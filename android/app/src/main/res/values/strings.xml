@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- String resources for Mix & Mingle -->
+<resources>
+    <!-- App Name - can be overridden by build flavors -->
+    <string name="app_name">Mix &amp; Mingle</string>
+
+    <!-- Notification channel names -->
+    <string name="notification_channel_default">General</string>
+    <string name="notification_channel_calls">Video Calls</string>
+    <string name="notification_channel_messages">Messages</string>
+</resources>

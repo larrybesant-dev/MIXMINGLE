@@ -1,0 +1,78 @@
+name: Deploy Flutter Web
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual deployment
+
+# Sets permissions for GitHub Pages deployment
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  build-web:
+    name: Build Flutter Web
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.3'
+          channel: 'stable'
+          cache: true
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      - name: 🌐 Build for Web
+        run: |
+          flutter build web --release --web-renderer canvaskit
+          echo "Build completed successfully"
+
+      - name: 📝 Add CNAME (optional - if using custom domain)
+        run: |
+          # Uncomment and set your domain if using custom domain
+          # echo "yourdomain.com" > build/web/CNAME
+          echo "CNAME file skipped (no custom domain configured)"
+        continue-on-error: true
+
+      - name: 📤 Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: 'build/web'
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build-web
+    runs-on: ubuntu-latest
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    steps:
+      - name: 🚀 Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: 📝 Deployment Summary
+        run: |
+          echo "## Deployment Complete 🎉" >> $GITHUB_STEP_SUMMARY
+          echo "Your Flutter web app is live at:" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.deployment.outputs.page_url }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Next Steps" >> $GITHUB_STEP_SUMMARY
+          echo "1. Visit the URL above to see your app" >> $GITHUB_STEP_SUMMARY
+          echo "2. Configure custom domain in repo settings (optional)" >> $GITHUB_STEP_SUMMARY
+          echo "3. Every push to main will auto-deploy" >> $GITHUB_STEP_SUMMARY

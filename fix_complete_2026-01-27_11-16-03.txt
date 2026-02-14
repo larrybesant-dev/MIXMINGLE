@@ -1,0 +1,38 @@
+Analyzing MIXMINGLE...                                          
+
+warning - The receiver can't be 'null' because of short-circuiting, so the null-aware operator '?.' can't be used - lib\features\settings\account_settings_page.dart:95:67 - invalid_null_aware_operator
+warning - The receiver can't be 'null' because of short-circuiting, so the null-aware operator '?.' can't be used - lib\features\settings\account_settings_page.dart:95:93 - invalid_null_aware_operator
+  error - 'MockProfileService.searchUsers' ('Future<List<QueryDocumentSnapshot<Object?>>> Function(String?, {int? limit})') isn't a valid override of 'ProfileService.searchUsers' ('Future<List<UserProfile>> Function(String)') - test\chat\chat_list_page_test.mocks.dart:154:56 - invalid_override
+   info - Don't invoke 'print' in production code - test\create_sample_event.dart:17:5 - avoid_print
+   info - Don't invoke 'print' in production code - test\create_sample_event.dart:42:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\create_sample_event.dart:48:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\create_sample_event.dart:50:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\create_sample_event.dart:51:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\create_sample_event.dart:56:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:15:5 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:20:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:23:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:25:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:26:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:27:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:29:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:33:7 - avoid_print
+warning - The getter doesn't override an inherited getter - test\features\room\full_room_e2e_test.dart:29:14 - override_on_non_overriding_member
+warning - The value of the local variable 'userId' isn't used - test\features\room\full_room_e2e_test.dart:55:15 - unused_local_variable
+   info - Don't invoke 'print' in production code - test\firebase_storage_integration_test.dart:72:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\firebase_storage_ping.dart:27:7 - avoid_print
+warning - The diagnostic 'must_be_immutable' doesn't need to be ignored here because it's already being ignored - test\helpers\mock_firebase.mocks.dart:752:12 - duplicate_ignore
+warning - The diagnostic 'must_be_immutable' doesn't need to be ignored here because it's already being ignored - test\helpers\mock_firebase.mocks.dart:1245:12 - duplicate_ignore
+warning - The diagnostic 'must_be_immutable' doesn't need to be ignored here because it's already being ignored - test\helpers\mock_firebase.mocks.dart:1569:12 - duplicate_ignore
+warning - The value of the local variable 'path' isn't used - test\services\storage_service_test.dart:70:13 - unused_local_variable
+warning - The declaration '_testRoom' isn't referenced - test\widgets\room_page_test.dart:5:7 - unused_element
+   info - Don't invoke 'print' in production code - update_agora_config.dart:14:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:26:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:27:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:28:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:29:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:30:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:31:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:35:5 - avoid_print
+
+34 issues found. (ran in 6.2s)

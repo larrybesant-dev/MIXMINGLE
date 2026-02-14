@@ -1,0 +1,218 @@
+# Mix & Mingle App Store Metadata
+# Version: 1.0.0
+# Last Updated: 2026-02-09
+
+app_info:
+  name: "Mix & Mingle"
+  subtitle: "Live Video Chat Rooms"
+
+# iOS App Store
+ios:
+  app_name: "Mix & Mingle"
+  subtitle: "Live Video Chat Rooms"
+
+  description: |
+    Mix & Mingle is the ultimate live video chat platform where you can connect with people from around the world in real-time video rooms.
+
+    🎥 MULTI-PARTICIPANT VIDEO CHAT
+    Join rooms with up to 12 active video participants. Our adaptive grid layout ensures everyone is visible, whether you're in a 1-on-1 conversation or a group discussion.
+
+    ⭐ SPOTLIGHT & FEATURE
+    Stand out from the crowd! Use the spotlight feature to become the featured broadcaster, or watch as hosts highlight interesting participants.
+
+    🎛️ HOST YOUR OWN ROOMS
+    Create and manage your own video rooms. As a host, you have complete control with tools to mute participants, grant co-host privileges, and manage room settings.
+
+    👑 VIP MEMBERSHIP
+    Unlock exclusive features with VIP and VIP+ memberships:
+    • Access VIP-only rooms
+    • Enhanced spotlight duration
+    • Priority room placement
+    • Exclusive profile badges
+
+    💰 VIRTUAL GIFTS & TIPS
+    Show appreciation to your favorite broadcasters with virtual gifts. Our coin-based economy lets you support creators and stand out in rooms.
+
+    🛡️ SAFE & MODERATED
+    We take safety seriously. Our moderation system includes user blocking, reporting, and active monitoring to ensure a positive experience for everyone.
+
+    Download Mix & Mingle today and start connecting!
+
+  keywords:
+    - video chat
+    - live streaming
+    - social video
+    - video rooms
+    - live video
+    - group chat
+    - video call
+    - social network
+    - live broadcast
+    - video community
+
+  promotional_text: "Connect with people worldwide in live video chat rooms. Join the Mix & Mingle community today!"
+
+  support_url: "https://mixmingle.app/support"
+  marketing_url: "https://mixmingle.app"
+  privacy_url: "https://mixmingle.app/privacy"
+
+  category:
+    primary: "Social Networking"
+    secondary: "Entertainment"
+
+  age_rating:
+    rating: "17+"
+    content_descriptions:
+      - "Unrestricted Web Access"
+      - "Frequent/Intense Mature/Suggestive Themes"
+
+  in_app_purchases:
+    - name: "VIP Monthly"
+      price: "$9.99"
+      description: "Unlock VIP features for 1 month"
+    - name: "VIP+ Monthly"
+      price: "$19.99"
+      description: "Unlock VIP+ features for 1 month"
+    - name: "Coin Pack - Small"
+      price: "$4.99"
+      description: "500 coins for virtual gifts"
+    - name: "Coin Pack - Medium"
+      price: "$9.99"
+      description: "1,200 coins for virtual gifts"
+    - name: "Coin Pack - Large"
+      price: "$19.99"
+      description: "2,800 coins for virtual gifts"
+
+# Google Play Store
+android:
+  app_name: "Mix & Mingle"
+  short_description: "Live video chat rooms - connect with people worldwide"
+
+  full_description: |
+    Mix & Mingle is the ultimate live video chat platform where you can connect with people from around the world in real-time video rooms.
+
+    ★ MULTI-PARTICIPANT VIDEO CHAT
+    Join rooms with up to 12 active video participants. Our adaptive grid layout ensures everyone is visible, whether you're in a 1-on-1 conversation or a group discussion.
+
+    ★ SPOTLIGHT & FEATURE
+    Stand out from the crowd! Use the spotlight feature to become the featured broadcaster, or watch as hosts highlight interesting participants.
+
+    ★ HOST YOUR OWN ROOMS
+    Create and manage your own video rooms. As a host, you have complete control with tools to mute participants, grant co-host privileges, and manage room settings.
+
+    ★ VIP MEMBERSHIP
+    Unlock exclusive features with VIP and VIP+ memberships:
+    • Access VIP-only rooms
+    • Enhanced spotlight duration
+    • Priority room placement
+    • Exclusive profile badges
+
+    ★ VIRTUAL GIFTS & TIPS
+    Show appreciation to your favorite broadcasters with virtual gifts. Our coin-based economy lets you support creators and stand out in rooms.
+
+    ★ SAFE & MODERATED
+    We take safety seriously. Our moderation system includes user blocking, reporting, and active monitoring to ensure a positive experience for everyone.
+
+    Download Mix & Mingle today and start connecting!
+
+  category: "Social"
+  content_rating: "Mature 17+"
+
+  contact_email: "support@mixmingle.app"
+  contact_website: "https://mixmingle.app"
+  privacy_policy_url: "https://mixmingle.app/privacy"
+
+# Data Safety (Google Play)
+data_safety:
+  data_collection:
+    - type: "Personal info"
+      data: "Name, Email address"
+      purpose: "Account creation and management"
+      shared: false
+      optional: false
+
+    - type: "Financial info"
+      data: "Purchase history"
+      purpose: "In-app purchases"
+      shared: true
+      shared_with: "Payment processors (RevenueCat, Stripe)"
+      optional: true
+
+    - type: "Photos and videos"
+      data: "Photos, Videos"
+      purpose: "Profile photo, live video streaming"
+      shared: false
+      optional: true
+
+    - type: "Audio"
+      data: "Voice or sound recordings"
+      purpose: "Live audio chat"
+      shared: false
+      optional: true
+
+    - type: "App activity"
+      data: "App interactions, In-app search history"
+      purpose: "Analytics and app functionality"
+      shared: true
+      shared_with: "Firebase Analytics"
+      optional: false
+
+    - type: "App info and performance"
+      data: "Crash logs, Diagnostics"
+      purpose: "App stability and performance"
+      shared: true
+      shared_with: "Firebase Crashlytics"
+      optional: false
+
+    - type: "Device or other IDs"
+      data: "Device ID"
+      purpose: "Analytics and fraud prevention"
+      shared: true
+      shared_with: "Firebase"
+      optional: false
+
+  security_practices:
+    data_encrypted_in_transit: true
+    data_deletion_request: true
+    deletion_instructions: "Request data deletion through app settings or email support@mixmingle.app"
+
+# Screenshot Requirements
+screenshots:
+  ios:
+    sizes:
+      - "6.5 inch (iPhone 14 Pro Max)" # 1284 x 2778
+      - "5.5 inch (iPhone 8 Plus)"     # 1242 x 2208
+      - "12.9 inch (iPad Pro)"         # 2048 x 2732
+
+    required_screens:
+      - name: "Onboarding"
+        description: "Welcome screen showing app value proposition"
+      - name: "Room Discovery"
+        description: "Browse available rooms with previews"
+      - name: "Multi-Cam Video"
+        description: "Active video room with multiple participants"
+      - name: "Spotlight Mode"
+        description: "Featured broadcaster in spotlight"
+      - name: "Host Tools"
+        description: "Room management panel for hosts"
+      - name: "VIP Features"
+        description: "VIP membership benefits showcase"
+      - name: "Coin Store"
+        description: "In-app purchase coin packages"
+
+  android:
+    sizes:
+      - "Phone" # Minimum 320px, max 3840px
+      - "7-inch tablet"
+      - "10-inch tablet"
+
+    required_screens:
+      - name: "Feature Graphic" # 1024 x 500
+        description: "App branding and key features"
+      - name: "Onboarding"
+      - name: "Room Discovery"
+      - name: "Multi-Cam Video"
+      - name: "Spotlight Mode"
+      - name: "Host Tools"
+      - name: "VIP Features"
+      - name: "Coin Store"

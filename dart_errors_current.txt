@@ -1,0 +1,105 @@
+Analyzing MIXMINGLE...                                          
+
+   info - Dangling library doc comment - lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart:1:1 - dangling_library_doc_comments
+   info - The file name 'PHASE_11_STABILITY_USAGE_EXAMPLES.dart' isn't a lower_case_with_underscores identifier - lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart:1:1 - file_names
+   info - Dangling library doc comment - lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart:2:1 - dangling_library_doc_comments
+   info - Dangling library doc comment - lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart:3:1 - dangling_library_doc_comments
+   info - Dangling library doc comment - lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart:4:1 - dangling_library_doc_comments
+   info - The constant name 'raise_hand' isn't a lowerCamelCase identifier - lib\core\constants\app_icons.dart:147:25 - constant_identifier_names
+   info - The constant name 'credit_card' isn't a lowerCamelCase identifier - lib\core\constants\app_icons.dart:152:25 - constant_identifier_names
+warning - The value of the local variable 'android' isn't used - lib\core\services\push_notification_service.dart:250:11 - unused_local_variable
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\app\screens\matches_page.dart:316:46 - deprecated_member_use
+warning - The left operand can't be null, so the right operand is never executed - lib\features\events\screens\events_page.dart:221:47 - dead_null_aware_expression
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_card_horizontal.dart:31:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_card_horizontal.dart:63:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_card_horizontal.dart:139:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_card_horizontal.dart:145:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_card_horizontal.dart:152:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_card_horizontal.dart:158:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_card_vertical.dart:31:35 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_card_vertical.dart:62:45 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_card_vertical.dart:101:60 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_card_vertical.dart:152:66 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_card_vertical.dart:158:68 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_discovery_list.dart:120:62 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_discovery_list.dart:126:68 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_discovery_list.dart:133:68 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\events\widgets\event_discovery_list.dart:163:68 - deprecated_member_use
+   info - 'AutoDisposeStateNotifierProviderRef' is deprecated and shouldn't be used. will be removed in 3.0.0. Use Ref instead - lib\features\group_chat\providers\group_chat_providers.dart:77:9 - deprecated_member_use
+   info - Don't invoke 'print' in production code - lib\features\matching\services\match_service.dart:24:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\services\match_service.dart:61:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\services\match_service.dart:79:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\services\match_service.dart:98:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\matching\services\match_service.dart:116:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\room\screens\voice_room_page.dart:277:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\room\screens\voice_room_page.dart:279:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\room\screens\voice_room_page.dart:283:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\room\screens\voice_room_page.dart:290:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\room\screens\voice_room_page.dart:296:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\room\screens\voice_room_page.dart:301:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\room\screens\voice_room_page.dart:304:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\room\screens\voice_room_page.dart:307:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\room\screens\voice_room_page.dart:311:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\features\room\screens\voice_room_page.dart:314:7 - avoid_print
+warning - The declaration '_startSpeakerTimer' isn't referenced - lib\features\room\screens\voice_room_page.dart:387:8 - unused_element
+warning - The value of the local variable 'roomService' isn't used - lib\features\room\screens\voice_room_page.dart:430:13 - unused_local_variable
+warning - The value of the local variable 'roomService' isn't used - lib\features\room\screens\voice_room_page.dart:459:13 - unused_local_variable
+warning - The value of the local variable 'user' isn't used - lib\features\room\screens\voice_room_page.dart:513:11 - unused_local_variable
+   info - Don't invoke 'print' in production code - lib\services\agora_platform_service.dart:33:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_platform_service.dart:42:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_platform_service.dart:44:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_platform_service.dart:48:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_platform_service.dart:58:5 - avoid_print
+warning - Dead code: Catch clauses after a 'catch (e)' or an 'on Object catch (e)' are never reached - lib\services\agora_video_service.dart:689:7 - dead_code_catch_following_catch
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:18:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:19:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:20:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:23:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:27:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:28:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:29:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:30:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:31:5 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:43:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:44:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:45:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:47:9 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:50:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:53:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\services\agora_web_service.dart:54:7 - avoid_print
+warning - The left operand can't be null, so the right operand is never executed - lib\shared\models\event.dart:147:29 - dead_null_aware_expression
+warning - The left operand can't be null, so the right operand is never executed - lib\shared\models\event.dart:148:29 - dead_null_aware_expression
+warning - Unused import: 'package:cloud_firestore/cloud_firestore.dart' - test\chat\chat_list_page_test.mocks.dart:8:8 - unused_import
+   info - Don't invoke 'print' in production code - test\create_sample_event.dart:17:5 - avoid_print
+   info - Don't invoke 'print' in production code - test\create_sample_event.dart:42:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\create_sample_event.dart:48:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\create_sample_event.dart:50:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\create_sample_event.dart:51:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\create_sample_event.dart:56:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:15:5 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:20:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:23:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:25:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:26:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:27:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:29:9 - avoid_print
+   info - Don't invoke 'print' in production code - test\events_test.dart:33:7 - avoid_print
+warning - The getter doesn't override an inherited getter - test\features\room\full_room_e2e_test.dart:29:14 - override_on_non_overriding_member
+warning - The value of the local variable 'userId' isn't used - test\features\room\full_room_e2e_test.dart:55:15 - unused_local_variable
+   info - Don't invoke 'print' in production code - test\firebase_storage_integration_test.dart:72:7 - avoid_print
+   info - Don't invoke 'print' in production code - test\firebase_storage_ping.dart:27:7 - avoid_print
+warning - The diagnostic 'must_be_immutable' doesn't need to be ignored here because it's already being ignored - test\helpers\mock_firebase.mocks.dart:751:12 - duplicate_ignore
+warning - The diagnostic 'must_be_immutable' doesn't need to be ignored here because it's already being ignored - test\helpers\mock_firebase.mocks.dart:1244:12 - duplicate_ignore
+warning - The diagnostic 'must_be_immutable' doesn't need to be ignored here because it's already being ignored - test\helpers\mock_firebase.mocks.dart:1568:12 - duplicate_ignore
+warning - The value of the local variable 'path' isn't used - test\services\storage_service_test.dart:70:13 - unused_local_variable
+warning - The declaration '_testRoom' isn't referenced - test\widgets\room_page_test.dart:5:7 - unused_element
+   info - Don't invoke 'print' in production code - update_agora_config.dart:14:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:26:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:27:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:28:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:29:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:30:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:31:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:35:5 - avoid_print
+
+101 issues found. (ran in 8.1s)

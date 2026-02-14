@@ -1,0 +1,45 @@
+{
+  // ========================================
+  // RECOMMENDED EXTENSIONS FOR THIS PROJECT
+  // ========================================
+  // VS Code will prompt to install these when opening the workspace
+  "recommendations": [
+    // ========================================
+    // TIER 1: ESSENTIAL (KEEP ENABLED ALWAYS)
+    // ========================================
+    "dart-code.dart-code",           // Dart language support
+    "dart-code.flutter",              // Flutter framework support
+    "firebase.vscode-firebase-explorer", // Firebase explorer
+
+    // ========================================
+    // TIER 2: DEBUGGING & CODE QUALITY
+    // ========================================
+    "usernamehw.errorlens",           // Inline error highlighting (critical for Agora bugs)
+    "eamodio.gitlens",                // Git blame & history
+
+    // ========================================
+    // TIER 3: OPTIONAL (ENABLE AS NEEDED)
+    // ========================================
+    // Uncomment these only if actively using them:
+    // "github.copilot",                //🟡 DISABLED by default - re-enable after stabilization
+    // "github.copilot-chat",           // 🟡 DISABLED by default
+    // "nash.awesome-flutter-snippets",    // 🟡 OPTIONAL
+    // "robert-brunhage.flutter-riverpod-snippets", // 🟡 OPTIONAL
+
+    // ========================================
+    // TIER 4: UNNECESSARY FOR THIS PROJECT
+    // ========================================
+    // DO NOT USE (remove if installed):
+    // "redhat.vscode-yaml",            // Built-in YAML support sufficient
+    // "pkief.material-icon-theme",     // Slows workspace, no value added
+    // "wayou.vscode-todo-highlight",   // Too noisy
+    // "gruntfuggly.todo-tree",         // Confusing with multiple TODO sources
+    // "streetsidesoftware.code-spell-checker", // Causes false positives in code
+    // "visualstudioexptteam.vscodeintellicode" // Often incorrect for Dart
+  ],
+  // Extensions that are not recommended or should be disabled
+  "unwantedRecommendations": [
+    "hookyqr.beautify", // Conflicts with Dart formatter
+    "esbenp.prettier-vscode" // Not needed for Dart/Flutter
+  ]
+}

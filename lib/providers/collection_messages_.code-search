@@ -1,0 +1,197 @@
+# Query: collection('messages')
+# ContextLines: 1
+
+48 results - 20 files cleanup_rooms.js: 29 30: const messagesSnap = await doc.ref.collection('messages').get();
+31 for (const messageDoc of messagesSnap.docs) { COMPREHENSIVE_AUDIT_REPORT_2026 -02 -07.md: 114 ✅ _firestore.collection('rooms').doc(roomId) 115: ✅ _firestore.collection('rooms').doc(roomId).collection('messages') 116 ✅ _firestore.collection('media') CRITICAL_FIXES.md: 254 const messagesSnapshot = await db 255:.collection('messages') 256.where('roomId', '==', roomId) PHASE_1_ANALYSIS_REPORT.md: 167 _firestore.collection('users').doc(userId).set(...) 168: _firestore.collection('messages').add(...) 169 ```
+
+REAL_DIAGNOSTIC_REPORT.md:
+  217    // No verification that current user owns the message!
+  218:   await _firestore.collection('messages').doc(messageId).delete();
+  219  }
+
+  224  Future<void> deleteMessage(String messageId) async {
+  225:   final message = await _firestore.collection('messages').doc(messageId).get();
+  226    final currentUserId = _auth.currentUser?.uid;
+
+REAL_QUICK_FIX_REFERENCE.md:
+  142  Future<void> deleteMessage(String messageId) async {
+  143:   final msgRef = _firestore.collection('messages').doc(messageId);
+  144    final msgData = await msgRef.get();
+
+  278    // Save
+  279:   await _firestore.collection('messages').doc(message.id).set(message.toJson());
+  280  }
+
+SURGICAL_ACTION_PLAN.md:
+  507  grep -r "\.collection('rooms')" lib/services/ | wc -l
+  508: grep -r "\.collection('messages')" lib/services/ | wc -l
+  509  # ... etc
+
+VOICE_ROOM_DEPLOYMENT_READY.md:
+  116        .doc(roomId)
+  117:       .collection('messages')
+  118        .orderBy('timestamp', descending: false)
+
+  135        .doc(roomId)
+  136:       .collection('messages')
+  137        .doc(message.id)
+
+archive\old-reports\PROJECT_ANALYSIS_COMPLETE.md:
+  518      const messages = await admin.firestore()
+  519:       .collection('messages')
+  520        .where('roomId', '==', roomId)
+
+functions\src\index.ts:
+  151        // Initialize messages collection (user-specific)
+  152:       const messagesRef = db.collection('users').doc(userId).collection('messages');
+  153        const messagesCount = await messagesRef.count().get();
+
+lib\features\group_chat\services\group_chat_service.dart:
+   31          .doc(roomId)
+   32:         .collection('messages')
+   33          .orderBy('timestamp', descending: false)
+
+  148  
+  149:     await _rooms.doc(roomId).collection('messages').doc(message.id).set(message.toMap());
+  150    }
+
+lib\features\room\providers\room_subcollection_providers.dart:
+   30          .doc(roomId)
+   31:         .collection('messages')
+   32          .orderBy('createdAt', descending: false)
+
+  137    }) async {
+  138:     final docRef = await _firestore.collection('rooms').doc(roomId).collection('messages').add(message.toMap());
+  139  
+
+  147    }) async {
+  148:     await _firestore.collection('rooms').doc(roomId).collection('messages').doc(messageId).update({'isDeleted': true});
+  149    }
+
+lib\features\voice_room\services\enhanced_chat_service.dart:
+   97    }) async {
+   98:     final docRef = await _firestore.collection('rooms').doc(roomId).collection('messages').add({
+   99        'senderId': userId,
+
+  115          .doc(roomId)
+  116:         .collection('messages')
+  117          .doc(messageId)
+
+  125          .doc(roomId)
+  126:         .collection('messages')
+  127          .doc(messageId)
+
+  132    Future<void> deleteMessage(String roomId, String messageId) async {
+  133:     await _firestore.collection('rooms').doc(roomId).collection('messages').doc(messageId).update({'deleted': true});
+  134    }
+
+  137    Future<void> addReaction(String roomId, String messageId, String emoji) async {
+  138:     final messageRef = _firestore.collection('rooms').doc(roomId).collection('messages').doc(messageId);
+  139  
+
+  150    Future<void> removeReaction(String roomId, String messageId, String emoji) async {
+  151:     final messageRef = _firestore.collection('rooms').doc(roomId).collection('messages').doc(messageId);
+  152  
+
+  166          .doc(roomId)
+  167:         .collection('messages')
+  168          .snapshots()
+
+  227          .doc(roomId)
+  228:         .collection('messages')
+  229          .snapshots()
+
+lib\providers\messaging_providers.dart:
+  18    return FirebaseFirestore.instance
+  19:       .collection('messages')
+  20        .where('roomId', isEqualTo: roomId)
+
+lib\providers\room_chat_presence_providers.dart:
+   83          .doc(roomId)
+   84:         .collection('messages')
+   85          .orderBy('createdAt', descending: true)
+
+  128            .doc(roomId)
+  129:           .collection('messages')
+  130            .orderBy('createdAt', descending: true)
+
+  176            .doc(roomId)
+  177:           .collection('messages')
+  178            .add({
+
+lib\services\account_deletion_service.dart:
+  110        // Delete from direct messages
+  111:       final messagesQuery = await _firestore.collection('messages').where('senderId', isEqualTo: userId).get();
+  112  
+
+lib\services\chat_service.dart:
+   72        final message = ChatMessage(
+   73:         id: _firestore.collection('chatRooms').doc(roomId).collection('messages').doc().id,
+   74          roomId: roomId,
+
+   83        // Add message to subcollection
+   84:       await _firestore.collection('chatRooms').doc(roomId).collection('messages').doc(message.id).set(message.toMap());
+   85  
+
+  102            .doc(roomId)
+  103:           .collection('messages')
+  104            .orderBy('timestamp', descending: true)
+
+  124            .doc(roomId)
+  125:           .collection('messages')
+  126            .where('senderId', isNotEqualTo: user.uid)
+
+  182          .doc(roomId)
+  183:         .collection('messages')
+  184          .orderBy('timestamp')
+
+  203      try {
+  204:       await _firestore.collection('chatRooms').doc(roomId).collection('messages').doc(messageId).update({
+  205          'deletedBy': FieldValue.arrayUnion([user.uid]),
+
+  237          .doc(roomId)
+  238:         .collection('messages')
+  239          .where('isPinned', isEqualTo: true)
+
+  257      try {
+  258:       final snapshot = await _firestore.collection('chatRooms').doc(roomId).collection('messages').count().get();
+  259        return snapshot.count ?? 0;
+
+lib\services\data_export_service.dart:
+  100        final messagesSnapshot = await _firestore
+  101:           .collection('messages')
+  102            .where('senderId', isEqualTo: userId)
+
+  292        // Count messages
+  293:       final messagesCount = await _firestore.collection('messages').where('senderId', isEqualTo: userId).count().get();
+  294        summary['messages_sent'] = messagesCount.count ?? 0;
+
+lib\services\firestore_service.dart:
+  110          .doc(roomId)
+  111:         .collection('messages')
+  112          .orderBy('timestamp', descending: true)
+
+  117    Future<void> sendMessage(String roomId, Message message) async {
+  118:     await _firestore.collection('rooms').doc(roomId).collection('messages').add(message.toMap());
+  119    }
+
+  269    Future<List<Message>> getFlaggedMessages() async {
+  270:     final snapshot = await _firestore.collection('messages').where('isFlagged', isEqualTo: true).get();
+  271      return snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList();
+
+lib\services\messaging_service.dart:
+  590      // Add message to Firestore (using subcollection)
+  591:     await _firestore.collection('rooms').doc(roomId).collection('messages').add(message.toMap());
+  592  
+
+  605          .doc(roomId)
+  606:         .collection('messages')
+  607          .orderBy('timestamp', descending: false)
+
+  615    Future<void> deleteRoomMessage(String roomId, String messageId, String senderId) async {
+  616:     final docRef = _firestore.collection('rooms').doc(roomId).collection('messages').doc(messageId);
+  617      final doc = await docRef.get();
+
+  635    Future<void> editRoomMessage(String roomId, String messageId, String senderId, String newContent) async {
+  636:     final docRef = _firestore.collection('rooms').doc(roomId).collection('messages').doc(messageId);
+  637      final doc = await docRef.get();

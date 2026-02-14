@@ -1,0 +1,10 @@
+Feature,Status,Details,Screenshot
+"Authentication","Working","No login required",""
+"Speed Dating","Working","Feature element found in UI","C:\Users\LARRY\MIXMINGLE\playwright-tests\smoke-test-results\speed-dating-found.png"
+"Chat","Working","Feature element found in UI","C:\Users\LARRY\MIXMINGLE\playwright-tests\smoke-test-results\chat-found.png"
+"Events","Working","Feature element found in UI","C:\Users\LARRY\MIXMINGLE\playwright-tests\smoke-test-results\events-found.png"
+"Profile","Working","Feature element found in UI","C:\Users\LARRY\MIXMINGLE\playwright-tests\smoke-test-results\profile-found.png"
+"Notifications","Working","Feature element found in UI","C:\Users\LARRY\MIXMINGLE\playwright-tests\smoke-test-results\notifications-found.png"
+"Go Live","Working","Feature element found in UI","C:\Users\LARRY\MIXMINGLE\playwright-tests\smoke-test-results\go-live-found.png"
+"Messages","Working","Feature element found in UI","C:\Users\LARRY\MIXMINGLE\playwright-tests\smoke-test-results\messages-found.png"
+"JavaScript Errors","Clean","No console errors",""

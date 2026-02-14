@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Agora Safety Diagnostic</title>
+  <style>
+    body {
+      font-family: 'Courier New', monospace;
+      background: #1e1e2f;
+      color: #00ff00;
+      padding: 20px;
+    }
+
+    .log-area {
+      background: #0d0d1f;
+      border: 2px solid #00ff00;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+      height: 600px;
+      overflow-y: auto;
+      font-size: 12px;
+    }
+
+    .log-item {
+      padding: 5px 0;
+      border-bottom: 1px solid #333;
+    }
+
+    .success {
+      color: #00ff00;
+    }
+
+    .error {
+      color: #ff4444;
+    }
+
+    .warning {
+      color: #ffaa00;
+    }
+
+    .info {
+      color: #88ccff;
+    }
+
+    button {
+      background: #00ff00;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      margin: 5px;
+    }
+
+    button:hover {
+      background: #00cc00;
+    }
+
+    .test-section {
+      margin: 20px 0;
+      padding: 15px;
+      background: #0d0d1f;
+      border-left: 4px solid #00ff00;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #00ff00;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>🔍 Agora Safety Diagnostic Tool</h1>
+
+  <div class="test-section">
+    <h2>1. Bridge Existence Check</h2>
+    <button onclick="testBridgeExists()">Test window.agoraWeb exists</button>
+  </div>
+
+  <div class="test-section">
+    <h2>2. Method Existence Check</h2>
+    <button onclick="testMethodsExist()">Test all methods exist</button>
+  </div>
+
+  <div class="test-section">
+    <h2>3. Promise Return Check</h2>
+    <button onclick="testPromiseReturns()">Test methods return Promises</button>
+  </div>
+
+  <div class="test-section">
+    <h2>4. Parameter Validation</h2>
+    <button onclick="testParamValidation()">Test parameter handling</button>
+  </div>
+
+  <div class="test-section">
+    <h2>5. Full Safety Check</h2>
+    <button onclick="runFullDiagnostic()">Run Complete Diagnostic</button>
+    <button onclick="clearLogs()">Clear Logs</button>
+  </div>
+
+  <h3>📋 Diagnostic Output:</h3>
+  <div class="log-area" id="logArea"></div>
+
+  <script>
+    const logArea = document.getElementById('logArea');
+
+    function log(message, type = 'info') {
+      const item = document.createElement('div');
+      item.className = `log-item ${type}`;
+      item.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logArea.appendChild(item);
+      logArea.scrollTop = logArea.scrollHeight;
+    }
+
+    function clearLogs() {
+      logArea.innerHTML = '';
+      log('Logs cleared', 'info');
+    }
+
+    function testBridgeExists() {
+      log('=== Testing Bridge Existence ===', 'info');
+
+      if (window.agoraWeb) {
+        log('✅ window.agoraWeb exists', 'success');
+        log(`   Type: ${typeof window.agoraWeb}`, 'info');
+      } else {
+        log('❌ window.agoraWeb does NOT exist', 'error');
+        log('   The Agora Web bridge has not loaded', 'error');
+      }
+    }
+
+    function testMethodsExist() {
+      log('=== Testing Method Existence ===', 'info');
+
+      if (!window.agoraWeb) {
+        log('❌ window.agoraWeb does not exist, skipping', 'error');
+        return;
+      }
+
+      const methods = ['joinChannel', 'leaveChannel', 'setMicMuted', 'setVideoMuted'];
+      methods.forEach(method => {
+        if (typeof window.agoraWeb[method] === 'function') {
+          log(`✅ window.agoraWeb.${method} exists (type: function)`, 'success');
+        } else {
+          log(`❌ window.agoraWeb.${method} does NOT exist (type: ${typeof window.agoraWeb[method]})`, 'error');
+        }
+      });
+    }
+
+    function testPromiseReturns() {
+      log('=== Testing Promise Returns ===', 'info');
+
+      if (!window.agoraWeb) {
+        log('❌ window.agoraWeb does not exist, skipping', 'error');
+        return;
+      }
+
+      // Test with mock parameters
+      const mockAppId = 'test-app-id';
+      const mockChannel = 'test-channel';
+      const mockToken = 'test-token';
+      const mockUid = '123';
+
+      log('Testing joinChannel return type...', 'info');
+      try {
+        const joinResult = window.agoraWeb.joinChannel(mockAppId, mockChannel, mockToken, mockUid);
+        if (joinResult && typeof joinResult.then === 'function') {
+          log(`✅ joinChannel returns a Promise (has .then method)`, 'success');
+        } else {
+          log(`❌ joinChannel does NOT return a Promise (got: ${typeof joinResult})`, 'error');
+        }
+      } catch (err) {
+        log(`⚠️ joinChannel threw error (expected for mock params): ${err.message}`, 'warning');
+      }
+
+      log('Testing leaveChannel return type...', 'info');
+      try {
+        const leaveResult = window.agoraWeb.leaveChannel();
+        if (leaveResult && typeof leaveResult.then === 'function') {
+          log(`✅ leaveChannel returns a Promise (has .then method)`, 'success');
+        } else {
+          log(`❌ leaveChannel does NOT return a Promise (got: ${typeof leaveResult})`, 'error');
+        }
+      } catch (err) {
+        log(`⚠️ leaveChannel threw error: ${err.message}`, 'warning');
+      }
+
+      log('Testing setMicMuted return type...', 'info');
+      try {
+        const micResult = window.agoraWeb.setMicMuted(true);
+        if (micResult && typeof micResult.then === 'function') {
+          log(`✅ setMicMuted returns a Promise (has .then method)`, 'success');
+        } else {
+          log(`❌ setMicMuted does NOT return a Promise (got: ${typeof micResult})`, 'error');
+        }
+      } catch (err) {
+        log(`⚠️ setMicMuted threw error: ${err.message}`, 'warning');
+      }
+
+      log('Testing setVideoMuted return type...', 'info');
+      try {
+        const videoResult = window.agoraWeb.setVideoMuted(false);
+        if (videoResult && typeof videoResult.then === 'function') {
+          log(`✅ setVideoMuted returns a Promise (has .then method)`, 'success');
+        } else {
+          log(`❌ setVideoMuted does NOT return a Promise (got: ${typeof videoResult})`, 'error');
+        }
+      } catch (err) {
+        log(`⚠️ setVideoMuted threw error: ${err.message}`, 'warning');
+      }
+    }
+
+    function testParamValidation() {
+      log('=== Testing Parameter Validation ===', 'info');
+
+      if (!window.agoraWeb) {
+        log('❌ window.agoraWeb does not exist, skipping', 'error');
+        return;
+      }
+
+      log('Test 1: Missing appId', 'info');
+      try {
+        const result = window.agoraWeb.joinChannel(null, 'channel', 'token', 'uid');
+        result.then(
+          () => log('⚠️ Unexpectedly succeeded', 'warning'),
+          (err) => log(`✅ Correctly rejected: ${err.message}`, 'success')
+        );
+      } catch (err) {
+        log(`✅ Correctly threw: ${err.message}`, 'success');
+      }
+
+      log('Test 2: Missing channelName', 'info');
+      try {
+        const result = window.agoraWeb.joinChannel('appid', null, 'token', 'uid');
+        result.then(
+          () => log('⚠️ Unexpectedly succeeded', 'warning'),
+          (err) => log(`✅ Correctly rejected: ${err.message}`, 'success')
+        );
+      } catch (err) {
+        log(`✅ Correctly threw: ${err.message}`, 'success');
+      }
+
+      log('Test 3: Empty/null token (should accept)', 'info');
+      try {
+        const result = window.agoraWeb.joinChannel('appid', 'channel', null, 'uid');
+        if (result && typeof result.then === 'function') {
+          log('✅ Correctly handles null token', 'success');
+        } else {
+          log('❌ Failed to handle null token', 'error');
+        }
+      } catch (err) {
+        log(`✅ Correctly handled: ${err.message}`, 'success');
+      }
+    }
+
+    function runFullDiagnostic() {
+      clearLogs();
+      log('🔍 STARTING FULL DIAGNOSTIC...', 'info');
+      log('', 'info');
+
+      testBridgeExists();
+      log('', 'info');
+
+      testMethodsExist();
+      log('', 'info');
+
+      testPromiseReturns();
+      log('', 'info');
+
+      testParamValidation();
+      log('', 'info');
+
+      log('✅ DIAGNOSTIC COMPLETE', 'success');
+      log('If all tests passed, your integration is safe from NoSuchMethodError', 'success');
+    }
+
+    // Auto-run on page load
+    window.addEventListener('load', () => {
+      log('🎬 Diagnostic tool loaded', 'info');
+      log('Click buttons above to test Agora Web safety', 'info');
+    });
+  </script>
+</body>
+
+</html>

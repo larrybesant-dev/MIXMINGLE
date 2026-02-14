@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Connect and mingle with people in real-time video rooms.">
+  <meta name="author" content="Mix & Mingle Team">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://mix-and-mingle-v2.web.app">
+  <title>Mix & Mingle</title>
+
+  <!-- PWA / Icons -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      z-index: 9999;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      transition: opacity 0.5s ease-out;
+      pointer-events: none;
+    }
+
+    .logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 30px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .logo-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4A90E2 0%, #7B68EE 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      font-weight: bold;
+      color: white;
+      box-shadow: 0 10px 40px rgba(74, 144, 226, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dancer {
+      font-size: 56px;
+      animation: musicFloat 2s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: white;
+      margin-top: 10px;
+      letter-spacing: 2px;
+    }
+
+    @keyframes musicFloat {
+
+      0%,
+      100% {
+        transform: translateY(0px) scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: translateY(-15px) scale(1.1);
+        opacity: 0.8;
+      }
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(74, 144, 226, 0.2);
+      border-top-color: #4A90E2;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .loading-subtext {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+    }
+  </style>
+
+  <!-- Load Agora Iris Web RTC script via a synchronous insertion so it executes before Flutter -->
+  <script>
+    (function () {
+      var firstScript = document.getElementsByTagName('script')[0];
+      var agoraScript = document.createElement('script');
+      agoraScript.src = "https://download.agora.io/sdk/release/iris-web-rtc_n450_w4220_0.8.6.js";
+      agoraScript.async = false;
+      agoraScript.onload = function () {
+        window.__AGORA_SDK_LOADED = true;
+        console.log('[AgoraWeb] ✅ Iris Web RTC script loaded');
+      };
+      agoraScript.onerror = function (ev) {
+        window.__AGORA_SDK_LOADED = false;
+        console.error('[AgoraWeb] ❌ Failed to load Iris Web RTC script from CDN', ev);
+      };
+      firstScript.parentNode.insertBefore(agoraScript, firstScript);
+    })();
+  </script>
+
+  <!-- Agora/Iris SDK Adapter - Detects and normalizes API calls -->
+  <script>
+    // SDK adapter to normalize AgoraRTC vs IrisRtcEngine
+    (function () {
+      window.__AgoraAdapter = {
+        isIris: false,
+        isClassic: false,
+        availableMethods: {},
+        logAvailable: function (obj, name) {
+          try {
+            const keys = Object.keys(obj || {}).sort();
+            console.log('[AgoraAdapter] Detected', name, 'methods', keys);
+            this.availableMethods[name] = keys;
+          } catch (e) {
+            console.warn('[AgoraAdapter] Could not enumerate', name, e);
+          }
+        },
+        waitForSDK: function (timeoutMs = 10000) {
+          return new Promise((resolve, reject) => {
+            const start = Date.now();
+            const check = () => {
+              const hasClassic = typeof window.AgoraRTC !== 'undefined';
+              const hasIris = typeof window.IrisRtcEngine !== 'undefined' || typeof window.IrisRtcEngineFactory !== 'undefined';
+              if (hasClassic || hasIris) {
+                this.isIris = !!hasIris && !hasClassic;
+                this.isClassic = !!hasClassic;
+                if (hasClassic) this.logAvailable(window.AgoraRTC, 'AgoraRTC');
+                if (hasIris) {
+                  // try both possible Iris entry points
+                  this.logAvailable(window.IrisRtcEngine, 'IrisRtcEngine');
+                  this.logAvailable(window.IrisRtcEngineFactory, 'IrisRtcEngineFactory');
+                }
+                console.log('[AgoraAdapter] SDK ready', { isClassic: this.isClassic, isIris: this.isIris });
+                return resolve();
+              }
+              if (Date.now() - start >= timeoutMs) {
+                return reject(new Error('No Agora/Iris SDK available within timeout'));
+              }
+              setTimeout(check, 100);
+            };
+            check();
+          });
+        },
+        // Normalized createClient
+        createClient: async function (opts) {
+          if (this.isClassic && window.AgoraRTC && typeof window.AgoraRTC.createClient === 'function') {
+            console.log('[AgoraAdapter] Using classic AgoraRTC.createClient');
+            return window.AgoraRTC.createClient(opts);
+          }
+          // Iris path - attempt common factory/engine patterns
+          if (this.isIris) {
+            console.log('[AgoraAdapter] Using Iris SDK path to create client-like object');
+
+            // Try factory create methods first
+            if (window.IrisRtcEngineFactory && typeof window.IrisRtcEngineFactory.create === 'function') {
+              console.log('[AgoraAdapter] Creating via IrisRtcEngineFactory.create()');
+              return window.IrisRtcEngineFactory.create(opts);
+            }
+            if (window.IrisRtcEngine && typeof window.IrisRtcEngine.create === 'function') {
+              console.log('[AgoraAdapter] Creating via IrisRtcEngine.create()');
+              return window.IrisRtcEngine.create(opts);
+            }
+
+            // Try instantiating as a class (new IrisRtcEngine())
+            if (window.IrisRtcEngine && typeof window.IrisRtcEngine === 'function') {
+              console.log('[AgoraAdapter] Instantiating IrisRtcEngine as class with new');
+              try {
+                const instance = new window.IrisRtcEngine(opts);
+                console.log('[AgoraAdapter] Successfully instantiated IrisRtcEngine, methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(instance)).slice(0, 20));
+                return instance;
+              } catch (e) {
+                console.warn('[AgoraAdapter] Failed to instantiate with new IrisRtcEngine(opts):', e.message);
+                // Try without options
+                try {
+                  const instance = new window.IrisRtcEngine();
+                  console.log('[AgoraAdapter] Successfully instantiated IrisRtcEngine (no opts)');
+                  return instance;
+                } catch (e2) {
+                  console.warn('[AgoraAdapter] Failed to instantiate with new IrisRtcEngine():', e2.message);
+                }
+              }
+            }
+
+            throw new Error('Iris SDK present but no create method found for client creation');
+          }
+          throw new Error('No supported Agora/Iris SDK available to create client');
+        },
+        // Normalized createMicrophoneAndCameraTracks - ALWAYS returns Promise
+        createMicrophoneAndCameraTracks: async function (audioConfig, videoConfig) {
+          if (this.isClassic && window.AgoraRTC && typeof window.AgoraRTC.createMicrophoneAndCameraTracks === 'function') {
+            return window.AgoraRTC.createMicrophoneAndCameraTracks(audioConfig, videoConfig);
+          }
+          if (this.isIris) {
+            // Iris may expose different helpers. We cannot assume exact name.
+            // Try a few likely candidates and log what we tried.
+            const tries = [
+              'createLocalTracks',
+              'createMicrophoneAndCameraTracks',
+              'createLocalAudioTrack',
+              'createLocalVideoTrack'
+            ];
+            for (const name of tries) {
+              // check on global Iris factory or engine
+              const candidate = (window.IrisRtcEngineFactory && window.IrisRtcEngineFactory[name]) ||
+                (window.IrisRtcEngine && window.IrisRtcEngine[name]);
+              if (typeof candidate === 'function') {
+                console.log('[AgoraAdapter] Calling Iris method', name);
+                try {
+                  const result = await candidate.call(window.IrisRtcEngineFactory || window.IrisRtcEngine, audioConfig, videoConfig);
+                  console.log('[AgoraAdapter] Iris method succeeded:', name, result);
+                  return result;
+                } catch (err) {
+                  console.error('[AgoraAdapter] Iris method failed:', name, err);
+                  // continue to next candidate
+                  continue;
+                }
+              }
+            }
+            // If no helper exists, reject with clear error
+            const msg = 'No Iris helper found for creating local tracks. Available methods to try: ' + tries.join(', ');
+            console.error('[AgoraAdapter] ' + msg);
+            return Promise.reject(new Error(msg));
+          }
+          return Promise.reject(new Error('No supported SDK available to create local tracks'));
+        },
+        // Fallback helper to create local tracks via getUserMedia if SDK lacks helper
+        createLocalTracksViaGetUserMedia: async function (audio = true, video = true) {
+          const constraints = { audio: !!audio, video: !!video };
+          try {
+            const stream = await navigator.mediaDevices.getUserMedia(constraints);
+            console.log('[AgoraAdapter] Obtained MediaStream via getUserMedia', stream);
+            return { stream };
+          } catch (err) {
+            console.error('[AgoraAdapter] getUserMedia failed', err);
+            throw err;
+          }
+        }
+      };
+
+      // Expose adapter globally for your bridge to call
+      window.AgoraAdapter = window.__AgoraAdapter;
+
+      // Immediately wait and log available methods so you can paste output
+      window.AgoraAdapter.waitForSDK(10000)
+        .then(() => {
+          console.log('[AgoraAdapter] SDK detection complete', window.AgoraAdapter.availableMethods);
+        })
+        .catch((err) => {
+          console.error('[AgoraAdapter] SDK detection failed', err);
+        });
+    })();
+  </script>
+
+  <!-- Flutter loader scripts -->
+  <script src="flutter.js" defer></script>
+  <script src="flutter_bootstrap.js" defer></script>
+
+  <!-- Chrome extension API guard -->
+  <script>
+    if (typeof window !== 'undefined' && typeof window.process === 'undefined') {
+      window.process = { env: {}, version: '', platform: 'browser', nextTick: function (cb) { setTimeout(cb, 0); } };
+    }
+    if (typeof window !== 'undefined') {
+      if (!window.chrome) {
+        window.chrome = { runtime: { id: undefined, onMessage: { addListener: function () { } }, sendMessage: function () { } }, tabs: { onUpdated: { addListener: function () { } }, onChanged: { addListener: function () { } }, query: function () { }, create: function () { }, update: function () { } }, contextMenus: { onClicked: { addListener: function () { } }, create: function () { } }, downloads: { onCreated: { addListener: function () { } }, download: function () { } }, storage: { local: { get: function () { }, set: function () { } } } };
+      }
+      if (!window.chrome.runtime) {
+        window.chrome.runtime = { id: undefined, onMessage: { addListener: function () { } }, sendMessage: function () { } };
+      }
+    }
+  </script>
+</head>
+
+<body>
+  <!-- Loading Screen -->
+  <div id="loading">
+    <div class="logo">
+      <div class="logo-circle">
+        <span class="dancer">🎵</span>
+      </div>
+      <div class="logo-text">MIX & MINGLE</div>
+    </div>
+    <div class="spinner"></div>
+    <div class="loading-text">Loading your experience...</div>
+    <div class="loading-subtext">Connecting people worldwide</div>
+  </div>
+
+  <script>
+    // ========== AGORA WEB BRIDGE INITIALIZATION ==========
+    console.log("[AgoraWeb] 🔧 Initializing Agora Web bridge...");
+
+    let agoraClient = null;
+    let localAudioTrack = null;
+    let localVideoTrack = null;
+    const remoteUsers = {};
+    const joinLifecycle = {
+      started: false,
+      bridgeReady: false,
+      clientCreated: false,
+      channelJoined: false,
+      tracksCreated: false,
+      tracksPublished: false,
+      eventsAttached: false
+    };
+
+    const logLifecycle = (step, status) => {
+      joinLifecycle[step] = status;
+      console.log(`[AgoraWeb] 📊 Join Status: ${JSON.stringify(joinLifecycle)}`);
+    };
+
+    const setupRemoteUserListeners = async () => {
+      if (!agoraClient || joinLifecycle.eventsAttached) return;
+
+      // Try classic Agora event API first
+      if (typeof agoraClient.on === 'function') {
+        console.log('[AgoraWeb] 📡 Attaching classic AgoraRTC events');
+        agoraClient.on('user-joined', async (user) => {
+          console.log(`[AgoraWeb] 👤 Remote user joined: uid=${user.uid}, hasAudio=${!!user.hasAudio}, hasVideo=${!!user.hasVideo}`);
+          remoteUsers[user.uid] = user;
+          console.log(`[AgoraWeb] 📊 Total remote users: ${Object.keys(remoteUsers).length}`);
+        });
+        agoraClient.on('user-left', (user) => {
+          console.log(`[AgoraWeb] 👤 Remote user left: uid=${user.uid}`);
+          delete remoteUsers[user.uid];
+          console.log(`[AgoraWeb] 📊 Total remote users: ${Object.keys(remoteUsers).length}`);
+        });
+        agoraClient.on('user-published', async (user, mediaType) => {
+          console.log(`[AgoraWeb] 🎥 Remote user published ${mediaType}: uid=${user.uid}`);
+        });
+        agoraClient.on('user-unpublished', (user, mediaType) => {
+          console.log(`[AgoraWeb] ❌ Remote user unpublished ${mediaType}: uid=${user.uid}`);
+        });
+        joinLifecycle.eventsAttached = true;
+        console.log(`[AgoraWeb] ✅ Classic event listeners attached`);
+        return;
+      }
+
+      // Try Iris-style event API
+      if (typeof agoraClient.addListener === 'function') {
+        console.log('[AgoraWeb] 📡 Attaching Iris-style events');
+        agoraClient.addListener('onUserJoined', (evt) => {
+          console.log('[AgoraWeb] 👤 onUserJoined', evt);
+          remoteUsers[evt.uid] = evt;
+        });
+        agoraClient.addListener('onUserLeft', (evt) => {
+          console.log('[AgoraWeb] 👤 onUserLeft', evt);
+          delete remoteUsers[evt.uid];
+        });
+        joinLifecycle.eventsAttached = true;
+        console.log(`[AgoraWeb] ✅ Iris event listeners attached`);
+        return;
+      }
+
+      console.warn('[AgoraWeb] ⚠️ Client has no known event API (no .on or .addListener); skipping event attachment');
+    };
+
+    window.agoraWebJoinChannel = function (appId, channelName, token, uid) {
+      // CRITICAL: Return a Promise immediately to avoid "jsPromise.then is null" errors
+      // Log all parameters immediately to catch undefined values
+      console.log("[AgoraWeb] 🚀 joinChannel called");
+      console.log("[AgoraWeb]   appId:", appId, "type:", typeof appId, "length:", appId ? appId.length : 'N/A');
+      console.log("[AgoraWeb]   channelName:", channelName, "type:", typeof channelName, "length:", channelName ? channelName.length : 'N/A');
+      console.log("[AgoraWeb]   token:", token ? (token.substring(0, 20) + '...') : 'null', "type:", typeof token, "length:", token ? token.length : 'N/A');
+      console.log("[AgoraWeb]   uid:", uid, "type:", typeof uid);
+
+      return (async function () {
+        try {
+          logLifecycle('started', true);
+
+          // Wait for adapter to initialize SDK detection
+          await window.AgoraAdapter.waitForSDK(5000);
+
+          if (!window.AgoraAdapter.isClassic && !window.AgoraAdapter.isIris) {
+            console.error("[AgoraWeb] ❌ No compatible Agora/Iris SDK detected");
+            logLifecycle('bridgeReady', false);
+            throw new Error("Agora/Iris SDK not loaded");
+          }
+          logLifecycle('bridgeReady', true);
+
+          if (!agoraClient) {
+            console.log("[AgoraWeb] 🔧 Creating Agora client using adapter...");
+            try {
+              agoraClient = await window.AgoraAdapter.createClient({ mode: "rtc", codec: "vp8" });
+              logLifecycle('clientCreated', true);
+              console.log("[AgoraWeb] ✅ Client created successfully", agoraClient);
+            } catch (err) {
+              console.error("[AgoraWeb] ❌ Failed to create client via adapter:", err.message);
+              logLifecycle('clientCreated', false);
+              throw err;
+            }
+          }
+
+          try {
+            console.log("[AgoraWeb] 🎯 Calling client join with feature detection...");
+            console.log("[AgoraWeb] Client methods available:", Object.getOwnPropertyNames(agoraClient || {}).slice(0, 30));
+
+            // Feature detection: try classic Agora join first
+            if (typeof agoraClient.join === 'function') {
+              console.log('[AgoraWeb] 📍 Using client.join() (classic Agora API)');
+              try {
+                const joinResult = agoraClient.join(appId, channelName, token, uid || null);
+                if (joinResult && typeof joinResult.then === 'function') {
+                  await joinResult;
+                }
+                console.log('[AgoraWeb] ✅ Successfully joined via classic API');
+              } catch (joinErr) {
+                throw new Error('Classic join failed: ' + joinErr.message);
+              }
+            }
+            // Try Iris-style joinChannel
+            else if (typeof agoraClient.joinChannel === 'function') {
+              console.log('[AgoraWeb] 📍 Using client.joinChannel() (Iris API)');
+              try {
+                const joinResult = agoraClient.joinChannel(token, channelName, uid || null);
+                if (joinResult && typeof joinResult.then === 'function') {
+                  await joinResult;
+                }
+                console.log('[AgoraWeb] ✅ Successfully joined via Iris API');
+              } catch (joinErr) {
+                throw new Error('Iris joinChannel failed: ' + joinErr.message);
+              }
+            }
+            // Try Iris low-level API using callIrisApiAsync
+            else if (typeof agoraClient.callIrisApiAsync === 'function') {
+              console.log('[AgoraWeb] 📍 Using Iris low-level API (callIrisApiAsync)');
+              try {
+                // Log the parameters we're about to send to Iris
+                console.log('[AgoraWeb] 🔍 Iris join params:', { token: token ? token.substring(0, 20) : 'null', channelId: channelName, uid: uid });
+
+                // CRITICAL: Iris API expects JSON string, not an object!
+                const joinParamsObj = {
+                  token: token || '',
+                  channelId: channelName,
+                  uid: parseInt(uid) || 0
+                };
+                const joinParamsJson = JSON.stringify(joinParamsObj);
+
+                console.log('[AgoraWeb] 🔄 Calling JoinChannelV2 via Iris API');
+                console.log('[AgoraWeb] 🔍 JSON params:', joinParamsJson);
+
+                let result;
+                try {
+                  result = await agoraClient.callIrisApiAsync('JoinChannelV2', joinParamsJson);
+                  console.log('[AgoraWeb] 🔍 JoinChannelV2 result:', result);
+                } catch (err1) {
+                  console.warn('[AgoraWeb] ⚠️ JoinChannelV2 failed:', err1.message);
+                  console.log('[AgoraWeb] 🔄 Trying JoinChannel with JSON string...');
+                  try {
+                    result = await agoraClient.callIrisApiAsync('JoinChannel', joinParamsJson);
+                    console.log('[AgoraWeb] 🔍 JoinChannel result:', result);
+                  } catch (err2) {
+                    console.warn('[AgoraWeb] ⚠️ JoinChannel failed:', err2.message);
+                    throw err2;
+                  }
+                }
+
+                window.__agoraChannel = agoraClient;
+                logLifecycle('channelJoined', true);
+                console.log('[AgoraWeb] ✅ Successfully joined via Iris low-level API');
+              } catch (joinErr) {
+                console.error('[AgoraWeb] ❌ Iris API join failed:', joinErr.message);
+                throw new Error('Iris callIrisApiAsync join failed: ' + joinErr.message);
+              }
+            }
+            // Try factory pattern: createChannel then join
+            else if (typeof agoraClient.createChannel === 'function') {
+              console.log('[AgoraWeb] 📍 Using client.createChannel() (factory pattern)');
+              let channelObj;
+              try {
+                const result = agoraClient.createChannel(channelName);
+                channelObj = result && typeof result.then === 'function' ? await result : result;
+              } catch (createErr) {
+                throw new Error('createChannel failed: ' + createErr.message);
+              }
+
+              if (!channelObj) {
+                throw new Error('createChannel returned null/undefined');
+              }
+
+              if (typeof channelObj.join === 'function') {
+                try {
+                  const joinResult = channelObj.join(token, uid || null);
+                  if (joinResult && typeof joinResult.then === 'function') {
+                    await joinResult;
+                  }
+                  window.__agoraChannel = channelObj;
+                  console.log('[AgoraWeb] ✅ Successfully joined channel via factory pattern');
+                } catch (joinErr) {
+                  throw new Error('Channel join failed: ' + joinErr.message);
+                }
+              } else {
+                throw new Error('Created channel object has no join method. Available: ' + Object.keys(channelObj || {}).join(', '));
+              }
+            } else {
+              const available = Object.keys(agoraClient || {});
+              throw new Error(`Client has no join-like method. Available: ${available.join(', ')}`);
+            }
+
+            console.log("[AgoraWeb] 🎥 Creating microphone and camera tracks...");
+            let tracks;
+            try {
+              tracks = await window.AgoraAdapter.createMicrophoneAndCameraTracks();
+              if (!tracks) {
+                throw new Error('Adapter returned null for tracks');
+              }
+              console.log("[AgoraWeb] ✅ SDK adapter created tracks successfully");
+            } catch (adapterErr) {
+              console.warn("[AgoraWeb] ⚠️ SDK adapter failed to create tracks:", adapterErr.message);
+              console.log("[AgoraWeb] 🔄 Falling back to getUserMedia...");
+              try {
+                tracks = await window.AgoraAdapter.createLocalTracksViaGetUserMedia(true, true);
+                if (!tracks) {
+                  throw new Error('getUserMedia fallback returned null');
+                }
+                console.log("[AgoraWeb] ✅ getUserMedia fallback succeeded");
+              } catch (gmErr) {
+                console.error("[AgoraWeb] ❌ getUserMedia fallback also failed:", gmErr.message);
+                logLifecycle('tracksCreated', false);
+                throw new Error('Both SDK and getUserMedia track creation failed: ' + gmErr.message);
+              }
+            }
+
+            // Ensure we have valid tracks before trying to destructure
+            if (!Array.isArray(tracks) && !tracks.stream) {
+              throw new Error('Tracks object is invalid (not array or stream): ' + JSON.stringify(tracks));
+            }
+
+            const [audioTrack, videoTrack] = tracks;
+            if (!audioTrack || !videoTrack) {
+              throw new Error('Track destructuring failed: missing audio or video track');
+            }
+            localAudioTrack = audioTrack;
+            localVideoTrack = videoTrack;
+            logLifecycle('tracksCreated', true);
+            console.log("[AgoraWeb] ✅ Tracks ready for publishing");
+
+            console.log("[AgoraWeb] 📤 Publishing local tracks with feature detection...");
+            let publishSucceeded = false;
+
+            // Feature detection for publish - with guards and Promise handling
+            if (agoraClient && typeof agoraClient.publish === 'function') {
+              try {
+                console.log('[AgoraWeb] 🔊 Using client.publish() (classic Agora)');
+                const pubResult = agoraClient.publish([audioTrack, videoTrack]);
+                if (pubResult && typeof pubResult.then === 'function') {
+                  await pubResult;
+                }
+                publishSucceeded = true;
+              } catch (pubErr) {
+                console.error('[AgoraWeb] ❌ client.publish() failed:', pubErr.message);
+              }
+            }
+
+            if (!publishSucceeded && agoraClient && typeof agoraClient.publishLocalTracks === 'function') {
+              try {
+                console.log('[AgoraWeb] 🔊 Using client.publishLocalTracks() (Iris)');
+                const pubResult = agoraClient.publishLocalTracks([audioTrack, videoTrack]);
+                if (pubResult && typeof pubResult.then === 'function') {
+                  await pubResult;
+                }
+                publishSucceeded = true;
+              } catch (pubErr) {
+                console.error('[AgoraWeb] ❌ client.publishLocalTracks() failed:', pubErr.message);
+              }
+            }
+
+            if (!publishSucceeded && window.__agoraChannel && typeof window.__agoraChannel.publish === 'function') {
+              try {
+                console.log('[AgoraWeb] 🔊 Using channel.publish() (factory pattern)');
+                const pubResult = window.__agoraChannel.publish([audioTrack, videoTrack]);
+                if (pubResult && typeof pubResult.then === 'function') {
+                  await pubResult;
+                }
+                publishSucceeded = true;
+              } catch (pubErr) {
+                console.error('[AgoraWeb] ❌ channel.publish() failed:', pubErr.message);
+              }
+            }
+
+            if (!publishSucceeded) {
+              console.warn('[AgoraWeb] ⚠️ Could not publish tracks with any known method');
+              console.log('[AgoraWeb] Available on client:', agoraClient ? Object.keys(agoraClient).filter(k => k.includes('publish')).join(', ') : 'N/A');
+            } else {
+              logLifecycle('tracksPublished', true);
+              console.log("[AgoraWeb] ✅ Successfully published tracks");
+            }
+
+            await setupRemoteUserListeners();
+
+            console.log("[AgoraWeb] ✅ JOIN COMPLETE - Full lifecycle successful");
+            console.log(`[AgoraWeb] 📊 Final Join Status: ${JSON.stringify(joinLifecycle)}`);
+            return true;
+          } catch (e) {
+            console.error("[AgoraWeb] ❌ joinChannel FAILED:", e);
+            console.error("[AgoraWeb]   Error name:", e?.name);
+            console.error("[AgoraWeb]   Error message:", e?.message);
+            console.error("[AgoraWeb]   Stack:", e?.stack);
+            console.error(`[AgoraWeb] 📊 Failed Join Status: ${JSON.stringify(joinLifecycle)}`);
+            throw e;
+          }
+        } catch (outerErr) {
+          console.error("[AgoraWeb] ❌ OUTER ERROR (should not reach here):", outerErr);
+          throw outerErr;
+        }
+      })();
+    };
+
+    window.getAgoraJoinStatus = () => {
+      return {
+        lifecycle: joinLifecycle,
+        remoteUserCount: Object.keys(remoteUsers).length,
+        remoteUserIds: Object.keys(remoteUsers),
+        hasLocalAudio: !!localAudioTrack,
+        hasLocalVideo: !!localVideoTrack,
+        clientExists: !!agoraClient
+      };
+    };
+
+    window.agoraWebLeaveChannel = async function () {
+      console.log("[AgoraWeb] Leaving channel...");
+      try {
+        if (localAudioTrack) {
+          localAudioTrack.close();
+          localAudioTrack = null;
+        }
+        if (localVideoTrack) {
+          localVideoTrack.close();
+          localVideoTrack = null;
+        }
+        if (agoraClient) {
+          await agoraClient.leave();
+        }
+        console.log("[AgoraWeb] ✅ Left channel");
+        return true;
+      } catch (e) {
+        console.error("[AgoraWeb] ❌ leaveChannel failed:", e);
+        throw e;
+      }
+    };
+
+    window.agoraWebMuteAudio = async function (muted) {
+      console.log("[AgoraWeb] Setting audio muted to:", muted);
+      try {
+        if (localAudioTrack) {
+          await localAudioTrack.setEnabled(!muted);
+        }
+        console.log("[AgoraWeb] ✅ Audio muted state updated");
+        return true;
+      } catch (e) {
+        console.error("[AgoraWeb] ❌ muteAudio failed:", e);
+        throw e;
+      }
+    };
+
+    window.agoraWebMuteVideo = async function (muted) {
+      console.log("[AgoraWeb] Setting video muted to:", muted);
+      try {
+        if (localVideoTrack) {
+          await localVideoTrack.setEnabled(!muted);
+        }
+        console.log("[AgoraWeb] ✅ Video muted state updated");
+        return true;
+      } catch (e) {
+        console.error("[AgoraWeb] ❌ muteVideo failed:", e);
+        throw e;
+      }
+    };
+
+    // Safe wrapper: ensures all methods always return Promises
+    window.agoraWeb = {
+      joinChannel: function (appId, channelName, token, uid) {
+        console.log('[AgoraWeb] 📋 SAFE: joinChannel wrapper called');
+        console.log('[AgoraWeb] 📋 Validating parameters:', {
+          appId: appId ? 'present' : 'MISSING',
+          channelName: channelName ? 'present' : 'MISSING',
+          token: token ? 'present' : 'MISSING',
+          uid: uid ? 'present' : 'MISSING'
+        });
+
+        // Ensure all params are non-null strings
+        if (!appId || !channelName) {
+          console.error('[AgoraWeb] ❌ SAFE: Missing critical params (appId or channelName)');
+          return Promise.reject(new Error('Missing appId or channelName'));
+        }
+
+        try {
+          const joinPromise = window.agoraWebJoinChannel(appId, channelName, token || '', uid || '0');
+          if (!joinPromise || typeof joinPromise.then !== 'function') {
+            console.error('[AgoraWeb] ❌ SAFE: joinChannel did not return a Promise, got:', typeof joinPromise);
+            return Promise.reject(new Error('joinChannel did not return a Promise'));
+          }
+          console.log('[AgoraWeb] ✅ SAFE: returning valid Promise from joinChannel');
+          return joinPromise;
+        } catch (err) {
+          console.error('[AgoraWeb] ❌ SAFE: joinChannel threw:', err.message);
+          return Promise.reject(err);
+        }
+      },
+      leaveChannel: function () {
+        console.log('[AgoraWeb] 📋 SAFE: leaveChannel wrapper called');
+        try {
+          const leavePromise = window.agoraWebLeaveChannel();
+          if (!leavePromise || typeof leavePromise.then !== 'function') {
+            console.error('[AgoraWeb] ❌ SAFE: leaveChannel did not return a Promise');
+            return Promise.resolve(false);
+          }
+          return leavePromise;
+        } catch (err) {
+          console.error('[AgoraWeb] ❌ SAFE: leaveChannel threw:', err.message);
+          return Promise.reject(err);
+        }
+      },
+      setMicMuted: function (muted) {
+        console.log('[AgoraWeb] 📋 SAFE: setMicMuted wrapper called with:', muted);
+        try {
+          const mutePromise = window.agoraWebMuteAudio(muted);
+          if (!mutePromise || typeof mutePromise.then !== 'function') {
+            console.error('[AgoraWeb] ❌ SAFE: setMicMuted did not return a Promise');
+            return Promise.resolve(true);
+          }
+          return mutePromise;
+        } catch (err) {
+          console.error('[AgoraWeb] ❌ SAFE: setMicMuted threw:', err.message);
+          return Promise.reject(err);
+        }
+      },
+      setVideoMuted: function (muted) {
+        console.log('[AgoraWeb] 📋 SAFE: setVideoMuted wrapper called with:', muted);
+        try {
+          const mutePromise = window.agoraWebMuteVideo(muted);
+          if (!mutePromise || typeof mutePromise.then !== 'function') {
+            console.error('[AgoraWeb] ❌ SAFE: setVideoMuted did not return a Promise');
+            return Promise.resolve(true);
+          }
+          return mutePromise;
+        } catch (err) {
+          console.error('[AgoraWeb] ❌ SAFE: setVideoMuted threw:', err.message);
+          return Promise.reject(err);
+        }
+      }
+    };
+
+    console.log("[AgoraWeb] ✅ Agora Web bridge initialized");
+    console.log("[AgoraWeb] typeof window.agoraWeb:", typeof window.agoraWeb);
+    console.log("[AgoraWeb] agoraWeb methods:", Object.keys(window.agoraWeb));
+
+    // ========== FLUTTER BOOT SEQUENCE ==========
+    function waitForAgoraSDK(timeoutMs = 10000) {
+      return new Promise((resolve, reject) => {
+        const start = Date.now();
+        const check = () => {
+          const hasAgoraRTC = typeof window.AgoraRTC !== 'undefined';
+          const hasIrisEngine = typeof window.IrisRtcEngine !== 'undefined';
+          if (hasAgoraRTC || hasIrisEngine) {
+            console.log('[AgoraWeb] ✅ Iris Web RTC available', { AgoraRTC: hasAgoraRTC, IrisRtcEngine: hasIrisEngine });
+            return resolve(true);
+          }
+          if (window.__AGORA_SDK_LOADED === false) {
+            console.error('[AgoraWeb] ❌ Agora SDK script failed to load (network or CDN error)');
+            return reject(new Error('Agora SDK script failed to load'));
+          }
+          if (Date.now() - start >= timeoutMs) {
+            console.error('[AgoraWeb] ❌ Iris Web RTC failed to become available within timeout', { timeoutMs });
+            return reject(new Error('Agora SDK not available within timeout'));
+          }
+          setTimeout(check, 100);
+        };
+        check();
+      });
+    }
+
+    window.addEventListener('load', async function () {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+
+      try {
+        await waitForAgoraSDK(10000);
+      } catch (err) {
+        console.error('[AgoraWeb] Critical: Agora SDK not available. Real-time features will be disabled until SDK loads.', err);
+        var loading = document.getElementById('loading');
+        if (loading) {
+          loading.querySelector('.loading-text').textContent = 'Loading failed: real-time features unavailable';
+        }
+      }
+
+      _flutter.loader.load({
+        serviceWorker: {
+          serviceWorkerVersion: null,
+        },
+        onEntrypointLoaded: async function (engineInitializer) {
+          let appRunner = await engineInitializer.initializeEngine({
+            renderer: "html",
+          });
+          await appRunner.runApp();
+          setTimeout(function () {
+            var el = document.getElementById('loading');
+            if (el) el.classList.add('hidden');
+          }, 500);
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

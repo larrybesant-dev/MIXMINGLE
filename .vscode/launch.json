@@ -1,0 +1,370 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    // ========================================
+    // FLUTTER - QUICK DEBUG
+    // ========================================
+    {
+      "name": "▶️ Flutter: Debug (Chrome)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--web-renderer",
+        "html"
+      ],
+      "deviceId": "chrome",
+      "flutterMode": "debug"
+    },
+    {
+      "name": "▶️ Flutter: Debug (Edge)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--web-renderer",
+        "html"
+      ],
+      "deviceId": "edge",
+      "flutterMode": "debug"
+    },
+    {
+      "name": "▶️ Flutter: Debug (Windows)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "deviceId": "windows",
+      "flutterMode": "debug"
+    },
+    // ========================================
+    // FLUTTER - RELEASE/PROFILE
+    // ========================================
+    {
+      "name": "🚀 Flutter: Profile (Chrome)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--web-renderer",
+        "html",
+        "--profile"
+      ],
+      "deviceId": "chrome",
+      "flutterMode": "profile"
+    },
+    {
+      "name": "🏁 Flutter: Release (Chrome)",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--web-renderer",
+        "html",
+        "--release"
+      ],
+      "deviceId": "chrome",
+      "flutterMode": "release"
+    },
+    // ========================================
+    // FLUTTER - WITH FIREBASE EMULATORS
+    // ========================================
+    {
+      "name": "🔥 Flutter: Debug with Firebase Emulators",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--web-renderer",
+        "html",
+        "--dart-define=USE_FIREBASE_EMULATOR=true"
+      ],
+      "deviceId": "chrome",
+      "flutterMode": "debug",
+      "preLaunchTask": "Firebase: Start emulators (auth,storage)"
+    },
+    // ========================================
+    // FLUTTER - SPECIFIC FEATURES
+    // ========================================
+    {
+      "name": "🎭 Flutter: Debug Auth Page",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--web-renderer",
+        "html",
+        "--dart-define=START_ROUTE=/auth"
+      ],
+      "deviceId": "chrome",
+      "flutterMode": "debug"
+    },
+    {
+      "name": "🎥 Flutter: Debug Video Room",
+      "type": "dart",
+      "request": "launch",
+      "program": "lib/main.dart",
+      "args": [
+        "--web-renderer",
+        "html",
+        "--dart-define=START_ROUTE=/video"
+      ],
+      "deviceId": "chrome",
+      "flutterMode": "debug"
+    },
+    // ========================================
+    // FLUTTER - TESTING
+    // ========================================
+    {
+      "name": "CI/CD: Full Pipeline",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/pipeline/run_pipeline.ps1",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass"
+      ],
+      "env": {
+        "DISCORD_WEBHOOK_URL": "", // Add your webhook here
+        "SLACK_WEBHOOK_URL": "", // Optional
+        "EMAIL_ALERT": "", // Optional
+        "USE_WASM": "false"
+      }
+    },
+    {
+      "name": "CI/CD: Dry Run",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/pipeline/ci_copilot_runner.ps1",
+      "args": [
+        "-DryRun"
+      ],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass"
+      ],
+      "env": {
+        "DISCORD_WEBHOOK_URL": "",
+        "SLACK_WEBHOOK_URL": "",
+        "EMAIL_ALERT": "",
+        "USE_WASM": "false"
+      }
+    },
+    {
+      "name": "CI/CD: Run Tests Only",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/pipeline/run_pipeline.ps1",
+      "args": [
+        "-TestsOnly"
+      ],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass"
+      ],
+      "env": {
+        "DISCORD_WEBHOOK_URL": "",
+        "SLACK_WEBHOOK_URL": "",
+        "EMAIL_ALERT": "",
+        "USE_WASM": "false"
+      }
+    },
+    {
+      "name": "Master Pipeline (Full)",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/master_pipeline.ps1",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass"
+      ],
+      "env": {
+        "DISCORD_WEBHOOK_URL": "",
+        "SLACK_WEBHOOK_URL": "",
+        "EMAIL_ALERT": "",
+        "USE_WASM": "false"
+      }
+    },
+    {
+      "name": "Master Pipeline (Dry Run)",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/master_pipeline.ps1",
+      "args": [
+        "-DryRun"
+      ],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass"
+      ],
+      "env": {
+        "DISCORD_WEBHOOK_URL": "",
+        "SLACK_WEBHOOK_URL": "",
+        "EMAIL_ALERT": "",
+        "USE_WASM": "false"
+      }
+    },
+    {
+      "name": "Flutter: Debug Storage Upload Test (Chrome)",
+      "type": "dart",
+      "request": "launch",
+      "program": "test/firebase_storage_integration_test.dart",
+      "args": [
+        "--platform",
+        "chrome"
+      ]
+    },
+    {
+      "name": "Flutter: Debug All Tests (Chrome)",
+      "type": "dart",
+      "request": "launch",
+      "program": "test",
+      "args": [
+        "--platform",
+        "chrome"
+      ]
+    },
+    // ========================================
+    // ULTIMATE PRODUCTION PIPELINE
+    // ========================================
+    {
+      "name": "🚀 Ultimate Production (Full)",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/ultimate_production.ps1",
+      "args": [],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass"
+      ],
+      "env": {
+        "DISCORD_WEBHOOK_URL": "",
+        "SLACK_WEBHOOK_URL": "",
+        "EMAIL_ALERT": ""
+      },
+      "presentation": {
+        "group": "Production Builds",
+        "order": 1
+      }
+    },
+    {
+      "name": "🔄 Ultimate Production (Dry Run)",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/ultimate_production.ps1",
+      "args": [
+        "-DryRun"
+      ],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass"
+      ],
+      "env": {
+        "DISCORD_WEBHOOK_URL": "",
+        "SLACK_WEBHOOK_URL": "",
+        "EMAIL_ALERT": ""
+      },
+      "presentation": {
+        "group": "Production Builds",
+        "order": 2
+      }
+    },
+    {
+      "name": "🌐 Ultimate Production (Web Only)",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/ultimate_production.ps1",
+      "args": [
+        "-SkipAndroid"
+      ],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass"
+      ],
+      "env": {
+        "DISCORD_WEBHOOK_URL": "",
+        "SLACK_WEBHOOK_URL": "",
+        "EMAIL_ALERT": ""
+      },
+      "presentation": {
+        "group": "Production Builds",
+        "order": 3
+      }
+    },
+    {
+      "name": "📱 Ultimate Production (Android Only)",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/ultimate_production.ps1",
+      "args": [
+        "-SkipWeb"
+      ],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass"
+      ],
+      "env": {
+        "DISCORD_WEBHOOK_URL": "",
+        "SLACK_WEBHOOK_URL": "",
+        "EMAIL_ALERT": ""
+      },
+      "presentation": {
+        "group": "Production Builds",
+        "order": 4
+      }
+    },
+    {
+      "name": "⚡ Ultimate Production (No Tests)",
+      "type": "PowerShell",
+      "request": "launch",
+      "script": "${workspaceFolder}/ultimate_production.ps1",
+      "args": [
+        "-SkipTests"
+      ],
+      "cwd": "${workspaceFolder}",
+      "runtimeExecutable": "pwsh",
+      "runtimeArgs": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass"
+      ],
+      "env": {
+        "DISCORD_WEBHOOK_URL": "",
+        "SLACK_WEBHOOK_URL": "",
+        "EMAIL_ALERT": ""
+      },
+      "presentation": {
+        "group": "Production Builds",
+        "order": 5
+      }
+    }
+  ]
+}

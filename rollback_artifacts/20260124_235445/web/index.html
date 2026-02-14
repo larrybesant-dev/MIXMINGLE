@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <base href="/">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Connect and mingle with people in real-time video rooms.">
+  <meta name="author" content="Mix & Mingle Team">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://mix-and-mingle-v2.web.app">
+
+  <title>Mix & Mingle</title>
+
+  <!-- PWA / Icons -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Agora Flutter Web Support - Iris Web RTC (REQUIRED for agora_rtc_engine Flutter package) -->
+  <!-- Official download link from pub.dev: https://pub.dev/packages/agora_rtc_engine -->
+  <script src="https://download.agora.io/sdk/release/iris-web-rtc_n450_w4220_0.8.6.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      z-index: 9999;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      transition: opacity 0.5s ease-out;
+      pointer-events: none;
+    }
+
+    .logo {
+      width: 120px;
+      height: 120px;
+      margin-bottom: 30px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    .logo-circle {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #4A90E2 0%, #7B68EE 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 56px;
+      font-weight: bold;
+      color: white;
+      box-shadow: 0 10px 40px rgba(74, 144, 226, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .dancer {
+      font-size: 56px;
+      animation: musicFloat 2s ease-in-out infinite;
+      display: inline-block;
+    }
+
+    .logo-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: white;
+      margin-top: 10px;
+      letter-spacing: 2px;
+    }
+
+    @keyframes musicFloat {
+
+      0%,
+      100% {
+        transform: translateY(0px) scale(1);
+        opacity: 1;
+      }
+
+      50% {
+        transform: translateY(-15px) scale(1.1);
+        opacity: 0.8;
+      }
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(74, 144, 226, 0.2);
+      border-top-color: #4A90E2;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 10px;
+    }
+
+    .loading-subtext {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 14px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+    }
+  </style>
+
+  <!-- 100ms SDK - temporarily disabled until proper version found -->
+  <!-- <script src="https://unpkg.com/@100mslive/hms-video-web@latest/dist/index.js"></script> -->
+
+  <!-- Flutter loads -->
+  <script src="flutter.js" defer></script>
+  <script src="flutter_bootstrap.js" async></script>
+
+  <!-- Flutter handles Firebase initialization - no external SDKs needed -->
+
+  <!-- Guard against Chrome extension API errors -->
+  <script>
+    // Polyfill for Node.js process object (required by 100ms SDK)
+    if (typeof window !== 'undefined' && typeof window.process === 'undefined') {
+      window.process = {
+        env: {},
+        version: '',
+        platform: 'browser',
+        nextTick: function (callback) {
+          setTimeout(callback, 0);
+        }
+      };
+    }
+
+    // Prevent Chrome extension API errors in web context
+    if (typeof window !== 'undefined') {
+      // Mock chrome API to prevent errors from extension scripts
+      if (!window.chrome) {
+        window.chrome = {
+          runtime: {
+            id: undefined,
+            onMessage: { addListener: function () { } },
+            sendMessage: function () { }
+          },
+          tabs: {
+            onUpdated: { addListener: function () { } },
+            onChanged: { addListener: function () { } },
+            query: function () { },
+            create: function () { },
+            update: function () { }
+          },
+          contextMenus: {
+            onClicked: { addListener: function () { } },
+            create: function () { }
+          },
+          downloads: {
+            onCreated: { addListener: function () { } },
+            download: function () { }
+          },
+          storage: {
+            local: {
+              get: function () { },
+              set: function () { }
+            }
+          }
+        };
+      }
+
+      // Ensure chrome.runtime exists
+      if (!window.chrome.runtime) {
+        window.chrome.runtime = {
+          id: undefined,
+          onMessage: { addListener: function () { } },
+          sendMessage: function () { }
+        };
+      }
+    }
+  </script>
+
+  <!-- Firebase is initialized by Flutter - no need for duplicate initialization here -->
+  <!-- <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4",
+      authDomain: "mix-and-mingle-v2.firebaseapp.com",
+      projectId: "mix-and-mingle-v2",
+      storageBucket: "mix-and-mingle-v2.firebasestorage.app",
+      messagingSenderId: "980846719834",
+      appId: "1:980846719834:web:a8981485ee574b25077963"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+  </script> -->
+</head>
+
+<body>
+  <!-- Loading Screen -->
+  <div id="loading">
+    <div class="logo">
+      <div class="logo-circle">
+        <span class="dancer">🎵</span>
+      </div>
+      <div class="logo-text">MIX & MINGLE</div>
+    </div>
+    <div class="spinner"></div>
+    <div class="loading-text">Loading your experience...</div>
+    <div class="loading-subtext">Connecting people worldwide</div>
+  </div>
+
+  <script>
+    // Check if Iris Web RTC is loaded
+    function waitForAgoraSDK() {
+      return new Promise((resolve) => {
+        const checkSDK = () => {
+          // iris-web-rtc exposes window.AgoraRTC and window.IrisRtcEngine
+          const hasAgoraRTC = typeof window.AgoraRTC !== 'undefined';
+          const hasIrisEngine = typeof window.IrisRtcEngine !== 'undefined';
+
+          if (hasAgoraRTC || hasIrisEngine) {
+            console.log('✅ Iris Web RTC loaded - Agora available:', {
+              AgoraRTC: hasAgoraRTC,
+              IrisRtcEngine: hasIrisEngine
+            });
+            return true;
+          }
+          return false;
+        };
+
+        if (checkSDK()) {
+          resolve();
+        } else {
+          let attempts = 0;
+          const maxAttempts = 100; // 10 seconds
+          const checkInterval = setInterval(() => {
+            attempts++;
+            if (checkSDK()) {
+              clearInterval(checkInterval);
+              resolve();
+            } else if (attempts >= maxAttempts) {
+              clearInterval(checkInterval);
+              console.error('❌ Iris Web RTC failed to load after 10 seconds');
+              console.error('Please check: https://download.agora.io/sdk/release/iris-web-rtc_n450_w4220_0.8.6.js');
+              resolve(); // Continue anyway
+            }
+          }, 100);
+        }
+      });
+    }
+
+    window.addEventListener('load', async function (ev) {
+      // Disable service worker completely
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          for (let registration of registrations) {
+            registration.unregister();
+          }
+        });
+      }
+
+      // Wait for Agora SDK to be ready
+      await waitForAgoraSDK();
+
+      _flutter.loader.load({
+        serviceWorker: {
+          serviceWorkerVersion: null,
+        },
+        onEntrypointLoaded: async function (engineInitializer) {
+          // Force HTML renderer to avoid CanvasKit issues
+          let appRunner = await engineInitializer.initializeEngine({
+            renderer: "html",
+          });
+          await appRunner.runApp();
+          // Hide loading screen
+          setTimeout(function () {
+            document.getElementById('loading').classList.add('hidden');
+          }, 500);
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>

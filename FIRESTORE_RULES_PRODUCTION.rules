@@ -1,0 +1,189 @@
+/**
+ * PRODUCTION-READY FIRESTORE SECURITY RULES FOR MIX & MINGLE
+ *
+ * Deploy with: firebase deploy --only firestore:rules
+ *
+ * This file implements complete access control for:
+ * - User profiles and blocking
+ * - Room creation and management
+ * - Participant tracking
+ * - Real-time messaging
+ * - Moderation and permissions
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================
+    // HELPER FUNCTIONS
+    // ==========================================
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function currentUserId() {
+      return request.auth.uid;
+    }
+
+    function isRoomOwner(roomId) {
+      return get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId == currentUserId();
+    }
+
+    function isRoomModerator(roomId) {
+      let participantDoc = get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(currentUserId()));
+      return participantDoc.data.role in ['owner', 'moderator'];
+    }
+
+    function hasRoomPermission(roomId) {
+      return isRoomOwner(roomId) || isRoomModerator(roomId);
+    }
+
+    function isRoomParticipant(roomId) {
+      return exists(/databases/$(database)/documents/rooms/$(roomId)/participants/$(currentUserId()));
+    }
+
+    function validUserData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['displayName', 'isOnline', 'lastSeen'])
+        && data.displayName is string
+        && data.displayName.size() > 0
+        && data.displayName.size() <= 100
+        && data.isOnline is bool
+        && data.lastSeen is timestamp;
+    }
+
+    function validRoomData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['name', 'ownerId', 'createdAt', 'isPrivate', 'maxUsers'])
+        && data.name is string
+        && data.name.size() > 0
+        && data.name.size() <= 200
+        && data.ownerId is string
+        && data.ownerId == currentUserId()
+        && data.createdAt is timestamp
+        && data.isPrivate is bool
+        && data.maxUsers is int
+        && data.maxUsers >= 1
+        && data.maxUsers <= 1000;
+    }
+
+    function validParticipantData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['role', 'isVideoOn', 'isAudioOn', 'joinedAt'])
+        && data.role in ['owner', 'moderator', 'speaker', 'listener']
+        && data.isVideoOn is bool
+        && data.isAudioOn is bool
+        && data.joinedAt is timestamp;
+    }
+
+    function validMessageData() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['text', 'senderId', 'senderDisplayName', 'createdAt', 'type'])
+        && data.text is string
+        && data.text.size() > 0
+        && data.text.size() <= 5000
+        && data.senderId is string
+        && data.senderId == currentUserId()
+        && data.senderDisplayName is string
+        && data.createdAt is timestamp
+        && data.type in ['chat', 'system', 'moderation'];
+    }
+
+    // ==========================================
+    // USER PROFILES COLLECTION
+    // ==========================================
+
+    match /users/{userId} {
+      allow read: if isAuth() && (request.auth.uid == userId || resource.data.isPublic == true);
+
+      allow create: if isAuth() && request.auth.uid == userId && validUserData();
+
+      allow update: if isAuth() && request.auth.uid == userId && validUserData()
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // ROOMS COLLECTION
+    // ==========================================
+
+    match /rooms/{roomId} {
+      allow read: if isAuth();
+
+      allow create: if isAuth()
+        && validRoomData()
+        && request.resource.data.activeUserCount == 0
+        && request.resource.data.allowVideo is bool
+        && request.resource.data.allowAudio is bool;
+
+      allow update: if isAuth() && isRoomOwner(roomId)
+        && request.resource.data.ownerId == resource.data.ownerId
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      allow delete: if isAuth() && isRoomOwner(roomId);
+
+      // ==========================================
+      // PARTICIPANTS SUBCOLLECTION
+      // ==========================================
+
+      match /participants/{participantUserId} {
+        allow read: if isAuth() && isRoomParticipant(roomId);
+
+        allow create: if isAuth()
+          && request.auth.uid == participantUserId
+          && validParticipantData()
+          && request.resource.data.joinedAt == request.time;
+
+        allow update: if isAuth() && (
+          hasRoomPermission(roomId) ||
+          (request.auth.uid == participantUserId &&
+           request.resource.data.role == resource.data.role &&
+           request.resource.data.joinedAt == resource.data.joinedAt)
+          );
+
+        allow delete: if isAuth() && (
+          hasRoomPermission(roomId) ||
+          request.auth.uid == participantUserId
+          );
+      }
+
+      // ==========================================
+      // MESSAGES SUBCOLLECTION
+      // ==========================================
+
+      match /messages/{messageId} {
+        allow read: if isAuth() && isRoomParticipant(roomId);
+
+        allow create: if isAuth()
+          && isRoomParticipant(roomId)
+          && validMessageData()
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.senderId == currentUserId();
+
+        allow update: if isAuth() && isRoomParticipant(roomId) && (
+          (request.auth.uid == resource.data.senderId &&
+           request.time < resource.data.createdAt + duration.value(300, 's') &&
+           request.resource.data.isEdited == true) ||
+          hasRoomPermission(roomId)
+          );
+
+        allow delete: if isAuth() && isRoomParticipant(roomId) && (
+          (request.auth.uid == resource.data.senderId &&
+           request.time < resource.data.createdAt + duration.value(300, 's')) ||
+          hasRoomPermission(roomId)
+          );
+      }
+    }
+
+    // ==========================================
+    // CATCH-ALL (deny everything else)
+    // ==========================================
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

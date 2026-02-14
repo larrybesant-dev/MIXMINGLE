@@ -1,0 +1,47 @@
+# Flutter Native Splash Configuration
+# Run: flutter pub run flutter_native_splash:create
+
+flutter_native_splash:
+  # Main background color
+  color: "#0D0D0D"
+  color_dark: "#0D0D0D"
+
+  # Logo image (will need to create this asset)
+  # image: assets/images/splash_logo.png
+  # image_dark: assets/images/splash_logo.png
+
+  # Branding image at bottom (optional)
+  # branding: assets/images/branding.png
+  # branding_dark: assets/images/branding.png
+
+  # Logo background color (for adaptive icons on Android 12+)
+  android_12:
+    color: "#0D0D0D"
+    color_dark: "#0D0D0D"
+    # icon_background_color: "#0D0D0D"
+    # icon_background_color_dark: "#0D0D0D"
+    # image: assets/images/splash_logo_android12.png
+    # image_dark: assets/images/splash_logo_android12.png
+
+  # Platform-specific settings
+  android: true
+  ios: true
+  web: true
+
+  # Android settings
+  android_gravity: center
+  android_screen_orientation: portrait
+
+  # iOS settings
+  ios_content_mode: center
+
+  # Web settings
+  web_image_mode: center
+
+  # Fullscreen splash (hide status/navigation bars)
+  fullscreen: true
+
+# Note: To use this configuration:
+# 1. Add flutter_native_splash dependency to pubspec.yaml
+# 2. Create the splash logo images in assets/images/
+# 3. Run: dart run flutter_native_splash:create

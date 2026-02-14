@@ -1,0 +1,28 @@
+# VS Code Workspace Configuration
+# This file defines workspace-specific settings for the MixMingle Flutter project
+
+folders:
+  - path: .
+    name: "MixMingle (Root)"
+
+settings:
+  # Inherit all settings from .vscode/settings.json
+
+extensions:
+  recommendations:
+    - dart-code.dart-code
+    - dart-code.flutter
+    - firebase.vscode-firebase-explorer
+    - toba.vsfire
+    - ms-vscode.powershell
+    - usernamehw.errorlens
+    - eamodio.gitlens
+    - gruntfuggly.todo-tree
+    - nash.awesome-flutter-snippets
+    - github.copilot
+
+launch:
+  # See .vscode/launch.json for configurations
+
+tasks:
+  # See .vscode/tasks.json for configurations

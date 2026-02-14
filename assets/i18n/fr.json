@@ -1,0 +1,230 @@
+{
+  "app": {
+    "name": "MixMingle",
+    "tagline": "Connectez. Créez. Célébrez."
+  },
+  "auth": {
+    "login": {
+      "title": "Bon retour",
+      "subtitle": "Connectez-vous pour continuer",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "forgot_password": "Mot de passe oublié ?",
+      "sign_in": "Se connecter",
+      "no_account": "Vous n'avez pas de compte ?",
+      "sign_up": "S'inscrire"
+    },
+    "register": {
+      "title": "Créer un compte",
+      "subtitle": "Rejoignez notre communauté",
+      "name": "Nom complet",
+      "email": "E-mail",
+      "password": "Mot de passe",
+      "confirm_password": "Confirmer le mot de passe",
+      "agree_terms": "J'accepte les Conditions d'utilisation",
+      "create_account": "Créer un compte",
+      "have_account": "Vous avez déjà un compte ?",
+      "sign_in": "Se connecter"
+    },
+    "errors": {
+      "invalid_email": "Veuillez entrer une adresse e-mail valide",
+      "weak_password": "Le mot de passe doit contenir au moins 8 caractères",
+      "email_in_use": "Cet e-mail est déjà enregistré",
+      "wrong_password": "Mot de passe incorrect",
+      "user_not_found": "Aucun compte trouvé avec cet e-mail"
+    }
+  },
+  "home": {
+    "title": "Accueil",
+    "welcome": "Bienvenue, {name} !",
+    "discover": "Découvrir",
+    "trending": "Tendances",
+    "for_you": "Pour Vous",
+    "live_now": "En Direct",
+    "see_all": "Voir Tout"
+  },
+  "rooms": {
+    "title": "Salons",
+    "create": "Créer un Salon",
+    "join": "Rejoindre un Salon",
+    "live": "EN DIRECT",
+    "viewers": {
+      "value": "{count} spectateurs",
+      "plurals": {
+        "zero": "Aucun spectateur",
+        "one": "1 spectateur",
+        "other": "{count} spectateurs"
+      }
+    },
+    "participants": {
+      "value": "{count} participants",
+      "plurals": {
+        "zero": "Aucun participant",
+        "one": "1 participant",
+        "other": "{count} participants"
+      }
+    },
+    "create_modal": {
+      "title": "Créer un Salon",
+      "room_name": "Nom du Salon",
+      "room_name_placeholder": "Entrez un nom accrocheur...",
+      "description": "Description",
+      "description_placeholder": "De quoi parle ce salon ?",
+      "category": "Catégorie",
+      "visibility": "Visibilité",
+      "public": "Public",
+      "private": "Privé",
+      "create_button": "Créer le Salon"
+    },
+    "categories": {
+      "music": "Musique",
+      "gaming": "Jeux Vidéo",
+      "talk": "Discussion",
+      "education": "Éducation",
+      "entertainment": "Divertissement",
+      "sports": "Sports",
+      "other": "Autre"
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "edit": "Modifier le Profil",
+    "followers": "Abonnés",
+    "following": "Abonnements",
+    "posts": "Publications",
+    "rooms_hosted": "Salons Hébergés",
+    "settings": "Paramètres",
+    "logout": "Déconnexion",
+    "about": "À propos",
+    "interests": "Centres d'intérêt"
+  },
+  "chat": {
+    "title": "Chat",
+    "send": "Envoyer",
+    "message_placeholder": "Tapez un message...",
+    "no_messages": "Aucun message pour l'instant",
+    "start_conversation": "Commencez la conversation !",
+    "blocked": "Cet utilisateur a été bloqué",
+    "deleted": "Message supprimé"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "Aucune notification",
+    "mark_read": "Tout marquer comme lu",
+    "types": {
+      "follow": "{name} a commencé à vous suivre",
+      "like": "{name} a aimé votre publication",
+      "comment": "{name} a commenté votre publication",
+      "room_invite": "{name} vous a invité dans un salon",
+      "room_live": "{name} est en direct !",
+      "gift": "{name} vous a envoyé un cadeau"
+    }
+  },
+  "gifts": {
+    "title": "Cadeaux",
+    "send": "Envoyer un Cadeau",
+    "select": "Sélectionnez un cadeau",
+    "balance": "Solde : {amount}",
+    "insufficient": "Solde insuffisant",
+    "buy_coins": "Acheter des Pièces",
+    "sent": "Cadeau envoyé !",
+    "received": "Vous avez reçu un cadeau de {name} !"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "account": "Compte",
+    "privacy": "Confidentialité",
+    "notifications": "Notifications",
+    "appearance": "Apparence",
+    "language": "Langue",
+    "help": "Aide et Support",
+    "about": "À propos",
+    "version": "Version {version}",
+    "dark_mode": "Mode Sombre",
+    "push_notifications": "Notifications Push",
+    "email_notifications": "Notifications par E-mail"
+  },
+  "creator": {
+    "dashboard": "Tableau de Bord Créateur",
+    "earnings": "Revenus",
+    "total_earnings": "Revenus Totaux",
+    "pending_balance": "Solde en Attente",
+    "payout": "Demander un Paiement",
+    "tier": "Niveau Créateur",
+    "analytics": "Analytiques",
+    "views": "Vues Totales",
+    "engagement": "Taux d'Engagement"
+  },
+  "time": {
+    "just_now": "À l'instant",
+    "minutes_ago": {
+      "value": "il y a {count} minutes",
+      "plurals": {
+        "one": "il y a 1 minute",
+        "other": "il y a {count} minutes"
+      }
+    },
+    "hours_ago": {
+      "value": "il y a {count} heures",
+      "plurals": {
+        "one": "il y a 1 heure",
+        "other": "il y a {count} heures"
+      }
+    },
+    "days_ago": {
+      "value": "il y a {count} jours",
+      "plurals": {
+        "one": "Hier",
+        "other": "il y a {count} jours"
+      }
+    },
+    "months_ago": {
+      "value": "il y a {count} mois",
+      "plurals": {
+        "one": "il y a 1 mois",
+        "other": "il y a {count} mois"
+      }
+    },
+    "years_ago": {
+      "value": "il y a {count} ans",
+      "plurals": {
+        "one": "il y a 1 an",
+        "other": "il y a {count} ans"
+      }
+    }
+  },
+  "common": {
+    "ok": "OK",
+    "cancel": "Annuler",
+    "save": "Enregistrer",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "done": "Terminé",
+    "loading": "Chargement...",
+    "error": "Erreur",
+    "success": "Succès",
+    "retry": "Réessayer",
+    "search": "Rechercher",
+    "search_placeholder": "Rechercher...",
+    "no_results": "Aucun résultat trouvé",
+    "share": "Partager",
+    "report": "Signaler",
+    "block": "Bloquer",
+    "unblock": "Débloquer",
+    "follow": "Suivre",
+    "unfollow": "Ne plus suivre",
+    "continue": "Continuer",
+    "skip": "Passer"
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite. Veuillez réessayer.",
+    "network": "Pas de connexion internet",
+    "timeout": "La requête a expiré",
+    "unauthorized": "Vous devez vous connecter pour continuer",
+    "permission_denied": "Permission refusée",
+    "not_found": "Non trouvé"
+  }
+}

@@ -1,0 +1,230 @@
+{
+  "app": {
+    "name": "MixMingle",
+    "tagline": "Connect. Create. Celebrate."
+  },
+  "auth": {
+    "login": {
+      "title": "Welcome Back",
+      "subtitle": "Sign in to continue",
+      "email": "Email",
+      "password": "Password",
+      "forgot_password": "Forgot Password?",
+      "sign_in": "Sign In",
+      "no_account": "Don't have an account?",
+      "sign_up": "Sign Up"
+    },
+    "register": {
+      "title": "Create Account",
+      "subtitle": "Join our community",
+      "name": "Full Name",
+      "email": "Email",
+      "password": "Password",
+      "confirm_password": "Confirm Password",
+      "agree_terms": "I agree to the Terms of Service",
+      "create_account": "Create Account",
+      "have_account": "Already have an account?",
+      "sign_in": "Sign In"
+    },
+    "errors": {
+      "invalid_email": "Please enter a valid email address",
+      "weak_password": "Password must be at least 8 characters",
+      "email_in_use": "This email is already registered",
+      "wrong_password": "Incorrect password",
+      "user_not_found": "No account found with this email"
+    }
+  },
+  "home": {
+    "title": "Home",
+    "welcome": "Welcome, {name}!",
+    "discover": "Discover",
+    "trending": "Trending Now",
+    "for_you": "For You",
+    "live_now": "Live Now",
+    "see_all": "See All"
+  },
+  "rooms": {
+    "title": "Rooms",
+    "create": "Create Room",
+    "join": "Join Room",
+    "live": "LIVE",
+    "viewers": {
+      "value": "{count} viewers",
+      "plurals": {
+        "zero": "No viewers",
+        "one": "1 viewer",
+        "other": "{count} viewers"
+      }
+    },
+    "participants": {
+      "value": "{count} participants",
+      "plurals": {
+        "zero": "No participants",
+        "one": "1 participant",
+        "other": "{count} participants"
+      }
+    },
+    "create_modal": {
+      "title": "Create a Room",
+      "room_name": "Room Name",
+      "room_name_placeholder": "Enter a catchy name...",
+      "description": "Description",
+      "description_placeholder": "What's this room about?",
+      "category": "Category",
+      "visibility": "Visibility",
+      "public": "Public",
+      "private": "Private",
+      "create_button": "Create Room"
+    },
+    "categories": {
+      "music": "Music",
+      "gaming": "Gaming",
+      "talk": "Talk & Chat",
+      "education": "Education",
+      "entertainment": "Entertainment",
+      "sports": "Sports",
+      "other": "Other"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "edit": "Edit Profile",
+    "followers": "Followers",
+    "following": "Following",
+    "posts": "Posts",
+    "rooms_hosted": "Rooms Hosted",
+    "settings": "Settings",
+    "logout": "Log Out",
+    "about": "About",
+    "interests": "Interests"
+  },
+  "chat": {
+    "title": "Chat",
+    "send": "Send",
+    "message_placeholder": "Type a message...",
+    "no_messages": "No messages yet",
+    "start_conversation": "Start the conversation!",
+    "blocked": "This user has been blocked",
+    "deleted": "Message deleted"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "empty": "No notifications",
+    "mark_read": "Mark all as read",
+    "types": {
+      "follow": "{name} started following you",
+      "like": "{name} liked your post",
+      "comment": "{name} commented on your post",
+      "room_invite": "{name} invited you to a room",
+      "room_live": "{name} is now live!",
+      "gift": "{name} sent you a gift"
+    }
+  },
+  "gifts": {
+    "title": "Gifts",
+    "send": "Send Gift",
+    "select": "Select a gift",
+    "balance": "Balance: {amount}",
+    "insufficient": "Insufficient balance",
+    "buy_coins": "Buy Coins",
+    "sent": "Gift sent!",
+    "received": "You received a gift from {name}!"
+  },
+  "settings": {
+    "title": "Settings",
+    "account": "Account",
+    "privacy": "Privacy",
+    "notifications": "Notifications",
+    "appearance": "Appearance",
+    "language": "Language",
+    "help": "Help & Support",
+    "about": "About",
+    "version": "Version {version}",
+    "dark_mode": "Dark Mode",
+    "push_notifications": "Push Notifications",
+    "email_notifications": "Email Notifications"
+  },
+  "creator": {
+    "dashboard": "Creator Dashboard",
+    "earnings": "Earnings",
+    "total_earnings": "Total Earnings",
+    "pending_balance": "Pending Balance",
+    "payout": "Request Payout",
+    "tier": "Creator Tier",
+    "analytics": "Analytics",
+    "views": "Total Views",
+    "engagement": "Engagement Rate"
+  },
+  "time": {
+    "just_now": "Just now",
+    "minutes_ago": {
+      "value": "{count} minutes ago",
+      "plurals": {
+        "one": "1 minute ago",
+        "other": "{count} minutes ago"
+      }
+    },
+    "hours_ago": {
+      "value": "{count} hours ago",
+      "plurals": {
+        "one": "1 hour ago",
+        "other": "{count} hours ago"
+      }
+    },
+    "days_ago": {
+      "value": "{count} days ago",
+      "plurals": {
+        "one": "Yesterday",
+        "other": "{count} days ago"
+      }
+    },
+    "months_ago": {
+      "value": "{count} months ago",
+      "plurals": {
+        "one": "1 month ago",
+        "other": "{count} months ago"
+      }
+    },
+    "years_ago": {
+      "value": "{count} years ago",
+      "plurals": {
+        "one": "1 year ago",
+        "other": "{count} years ago"
+      }
+    }
+  },
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "retry": "Retry",
+    "search": "Search",
+    "search_placeholder": "Search...",
+    "no_results": "No results found",
+    "share": "Share",
+    "report": "Report",
+    "block": "Block",
+    "unblock": "Unblock",
+    "follow": "Follow",
+    "unfollow": "Unfollow",
+    "continue": "Continue",
+    "skip": "Skip"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "No internet connection",
+    "timeout": "Request timed out",
+    "unauthorized": "You need to log in to continue",
+    "permission_denied": "Permission denied",
+    "not_found": "Not found"
+  }
+}

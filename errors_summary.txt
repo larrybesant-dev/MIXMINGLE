@@ -1,0 +1,100 @@
+The argument type 'String?' can't be assigned to the parameter type 'String'.  - lib\features\events\screens\event_details_screen.dart:353:33 - argument_type_not_assignable
+The argument type 'String?' can't be assigned to the parameter type 'String'.  - lib\features\matching\screens\matches_list_page.dart:213:25 - argument_type_not_assignable
+The argument type 'String?' can't be assigned to the parameter type 'String'.  - lib\features\matching\screens\matches_list_page.dart:283:25 - argument_type_not_assignable
+The named parameter 'style' isn't defined - lib\features\onboarding_flow.dart:273:21 - undefined_named_parameter
+The argument type 'String?' can't be assigned to the parameter type 'String'.  - lib\features\profile\screens\user_profile_page.dart:130:33 - argument_type_not_assignable
+The named parameter 'description' is required, but there's no corresponding argument - lib\features\profile\screens\user_profile_page.dart:417:71 - missing_required_argument
+The named parameter 'reportedUserId' is required, but there's no corresponding argument - lib\features\profile\screens\user_profile_page.dart:417:71 - missing_required_argument
+The named parameter 'type' is required, but there's no corresponding argument - lib\features\profile\screens\user_profile_page.dart:417:71 - missing_required_argument
+Too many positional arguments: 0 expected, but 2 found - lib\features\profile\screens\user_profile_page.dart:417:82 - extra_positional_arguments_could_be_named
+The argument type 'String?' can't be assigned to the parameter type 'String'.  - lib\features\speed_dating\screens\speed_dating_decision_page.dart:108:31 - argument_type_not_assignable
+There's no constant named 'active' in 'SpeedDatingStatus' - lib\features\speed_dating\screens\speed_dating_lobby_page.dart:62:53 - undefined_enum_constant
+The argument type 'Duration' can't be assigned to the parameter type 'int'.  - lib\features\speed_dating\screens\speed_dating_lobby_page.dart:63:65 - argument_type_not_assignable
+The getter 'participants' isn't defined for the type 'SpeedDatingSession' - lib\features\speed_dating\screens\speed_dating_lobby_page.dart:133:31 - undefined_getter
+The argument type 'String' can't be assigned to the parameter type 'bool'.  - lib\features\speed_dating\screens\speed_dating_lobby_page.dart:338:79 - argument_type_not_assignable
+Too many positional arguments: 1 expected, but 2 found - lib\features\speed_dating\screens\speed_dating_lobby_page.dart:338:90 - extra_positional_arguments
+The argument type 'String' can't be assigned to the parameter type 'bool'.  - lib\features\speed_dating\screens\speed_dating_lobby_page.dart:355:79 - argument_type_not_assignable
+Too many positional arguments: 1 expected, but 2 found - lib\features\speed_dating\screens\speed_dating_lobby_page.dart:355:90 - extra_positional_arguments
+Arguments of a constant creation must be constant expressions - lib\providers\event_dating_providers.dart:141:37 - const_with_non_constant_argument
+The argument type 'String' can't be assigned to the parameter type 'Event'.  - lib\providers\event_dating_providers.dart:153:40 - argument_type_not_assignable
+Too many positional arguments: 1 expected, but 2 found - lib\providers\event_dating_providers.dart:153:49 - extra_positional_arguments
+Too many positional arguments: 1 expected, but 2 found - lib\providers\event_dating_providers.dart:170:49 - extra_positional_arguments
+Too many positional arguments: 1 expected, but 2 found - lib\providers\event_dating_providers.dart:186:47 - extra_positional_arguments
+Too many positional arguments: 1 expected, but 2 found - lib\providers\event_dating_providers.dart:201:48 - extra_positional_arguments
+The method 'findActiveSession' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:369:57 - undefined_method
+The method 'findPartner' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:378:58 - undefined_method
+The method 'getSession' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:382:51 - undefined_method
+The method 'createSession' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:387:53 - undefined_method
+The method 'getSession' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:388:51 - undefined_method
+The method 'cancelSession' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:404:35 - undefined_method
+The method 'submitDecision' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:426:33 - undefined_method
+The method 'startNextRound' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:445:33 - undefined_method
+The method 'endSession' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:458:33 - undefined_method
+The method 'getSession' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:472:40 - undefined_method
+The argument type 'Object?' can't be assigned to the parameter type 'SpeedDatingSession?'.  - lib\providers\event_dating_providers.dart:475:33 - argument_type_not_assignable
+A yielded value of type 'List<UserBadge>' must be assignable to 'List<Map<String, dynamic>>' - lib\providers\gamification_payment_providers.dart:83:11 - yield_of_invalid_type
+The method 'getAvailableAchievements' isn't defined for the type 'GamificationService' - lib\providers\gamification_payment_providers.dart:92:30 - undefined_method
+The getter 'currentXP' isn't defined for the type 'UserLevel' - lib\providers\gamification_payment_providers.dart:98:16 - undefined_getter
+The method 'getLeaderboard' isn't defined for the type 'GamificationService' - lib\providers\gamification_payment_providers.dart:115:30 - undefined_method
+The method 'awardXP' isn't defined for the type 'GamificationService' - lib\providers\gamification_payment_providers.dart:141:34 - undefined_method
+The method 'checkDailyStreak' isn't defined for the type 'GamificationService' - lib\providers\gamification_payment_providers.dart:157:34 - undefined_method
+The method 'unlockAchievement' isn't defined for the type 'GamificationService' - lib\providers\gamification_payment_providers.dart:173:34 - undefined_method
+The named parameter 'badgeId' is required, but there's no corresponding argument - lib\providers\gamification_payment_providers.dart:194:26 - missing_required_argument
+The named parameter 'userId' is required, but there's no corresponding argument - lib\providers\gamification_payment_providers.dart:194:26 - missing_required_argument
+Too many positional arguments: 0 expected, but 2 found - lib\providers\gamification_payment_providers.dart:194:37 - extra_positional_arguments_could_be_named
+The method 'getPaymentMethods' isn't defined for the type 'PaymentService' - lib\providers\gamification_payment_providers.dart:213:25 - undefined_method
+The method 'getPaymentHistory' isn't defined for the type 'PaymentService' - lib\providers\gamification_payment_providers.dart:227:42 - undefined_method
+The method 'processPayment' isn't defined for the type 'PaymentService' - lib\providers\gamification_payment_providers.dart:262:44 - undefined_method
+The method 'addPaymentMethod' isn't defined for the type 'PaymentService' - lib\providers\gamification_payment_providers.dart:287:29 - undefined_method
+The method 'removePaymentMethod' isn't defined for the type 'PaymentService' - lib\providers\gamification_payment_providers.dart:303:29 - undefined_method
+The method 'refundPayment' isn't defined for the type 'PaymentService' - lib\providers\gamification_payment_providers.dart:317:29 - undefined_method
+The argument type 'Map<String, dynamic>?' can't be assigned to the parameter type 'Map<String, Object>?'.  - lib\providers\gamification_payment_providers.dart:347:51 - argument_type_not_assignable
+The method 'setCurrentScreen' isn't defined for the type 'AnalyticsService' - lib\providers\gamification_payment_providers.dart:356:31 - undefined_method
+'RoomMessagesController' doesn't conform to the bound 'Notifier<AsyncValue<List<Message>>>' of the type parameter 'NotifierT' - lib\providers\messaging_providers.dart:25:29 - type_argument_not_matching_bounds
+The argument type 'RoomMessagesController Function(String, dynamic)' can't be assigned to the parameter type 'RoomMessagesController Function(String)'.  - lib\providers\messaging_providers.dart:25:88 - argument_type_not_assignable
+Too many positional arguments: 0 expected, but 1 found - lib\providers\messaging_providers.dart:26:33 - extra_positional_arguments
+Classes can only extend other classes - lib\providers\messaging_providers.dart:29:38 - extends_non_class
+Undefined name 'ref' - lib\providers\messaging_providers.dart:38:25 - undefined_identifier
+Undefined name 'ref' - lib\providers\messaging_providers.dart:40:5 - undefined_identifier
+Undefined name 'arg' - lib\providers\messaging_providers.dart:48:63 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:53:9 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:56:9 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:62:22 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:65:31 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:71:9 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:74:7 - undefined_identifier
+Undefined name 'ref' - lib\providers\messaging_providers.dart:81:33 - undefined_identifier
+Undefined name 'arg' - lib\providers\messaging_providers.dart:90:17 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:96:7 - undefined_identifier
+Undefined name 'ref' - lib\providers\messaging_providers.dart:104:33 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:111:7 - undefined_identifier
+Undefined name 'ref' - lib\providers\messaging_providers.dart:119:33 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:126:7 - undefined_identifier
+Undefined name 'ref' - lib\providers\messaging_providers.dart:134:33 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:141:7 - undefined_identifier
+Undefined name 'ref' - lib\providers\messaging_providers.dart:149:33 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:156:7 - undefined_identifier
+'DirectMessageController' doesn't conform to the bound 'Notifier<AsyncValue<List<DirectMessage>>>' of the type parameter 'NotifierT' - lib\providers\messaging_providers.dart:188:29 - type_argument_not_matching_bounds
+The argument type 'DirectMessageController Function(String, dynamic)' can't be assigned to the parameter type 'DirectMessageController Function(String)'.  - lib\providers\messaging_providers.dart:188:95 - argument_type_not_assignable
+Too many positional arguments: 0 expected, but 1 found - lib\providers\messaging_providers.dart:189:34 - extra_positional_arguments
+Classes can only extend other classes - lib\providers\messaging_providers.dart:192:39 - extends_non_class
+Undefined name 'ref' - lib\providers\messaging_providers.dart:198:25 - undefined_identifier
+Undefined name 'ref' - lib\providers\messaging_providers.dart:200:5 - undefined_identifier
+Undefined name 'ref' - lib\providers\messaging_providers.dart:208:33 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:210:9 - undefined_identifier
+Undefined name 'arg' - lib\providers\messaging_providers.dart:215:89 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:217:11 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:220:11 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:224:7 - undefined_identifier
+Undefined name 'ref' - lib\providers\messaging_providers.dart:237:33 - undefined_identifier
+Undefined name 'arg' - lib\providers\messaging_providers.dart:244:21 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:252:7 - undefined_identifier
+Undefined name 'ref' - lib\providers\messaging_providers.dart:260:33 - undefined_identifier
+Undefined name 'arg' - lib\providers\messaging_providers.dart:265:81 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:268:7 - undefined_identifier
+Undefined name 'ref' - lib\providers\messaging_providers.dart:276:33 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:283:7 - undefined_identifier
+Undefined name 'ref' - lib\providers\messaging_providers.dart:291:33 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:298:7 - undefined_identifier
+Undefined name 'ref' - lib\providers\messaging_providers.dart:306:33 - undefined_identifier
+Undefined name 'state' - lib\providers\messaging_providers.dart:313:7 - undefined_identifier

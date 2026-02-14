@@ -1,0 +1,10 @@
+Feature,Status,Details
+"Authentication","Working","No login required"
+"Speed Dating","Missing","Feature not found in UI"
+"Browse Rooms","Missing","Feature not found in UI"
+"Profile","Missing","Feature not found in UI"
+"Notifications","Missing","Feature not found in UI"
+"Chat/Messages","Missing","Feature not found in UI"
+"Discover Users","Missing","Feature not found in UI"
+"Go Live","Missing","Feature not found in UI"
+"JavaScript Errors","Clean","No console errors"

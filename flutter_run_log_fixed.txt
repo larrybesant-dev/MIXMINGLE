@@ -1,0 +1,117 @@
+Launching lib\main.dart on Chrome in debug mode...
+Waiting for connection from debug service on Chrome...             36.6s
+
+Flutter run key commands.
+r Hot reload. 
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+This app is linked to the debug service: ws://127.0.0.1:50304/hraDmEz72es=/ws
+Debug service listening on ws://127.0.0.1:50304/hraDmEz72es=/ws
+A Dart VM Service on Chrome is available at: http://127.0.0.1:50304/hraDmEz72es=
+The Flutter DevTools debugger and profiler on Chrome is available at: http://127.0.0.1:50304/hraDmEz72es=/devtools/?uri=ws://127.0.0.1:50304/hraDmEz72es=/ws
+Starting application from main method in: org-dartlang-app:/web_entrypoint.dart.
+Found an existing <meta name="viewport"> tag. Flutter Web uses its own viewport configuration for better compatibility with Flutter. This tag will be replaced.
+≡ƒÜÇ Starting app initialization...
+Γ£à Firebase initialized successfully
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO: Firebase initialized successfully
+≡ƒÜÇ Running app...
+ Initializing Firebase...
+Γ£à Firebase initialized
+Γ£à FCM background handler registered
+≡ƒô▒ Initializing push notifications...
+≡ƒÅù∩╕Å Building MixMingleApp...
+≡ƒöì Checking Firebase auth status...
+Γ£à Firebase auth check complete. User: null
+≡ƒöÉ No user authenticated, navigating to login...
+Push notification permission granted
+FCM Token: dx8F_Nc1np_AEpIqzcF0Zi:APA91bEj7HLCPfQ1FgptR4A3vhF3ONL_Dq-8_fCK8hNS8N9QuLIPKmiOD1JwanyWlwLxn3WPJlU3Sk1bF0QtMLi0_vhoQz2VnBZ5NDY_p7a3Wc9HQxFcp88
+Γ£à Push notifications initialized
+Loaded 2 rooms
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO:  [JOIN] Function called - _isInitializing: false, _isJoined: false
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO:  [JOIN] Setting state to initializing
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO:  [JOIN] Getting agora service and user
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO:  [JOIN] User: larrybesant@gmail.com (Details: )
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO:  [JOIN] Checking if Agora is initialized: false
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO:  [JOIN] Verifying room access permission
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO:  [JOIN] Room access verified Γ£à
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO:  [JOIN] Initializing Agora engine...
+≡ƒÄ¼ Initializing Agora engine...
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO:  [JOIN] Agora initialized
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO:  [JOIN] About to join room: JZOh6tXYT25QLLirlcwZ
+≡ƒôó Joining room: JZOh6tXYT25QLLirlcwZ
+[DEBUG] AgoraPlatformService.joinChannel() called with kIsWeb=true
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO: ≡ƒîÉ joinChannel called - kIsWeb: true
+[DEBUG] WEB PATH: Initializing bridge...
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO: Γ£à WEB PATH: Initializing AgoraWebBridgeV2
+[DEBUG] Calling AgoraWebBridgeV2.init()...
+[BRIDGE] Step 1: Accessing js.context
+[BRIDGE] Step 2: Bridge object = [object Object]
+[BRIDGE] Step 4: Bridge exists, accessing init function
+[BRIDGE] Step 5: init function = async function (appId) {
+        try {
+          AgoraState.log('Initializing with appId: ' + appId.substring(0, 10) + '...');
+
+          // Wait for SDK to load
+          let attempts = 0;
+          while (!window.IrisRtcEngine && attempts < 50) {
+            await new Promise(r => setTimeout(r, 100));
+            attempts++;
+          }
+
+          if (!window.IrisRtcEngine) {
+            throw new Error('Iris SDK not available');
+          }
+
+          AgoraState.log('Iris SDK ready');
+          return { success: true };
+        } catch (err) {
+          AgoraState.error('Init failed: ' + err.message);
+          return { success: false, error: err.message };
+        }
+      }
+[BRIDGE] Step 7: Calling JS init(ec1b578586d24976a89d787d9ee4d5c7)
+[BRIDGE] Initializing with appId: ec1b578586...
+[BRIDGE] Iris SDK ready
+[BRIDGE] Step 8: JS init() returned Promise: [object Promise]
+[BRIDGE] Step 9: Converting Promise to Future
+[BRIDGE] Calling promise.then() with callbacks...
+[BRIDGE] Callbacks registered successfully
+[BRIDGE] Promise resolved with: [object Object]
+[BRIDGE] Step 10: Promise resolved with result: [object Object]
+[BRIDGE] Step 12: Checking result.success field
+[BRIDGE] Step 13: result.success = true
+[DEBUG] AgoraWebBridgeV2.init() returned: true
+[DEBUG] Calling AgoraWebBridgeV2.joinChannel() with JZOh6tXYT25QLLirlcwZ...
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO: Γ£à WEB PATH: Calling AgoraWebBridgeV2.joinChannel()
+[BRIDGE] Calling JS join(JZOh6tXYT25QLLirlcwZ, uid=363139901)
+[BRIDGE] Joining: appId=***,JZOh6tXYT25QLLirlcwZ, uid=363139901
+[BRIDGE] Creating Iris client
+[BRIDGE] Iris client created
+[BRIDGE] Calling callIrisApiAsync with params
+[BRIDGE] Calling promise.then() with callbacks...
+[BRIDGE] Callbacks registered successfully
+[BRIDGE] Join failed: Cannot read properties of undefined (reading 'split')
+[BRIDGE] Promise resolved with: [object Object]
+≡ƒÄ╡ Mix&Mingle Γ¥î ERROR: Γ¥î join error: NoSuchMethodError: 'Object.prototype.toString.call'
+method not found
+Receiver: Instance of 'Window'
+Arguments: [Instance of 'LegacyJavaScriptObject']
+[BRIDGE] Dart join error: NoSuchMethodError: 'Object.prototype.toString.call'
+method not found
+Receiver: Instance of 'Window'
+Arguments: [Instance of 'LegacyJavaScriptObject']
+[DEBUG] AgoraWebBridgeV2.joinChannel() returned: false
+≡ƒÄ╡ Mix&Mingle Γä╣∩╕Å  INFO: Γ£à WEB PATH: Result = false
+Γ¥î Failed to initialize room: Exception: Failed to join channel via platform service
+≡ƒÄ╡ Mix&Mingle Γ¥î ERROR:  Room initialization failed
+  Error: Exception: Failed to join channel via platform service
+22:10:51:472 %cAgora-SDK [DEBUG]:
+22:10:52:581 %cAgora-SDK [DEBUG]:
+22:10:58:653 %cAgora-SDK [DEBUG]:
+05:36:57:341 %cAgora-SDK [DEBUG]:
+05:44:30:157 %cAgora-SDK [DEBUG]:
+Application finished.

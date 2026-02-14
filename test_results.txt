@@ -1,0 +1,252 @@
+00:00 +0: loading C:/Users/LARRY/MIXMINGLE/test/auth/auth_comprehensive_test.dart
+00:00 +0: C:/Users/LARRY/MIXMINGLE/test/auth/auth_comprehensive_test.dart: Authentication Tests Sign Up should create user account with email and password
+00:00 +1: C:/Users/LARRY/MIXMINGLE/test/auth/auth_comprehensive_test.dart: Authentication Tests Sign Up should fail with weak password
+00:00 +2: C:/Users/LARRY/MIXMINGLE/test/auth/auth_comprehensive_test.dart: Authentication Tests Sign Up should fail with invalid email
+00:00 +3: C:/Users/LARRY/MIXMINGLE/test/auth/auth_comprehensive_test.dart: Authentication Tests Sign Up should create user profile in Firestore after signup
+00:00 +4: C:/Users/LARRY/MIXMINGLE/test/auth/auth_comprehensive_test.dart: Authentication Tests Sign In should sign in with valid credentials
+00:00 +5: C:/Users/LARRY/MIXMINGLE/test/auth/auth_comprehensive_test.dart: Authentication Tests Sign In should fail with wrong password
+00:00 +6: C:/Users/LARRY/MIXMINGLE/test/auth/auth_comprehensive_test.dart: Authentication Tests Sign In should fail with non-existent user
+00:00 +7: C:/Users/LARRY/MIXMINGLE/test/auth/auth_comprehensive_test.dart: Authentication Tests Sign Out should sign out current user
+00:00 +8: C:/Users/LARRY/MIXMINGLE/test/auth/auth_comprehensive_test.dart: Authentication Tests Auth State Changes should emit auth state changes
+00:00 +9: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Creation should create event with valid data
+00:00 +10: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Creation should create event with valid data
+00:00 +11: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Creation should create event with valid data
+00:00 +12: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Creation should create event with valid data
+00:00 +13: C:/Users/LARRY/MIXMINGLE/test/auth/auth_comprehensive_test.dart: Authentication Tests Profile Update should update user display name
+00:00 +14: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Creation should set createdAt timestamp on event creation
+00:00 +15: C:/Users/LARRY/MIXMINGLE/test/auth/auth_comprehensive_test.dart: Authentication Tests Profile Update should update user photo URL
+00:00 +16: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Creation should create event with required fields
+00:00 +17: C:/Users/LARRY/MIXMINGLE/test/auth/auth_comprehensive_test.dart: Authentication Tests Email Verification should send email verification
+00:00 +18: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Creation should store event location data
+00:00 +19: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event RSVP should add user to event attendees
+00:00 +20: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event RSVP should update RSVP status
+00:00 +21: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event RSVP should remove RSVP
+00:00 +22: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event RSVP should count total RSVPs
+00:00 +23: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Queries should get all events
+00:00 +24: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Queries should filter events by host
+00:00 +25: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Queries should get event by ID
+00:00 +26: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Updates should update event title
+00:00 +27: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Updates should update event description
+00:00 +28: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Updates should update event capacity
+00:00 +29: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Deletion should delete event
+00:00 +30: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Deletion should delete event RSVPs when event is deleted
+00:00 +31: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Capacity should track attendee count
+00:00 +32: C:/Users/LARRY/MIXMINGLE/test/events/event_comprehensive_test.dart: Event Tests Event Capacity should check if event is full
+00:00 +33: C:/Users/LARRY/MIXMINGLE/test/events_test.dart: Check events collection
+Testing events collection access...
+Found 1 events in database
+Sample event data:
+Title: Test Event
+Host: testHost
+Start Time: 2026-02-05T16:54:11.885415
+00:00 +34: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingScoringUtils enumSimilarity returns 100 for identical values
+00:01 +35: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingScoringUtils enumSimilarity returns 0 for different values
+00:01 +36: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingScoringUtils enumSimilarity returns 50 for null values
+00:01 +37: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingScoringUtils complementaryScore works for matching pairs
+00:01 +38: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingScoringUtils normalizeScore clamps values to 0-100
+00:01 +39: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingScoringUtils applyWeight calculates correctly
+00:01 +40: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingScoringUtils weightedAverage calculates correctly
+00:01 +41: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingScoringUtils ageCompatibilityScore perfect for same age
+00:01 +42: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingScoringUtils ageCompatibilityScore returns 0 for out of range
+00:01 +43: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingScoringUtils distancePenalty works correctly
+00:01 +44: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingWeights total weights sum to approximately 100
+00:01 +45: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingWeights categoryWeights contains all categories
+00:01 +46: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingWeights weights are positive values
+00:01 +47: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: QuestionnaireAnswers isComplete returns false for incomplete answers
+00:01 +48: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: QuestionnaireAnswers isComplete returns true for complete answers
+00:01 +49: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: QuestionnaireAnswers completionPercentage calculates correctly
+00:01 +50: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingProfile distanceTo calculates correctly
+00:01 +51: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingProfile isWithinAgeRange works correctly
+00:01 +52: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingProfile meetsDistancePreference works correctly
+00:01 +53: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingProfile isReadyForMatching checks profile completeness
+00:01 +54: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingService calculateMatchScore returns perfect score for identical profiles
+00:01 +55: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingService calculateMatchScore returns low score for incompatible profiles
+00:01 +56: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingService findMatches returns empty list when no profiles exist
+00:01 +57: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchingService calculateStatistics handles empty matches correctly
+00:01 +58: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchScore compatibilityLevel returns correct string
+00:01 +59: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchScore isStrongMatch threshold works correctly
+00:01 +60: C:/Users/LARRY/MIXMINGLE/test/features/matching/matching_service_test.dart: MatchScore topReasons returns maximum 3 reasons
+00:01 +61: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Room Join/Leave Flow User can join a room successfully
+00:01 +62: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Room Join/Leave Flow User can leave a room successfully
+00:01 +63: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Room Join/Leave Flow Joining room initializes video service
+00:01 +64: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Room Join/Leave Flow User cannot join room if not authenticated
+00:01 +65: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Video Control Flow User can toggle microphone on/off
+00:01 +66: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Video Control Flow User can toggle camera on/off
+00:01 +67: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Video Control Flow User can switch camera (front/back)
+00:01 +68: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Video Control Flow Mic toggle persists state across rebuilds
+00:01 +69: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Video Control Flow Multiple control changes work in sequence
+00:01 +70: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Turn-Based Mode Flow Speaker is assigned in turn-based room
+00:01 +71: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Turn-Based Mode Flow Speaker changes trigger smooth transition
+00:01 +72: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Turn-Based Mode Flow Speaker timer counts down correctly
+00:01 +73: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Turn-Based Mode Flow Speaker auto-advances when timer expires
+00:01 +74: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Turn-Based Mode Flow Raised hand queue processes in order
+00:01 +75: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Participant State Management New participant joins and appears in gallery
+00:01 +76: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Participant State Management Participant leaves and removed from gallery
+00:01 +77: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Participant State Management Participant mute state tracked correctly
+00:01 +78: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Participant State Management Multiple participant state changes work together
+00:01 +79: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Chat Integration User can send message in room
+00:01 +80: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Chat Integration Chat messages display in correct order (FIFO)
+00:01 +81: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Chat Integration Empty message is not sent
+00:01 +82: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Chat Integration Chat overlay can be toggled
+00:01 +83: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Stage Layout Rendering Spotlight displays featured speaker
+00:01 +84: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Stage Layout Rendering Gallery displays non-speaker participants
+00:01 +85: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Stage Layout Rendering Speaking indicators animate on/off
+00:01 +86: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Stage Layout Rendering Mute badges display correctly
+00:01 +87: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Stage Layout Rendering Video-off badges display correctly
+00:01 +88: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Error Handling & Recovery Handle video initialization failure gracefully
+00:01 +89: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Error Handling & Recovery Handle participant disconnect gracefully
+00:01 +90: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Error Handling & Recovery Recovery after network interruption
+00:01 +91: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Error Handling & Recovery Retry button works after error
+00:01 +92: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Performance & Load Tests Handle 10+ participants without lag
+00:01 +93: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Performance & Load Tests Video tile renders quickly
+00:01 +94: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Performance & Load Tests Animation completes within target duration
+00:01 +95: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests State Persistence Mic state persists after widget rebuild
+00:01 +96: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests State Persistence Room data persists in Firestore
+00:01 +97: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests State Persistence Participant list stays consistent across updates
+00:01 +98: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Accessibility Participant names are readable
+00:01 +99: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Accessibility Control buttons have clear labels
+00:01 +100: C:/Users/LARRY/MIXMINGLE/test/features/room/full_room_e2e_test.dart: Full Room E2E Tests Accessibility Status badges are visually distinct
+00:01 +101: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - classifyRoom classifies music tags correctly
+00:01 +102: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - classifyRoom classifies gaming tags correctly
+00:01 +103: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - classifyRoom classifies chat tags correctly
+00:01 +104: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - classifyRoom classifies live tags correctly
+00:01 +105: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - classifyRoom returns Other for unmatched tags
+00:01 +106: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - classifyRoom returns Other for empty tags
+00:01 +107: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - classifyRoom respects priority order: Music > Gaming > Chat > Live
+00:01 +108: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - classifyRoom handles case-insensitive matching
+00:01 +109: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - classifyRoom handles tags with whitespace
+00:01 +110: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - classifyRoom handles mixed matched and unmatched tags
+00:01 +111: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - classifyRoom handles duplicate tags
+00:01 +112: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - isValidCategory validates correct categories
+00:01 +113: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - isValidCategory rejects invalid categories
+00:01 +114: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - getAllCategories returns all categories including Other
+00:01 +115: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - getCategoryKeywords returns keywords for Music
+00:01 +116: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - getCategoryKeywords returns keywords for Gaming
+00:01 +117: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - getCategoryKeywords returns empty list for invalid category
+00:01 +118: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - suggestCategory suggests category from partial tag
+00:01 +119: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - suggestCategory returns null for no match
+00:01 +120: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - suggestCategory handles case-insensitive suggestions
+00:01 +121: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - normalizeTags normalizes tags to lowercase and trims whitespace
+00:01 +122: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - normalizeTags removes empty tags
+00:01 +123: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - normalizeTags removes duplicate tags
+00:01 +124: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - validateTags validates correct tags
+00:01 +125: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - validateTags rejects empty tag list
+00:01 +126: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - validateTags rejects tags that are all whitespace
+00:01 +127: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - validateTags rejects too many tags
+00:01 +128: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - validateTags rejects tags that are too long
+00:01 +129: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - validateTags rejects tags with invalid characters
+00:01 +130: C:/Users/LARRY/MIXMINGLE/test/features/rooms/category_service_test.dart: CategoryService - validateTags accepts tags with valid characters
+00:01 +131: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers categoriesProvider returns all categories
+00:02 +132: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers createRoomProvider creates a room successfully
+00:02 +133: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers roomsByCategoryProvider fetches rooms by category
+00:02 +134: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_service_test.dart: RoomService - createRoom creates a room with auto-computed category
+00:02 +135: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_service_test.dart: RoomService - createRoom creates a room with auto-computed category
+00:02 +136: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers liveRoomsProvider fetches only live rooms
+00:02 +137: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers liveRoomsProvider fetches only live rooms
+00:02 +138: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers liveRoomsProvider fetches only live rooms
+00:02 +139: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers liveRoomsProvider fetches only live rooms
+00:02 +140: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers liveRoomsProvider fetches only live rooms
+00:02 +141: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers liveRoomsProvider fetches only live rooms
+00:02 +142: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers liveRoomsProvider fetches only live rooms
+00:02 +143: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers liveRoomsProvider fetches only live rooms
+00:02 +144: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers liveRoomsProvider fetches only live rooms
+00:02 +145: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers liveRoomsProvider fetches only live rooms
+00:02 +146: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers liveRoomsProvider fetches only live rooms
+00:02 +147: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_service_test.dart: RoomService - updateViewerCount updates viewer count correctly
+00:02 +148: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers updateRoomProvider updates live status
+00:02 +149: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers updateRoomProvider updates live status
+00:02 +150: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_service_test.dart: RoomService - deleteRoom deletes room successfully
+00:02 +151: C:/Users/LARRY/MIXMINGLE/test/features/rooms/room_providers_test.dart: Room Providers deleteRoomProvider deletes room
+00:02 +152: C:/Users/LARRY/MIXMINGLE/test/firebase_storage_integration_test.dart: (setUpAll)
+[storage-test] setUpAll: begin
+[storage-test] initializing Firebase app...
+[storage-test] SKIP: Firebase initialization failed (emulators not running or platform channels unavailable): PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.firebase_core_platform_interface.FirebaseCoreHostApi.initializeCore"., null, null)
+00:02 +152: C:/Users/LARRY/MIXMINGLE/test/firebase_storage_integration_test.dart: Firebase Storage emulator upload succeeds
+[storage-test] Skipping test - Firebase not initialized
+00:02 +153: C:/Users/LARRY/MIXMINGLE/test/firebase_storage_integration_test.dart: (tearDownAll)
+00:02 +153: C:/Users/LARRY/MIXMINGLE/test/integration_test.dart: App builds without crashing
+00:03 +154: C:/Users/LARRY/MIXMINGLE/test/message_reactions_test.dart: MessageBubble displays reactions correctly
+00:03 +155: C:/Users/LARRY/MIXMINGLE/test/message_reactions_test.dart: MessageBubble displays reactions correctly
+00:03 +156: C:/Users/LARRY/MIXMINGLE/test/message_reactions_test.dart: MessageBubble displays reactions correctly
+00:03 +157: C:/Users/LARRY/MIXMINGLE/test/message_reactions_test.dart: MessageBubble displays reactions correctly
+00:04 +158: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:04 +159: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:04 +160: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:04 +161: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:04 +162: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:04 +163: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:04 +164: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:04 +164 -1: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:04 +164 -1: C:/Users/LARRY/MIXMINGLE/test/models/room_test.dart: Room toMap preserves core fields [E]
+  Expected: <Instance of 'String'>
+    Actual: Timestamp:<Timestamp(seconds=1706853600, nanoseconds=0)>
+     Which: is not an instance of 'String'
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\models\room_test.dart 88:7                     main.<fn>.<fn>
+  
+00:04 +165 -1: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:04 +166 -1: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:04 +167 -1: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:05 +168 -1: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:05 +169 -1: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:05 +170 -1: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login form interaction with mocked auth service
+00:05 +171 -1: C:/Users/LARRY/MIXMINGLE/test/mocked_login_flow_test.dart: Login with invalid credentials shows error
+00:05 +172 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Follow/Unfollow should follow user
+00:05 +173 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Follow/Unfollow should unfollow user
+00:05 +174 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Follow/Unfollow should get followers list
+00:05 +175 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Follow/Unfollow should get following list
+00:05 +176 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Follow/Unfollow should count followers
+00:05 +177 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Friends should detect mutual follow (friendship)
+00:05 +178 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Friends should get friends list
+00:05 +179 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Presence should update online status
+00:05 +180 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Presence should update offline status
+00:05 +181 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Presence should get online users
+00:05 +182 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Block/Unblock should block user
+00:05 +183 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Block/Unblock should unblock user
+00:05 +184 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Block/Unblock should check if user is blocked
+00:05 +185 -1: C:/Users/LARRY/MIXMINGLE/test/profile/social_graph_test.dart: Social Graph Tests Block/Unblock should remove follow relationships when blocking
+00:05 +186 -1: C:/Users/LARRY/MIXMINGLE/test/services/auth_service_test.dart: AuthService Tests should validate email format
+00:05 +187 -1: C:/Users/LARRY/MIXMINGLE/test/services/auth_service_test.dart: AuthService Tests should validate password strength
+00:05 +188 -1: C:/Users/LARRY/MIXMINGLE/test/services/auth_service_test.dart: AuthService Tests should enforce rate limiting after max attempts
+00:05 +189 -1: C:/Users/LARRY/MIXMINGLE/test/services/auth_service_test.dart: AuthService Tests should handle rate limit edge cases
+00:05 +190 -1: C:/Users/LARRY/MIXMINGLE/test/services/events_service_test.dart: EventsService Tests should create event with validation
+00:05 +191 -1: C:/Users/LARRY/MIXMINGLE/test/services/events_service_test.dart: EventsService Tests should validate event data
+00:05 +192 -1: C:/Users/LARRY/MIXMINGLE/test/services/events_service_test.dart: EventsService Tests should get upcoming events
+00:05 +193 -1: C:/Users/LARRY/MIXMINGLE/test/services/events_service_test.dart: EventsService Tests should enforce capacity limits
+00:05 +194 -1: C:/Users/LARRY/MIXMINGLE/test/services/events_service_test.dart: EventsService Tests should join event
+00:05 +195 -1: C:/Users/LARRY/MIXMINGLE/test/services/events_service_test.dart: EventsService Tests should leave event
+00:05 +196 -1: C:/Users/LARRY/MIXMINGLE/test/services/events_service_test.dart: EventsService Tests should search events by category
+00:05 +197 -1: C:/Users/LARRY/MIXMINGLE/test/services/events_service_test.dart: EventsService Tests should delete event
+00:05 +198 -1: C:/Users/LARRY/MIXMINGLE/test/services/events_service_test.dart: EventsService Tests should only allow host to delete event
+00:06 +199 -1: C:/Users/LARRY/MIXMINGLE/test/services/match_service_test.dart: MatchService Tests should like a user
+00:06 +200 -1: C:/Users/LARRY/MIXMINGLE/test/services/match_service_test.dart: MatchService Tests should create match on mutual like
+00:06 +201 -1: C:/Users/LARRY/MIXMINGLE/test/services/match_service_test.dart: MatchService Tests should not allow self-like
+00:06 +202 -1: C:/Users/LARRY/MIXMINGLE/test/services/match_service_test.dart: MatchService Tests should enforce rate limiting
+00:06 +203 -1: C:/Users/LARRY/MIXMINGLE/test/services/match_service_test.dart: MatchService Tests should calculate match quality score
+00:06 +204 -1: C:/Users/LARRY/MIXMINGLE/test/services/match_service_test.dart: MatchService Tests should get user matches
+00:06 +205 -1: C:/Users/LARRY/MIXMINGLE/test/services/match_service_test.dart: MatchService Tests should unmatch users
+00:06 +206 -1: C:/Users/LARRY/MIXMINGLE/test/services/speed_dating_service_test.dart: SpeedDatingService Tests should create speed dating round
+00:06 +207 -1: C:/Users/LARRY/MIXMINGLE/test/services/speed_dating_service_test.dart: SpeedDatingService Tests should validate minimum participants
+00:06 +208 -1: C:/Users/LARRY/MIXMINGLE/test/services/speed_dating_service_test.dart: SpeedDatingService Tests should join speed dating round
+00:06 +209 -1: C:/Users/LARRY/MIXMINGLE/test/services/speed_dating_service_test.dart: SpeedDatingService Tests should generate matches for participants
+00:06 +210 -1: C:/Users/LARRY/MIXMINGLE/test/services/speed_dating_service_test.dart: SpeedDatingService Tests should advance to next round
+00:06 +211 -1: C:/Users/LARRY/MIXMINGLE/test/services/speed_dating_service_test.dart: SpeedDatingService Tests should end round when reaching total rounds
+00:06 +212 -1: C:/Users/LARRY/MIXMINGLE/test/services/speed_dating_service_test.dart: SpeedDatingService Tests should submit speed dating result
+00:06 +213 -1: C:/Users/LARRY/MIXMINGLE/test/services/speed_dating_service_test.dart: SpeedDatingService Tests should detect mutual match
+00:06 +214 -1: C:/Users/LARRY/MIXMINGLE/test/services/speed_dating_service_test.dart: SpeedDatingService Tests should calculate compatibility score
+00:06 +215 -1: C:/Users/LARRY/MIXMINGLE/test/services/storage_service_test.dart: StorageService Tests should upload file
+00:06 +216 -1: C:/Users/LARRY/MIXMINGLE/test/services/storage_service_test.dart: StorageService Tests should delete file
+00:06 +217 -1: C:/Users/LARRY/MIXMINGLE/test/services/storage_service_test.dart: StorageService Tests should validate file size
+00:06 +218 -1: C:/Users/LARRY/MIXMINGLE/test/services/storage_service_test.dart: StorageService Tests should validate file type
+00:06 +219 -1: C:/Users/LARRY/MIXMINGLE/test/services/storage_service_test.dart: StorageService Tests should handle upload errors gracefully
+00:06 +220 -1: C:/Users/LARRY/MIXMINGLE/test/services/storage_service_test.dart: StorageService Tests should get file reference
+00:06 +221 -1: C:/Users/LARRY/MIXMINGLE/test/services/storage_service_test.dart: StorageService Tests should upload multiple files
+00:07 +222 -1: C:/Users/LARRY/MIXMINGLE/test/widgets/chat_list_page_test.dart: ChatListPage Widget Tests ChatListPage is properly constructed
+00:07 +223 -1: C:/Users/LARRY/MIXMINGLE/test/widgets/events_page_test.dart: EventsPage Widget Tests EventsPage is properly constructed
+00:08 +224 -1: C:/Users/LARRY/MIXMINGLE/test/widgets/home_page_test.dart: HomePage Widget Tests HomePage is properly constructed
+00:08 +225 -1: C:/Users/LARRY/MIXMINGLE/test/widgets/matches_list_page_test.dart: MatchesPage Widget Tests MatchesPage is properly constructed
+00:08 +226 -1: C:/Users/LARRY/MIXMINGLE/test/widgets/matches_list_page_test.dart: MatchesPage Widget Tests MatchesPage is properly constructed
+00:08 +227 -1: C:/Users/LARRY/MIXMINGLE/test/widget_test.dart: Basic widget test
+00:09 +228 -1: Some tests failed.

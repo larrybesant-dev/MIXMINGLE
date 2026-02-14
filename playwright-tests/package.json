@@ -1,0 +1,40 @@
+{
+  "name": "mix-and-mingle-e2e-tests",
+  "version": "1.0.0",
+  "description": "End-to-end tests for Mix & Mingle Flutter Web App",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "smoke-test": "node simple-smoke-test.js",
+    "full-smoke-test": "node full-smoke-test.js",
+    "targeted-smoke-test": "node targeted-smoke-test.js",
+    "test:happy-path": "playwright test tests/happy-path.spec.js",
+    "test:auth": "playwright test tests/auth.spec.js",
+    "test:home": "playwright test tests/home.spec.js",
+    "test:rooms": "playwright test tests/rooms.spec.js",
+    "test:users": "playwright test tests/users.spec.js",
+    "test:messages": "playwright test tests/messages.spec.js",
+    "test:settings": "playwright test tests/settings.spec.js",
+    "report": "playwright show-report",
+    "install-browsers": "playwright install"
+  },
+  "keywords": [
+    "playwright",
+    "e2e",
+    "testing",
+    "flutter",
+    "web",
+    "firebase"
+  ],
+  "author": "Mix & Mingle Team",
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.40.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

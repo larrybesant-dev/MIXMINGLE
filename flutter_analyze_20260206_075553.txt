@@ -1,0 +1,840 @@
+Analyzing MIXMINGLE...                                          
+
+  error - The getter 'darkTheme' isn't defined for the type 'NeonTheme' - cleanup_backup_20260206_073700\lib_backup\app.dart:17:26 - undefined_getter
+   info - The referenced identifier is a wildcard - cleanup_backup_20260206_073700\lib_backup\app.dart:38:40 - no_wildcard_variable_uses
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_073700\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_073700\lib_backup\app_routes.dart:596:36 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_073700\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_073700\lib_backup\core\services\push_notification_service.dart:473:70 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_073700\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_073700\lib_backup\features\browse_rooms\browse_rooms_page.dart:270:68 - argument_type_not_assignable
+  error - Target of URI doesn't exist: '../../../providers/room_providers.dart' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/models/room.dart' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:4:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../app_routes.dart' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:5:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/club_background.dart' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:6:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/glow_text.dart' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:7:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/neon_button.dart' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:8:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/auth_guard.dart' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:9:8 - uri_does_not_exist
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:43:38 - undefined_method
+  error - The method 'ClubBackground' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:45:12 - undefined_method
+  error - The name 'GlowText' isn't a class - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:49:24 - creation_with_non_type
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:62:31 - undefined_method
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:98:19 - undefined_method
+  error - Undefined name 'AppRoutes' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:99:70 - undefined_identifier
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:158:27 - undefined_method
+  error - Undefined name 'AppRoutes' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:159:78 - undefined_identifier
+  error - The name 'Room' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:168:24 - non_type_as_type_argument
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:193:39 - undefined_method
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:226:23 - undefined_method
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:228:41 - undefined_method
+  error - Undefined class 'Room' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:283:47 - undefined_class
+  error - The method 'AuthGuard' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:288:35 - undefined_method
+  error - Undefined name 'RoomType' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:431:38 - undefined_identifier
+  error - Undefined name 'RoomType' - cleanup_backup_20260206_073700\lib_backup\features\discover\room_discovery_page_complete.dart:433:44 - undefined_identifier
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_073700\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_073700\lib_backup\features\events\screens\event_details_page.dart:256:100 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_073700\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_073700\lib_backup\features\events\screens\events_list_page.dart:96:24 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_073700\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_073700\lib_backup\features\events\screens\events_list_page.dart:177:30 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_073700\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_073700\lib_backup\features\events\screens\events_list_page.dart:263:30 - argument_type_not_assignable
+  error - Target of URI doesn't exist: '../../../../providers/providers.dart' - cleanup_backup_20260206_073700\lib_backup\features\notifications\screens\notifications_page.dart:3:8 - uri_does_not_exist
+  error - Undefined name 'currentUserProvider' - cleanup_backup_20260206_073700\lib_backup\features\notifications\screens\notifications_page.dart:10:35 - undefined_identifier
+  error - The method 'addCoins' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_073700\lib_backup\features\payment\coin_purchase_page.dart:29:29 - undefined_method
+  error - Undefined class 'SpeedDatingMatch' - cleanup_backup_20260206_073700\lib_backup\features\profile\profile_page.dart:762:26 - undefined_class
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_073700\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_073700\lib_backup\features\profile\profile_page.dart:956:90 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_073700\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_073700\lib_backup\features\profile\profile_page.dart:965:80 - argument_type_not_assignable
+  error - The method 'promoteToSpeaker' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_073700\lib_backup\features\room\screens\room_page.dart:94:26 - undefined_method
+  error - The method 'demoteToListener' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_073700\lib_backup\features\room\screens\room_page.dart:102:26 - undefined_method
+  error - The method 'makeModerator' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_073700\lib_backup\features\room\screens\room_page.dart:110:26 - undefined_method
+  error - The method 'removeModerator' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_073700\lib_backup\features\room\screens\room_page.dart:118:26 - undefined_method
+  error - Too many positional arguments: 2 expected, but 3 found - cleanup_backup_20260206_073700\lib_backup\features\room\screens\room_page.dart:144:59 - extra_positional_arguments
+  error - Too many positional arguments: 2 expected, but 3 found - cleanup_backup_20260206_073700\lib_backup\features\room\screens\room_page.dart:152:59 - extra_positional_arguments
+  error - The method 'approveRaisedHand' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_073700\lib_backup\features\room\screens\room_page.dart:168:26 - undefined_method
+  error - The method 'declineRaisedHand' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_073700\lib_backup\features\room\screens\room_page.dart:176:26 - undefined_method
+  error - The method 'requestToSpeak' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_073700\lib_backup\features\room\screens\room_page.dart:184:26 - undefined_method
+  error - Too many positional arguments: 1 expected, but 2 found - cleanup_backup_20260206_073700\lib_backup\features\room\screens\room_page.dart:204:51 - extra_positional_arguments
+   info - 'dart:html' is deprecated and shouldn't be used. Use package:web and dart:js_interop instead - cleanup_backup_20260206_073700\lib_backup\features\room\screens\voice_room_page.dart:16:1 - deprecated_member_use
+  error - The method 'createRoom' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_073700\lib_backup\features\rooms\create_room_page_complete.dart:46:34 - undefined_method
+  error - Target of URI doesn't exist: 'account_settings_web_stub.dart' - cleanup_backup_20260206_073700\lib_backup\features\settings\account_settings_page.dart:11:8 - uri_does_not_exist
+  error - The method 'downloadJsonOnWeb' isn't defined for the type '_AccountSettingsPageState' - cleanup_backup_20260206_073700\lib_backup\features\settings\account_settings_page.dart:384:7 - undefined_method
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:10:9 - undefined_class
+  error - The getter 'status' isn't defined for the type 'Object' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:61:28 - undefined_getter
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:123:31 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:175:35 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:183:54 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:189:54 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:207:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:211:48 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:217:47 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:303:29 - undefined_class
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:418:46 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:430:23 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:434:30 - undefined_identifier
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:442:30 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_decision_page.dart:459:23 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_lobby_page.dart:201:33 - undefined_class
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_room_page.dart:12:9 - undefined_class
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating\speed_dating_room_page.dart:168:27 - undefined_class
+  error - The method 'getActiveRoundsForEvent' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\features\speed_dating_page.dart:33:65 - undefined_method
+  error - The method 'findActiveSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\event_dating_providers.dart:400:57 - undefined_method
+  error - The method 'createSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\event_dating_providers.dart:410:51 - undefined_method
+  error - The method 'getSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\event_dating_providers.dart:411:49 - undefined_method
+  error - The method 'cancelSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\event_dating_providers.dart:428:35 - undefined_method
+  error - The method 'submitDecision' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\event_dating_providers.dart:451:33 - undefined_method
+  error - The method 'startNextRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\event_dating_providers.dart:470:33 - undefined_method
+  error - The method 'endSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\event_dating_providers.dart:483:33 - undefined_method
+  error - The method 'getSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\event_dating_providers.dart:497:40 - undefined_method
+  error - The argument type 'Object?' can't be assigned to the parameter type 'SpeedDatingRound?'.  - cleanup_backup_20260206_073700\lib_backup\providers\event_dating_providers.dart:502:33 - argument_type_not_assignable
+  error - The method 'getPaymentMethods' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_073700\lib_backup\providers\gamification_payment_providers.dart:218:25 - undefined_method
+  error - The method 'getPaymentHistory' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_073700\lib_backup\providers\gamification_payment_providers.dart:231:33 - undefined_method
+  error - The method 'processPayment' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_073700\lib_backup\providers\gamification_payment_providers.dart:266:44 - undefined_method
+  error - The method 'addPaymentMethod' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_073700\lib_backup\providers\gamification_payment_providers.dart:290:29 - undefined_method
+  error - The method 'removePaymentMethod' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_073700\lib_backup\providers\gamification_payment_providers.dart:306:29 - undefined_method
+  error - The method 'refundPayment' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_073700\lib_backup\providers\gamification_payment_providers.dart:320:29 - undefined_method
+  error - The method 'coinBalanceStream' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_073700\lib_backup\providers\gamification_payment_providers.dart:458:25 - undefined_method
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_073700\lib_backup\providers\providers.dart:154:57 - non_type_as_type_argument
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\providers\providers.dart:213:9 - undefined_class
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_073700\lib_backup\providers\providers.dart:463:22 - non_type_as_type_argument
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_073700\lib_backup\providers\providers.dart:542:58 - non_type_as_type_argument
+  error - The name 'SpeedDatingMatch' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_073700\lib_backup\providers\providers.dart:547:56 - non_type_as_type_argument
+  error - The method 'getRoomStream' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_073700\lib_backup\providers\room_providers.dart:24:48 - undefined_method
+  error - The method 'getLiveRoomsStream' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_073700\lib_backup\providers\room_providers.dart:28:48 - undefined_method
+  error - The argument type 'RoomRole (where RoomRole is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room_role.dart)' can't be assigned to the parameter type 'RoomRole (where RoomRole is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_073700\lib_backup\shared\models\room_role.dart)'.  - cleanup_backup_20260206_073700\lib_backup\providers\room_providers.dart:98:17 - argument_type_not_assignable
+  error - The method 'getSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\speed_dating_controller.dart:15:18 - undefined_method
+  error - The method 'getActiveRoundsForEvent' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\speed_dating_controller.dart:21:18 - undefined_method
+  error - The method 'getUserSpeedDatingResults' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\speed_dating_controller.dart:29:18 - undefined_method
+  error - The method 'getMutualMatches' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\speed_dating_controller.dart:37:18 - undefined_method
+  error - The method 'createSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\speed_dating_controller.dart:58:33 - undefined_method
+  error - The method 'joinSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\speed_dating_controller.dart:67:33 - undefined_method
+  error - The method 'leaveSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\speed_dating_controller.dart:75:33 - undefined_method
+  error - The method 'startSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\speed_dating_controller.dart:83:33 - undefined_method
+  error - The method 'submitSpeedDatingResult' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\speed_dating_controller.dart:91:33 - undefined_method
+  error - The method 'advanceToNextRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\speed_dating_controller.dart:99:33 - undefined_method
+  error - The method 'endSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_073700\lib_backup\providers\speed_dating_controller.dart:107:33 - undefined_method
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_073700\lib_backup\services\agora_web_bridge_v2.dart:4:1 - deprecated_member_use
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_073700\lib_backup\services\agora_web_bridge_v2_simple.dart:3:1 - deprecated_member_use
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:193:10 - non_type_as_type_argument
+  error - The method 'SpeedDatingSession' isn't defined for the type 'FirestoreService' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:197:21 - undefined_method
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:209:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:213:37 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:220:23 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:224:17 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:233:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:237:21 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:239:15 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:247:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:251:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:252:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:253:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:260:14 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:267:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:268:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:269:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:276:14 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:282:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:285:16 - undefined_identifier
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:291:75 - undefined_class
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:295:21 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:297:5 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:307:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:308:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:309:55 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:310:43 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:313:17 - undefined_identifier
+  error - The method 'SpeedDatingMatch' isn't defined for the type 'FirestoreService' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:321:23 - undefined_method
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:337:17 - undefined_identifier
+  error - The name 'SpeedDatingMatch' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:342:15 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingMatch' - cleanup_backup_20260206_073700\lib_backup\services\firestore_service.dart:348:55 - undefined_identifier
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_073700\lib_backup\services\video_engines\agora_web_engine.dart:8:1 - deprecated_member_use
+  error - Target of URI doesn't exist: '../../providers/providers.dart' - cleanup_backup_20260206_073700\lib_backup\shared\gift_selector.dart:3:8 - uri_does_not_exist
+  error - The method 'sendTipProvider' isn't defined for the type '_GiftSelectorState' - cleanup_backup_20260206_073700\lib_backup\shared\gift_selector.dart:42:22 - undefined_method
+  error - Undefined name 'currentUserProvider' - cleanup_backup_20260206_073700\lib_backup\shared\gift_selector.dart:74:35 - undefined_identifier
+  error - The argument type 'Stream<UserPresence?>' can't be assigned to the parameter type 'Stream<UserPresence?>?'.  - cleanup_backup_20260206_073700\lib_backup\shared\widgets\presence_indicator.dart:24:15 - argument_type_not_assignable
+  error - The argument type 'Stream<UserPresence?>' can't be assigned to the parameter type 'Stream<UserPresence?>?'.  - cleanup_backup_20260206_073700\lib_backup\shared\widgets\presence_indicator.dart:75:15 - argument_type_not_assignable
+  error - The getter 'darkTheme' isn't defined for the type 'NeonTheme' - cleanup_backup_20260206_074434\lib_backup\app.dart:17:26 - undefined_getter
+   info - The referenced identifier is a wildcard - cleanup_backup_20260206_074434\lib_backup\app.dart:38:40 - no_wildcard_variable_uses
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074434\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_074434\lib_backup\app_routes.dart:596:36 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074434\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_074434\lib_backup\core\services\push_notification_service.dart:473:70 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074434\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_074434\lib_backup\features\browse_rooms\browse_rooms_page.dart:270:68 - argument_type_not_assignable
+  error - Target of URI doesn't exist: '../../../providers/room_providers.dart' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/models/room.dart' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:4:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../app_routes.dart' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:5:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/club_background.dart' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:6:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/glow_text.dart' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:7:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/neon_button.dart' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:8:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/auth_guard.dart' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:9:8 - uri_does_not_exist
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:43:38 - undefined_method
+  error - The method 'ClubBackground' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:45:12 - undefined_method
+  error - The name 'GlowText' isn't a class - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:49:24 - creation_with_non_type
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:62:31 - undefined_method
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:98:19 - undefined_method
+  error - Undefined name 'AppRoutes' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:99:70 - undefined_identifier
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:158:27 - undefined_method
+  error - Undefined name 'AppRoutes' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:159:78 - undefined_identifier
+  error - The name 'Room' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:168:24 - non_type_as_type_argument
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:193:39 - undefined_method
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:226:23 - undefined_method
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:228:41 - undefined_method
+  error - Undefined class 'Room' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:283:47 - undefined_class
+  error - The method 'AuthGuard' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:288:35 - undefined_method
+  error - Undefined name 'RoomType' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:431:38 - undefined_identifier
+  error - Undefined name 'RoomType' - cleanup_backup_20260206_074434\lib_backup\features\discover\room_discovery_page_complete.dart:433:44 - undefined_identifier
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074434\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_074434\lib_backup\features\events\screens\event_details_page.dart:256:100 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074434\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_074434\lib_backup\features\events\screens\events_list_page.dart:96:24 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074434\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_074434\lib_backup\features\events\screens\events_list_page.dart:177:30 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074434\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_074434\lib_backup\features\events\screens\events_list_page.dart:263:30 - argument_type_not_assignable
+  error - Target of URI doesn't exist: '../../../../providers/providers.dart' - cleanup_backup_20260206_074434\lib_backup\features\notifications\screens\notifications_page.dart:3:8 - uri_does_not_exist
+  error - Undefined name 'currentUserProvider' - cleanup_backup_20260206_074434\lib_backup\features\notifications\screens\notifications_page.dart:10:35 - undefined_identifier
+  error - The method 'addCoins' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074434\lib_backup\features\payment\coin_purchase_page.dart:29:29 - undefined_method
+  error - Undefined class 'SpeedDatingMatch' - cleanup_backup_20260206_074434\lib_backup\features\profile\profile_page.dart:762:26 - undefined_class
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074434\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_074434\lib_backup\features\profile\profile_page.dart:956:90 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074434\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_074434\lib_backup\features\profile\profile_page.dart:965:80 - argument_type_not_assignable
+  error - The method 'promoteToSpeaker' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074434\lib_backup\features\room\screens\room_page.dart:94:26 - undefined_method
+  error - The method 'demoteToListener' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074434\lib_backup\features\room\screens\room_page.dart:102:26 - undefined_method
+  error - The method 'makeModerator' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074434\lib_backup\features\room\screens\room_page.dart:110:26 - undefined_method
+  error - The method 'removeModerator' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074434\lib_backup\features\room\screens\room_page.dart:118:26 - undefined_method
+  error - Too many positional arguments: 2 expected, but 3 found - cleanup_backup_20260206_074434\lib_backup\features\room\screens\room_page.dart:144:59 - extra_positional_arguments
+  error - Too many positional arguments: 2 expected, but 3 found - cleanup_backup_20260206_074434\lib_backup\features\room\screens\room_page.dart:152:59 - extra_positional_arguments
+  error - The method 'approveRaisedHand' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074434\lib_backup\features\room\screens\room_page.dart:168:26 - undefined_method
+  error - The method 'declineRaisedHand' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074434\lib_backup\features\room\screens\room_page.dart:176:26 - undefined_method
+  error - The method 'requestToSpeak' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074434\lib_backup\features\room\screens\room_page.dart:184:26 - undefined_method
+  error - Too many positional arguments: 1 expected, but 2 found - cleanup_backup_20260206_074434\lib_backup\features\room\screens\room_page.dart:204:51 - extra_positional_arguments
+   info - 'dart:html' is deprecated and shouldn't be used. Use package:web and dart:js_interop instead - cleanup_backup_20260206_074434\lib_backup\features\room\screens\voice_room_page.dart:16:1 - deprecated_member_use
+  error - The method 'createRoom' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074434\lib_backup\features\rooms\create_room_page_complete.dart:46:34 - undefined_method
+  error - Target of URI doesn't exist: 'account_settings_web_stub.dart' - cleanup_backup_20260206_074434\lib_backup\features\settings\account_settings_page.dart:11:8 - uri_does_not_exist
+  error - The method 'downloadJsonOnWeb' isn't defined for the type '_AccountSettingsPageState' - cleanup_backup_20260206_074434\lib_backup\features\settings\account_settings_page.dart:384:7 - undefined_method
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:10:9 - undefined_class
+  error - The getter 'status' isn't defined for the type 'Object' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:61:28 - undefined_getter
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:123:31 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:175:35 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:183:54 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:189:54 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:207:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:211:48 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:217:47 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:303:29 - undefined_class
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:418:46 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:430:23 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:434:30 - undefined_identifier
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:442:30 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_decision_page.dart:459:23 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_lobby_page.dart:201:33 - undefined_class
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_room_page.dart:12:9 - undefined_class
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating\speed_dating_room_page.dart:168:27 - undefined_class
+  error - The method 'getActiveRoundsForEvent' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\features\speed_dating_page.dart:33:65 - undefined_method
+  error - The method 'findActiveSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\event_dating_providers.dart:400:57 - undefined_method
+  error - The method 'createSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\event_dating_providers.dart:410:51 - undefined_method
+  error - The method 'getSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\event_dating_providers.dart:411:49 - undefined_method
+  error - The method 'cancelSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\event_dating_providers.dart:428:35 - undefined_method
+  error - The method 'submitDecision' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\event_dating_providers.dart:451:33 - undefined_method
+  error - The method 'startNextRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\event_dating_providers.dart:470:33 - undefined_method
+  error - The method 'endSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\event_dating_providers.dart:483:33 - undefined_method
+  error - The method 'getSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\event_dating_providers.dart:497:40 - undefined_method
+  error - The argument type 'Object?' can't be assigned to the parameter type 'SpeedDatingRound?'.  - cleanup_backup_20260206_074434\lib_backup\providers\event_dating_providers.dart:502:33 - argument_type_not_assignable
+  error - The method 'getPaymentMethods' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074434\lib_backup\providers\gamification_payment_providers.dart:218:25 - undefined_method
+  error - The method 'getPaymentHistory' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074434\lib_backup\providers\gamification_payment_providers.dart:231:33 - undefined_method
+  error - The method 'processPayment' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074434\lib_backup\providers\gamification_payment_providers.dart:266:44 - undefined_method
+  error - The method 'addPaymentMethod' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074434\lib_backup\providers\gamification_payment_providers.dart:290:29 - undefined_method
+  error - The method 'removePaymentMethod' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074434\lib_backup\providers\gamification_payment_providers.dart:306:29 - undefined_method
+  error - The method 'refundPayment' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074434\lib_backup\providers\gamification_payment_providers.dart:320:29 - undefined_method
+  error - The method 'coinBalanceStream' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074434\lib_backup\providers\gamification_payment_providers.dart:458:25 - undefined_method
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074434\lib_backup\providers\providers.dart:154:57 - non_type_as_type_argument
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\providers\providers.dart:213:9 - undefined_class
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074434\lib_backup\providers\providers.dart:463:22 - non_type_as_type_argument
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074434\lib_backup\providers\providers.dart:542:58 - non_type_as_type_argument
+  error - The name 'SpeedDatingMatch' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074434\lib_backup\providers\providers.dart:547:56 - non_type_as_type_argument
+  error - The method 'getRoomStream' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074434\lib_backup\providers\room_providers.dart:24:48 - undefined_method
+  error - The method 'getLiveRoomsStream' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074434\lib_backup\providers\room_providers.dart:28:48 - undefined_method
+  error - The argument type 'RoomRole (where RoomRole is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room_role.dart)' can't be assigned to the parameter type 'RoomRole (where RoomRole is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074434\lib_backup\shared\models\room_role.dart)'.  - cleanup_backup_20260206_074434\lib_backup\providers\room_providers.dart:98:17 - argument_type_not_assignable
+  error - The method 'getSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\speed_dating_controller.dart:15:18 - undefined_method
+  error - The method 'getActiveRoundsForEvent' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\speed_dating_controller.dart:21:18 - undefined_method
+  error - The method 'getUserSpeedDatingResults' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\speed_dating_controller.dart:29:18 - undefined_method
+  error - The method 'getMutualMatches' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\speed_dating_controller.dart:37:18 - undefined_method
+  error - The method 'createSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\speed_dating_controller.dart:58:33 - undefined_method
+  error - The method 'joinSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\speed_dating_controller.dart:67:33 - undefined_method
+  error - The method 'leaveSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\speed_dating_controller.dart:75:33 - undefined_method
+  error - The method 'startSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\speed_dating_controller.dart:83:33 - undefined_method
+  error - The method 'submitSpeedDatingResult' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\speed_dating_controller.dart:91:33 - undefined_method
+  error - The method 'advanceToNextRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\speed_dating_controller.dart:99:33 - undefined_method
+  error - The method 'endSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074434\lib_backup\providers\speed_dating_controller.dart:107:33 - undefined_method
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_074434\lib_backup\services\agora_web_bridge_v2.dart:4:1 - deprecated_member_use
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_074434\lib_backup\services\agora_web_bridge_v2_simple.dart:3:1 - deprecated_member_use
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:193:10 - non_type_as_type_argument
+  error - The method 'SpeedDatingSession' isn't defined for the type 'FirestoreService' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:197:21 - undefined_method
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:209:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:213:37 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:220:23 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:224:17 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:233:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:237:21 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:239:15 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:247:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:251:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:252:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:253:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:260:14 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:267:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:268:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:269:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:276:14 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:282:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:285:16 - undefined_identifier
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:291:75 - undefined_class
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:295:21 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:297:5 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:307:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:308:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:309:55 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:310:43 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:313:17 - undefined_identifier
+  error - The method 'SpeedDatingMatch' isn't defined for the type 'FirestoreService' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:321:23 - undefined_method
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:337:17 - undefined_identifier
+  error - The name 'SpeedDatingMatch' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:342:15 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingMatch' - cleanup_backup_20260206_074434\lib_backup\services\firestore_service.dart:348:55 - undefined_identifier
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_074434\lib_backup\services\video_engines\agora_web_engine.dart:8:1 - deprecated_member_use
+  error - Target of URI doesn't exist: '../../providers/providers.dart' - cleanup_backup_20260206_074434\lib_backup\shared\gift_selector.dart:3:8 - uri_does_not_exist
+  error - The method 'sendTipProvider' isn't defined for the type '_GiftSelectorState' - cleanup_backup_20260206_074434\lib_backup\shared\gift_selector.dart:42:22 - undefined_method
+  error - Undefined name 'currentUserProvider' - cleanup_backup_20260206_074434\lib_backup\shared\gift_selector.dart:74:35 - undefined_identifier
+  error - The argument type 'Stream<UserPresence?>' can't be assigned to the parameter type 'Stream<UserPresence?>?'.  - cleanup_backup_20260206_074434\lib_backup\shared\widgets\presence_indicator.dart:24:15 - argument_type_not_assignable
+  error - The argument type 'Stream<UserPresence?>' can't be assigned to the parameter type 'Stream<UserPresence?>?'.  - cleanup_backup_20260206_074434\lib_backup\shared\widgets\presence_indicator.dart:75:15 - argument_type_not_assignable
+  error - The getter 'darkTheme' isn't defined for the type 'NeonTheme' - cleanup_backup_20260206_074912\lib_backup\app.dart:17:26 - undefined_getter
+   info - The referenced identifier is a wildcard - cleanup_backup_20260206_074912\lib_backup\app.dart:38:40 - no_wildcard_variable_uses
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074912\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_074912\lib_backup\app_routes.dart:596:36 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074912\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_074912\lib_backup\core\services\push_notification_service.dart:473:70 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074912\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_074912\lib_backup\features\browse_rooms\browse_rooms_page.dart:270:68 - argument_type_not_assignable
+  error - Target of URI doesn't exist: '../../../providers/room_providers.dart' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/models/room.dart' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:4:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../app_routes.dart' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:5:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/club_background.dart' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:6:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/glow_text.dart' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:7:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/neon_button.dart' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:8:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/auth_guard.dart' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:9:8 - uri_does_not_exist
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:43:38 - undefined_method
+  error - The method 'ClubBackground' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:45:12 - undefined_method
+  error - The name 'GlowText' isn't a class - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:49:24 - creation_with_non_type
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:62:31 - undefined_method
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:98:19 - undefined_method
+  error - Undefined name 'AppRoutes' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:99:70 - undefined_identifier
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:158:27 - undefined_method
+  error - Undefined name 'AppRoutes' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:159:78 - undefined_identifier
+  error - The name 'Room' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:168:24 - non_type_as_type_argument
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:193:39 - undefined_method
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:226:23 - undefined_method
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:228:41 - undefined_method
+  error - Undefined class 'Room' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:283:47 - undefined_class
+  error - The method 'AuthGuard' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:288:35 - undefined_method
+  error - Undefined name 'RoomType' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:431:38 - undefined_identifier
+  error - Undefined name 'RoomType' - cleanup_backup_20260206_074912\lib_backup\features\discover\room_discovery_page_complete.dart:433:44 - undefined_identifier
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074912\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_074912\lib_backup\features\events\screens\event_details_page.dart:256:100 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074912\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_074912\lib_backup\features\events\screens\events_list_page.dart:96:24 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074912\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_074912\lib_backup\features\events\screens\events_list_page.dart:177:30 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074912\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_074912\lib_backup\features\events\screens\events_list_page.dart:263:30 - argument_type_not_assignable
+  error - Target of URI doesn't exist: '../../../../providers/providers.dart' - cleanup_backup_20260206_074912\lib_backup\features\notifications\screens\notifications_page.dart:3:8 - uri_does_not_exist
+  error - Undefined name 'currentUserProvider' - cleanup_backup_20260206_074912\lib_backup\features\notifications\screens\notifications_page.dart:10:35 - undefined_identifier
+  error - The method 'addCoins' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074912\lib_backup\features\payment\coin_purchase_page.dart:29:29 - undefined_method
+  error - Undefined class 'SpeedDatingMatch' - cleanup_backup_20260206_074912\lib_backup\features\profile\profile_page.dart:762:26 - undefined_class
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074912\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_074912\lib_backup\features\profile\profile_page.dart:956:90 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074912\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_074912\lib_backup\features\profile\profile_page.dart:965:80 - argument_type_not_assignable
+  error - The method 'promoteToSpeaker' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074912\lib_backup\features\room\screens\room_page.dart:94:26 - undefined_method
+  error - The method 'demoteToListener' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074912\lib_backup\features\room\screens\room_page.dart:102:26 - undefined_method
+  error - The method 'makeModerator' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074912\lib_backup\features\room\screens\room_page.dart:110:26 - undefined_method
+  error - The method 'removeModerator' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074912\lib_backup\features\room\screens\room_page.dart:118:26 - undefined_method
+  error - Too many positional arguments: 2 expected, but 3 found - cleanup_backup_20260206_074912\lib_backup\features\room\screens\room_page.dart:144:59 - extra_positional_arguments
+  error - Too many positional arguments: 2 expected, but 3 found - cleanup_backup_20260206_074912\lib_backup\features\room\screens\room_page.dart:152:59 - extra_positional_arguments
+  error - The method 'approveRaisedHand' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074912\lib_backup\features\room\screens\room_page.dart:168:26 - undefined_method
+  error - The method 'declineRaisedHand' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074912\lib_backup\features\room\screens\room_page.dart:176:26 - undefined_method
+  error - The method 'requestToSpeak' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074912\lib_backup\features\room\screens\room_page.dart:184:26 - undefined_method
+  error - Too many positional arguments: 1 expected, but 2 found - cleanup_backup_20260206_074912\lib_backup\features\room\screens\room_page.dart:204:51 - extra_positional_arguments
+   info - 'dart:html' is deprecated and shouldn't be used. Use package:web and dart:js_interop instead - cleanup_backup_20260206_074912\lib_backup\features\room\screens\voice_room_page.dart:16:1 - deprecated_member_use
+  error - The method 'createRoom' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074912\lib_backup\features\rooms\create_room_page_complete.dart:46:34 - undefined_method
+  error - Target of URI doesn't exist: 'account_settings_web_stub.dart' - cleanup_backup_20260206_074912\lib_backup\features\settings\account_settings_page.dart:11:8 - uri_does_not_exist
+  error - The method 'downloadJsonOnWeb' isn't defined for the type '_AccountSettingsPageState' - cleanup_backup_20260206_074912\lib_backup\features\settings\account_settings_page.dart:384:7 - undefined_method
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:10:9 - undefined_class
+  error - The getter 'status' isn't defined for the type 'Object' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:61:28 - undefined_getter
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:123:31 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:175:35 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:183:54 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:189:54 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:207:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:211:48 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:217:47 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:303:29 - undefined_class
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:418:46 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:430:23 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:434:30 - undefined_identifier
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:442:30 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_decision_page.dart:459:23 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_lobby_page.dart:201:33 - undefined_class
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_room_page.dart:12:9 - undefined_class
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating\speed_dating_room_page.dart:168:27 - undefined_class
+  error - The method 'getActiveRoundsForEvent' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\features\speed_dating_page.dart:33:65 - undefined_method
+  error - The method 'findActiveSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\event_dating_providers.dart:400:57 - undefined_method
+  error - The method 'createSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\event_dating_providers.dart:410:51 - undefined_method
+  error - The method 'getSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\event_dating_providers.dart:411:49 - undefined_method
+  error - The method 'cancelSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\event_dating_providers.dart:428:35 - undefined_method
+  error - The method 'submitDecision' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\event_dating_providers.dart:451:33 - undefined_method
+  error - The method 'startNextRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\event_dating_providers.dart:470:33 - undefined_method
+  error - The method 'endSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\event_dating_providers.dart:483:33 - undefined_method
+  error - The method 'getSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\event_dating_providers.dart:497:40 - undefined_method
+  error - The argument type 'Object?' can't be assigned to the parameter type 'SpeedDatingRound?'.  - cleanup_backup_20260206_074912\lib_backup\providers\event_dating_providers.dart:502:33 - argument_type_not_assignable
+  error - The method 'getPaymentMethods' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074912\lib_backup\providers\gamification_payment_providers.dart:218:25 - undefined_method
+  error - The method 'getPaymentHistory' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074912\lib_backup\providers\gamification_payment_providers.dart:231:33 - undefined_method
+  error - The method 'processPayment' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074912\lib_backup\providers\gamification_payment_providers.dart:266:44 - undefined_method
+  error - The method 'addPaymentMethod' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074912\lib_backup\providers\gamification_payment_providers.dart:290:29 - undefined_method
+  error - The method 'removePaymentMethod' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074912\lib_backup\providers\gamification_payment_providers.dart:306:29 - undefined_method
+  error - The method 'refundPayment' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074912\lib_backup\providers\gamification_payment_providers.dart:320:29 - undefined_method
+  error - The method 'coinBalanceStream' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_074912\lib_backup\providers\gamification_payment_providers.dart:458:25 - undefined_method
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074912\lib_backup\providers\providers.dart:154:57 - non_type_as_type_argument
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\providers\providers.dart:213:9 - undefined_class
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074912\lib_backup\providers\providers.dart:463:22 - non_type_as_type_argument
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074912\lib_backup\providers\providers.dart:542:58 - non_type_as_type_argument
+  error - The name 'SpeedDatingMatch' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074912\lib_backup\providers\providers.dart:547:56 - non_type_as_type_argument
+  error - The method 'getRoomStream' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074912\lib_backup\providers\room_providers.dart:24:48 - undefined_method
+  error - The method 'getLiveRoomsStream' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_074912\lib_backup\providers\room_providers.dart:28:48 - undefined_method
+  error - The argument type 'RoomRole (where RoomRole is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room_role.dart)' can't be assigned to the parameter type 'RoomRole (where RoomRole is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_074912\lib_backup\shared\models\room_role.dart)'.  - cleanup_backup_20260206_074912\lib_backup\providers\room_providers.dart:98:17 - argument_type_not_assignable
+  error - The method 'getSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\speed_dating_controller.dart:15:18 - undefined_method
+  error - The method 'getActiveRoundsForEvent' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\speed_dating_controller.dart:21:18 - undefined_method
+  error - The method 'getUserSpeedDatingResults' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\speed_dating_controller.dart:29:18 - undefined_method
+  error - The method 'getMutualMatches' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\speed_dating_controller.dart:37:18 - undefined_method
+  error - The method 'createSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\speed_dating_controller.dart:58:33 - undefined_method
+  error - The method 'joinSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\speed_dating_controller.dart:67:33 - undefined_method
+  error - The method 'leaveSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\speed_dating_controller.dart:75:33 - undefined_method
+  error - The method 'startSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\speed_dating_controller.dart:83:33 - undefined_method
+  error - The method 'submitSpeedDatingResult' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\speed_dating_controller.dart:91:33 - undefined_method
+  error - The method 'advanceToNextRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\speed_dating_controller.dart:99:33 - undefined_method
+  error - The method 'endSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_074912\lib_backup\providers\speed_dating_controller.dart:107:33 - undefined_method
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_074912\lib_backup\services\agora_web_bridge_v2.dart:4:1 - deprecated_member_use
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_074912\lib_backup\services\agora_web_bridge_v2_simple.dart:3:1 - deprecated_member_use
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:193:10 - non_type_as_type_argument
+  error - The method 'SpeedDatingSession' isn't defined for the type 'FirestoreService' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:197:21 - undefined_method
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:209:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:213:37 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:220:23 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:224:17 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:233:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:237:21 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:239:15 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:247:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:251:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:252:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:253:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:260:14 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:267:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:268:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:269:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:276:14 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:282:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:285:16 - undefined_identifier
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:291:75 - undefined_class
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:295:21 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:297:5 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:307:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:308:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:309:55 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:310:43 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:313:17 - undefined_identifier
+  error - The method 'SpeedDatingMatch' isn't defined for the type 'FirestoreService' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:321:23 - undefined_method
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:337:17 - undefined_identifier
+  error - The name 'SpeedDatingMatch' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:342:15 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingMatch' - cleanup_backup_20260206_074912\lib_backup\services\firestore_service.dart:348:55 - undefined_identifier
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_074912\lib_backup\services\video_engines\agora_web_engine.dart:8:1 - deprecated_member_use
+  error - Target of URI doesn't exist: '../../providers/providers.dart' - cleanup_backup_20260206_074912\lib_backup\shared\gift_selector.dart:3:8 - uri_does_not_exist
+  error - The method 'sendTipProvider' isn't defined for the type '_GiftSelectorState' - cleanup_backup_20260206_074912\lib_backup\shared\gift_selector.dart:42:22 - undefined_method
+  error - Undefined name 'currentUserProvider' - cleanup_backup_20260206_074912\lib_backup\shared\gift_selector.dart:74:35 - undefined_identifier
+  error - The argument type 'Stream<UserPresence?>' can't be assigned to the parameter type 'Stream<UserPresence?>?'.  - cleanup_backup_20260206_074912\lib_backup\shared\widgets\presence_indicator.dart:24:15 - argument_type_not_assignable
+  error - The argument type 'Stream<UserPresence?>' can't be assigned to the parameter type 'Stream<UserPresence?>?'.  - cleanup_backup_20260206_074912\lib_backup\shared\widgets\presence_indicator.dart:75:15 - argument_type_not_assignable
+  error - The getter 'darkTheme' isn't defined for the type 'NeonTheme' - cleanup_backup_20260206_075553\lib_backup\app.dart:17:26 - undefined_getter
+   info - The referenced identifier is a wildcard - cleanup_backup_20260206_075553\lib_backup\app.dart:38:40 - no_wildcard_variable_uses
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075553\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_075553\lib_backup\app_routes.dart:596:36 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075553\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_075553\lib_backup\core\services\push_notification_service.dart:473:70 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075553\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_075553\lib_backup\features\browse_rooms\browse_rooms_page.dart:270:68 - argument_type_not_assignable
+  error - Target of URI doesn't exist: '../../../providers/room_providers.dart' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/models/room.dart' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:4:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../app_routes.dart' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:5:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/club_background.dart' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:6:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/glow_text.dart' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:7:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/neon_button.dart' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:8:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/auth_guard.dart' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:9:8 - uri_does_not_exist
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:43:38 - undefined_method
+  error - The method 'ClubBackground' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:45:12 - undefined_method
+  error - The name 'GlowText' isn't a class - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:49:24 - creation_with_non_type
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:62:31 - undefined_method
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:98:19 - undefined_method
+  error - Undefined name 'AppRoutes' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:99:70 - undefined_identifier
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:158:27 - undefined_method
+  error - Undefined name 'AppRoutes' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:159:78 - undefined_identifier
+  error - The name 'Room' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:168:24 - non_type_as_type_argument
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:193:39 - undefined_method
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:226:23 - undefined_method
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:228:41 - undefined_method
+  error - Undefined class 'Room' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:283:47 - undefined_class
+  error - The method 'AuthGuard' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:288:35 - undefined_method
+  error - Undefined name 'RoomType' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:431:38 - undefined_identifier
+  error - Undefined name 'RoomType' - cleanup_backup_20260206_075553\lib_backup\features\discover\room_discovery_page_complete.dart:433:44 - undefined_identifier
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075553\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_075553\lib_backup\features\events\screens\event_details_page.dart:256:100 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075553\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_075553\lib_backup\features\events\screens\events_list_page.dart:96:24 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075553\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_075553\lib_backup\features\events\screens\events_list_page.dart:177:30 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075553\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_075553\lib_backup\features\events\screens\events_list_page.dart:263:30 - argument_type_not_assignable
+  error - Target of URI doesn't exist: '../../../../providers/providers.dart' - cleanup_backup_20260206_075553\lib_backup\features\notifications\screens\notifications_page.dart:3:8 - uri_does_not_exist
+  error - Undefined name 'currentUserProvider' - cleanup_backup_20260206_075553\lib_backup\features\notifications\screens\notifications_page.dart:10:35 - undefined_identifier
+  error - The method 'addCoins' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075553\lib_backup\features\payment\coin_purchase_page.dart:29:29 - undefined_method
+  error - Undefined class 'SpeedDatingMatch' - cleanup_backup_20260206_075553\lib_backup\features\profile\profile_page.dart:762:26 - undefined_class
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075553\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_075553\lib_backup\features\profile\profile_page.dart:956:90 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075553\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_075553\lib_backup\features\profile\profile_page.dart:965:80 - argument_type_not_assignable
+  error - The method 'promoteToSpeaker' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075553\lib_backup\features\room\screens\room_page.dart:94:26 - undefined_method
+  error - The method 'demoteToListener' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075553\lib_backup\features\room\screens\room_page.dart:102:26 - undefined_method
+  error - The method 'makeModerator' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075553\lib_backup\features\room\screens\room_page.dart:110:26 - undefined_method
+  error - The method 'removeModerator' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075553\lib_backup\features\room\screens\room_page.dart:118:26 - undefined_method
+  error - Too many positional arguments: 2 expected, but 3 found - cleanup_backup_20260206_075553\lib_backup\features\room\screens\room_page.dart:144:59 - extra_positional_arguments
+  error - Too many positional arguments: 2 expected, but 3 found - cleanup_backup_20260206_075553\lib_backup\features\room\screens\room_page.dart:152:59 - extra_positional_arguments
+  error - The method 'approveRaisedHand' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075553\lib_backup\features\room\screens\room_page.dart:168:26 - undefined_method
+  error - The method 'declineRaisedHand' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075553\lib_backup\features\room\screens\room_page.dart:176:26 - undefined_method
+  error - The method 'requestToSpeak' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075553\lib_backup\features\room\screens\room_page.dart:184:26 - undefined_method
+  error - Too many positional arguments: 1 expected, but 2 found - cleanup_backup_20260206_075553\lib_backup\features\room\screens\room_page.dart:204:51 - extra_positional_arguments
+   info - 'dart:html' is deprecated and shouldn't be used. Use package:web and dart:js_interop instead - cleanup_backup_20260206_075553\lib_backup\features\room\screens\voice_room_page.dart:16:1 - deprecated_member_use
+  error - The method 'createRoom' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075553\lib_backup\features\rooms\create_room_page_complete.dart:46:34 - undefined_method
+  error - Target of URI doesn't exist: 'account_settings_web_stub.dart' - cleanup_backup_20260206_075553\lib_backup\features\settings\account_settings_page.dart:11:8 - uri_does_not_exist
+  error - The method 'downloadJsonOnWeb' isn't defined for the type '_AccountSettingsPageState' - cleanup_backup_20260206_075553\lib_backup\features\settings\account_settings_page.dart:384:7 - undefined_method
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:10:9 - undefined_class
+  error - The getter 'status' isn't defined for the type 'Object' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:61:28 - undefined_getter
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:123:31 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:175:35 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:183:54 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:189:54 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:207:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:211:48 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:217:47 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:303:29 - undefined_class
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:418:46 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:430:23 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:434:30 - undefined_identifier
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:442:30 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_decision_page.dart:459:23 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_lobby_page.dart:201:33 - undefined_class
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_room_page.dart:12:9 - undefined_class
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating\speed_dating_room_page.dart:168:27 - undefined_class
+  error - The method 'getActiveRoundsForEvent' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\features\speed_dating_page.dart:33:65 - undefined_method
+  error - The method 'findActiveSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\event_dating_providers.dart:400:57 - undefined_method
+  error - The method 'createSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\event_dating_providers.dart:410:51 - undefined_method
+  error - The method 'getSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\event_dating_providers.dart:411:49 - undefined_method
+  error - The method 'cancelSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\event_dating_providers.dart:428:35 - undefined_method
+  error - The method 'submitDecision' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\event_dating_providers.dart:451:33 - undefined_method
+  error - The method 'startNextRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\event_dating_providers.dart:470:33 - undefined_method
+  error - The method 'endSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\event_dating_providers.dart:483:33 - undefined_method
+  error - The method 'getSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\event_dating_providers.dart:497:40 - undefined_method
+  error - The argument type 'Object?' can't be assigned to the parameter type 'SpeedDatingRound?'.  - cleanup_backup_20260206_075553\lib_backup\providers\event_dating_providers.dart:502:33 - argument_type_not_assignable
+  error - The method 'getPaymentMethods' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075553\lib_backup\providers\gamification_payment_providers.dart:218:25 - undefined_method
+  error - The method 'getPaymentHistory' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075553\lib_backup\providers\gamification_payment_providers.dart:231:33 - undefined_method
+  error - The method 'processPayment' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075553\lib_backup\providers\gamification_payment_providers.dart:266:44 - undefined_method
+  error - The method 'addPaymentMethod' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075553\lib_backup\providers\gamification_payment_providers.dart:290:29 - undefined_method
+  error - The method 'removePaymentMethod' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075553\lib_backup\providers\gamification_payment_providers.dart:306:29 - undefined_method
+  error - The method 'refundPayment' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075553\lib_backup\providers\gamification_payment_providers.dart:320:29 - undefined_method
+  error - The method 'coinBalanceStream' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075553\lib_backup\providers\gamification_payment_providers.dart:458:25 - undefined_method
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075553\lib_backup\providers\providers.dart:154:57 - non_type_as_type_argument
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\providers\providers.dart:213:9 - undefined_class
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075553\lib_backup\providers\providers.dart:463:22 - non_type_as_type_argument
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075553\lib_backup\providers\providers.dart:542:58 - non_type_as_type_argument
+  error - The name 'SpeedDatingMatch' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075553\lib_backup\providers\providers.dart:547:56 - non_type_as_type_argument
+  error - The method 'getRoomStream' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075553\lib_backup\providers\room_providers.dart:24:48 - undefined_method
+  error - The method 'getLiveRoomsStream' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075553\lib_backup\providers\room_providers.dart:28:48 - undefined_method
+  error - The argument type 'RoomRole (where RoomRole is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room_role.dart)' can't be assigned to the parameter type 'RoomRole (where RoomRole is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075553\lib_backup\shared\models\room_role.dart)'.  - cleanup_backup_20260206_075553\lib_backup\providers\room_providers.dart:98:17 - argument_type_not_assignable
+  error - The method 'getSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\speed_dating_controller.dart:15:18 - undefined_method
+  error - The method 'getActiveRoundsForEvent' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\speed_dating_controller.dart:21:18 - undefined_method
+  error - The method 'getUserSpeedDatingResults' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\speed_dating_controller.dart:29:18 - undefined_method
+  error - The method 'getMutualMatches' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\speed_dating_controller.dart:37:18 - undefined_method
+  error - The method 'createSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\speed_dating_controller.dart:58:33 - undefined_method
+  error - The method 'joinSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\speed_dating_controller.dart:67:33 - undefined_method
+  error - The method 'leaveSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\speed_dating_controller.dart:75:33 - undefined_method
+  error - The method 'startSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\speed_dating_controller.dart:83:33 - undefined_method
+  error - The method 'submitSpeedDatingResult' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\speed_dating_controller.dart:91:33 - undefined_method
+  error - The method 'advanceToNextRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\speed_dating_controller.dart:99:33 - undefined_method
+  error - The method 'endSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075553\lib_backup\providers\speed_dating_controller.dart:107:33 - undefined_method
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_075553\lib_backup\services\agora_web_bridge_v2.dart:4:1 - deprecated_member_use
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_075553\lib_backup\services\agora_web_bridge_v2_simple.dart:3:1 - deprecated_member_use
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:193:10 - non_type_as_type_argument
+  error - The method 'SpeedDatingSession' isn't defined for the type 'FirestoreService' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:197:21 - undefined_method
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:209:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:213:37 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:220:23 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:224:17 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:233:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:237:21 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:239:15 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:247:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:251:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:252:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:253:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:260:14 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:267:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:268:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:269:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:276:14 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:282:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:285:16 - undefined_identifier
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:291:75 - undefined_class
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:295:21 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:297:5 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:307:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:308:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:309:55 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:310:43 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:313:17 - undefined_identifier
+  error - The method 'SpeedDatingMatch' isn't defined for the type 'FirestoreService' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:321:23 - undefined_method
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:337:17 - undefined_identifier
+  error - The name 'SpeedDatingMatch' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:342:15 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingMatch' - cleanup_backup_20260206_075553\lib_backup\services\firestore_service.dart:348:55 - undefined_identifier
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_075553\lib_backup\services\video_engines\agora_web_engine.dart:8:1 - deprecated_member_use
+  error - Target of URI doesn't exist: '../../providers/providers.dart' - cleanup_backup_20260206_075553\lib_backup\shared\gift_selector.dart:3:8 - uri_does_not_exist
+  error - The method 'sendTipProvider' isn't defined for the type '_GiftSelectorState' - cleanup_backup_20260206_075553\lib_backup\shared\gift_selector.dart:42:22 - undefined_method
+  error - Undefined name 'currentUserProvider' - cleanup_backup_20260206_075553\lib_backup\shared\gift_selector.dart:74:35 - undefined_identifier
+  error - The argument type 'Stream<UserPresence?>' can't be assigned to the parameter type 'Stream<UserPresence?>?'.  - cleanup_backup_20260206_075553\lib_backup\shared\widgets\presence_indicator.dart:24:15 - argument_type_not_assignable
+  error - The argument type 'Stream<UserPresence?>' can't be assigned to the parameter type 'Stream<UserPresence?>?'.  - cleanup_backup_20260206_075553\lib_backup\shared\widgets\presence_indicator.dart:75:15 - argument_type_not_assignable
+  error - The getter 'darkTheme' isn't defined for the type 'NeonTheme' - cleanup_backup_20260206_075612\lib_backup\app.dart:17:26 - undefined_getter
+   info - The referenced identifier is a wildcard - cleanup_backup_20260206_075612\lib_backup\app.dart:38:40 - no_wildcard_variable_uses
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075612\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_075612\lib_backup\app_routes.dart:596:36 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075612\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_075612\lib_backup\core\services\push_notification_service.dart:473:70 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075612\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_075612\lib_backup\features\browse_rooms\browse_rooms_page.dart:270:68 - argument_type_not_assignable
+  error - Target of URI doesn't exist: '../../../providers/room_providers.dart' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:3:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/models/room.dart' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:4:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../app_routes.dart' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:5:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/club_background.dart' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:6:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/glow_text.dart' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:7:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/neon_button.dart' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:8:8 - uri_does_not_exist
+  error - Target of URI doesn't exist: '../../../shared/auth_guard.dart' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:9:8 - uri_does_not_exist
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:43:38 - undefined_method
+  error - The method 'ClubBackground' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:45:12 - undefined_method
+  error - The name 'GlowText' isn't a class - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:49:24 - creation_with_non_type
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:62:31 - undefined_method
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:98:19 - undefined_method
+  error - Undefined name 'AppRoutes' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:99:70 - undefined_identifier
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:158:27 - undefined_method
+  error - Undefined name 'AppRoutes' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:159:78 - undefined_identifier
+  error - The name 'Room' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:168:24 - non_type_as_type_argument
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:193:39 - undefined_method
+  error - The method 'NeonButton' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:226:23 - undefined_method
+  error - The method 'liveRoomsStreamProvider' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:228:41 - undefined_method
+  error - Undefined class 'Room' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:283:47 - undefined_class
+  error - The method 'AuthGuard' isn't defined for the type '_RoomDiscoveryPageCompleteState' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:288:35 - undefined_method
+  error - Undefined name 'RoomType' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:431:38 - undefined_identifier
+  error - Undefined name 'RoomType' - cleanup_backup_20260206_075612\lib_backup\features\discover\room_discovery_page_complete.dart:433:44 - undefined_identifier
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075612\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_075612\lib_backup\features\events\screens\event_details_page.dart:256:100 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075612\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_075612\lib_backup\features\events\screens\events_list_page.dart:96:24 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075612\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_075612\lib_backup\features\events\screens\events_list_page.dart:177:30 - argument_type_not_assignable
+  error - The argument type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075612\lib_backup\shared\models\event.dart)' can't be assigned to the parameter type 'Event (where Event is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\event.dart)'.  - cleanup_backup_20260206_075612\lib_backup\features\events\screens\events_list_page.dart:263:30 - argument_type_not_assignable
+  error - Target of URI doesn't exist: '../../../../providers/providers.dart' - cleanup_backup_20260206_075612\lib_backup\features\notifications\screens\notifications_page.dart:3:8 - uri_does_not_exist
+  error - Undefined name 'currentUserProvider' - cleanup_backup_20260206_075612\lib_backup\features\notifications\screens\notifications_page.dart:10:35 - undefined_identifier
+  error - The method 'addCoins' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075612\lib_backup\features\payment\coin_purchase_page.dart:29:29 - undefined_method
+  error - Undefined class 'SpeedDatingMatch' - cleanup_backup_20260206_075612\lib_backup\features\profile\profile_page.dart:762:26 - undefined_class
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075612\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_075612\lib_backup\features\profile\profile_page.dart:956:90 - argument_type_not_assignable
+  error - The argument type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075612\lib_backup\shared\models\room.dart)' can't be assigned to the parameter type 'Room (where Room is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room.dart)'.  - cleanup_backup_20260206_075612\lib_backup\features\profile\profile_page.dart:965:80 - argument_type_not_assignable
+  error - The method 'promoteToSpeaker' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075612\lib_backup\features\room\screens\room_page.dart:94:26 - undefined_method
+  error - The method 'demoteToListener' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075612\lib_backup\features\room\screens\room_page.dart:102:26 - undefined_method
+  error - The method 'makeModerator' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075612\lib_backup\features\room\screens\room_page.dart:110:26 - undefined_method
+  error - The method 'removeModerator' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075612\lib_backup\features\room\screens\room_page.dart:118:26 - undefined_method
+  error - Too many positional arguments: 2 expected, but 3 found - cleanup_backup_20260206_075612\lib_backup\features\room\screens\room_page.dart:144:59 - extra_positional_arguments
+  error - Too many positional arguments: 2 expected, but 3 found - cleanup_backup_20260206_075612\lib_backup\features\room\screens\room_page.dart:152:59 - extra_positional_arguments
+  error - The method 'approveRaisedHand' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075612\lib_backup\features\room\screens\room_page.dart:168:26 - undefined_method
+  error - The method 'declineRaisedHand' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075612\lib_backup\features\room\screens\room_page.dart:176:26 - undefined_method
+  error - The method 'requestToSpeak' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075612\lib_backup\features\room\screens\room_page.dart:184:26 - undefined_method
+  error - Too many positional arguments: 1 expected, but 2 found - cleanup_backup_20260206_075612\lib_backup\features\room\screens\room_page.dart:204:51 - extra_positional_arguments
+   info - 'dart:html' is deprecated and shouldn't be used. Use package:web and dart:js_interop instead - cleanup_backup_20260206_075612\lib_backup\features\room\screens\voice_room_page.dart:16:1 - deprecated_member_use
+  error - The method 'createRoom' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075612\lib_backup\features\rooms\create_room_page_complete.dart:46:34 - undefined_method
+  error - Target of URI doesn't exist: 'account_settings_web_stub.dart' - cleanup_backup_20260206_075612\lib_backup\features\settings\account_settings_page.dart:11:8 - uri_does_not_exist
+  error - The method 'downloadJsonOnWeb' isn't defined for the type '_AccountSettingsPageState' - cleanup_backup_20260206_075612\lib_backup\features\settings\account_settings_page.dart:384:7 - undefined_method
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:10:9 - undefined_class
+  error - The getter 'status' isn't defined for the type 'Object' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:61:28 - undefined_getter
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:123:31 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:175:35 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:183:54 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:189:54 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:207:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:211:48 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:217:47 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:303:29 - undefined_class
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:418:46 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:430:23 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:434:30 - undefined_identifier
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:442:30 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_decision_page.dart:459:23 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_lobby_page.dart:201:33 - undefined_class
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_room_page.dart:12:9 - undefined_class
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating\speed_dating_room_page.dart:168:27 - undefined_class
+  error - The method 'getActiveRoundsForEvent' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\features\speed_dating_page.dart:33:65 - undefined_method
+  error - The method 'findActiveSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\event_dating_providers.dart:400:57 - undefined_method
+  error - The method 'createSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\event_dating_providers.dart:410:51 - undefined_method
+  error - The method 'getSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\event_dating_providers.dart:411:49 - undefined_method
+  error - The method 'cancelSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\event_dating_providers.dart:428:35 - undefined_method
+  error - The method 'submitDecision' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\event_dating_providers.dart:451:33 - undefined_method
+  error - The method 'startNextRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\event_dating_providers.dart:470:33 - undefined_method
+  error - The method 'endSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\event_dating_providers.dart:483:33 - undefined_method
+  error - The method 'getSession' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\event_dating_providers.dart:497:40 - undefined_method
+  error - The argument type 'Object?' can't be assigned to the parameter type 'SpeedDatingRound?'.  - cleanup_backup_20260206_075612\lib_backup\providers\event_dating_providers.dart:502:33 - argument_type_not_assignable
+  error - The method 'getPaymentMethods' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075612\lib_backup\providers\gamification_payment_providers.dart:218:25 - undefined_method
+  error - The method 'getPaymentHistory' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075612\lib_backup\providers\gamification_payment_providers.dart:231:33 - undefined_method
+  error - The method 'processPayment' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075612\lib_backup\providers\gamification_payment_providers.dart:266:44 - undefined_method
+  error - The method 'addPaymentMethod' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075612\lib_backup\providers\gamification_payment_providers.dart:290:29 - undefined_method
+  error - The method 'removePaymentMethod' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075612\lib_backup\providers\gamification_payment_providers.dart:306:29 - undefined_method
+  error - The method 'refundPayment' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075612\lib_backup\providers\gamification_payment_providers.dart:320:29 - undefined_method
+  error - The method 'coinBalanceStream' isn't defined for the type 'PaymentService' - cleanup_backup_20260206_075612\lib_backup\providers\gamification_payment_providers.dart:458:25 - undefined_method
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075612\lib_backup\providers\providers.dart:154:57 - non_type_as_type_argument
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\providers\providers.dart:213:9 - undefined_class
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075612\lib_backup\providers\providers.dart:463:22 - non_type_as_type_argument
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075612\lib_backup\providers\providers.dart:542:58 - non_type_as_type_argument
+  error - The name 'SpeedDatingMatch' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075612\lib_backup\providers\providers.dart:547:56 - non_type_as_type_argument
+  error - The method 'getRoomStream' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075612\lib_backup\providers\room_providers.dart:24:48 - undefined_method
+  error - The method 'getLiveRoomsStream' isn't defined for the type 'RoomManagerService' - cleanup_backup_20260206_075612\lib_backup\providers\room_providers.dart:28:48 - undefined_method
+  error - The argument type 'RoomRole (where RoomRole is defined in C:\Users\LARRY\MIXMINGLE\lib\shared\models\room_role.dart)' can't be assigned to the parameter type 'RoomRole (where RoomRole is defined in C:\Users\LARRY\MIXMINGLE\cleanup_backup_20260206_075612\lib_backup\shared\models\room_role.dart)'.  - cleanup_backup_20260206_075612\lib_backup\providers\room_providers.dart:98:17 - argument_type_not_assignable
+  error - The method 'getSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\speed_dating_controller.dart:15:18 - undefined_method
+  error - The method 'getActiveRoundsForEvent' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\speed_dating_controller.dart:21:18 - undefined_method
+  error - The method 'getUserSpeedDatingResults' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\speed_dating_controller.dart:29:18 - undefined_method
+  error - The method 'getMutualMatches' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\speed_dating_controller.dart:37:18 - undefined_method
+  error - The method 'createSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\speed_dating_controller.dart:58:33 - undefined_method
+  error - The method 'joinSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\speed_dating_controller.dart:67:33 - undefined_method
+  error - The method 'leaveSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\speed_dating_controller.dart:75:33 - undefined_method
+  error - The method 'startSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\speed_dating_controller.dart:83:33 - undefined_method
+  error - The method 'submitSpeedDatingResult' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\speed_dating_controller.dart:91:33 - undefined_method
+  error - The method 'advanceToNextRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\speed_dating_controller.dart:99:33 - undefined_method
+  error - The method 'endSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - cleanup_backup_20260206_075612\lib_backup\providers\speed_dating_controller.dart:107:33 - undefined_method
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_075612\lib_backup\services\agora_web_bridge_v2.dart:4:1 - deprecated_member_use
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_075612\lib_backup\services\agora_web_bridge_v2_simple.dart:3:1 - deprecated_member_use
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:193:10 - non_type_as_type_argument
+  error - The method 'SpeedDatingSession' isn't defined for the type 'FirestoreService' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:197:21 - undefined_method
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:209:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:213:37 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:220:23 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:224:17 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:233:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:237:21 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:239:15 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:247:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:251:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:252:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:253:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:260:14 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:267:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:268:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:269:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:276:14 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:282:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:285:16 - undefined_identifier
+  error - Undefined class 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:291:75 - undefined_class
+  error - Undefined name 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:295:21 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:297:5 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:307:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:308:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:309:55 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:310:43 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:313:17 - undefined_identifier
+  error - The method 'SpeedDatingMatch' isn't defined for the type 'FirestoreService' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:321:23 - undefined_method
+  error - Undefined name 'SpeedDatingStatus' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:337:17 - undefined_identifier
+  error - The name 'SpeedDatingMatch' isn't a type, so it can't be used as a type argument - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:342:15 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingMatch' - cleanup_backup_20260206_075612\lib_backup\services\firestore_service.dart:348:55 - undefined_identifier
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - cleanup_backup_20260206_075612\lib_backup\services\video_engines\agora_web_engine.dart:8:1 - deprecated_member_use
+  error - Target of URI doesn't exist: '../../providers/providers.dart' - cleanup_backup_20260206_075612\lib_backup\shared\gift_selector.dart:3:8 - uri_does_not_exist
+  error - The method 'sendTipProvider' isn't defined for the type '_GiftSelectorState' - cleanup_backup_20260206_075612\lib_backup\shared\gift_selector.dart:42:22 - undefined_method
+  error - Undefined name 'currentUserProvider' - cleanup_backup_20260206_075612\lib_backup\shared\gift_selector.dart:74:35 - undefined_identifier
+  error - The argument type 'Stream<UserPresence?>' can't be assigned to the parameter type 'Stream<UserPresence?>?'.  - cleanup_backup_20260206_075612\lib_backup\shared\widgets\presence_indicator.dart:24:15 - argument_type_not_assignable
+  error - The argument type 'Stream<UserPresence?>' can't be assigned to the parameter type 'Stream<UserPresence?>?'.  - cleanup_backup_20260206_075612\lib_backup\shared\widgets\presence_indicator.dart:75:15 - argument_type_not_assignable
+  error - The getter 'darkTheme' isn't defined for the type 'NeonTheme' - lib\app.dart:17:26 - undefined_getter
+   info - The referenced identifier is a wildcard - lib\app.dart:38:40 - no_wildcard_variable_uses
+  error - The method 'addCoins' isn't defined for the type 'PaymentService' - lib\features\payment\coin_purchase_page.dart:29:29 - undefined_method
+  error - Undefined class 'SpeedDatingMatch' - lib\features\profile\profile_page.dart:762:26 - undefined_class
+  error - The method 'promoteToSpeaker' isn't defined for the type 'RoomManagerService' - lib\features\room\screens\room_page.dart:94:26 - undefined_method
+  error - The method 'demoteToListener' isn't defined for the type 'RoomManagerService' - lib\features\room\screens\room_page.dart:102:26 - undefined_method
+  error - The method 'makeModerator' isn't defined for the type 'RoomManagerService' - lib\features\room\screens\room_page.dart:110:26 - undefined_method
+  error - The method 'removeModerator' isn't defined for the type 'RoomManagerService' - lib\features\room\screens\room_page.dart:118:26 - undefined_method
+  error - Too many positional arguments: 2 expected, but 3 found - lib\features\room\screens\room_page.dart:144:59 - extra_positional_arguments
+  error - Too many positional arguments: 2 expected, but 3 found - lib\features\room\screens\room_page.dart:152:59 - extra_positional_arguments
+  error - The method 'approveRaisedHand' isn't defined for the type 'RoomManagerService' - lib\features\room\screens\room_page.dart:168:26 - undefined_method
+  error - The method 'declineRaisedHand' isn't defined for the type 'RoomManagerService' - lib\features\room\screens\room_page.dart:176:26 - undefined_method
+  error - The method 'requestToSpeak' isn't defined for the type 'RoomManagerService' - lib\features\room\screens\room_page.dart:184:26 - undefined_method
+  error - Too many positional arguments: 1 expected, but 2 found - lib\features\room\screens\room_page.dart:204:51 - extra_positional_arguments
+   info - 'dart:html' is deprecated and shouldn't be used. Use package:web and dart:js_interop instead - lib\features\room\screens\voice_room_page.dart:16:1 - deprecated_member_use
+  error - The method 'createRoom' isn't defined for the type 'RoomManagerService' - lib\features\rooms\create_room_page_complete.dart:46:34 - undefined_method
+  error - Target of URI doesn't exist: 'account_settings_web_stub.dart' - lib\features\settings\account_settings_page.dart:11:8 - uri_does_not_exist
+  error - The method 'downloadJsonOnWeb' isn't defined for the type '_AccountSettingsPageState' - lib\features\settings\account_settings_page.dart:384:7 - undefined_method
+  error - Undefined class 'SpeedDatingSession' - lib\features\speed_dating\speed_dating_decision_page.dart:10:9 - undefined_class
+  error - The getter 'status' isn't defined for the type 'Object' - lib\features\speed_dating\speed_dating_decision_page.dart:61:28 - undefined_getter
+  error - Undefined class 'SpeedDatingSession' - lib\features\speed_dating\speed_dating_decision_page.dart:123:31 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - lib\features\speed_dating\speed_dating_decision_page.dart:175:35 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - lib\features\speed_dating\speed_dating_decision_page.dart:183:54 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - lib\features\speed_dating\speed_dating_decision_page.dart:189:54 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - lib\features\speed_dating\speed_dating_decision_page.dart:207:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - lib\features\speed_dating\speed_dating_decision_page.dart:211:48 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - lib\features\speed_dating\speed_dating_decision_page.dart:217:47 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - lib\features\speed_dating\speed_dating_decision_page.dart:303:29 - undefined_class
+  error - Undefined class 'SpeedDatingDecision' - lib\features\speed_dating\speed_dating_decision_page.dart:418:46 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - lib\features\speed_dating\speed_dating_decision_page.dart:430:23 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - lib\features\speed_dating\speed_dating_decision_page.dart:434:30 - undefined_identifier
+  error - Undefined class 'SpeedDatingDecision' - lib\features\speed_dating\speed_dating_decision_page.dart:442:30 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - lib\features\speed_dating\speed_dating_decision_page.dart:459:23 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - lib\features\speed_dating\speed_dating_lobby_page.dart:201:33 - undefined_class
+  error - Undefined class 'SpeedDatingSession' - lib\features\speed_dating\speed_dating_room_page.dart:12:9 - undefined_class
+  error - Undefined class 'SpeedDatingSession' - lib\features\speed_dating\speed_dating_room_page.dart:168:27 - undefined_class
+  error - The method 'getActiveRoundsForEvent' isn't defined for the type 'SpeedDatingService' - lib\features\speed_dating_page.dart:33:65 - undefined_method
+  error - The method 'findActiveSession' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:400:57 - undefined_method
+  error - The method 'createSession' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:410:51 - undefined_method
+  error - The method 'getSession' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:411:49 - undefined_method
+  error - The method 'cancelSession' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:428:35 - undefined_method
+  error - The method 'submitDecision' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:451:33 - undefined_method
+  error - The method 'startNextRound' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:470:33 - undefined_method
+  error - The method 'endSession' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:483:33 - undefined_method
+  error - The method 'getSession' isn't defined for the type 'SpeedDatingService' - lib\providers\event_dating_providers.dart:497:40 - undefined_method
+  error - The argument type 'Object?' can't be assigned to the parameter type 'SpeedDatingRound?'.  - lib\providers\event_dating_providers.dart:502:33 - argument_type_not_assignable
+  error - The method 'getPaymentMethods' isn't defined for the type 'PaymentService' - lib\providers\gamification_payment_providers.dart:218:25 - undefined_method
+  error - The method 'getPaymentHistory' isn't defined for the type 'PaymentService' - lib\providers\gamification_payment_providers.dart:231:33 - undefined_method
+  error - The method 'processPayment' isn't defined for the type 'PaymentService' - lib\providers\gamification_payment_providers.dart:266:44 - undefined_method
+  error - The method 'addPaymentMethod' isn't defined for the type 'PaymentService' - lib\providers\gamification_payment_providers.dart:290:29 - undefined_method
+  error - The method 'removePaymentMethod' isn't defined for the type 'PaymentService' - lib\providers\gamification_payment_providers.dart:306:29 - undefined_method
+  error - The method 'refundPayment' isn't defined for the type 'PaymentService' - lib\providers\gamification_payment_providers.dart:320:29 - undefined_method
+  error - The method 'coinBalanceStream' isn't defined for the type 'PaymentService' - lib\providers\gamification_payment_providers.dart:458:25 - undefined_method
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - lib\providers\providers.dart:154:57 - non_type_as_type_argument
+  error - Undefined class 'SpeedDatingSession' - lib\providers\providers.dart:213:9 - undefined_class
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - lib\providers\providers.dart:463:22 - non_type_as_type_argument
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - lib\providers\providers.dart:542:58 - non_type_as_type_argument
+  error - The name 'SpeedDatingMatch' isn't a type, so it can't be used as a type argument - lib\providers\providers.dart:547:56 - non_type_as_type_argument
+  error - The method 'getRoomStream' isn't defined for the type 'RoomManagerService' - lib\providers\room_providers.dart:24:48 - undefined_method
+  error - The method 'getLiveRoomsStream' isn't defined for the type 'RoomManagerService' - lib\providers\room_providers.dart:28:48 - undefined_method
+  error - The method 'getSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - lib\providers\speed_dating_controller.dart:15:18 - undefined_method
+  error - The method 'getActiveRoundsForEvent' isn't defined for the type 'SpeedDatingService' - lib\providers\speed_dating_controller.dart:21:18 - undefined_method
+  error - The method 'getUserSpeedDatingResults' isn't defined for the type 'SpeedDatingService' - lib\providers\speed_dating_controller.dart:29:18 - undefined_method
+  error - The method 'getMutualMatches' isn't defined for the type 'SpeedDatingService' - lib\providers\speed_dating_controller.dart:37:18 - undefined_method
+  error - The method 'createSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - lib\providers\speed_dating_controller.dart:58:33 - undefined_method
+  error - The method 'joinSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - lib\providers\speed_dating_controller.dart:67:33 - undefined_method
+  error - The method 'leaveSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - lib\providers\speed_dating_controller.dart:75:33 - undefined_method
+  error - The method 'startSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - lib\providers\speed_dating_controller.dart:83:33 - undefined_method
+  error - The method 'submitSpeedDatingResult' isn't defined for the type 'SpeedDatingService' - lib\providers\speed_dating_controller.dart:91:33 - undefined_method
+  error - The method 'advanceToNextRound' isn't defined for the type 'SpeedDatingService' - lib\providers\speed_dating_controller.dart:99:33 - undefined_method
+  error - The method 'endSpeedDatingRound' isn't defined for the type 'SpeedDatingService' - lib\providers\speed_dating_controller.dart:107:33 - undefined_method
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - lib\services\agora_web_bridge_v2.dart:4:1 - deprecated_member_use
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - lib\services\agora_web_bridge_v2_simple.dart:3:1 - deprecated_member_use
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - lib\services\firestore_service.dart:193:10 - non_type_as_type_argument
+  error - The method 'SpeedDatingSession' isn't defined for the type 'FirestoreService' - lib\services\firestore_service.dart:197:21 - undefined_method
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - lib\services\firestore_service.dart:209:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingStatus' - lib\services\firestore_service.dart:213:37 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - lib\services\firestore_service.dart:220:23 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - lib\services\firestore_service.dart:224:17 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - lib\services\firestore_service.dart:233:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingSession' - lib\services\firestore_service.dart:237:21 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - lib\services\firestore_service.dart:239:15 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - lib\services\firestore_service.dart:247:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingStatus' - lib\services\firestore_service.dart:251:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - lib\services\firestore_service.dart:252:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - lib\services\firestore_service.dart:253:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - lib\services\firestore_service.dart:260:14 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - lib\services\firestore_service.dart:267:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - lib\services\firestore_service.dart:268:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - lib\services\firestore_service.dart:269:11 - undefined_identifier
+  error - Undefined name 'SpeedDatingSession' - lib\services\firestore_service.dart:276:14 - undefined_identifier
+  error - The name 'SpeedDatingSession' isn't a type, so it can't be used as a type argument - lib\services\firestore_service.dart:282:10 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingSession' - lib\services\firestore_service.dart:285:16 - undefined_identifier
+  error - Undefined class 'SpeedDatingDecision' - lib\services\firestore_service.dart:291:75 - undefined_class
+  error - Undefined name 'SpeedDatingSession' - lib\services\firestore_service.dart:295:21 - undefined_identifier
+  error - Undefined class 'SpeedDatingSession' - lib\services\firestore_service.dart:297:5 - undefined_class
+  error - Undefined name 'SpeedDatingDecision' - lib\services\firestore_service.dart:307:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - lib\services\firestore_service.dart:308:41 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - lib\services\firestore_service.dart:309:55 - undefined_identifier
+  error - Undefined name 'SpeedDatingDecision' - lib\services\firestore_service.dart:310:43 - undefined_identifier
+  error - Undefined name 'SpeedDatingStatus' - lib\services\firestore_service.dart:313:17 - undefined_identifier
+  error - The method 'SpeedDatingMatch' isn't defined for the type 'FirestoreService' - lib\services\firestore_service.dart:321:23 - undefined_method
+  error - Undefined name 'SpeedDatingStatus' - lib\services\firestore_service.dart:337:17 - undefined_identifier
+  error - The name 'SpeedDatingMatch' isn't a type, so it can't be used as a type argument - lib\services\firestore_service.dart:342:15 - non_type_as_type_argument
+  error - Undefined name 'SpeedDatingMatch' - lib\services\firestore_service.dart:348:55 - undefined_identifier
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - lib\services\video_engines\agora_web_engine.dart:8:1 - deprecated_member_use
+
+836 issues found. (ran in 11.8s)

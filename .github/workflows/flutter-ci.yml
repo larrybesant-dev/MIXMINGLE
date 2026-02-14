@@ -1,0 +1,274 @@
+name: Mix & Mingle CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: "3.19.0"
+  JAVA_VERSION: "17"
+
+jobs:
+  # ========================================
+  # CODE QUALITY & TESTING
+  # ========================================
+  analyze-and-test:
+    name: Analyze & Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+          cache: true
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      - name: 🔍 Verify pub get
+        run: flutter pub get --check
+
+      - name: 🔎 Analyze code
+        run: flutter analyze
+
+      - name: 🧪 Run unit tests
+        run: flutter test --coverage --reporter expanded
+
+      - name: 📊 Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+
+      - name: 📈 Generate coverage report
+        run: |
+          sudo apt-get install -y lcov
+          genhtml coverage/lcov.info -o coverage/html
+
+      - name: 📤 Upload coverage HTML
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage/html
+
+  # ========================================
+  # BUILD ANDROID APK (for testing)
+  # ========================================
+  build-android-apk:
+    name: Build Android APK
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+          cache: true
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "zulu"
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: "gradle"
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      - name: 🏗️ Build Android APK
+        run: flutter build apk --debug
+
+      - name: 📤 Upload APK artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-debug.apk
+          path: build/app/outputs/flutter-apk/app-debug.apk
+
+  # ========================================
+  # BUILD ANDROID RELEASE (Play Store)
+  # ========================================
+  build-android-release:
+    name: Build Android Release
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+          cache: true
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "zulu"
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: "gradle"
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      - name: 🔐 Decode Android keystore
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
+
+      - name: 🔑 Create key.properties
+        if: github.ref == 'refs/heads/main'
+        run: |
+          cat > android/key.properties <<EOF
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=keystore.jks
+          EOF
+
+      - name: 🏗️ Build Android App Bundle
+        run: flutter build appbundle --release
+
+      - name: 📤 Upload AAB artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release.aab
+          path: build/app/outputs/bundle/release/app-release.aab
+
+      - name: 🚀 Deploy to Play Store (Internal Testing)
+        if: github.ref == 'refs/heads/main' && false # Disabled until credentials are configured
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+          packageName: com.mixmingle.app
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed
+          inAppUpdatePriority: 2
+          whatsNewDirectory: whatsnew/
+
+  # ========================================
+  # BUILD iOS (TestFlight)
+  # ========================================
+  build-ios:
+    name: Build iOS
+    needs: analyze-and-test
+    runs-on: macos-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔧 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+          cache: true
+
+      - name: 📦 Get dependencies
+        run: flutter pub get
+
+      - name: 🍎 Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "latest-stable"
+
+      - name: 🔨 Install CocoaPods
+        run: |
+          cd ios
+          pod install --repo-update
+          cd ..
+
+      - name: 🏗️ Build iOS (no codesign)
+        run: flutter build ios --release --no-codesign
+
+      - name: 📦 Create IPA
+        if: github.ref == 'refs/heads/main' && false # Disabled until credentials are configured
+        run: |
+          cd build/ios/iphoneos
+          mkdir Payload
+          cp -r Runner.app Payload
+          zip -r app-release.ipa Payload
+          cd ../../..
+
+      - name: 📤 Upload IPA artifact
+        if: github.ref == 'refs/heads/main' && false # Disabled until credentials are configured
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release.ipa
+          path: build/ios/iphoneos/app-release.ipa
+
+      - name: 🚀 Deploy to TestFlight
+        if: github.ref == 'refs/heads/main' && false # Disabled until credentials are configured
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: build/ios/iphoneos/app-release.ipa
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+
+  # ========================================
+  # DEPLOY FIREBASE (Security Rules)
+  # ========================================
+  deploy-firebase:
+    name: Deploy Firebase
+    needs: analyze-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: 📥 Checkout code
+        uses: actions/checkout@v4
+
+      - name: 🔥 Deploy Firestore rules
+        if: false # Disabled until credentials are configured
+        uses: w9jds/firebase-action@master
+        with:
+          args: deploy --only firestore:rules
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+
+  # ========================================
+  # NOTIFICATIONS
+  # ========================================
+  notify-success:
+    name: Notify Success
+    needs: [analyze-and-test, build-android-release, build-ios]
+    runs-on: ubuntu-latest
+    if: success() && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: ✅ Send success notification
+        run: echo "✅ CI/CD Pipeline completed successfully!"
+
+  notify-failure:
+    name: Notify Failure
+    needs: [analyze-and-test, build-android-release, build-ios]
+    runs-on: ubuntu-latest
+    if: failure()
+
+    steps:
+      - name: ❌ Send failure notification
+        run: echo "❌ CI/CD Pipeline failed!"

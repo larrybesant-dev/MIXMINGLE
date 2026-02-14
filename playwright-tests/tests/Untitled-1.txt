@@ -1,0 +1,4 @@
+<script>
+  // Force HTML renderer for better test compatibility
+  window.flutterWebRenderer = "html";
+</script>

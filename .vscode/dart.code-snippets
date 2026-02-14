@@ -1,0 +1,209 @@
+{
+  // ========================================
+  // FLUTTER SNIPPETS
+  // ========================================
+  "Stateless Widget": {
+    "prefix": "stless",
+    "body": [
+      "import 'package:flutter/material.dart';",
+      "",
+      "class ${1:WidgetName} extends StatelessWidget {",
+      "  const ${1:WidgetName}({super.key});",
+      "",
+      "  @override",
+      "  Widget build(BuildContext context) {",
+      "    return ${2:Container}();",
+      "  }",
+      "}"
+    ],
+    "description": "Create a Stateless Widget"
+  },
+  "Stateful Widget": {
+    "prefix": "stful",
+    "body": [
+      "import 'package:flutter/material.dart';",
+      "",
+      "class ${1:WidgetName} extends StatefulWidget {",
+      "  const ${1:WidgetName}({super.key});",
+      "",
+      "  @override",
+      "  State<${1:WidgetName}> createState() => _${1:WidgetName}State();",
+      "}",
+      "",
+      "class _${1:WidgetName}State extends State<${1:WidgetName}> {",
+      "  @override",
+      "  Widget build(BuildContext context) {",
+      "    return ${2:Container}();",
+      "  }",
+      "}"
+    ],
+    "description": "Create a Stateful Widget"
+  },
+  "Riverpod ConsumerWidget": {
+    "prefix": "riverpod-consumer",
+    "body": [
+      "import 'package:flutter/material.dart';",
+      "import 'package:flutter_riverpod/flutter_riverpod.dart';",
+      "",
+      "class ${1:WidgetName} extends ConsumerWidget {",
+      "  const ${1:WidgetName}({super.key});",
+      "",
+      "  @override",
+      "  Widget build(BuildContext context, WidgetRef ref) {",
+      "    ${2:// Watch providers here}",
+      "    return ${3:Container}();",
+      "  }",
+      "}"
+    ],
+    "description": "Create a Riverpod ConsumerWidget"
+  },
+  "Riverpod ConsumerStatefulWidget": {
+    "prefix": "riverpod-consumer-stateful",
+    "body": [
+      "import 'package:flutter/material.dart';",
+      "import 'package:flutter_riverpod/flutter_riverpod.dart';",
+      "",
+      "class ${1:WidgetName} extends ConsumerStatefulWidget {",
+      "  const ${1:WidgetName}({super.key});",
+      "",
+      "  @override",
+      "  ConsumerState<${1:WidgetName}> createState() => _${1:WidgetName}State();",
+      "}",
+      "",
+      "class _${1:WidgetName}State extends ConsumerState<${1:WidgetName}> {",
+      "  @override",
+      "  Widget build(BuildContext context) {",
+      "    ${2:// Watch providers here}",
+      "    return ${3:Container}();",
+      "  }",
+      "}"
+    ],
+    "description": "Create a Riverpod ConsumerStatefulWidget"
+  },
+  "Riverpod Provider": {
+    "prefix": "riverpod-provider",
+    "body": [
+      "final ${1:myProvider} = Provider<${2:Type}>((ref) {",
+      "  ${3:// Provider implementation}",
+      "  return ${4:value};",
+      "});"
+    ],
+    "description": "Create a Riverpod Provider"
+  },
+  "Riverpod StateProvider": {
+    "prefix": "riverpod-state-provider",
+    "body": [
+      "final ${1:myStateProvider} = StateProvider<${2:Type}>((ref) {",
+      "  return ${3:initialValue};",
+      "});"
+    ],
+    "description": "Create a Riverpod StateProvider"
+  },
+  "Riverpod FutureProvider": {
+    "prefix": "riverpod-future-provider",
+    "body": [
+      "final ${1:myFutureProvider} = FutureProvider<${2:Type}>((ref) async {",
+      "  ${3:// Async implementation}",
+      "  return ${4:value};",
+      "});"
+    ],
+    "description": "Create a Riverpod FutureProvider"
+  },
+  "Riverpod StreamProvider": {
+    "prefix": "riverpod-stream-provider",
+    "body": [
+      "final ${1:myStreamProvider} = StreamProvider<${2:Type}>((ref) {",
+      "  ${3:// Stream implementation}",
+      "  return ${4:stream};",
+      "});"
+    ],
+    "description": "Create a Riverpod StreamProvider"
+  },
+  "Firebase Firestore Collection": {
+    "prefix": "firestore-collection",
+    "body": [
+      "final ${1:collectionRef} = FirebaseFirestore.instance.collection('${2:collectionName}');"
+    ],
+    "description": "Create a Firestore collection reference"
+  },
+  "Firebase Firestore Query": {
+    "prefix": "firestore-query",
+    "body": [
+      "final ${1:querySnapshot} = await FirebaseFirestore.instance",
+      "  .collection('${2:collectionName}')",
+      "  .where('${3:field}', isEqualTo: ${4:value})",
+      "  .get();"
+    ],
+    "description": "Create a Firestore query"
+  },
+  "Firebase Auth Sign In": {
+    "prefix": "firebase-signin",
+    "body": [
+      "try {",
+      "  final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(",
+      "    email: ${1:email},",
+      "    password: ${2:password},",
+      "  );",
+      "  ${3:// Success}",
+      "} on FirebaseAuthException catch (e) {",
+      "  ${4:// Handle error}",
+      "}"
+    ],
+    "description": "Firebase Auth sign in with email and password"
+  },
+  "Try-Catch Block": {
+    "prefix": "try",
+    "body": [
+      "try {",
+      "  ${1:// Code that might throw}",
+      "} catch (e) {",
+      "  ${2:// Handle error}",
+      "}"
+    ],
+    "description": "Try-catch block"
+  },
+  "Async Function": {
+    "prefix": "async-func",
+    "body": [
+      "Future<${1:void}> ${2:functionName}() async {",
+      "  ${3:// Async implementation}",
+      "}"
+    ],
+    "description": "Create an async function"
+  },
+  "Print Debug": {
+    "prefix": "debugPrint",
+    "body": [
+      "debugPrint('${1:message}: \\${${2:variable}}');"
+    ],
+    "description": "Debug print statement"
+  },
+  "TODO Comment": {
+    "prefix": "todo",
+    "body": [
+      "// TODO: ${1:description}"
+    ],
+    "description": "TODO comment"
+  },
+  "FIXME Comment": {
+    "prefix": "fixme",
+    "body": [
+      "// FIXME: ${1:description}"
+    ],
+    "description": "FIXME comment"
+  },
+  "BuildContext Extension": {
+    "prefix": "context-theme",
+    "body": [
+      "Theme.of(context)${1:.textTheme}"
+    ],
+    "description": "Access theme from context"
+  },
+  "MediaQuery Size": {
+    "prefix": "media-size",
+    "body": [
+      "MediaQuery.of(context).size.${1:width}"
+    ],
+    "description": "Get MediaQuery size"
+  }
+}

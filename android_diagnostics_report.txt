@@ -1,0 +1,36 @@
+Android Build Diagnostics Report
+=================================
+Date: 02/06/2026 07:57:58
+
+Build Logs:
+  - flutter_doctor_report.txt
+  - android_apk_build_verbose.log
+  - android_aab_build_verbose.log
+
+Next Steps:
+  1. Review android_apk_build_verbose.log for specific error
+  2. Look for lines with "ERROR", "FAILED", "error:"
+  3. Check ANDROID_BUILD_TROUBLESHOOTING.md for fixes
+  4. Common issues:
+     - Gradle version mismatch (need 8.2+)
+     - SDK version mismatch (need compileSdk 34+)
+     - Missing key.properties for signing
+     - Plugin version conflicts
+     - ProGuard/minify issues
+
+Common Fixes:
+  1. Update Gradle:
+     android/gradle/wrapper/gradle-wrapper.properties → gradle-8.2-all.zip
+
+  2. Update Gradle Plugin:
+     android/build.gradle → com.android.tools.build:gradle:8.2.0
+
+  3. Update SDK versions:
+     android/app/build.gradle → compileSdkVersion 34, minSdkVersion 21
+
+  4. Update Flutter plugins:
+     flutter pub upgrade
+     flutter clean && flutter pub get
+
+  5. If ProGuard error, check android/app/proguard-rules.pro
+

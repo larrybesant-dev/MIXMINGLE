@@ -1,0 +1,230 @@
+{
+  "app": {
+    "name": "MixMingle",
+    "tagline": "Conecta. Crea. Celebra."
+  },
+  "auth": {
+    "login": {
+      "title": "Bienvenido de nuevo",
+      "subtitle": "Inicia sesión para continuar",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "forgot_password": "¿Olvidaste tu contraseña?",
+      "sign_in": "Iniciar Sesión",
+      "no_account": "¿No tienes una cuenta?",
+      "sign_up": "Regístrate"
+    },
+    "register": {
+      "title": "Crear Cuenta",
+      "subtitle": "Únete a nuestra comunidad",
+      "name": "Nombre completo",
+      "email": "Correo electrónico",
+      "password": "Contraseña",
+      "confirm_password": "Confirmar contraseña",
+      "agree_terms": "Acepto los Términos de Servicio",
+      "create_account": "Crear Cuenta",
+      "have_account": "¿Ya tienes una cuenta?",
+      "sign_in": "Iniciar Sesión"
+    },
+    "errors": {
+      "invalid_email": "Por favor ingresa un correo electrónico válido",
+      "weak_password": "La contraseña debe tener al menos 8 caracteres",
+      "email_in_use": "Este correo ya está registrado",
+      "wrong_password": "Contraseña incorrecta",
+      "user_not_found": "No se encontró una cuenta con este correo"
+    }
+  },
+  "home": {
+    "title": "Inicio",
+    "welcome": "¡Bienvenido, {name}!",
+    "discover": "Descubrir",
+    "trending": "Tendencias",
+    "for_you": "Para Ti",
+    "live_now": "En Vivo Ahora",
+    "see_all": "Ver Todo"
+  },
+  "rooms": {
+    "title": "Salas",
+    "create": "Crear Sala",
+    "join": "Unirse a Sala",
+    "live": "EN VIVO",
+    "viewers": {
+      "value": "{count} espectadores",
+      "plurals": {
+        "zero": "Sin espectadores",
+        "one": "1 espectador",
+        "other": "{count} espectadores"
+      }
+    },
+    "participants": {
+      "value": "{count} participantes",
+      "plurals": {
+        "zero": "Sin participantes",
+        "one": "1 participante",
+        "other": "{count} participantes"
+      }
+    },
+    "create_modal": {
+      "title": "Crear una Sala",
+      "room_name": "Nombre de la Sala",
+      "room_name_placeholder": "Ingresa un nombre llamativo...",
+      "description": "Descripción",
+      "description_placeholder": "¿De qué trata esta sala?",
+      "category": "Categoría",
+      "visibility": "Visibilidad",
+      "public": "Pública",
+      "private": "Privada",
+      "create_button": "Crear Sala"
+    },
+    "categories": {
+      "music": "Música",
+      "gaming": "Videojuegos",
+      "talk": "Charla",
+      "education": "Educación",
+      "entertainment": "Entretenimiento",
+      "sports": "Deportes",
+      "other": "Otro"
+    }
+  },
+  "profile": {
+    "title": "Perfil",
+    "edit": "Editar Perfil",
+    "followers": "Seguidores",
+    "following": "Siguiendo",
+    "posts": "Publicaciones",
+    "rooms_hosted": "Salas Hospedadas",
+    "settings": "Configuración",
+    "logout": "Cerrar Sesión",
+    "about": "Acerca de",
+    "interests": "Intereses"
+  },
+  "chat": {
+    "title": "Chat",
+    "send": "Enviar",
+    "message_placeholder": "Escribe un mensaje...",
+    "no_messages": "Aún no hay mensajes",
+    "start_conversation": "¡Comienza la conversación!",
+    "blocked": "Este usuario ha sido bloqueado",
+    "deleted": "Mensaje eliminado"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "empty": "Sin notificaciones",
+    "mark_read": "Marcar todo como leído",
+    "types": {
+      "follow": "{name} comenzó a seguirte",
+      "like": "A {name} le gustó tu publicación",
+      "comment": "{name} comentó en tu publicación",
+      "room_invite": "{name} te invitó a una sala",
+      "room_live": "¡{name} está en vivo ahora!",
+      "gift": "{name} te envió un regalo"
+    }
+  },
+  "gifts": {
+    "title": "Regalos",
+    "send": "Enviar Regalo",
+    "select": "Selecciona un regalo",
+    "balance": "Saldo: {amount}",
+    "insufficient": "Saldo insuficiente",
+    "buy_coins": "Comprar Monedas",
+    "sent": "¡Regalo enviado!",
+    "received": "¡Recibiste un regalo de {name}!"
+  },
+  "settings": {
+    "title": "Configuración",
+    "account": "Cuenta",
+    "privacy": "Privacidad",
+    "notifications": "Notificaciones",
+    "appearance": "Apariencia",
+    "language": "Idioma",
+    "help": "Ayuda y Soporte",
+    "about": "Acerca de",
+    "version": "Versión {version}",
+    "dark_mode": "Modo Oscuro",
+    "push_notifications": "Notificaciones Push",
+    "email_notifications": "Notificaciones por Email"
+  },
+  "creator": {
+    "dashboard": "Panel del Creador",
+    "earnings": "Ganancias",
+    "total_earnings": "Ganancias Totales",
+    "pending_balance": "Saldo Pendiente",
+    "payout": "Solicitar Pago",
+    "tier": "Nivel de Creador",
+    "analytics": "Analíticas",
+    "views": "Vistas Totales",
+    "engagement": "Tasa de Engagement"
+  },
+  "time": {
+    "just_now": "Ahora mismo",
+    "minutes_ago": {
+      "value": "hace {count} minutos",
+      "plurals": {
+        "one": "hace 1 minuto",
+        "other": "hace {count} minutos"
+      }
+    },
+    "hours_ago": {
+      "value": "hace {count} horas",
+      "plurals": {
+        "one": "hace 1 hora",
+        "other": "hace {count} horas"
+      }
+    },
+    "days_ago": {
+      "value": "hace {count} días",
+      "plurals": {
+        "one": "Ayer",
+        "other": "hace {count} días"
+      }
+    },
+    "months_ago": {
+      "value": "hace {count} meses",
+      "plurals": {
+        "one": "hace 1 mes",
+        "other": "hace {count} meses"
+      }
+    },
+    "years_ago": {
+      "value": "hace {count} años",
+      "plurals": {
+        "one": "hace 1 año",
+        "other": "hace {count} años"
+      }
+    }
+  },
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "done": "Listo",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "retry": "Reintentar",
+    "search": "Buscar",
+    "search_placeholder": "Buscar...",
+    "no_results": "No se encontraron resultados",
+    "share": "Compartir",
+    "report": "Reportar",
+    "block": "Bloquear",
+    "unblock": "Desbloquear",
+    "follow": "Seguir",
+    "unfollow": "Dejar de seguir",
+    "continue": "Continuar",
+    "skip": "Omitir"
+  },
+  "errors": {
+    "generic": "Algo salió mal. Por favor intenta de nuevo.",
+    "network": "Sin conexión a internet",
+    "timeout": "La solicitud expiró",
+    "unauthorized": "Necesitas iniciar sesión para continuar",
+    "permission_denied": "Permiso denegado",
+    "not_found": "No encontrado"
+  }
+}

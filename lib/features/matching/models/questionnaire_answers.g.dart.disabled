@@ -1,0 +1,276 @@
+// GENERATED CODE - DO NOT MODIFY BY HAND
+
+part of 'questionnaire_answers.dart';
+
+// **************************************************************************
+// JsonSerializableGenerator
+// **************************************************************************
+
+_$QuestionnaireAnswersImpl _$$QuestionnaireAnswersImplFromJson(
+        Map<String, dynamic> json) =>
+    _$QuestionnaireAnswersImpl(
+      relationshipIntent: $enumDecodeNullable(
+          _$RelationshipIntentEnumMap, json['relationshipIntent']),
+      partnerVibe:
+          $enumDecodeNullable(_$PartnerVibeEnumMap, json['partnerVibe']),
+      connectionStyle: $enumDecodeNullable(
+          _$ConnectionStyleEnumMap, json['connectionStyle']),
+      weekendEnergy:
+          $enumDecodeNullable(_$WeekendEnergyEnumMap, json['weekendEnergy']),
+      musicIdentity:
+          $enumDecodeNullable(_$MusicIdentityEnumMap, json['musicIdentity']),
+      socialStyle:
+          $enumDecodeNullable(_$SocialStyleEnumMap, json['socialStyle']),
+      personalityTrait: $enumDecodeNullable(
+          _$PersonalityTraitEnumMap, json['personalityTrait']),
+      communicationStyle: $enumDecodeNullable(
+          _$CommunicationStyleEnumMap, json['communicationStyle']),
+      loveLanguage:
+          $enumDecodeNullable(_$LoveLanguageEnumMap, json['loveLanguage']),
+      attractionTrigger: $enumDecodeNullable(
+          _$AttractionTriggerEnumMap, json['attractionTrigger']),
+      dealbreaker:
+          $enumDecodeNullable(_$DealbreakerEnumMap, json['dealbreaker']),
+      flirtingStyle:
+          $enumDecodeNullable(_$FlirtingStyleEnumMap, json['flirtingStyle']),
+      icebreakerType:
+          $enumDecodeNullable(_$IcebreakerTypeEnumMap, json['icebreakerType']),
+      favoritePrompt:
+          $enumDecodeNullable(_$FavoritePromptEnumMap, json['favoritePrompt']),
+      minAge: (json['minAge'] as num?)?.toInt() ?? 18,
+      maxAge: (json['maxAge'] as num?)?.toInt() ?? 80,
+      preferredGenders: (json['preferredGenders'] as List<dynamic>?)
+              ?.map((e) => $enumDecode(_$PreferredGenderEnumMap, e))
+              .toList() ??
+          const [],
+      distancePreference: $enumDecodeNullable(
+              _$DistancePreferenceEnumMap, json['distancePreference']) ??
+          DistancePreference.within25Miles,
+      smokingPreference: $enumDecodeNullable(
+          _$SmokingPreferenceEnumMap, json['smokingPreference']),
+      drinkingPreference: $enumDecodeNullable(
+          _$DrinkingPreferenceEnumMap, json['drinkingPreference']),
+      cannabisPreference: $enumDecodeNullable(
+          _$CannabisPreferenceEnumMap, json['cannabisPreference']),
+      petsPreference:
+          $enumDecodeNullable(_$PetsPreferenceEnumMap, json['petsPreference']),
+      kidsPreference:
+          $enumDecodeNullable(_$KidsPreferenceEnumMap, json['kidsPreference']),
+    );
+
+Map<String, dynamic> _$$QuestionnaireAnswersImplToJson(
+        _$QuestionnaireAnswersImpl instance) =>
+    <String, dynamic>{
+      'relationshipIntent':
+          _$RelationshipIntentEnumMap[instance.relationshipIntent],
+      'partnerVibe': _$PartnerVibeEnumMap[instance.partnerVibe],
+      'connectionStyle': _$ConnectionStyleEnumMap[instance.connectionStyle],
+      'weekendEnergy': _$WeekendEnergyEnumMap[instance.weekendEnergy],
+      'musicIdentity': _$MusicIdentityEnumMap[instance.musicIdentity],
+      'socialStyle': _$SocialStyleEnumMap[instance.socialStyle],
+      'personalityTrait': _$PersonalityTraitEnumMap[instance.personalityTrait],
+      'communicationStyle':
+          _$CommunicationStyleEnumMap[instance.communicationStyle],
+      'loveLanguage': _$LoveLanguageEnumMap[instance.loveLanguage],
+      'attractionTrigger':
+          _$AttractionTriggerEnumMap[instance.attractionTrigger],
+      'dealbreaker': _$DealbreakerEnumMap[instance.dealbreaker],
+      'flirtingStyle': _$FlirtingStyleEnumMap[instance.flirtingStyle],
+      'icebreakerType': _$IcebreakerTypeEnumMap[instance.icebreakerType],
+      'favoritePrompt': _$FavoritePromptEnumMap[instance.favoritePrompt],
+      'minAge': instance.minAge,
+      'maxAge': instance.maxAge,
+      'preferredGenders': instance.preferredGenders
+          .map((e) => _$PreferredGenderEnumMap[e]!)
+          .toList(),
+      'distancePreference':
+          _$DistancePreferenceEnumMap[instance.distancePreference]!,
+      'smokingPreference':
+          _$SmokingPreferenceEnumMap[instance.smokingPreference],
+      'drinkingPreference':
+          _$DrinkingPreferenceEnumMap[instance.drinkingPreference],
+      'cannabisPreference':
+          _$CannabisPreferenceEnumMap[instance.cannabisPreference],
+      'petsPreference': _$PetsPreferenceEnumMap[instance.petsPreference],
+      'kidsPreference': _$KidsPreferenceEnumMap[instance.kidsPreference],
+    };
+
+const _$RelationshipIntentEnumMap = {
+  RelationshipIntent.casualDating: 'casualDating',
+  RelationshipIntent.seriousRelationship: 'seriousRelationship',
+  RelationshipIntent.friendship: 'friendship',
+  RelationshipIntent.networking: 'networking',
+  RelationshipIntent.figureItOut: 'figureItOut',
+};
+
+const _$PartnerVibeEnumMap = {
+  PartnerVibe.adventurous: 'adventurous',
+  PartnerVibe.intellectual: 'intellectual',
+  PartnerVibe.creative: 'creative',
+  PartnerVibe.athletic: 'athletic',
+  PartnerVibe.spiritual: 'spiritual',
+  PartnerVibe.ambitious: 'ambitious',
+  PartnerVibe.chill: 'chill',
+};
+
+const _$ConnectionStyleEnumMap = {
+  ConnectionStyle.deepConversations: 'deepConversations',
+  ConnectionStyle.sharedActivities: 'sharedActivities',
+  ConnectionStyle.physical: 'physical',
+  ConnectionStyle.humor: 'humor',
+  ConnectionStyle.emotional: 'emotional',
+};
+
+const _$WeekendEnergyEnumMap = {
+  WeekendEnergy.partyAnimal: 'partyAnimal',
+  WeekendEnergy.socialButterfly: 'socialButterfly',
+  WeekendEnergy.balancedMix: 'balancedMix',
+  WeekendEnergy.quietNights: 'quietNights',
+  WeekendEnergy.homebody: 'homebody',
+};
+
+const _$MusicIdentityEnumMap = {
+  MusicIdentity.popLover: 'popLover',
+  MusicIdentity.rockRebel: 'rockRebel',
+  MusicIdentity.hiphopHead: 'hiphopHead',
+  MusicIdentity.jazzSoul: 'jazzSoul',
+  MusicIdentity.electronic: 'electronic',
+  MusicIdentity.indie: 'indie',
+  MusicIdentity.classical: 'classical',
+  MusicIdentity.country: 'country',
+  MusicIdentity.eclectic: 'eclectic',
+};
+
+const _$SocialStyleEnumMap = {
+  SocialStyle.extrovert: 'extrovert',
+  SocialStyle.introvert: 'introvert',
+  SocialStyle.ambivert: 'ambivert',
+  SocialStyle.selective: 'selective',
+};
+
+const _$PersonalityTraitEnumMap = {
+  PersonalityTrait.spontaneous: 'spontaneous',
+  PersonalityTrait.planner: 'planner',
+  PersonalityTrait.analytical: 'analytical',
+  PersonalityTrait.creative: 'creative',
+  PersonalityTrait.empathetic: 'empathetic',
+  PersonalityTrait.confident: 'confident',
+  PersonalityTrait.curious: 'curious',
+};
+
+const _$CommunicationStyleEnumMap = {
+  CommunicationStyle.directHonest: 'directHonest',
+  CommunicationStyle.diplomaticCareful: 'diplomaticCareful',
+  CommunicationStyle.playfulTeasing: 'playfulTeasing',
+  CommunicationStyle.deepEmotional: 'deepEmotional',
+  CommunicationStyle.logicalPractical: 'logicalPractical',
+};
+
+const _$LoveLanguageEnumMap = {
+  LoveLanguage.wordsOfAffirmation: 'wordsOfAffirmation',
+  LoveLanguage.qualityTime: 'qualityTime',
+  LoveLanguage.physicalTouch: 'physicalTouch',
+  LoveLanguage.actsOfService: 'actsOfService',
+  LoveLanguage.receivingGifts: 'receivingGifts',
+};
+
+const _$AttractionTriggerEnumMap = {
+  AttractionTrigger.intelligence: 'intelligence',
+  AttractionTrigger.humor: 'humor',
+  AttractionTrigger.confidence: 'confidence',
+  AttractionTrigger.kindness: 'kindness',
+  AttractionTrigger.ambition: 'ambition',
+  AttractionTrigger.creativity: 'creativity',
+  AttractionTrigger.physicalAppearance: 'physicalAppearance',
+  AttractionTrigger.sharedValues: 'sharedValues',
+};
+
+const _$DealbreakerEnumMap = {
+  Dealbreaker.smoking: 'smoking',
+  Dealbreaker.poorHygiene: 'poorHygiene',
+  Dealbreaker.rudeness: 'rudeness',
+  Dealbreaker.dishonesty: 'dishonesty',
+  Dealbreaker.lackOfAmbition: 'lackOfAmbition',
+  Dealbreaker.differentValues: 'differentValues',
+  Dealbreaker.badCommunication: 'badCommunication',
+  Dealbreaker.jealousy: 'jealousy',
+};
+
+const _$FlirtingStyleEnumMap = {
+  FlirtingStyle.playfulTeasing: 'playfulTeasing',
+  FlirtingStyle.directConfident: 'directConfident',
+  FlirtingStyle.shySubtle: 'shySubtle',
+  FlirtingStyle.intellectualBanter: 'intellectualBanter',
+  FlirtingStyle.compliments: 'compliments',
+  FlirtingStyle.physicalTouch: 'physicalTouch',
+};
+
+const _$IcebreakerTypeEnumMap = {
+  IcebreakerType.funnyQuestion: 'funnyQuestion',
+  IcebreakerType.deepPhilosophical: 'deepPhilosophical',
+  IcebreakerType.wouldYouRather: 'wouldYouRather',
+  IcebreakerType.storyTime: 'storyTime',
+  IcebreakerType.debate: 'debate',
+  IcebreakerType.game: 'game',
+};
+
+const _$FavoritePromptEnumMap = {
+  FavoritePrompt.twoTruthsOneLie: 'twoTruthsOneLie',
+  FavoritePrompt.bestTravelStory: 'bestTravelStory',
+  FavoritePrompt.passionProject: 'passionProject',
+  FavoritePrompt.perfectDate: 'perfectDate',
+  FavoritePrompt.unpopularOpinion: 'unpopularOpinion',
+  FavoritePrompt.hiddenTalent: 'hiddenTalent',
+};
+
+const _$PreferredGenderEnumMap = {
+  PreferredGender.men: 'men',
+  PreferredGender.women: 'women',
+  PreferredGender.nonBinary: 'nonBinary',
+  PreferredGender.everyone: 'everyone',
+};
+
+const _$DistancePreferenceEnumMap = {
+  DistancePreference.within5Miles: 'within5Miles',
+  DistancePreference.within10Miles: 'within10Miles',
+  DistancePreference.within25Miles: 'within25Miles',
+  DistancePreference.within50Miles: 'within50Miles',
+  DistancePreference.anywhere: 'anywhere',
+};
+
+const _$SmokingPreferenceEnumMap = {
+  SmokingPreference.never: 'never',
+  SmokingPreference.socially: 'socially',
+  SmokingPreference.regularly: 'regularly',
+  SmokingPreference.noPreference: 'noPreference',
+};
+
+const _$DrinkingPreferenceEnumMap = {
+  DrinkingPreference.never: 'never',
+  DrinkingPreference.socially: 'socially',
+  DrinkingPreference.regularly: 'regularly',
+  DrinkingPreference.noPreference: 'noPreference',
+};
+
+const _$CannabisPreferenceEnumMap = {
+  CannabisPreference.never: 'never',
+  CannabisPreference.occasionally: 'occasionally',
+  CannabisPreference.regularly: 'regularly',
+  CannabisPreference.noPreference: 'noPreference',
+};
+
+const _$PetsPreferenceEnumMap = {
+  PetsPreference.loveDogs: 'loveDogs',
+  PetsPreference.loveCats: 'loveCats',
+  PetsPreference.loveBoth: 'loveBoth',
+  PetsPreference.noPreference: 'noPreference',
+  PetsPreference.noPets: 'noPets',
+};
+
+const _$KidsPreferenceEnumMap = {
+  KidsPreference.haveKids: 'haveKids',
+  KidsPreference.wantKids: 'wantKids',
+  KidsPreference.dontWantKids: 'dontWantKids',
+  KidsPreference.openToIt: 'openToIt',
+  KidsPreference.noPreference: 'noPreference',
+};

@@ -1,0 +1,679 @@
+// coverage:ignore-file
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'questionnaire_answers.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+T _$identity<T>(T value) => value;
+
+final _privateConstructorUsedError = UnsupportedError(
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+
+QuestionnaireAnswers _$QuestionnaireAnswersFromJson(Map<String, dynamic> json) {
+  return _QuestionnaireAnswers.fromJson(json);
+}
+
+/// @nodoc
+mixin _$QuestionnaireAnswers {
+  RelationshipIntent? get relationshipIntent =>
+      throw _privateConstructorUsedError;
+  PartnerVibe? get partnerVibe => throw _privateConstructorUsedError;
+  ConnectionStyle? get connectionStyle => throw _privateConstructorUsedError;
+  WeekendEnergy? get weekendEnergy => throw _privateConstructorUsedError;
+  MusicIdentity? get musicIdentity => throw _privateConstructorUsedError;
+  SocialStyle? get socialStyle => throw _privateConstructorUsedError;
+  PersonalityTrait? get personalityTrait => throw _privateConstructorUsedError;
+  CommunicationStyle? get communicationStyle =>
+      throw _privateConstructorUsedError;
+  LoveLanguage? get loveLanguage => throw _privateConstructorUsedError;
+  AttractionTrigger? get attractionTrigger =>
+      throw _privateConstructorUsedError;
+  Dealbreaker? get dealbreaker => throw _privateConstructorUsedError;
+  FlirtingStyle? get flirtingStyle => throw _privateConstructorUsedError;
+  IcebreakerType? get icebreakerType => throw _privateConstructorUsedError;
+  FavoritePrompt? get favoritePrompt => throw _privateConstructorUsedError;
+  int get minAge => throw _privateConstructorUsedError;
+  int get maxAge => throw _privateConstructorUsedError;
+  List<PreferredGender> get preferredGenders =>
+      throw _privateConstructorUsedError;
+  DistancePreference get distancePreference =>
+      throw _privateConstructorUsedError;
+  SmokingPreference? get smokingPreference =>
+      throw _privateConstructorUsedError;
+  DrinkingPreference? get drinkingPreference =>
+      throw _privateConstructorUsedError;
+  CannabisPreference? get cannabisPreference =>
+      throw _privateConstructorUsedError;
+  PetsPreference? get petsPreference => throw _privateConstructorUsedError;
+  KidsPreference? get kidsPreference => throw _privateConstructorUsedError;
+
+  /// Serializes this QuestionnaireAnswers to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of QuestionnaireAnswers
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $QuestionnaireAnswersCopyWith<QuestionnaireAnswers> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $QuestionnaireAnswersCopyWith<$Res> {
+  factory $QuestionnaireAnswersCopyWith(QuestionnaireAnswers value,
+          $Res Function(QuestionnaireAnswers) then) =
+      _$QuestionnaireAnswersCopyWithImpl<$Res, QuestionnaireAnswers>;
+  @useResult
+  $Res call(
+      {RelationshipIntent? relationshipIntent,
+      PartnerVibe? partnerVibe,
+      ConnectionStyle? connectionStyle,
+      WeekendEnergy? weekendEnergy,
+      MusicIdentity? musicIdentity,
+      SocialStyle? socialStyle,
+      PersonalityTrait? personalityTrait,
+      CommunicationStyle? communicationStyle,
+      LoveLanguage? loveLanguage,
+      AttractionTrigger? attractionTrigger,
+      Dealbreaker? dealbreaker,
+      FlirtingStyle? flirtingStyle,
+      IcebreakerType? icebreakerType,
+      FavoritePrompt? favoritePrompt,
+      int minAge,
+      int maxAge,
+      List<PreferredGender> preferredGenders,
+      DistancePreference distancePreference,
+      SmokingPreference? smokingPreference,
+      DrinkingPreference? drinkingPreference,
+      CannabisPreference? cannabisPreference,
+      PetsPreference? petsPreference,
+      KidsPreference? kidsPreference});
+}
+
+/// @nodoc
+class _$QuestionnaireAnswersCopyWithImpl<$Res,
+        $Val extends QuestionnaireAnswers>
+    implements $QuestionnaireAnswersCopyWith<$Res> {
+  _$QuestionnaireAnswersCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of QuestionnaireAnswers
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? relationshipIntent = freezed,
+    Object? partnerVibe = freezed,
+    Object? connectionStyle = freezed,
+    Object? weekendEnergy = freezed,
+    Object? musicIdentity = freezed,
+    Object? socialStyle = freezed,
+    Object? personalityTrait = freezed,
+    Object? communicationStyle = freezed,
+    Object? loveLanguage = freezed,
+    Object? attractionTrigger = freezed,
+    Object? dealbreaker = freezed,
+    Object? flirtingStyle = freezed,
+    Object? icebreakerType = freezed,
+    Object? favoritePrompt = freezed,
+    Object? minAge = null,
+    Object? maxAge = null,
+    Object? preferredGenders = null,
+    Object? distancePreference = null,
+    Object? smokingPreference = freezed,
+    Object? drinkingPreference = freezed,
+    Object? cannabisPreference = freezed,
+    Object? petsPreference = freezed,
+    Object? kidsPreference = freezed,
+  }) {
+    return _then(_value.copyWith(
+      relationshipIntent: freezed == relationshipIntent
+          ? _value.relationshipIntent
+          : relationshipIntent // ignore: cast_nullable_to_non_nullable
+              as RelationshipIntent?,
+      partnerVibe: freezed == partnerVibe
+          ? _value.partnerVibe
+          : partnerVibe // ignore: cast_nullable_to_non_nullable
+              as PartnerVibe?,
+      connectionStyle: freezed == connectionStyle
+          ? _value.connectionStyle
+          : connectionStyle // ignore: cast_nullable_to_non_nullable
+              as ConnectionStyle?,
+      weekendEnergy: freezed == weekendEnergy
+          ? _value.weekendEnergy
+          : weekendEnergy // ignore: cast_nullable_to_non_nullable
+              as WeekendEnergy?,
+      musicIdentity: freezed == musicIdentity
+          ? _value.musicIdentity
+          : musicIdentity // ignore: cast_nullable_to_non_nullable
+              as MusicIdentity?,
+      socialStyle: freezed == socialStyle
+          ? _value.socialStyle
+          : socialStyle // ignore: cast_nullable_to_non_nullable
+              as SocialStyle?,
+      personalityTrait: freezed == personalityTrait
+          ? _value.personalityTrait
+          : personalityTrait // ignore: cast_nullable_to_non_nullable
+              as PersonalityTrait?,
+      communicationStyle: freezed == communicationStyle
+          ? _value.communicationStyle
+          : communicationStyle // ignore: cast_nullable_to_non_nullable
+              as CommunicationStyle?,
+      loveLanguage: freezed == loveLanguage
+          ? _value.loveLanguage
+          : loveLanguage // ignore: cast_nullable_to_non_nullable
+              as LoveLanguage?,
+      attractionTrigger: freezed == attractionTrigger
+          ? _value.attractionTrigger
+          : attractionTrigger // ignore: cast_nullable_to_non_nullable
+              as AttractionTrigger?,
+      dealbreaker: freezed == dealbreaker
+          ? _value.dealbreaker
+          : dealbreaker // ignore: cast_nullable_to_non_nullable
+              as Dealbreaker?,
+      flirtingStyle: freezed == flirtingStyle
+          ? _value.flirtingStyle
+          : flirtingStyle // ignore: cast_nullable_to_non_nullable
+              as FlirtingStyle?,
+      icebreakerType: freezed == icebreakerType
+          ? _value.icebreakerType
+          : icebreakerType // ignore: cast_nullable_to_non_nullable
+              as IcebreakerType?,
+      favoritePrompt: freezed == favoritePrompt
+          ? _value.favoritePrompt
+          : favoritePrompt // ignore: cast_nullable_to_non_nullable
+              as FavoritePrompt?,
+      minAge: null == minAge
+          ? _value.minAge
+          : minAge // ignore: cast_nullable_to_non_nullable
+              as int,
+      maxAge: null == maxAge
+          ? _value.maxAge
+          : maxAge // ignore: cast_nullable_to_non_nullable
+              as int,
+      preferredGenders: null == preferredGenders
+          ? _value.preferredGenders
+          : preferredGenders // ignore: cast_nullable_to_non_nullable
+              as List<PreferredGender>,
+      distancePreference: null == distancePreference
+          ? _value.distancePreference
+          : distancePreference // ignore: cast_nullable_to_non_nullable
+              as DistancePreference,
+      smokingPreference: freezed == smokingPreference
+          ? _value.smokingPreference
+          : smokingPreference // ignore: cast_nullable_to_non_nullable
+              as SmokingPreference?,
+      drinkingPreference: freezed == drinkingPreference
+          ? _value.drinkingPreference
+          : drinkingPreference // ignore: cast_nullable_to_non_nullable
+              as DrinkingPreference?,
+      cannabisPreference: freezed == cannabisPreference
+          ? _value.cannabisPreference
+          : cannabisPreference // ignore: cast_nullable_to_non_nullable
+              as CannabisPreference?,
+      petsPreference: freezed == petsPreference
+          ? _value.petsPreference
+          : petsPreference // ignore: cast_nullable_to_non_nullable
+              as PetsPreference?,
+      kidsPreference: freezed == kidsPreference
+          ? _value.kidsPreference
+          : kidsPreference // ignore: cast_nullable_to_non_nullable
+              as KidsPreference?,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$QuestionnaireAnswersImplCopyWith<$Res>
+    implements $QuestionnaireAnswersCopyWith<$Res> {
+  factory _$$QuestionnaireAnswersImplCopyWith(_$QuestionnaireAnswersImpl value,
+          $Res Function(_$QuestionnaireAnswersImpl) then) =
+      __$$QuestionnaireAnswersImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {RelationshipIntent? relationshipIntent,
+      PartnerVibe? partnerVibe,
+      ConnectionStyle? connectionStyle,
+      WeekendEnergy? weekendEnergy,
+      MusicIdentity? musicIdentity,
+      SocialStyle? socialStyle,
+      PersonalityTrait? personalityTrait,
+      CommunicationStyle? communicationStyle,
+      LoveLanguage? loveLanguage,
+      AttractionTrigger? attractionTrigger,
+      Dealbreaker? dealbreaker,
+      FlirtingStyle? flirtingStyle,
+      IcebreakerType? icebreakerType,
+      FavoritePrompt? favoritePrompt,
+      int minAge,
+      int maxAge,
+      List<PreferredGender> preferredGenders,
+      DistancePreference distancePreference,
+      SmokingPreference? smokingPreference,
+      DrinkingPreference? drinkingPreference,
+      CannabisPreference? cannabisPreference,
+      PetsPreference? petsPreference,
+      KidsPreference? kidsPreference});
+}
+
+/// @nodoc
+class __$$QuestionnaireAnswersImplCopyWithImpl<$Res>
+    extends _$QuestionnaireAnswersCopyWithImpl<$Res, _$QuestionnaireAnswersImpl>
+    implements _$$QuestionnaireAnswersImplCopyWith<$Res> {
+  __$$QuestionnaireAnswersImplCopyWithImpl(_$QuestionnaireAnswersImpl _value,
+      $Res Function(_$QuestionnaireAnswersImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of QuestionnaireAnswers
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? relationshipIntent = freezed,
+    Object? partnerVibe = freezed,
+    Object? connectionStyle = freezed,
+    Object? weekendEnergy = freezed,
+    Object? musicIdentity = freezed,
+    Object? socialStyle = freezed,
+    Object? personalityTrait = freezed,
+    Object? communicationStyle = freezed,
+    Object? loveLanguage = freezed,
+    Object? attractionTrigger = freezed,
+    Object? dealbreaker = freezed,
+    Object? flirtingStyle = freezed,
+    Object? icebreakerType = freezed,
+    Object? favoritePrompt = freezed,
+    Object? minAge = null,
+    Object? maxAge = null,
+    Object? preferredGenders = null,
+    Object? distancePreference = null,
+    Object? smokingPreference = freezed,
+    Object? drinkingPreference = freezed,
+    Object? cannabisPreference = freezed,
+    Object? petsPreference = freezed,
+    Object? kidsPreference = freezed,
+  }) {
+    return _then(_$QuestionnaireAnswersImpl(
+      relationshipIntent: freezed == relationshipIntent
+          ? _value.relationshipIntent
+          : relationshipIntent // ignore: cast_nullable_to_non_nullable
+              as RelationshipIntent?,
+      partnerVibe: freezed == partnerVibe
+          ? _value.partnerVibe
+          : partnerVibe // ignore: cast_nullable_to_non_nullable
+              as PartnerVibe?,
+      connectionStyle: freezed == connectionStyle
+          ? _value.connectionStyle
+          : connectionStyle // ignore: cast_nullable_to_non_nullable
+              as ConnectionStyle?,
+      weekendEnergy: freezed == weekendEnergy
+          ? _value.weekendEnergy
+          : weekendEnergy // ignore: cast_nullable_to_non_nullable
+              as WeekendEnergy?,
+      musicIdentity: freezed == musicIdentity
+          ? _value.musicIdentity
+          : musicIdentity // ignore: cast_nullable_to_non_nullable
+              as MusicIdentity?,
+      socialStyle: freezed == socialStyle
+          ? _value.socialStyle
+          : socialStyle // ignore: cast_nullable_to_non_nullable
+              as SocialStyle?,
+      personalityTrait: freezed == personalityTrait
+          ? _value.personalityTrait
+          : personalityTrait // ignore: cast_nullable_to_non_nullable
+              as PersonalityTrait?,
+      communicationStyle: freezed == communicationStyle
+          ? _value.communicationStyle
+          : communicationStyle // ignore: cast_nullable_to_non_nullable
+              as CommunicationStyle?,
+      loveLanguage: freezed == loveLanguage
+          ? _value.loveLanguage
+          : loveLanguage // ignore: cast_nullable_to_non_nullable
+              as LoveLanguage?,
+      attractionTrigger: freezed == attractionTrigger
+          ? _value.attractionTrigger
+          : attractionTrigger // ignore: cast_nullable_to_non_nullable
+              as AttractionTrigger?,
+      dealbreaker: freezed == dealbreaker
+          ? _value.dealbreaker
+          : dealbreaker // ignore: cast_nullable_to_non_nullable
+              as Dealbreaker?,
+      flirtingStyle: freezed == flirtingStyle
+          ? _value.flirtingStyle
+          : flirtingStyle // ignore: cast_nullable_to_non_nullable
+              as FlirtingStyle?,
+      icebreakerType: freezed == icebreakerType
+          ? _value.icebreakerType
+          : icebreakerType // ignore: cast_nullable_to_non_nullable
+              as IcebreakerType?,
+      favoritePrompt: freezed == favoritePrompt
+          ? _value.favoritePrompt
+          : favoritePrompt // ignore: cast_nullable_to_non_nullable
+              as FavoritePrompt?,
+      minAge: null == minAge
+          ? _value.minAge
+          : minAge // ignore: cast_nullable_to_non_nullable
+              as int,
+      maxAge: null == maxAge
+          ? _value.maxAge
+          : maxAge // ignore: cast_nullable_to_non_nullable
+              as int,
+      preferredGenders: null == preferredGenders
+          ? _value._preferredGenders
+          : preferredGenders // ignore: cast_nullable_to_non_nullable
+              as List<PreferredGender>,
+      distancePreference: null == distancePreference
+          ? _value.distancePreference
+          : distancePreference // ignore: cast_nullable_to_non_nullable
+              as DistancePreference,
+      smokingPreference: freezed == smokingPreference
+          ? _value.smokingPreference
+          : smokingPreference // ignore: cast_nullable_to_non_nullable
+              as SmokingPreference?,
+      drinkingPreference: freezed == drinkingPreference
+          ? _value.drinkingPreference
+          : drinkingPreference // ignore: cast_nullable_to_non_nullable
+              as DrinkingPreference?,
+      cannabisPreference: freezed == cannabisPreference
+          ? _value.cannabisPreference
+          : cannabisPreference // ignore: cast_nullable_to_non_nullable
+              as CannabisPreference?,
+      petsPreference: freezed == petsPreference
+          ? _value.petsPreference
+          : petsPreference // ignore: cast_nullable_to_non_nullable
+              as PetsPreference?,
+      kidsPreference: freezed == kidsPreference
+          ? _value.kidsPreference
+          : kidsPreference // ignore: cast_nullable_to_non_nullable
+              as KidsPreference?,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$QuestionnaireAnswersImpl extends _QuestionnaireAnswers {
+  const _$QuestionnaireAnswersImpl(
+      {this.relationshipIntent,
+      this.partnerVibe,
+      this.connectionStyle,
+      this.weekendEnergy,
+      this.musicIdentity,
+      this.socialStyle,
+      this.personalityTrait,
+      this.communicationStyle,
+      this.loveLanguage,
+      this.attractionTrigger,
+      this.dealbreaker,
+      this.flirtingStyle,
+      this.icebreakerType,
+      this.favoritePrompt,
+      this.minAge = 18,
+      this.maxAge = 80,
+      final List<PreferredGender> preferredGenders = const [],
+      this.distancePreference = DistancePreference.within25Miles,
+      this.smokingPreference,
+      this.drinkingPreference,
+      this.cannabisPreference,
+      this.petsPreference,
+      this.kidsPreference})
+      : _preferredGenders = preferredGenders,
+        super._();
+
+  factory _$QuestionnaireAnswersImpl.fromJson(Map<String, dynamic> json) =>
+      _$$QuestionnaireAnswersImplFromJson(json);
+
+  @override
+  final RelationshipIntent? relationshipIntent;
+  @override
+  final PartnerVibe? partnerVibe;
+  @override
+  final ConnectionStyle? connectionStyle;
+  @override
+  final WeekendEnergy? weekendEnergy;
+  @override
+  final MusicIdentity? musicIdentity;
+  @override
+  final SocialStyle? socialStyle;
+  @override
+  final PersonalityTrait? personalityTrait;
+  @override
+  final CommunicationStyle? communicationStyle;
+  @override
+  final LoveLanguage? loveLanguage;
+  @override
+  final AttractionTrigger? attractionTrigger;
+  @override
+  final Dealbreaker? dealbreaker;
+  @override
+  final FlirtingStyle? flirtingStyle;
+  @override
+  final IcebreakerType? icebreakerType;
+  @override
+  final FavoritePrompt? favoritePrompt;
+  @override
+  @JsonKey()
+  final int minAge;
+  @override
+  @JsonKey()
+  final int maxAge;
+  final List<PreferredGender> _preferredGenders;
+  @override
+  @JsonKey()
+  List<PreferredGender> get preferredGenders {
+    if (_preferredGenders is EqualUnmodifiableListView)
+      return _preferredGenders;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_preferredGenders);
+  }
+
+  @override
+  @JsonKey()
+  final DistancePreference distancePreference;
+  @override
+  final SmokingPreference? smokingPreference;
+  @override
+  final DrinkingPreference? drinkingPreference;
+  @override
+  final CannabisPreference? cannabisPreference;
+  @override
+  final PetsPreference? petsPreference;
+  @override
+  final KidsPreference? kidsPreference;
+
+  @override
+  String toString() {
+    return 'QuestionnaireAnswers(relationshipIntent: $relationshipIntent, partnerVibe: $partnerVibe, connectionStyle: $connectionStyle, weekendEnergy: $weekendEnergy, musicIdentity: $musicIdentity, socialStyle: $socialStyle, personalityTrait: $personalityTrait, communicationStyle: $communicationStyle, loveLanguage: $loveLanguage, attractionTrigger: $attractionTrigger, dealbreaker: $dealbreaker, flirtingStyle: $flirtingStyle, icebreakerType: $icebreakerType, favoritePrompt: $favoritePrompt, minAge: $minAge, maxAge: $maxAge, preferredGenders: $preferredGenders, distancePreference: $distancePreference, smokingPreference: $smokingPreference, drinkingPreference: $drinkingPreference, cannabisPreference: $cannabisPreference, petsPreference: $petsPreference, kidsPreference: $kidsPreference)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$QuestionnaireAnswersImpl &&
+            (identical(other.relationshipIntent, relationshipIntent) ||
+                other.relationshipIntent == relationshipIntent) &&
+            (identical(other.partnerVibe, partnerVibe) ||
+                other.partnerVibe == partnerVibe) &&
+            (identical(other.connectionStyle, connectionStyle) ||
+                other.connectionStyle == connectionStyle) &&
+            (identical(other.weekendEnergy, weekendEnergy) ||
+                other.weekendEnergy == weekendEnergy) &&
+            (identical(other.musicIdentity, musicIdentity) ||
+                other.musicIdentity == musicIdentity) &&
+            (identical(other.socialStyle, socialStyle) ||
+                other.socialStyle == socialStyle) &&
+            (identical(other.personalityTrait, personalityTrait) ||
+                other.personalityTrait == personalityTrait) &&
+            (identical(other.communicationStyle, communicationStyle) ||
+                other.communicationStyle == communicationStyle) &&
+            (identical(other.loveLanguage, loveLanguage) ||
+                other.loveLanguage == loveLanguage) &&
+            (identical(other.attractionTrigger, attractionTrigger) ||
+                other.attractionTrigger == attractionTrigger) &&
+            (identical(other.dealbreaker, dealbreaker) ||
+                other.dealbreaker == dealbreaker) &&
+            (identical(other.flirtingStyle, flirtingStyle) ||
+                other.flirtingStyle == flirtingStyle) &&
+            (identical(other.icebreakerType, icebreakerType) ||
+                other.icebreakerType == icebreakerType) &&
+            (identical(other.favoritePrompt, favoritePrompt) ||
+                other.favoritePrompt == favoritePrompt) &&
+            (identical(other.minAge, minAge) || other.minAge == minAge) &&
+            (identical(other.maxAge, maxAge) || other.maxAge == maxAge) &&
+            const DeepCollectionEquality()
+                .equals(other._preferredGenders, _preferredGenders) &&
+            (identical(other.distancePreference, distancePreference) ||
+                other.distancePreference == distancePreference) &&
+            (identical(other.smokingPreference, smokingPreference) ||
+                other.smokingPreference == smokingPreference) &&
+            (identical(other.drinkingPreference, drinkingPreference) ||
+                other.drinkingPreference == drinkingPreference) &&
+            (identical(other.cannabisPreference, cannabisPreference) ||
+                other.cannabisPreference == cannabisPreference) &&
+            (identical(other.petsPreference, petsPreference) ||
+                other.petsPreference == petsPreference) &&
+            (identical(other.kidsPreference, kidsPreference) ||
+                other.kidsPreference == kidsPreference));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        relationshipIntent,
+        partnerVibe,
+        connectionStyle,
+        weekendEnergy,
+        musicIdentity,
+        socialStyle,
+        personalityTrait,
+        communicationStyle,
+        loveLanguage,
+        attractionTrigger,
+        dealbreaker,
+        flirtingStyle,
+        icebreakerType,
+        favoritePrompt,
+        minAge,
+        maxAge,
+        const DeepCollectionEquality().hash(_preferredGenders),
+        distancePreference,
+        smokingPreference,
+        drinkingPreference,
+        cannabisPreference,
+        petsPreference,
+        kidsPreference
+      ]);
+
+  /// Create a copy of QuestionnaireAnswers
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$QuestionnaireAnswersImplCopyWith<_$QuestionnaireAnswersImpl>
+      get copyWith =>
+          __$$QuestionnaireAnswersImplCopyWithImpl<_$QuestionnaireAnswersImpl>(
+              this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$QuestionnaireAnswersImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _QuestionnaireAnswers extends QuestionnaireAnswers {
+  const factory _QuestionnaireAnswers(
+      {final RelationshipIntent? relationshipIntent,
+      final PartnerVibe? partnerVibe,
+      final ConnectionStyle? connectionStyle,
+      final WeekendEnergy? weekendEnergy,
+      final MusicIdentity? musicIdentity,
+      final SocialStyle? socialStyle,
+      final PersonalityTrait? personalityTrait,
+      final CommunicationStyle? communicationStyle,
+      final LoveLanguage? loveLanguage,
+      final AttractionTrigger? attractionTrigger,
+      final Dealbreaker? dealbreaker,
+      final FlirtingStyle? flirtingStyle,
+      final IcebreakerType? icebreakerType,
+      final FavoritePrompt? favoritePrompt,
+      final int minAge,
+      final int maxAge,
+      final List<PreferredGender> preferredGenders,
+      final DistancePreference distancePreference,
+      final SmokingPreference? smokingPreference,
+      final DrinkingPreference? drinkingPreference,
+      final CannabisPreference? cannabisPreference,
+      final PetsPreference? petsPreference,
+      final KidsPreference? kidsPreference}) = _$QuestionnaireAnswersImpl;
+  const _QuestionnaireAnswers._() : super._();
+
+  factory _QuestionnaireAnswers.fromJson(Map<String, dynamic> json) =
+      _$QuestionnaireAnswersImpl.fromJson;
+
+  @override
+  RelationshipIntent? get relationshipIntent;
+  @override
+  PartnerVibe? get partnerVibe;
+  @override
+  ConnectionStyle? get connectionStyle;
+  @override
+  WeekendEnergy? get weekendEnergy;
+  @override
+  MusicIdentity? get musicIdentity;
+  @override
+  SocialStyle? get socialStyle;
+  @override
+  PersonalityTrait? get personalityTrait;
+  @override
+  CommunicationStyle? get communicationStyle;
+  @override
+  LoveLanguage? get loveLanguage;
+  @override
+  AttractionTrigger? get attractionTrigger;
+  @override
+  Dealbreaker? get dealbreaker;
+  @override
+  FlirtingStyle? get flirtingStyle;
+  @override
+  IcebreakerType? get icebreakerType;
+  @override
+  FavoritePrompt? get favoritePrompt;
+  @override
+  int get minAge;
+  @override
+  int get maxAge;
+  @override
+  List<PreferredGender> get preferredGenders;
+  @override
+  DistancePreference get distancePreference;
+  @override
+  SmokingPreference? get smokingPreference;
+  @override
+  DrinkingPreference? get drinkingPreference;
+  @override
+  CannabisPreference? get cannabisPreference;
+  @override
+  PetsPreference? get petsPreference;
+  @override
+  KidsPreference? get kidsPreference;
+
+  /// Create a copy of QuestionnaireAnswers
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$QuestionnaireAnswersImplCopyWith<_$QuestionnaireAnswersImpl>
+      get copyWith => throw _privateConstructorUsedError;
+}

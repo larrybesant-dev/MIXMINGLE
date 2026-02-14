@@ -1,0 +1,174 @@
+{
+  "categories": [
+    {
+      "id": "music",
+      "name": "Music",
+      "icon": "music_note",
+      "interests": [
+        "Pop",
+        "Rock",
+        "Hip Hop",
+        "Jazz",
+        "Classical",
+        "Electronic",
+        "Country",
+        "R&B",
+        "Indie",
+        "Metal"
+      ]
+    },
+    {
+      "id": "sports",
+      "name": "Sports & Fitness",
+      "icon": "sports_soccer",
+      "interests": [
+        "Soccer",
+        "Basketball",
+        "Tennis",
+        "Running",
+        "Gym",
+        "Yoga",
+        "Swimming",
+        "Cycling",
+        "Hiking",
+        "Boxing"
+      ]
+    },
+    {
+      "id": "food",
+      "name": "Food & Drink",
+      "icon": "restaurant",
+      "interests": [
+        "Cooking",
+        "Baking",
+        "Wine Tasting",
+        "Coffee",
+        "Craft Beer",
+        "Fine Dining",
+        "Street Food",
+        "Veganism",
+        "BBQ",
+        "Cocktails"
+      ]
+    },
+    {
+      "id": "arts",
+      "name": "Arts & Culture",
+      "icon": "palette",
+      "interests": [
+        "Painting",
+        "Photography",
+        "Theater",
+        "Museums",
+        "Dance",
+        "Sculpture",
+        "Drawing",
+        "Film",
+        "Poetry",
+        "Literature"
+      ]
+    },
+    {
+      "id": "technology",
+      "name": "Technology",
+      "icon": "computer",
+      "interests": [
+        "Coding",
+        "Gaming",
+        "AI",
+        "Crypto",
+        "Gadgets",
+        "Robotics",
+        "VR",
+        "Startups",
+        "Apps",
+        "Cybersecurity"
+      ]
+    },
+    {
+      "id": "travel",
+      "name": "Travel & Adventure",
+      "icon": "flight",
+      "interests": [
+        "Backpacking",
+        "Beach Vacations",
+        "City Breaks",
+        "Road Trips",
+        "Camping",
+        "Cruises",
+        "Solo Travel",
+        "Cultural Tours",
+        "Safari",
+        "Skiing"
+      ]
+    },
+    {
+      "id": "entertainment",
+      "name": "Entertainment",
+      "icon": "movie",
+      "interests": [
+        "Movies",
+        "TV Shows",
+        "Anime",
+        "Stand-up Comedy",
+        "Concerts",
+        "Festivals",
+        "Board Games",
+        "Karaoke",
+        "Escape Rooms",
+        "Comedy Shows"
+      ]
+    },
+    {
+      "id": "lifestyle",
+      "name": "Lifestyle",
+      "icon": "spa",
+      "interests": [
+        "Fashion",
+        "Beauty",
+        "Meditation",
+        "Wellness",
+        "Sustainability",
+        "Volunteering",
+        "Gardening",
+        "Interior Design",
+        "DIY",
+        "Pets"
+      ]
+    },
+    {
+      "id": "learning",
+      "name": "Learning & Growth",
+      "icon": "school",
+      "interests": [
+        "Reading",
+        "Languages",
+        "History",
+        "Science",
+        "Philosophy",
+        "Business",
+        "Psychology",
+        "Podcasts",
+        "Online Courses",
+        "Writing"
+      ]
+    },
+    {
+      "id": "social",
+      "name": "Social",
+      "icon": "people",
+      "interests": [
+        "Networking",
+        "Parties",
+        "Clubbing",
+        "Meetups",
+        "Speed Dating",
+        "Game Nights",
+        "Wine Nights",
+        "Brunch",
+        "Pub Quizzes",
+        "Social Causes"
+      ]
+    }
+  ]
+}

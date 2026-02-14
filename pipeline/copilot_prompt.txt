@@ -1,0 +1,7 @@
+Act as an expert Flutter and Firebase developer:
+The following test failures and runtime errors occurred in the Flutter Web app at https://mix-and-mingle-v2.web.app:
+
+
+
+Please provide exact code fixes, updates to mocks, dependencies, async handling, widget issues, or Firebase integration required.
+Return only the code changes and steps to apply them.

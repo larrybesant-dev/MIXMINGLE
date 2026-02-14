@@ -1,0 +1,173 @@
+================================================================================
+⭐ PHASE 1: SCAN MODE - DETECT ALL ISSUES
+================================================================================
+
+You are a Flutter/Firebase/Agora code auditor. Your task is to scan the entire
+Mix & Mingle project and produce a COMPREHENSIVE INVENTORY of every issue.
+
+DO NOT fix anything yet. ONLY scan and report.
+
+Scan for:
+
+1. AGORA WEB/MOBILE SPLIT
+   - Is conditional import correct? (should use real bridge on web)
+   - Is kIsWeb check in joinChannel?
+   - Does web path return early?
+   - Mobile fallback still happening on web?
+
+2. JAVASCRIPT BRIDGE INTEROP
+   - Are dart:js calls using correct pattern? (js.context['object'].callMethod, not js.context.callMethod('object.method'))
+   - Is window.agoraWeb properly structured?
+   - Can Dart actually invoke window methods?
+   - Are promises being converted with promiseToFuture?
+
+3. JOIN FLOW
+   - Auth check before room join?
+   - Permission verification working?
+   - Token generation Cloud Function callable?
+   - Participant doc creation?
+   - Agora join happening after token received?
+   - Both web and mobile paths covered?
+
+4. LEAVE FLOW
+   - Agora.leaveChannel() being called?
+   - Participant doc being deleted?
+   - currentRoomId being cleared?
+   - UI properly updating?
+
+5. CRASHLYTICS & WEB COMPATIBILITY
+   - Are Crashlytics calls guarded with kIsWeb?
+   - Any MissingPluginException risk on web?
+   - Firebase cloud functions accessible on web?
+
+6. NULL SAFETY & TYPE ISSUES
+   - Null checks before accessing properties?
+   - Optional types properly handled?
+   - Type mismatches in state management?
+
+7. ASYNC FLOW ISSUES
+   - Are all futures being awaited?
+   - Are listeners in correct lifecycle methods?
+   - ref.listen in build() not initState()?
+   - Riverpod lifecycle violations?
+
+8. IMPORTS & DEPENDENCIES
+   - Missing imports?
+   - Unused imports?
+   - Circular dependencies?
+   - Platform-specific imports missing if (dart.library.io)?
+
+9. PLATFORM FALLTHROUGH
+   - Web code falling through to native paths?
+   - Native code falling through to web?
+   - Early returns not working?
+
+10. FIRESTORE INTEGRATION
+    - Listeners set up properly?
+    - Collections being read/written to?
+    - Subcollections accessible?
+    - Real-time updates working?
+
+FOR EACH ISSUE FOUND, report in this format:
+---
+**File:** [path/to/file.dart]
+**Line:** [line number or range]
+**Severity:** CRITICAL | HIGH | MEDIUM | LOW
+**Issue:** [one-line description]
+**Details:** [what's wrong and why]
+**Current Code:** [snippet of actual code]
+---
+
+After scanning ALL files, provide:
+1. Count of issues by severity
+2. Top 5 critical issues
+3. Dependency chain (what must be fixed first)
+
+START SCANNING.
+
+================================================================================
+⭐ PHASE 2: FIX MODE - APPLY TARGETED REPAIRS
+================================================================================
+
+(Run this AFTER Phase 1 completes)
+
+You are a Flutter/Firebase/Agora code fixer. Your task is to apply SURGICAL
+fixes to the Mix & Mingle project based on the issues found in Phase 1.
+
+RULES:
+- Fix ONLY the issues identified in Phase 1
+- Do NOT refactor architecture
+- Do NOT rewrite working code
+- Do NOT change file structure
+- Keep all existing logic intact
+- Generate clean diffs with before/after
+
+FIX PRIORITY ORDER:
+1. CRITICAL issues first (blocking build or runtime)
+2. HIGH issues (breaking functionality)
+3. MEDIUM issues (partial functionality loss)
+4. LOW issues (code quality)
+
+FOR EACH FIX:
+1. Show the file path
+2. Show the exact old code (10 lines of context)
+3. Show the exact new code (with fix applied)
+4. Explain WHY this fix works
+5. Note any side effects
+
+FIXES TO APPLY (if found):
+
+### FIX #1: Agora Web/Mobile Split
+- If conditional import is backwards: reverse it
+- If no kIsWeb guard: add it
+- If no early return in web path: add it
+- If mobile fallback happening: block it
+
+### FIX #2: JavaScript Interop Pattern
+- Change js.context.callMethod('object.method', [...])
+  TO js_util.callMethod(js.context['agoraWeb'], 'joinChannel', [...])
+- Ensure promiseToFuture wraps all JS calls
+- Verify object structure in index.html
+
+### FIX #3: Join Flow Logic
+- Ensure joinChannel() has: auth check → permission check → token call → Agora join
+- Ensure early return after web join
+- Ensure no fallback to native
+
+### FIX #4: Leave Flow Logic
+- Ensure leaveChannel() calls: Agora.leave() → remove participant doc → clear state
+- Ensure proper cleanup
+
+### FIX #5: Crashlytics Guards
+- Wrap all setCustomKey() calls: if (!kIsWeb) { ... }
+- Wrap all Crashlytics calls: if (!kIsWeb) { ... }
+
+### FIX #6: Riverpod Lifecycle
+- Move any ref.listen() from initState() to build()
+- Remove duplicate event handler registrations
+- Ensure no assertion errors
+
+### FIX #7: Null Safety
+- Add null checks before property access
+- Use ?. for optional access
+- Cast types safely
+
+### FIX #8: Import Corrections
+- Add missing imports
+- Remove unused imports
+- Use proper if (dart.library.io) for platform-specific imports
+
+### FIX #9: Async Flow
+- Ensure all futures are awaited
+- Ensure callbacks are properly typed
+- Ensure listeners are cleaned up
+
+After applying all fixes:
+1. Show a summary of changes
+2. List files modified
+3. Confirm no build errors remain
+4. Confirm no runtime errors visible
+
+APPLY FIXES NOW.
+
+================================================================================

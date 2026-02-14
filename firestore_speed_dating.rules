@@ -1,0 +1,204 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasCompletedOnboarding() {
+      return isAuthenticated() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.hasCompletedOnboarding == true;
+    }
+
+    function isVerified() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isVerified == true;
+    }
+
+    // ==============================================
+    // SPEED DATING RULES
+    // ==============================================
+
+    // Speed dating queue - users can only read/write their own entry
+    match /speed_dating_queue/{userId} {
+      // Can read own entry or count all entries
+      allow read: if isOwner(userId) || hasCompletedOnboarding();
+
+      // Can only create/update own entry
+      allow create, update: if isOwner(userId) &&
+                               hasCompletedOnboarding() &&
+                               request.resource.data.userId == userId;
+
+      // Can only delete own entry
+      allow delete: if isOwner(userId);
+    }
+
+    // Speed dating sessions - participants can read, server creates
+    match /speed_dating_sessions/{sessionId} {
+      // Can read if you're a participant
+      allow read: if isAuthenticated() &&
+                     (resource.data.user1Id == request.auth.uid ||
+                      resource.data.user2Id == request.auth.uid);
+
+      // Only server can create (via Cloud Functions)
+      allow create: if false;
+
+      // Participants can update their decision
+      allow update: if isAuthenticated() &&
+                       (resource.data.user1Id == request.auth.uid ||
+                        resource.data.user2Id == request.auth.uid) &&
+                       resource.data.status == 'active' &&
+                       // Only updating own decision field
+                       (request.resource.data.diff(resource.data).affectedKeys()
+                        .hasOnly(['decisions', request.auth.uid + 'DecisionAt']));
+
+      // Only server can delete
+      allow delete: if false;
+    }
+
+    // Speed dating decisions - history log
+    match /speed_dating_decisions/{decisionId} {
+      // Can read own decisions
+      allow read: if isAuthenticated() &&
+                     resource.data.userId == request.auth.uid;
+
+      // Server creates via Cloud Functions
+      allow create, update, delete: if false;
+    }
+
+    // ==============================================
+    // USER PROFILES
+    // ==============================================
+
+    match /users/{userId} {
+      // Anyone authenticated can read public profiles
+      allow read: if isAuthenticated();
+
+      // Can only create/update own profile
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) &&
+                       // Don't allow changing critical fields
+                       !request.resource.data.diff(resource.data).affectedKeys()
+                        .hasAny(['isVerified', 'isPremium', 'coins']);
+
+      // Can't delete profile
+      allow delete: if false;
+
+      // Speed dating preferences subcollection
+      match /speedDatingPreferences/{document=**} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Matches array - server-managed
+      match /matches/{document=**} {
+        allow read: if isOwner(userId);
+        allow write: if false; // Only Cloud Functions
+      }
+
+      // Blocked users - only owner can manage
+      match /blockedUsers/{document=**} {
+        allow read,write: if isOwner(userId);
+      }
+    }
+
+    // ==============================================
+    // CHATS (from speed dating matches)
+    // ==============================================
+
+    match /chats/{chatId} {
+      function isParticipant() {
+        return request.auth.uid in resource.data.participantIds;
+      }
+
+      // Participants can read
+      allow read: if isAuthenticated() && isParticipant();
+
+      // Server creates chats (from matches)
+      allow create: if false;
+
+      // Participants can update metadata (last message, unread count)
+      allow update: if isAuthenticated() && isParticipant();
+
+      // Can't delete chats
+      allow delete: if false;
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        // Participants can read messages
+        allow read: if isAuthenticated() &&
+                       request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds;
+
+        // Participants can create messages
+        allow create: if isAuthenticated() &&
+                         request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participantIds &&
+                         request.resource.data.senderId == request.auth.uid;
+
+        // Can update own messages (mark as read)
+        allow update: if isAuthenticated() &&
+                         resource.data.senderId == request.auth.uid;
+
+        // Can't delete messages
+        allow delete: if false;
+      }
+    }
+
+    // ==============================================
+    // LIVE ROOMS
+    // ==============================================
+
+    match /rooms/{roomId} {
+      // Anyone can read live rooms
+      allow read: if isAuthenticated();
+
+      // Verified users can create rooms
+      allow create: if isAuthenticated() &&
+                       hasCompletedOnboarding() &&
+                       request.resource.data.ownerId == request.auth.uid;
+
+      // Owner or moderators can update
+      allow update: if isAuthenticated() &&
+                       (resource.data.ownerId == request.auth.uid ||
+                        request.auth.uid in resource.data.get('moderators', []));
+
+      // Owner can delete
+      allow delete: if isOwner(resource.data.ownerId);
+    }
+
+    // ==============================================
+    // REPORTS (user safety)
+    // ==============================================
+
+    match /reports/{reportId} {
+      // Users can read their own reports
+      allow read: if isAuthenticated() &&
+                     resource.data.reporterId == request.auth.uid;
+
+      // Anyone can create reports
+      allow create: if isAuthenticated() &&
+                       request.resource.data.reporterId == request.auth.uid;
+
+      // Can't update or delete reports
+      allow update, delete: if false;
+    }
+
+    // ==============================================
+    // NOTIFICATIONS (FCM queue)
+    // ==============================================
+
+    match /notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if isAuthenticated() &&
+                     resource.data.targetUserId == request.auth.uid;
+
+      // Server creates notifications
+      allow create, update, delete: if false;
+    }
+  }
+}

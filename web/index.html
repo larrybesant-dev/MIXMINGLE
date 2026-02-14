@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Connect and mingle with people in real-time video rooms.">
+  <!-- CSP header to allow external resources and scripts -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self' https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https: fonts.googleapis.com; font-src 'self' https: fonts.gstatic.com; img-src 'self' https: data: blob:; connect-src 'self' https: wss: blob:; frame-src; media-src 'self' https: blob:; object-src 'none'; base-uri 'self';">
+  <title>Mix & Mingle</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      z-index: 9999;
+    }
+
+    #loading.hidden {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease-out;
+      pointer-events: none;
+    }
+
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(74, 144, 226, 0.2);
+      border-top-color: #4A90E2;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading">
+    <div class="loader"></div>
+    <div class="loading-text">Loading Mix & Mingle...</div>
+  </div>
+
+  <!-- ========== AGORA WEB SDK v5 - PRODUCTION ==========
+       This loads the production-ready Agora Web bridge with:
+       - SDK v5.x (latest stable)
+       - Automatic token validation
+       - Permission handling
+       - Comprehensive error handling
+
+       The bridge script (agora_web_v5_production.js) loads the Agora SDK
+       dynamically and provides Flutter with a clean async interface.
+       ========== -->
+
+  <!-- Load Agora Web Bridge v5 - Production Ready -->
+  <script src="agora_web_v5_production.js"></script>
+
+  <!-- Production Bridge Validation - Verify bridge loaded successfully -->
+  <script>
+    (function() {
+      const checkInterval = setInterval(() => {
+        const required = [
+          'agoraWebInit',
+          'agoraWebJoinChannel',
+          'agoraWebLeaveChannel',
+          'agoraWebSetMicMuted',
+          'agoraWebSetVideoMuted',
+          'agoraWebGetState'
+        ];
+
+        const missing = required.filter(fn => typeof window[fn] !== 'function');
+
+        if (missing.length === 0) {
+          console.log('%c[AGORA] ✅ Production bridge ready with all functions',
+                      'color: #4CAF50; font-weight: bold;');
+          clearInterval(checkInterval);
+        } else if (Date.now() > 15000) { // 15 second timeout
+          console.warn('%c[AGORA] ⚠️  Missing functions: ' + missing.join(', '),
+                       'color: #FF9800; font-weight: bold;');
+          clearInterval(checkInterval);
+        }
+      }, 100);
+    })();
+  </script>
+
+  <!-- Handle performance optimizations -->
+  <script>
+    // Fix non-passive event listener warnings by patching addEventListener
+    (function () {
+      const originalAddEventListener = EventTarget.prototype.addEventListener;
+      EventTarget.prototype.addEventListener = function (type, listener, options) {
+        // Make wheel, touchstart, touchmove, touchend passive for better scroll performance
+        if (['wheel', 'touchstart', 'touchmove', 'touchend'].includes(type)) {
+          if (typeof options === 'object' && options.passive === undefined) {
+            options = { ...options, passive: true };
+          } else if (typeof options !== 'object') {
+            options = { passive: true };
+          }
+        }
+        return originalAddEventListener.call(this, type, listener, options);
+      };
+    })();
+
+    // Fix Google Fonts SRI integrity mismatch - remove integrity from external stylesheets
+    const originalFetch = window.fetch;
+    window.fetch = function (...args) {
+      const result = originalFetch.apply(this, args);
+      return result;
+    };
+
+    // Monitor and fix link elements with integrity attributes that may fail
+    const observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
+        if (mutation.addedNodes.length) {
+          mutation.addedNodes.forEach(function (node) {
+            if (node.nodeType === 1) { // Element node
+              if (node.tagName === 'LINK' && node.href && node.href.includes('googleapis')) {
+                // Remove integrity from Google API stylesheets - they may change
+                if (node.integrity) {
+                  console.log('[FIX] Removing integrity attribute from Google Fonts link');
+                  node.removeAttribute('integrity');
+                }
+                // Add crossorigin for CORS
+                node.setAttribute('crossorigin', 'anonymous');
+              }
+            }
+          });
+        }
+      });
+    });
+
+    observer.observe(document.head, { childList: true, subtree: true });
+
+    // Pre-emptively fix any existing links
+    document.querySelectorAll('link[href*="googleapis"]').forEach(function (link) {
+      if (link.integrity) {
+        console.log('[FIX] Removing integrity attribute from existing Google Fonts link');
+        link.removeAttribute('integrity');
+      }
+      link.setAttribute('crossorigin', 'anonymous');
+    });
+
+    // Suppress browser extension errors by safely wrapping chrome API access
+    if (typeof chrome === 'undefined') {
+      window.chrome = {
+        runtime: { onMessage: { addListener: function () { } } },
+        tabs: { onUpdated: { addListener: function () { } } },
+        contextMenus: { onClicked: { addListener: function () { } } },
+        downloads: { onCreated: { addListener: function () { } } }
+      };
+    }
+
+    // Suppress tracking prevention warnings - Edge feature
+    if (typeof navigator !== 'undefined' && navigator.doNotTrack === undefined) {
+      Object.defineProperty(navigator, 'doNotTrack', {
+        value: '1',
+        writable: false,
+        enumerable: true,
+        configurable: true
+      });
+    }
+  </script>
+
+  <script src="flutter_bootstrap.js" defer></script>
+
+  <script>
+    // Hide loading screen once Flutter has rendered
+    window.addEventListener('load', function () {
+      // Give Flutter time to render (increased timeout to 5 seconds)
+      setTimeout(function () {
+        const loadingDiv = document.getElementById('loading');
+        if (loadingDiv) {
+          loadingDiv.classList.add('hidden');
+        }
+      }, 4500); // 4.5 seconds to let Flutter render
+    });
+  </script>
+</body>
+
+</html>

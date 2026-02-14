@@ -1,0 +1,15 @@
+{
+  "name": "mix-and-mingle-web-modules",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  },
+  "dependencies": {
+    "@100mslive/hms-video-store": "^0.12.0"
+  }
+}

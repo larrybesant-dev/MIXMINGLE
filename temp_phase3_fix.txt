@@ -1,0 +1,4 @@
+Line 257: Change from
+  _sendMatchNotifications(user1Id, user2Id, matchId).catchError((e) {
+to:
+  _sendMatchNotifications(user1Id, user2Id, matchId!).catchError((e) {

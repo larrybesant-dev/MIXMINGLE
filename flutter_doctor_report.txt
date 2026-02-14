@@ -1,0 +1,39 @@
+[ΓêÜ] Flutter (Channel stable, 3.38.7, on Microsoft Windows [Version 10.0.26200.7705], locale en-US) [737ms]
+    ΓÇó Flutter version 3.38.7 on channel stable at C:\Users\LARRY\flutter
+    ΓÇó Upstream repository https://github.com/flutter/flutter.git
+    ΓÇó Framework revision 3b62efc2a3 (3 weeks ago), 2026-01-13 13:47:42 -0800
+    ΓÇó Engine revision 78fc3012e4
+    ΓÇó Dart version 3.10.7
+    ΓÇó DevTools version 2.51.1
+    ΓÇó Feature flags: enable-web, enable-linux-desktop, enable-macos-desktop, enable-windows-desktop, enable-android, enable-ios, cli-animations, enable-native-assets, omit-legacy-version-file, enable-lldb-debugging
+
+[ΓêÜ] Windows Version (Windows 11 or higher, 25H2, 2009) [2.5s]
+
+[ΓêÜ] Android toolchain - develop for Android devices (Android SDK version 36.1.0) [3.7s]
+    ΓÇó Android SDK at C:\Users\LARRY\AppData\Local\Android\Sdk
+    ΓÇó Emulator version 36.2.12.0 (build_id 14214601) (CL:N/A)
+    ΓÇó Platform android-36, build-tools 36.1.0
+    ΓÇó ANDROID_HOME = C:\Users\LARRY\AppData\Local\Android\Sdk
+    ΓÇó Java binary at: C:\Program Files\Java\jdk-24\bin\java
+      This JDK is specified in your Flutter configuration.
+      To change the current JDK, run: `flutter config --jdk-dir="path/to/jdk"`.
+    ΓÇó Java version Java(TM) SE Runtime Environment (build 24.0.1+9-30)
+    ΓÇó All Android licenses accepted.
+
+[ΓêÜ] Chrome - develop for the web [355ms]
+    ΓÇó Chrome at C:\Program Files\Google\Chrome\Application\chrome.exe
+
+[ΓêÜ] Visual Studio - develop Windows apps (Visual Studio Build Tools 2019 16.11.46) [354ms]
+    ΓÇó Visual Studio at C:\Program Files (x86)\Microsoft Visual Studio\2019\BuildTools
+    ΓÇó Visual Studio Build Tools 2019 version 16.11.35931.194
+    ΓÇó Windows 10 SDK version 10.0.19041.0
+
+[ΓêÜ] Connected device (3 available) [710ms]
+    ΓÇó Windows (desktop) ΓÇó windows ΓÇó windows-x64    ΓÇó Microsoft Windows [Version 10.0.26200.7705]
+    ΓÇó Chrome (web)      ΓÇó chrome  ΓÇó web-javascript ΓÇó Google Chrome 144.0.7559.133
+    ΓÇó Edge (web)        ΓÇó edge    ΓÇó web-javascript ΓÇó Microsoft Edge 144.0.3719.104
+
+[ΓêÜ] Network resources [578ms]
+    ΓÇó All expected network resources are available.
+
+ΓÇó No issues found!

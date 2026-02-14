@@ -1,0 +1,171 @@
+// ========================================
+// CUSTOM KEYBINDINGS FOR FLUTTER DEVELOPMENT
+// ========================================
+// Place this in your User settings: File → Preferences → Keyboard Shortcuts (JSON)
+// Or keep it here as reference for manual setup
+[
+  // ========================================
+  // FLUTTER QUICK ACTIONS
+  // ========================================
+  {
+    "key": "ctrl+shift+r",
+    "command": "flutter.hotReload",
+    "when": "dart-code:dartProjectLoaded"
+  },
+  {
+    "key": "ctrl+shift+h",
+    "command": "flutter.hotRestart",
+    "when": "dart-code:dartProjectLoaded"
+  },
+  {
+    "key": "ctrl+alt+p",
+    "command": "flutter.packages.get",
+    "when": "dart-code:dartProjectLoaded"
+  },
+  {
+    "key": "ctrl+alt+d",
+    "command": "flutter.doctor",
+    "when": "dart-code:dartProjectLoaded"
+  },
+  // ========================================
+  // BUILD & DEPLOY
+  // ========================================
+  {
+    "key": "ctrl+shift+b",
+    "command": "workbench.action.tasks.build"
+  },
+  {
+    "key": "ctrl+alt+b",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Flutter: Build Web (Release)"
+  },
+  {
+    "key": "ctrl+alt+f",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Firebase: Deploy Hosting"
+  },
+  // ========================================
+  // TESTING
+  // ========================================
+  {
+    "key": "ctrl+shift+t",
+    "command": "workbench.action.tasks.test"
+  },
+  {
+    "key": "ctrl+alt+t",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Flutter: Run All Tests"
+  },
+  // ========================================
+  // CODE ACTIONS
+  // ========================================
+  {
+    "key": "ctrl+alt+l",
+    "command": "editor.action.formatDocument",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "key": "ctrl+alt+i",
+    "command": "editor.action.organizeImports",
+    "when": "editorTextFocus && !editorReadonly"
+  },
+  {
+    "key": "ctrl+alt+a",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Flutter: Analyze"
+  },
+  // ========================================
+  // NAVIGATION
+  // ========================================
+  {
+    "key": "ctrl+shift+o",
+    "command": "workbench.action.gotoSymbol"
+  },
+  {
+    "key": "ctrl+t",
+    "command": "workbench.action.showAllSymbols"
+  },
+  // ========================================
+  // PANELS & VIEWS
+  // ========================================
+  {
+    "key": "ctrl+shift+e",
+    "command": "workbench.view.explorer"
+  },
+  {
+    "key": "ctrl+shift+g",
+    "command": "workbench.view.scm"
+  },
+  {
+    "key": "ctrl+shift+d",
+    "command": "workbench.view.debug"
+  },
+  {
+    "key": "ctrl+shift+x",
+    "command": "workbench.view.extensions"
+  },
+  {
+    "key": "ctrl+shift+m",
+    "command": "workbench.actions.view.problems"
+  },
+  {
+    "key": "ctrl+shift+y",
+    "command": "workbench.debug.action.toggleRepl"
+  },
+  // ========================================
+  // TERMINAL
+  // ========================================
+  {
+    "key": "ctrl+`",
+    "command": "workbench.action.terminal.toggleTerminal"
+  },
+  {
+    "key": "ctrl+shift+`",
+    "command": "workbench.action.terminal.new"
+  },
+  // ========================================
+  // DEBUGGING
+  // ========================================
+  {
+    "key": "f5",
+    "command": "workbench.action.debug.start",
+    "when": "debuggersAvailable && debugState == 'inactive'"
+  },
+  {
+    "key": "shift+f5",
+    "command": "workbench.action.debug.stop",
+    "when": "inDebugMode"
+  },
+  {
+    "key": "ctrl+f5",
+    "command": "workbench.action.debug.run",
+    "when": "debuggersAvailable"
+  },
+  // ========================================
+  // CUSTOM SNIPPETS
+  // ========================================
+  {
+    "key": "ctrl+alt+s",
+    "command": "editor.action.insertSnippet",
+    "when": "editorTextFocus && editorLangId == 'dart'"
+  },
+  // ========================================
+  // FIREBASE EMULATORS
+  // ========================================
+  {
+    "key": "ctrl+alt+e",
+    "command": "workbench.action.tasks.runTask",
+    "args": "Firebase: Start emulators (auth,storage)"
+  },
+  // ========================================
+  // GIT ACTIONS
+  // ========================================
+  {
+    "key": "ctrl+alt+g",
+    "command": "git.commitAll"
+  },
+  {
+    "key": "ctrl+alt+s",
+    "command": "git.sync"
+  }
+]

@@ -1,0 +1,119 @@
+# GitLab CI/CD Pipeline for Flutter Web Authentication
+
+stages:
+  - test
+  - build
+  - e2e
+  - deploy
+
+variables:
+  FLUTTER_VERSION: 'stable'
+  NODE_VERSION: '18'
+  FIREBASE_PROJECT_ID: 'your-project-id'  # Change this
+
+# Cache Flutter dependencies
+cache:
+  key: ${CI_COMMIT_REF_SLUG}
+  paths:
+    - .pub-cache/
+    - .flutter/
+
+flutter:test:
+  stage: test
+  image: cirrusci/flutter:stable
+  before_script:
+    - flutter config --no-analytics
+    - flutter pub get
+  script:
+    - flutter analyze
+    - flutter format --set-exit-if-changed .
+    - flutter test test/login_flow_test.dart test/mocked_login_flow_test.dart --coverage
+  coverage: '/lines\.*: (\d+\.\d+)%/'
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/lcov.info
+    paths:
+      - coverage/
+    expire_in: 1 week
+  only:
+    - merge_requests
+    - main
+    - develop
+
+flutter:build:
+  stage: build
+  image: cirrusci/flutter:stable
+  before_script:
+    - flutter config --no-analytics
+    - flutter pub get
+  script:
+    - flutter build web --release
+    - ./copy-auth-pages.sh
+  artifacts:
+    paths:
+      - build/web/
+    expire_in: 1 hour
+  dependencies:
+    - flutter:test
+  only:
+    - merge_requests
+    - main
+    - develop
+
+playwright:e2e:
+  stage: e2e
+  image: mcr.microsoft.com/playwright:v1.40.0-jammy
+  before_script:
+    - npm install -g firebase-tools
+    - firebase --version
+  script:
+    - firebase emulators:start --only functions,firestore --project=$FIREBASE_PROJECT_ID &
+    - sleep 15
+    - cd playwright-tests
+    - npm ci
+    - npx playwright install --with-deps
+    - npm test -- --reporter=json --reporter=junit --output=test-results
+  artifacts:
+    paths:
+      - playwright-tests/test-results/
+      - playwright-tests/playwright-report/
+      - playwright-tests/test-results.json
+    reports:
+      junit: playwright-tests/test-results/junit.xml
+    expire_in: 1 week
+  dependencies:
+    - flutter:build
+  only:
+    - merge_requests
+    - main
+    - develop
+
+deploy:staging:
+  stage: deploy
+  script:
+    - echo "🚀 Deploying to staging environment"
+    - firebase deploy --only hosting --project=$FIREBASE_PROJECT_ID-staging
+  environment:
+    name: staging
+    url: https://your-project-staging.web.app
+  dependencies:
+    - playwright:e2e
+  only:
+    - develop
+
+deploy:production:
+  stage: deploy
+  script:
+    - echo "🚀 Deploying to production"
+    - firebase deploy --only hosting --project=$FIREBASE_PROJECT_ID
+  environment:
+    name: production
+    url: https://your-project.web.app
+  dependencies:
+    - playwright:e2e
+  only:
+    - main
+  when: manual  # Require manual approval for production deployment</content>
+<parameter name="filePath">c:\Users\LARRY\MIXMINGLE\.gitlab-ci.yml

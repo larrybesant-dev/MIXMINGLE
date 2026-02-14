@@ -1,0 +1,116 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "shell",
+			"label": "flutter pub get",
+			"command": "flutter",
+			"args": [
+				"pub",
+				"get"
+			],
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "silent"
+			}
+		},
+		{
+			"label": "🟦 Flutter Clean",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"clean"
+			],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"group": "flutter-web"
+			}
+		},
+		{
+			"label": "🟦 Flutter Run Chrome",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"run",
+				"-d",
+				"chrome",
+				"--no-hot"
+			],
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": false,
+				"panel": "shared",
+				"group": "flutter-web"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "🟩 Firebase Function Logs",
+			"type": "shell",
+			"command": "firebase",
+			"args": [
+				"functions:log",
+				"--only",
+				"generateAgoraToken"
+			],
+			"isBackground": true,
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "new",
+				"group": "firebase-logs"
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "✨ LAUNCH BOTH: Flutter Web + Firebase Logs",
+			"type": "shell",
+			"command": "echo",
+			"args": [
+				"Starting Flutter Web and Firebase Logs in parallel..."
+			],
+			"dependsOn": [
+				"🟦 Flutter Run Chrome",
+				"🟩 Firebase Function Logs"
+			],
+			"presentation": {
+				"reveal": "silent"
+			},
+			"problemMatcher": [],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			}
+		},
+		{
+			"label": "🚀 Release Beta",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy",
+				"Bypass",
+				"-File",
+				"${workspaceFolder}/release_beta.ps1"
+			],
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "dedicated",
+				"showReuseMessage": false,
+				"clear": true
+			},
+			"problemMatcher": [],
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			}
+		}
+	]
+}

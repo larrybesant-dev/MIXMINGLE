@@ -1,0 +1,22 @@
+# Expert analysis documentation
+EXPERT_*.md
+START_HERE_*.md
+
+# Legacy documentation files
+QUICK_TEST_REFERENCE.md
+REAL_DIAGNOSTIC_REPORT.md
+REAL_QUICK_FIX_REFERENCE.md
+DIAGNOSTIC_REFERENCE.md
+REAL_ISSUES_INDEX.md
+PHASE_*.md
+INDEX.md
+SAFE_TEST_PIPELINE.md
+ID_TOKEN_REFRESH_FIX.md
+HTTP_AUDIT_COMPLETE.md
+MASTER_*.md
+FINAL_SUMMARY_REPORT.md
+USERNAME_UNIQUENESS_FIX.md
+
+# All other markdown documentation
+*.md
+!README.md

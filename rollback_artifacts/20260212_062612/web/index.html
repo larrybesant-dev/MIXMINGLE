@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Connect and mingle with people in real-time video rooms.">
+
+  <!-- Noto Fonts for perfect unicode/emoji rendering -->
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;700&family=Noto+Color+Emoji&display=swap" rel="stylesheet">
+  <!-- CSP header to allow external resources and scripts -->
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self' https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https: fonts.googleapis.com; font-src 'self' https: fonts.gstatic.com; img-src 'self' https: data: blob:; connect-src 'self' https: wss: blob:; frame-src; media-src 'self' https: blob:; object-src 'none'; base-uri 'self';">
+  <title>Mix & Mingle</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <!-- Apple Touch Icon for iOS Home Screen -->
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #000000;
+      /* Use Noto fonts globally for unicode/emoji support */
+      font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    /* Ensure emojis render with color */
+    body, button, input, select, textarea {
+      font-family: 'Noto Sans', 'Noto Color Emoji', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: #000000;
+      z-index: 9999;
+    }
+
+    #loading.hidden {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease-out;
+      pointer-events: none;
+    }
+
+    #video-container {
+      display: none !important;
+      position: absolute;
+      top: 70px;
+      left: 10px;
+      width: 120px;
+      height: 160px;
+      min-width: 120px;
+      min-height: 160px;
+      background: #000;
+      border: 0;
+      border-radius: 8px;
+      z-index: 99;
+      overflow: hidden;
+      visibility: hidden;
+    }
+
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(74, 144, 226, 0.2);
+      border-top-color: #4A90E2;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading">
+    <div class="loader"></div>
+    <div class="loading-text">Loading Mix & Mingle...</div>
+  </div>
+
+  <!-- ========== AGORA WEB BRIDGE - FLUTTER INTEROP ==========
+       Simple, direct global functions for Dart JS interop.
+       Loads Agora SDK dynamically when needed.
+       ========== -->
+
+  <!-- Video Container for Agora Web SDK
+       Local camera thumbnail - positioned in top-left over the app
+  -->
+  <div id="video-container"></div>
+
+  <!-- Load Agora Web Bridge - Simple Global Functions -->
+  <script src="agora_bridge.js"></script>
+
+  <!-- Verify bridge is ready -->
+  <script>
+    (function() {
+      if (window.agoraBridgeReady) {
+        console.log('%c[AGORA] ✅ Bridge ready immediately', 'color: #4CAF50; font-weight: bold;');
+      } else {
+        console.warn('%c[AGORA] ⚠️ Bridge not ready - check agora_bridge.js loaded', 'color: #FF9800; font-weight: bold;');
+      }
+
+      // Verify all functions exist
+      const required = [
+        'agoraWebInit',
+        'agoraWebJoinChannel',
+        'agoraWebLeaveChannel',
+        'agoraWebSetMicMuted',
+        'agoraWebSetVideoMuted',
+        'agoraWebGetState'
+      ];
+      const missing = required.filter(fn => typeof window[fn] !== 'function');
+      if (missing.length === 0) {
+        console.log('%c[AGORA] ✅ All bridge functions available', 'color: #4CAF50; font-weight: bold;');
+      } else {
+        console.warn('%c[AGORA] ⚠️ Missing functions: ' + missing.join(', '), 'color: #FF9800; font-weight: bold;');
+      }
+    })();
+  </script>
+
+  <!-- Handle performance optimizations -->
+  <script>
+    // Fix non-passive event listener warnings by patching addEventListener
+    (function () {
+      const originalAddEventListener = EventTarget.prototype.addEventListener;
+      EventTarget.prototype.addEventListener = function (type, listener, options) {
+        // Make wheel, touchstart, touchmove, touchend passive for better scroll performance
+        if (['wheel', 'touchstart', 'touchmove', 'touchend'].includes(type)) {
+          if (typeof options === 'object' && options.passive === undefined) {
+            options = { ...options, passive: true };
+          } else if (typeof options !== 'object') {
+            options = { passive: true };
+          }
+        }
+        return originalAddEventListener.call(this, type, listener, options);
+      };
+    })();
+
+    // Fix Google Fonts SRI integrity mismatch - remove integrity from external stylesheets
+    const originalFetch = window.fetch;
+    window.fetch = function (...args) {
+      const result = originalFetch.apply(this, args);
+      return result;
+    };
+
+    // Monitor and fix link elements with integrity attributes that may fail
+    const observer = new MutationObserver(function (mutations) {
+      mutations.forEach(function (mutation) {
+        if (mutation.addedNodes.length) {
+          mutation.addedNodes.forEach(function (node) {
+            if (node.nodeType === 1) { // Element node
+              if (node.tagName === 'LINK' && node.href && node.href.includes('googleapis')) {
+                // Remove integrity from Google API stylesheets - they may change
+                if (node.integrity) {
+                  console.log('[FIX] Removing integrity attribute from Google Fonts link');
+                  node.removeAttribute('integrity');
+                }
+                // Add crossorigin for CORS
+                node.setAttribute('crossorigin', 'anonymous');
+              }
+            }
+          });
+        }
+      });
+    });
+
+    observer.observe(document.head, { childList: true, subtree: true });
+
+    // Pre-emptively fix any existing Google Fonts links
+    document.querySelectorAll('link[href*="googleapis"]').forEach((link) => {
+      try {
+        if (link.integrity) {
+          console.log('[FIX] Removing integrity attribute from Google Fonts link');
+          link.removeAttribute('integrity');
+        }
+        link.setAttribute('crossorigin', 'anonymous');
+      } catch (err) {
+        console.warn('[WARN] Failed to patch Google Fonts link:', err);
+      }
+    });
+
+    // Suppress browser extension errors by safely wrapping chrome API access
+    if (typeof chrome === 'undefined') {
+      window.chrome = {
+        runtime: { onMessage: { addListener: function () { } } },
+        tabs: { onUpdated: { addListener: function () { } } },
+        contextMenus: { onClicked: { addListener: function () { } } },
+        downloads: { onCreated: { addListener: function () { } } }
+      };
+    }
+
+    // Suppress tracking prevention warnings - Edge feature
+    if (typeof navigator !== 'undefined' && navigator.doNotTrack === undefined) {
+      Object.defineProperty(navigator, 'doNotTrack', {
+        value: '1',
+        writable: false,
+        enumerable: true,
+        configurable: true
+      });
+    }
+  </script>
+
+  <script src="flutter_bootstrap.js" defer></script>
+
+  <script>
+    // Hide loading screen once Flutter has rendered
+    window.addEventListener('load', function () {
+      // Give Flutter time to render (increased timeout to 5 seconds)
+      setTimeout(function () {
+        const loadingDiv = document.getElementById('loading');
+        if (loadingDiv) {
+          loadingDiv.classList.add('hidden');
+        }
+      }, 4500); // 4.5 seconds to let Flutter render
+    });
+  </script>
+</body>
+
+</html>

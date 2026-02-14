@@ -1,0 +1,608 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:golden_toolkit/golden_toolkit.dart';
+
+// Mock HomePage for golden testing (no Firebase dependencies)
+class MockHomePage extends StatelessWidget {
+  const MockHomePage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Mix & Mingle'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.person),
+            onPressed: () {},
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {},
+          ),
+        ],
+      ),
+      body: const Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.home, size: 80, color: Colors.blue),
+            SizedBox(height: 20),
+            Text(
+              'Welcome to Mix & Mingle!',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 10),
+            Text(
+              'Connect with people who share your interests',
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {},
+        child: const Icon(Icons.add),
+      ),
+    );
+  }
+}
+
+// Mock LoginPage for golden testing (no Firebase dependencies)
+class MockLoginPage extends StatefulWidget {
+  const MockLoginPage({super.key});
+
+  @override
+  State<MockLoginPage> createState() => _MockLoginPageState();
+}
+
+class _MockLoginPageState extends State<MockLoginPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  String? _emailError;
+  String? _passwordError;
+  final bool _isLoading = false;
+
+  void _login() {
+    setState(() {
+      _emailError = _emailController.text.isEmpty ? 'Email is required' : null;
+      _passwordError =
+          _passwordController.text.isEmpty ? 'Password is required' : null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Login'),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Welcome Back',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                errorText: _emailError,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.email),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _passwordController,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                errorText: _passwordError,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.lock),
+              ),
+              obscureText: true,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _isLoading ? null : _login,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text('Login'),
+            ),
+            const SizedBox(height: 16),
+            TextButton(
+              onPressed: () {},
+              child: const Text('Forgot Password?'),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text("Don't have an account?"),
+                TextButton(
+                  onPressed: () {},
+                  child: const Text('Sign Up'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Mock SignupPage for golden testing (no Firebase dependencies)
+class MockSignupPage extends StatefulWidget {
+  const MockSignupPage({super.key});
+
+  @override
+  State<MockSignupPage> createState() => _MockSignupPageState();
+}
+
+class _MockSignupPageState extends State<MockSignupPage> {
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _displayNameController = TextEditingController();
+  String? _emailError;
+  String? _passwordError;
+  String? _confirmPasswordError;
+  String? _displayNameError;
+  final bool _isLoading = false;
+
+  void _signup() {
+    setState(() {
+      _emailError = _emailController.text.isEmpty ? 'Email is required' : null;
+      _passwordError = _passwordController.text.length < 6
+          ? 'Password must be at least 6 characters'
+          : null;
+      _confirmPasswordError =
+          _passwordController.text != _confirmPasswordController.text
+              ? 'Passwords do not match'
+              : null;
+      _displayNameError = _displayNameController.text.isEmpty
+          ? 'Display name is required'
+          : null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Sign Up'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const Text(
+              'Create Account',
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 32),
+            TextField(
+              controller: _displayNameController,
+              decoration: InputDecoration(
+                labelText: 'Display Name',
+                errorText: _displayNameError,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.person),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _emailController,
+              decoration: InputDecoration(
+                labelText: 'Email',
+                errorText: _emailError,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.email),
+              ),
+              keyboardType: TextInputType.emailAddress,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _passwordController,
+              decoration: InputDecoration(
+                labelText: 'Password',
+                errorText: _passwordError,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.lock),
+              ),
+              obscureText: true,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _confirmPasswordController,
+              decoration: InputDecoration(
+                labelText: 'Confirm Password',
+                errorText: _confirmPasswordError,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.lock_outline),
+              ),
+              obscureText: true,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _isLoading ? null : _signup,
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: _isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text('Sign Up'),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Already have an account?'),
+                TextButton(
+                  onPressed: () {},
+                  child: const Text('Login'),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Mock UserProfile for golden testing
+class MockUserProfile {
+  final String id;
+  final String email;
+  final String displayName;
+  final String bio;
+  final String location;
+  final List<String> interests;
+  final String? photoUrl;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  const MockUserProfile({
+    required this.id,
+    required this.email,
+    required this.displayName,
+    required this.bio,
+    required this.location,
+    required this.interests,
+    this.photoUrl,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+}
+
+// Mock ProfileEditPage for golden testing (no Firebase dependencies)
+class MockProfileEditPage extends StatefulWidget {
+  final MockUserProfile? initialProfile;
+
+  const MockProfileEditPage({super.key, this.initialProfile});
+
+  @override
+  State<MockProfileEditPage> createState() => _MockProfileEditPageState();
+}
+
+class _MockProfileEditPageState extends State<MockProfileEditPage> {
+  late TextEditingController _displayNameController;
+  late TextEditingController _bioController;
+  late TextEditingController _locationController;
+  late TextEditingController _interestsController;
+  String? _displayNameError;
+  String? _bioError;
+  final bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _displayNameController =
+        TextEditingController(text: widget.initialProfile?.displayName ?? '');
+    _bioController =
+        TextEditingController(text: widget.initialProfile?.bio ?? '');
+    _locationController =
+        TextEditingController(text: widget.initialProfile?.location ?? '');
+    _interestsController = TextEditingController(
+        text: widget.initialProfile?.interests.join(', ') ?? '');
+  }
+
+  void _saveProfile() {
+    setState(() {
+      _displayNameError = _displayNameController.text.isEmpty
+          ? 'Display name is required'
+          : null;
+      _bioError = _bioController.text.length > 500
+          ? 'Bio must be less than 500 characters'
+          : null;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit Profile'),
+        actions: [
+          TextButton(
+            onPressed: _isLoading ? null : _saveProfile,
+            child: _isLoading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text('Save', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 20),
+            Center(
+              child: Stack(
+                children: [
+                  CircleAvatar(
+                    radius: 50,
+                    backgroundColor: Colors.blue,
+                    child: const Icon(
+                      Icons.person,
+                      size: 50,
+                      color: Colors.white,
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: CircleAvatar(
+                      radius: 18,
+                      backgroundColor: Theme.of(context).primaryColor,
+                      child: const Icon(
+                        Icons.camera_alt,
+                        color: Colors.white,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            TextField(
+              controller: _displayNameController,
+              decoration: InputDecoration(
+                labelText: 'Display Name',
+                errorText: _displayNameError,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.person),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _bioController,
+              decoration: InputDecoration(
+                labelText: 'Bio',
+                errorText: _bioError,
+                border: const OutlineInputBorder(),
+                prefixIcon: const Icon(Icons.description),
+              ),
+              maxLines: 3,
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _locationController,
+              decoration: const InputDecoration(
+                labelText: 'Location',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.location_on),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _interestsController,
+              decoration: const InputDecoration(
+                labelText: 'Interests (comma separated)',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.interests),
+              ),
+            ),
+            const SizedBox(height: 32),
+            if (widget.initialProfile != null) ...[
+              const Text(
+                'Profile Statistics',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Member since'),
+                          Text(
+                            '${widget.initialProfile!.createdAt.month}/${widget.initialProfile!.createdAt.year}',
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Last updated'),
+                          Text(
+                            '${widget.initialProfile!.updatedAt.month}/${widget.initialProfile!.updatedAt.day}/${widget.initialProfile!.updatedAt.year}',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+void main() {
+  // Load any necessary fonts or assets for golden testing
+  setUpAll(() async {
+    await loadAppFonts();
+  });
+
+  group('Golden Tests - Mix & Mingle', () {
+    // -------------------- Home Page --------------------
+    testGoldens('HomePage default', (tester) async {
+      await tester.pumpWidgetBuilder(const MockHomePage());
+      await tester.pumpAndSettle();
+      await screenMatchesGolden(tester, 'goldens/home_page');
+    });
+
+    testGoldens('HomePage mobile', (tester) async {
+      await tester.pumpWidgetBuilder(const MockHomePage(),
+          surfaceSize: const Size(375, 812));
+      await tester.pumpAndSettle();
+      await screenMatchesGolden(tester, 'goldens/home_page_mobile');
+    });
+
+    testGoldens('HomePage tablet', (tester) async {
+      await tester.pumpWidgetBuilder(const MockHomePage(),
+          surfaceSize: const Size(768, 1024));
+      await tester.pumpAndSettle();
+      await screenMatchesGolden(tester, 'goldens/home_page_tablet');
+    });
+
+    // -------------------- Login Page --------------------
+    testGoldens('LoginPage default', (tester) async {
+      await tester.pumpWidgetBuilder(const MockLoginPage());
+      await tester.pumpAndSettle();
+      await screenMatchesGolden(tester, 'goldens/login_page');
+    });
+
+    testGoldens('LoginPage validation error', (tester) async {
+      await tester.pumpWidgetBuilder(const MockLoginPage());
+      await tester.pumpAndSettle();
+      // Find the ElevatedButton with Login text specifically
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Login'));
+      await tester.pumpAndSettle();
+      await screenMatchesGolden(tester, 'goldens/login_page_validation_error');
+    });
+
+    testGoldens('LoginPage filled', (tester) async {
+      await tester.pumpWidgetBuilder(const MockLoginPage());
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byType(TextField).at(0), 'test@example.com');
+      await tester.enterText(find.byType(TextField).at(1), 'Test123!');
+      await tester.pumpAndSettle();
+      await screenMatchesGolden(tester, 'goldens/login_page_filled');
+    });
+
+    // -------------------- Signup Page --------------------
+    testGoldens('SignupPage default', (tester) async {
+      await tester.pumpWidgetBuilder(const MockSignupPage());
+      await tester.pumpAndSettle();
+      await screenMatchesGolden(tester, 'goldens/signup_page');
+    });
+
+    testGoldens('SignupPage validation error', (tester) async {
+      await tester.pumpWidgetBuilder(const MockSignupPage());
+      await tester.pumpAndSettle();
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Sign Up'));
+      await tester.pumpAndSettle();
+      await screenMatchesGolden(tester, 'goldens/signup_page_validation_error');
+    });
+
+    testGoldens('SignupPage partial data', (tester) async {
+      await tester.pumpWidgetBuilder(const MockSignupPage());
+      await tester.pumpAndSettle();
+      await tester.enterText(
+          find.byType(TextField).at(0), 'partial@example.com');
+      await tester.pumpAndSettle();
+      await screenMatchesGolden(tester, 'goldens/signup_page_partial_data');
+    });
+
+    // -------------------- Profile Edit Page --------------------
+    testGoldens('ProfileEditPage empty', (tester) async {
+      await tester.pumpWidgetBuilder(const MockProfileEditPage());
+      await tester.pumpAndSettle();
+      await screenMatchesGolden(tester, 'goldens/profile_edit_page_empty');
+    });
+
+    testGoldens('ProfileEditPage with data', (tester) async {
+      final initialProfile = MockUserProfile(
+        id: 'test-uid',
+        email: 'test@example.com',
+        displayName: 'Test User',
+        bio: 'This is a test bio',
+        location: 'Test City',
+        interests: ['Music', 'Art', 'Technology'],
+        photoUrl: null,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await tester.pumpWidgetBuilder(
+          MockProfileEditPage(initialProfile: initialProfile));
+      await tester.pumpAndSettle();
+      await screenMatchesGolden(tester, 'goldens/profile_edit_page_with_data');
+    });
+
+    testGoldens('ProfileEditPage validation error', (tester) async {
+      final initialProfile = MockUserProfile(
+        id: 'test-uid',
+        email: 'test@example.com',
+        displayName: '', // Empty to trigger validation
+        bio:
+            'This is a very long bio that exceeds the character limit for testing validation errors in the golden test suite. ' *
+                10,
+        location: 'Test City',
+        interests: ['Music'],
+        photoUrl: null,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+
+      await tester.pumpWidgetBuilder(
+          MockProfileEditPage(initialProfile: initialProfile));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Save'));
+      await tester.pumpAndSettle();
+      await screenMatchesGolden(
+          tester, 'goldens/profile_edit_page_validation_error');
+    });
+  });
+}

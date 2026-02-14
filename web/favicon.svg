@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <!-- Dark navy background -->
+  <rect width="192" height="192" fill="#0A1E3E"/>
+
+  <!-- Neon glow filters -->
+  <defs>
+    <filter id="orangeGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="blueGlow">
+      <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- "MIX" in orange with glow -->
+  <text x="48" y="110" font-family="Arial, sans-serif" font-size="64" font-weight="bold" fill="#FF9500" filter="url(#orangeGlow)" text-anchor="middle">MIX</text>
+
+  <!-- Musical note in orange with glow -->
+  <text x="128" y="110" font-family="Arial, sans-serif" font-size="72" fill="#FF9500" filter="url(#orangeGlow)" text-anchor="middle">♪</text>
+
+  <!-- "MINGLE" text would be cut off, so just use the logo -->
+</svg>

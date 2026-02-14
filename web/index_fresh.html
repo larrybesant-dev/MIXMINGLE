@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <base href="/">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="description" content="Connect and mingle with people in real-time video rooms.">
+  <title>Mix & Mingle</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+
+    #loading {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      z-index: 9999;
+    }
+
+    #loading.hidden {
+      opacity: 0;
+      transition: opacity 0.5s ease-out;
+      pointer-events: none;
+    }
+
+    .loader {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(74, 144, 226, 0.2);
+      border-top-color: #4A90E2;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    .loading-text {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="loading">
+    <div class="loader"></div>
+    <div class="loading-text">Loading Mix & Mingle...</div>
+  </div>
+
+  <!-- Load Agora Iris Web SDK -->
+  <script>
+    // Load Iris SDK before Flutter
+    (function () {
+      const script = document.createElement('script');
+      script.src = 'https://download.agora.io/sdk/release/iris-web-rtc_n450_w4220_0.8.6.js';
+      script.async = true;
+      script.onload = function () {
+        console.log('[BRIDGE] Iris SDK loaded');
+        window._agoraSDKReady = true;
+      };
+      script.onerror = function () {
+        console.error('[BRIDGE] Failed to load Iris SDK');
+        window._agoraSDKReady = false;
+      };
+      document.head.appendChild(script);
+    })();
+  </script>
+
+  <!-- Simple, clean Agora bridge -->
+  <script>
+    window.AgoraState = {
+      agoraClient: null,
+      localAudioTrack: null,
+      localVideoTrack: null,
+      isJoined: false,
+      log: function (msg) {
+        console.log('[BRIDGE] ' + msg);
+      },
+      error: function (msg) {
+        console.error('[BRIDGE] ' + msg);
+      }
+    };
+
+    // Simple wrapper that exposes methods to Dart
+    window.agoraWebV2 = {
+      // Initialize Agora
+      init: async function (appId) {
+        try {
+          AgoraState.log('Initializing with appId: ' + appId.substring(0, 10) + '...');
+
+          // Wait for SDK to load
+          let attempts = 0;
+          while (!window.IrisRtcEngine && attempts < 50) {
+            await new Promise(r => setTimeout(r, 100));
+            attempts++;
+          }
+
+          if (!window.IrisRtcEngine) {
+            throw new Error('Iris SDK not available');
+          }
+
+          AgoraState.log('Iris SDK ready');
+          return { success: true };
+        } catch (err) {
+          AgoraState.error('Init failed: ' + err.message);
+          return { success: false, error: err.message };
+        }
+      },
+
+      // Join a channel
+      join: async function (appId, channelName, token, uid) {
+        try {
+          AgoraState.log('Joining: appId=***,' + channelName + ', uid=' + uid);
+
+          // Validate inputs
+          if (!appId || !channelName) {
+            throw new Error('Invalid parameters: appId and channelName required');
+          }
+
+          // Create engine if needed
+          if (!AgoraState.agoraClient) {
+            AgoraState.log('Creating Iris client');
+            try {
+              AgoraState.agoraClient = new window.IrisRtcEngine();
+              AgoraState.log('Iris client created');
+            } catch (e) {
+              throw new Error('Failed to create Iris client: ' + e.message);
+            }
+          }
+
+          // Call join API
+          const uidNum = parseInt(uid) || 0;
+          const params = JSON.stringify({
+            token: token || '',
+            channelId: channelName,
+            uid: uidNum
+          });
+
+          AgoraState.log('Calling callIrisApiAsync with params');
+
+          const result = await AgoraState.agoraClient.callIrisApiAsync(
+            'JoinChannelV2',
+            params
+          );
+
+          AgoraState.log('Join result: ' + JSON.stringify(result));
+          AgoraState.isJoined = true;
+          return { success: true, result: result };
+        } catch (err) {
+          AgoraState.error('Join failed: ' + err.message);
+          return { success: false, error: err.message };
+        }
+      },
+
+      // Leave channel
+      leave: async function () {
+        try {
+          AgoraState.log('Leaving channel');
+          if (AgoraState.agoraClient) {
+            await AgoraState.agoraClient.callIrisApiAsync('LeaveChannel', '{}');
+            AgoraState.isJoined = false;
+          }
+          return { success: true };
+        } catch (err) {
+          AgoraState.error('Leave failed: ' + err.message);
+          return { success: false, error: err.message };
+        }
+      },
+
+      // Mute audio
+      muteAudio: async function (muted) {
+        try {
+          AgoraState.log('Setting audio muted: ' + muted);
+          if (AgoraState.agoraClient) {
+            const enabled = !muted;
+            await AgoraState.agoraClient.callIrisApiAsync(
+              'MuteLocalAudioStream',
+              JSON.stringify({ mute: muted })
+            );
+          }
+          return { success: true };
+        } catch (err) {
+          AgoraState.error('Mute audio failed: ' + err.message);
+          return { success: false, error: err.message };
+        }
+      },
+
+      // Mute video
+      muteVideo: async function (muted) {
+        try {
+          AgoraState.log('Setting video muted: ' + muted);
+          if (AgoraState.agoraClient) {
+            await AgoraState.agoraClient.callIrisApiAsync(
+              'MuteLocalVideoStream',
+              JSON.stringify({ mute: muted })
+            );
+          }
+          return { success: true };
+        } catch (err) {
+          AgoraState.error('Mute video failed: ' + err.message);
+          return { success: false, error: err.message };
+        }
+      }
+    };
+
+    console.log('[BRIDGE] Bridge initialized: window.agoraWebV2 ready');
+  </script>
+
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+
+</html>

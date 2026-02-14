@@ -1,0 +1,947 @@
+// coverage:ignore-file
+// GENERATED CODE - DO NOT MODIFY BY HAND
+// ignore_for_file: type=lint
+// ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
+
+part of 'match_score.dart';
+
+// **************************************************************************
+// FreezedGenerator
+// **************************************************************************
+
+T _$identity<T>(T value) => value;
+
+final _privateConstructorUsedError = UnsupportedError(
+    'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models');
+
+MatchScore _$MatchScoreFromJson(Map<String, dynamic> json) {
+  return _MatchScore.fromJson(json);
+}
+
+/// @nodoc
+mixin _$MatchScore {
+  String get userId => throw _privateConstructorUsedError;
+  String get matchedUserId => throw _privateConstructorUsedError;
+  double get overallScore => throw _privateConstructorUsedError;
+  Map<String, double> get categoryScores => throw _privateConstructorUsedError;
+  List<String> get sharedInterests => throw _privateConstructorUsedError;
+  List<String> get compatibilityReasons => throw _privateConstructorUsedError;
+  List<String> get potentialChallenges => throw _privateConstructorUsedError;
+  DateTime get calculatedAt => throw _privateConstructorUsedError;
+
+  /// Serializes this MatchScore to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of MatchScore
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $MatchScoreCopyWith<MatchScore> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $MatchScoreCopyWith<$Res> {
+  factory $MatchScoreCopyWith(
+          MatchScore value, $Res Function(MatchScore) then) =
+      _$MatchScoreCopyWithImpl<$Res, MatchScore>;
+  @useResult
+  $Res call(
+      {String userId,
+      String matchedUserId,
+      double overallScore,
+      Map<String, double> categoryScores,
+      List<String> sharedInterests,
+      List<String> compatibilityReasons,
+      List<String> potentialChallenges,
+      DateTime calculatedAt});
+}
+
+/// @nodoc
+class _$MatchScoreCopyWithImpl<$Res, $Val extends MatchScore>
+    implements $MatchScoreCopyWith<$Res> {
+  _$MatchScoreCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of MatchScore
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? userId = null,
+    Object? matchedUserId = null,
+    Object? overallScore = null,
+    Object? categoryScores = null,
+    Object? sharedInterests = null,
+    Object? compatibilityReasons = null,
+    Object? potentialChallenges = null,
+    Object? calculatedAt = null,
+  }) {
+    return _then(_value.copyWith(
+      userId: null == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as String,
+      matchedUserId: null == matchedUserId
+          ? _value.matchedUserId
+          : matchedUserId // ignore: cast_nullable_to_non_nullable
+              as String,
+      overallScore: null == overallScore
+          ? _value.overallScore
+          : overallScore // ignore: cast_nullable_to_non_nullable
+              as double,
+      categoryScores: null == categoryScores
+          ? _value.categoryScores
+          : categoryScores // ignore: cast_nullable_to_non_nullable
+              as Map<String, double>,
+      sharedInterests: null == sharedInterests
+          ? _value.sharedInterests
+          : sharedInterests // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      compatibilityReasons: null == compatibilityReasons
+          ? _value.compatibilityReasons
+          : compatibilityReasons // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      potentialChallenges: null == potentialChallenges
+          ? _value.potentialChallenges
+          : potentialChallenges // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      calculatedAt: null == calculatedAt
+          ? _value.calculatedAt
+          : calculatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$MatchScoreImplCopyWith<$Res>
+    implements $MatchScoreCopyWith<$Res> {
+  factory _$$MatchScoreImplCopyWith(
+          _$MatchScoreImpl value, $Res Function(_$MatchScoreImpl) then) =
+      __$$MatchScoreImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String userId,
+      String matchedUserId,
+      double overallScore,
+      Map<String, double> categoryScores,
+      List<String> sharedInterests,
+      List<String> compatibilityReasons,
+      List<String> potentialChallenges,
+      DateTime calculatedAt});
+}
+
+/// @nodoc
+class __$$MatchScoreImplCopyWithImpl<$Res>
+    extends _$MatchScoreCopyWithImpl<$Res, _$MatchScoreImpl>
+    implements _$$MatchScoreImplCopyWith<$Res> {
+  __$$MatchScoreImplCopyWithImpl(
+      _$MatchScoreImpl _value, $Res Function(_$MatchScoreImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of MatchScore
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? userId = null,
+    Object? matchedUserId = null,
+    Object? overallScore = null,
+    Object? categoryScores = null,
+    Object? sharedInterests = null,
+    Object? compatibilityReasons = null,
+    Object? potentialChallenges = null,
+    Object? calculatedAt = null,
+  }) {
+    return _then(_$MatchScoreImpl(
+      userId: null == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as String,
+      matchedUserId: null == matchedUserId
+          ? _value.matchedUserId
+          : matchedUserId // ignore: cast_nullable_to_non_nullable
+              as String,
+      overallScore: null == overallScore
+          ? _value.overallScore
+          : overallScore // ignore: cast_nullable_to_non_nullable
+              as double,
+      categoryScores: null == categoryScores
+          ? _value._categoryScores
+          : categoryScores // ignore: cast_nullable_to_non_nullable
+              as Map<String, double>,
+      sharedInterests: null == sharedInterests
+          ? _value._sharedInterests
+          : sharedInterests // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      compatibilityReasons: null == compatibilityReasons
+          ? _value._compatibilityReasons
+          : compatibilityReasons // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      potentialChallenges: null == potentialChallenges
+          ? _value._potentialChallenges
+          : potentialChallenges // ignore: cast_nullable_to_non_nullable
+              as List<String>,
+      calculatedAt: null == calculatedAt
+          ? _value.calculatedAt
+          : calculatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$MatchScoreImpl extends _MatchScore {
+  const _$MatchScoreImpl(
+      {required this.userId,
+      required this.matchedUserId,
+      required this.overallScore,
+      required final Map<String, double> categoryScores,
+      required final List<String> sharedInterests,
+      required final List<String> compatibilityReasons,
+      required final List<String> potentialChallenges,
+      required this.calculatedAt})
+      : _categoryScores = categoryScores,
+        _sharedInterests = sharedInterests,
+        _compatibilityReasons = compatibilityReasons,
+        _potentialChallenges = potentialChallenges,
+        super._();
+
+  factory _$MatchScoreImpl.fromJson(Map<String, dynamic> json) =>
+      _$$MatchScoreImplFromJson(json);
+
+  @override
+  final String userId;
+  @override
+  final String matchedUserId;
+  @override
+  final double overallScore;
+  final Map<String, double> _categoryScores;
+  @override
+  Map<String, double> get categoryScores {
+    if (_categoryScores is EqualUnmodifiableMapView) return _categoryScores;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_categoryScores);
+  }
+
+  final List<String> _sharedInterests;
+  @override
+  List<String> get sharedInterests {
+    if (_sharedInterests is EqualUnmodifiableListView) return _sharedInterests;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_sharedInterests);
+  }
+
+  final List<String> _compatibilityReasons;
+  @override
+  List<String> get compatibilityReasons {
+    if (_compatibilityReasons is EqualUnmodifiableListView)
+      return _compatibilityReasons;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_compatibilityReasons);
+  }
+
+  final List<String> _potentialChallenges;
+  @override
+  List<String> get potentialChallenges {
+    if (_potentialChallenges is EqualUnmodifiableListView)
+      return _potentialChallenges;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableListView(_potentialChallenges);
+  }
+
+  @override
+  final DateTime calculatedAt;
+
+  @override
+  String toString() {
+    return 'MatchScore(userId: $userId, matchedUserId: $matchedUserId, overallScore: $overallScore, categoryScores: $categoryScores, sharedInterests: $sharedInterests, compatibilityReasons: $compatibilityReasons, potentialChallenges: $potentialChallenges, calculatedAt: $calculatedAt)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$MatchScoreImpl &&
+            (identical(other.userId, userId) || other.userId == userId) &&
+            (identical(other.matchedUserId, matchedUserId) ||
+                other.matchedUserId == matchedUserId) &&
+            (identical(other.overallScore, overallScore) ||
+                other.overallScore == overallScore) &&
+            const DeepCollectionEquality()
+                .equals(other._categoryScores, _categoryScores) &&
+            const DeepCollectionEquality()
+                .equals(other._sharedInterests, _sharedInterests) &&
+            const DeepCollectionEquality()
+                .equals(other._compatibilityReasons, _compatibilityReasons) &&
+            const DeepCollectionEquality()
+                .equals(other._potentialChallenges, _potentialChallenges) &&
+            (identical(other.calculatedAt, calculatedAt) ||
+                other.calculatedAt == calculatedAt));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType,
+      userId,
+      matchedUserId,
+      overallScore,
+      const DeepCollectionEquality().hash(_categoryScores),
+      const DeepCollectionEquality().hash(_sharedInterests),
+      const DeepCollectionEquality().hash(_compatibilityReasons),
+      const DeepCollectionEquality().hash(_potentialChallenges),
+      calculatedAt);
+
+  /// Create a copy of MatchScore
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$MatchScoreImplCopyWith<_$MatchScoreImpl> get copyWith =>
+      __$$MatchScoreImplCopyWithImpl<_$MatchScoreImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$MatchScoreImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _MatchScore extends MatchScore {
+  const factory _MatchScore(
+      {required final String userId,
+      required final String matchedUserId,
+      required final double overallScore,
+      required final Map<String, double> categoryScores,
+      required final List<String> sharedInterests,
+      required final List<String> compatibilityReasons,
+      required final List<String> potentialChallenges,
+      required final DateTime calculatedAt}) = _$MatchScoreImpl;
+  const _MatchScore._() : super._();
+
+  factory _MatchScore.fromJson(Map<String, dynamic> json) =
+      _$MatchScoreImpl.fromJson;
+
+  @override
+  String get userId;
+  @override
+  String get matchedUserId;
+  @override
+  double get overallScore;
+  @override
+  Map<String, double> get categoryScores;
+  @override
+  List<String> get sharedInterests;
+  @override
+  List<String> get compatibilityReasons;
+  @override
+  List<String> get potentialChallenges;
+  @override
+  DateTime get calculatedAt;
+
+  /// Create a copy of MatchScore
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$MatchScoreImplCopyWith<_$MatchScoreImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+RankedMatch _$RankedMatchFromJson(Map<String, dynamic> json) {
+  return _RankedMatch.fromJson(json);
+}
+
+/// @nodoc
+mixin _$RankedMatch {
+  String get userId => throw _privateConstructorUsedError;
+  String get userName => throw _privateConstructorUsedError;
+  String? get userPhotoUrl => throw _privateConstructorUsedError;
+  int get age => throw _privateConstructorUsedError;
+  double get distanceInMiles => throw _privateConstructorUsedError;
+  MatchScore get matchScore => throw _privateConstructorUsedError;
+  int get rank => throw _privateConstructorUsedError;
+
+  /// Serializes this RankedMatch to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of RankedMatch
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $RankedMatchCopyWith<RankedMatch> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $RankedMatchCopyWith<$Res> {
+  factory $RankedMatchCopyWith(
+          RankedMatch value, $Res Function(RankedMatch) then) =
+      _$RankedMatchCopyWithImpl<$Res, RankedMatch>;
+  @useResult
+  $Res call(
+      {String userId,
+      String userName,
+      String? userPhotoUrl,
+      int age,
+      double distanceInMiles,
+      MatchScore matchScore,
+      int rank});
+
+  $MatchScoreCopyWith<$Res> get matchScore;
+}
+
+/// @nodoc
+class _$RankedMatchCopyWithImpl<$Res, $Val extends RankedMatch>
+    implements $RankedMatchCopyWith<$Res> {
+  _$RankedMatchCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of RankedMatch
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? userId = null,
+    Object? userName = null,
+    Object? userPhotoUrl = freezed,
+    Object? age = null,
+    Object? distanceInMiles = null,
+    Object? matchScore = null,
+    Object? rank = null,
+  }) {
+    return _then(_value.copyWith(
+      userId: null == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as String,
+      userName: null == userName
+          ? _value.userName
+          : userName // ignore: cast_nullable_to_non_nullable
+              as String,
+      userPhotoUrl: freezed == userPhotoUrl
+          ? _value.userPhotoUrl
+          : userPhotoUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
+      age: null == age
+          ? _value.age
+          : age // ignore: cast_nullable_to_non_nullable
+              as int,
+      distanceInMiles: null == distanceInMiles
+          ? _value.distanceInMiles
+          : distanceInMiles // ignore: cast_nullable_to_non_nullable
+              as double,
+      matchScore: null == matchScore
+          ? _value.matchScore
+          : matchScore // ignore: cast_nullable_to_non_nullable
+              as MatchScore,
+      rank: null == rank
+          ? _value.rank
+          : rank // ignore: cast_nullable_to_non_nullable
+              as int,
+    ) as $Val);
+  }
+
+  /// Create a copy of RankedMatch
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @pragma('vm:prefer-inline')
+  $MatchScoreCopyWith<$Res> get matchScore {
+    return $MatchScoreCopyWith<$Res>(_value.matchScore, (value) {
+      return _then(_value.copyWith(matchScore: value) as $Val);
+    });
+  }
+}
+
+/// @nodoc
+abstract class _$$RankedMatchImplCopyWith<$Res>
+    implements $RankedMatchCopyWith<$Res> {
+  factory _$$RankedMatchImplCopyWith(
+          _$RankedMatchImpl value, $Res Function(_$RankedMatchImpl) then) =
+      __$$RankedMatchImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {String userId,
+      String userName,
+      String? userPhotoUrl,
+      int age,
+      double distanceInMiles,
+      MatchScore matchScore,
+      int rank});
+
+  @override
+  $MatchScoreCopyWith<$Res> get matchScore;
+}
+
+/// @nodoc
+class __$$RankedMatchImplCopyWithImpl<$Res>
+    extends _$RankedMatchCopyWithImpl<$Res, _$RankedMatchImpl>
+    implements _$$RankedMatchImplCopyWith<$Res> {
+  __$$RankedMatchImplCopyWithImpl(
+      _$RankedMatchImpl _value, $Res Function(_$RankedMatchImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of RankedMatch
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? userId = null,
+    Object? userName = null,
+    Object? userPhotoUrl = freezed,
+    Object? age = null,
+    Object? distanceInMiles = null,
+    Object? matchScore = null,
+    Object? rank = null,
+  }) {
+    return _then(_$RankedMatchImpl(
+      userId: null == userId
+          ? _value.userId
+          : userId // ignore: cast_nullable_to_non_nullable
+              as String,
+      userName: null == userName
+          ? _value.userName
+          : userName // ignore: cast_nullable_to_non_nullable
+              as String,
+      userPhotoUrl: freezed == userPhotoUrl
+          ? _value.userPhotoUrl
+          : userPhotoUrl // ignore: cast_nullable_to_non_nullable
+              as String?,
+      age: null == age
+          ? _value.age
+          : age // ignore: cast_nullable_to_non_nullable
+              as int,
+      distanceInMiles: null == distanceInMiles
+          ? _value.distanceInMiles
+          : distanceInMiles // ignore: cast_nullable_to_non_nullable
+              as double,
+      matchScore: null == matchScore
+          ? _value.matchScore
+          : matchScore // ignore: cast_nullable_to_non_nullable
+              as MatchScore,
+      rank: null == rank
+          ? _value.rank
+          : rank // ignore: cast_nullable_to_non_nullable
+              as int,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$RankedMatchImpl implements _RankedMatch {
+  const _$RankedMatchImpl(
+      {required this.userId,
+      required this.userName,
+      required this.userPhotoUrl,
+      required this.age,
+      required this.distanceInMiles,
+      required this.matchScore,
+      required this.rank});
+
+  factory _$RankedMatchImpl.fromJson(Map<String, dynamic> json) =>
+      _$$RankedMatchImplFromJson(json);
+
+  @override
+  final String userId;
+  @override
+  final String userName;
+  @override
+  final String? userPhotoUrl;
+  @override
+  final int age;
+  @override
+  final double distanceInMiles;
+  @override
+  final MatchScore matchScore;
+  @override
+  final int rank;
+
+  @override
+  String toString() {
+    return 'RankedMatch(userId: $userId, userName: $userName, userPhotoUrl: $userPhotoUrl, age: $age, distanceInMiles: $distanceInMiles, matchScore: $matchScore, rank: $rank)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$RankedMatchImpl &&
+            (identical(other.userId, userId) || other.userId == userId) &&
+            (identical(other.userName, userName) ||
+                other.userName == userName) &&
+            (identical(other.userPhotoUrl, userPhotoUrl) ||
+                other.userPhotoUrl == userPhotoUrl) &&
+            (identical(other.age, age) || other.age == age) &&
+            (identical(other.distanceInMiles, distanceInMiles) ||
+                other.distanceInMiles == distanceInMiles) &&
+            (identical(other.matchScore, matchScore) ||
+                other.matchScore == matchScore) &&
+            (identical(other.rank, rank) || other.rank == rank));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(runtimeType, userId, userName, userPhotoUrl,
+      age, distanceInMiles, matchScore, rank);
+
+  /// Create a copy of RankedMatch
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$RankedMatchImplCopyWith<_$RankedMatchImpl> get copyWith =>
+      __$$RankedMatchImplCopyWithImpl<_$RankedMatchImpl>(this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$RankedMatchImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _RankedMatch implements RankedMatch {
+  const factory _RankedMatch(
+      {required final String userId,
+      required final String userName,
+      required final String? userPhotoUrl,
+      required final int age,
+      required final double distanceInMiles,
+      required final MatchScore matchScore,
+      required final int rank}) = _$RankedMatchImpl;
+
+  factory _RankedMatch.fromJson(Map<String, dynamic> json) =
+      _$RankedMatchImpl.fromJson;
+
+  @override
+  String get userId;
+  @override
+  String get userName;
+  @override
+  String? get userPhotoUrl;
+  @override
+  int get age;
+  @override
+  double get distanceInMiles;
+  @override
+  MatchScore get matchScore;
+  @override
+  int get rank;
+
+  /// Create a copy of RankedMatch
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$RankedMatchImplCopyWith<_$RankedMatchImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+MatchStatistics _$MatchStatisticsFromJson(Map<String, dynamic> json) {
+  return _MatchStatistics.fromJson(json);
+}
+
+/// @nodoc
+mixin _$MatchStatistics {
+  int get totalMatches => throw _privateConstructorUsedError;
+  int get strongMatches => throw _privateConstructorUsedError;
+  double get averageScore => throw _privateConstructorUsedError;
+  double get highestScore => throw _privateConstructorUsedError;
+  double get lowestScore => throw _privateConstructorUsedError;
+  Map<String, int> get compatibilityDistribution =>
+      throw _privateConstructorUsedError;
+  DateTime get calculatedAt => throw _privateConstructorUsedError;
+
+  /// Serializes this MatchStatistics to a JSON map.
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
+
+  /// Create a copy of MatchStatistics
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $MatchStatisticsCopyWith<MatchStatistics> get copyWith =>
+      throw _privateConstructorUsedError;
+}
+
+/// @nodoc
+abstract class $MatchStatisticsCopyWith<$Res> {
+  factory $MatchStatisticsCopyWith(
+          MatchStatistics value, $Res Function(MatchStatistics) then) =
+      _$MatchStatisticsCopyWithImpl<$Res, MatchStatistics>;
+  @useResult
+  $Res call(
+      {int totalMatches,
+      int strongMatches,
+      double averageScore,
+      double highestScore,
+      double lowestScore,
+      Map<String, int> compatibilityDistribution,
+      DateTime calculatedAt});
+}
+
+/// @nodoc
+class _$MatchStatisticsCopyWithImpl<$Res, $Val extends MatchStatistics>
+    implements $MatchStatisticsCopyWith<$Res> {
+  _$MatchStatisticsCopyWithImpl(this._value, this._then);
+
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
+
+  /// Create a copy of MatchStatistics
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? totalMatches = null,
+    Object? strongMatches = null,
+    Object? averageScore = null,
+    Object? highestScore = null,
+    Object? lowestScore = null,
+    Object? compatibilityDistribution = null,
+    Object? calculatedAt = null,
+  }) {
+    return _then(_value.copyWith(
+      totalMatches: null == totalMatches
+          ? _value.totalMatches
+          : totalMatches // ignore: cast_nullable_to_non_nullable
+              as int,
+      strongMatches: null == strongMatches
+          ? _value.strongMatches
+          : strongMatches // ignore: cast_nullable_to_non_nullable
+              as int,
+      averageScore: null == averageScore
+          ? _value.averageScore
+          : averageScore // ignore: cast_nullable_to_non_nullable
+              as double,
+      highestScore: null == highestScore
+          ? _value.highestScore
+          : highestScore // ignore: cast_nullable_to_non_nullable
+              as double,
+      lowestScore: null == lowestScore
+          ? _value.lowestScore
+          : lowestScore // ignore: cast_nullable_to_non_nullable
+              as double,
+      compatibilityDistribution: null == compatibilityDistribution
+          ? _value.compatibilityDistribution
+          : compatibilityDistribution // ignore: cast_nullable_to_non_nullable
+              as Map<String, int>,
+      calculatedAt: null == calculatedAt
+          ? _value.calculatedAt
+          : calculatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+    ) as $Val);
+  }
+}
+
+/// @nodoc
+abstract class _$$MatchStatisticsImplCopyWith<$Res>
+    implements $MatchStatisticsCopyWith<$Res> {
+  factory _$$MatchStatisticsImplCopyWith(_$MatchStatisticsImpl value,
+          $Res Function(_$MatchStatisticsImpl) then) =
+      __$$MatchStatisticsImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call(
+      {int totalMatches,
+      int strongMatches,
+      double averageScore,
+      double highestScore,
+      double lowestScore,
+      Map<String, int> compatibilityDistribution,
+      DateTime calculatedAt});
+}
+
+/// @nodoc
+class __$$MatchStatisticsImplCopyWithImpl<$Res>
+    extends _$MatchStatisticsCopyWithImpl<$Res, _$MatchStatisticsImpl>
+    implements _$$MatchStatisticsImplCopyWith<$Res> {
+  __$$MatchStatisticsImplCopyWithImpl(
+      _$MatchStatisticsImpl _value, $Res Function(_$MatchStatisticsImpl) _then)
+      : super(_value, _then);
+
+  /// Create a copy of MatchStatistics
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? totalMatches = null,
+    Object? strongMatches = null,
+    Object? averageScore = null,
+    Object? highestScore = null,
+    Object? lowestScore = null,
+    Object? compatibilityDistribution = null,
+    Object? calculatedAt = null,
+  }) {
+    return _then(_$MatchStatisticsImpl(
+      totalMatches: null == totalMatches
+          ? _value.totalMatches
+          : totalMatches // ignore: cast_nullable_to_non_nullable
+              as int,
+      strongMatches: null == strongMatches
+          ? _value.strongMatches
+          : strongMatches // ignore: cast_nullable_to_non_nullable
+              as int,
+      averageScore: null == averageScore
+          ? _value.averageScore
+          : averageScore // ignore: cast_nullable_to_non_nullable
+              as double,
+      highestScore: null == highestScore
+          ? _value.highestScore
+          : highestScore // ignore: cast_nullable_to_non_nullable
+              as double,
+      lowestScore: null == lowestScore
+          ? _value.lowestScore
+          : lowestScore // ignore: cast_nullable_to_non_nullable
+              as double,
+      compatibilityDistribution: null == compatibilityDistribution
+          ? _value._compatibilityDistribution
+          : compatibilityDistribution // ignore: cast_nullable_to_non_nullable
+              as Map<String, int>,
+      calculatedAt: null == calculatedAt
+          ? _value.calculatedAt
+          : calculatedAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
+    ));
+  }
+}
+
+/// @nodoc
+@JsonSerializable()
+class _$MatchStatisticsImpl implements _MatchStatistics {
+  const _$MatchStatisticsImpl(
+      {required this.totalMatches,
+      required this.strongMatches,
+      required this.averageScore,
+      required this.highestScore,
+      required this.lowestScore,
+      required final Map<String, int> compatibilityDistribution,
+      required this.calculatedAt})
+      : _compatibilityDistribution = compatibilityDistribution;
+
+  factory _$MatchStatisticsImpl.fromJson(Map<String, dynamic> json) =>
+      _$$MatchStatisticsImplFromJson(json);
+
+  @override
+  final int totalMatches;
+  @override
+  final int strongMatches;
+  @override
+  final double averageScore;
+  @override
+  final double highestScore;
+  @override
+  final double lowestScore;
+  final Map<String, int> _compatibilityDistribution;
+  @override
+  Map<String, int> get compatibilityDistribution {
+    if (_compatibilityDistribution is EqualUnmodifiableMapView)
+      return _compatibilityDistribution;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_compatibilityDistribution);
+  }
+
+  @override
+  final DateTime calculatedAt;
+
+  @override
+  String toString() {
+    return 'MatchStatistics(totalMatches: $totalMatches, strongMatches: $strongMatches, averageScore: $averageScore, highestScore: $highestScore, lowestScore: $lowestScore, compatibilityDistribution: $compatibilityDistribution, calculatedAt: $calculatedAt)';
+  }
+
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$MatchStatisticsImpl &&
+            (identical(other.totalMatches, totalMatches) ||
+                other.totalMatches == totalMatches) &&
+            (identical(other.strongMatches, strongMatches) ||
+                other.strongMatches == strongMatches) &&
+            (identical(other.averageScore, averageScore) ||
+                other.averageScore == averageScore) &&
+            (identical(other.highestScore, highestScore) ||
+                other.highestScore == highestScore) &&
+            (identical(other.lowestScore, lowestScore) ||
+                other.lowestScore == lowestScore) &&
+            const DeepCollectionEquality().equals(
+                other._compatibilityDistribution, _compatibilityDistribution) &&
+            (identical(other.calculatedAt, calculatedAt) ||
+                other.calculatedAt == calculatedAt));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(
+      runtimeType,
+      totalMatches,
+      strongMatches,
+      averageScore,
+      highestScore,
+      lowestScore,
+      const DeepCollectionEquality().hash(_compatibilityDistribution),
+      calculatedAt);
+
+  /// Create a copy of MatchStatistics
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$MatchStatisticsImplCopyWith<_$MatchStatisticsImpl> get copyWith =>
+      __$$MatchStatisticsImplCopyWithImpl<_$MatchStatisticsImpl>(
+          this, _$identity);
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$MatchStatisticsImplToJson(
+      this,
+    );
+  }
+}
+
+abstract class _MatchStatistics implements MatchStatistics {
+  const factory _MatchStatistics(
+      {required final int totalMatches,
+      required final int strongMatches,
+      required final double averageScore,
+      required final double highestScore,
+      required final double lowestScore,
+      required final Map<String, int> compatibilityDistribution,
+      required final DateTime calculatedAt}) = _$MatchStatisticsImpl;
+
+  factory _MatchStatistics.fromJson(Map<String, dynamic> json) =
+      _$MatchStatisticsImpl.fromJson;
+
+  @override
+  int get totalMatches;
+  @override
+  int get strongMatches;
+  @override
+  double get averageScore;
+  @override
+  double get highestScore;
+  @override
+  double get lowestScore;
+  @override
+  Map<String, int> get compatibilityDistribution;
+  @override
+  DateTime get calculatedAt;
+
+  /// Create a copy of MatchStatistics
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$MatchStatisticsImplCopyWith<_$MatchStatisticsImpl> get copyWith =>
+      throw _privateConstructorUsedError;
+}

@@ -1,0 +1,102 @@
+Analyzing MIXMINGLE...                                          
+
+warning - The left operand can't be null, so the right operand is never executed - lib\features\browse\screens\browse_rooms_paginated_page.dart:65:58 - dead_null_aware_expression
+warning - Unused import: 'dart:convert' - lib\features\moderation\screens\moderator_dashboard_page.dart:8:8 - unused_import
+   info - Unnecessary use of string interpolation - lib\features\moderation\widgets\mod_log_viewer.dart:75:18 - unnecessary_string_interpolations
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\moderation\widgets\mod_log_viewer.dart:143:30 - deprecated_member_use
+warning - Unused import: 'package:flutter/foundation.dart' - lib\features\room\providers\voice_room_providers.dart:2:8 - unused_import
+warning - Unused import: 'package:mix_and_mingle/shared/models/voice_room_chat_message.dart' - lib\features\room\providers\voice_room_providers.dart:3:8 - unused_import
+warning - Unused import: '../widgets/camera_grid.dart' - lib\features\room\screens\room_page.dart:16:8 - unused_import
+warning - Unused import: '../widgets/cam_count_indicator.dart' - lib\features\room\screens\room_page.dart:17:8 - unused_import
+warning - Unused import: '../widgets/camera_quality_selector.dart' - lib\features\room\screens\room_page.dart:18:8 - unused_import
+warning - Unused import: '../widgets/mic_queue_indicator.dart' - lib\features\room\screens\room_page.dart:19:8 - unused_import
+warning - Unused import: '../widgets/pinned_messages_bar.dart' - lib\features\room\screens\room_page.dart:20:8 - unused_import
+   info - The private field _showCameraGrid could be 'final' - lib\features\room\screens\room_page.dart:40:8 - prefer_final_fields
+warning - The value of the field '_showCameraGrid' isn't used - lib\features\room\screens\room_page.dart:40:8 - unused_field
+   info - The private field _showMicPanel could be 'final' - lib\features\room\screens\room_page.dart:41:8 - prefer_final_fields
+warning - The value of the field '_showMicPanel' isn't used - lib\features\room\screens\room_page.dart:41:8 - unused_field
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\room\screens\room_page.dart:173:43 - deprecated_member_use
+warning - The left operand can't be null, so the right operand is never executed - lib\features\room\screens\room_page.dart:182:60 - dead_null_aware_expression
+warning - The left operand can't be null, so the right operand is never executed - lib\features\room\screens\room_page.dart:182:89 - dead_null_aware_expression
+warning - The value of the local variable 'currentUserInQueue' isn't used - lib\features\room\screens\room_page.dart:894:11 - unused_local_variable
+warning - The left operand can't be null, so the right operand is never executed - lib\features\room\screens\room_page.dart:911:47 - dead_null_aware_expression
+warning - The '!' will have no effect because the receiver can't be null - lib\features\room\screens\room_page.dart:1257:64 - unnecessary_non_null_assertion
+   info - Don't use 'BuildContext's across async gaps - lib\features\room\screens\room_page.dart:1298:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\room\screens\room_page.dart:1302:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\room\screens\room_page.dart:1334:21 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\room\screens\room_page.dart:1335:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\room\screens\room_page.dart:1339:28 - use_build_context_synchronously
+warning - The declaration '_revokeCameraPermission' isn't referenced - lib\features\room\screens\room_page.dart:1365:16 - unused_element
+   info - Don't use 'BuildContext's across async gaps - lib\features\room\screens\room_page.dart:1378:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\room\screens\room_page.dart:1382:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\room\screens\room_page.dart:1395:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\room\screens\room_page.dart:1405:23 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\room\screens\room_page.dart:1406:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\room\screens\room_page.dart:1409:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\room\screens\room_page.dart:1420:28 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\room\screens\room_page.dart:1426:23 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\room\screens\room_page.dart:1427:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\room\screens\room_page.dart:1430:28 - use_build_context_synchronously
+warning - Unused import: '../providers/voice_room_providers.dart' - lib\features\room\screens\voice_room_page.dart:14:8 - unused_import
+   info - The import of '../providers/room_subcollection_providers.dart' is unnecessary because all of the used elements are also provided by the import of 'package:mix_and_mingle/providers/all_providers.dart' - lib\features\room\screens\voice_room_page.dart:18:8 - unnecessary_import
+warning - The value of the local variable 'firestoreParticipantsAsync' isn't used - lib\features\room\screens\voice_room_page.dart:390:11 - unused_local_variable
+warning - The value of the local variable 'eventsAsync' isn't used - lib\features\room\screens\voice_room_page.dart:393:11 - unused_local_variable
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\room\screens\voice_room_page.dart:454:33 - unnecessary_null_comparison
+warning - The value of the local variable 'eventsAsync' isn't used - lib\features\room\screens\voice_room_page.dart:891:11 - unused_local_variable
+  error - The argument type 'VoiceRoomChatMessage' can't be assigned to the parameter type 'ChatMessage'.  - lib\features\room\services\room_moderation_service.dart:79:16 - argument_type_not_assignable
+  error - The argument type 'VoiceRoomChatMessage' can't be assigned to the parameter type 'ChatMessage'.  - lib\features\room\services\room_moderation_service.dart:126:16 - argument_type_not_assignable
+   info - Parameter 'key' could be a super parameter - lib\features\room\widgets\cam_count_indicator.dart:9:9 - use_super_parameters
+warning - Unused import: 'package:mix_and_mingle/shared/models/camera_state.dart' - lib\features\room\widgets\camera_grid.dart:3:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\features\room\widgets\camera_grid.dart:13:9 - use_super_parameters
+   info - Parameter 'key' could be a super parameter - lib\features\room\widgets\camera_quality_selector.dart:11:9 - use_super_parameters
+   info - 'groupValue' is deprecated and shouldn't be used. Use a RadioGroup ancestor to manage group value instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\room\widgets\camera_quality_selector.dart:139:11 - deprecated_member_use
+   info - 'onChanged' is deprecated and shouldn't be used. Use RadioGroup to handle value change instead. This feature was deprecated after v3.32.0-0.0.pre - lib\features\room\widgets\camera_quality_selector.dart:140:11 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\features\room\widgets\camera_tile.dart:10:9 - use_super_parameters
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\room\widgets\camera_tile.dart:104:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\room\widgets\camera_tile.dart:105:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\room\widgets\camera_tile.dart:177:42 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\room\widgets\dynamic_video_grid.dart:211:32 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\room\widgets\dynamic_video_grid.dart:230:47 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\features\room\widgets\freeze_detector.dart:8:9 - use_super_parameters
+warning - Unused import: 'package:mix_and_mingle/shared/models/mic_state.dart' - lib\features\room\widgets\mic_queue_indicator.dart:3:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\features\room\widgets\mic_queue_indicator.dart:10:9 - use_super_parameters
+warning - Unused import: 'package:mix_and_mingle/shared/models/chat_message.dart' - lib\features\room\widgets\pinned_messages_bar.dart:3:8 - unused_import
+   info - Parameter 'key' could be a super parameter - lib\features\room\widgets\pinned_messages_bar.dart:10:9 - use_super_parameters
+   info - Unnecessary use of 'toList' in a spread - lib\features\room\widgets\pinned_messages_bar.dart:73:18 - unnecessary_to_list_in_spreads
+   info - Parameter 'key' could be a super parameter - lib\features\room\widgets\spotlight_view.dart:12:9 - use_super_parameters
+   info - 'WillPopScope' is deprecated and shouldn't be used. Use PopScope instead. The Android predictive back feature will not work with WillPopScope. This feature was deprecated after v3.12.0-1.0.pre - lib\features\room\widgets\spotlight_view.dart:25:12 - deprecated_member_use
+  error - The named parameter 'error' is required, but there's no corresponding argument - lib\features\room\widgets\voice_room_chat_overlay.dart:90:26 - missing_required_argument
+  error - The named parameter 'loading' is required, but there's no corresponding argument - lib\features\room\widgets\voice_room_chat_overlay.dart:90:26 - missing_required_argument
+  error - The named parameter 'loading' isn't defined - lib\features\room\widgets\voice_room_chat_overlay.dart:207:7 - undefined_named_parameter
+  error - The named parameter 'error' isn't defined - lib\features\room\widgets\voice_room_chat_overlay.dart:208:7 - undefined_named_parameter
+  error - Expected to find ')' - lib\features\room\widgets\voice_room_chat_overlay.dart:209:6 - expected_token
+   info - Parameter 'key' could be a super parameter - lib\features\voice_room\widgets\advanced_mic_control_widget.dart:16:9 - use_super_parameters
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\voice_room\widgets\advanced_mic_control_widget.dart:315:13 - deprecated_member_use
+   info - Parameter 'key' could be a super parameter - lib\features\voice_room\widgets\analytics_dashboard_widget.dart:16:9 - use_super_parameters
+  error - Invalid constant value - lib\features\voice_room\widgets\analytics_dashboard_widget.dart:394:26 - invalid_constant
+   info - Parameter 'key' could be a super parameter - lib\features\voice_room\widgets\enhanced_chat_widget.dart:19:9 - use_super_parameters
+   info - Don't use 'BuildContext's across async gaps - lib\features\voice_room\widgets\enhanced_chat_widget.dart:411:28 - use_build_context_synchronously
+   info - Parameter 'key' could be a super parameter - lib\features\voice_room\widgets\room_moderation_widget.dart:19:9 - use_super_parameters
+  error - The getter 'data' isn't defined for the type 'Widget' - lib\features\voice_room\widgets\room_moderation_widget.dart:196:40 - undefined_getter
+   info - Parameter 'key' could be a super parameter - lib\features\voice_room\widgets\room_recording_widget.dart:18:9 - use_super_parameters
+   info - 'activeColor' is deprecated and shouldn't be used. Use activeThumbColor instead. This feature was deprecated after v3.31.0-2.0.pre - lib\features\voice_room\widgets\room_recording_widget.dart:268:21 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\voice_room\widgets\room_recording_widget.dart:343:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\voice_room\widgets\room_recording_widget.dart:344:38 - use_build_context_synchronously
+   info - Parameter 'key' could be a super parameter - lib\features\voice_room\widgets\user_presence_widget.dart:17:9 - use_super_parameters
+   info - Parameter 'key' could be a super parameter - lib\features\voice_room\widgets\user_presence_widget.dart:106:9 - use_super_parameters
+   info - Parameter 'key' could be a super parameter - lib\features\voice_room\widgets\user_presence_widget.dart:218:9 - use_super_parameters
+  error - The name 'ProfileController' is defined in the libraries 'package:mix_and_mingle/providers/user_providers.dart' and 'package:mix_and_mingle/providers/profile_controller.dart' - lib\providers\all_providers.dart:59:8 - ambiguous_export
+   info - The private field _isLiveStreamingMode could be 'final' - lib\services\agora_video_service.dart:44:8 - prefer_final_fields
+warning - The value of the field '_isLiveStreamingMode' isn't used - lib\services\agora_video_service.dart:44:8 - unused_field
+warning - The value of the local variable 'bannedUsers' isn't used - lib\services\auto_moderation_service.dart:218:13 - unused_local_variable
+warning - Unnecessary cast - lib\services\chat_service.dart:561:20 - unnecessary_cast
+   info - Don't invoke 'print' in production code - update_agora_config.dart:14:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:26:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:27:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:28:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:29:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:30:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:31:5 - avoid_print
+   info - Don't invoke 'print' in production code - update_agora_config.dart:35:5 - avoid_print
+
+98 issues found. (ran in 4.0s)
