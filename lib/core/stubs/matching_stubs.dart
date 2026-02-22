@@ -122,6 +122,83 @@ class MatchingProfile {
     this.kidsPreference,
     this.preferredGenders,
   });
+
+  /// Tolerant named constructor used by tests that construct profiles from maps.
+  const MatchingProfile.fromMap({
+    String? id,
+    dynamic latitude,
+    dynamic longitude,
+    dynamic lastActive,
+    dynamic createdAt,
+    dynamic userId,
+    dynamic displayName,
+    dynamic age,
+    dynamic relationshipIntent,
+    WeekendEnergy? weekendEnergy,
+    SocialStyle? socialStyle,
+    CommunicationStyle? communicationStyle,
+    QuestionnaireAnswers answers = const QuestionnaireAnswers(),
+    dynamic minAge,
+    dynamic maxAge,
+    dynamic distancePreference,
+    dynamic smokingPreference,
+    dynamic drinkingPreference,
+    dynamic cannabisPreference,
+    dynamic petsPreference,
+    dynamic kidsPreference,
+    dynamic preferredGenders,
+  }) : this(
+          id: id ?? 'stub-id',
+          latitude: latitude,
+          longitude: longitude,
+          lastActive: lastActive,
+          createdAt: createdAt,
+          userId: userId,
+          displayName: displayName,
+          age: age,
+          relationshipIntent: relationshipIntent,
+          weekendEnergy: weekendEnergy,
+          socialStyle: socialStyle,
+          communicationStyle: communicationStyle,
+          answers: answers,
+          minAge: minAge,
+          maxAge: maxAge,
+          distancePreference: distancePreference,
+          smokingPreference: smokingPreference,
+          drinkingPreference: drinkingPreference,
+          cannabisPreference: cannabisPreference,
+          petsPreference: petsPreference,
+          kidsPreference: kidsPreference,
+          preferredGenders: preferredGenders,
+        );
+
+  /// Tolerant constructor that builds a MatchingProfile from a JSON-like map.
+  /// Keys are looked up by common names used in tests.
+  const MatchingProfile.fromJson(Map<String, dynamic> json)
+      : this(
+          id: json['id']?.toString() ?? json['userId']?.toString() ?? 'stub-id',
+          latitude: json['latitude'] ?? json['lat'],
+          longitude: json['longitude'] ?? json['lon'] ?? json['lng'],
+          lastActive: json['lastActive'] ?? json['last_active'],
+          createdAt: json['createdAt'] ?? json['created_at'],
+          userId: json['userId'] ?? json['user_id'],
+          displayName: json['displayName'] ?? json['display_name'],
+          age: json['age'],
+          relationshipIntent: json['relationshipIntent'] ?? json['relationship_intent'],
+          weekendEnergy: json['weekendEnergy'] ?? json['weekend_energy'],
+          socialStyle: json['socialStyle'] ?? json['social_style'],
+          communicationStyle: json['communicationStyle'] ?? json['communication_style'],
+          answers: json['answers'] is Map ? QuestionnaireAnswers(Map<String, dynamic>.from(json['answers'])) : const QuestionnaireAnswers(),
+          minAge: json['minAge'] ?? json['min_age'],
+          maxAge: json['maxAge'] ?? json['max_age'],
+          distancePreference: json['distancePreference'] ?? json['distance_preference'],
+          smokingPreference: json['smokingPreference'] ?? json['smoking_preference'],
+          drinkingPreference: json['drinkingPreference'] ?? json['drinking_preference'],
+          cannabisPreference: json['cannabisPreference'] ?? json['cannabis_preference'],
+          petsPreference: json['petsPreference'] ?? json['pets_preference'],
+          kidsPreference: json['kidsPreference'] ?? json['kids_preference'],
+          preferredGenders: json['preferredGenders'] ?? json['preferred_genders'],
+        );
 }
 
 /// Minimal PartnerVibe stub for tests
