@@ -1,10 +1,3 @@
-// ignore_for_file: deprecated_member_use
-import 'package:web/web.dart' as web;
-
-class MultiWindowBridge {
-  static void openRoom(String roomId) {
-    web.window.open('/room/$roomId', '_blank');
-  }
-}
-
-
+// Conditional re-export: web implementation on web, no-op stub on native.
+export 'multi_window_bridge_stub.dart'
+    if (dart.library.js_interop) 'multi_window_bridge_web.dart';

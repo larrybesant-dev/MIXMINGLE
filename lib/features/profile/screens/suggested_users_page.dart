@@ -1,4 +1,4 @@
-/// Suggested Users Page
+﻿/// Suggested Users Page
 /// Discover new people to follow based on interests and mutual connections
 library;
 
@@ -76,13 +76,13 @@ class SuggestedUsersPage extends ConsumerWidget {
                     Icon(
                       Icons.error_outline,
                       size: 64,
-                      color: DesignColors.white.withOpacity(0.3),
+                      color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       'Error loading suggestions',
                       style: TextStyle(
-                        color: DesignColors.white.withOpacity(0.7),
+                        color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                         fontSize: 18,
                       ),
                     ),
@@ -124,7 +124,7 @@ class SuggestedUsersPage extends ConsumerWidget {
                   children: [
                     CircleAvatar(
                       radius: 35,
-                      backgroundColor: DesignColors.accent.withOpacity(0.3),
+                      backgroundColor: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                       backgroundImage:
                           user.photos.isNotEmpty ? NetworkImage(user.photos.first) : null,
                       child: user.photos.isEmpty
@@ -168,7 +168,7 @@ class SuggestedUsersPage extends ConsumerWidget {
                         Text(
                           '${user.age} years old',
                           style: TextStyle(
-                            color: DesignColors.white.withOpacity(0.7),
+                            color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                             fontSize: 12,
                           ),
                         ),
@@ -201,20 +201,21 @@ class SuggestedUsersPage extends ConsumerWidget {
                       label: isFollowing ? 'Unfollow' : 'Follow',
                       onPressed: () async {
                         final service = ref.read(socialGraphServiceProvider);
+                        final messenger = ScaffoldMessenger.of(context);
                         try {
                           if (isFollowing) {
                             await service.unfollowUser(user.id);
                           } else {
                             await service.followUser(user.id);
                           }
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             SnackBar(
                               content: Text(isFollowing ? 'Unfollowed' : 'Now following ${user.displayName}!'),
                               duration: const Duration(seconds: 2),
                             ),
                           );
                         } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          messenger.showSnackBar(
                             SnackBar(
                               content: Text('Error: $e'),
                               backgroundColor: Colors.red,
@@ -222,7 +223,7 @@ class SuggestedUsersPage extends ConsumerWidget {
                           );
                         }
                       },
-                      glowColor: isFollowing ? DesignColors.grey : DesignColors.accent,
+                      glowColor: isFollowing ? Colors.grey : DesignColors.accent,
                       width: 100,
                       height: 36,
                     );
@@ -249,7 +250,7 @@ class SuggestedUsersPage extends ConsumerWidget {
               Text(
                 user.bio!,
                 style: TextStyle(
-                  color: DesignColors.white.withOpacity(0.8),
+                  color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                   fontSize: 14,
                 ),
                 maxLines: 2,
@@ -267,10 +268,10 @@ class SuggestedUsersPage extends ConsumerWidget {
                   return Container(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
-                      color: DesignColors.accent.withOpacity(0.3),
+                      color: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: DesignColors.accent.withOpacity(0.5),
+                        color: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                         width: 1,
                       ),
                     ),
@@ -301,7 +302,7 @@ class SuggestedUsersPage extends ConsumerWidget {
                   );
                 },
                 style: OutlinedButton.styleFrom(
-                  side: BorderSide(color: DesignColors.accent.withOpacity(0.5)),
+                  side: BorderSide(color: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255)),
                   foregroundColor: DesignColors.white,
                 ),
                 child: const Text('View Profile'),
@@ -321,13 +322,13 @@ class SuggestedUsersPage extends ConsumerWidget {
           Icon(
             Icons.search_off,
             size: 80,
-            color: DesignColors.white.withOpacity(0.3),
+            color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
           ),
           const SizedBox(height: 16),
           Text(
             'No suggestions available',
             style: TextStyle(
-              color: DesignColors.white.withOpacity(0.7),
+              color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
               fontSize: 18,
             ),
           ),

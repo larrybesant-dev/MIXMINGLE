@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+﻿import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:agora_rtc_engine/agora_rtc_engine.dart' as native;
 import '../core/utils/app_logger.dart';
 
@@ -17,6 +17,7 @@ import 'agora_web_bridge_v3.dart';
 /// - Broadcast from mobile
 ///
 /// Set to FALSE when Agora Web bridge is rewritten for SDK v5.
+// ignore: constant_identifier_names
 const bool AGORA_WEB_DISABLED = true;
 
 void _consoleLog(String msg) {
@@ -48,26 +49,26 @@ class AgoraPlatformService {
     required String token,
     required String uid,
   }) async {
-    _consoleLog('🌐 joinChannel called - kIsWeb: $kIsWeb');
+    _consoleLog('ðŸŒ joinChannel called - kIsWeb: $kIsWeb');
     debugPrint('[DEBUG] AgoraPlatformService.joinChannel() called with kIsWeb=$kIsWeb');
-    AppLogger.info('🌐 joinChannel called - kIsWeb: $kIsWeb');
+    AppLogger.info('ðŸŒ joinChannel called - kIsWeb: $kIsWeb');
 
     if (kIsWeb) {
       // ========================================================================
       // AGORA WEB DISABLED: Allow web to join room WITHOUT voice/video
       // ========================================================================
       if (AGORA_WEB_DISABLED) {
-        debugPrint('[AGORA_WEB] 🟡 Agora Web is DISABLED - Allowing room join without video/audio');
-        AppLogger.warning('🟡 Agora Web DISABLED: Joining room without voice/video');
+        debugPrint('[AGORA_WEB] ðŸŸ¡ Agora Web is DISABLED - Allowing room join without video/audio');
+        AppLogger.warning('ðŸŸ¡ Agora Web DISABLED: Joining room without voice/video');
         debugPrint('[AGORA_WEB]    Channel: $channelName');
         debugPrint('[AGORA_WEB]    UID: $uid');
-        debugPrint('[AGORA_WEB]    Web users can: Chat ✅, Presence ✅, UI ✅, Voice/Video ❌');
+        debugPrint('[AGORA_WEB]    Web users can: Chat âœ…, Presence âœ…, UI âœ…, Voice/Video âŒ');
         return true; // Pretend join succeeded - room UI will render
       }
 
-      _consoleLog('✅ WEB PATH: Initializing AgoraWebBridgeV3 (SDK v5)');
+      _consoleLog('âœ… WEB PATH: Initializing AgoraWebBridgeV3 (SDK v5)');
       debugPrint('[DEBUG] WEB PATH: Initializing web bridge...');
-      AppLogger.info('✅ WEB PATH: Initializing Agora Web SDK v5');
+      AppLogger.info('âœ… WEB PATH: Initializing Agora Web SDK v5');
 
       // === STEP 1: Initialize bridge ===
       debugPrint('[DEBUG] Calling AgoraWebBridgeV3.init()...');
@@ -75,9 +76,9 @@ class AgoraPlatformService {
       debugPrint('[DEBUG] AgoraWebBridgeV3.init() returned: $initSuccess');
 
       if (!initSuccess) {
-        _consoleLog('❌ Failed to initialize Agora');
+        _consoleLog('âŒ Failed to initialize Agora');
         debugPrint('[DEBUG] Init failed, returning false');
-        AppLogger.error('❌ Failed to initialize Agora');
+        AppLogger.error('âŒ Failed to initialize Agora');
 
         // Debug output for troubleshooting
         _printDebugState();
@@ -86,9 +87,9 @@ class AgoraPlatformService {
 
       // === STEP 2: JOIN CHANNEL ===
       // The production bridge handles permissions automatically during join
-      _consoleLog('✅ WEB PATH: Calling AgoraWebBridgeV3.joinChannel()');
+      _consoleLog('âœ… WEB PATH: Calling AgoraWebBridgeV3.joinChannel()');
       debugPrint('[DEBUG] Calling AgoraWebBridgeV3.joinChannel() with $channelName...');
-      AppLogger.info('🔗 Joining Agora channel: $channelName');
+      AppLogger.info('ðŸ”— Joining Agora channel: $channelName');
 
       final result = await AgoraWebBridgeV3.joinChannel(
         appId: appId,
@@ -99,20 +100,20 @@ class AgoraPlatformService {
       debugPrint('[DEBUG] AgoraWebBridgeV3.joinChannel() returned: $result');
 
       if (!result) {
-        _consoleLog('❌ Failed to join channel');
-        AppLogger.error('❌ Failed to join channel');
+        _consoleLog('âŒ Failed to join channel');
+        AppLogger.error('âŒ Failed to join channel');
 
         // Debug output for troubleshooting
         _printDebugState();
         return false;
       }
 
-      _consoleLog('✅ WEB PATH: Successfully joined channel');
-      AppLogger.info('✅ WEB PATH: Successfully joined channel');
+      _consoleLog('âœ… WEB PATH: Successfully joined channel');
+      AppLogger.info('âœ… WEB PATH: Successfully joined channel');
       return result;
     }
 
-    AppLogger.info('📱 NATIVE PATH: Using Agora NATIVE SDK (Flutter)');
+    AppLogger.info('ðŸ“± NATIVE PATH: Using Agora NATIVE SDK (Flutter)');
     if (_engine == null) {
       AppLogger.info('Initializing Agora native engine...');
       await initializeNative(appId);
@@ -136,7 +137,7 @@ class AgoraPlatformService {
   static Future<bool> leaveChannel() async {
     if (kIsWeb) {
       if (AGORA_WEB_DISABLED) {
-        debugPrint('[AGORA_WEB] 🟡 Agora Web disabled - leaveChannel is no-op');
+        debugPrint('[AGORA_WEB] ðŸŸ¡ Agora Web disabled - leaveChannel is no-op');
         return true; // No-op since join was skipped
       }
       return AgoraWebBridgeV3.leaveChannel();
@@ -150,7 +151,7 @@ class AgoraPlatformService {
   static Future<void> setMicMuted(bool muted) async {
     if (kIsWeb) {
       if (AGORA_WEB_DISABLED) {
-        debugPrint('[AGORA_WEB] 🟡 Agora Web disabled - setMicMuted is no-op');
+        debugPrint('[AGORA_WEB] ðŸŸ¡ Agora Web disabled - setMicMuted is no-op');
         return; // No-op since Agora is disabled
       }
       await AgoraWebBridgeV3.setMicMuted(muted);
@@ -164,7 +165,7 @@ class AgoraPlatformService {
   static Future<void> setVideoMuted(bool muted) async {
     if (kIsWeb) {
       if (AGORA_WEB_DISABLED) {
-        debugPrint('[AGORA_WEB] 🟡 Agora Web disabled - setVideoMuted is no-op');
+        debugPrint('[AGORA_WEB] ðŸŸ¡ Agora Web disabled - setVideoMuted is no-op');
         return; // No-op since Agora is disabled
       }
       await AgoraWebBridgeV3.setVideoMuted(muted);
@@ -175,11 +176,41 @@ class AgoraPlatformService {
     await _engine!.muteLocalVideoStream(muted);
   }
 
-  /// Enable debug logging for Web
+  /// Initialize web-specific Agora instance
+  static Future<bool> initializeWeb(String appId) async {
+    if (!kIsWeb) return false;
+    if (AGORA_WEB_DISABLED) {
+      debugPrint('[AGORA_WEB] ðŸŸ¡ Agora Web disabled - initializeWeb is no-op');
+      return true; // Return success to allow room join without video
+    }
+    // Web initialization happens in joinChannel
+    return true;
+  }
+
+  /// Get web bridge state for debugging
+  static Map<String, dynamic> getWebBridgeState() {
+    if (!kIsWeb) return {};
+    if (AGORA_WEB_DISABLED) return {'disabled': true};
+    try {
+      return AgoraWebBridgeV3.getState();
+    } catch (e) {
+      return {'error': e.toString()};
+    }
+  }
+
+  /// Enable debug logging for Web (external API method)
+  static void enableWebDebugLogging() {
+    if (kIsWeb && !AGORA_WEB_DISABLED) {
+      AgoraWebBridgeV3.enableDebugLogging();
+      AppLogger.info('ðŸ” Agora Web debug logging enabled');
+    }
+  }
+
+  /// Enable debug logging for Web (internal)
   static void enableDebugLogging() {
     if (kIsWeb) {
       AgoraWebBridgeV3.enableDebugLogging();
-      AppLogger.info('🔍 Agora Web debug logging enabled');
+      AppLogger.info('ðŸ” Agora Web debug logging enabled');
     }
   }
 

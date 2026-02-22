@@ -1,4 +1,4 @@
-/// Rooms List Page
+﻿/// Rooms List Page
 /// Browse and join live video rooms
 library;
 
@@ -105,8 +105,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage> {
           });
           ref.read(roomsProvider.notifier).setCategory(_selectedCategory);
         },
-        backgroundColor: DesignColors.accent.withOpacity(0.1),
-        selectedColor: DesignColors.accent.withOpacity(0.3),
+        backgroundColor: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+        selectedColor: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
         checkmarkColor: DesignColors.white,
         labelStyle: TextStyle(
           color: DesignColors.white,
@@ -131,7 +131,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: DesignColors.accent.withOpacity(0.2),
+                color: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   color: DesignColors.accent,
@@ -194,7 +194,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage> {
                 Text(
                   room.description,
                   style: TextStyle(
-                    color: DesignColors.white.withOpacity(0.7),
+                    color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                     fontSize: 12,
                   ),
                   maxLines: 1,
@@ -224,7 +224,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: DesignColors.accent.withOpacity(0.3),
+                        color: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -261,13 +261,13 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage> {
           Icon(
             Icons.video_call_outlined,
             size: 80,
-            color: DesignColors.white.withOpacity(0.3),
+            color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
           ),
           const SizedBox(height: 16),
           Text(
             'No live rooms right now',
             style: TextStyle(
-              color: DesignColors.white.withOpacity(0.7),
+              color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
               fontSize: 18,
             ),
           ),
@@ -378,6 +378,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage> {
                 return;
               }
 
+              final navigator = Navigator.of(context);
               final roomId = await ref.read(roomsProvider.notifier).createRoom(
                     name: nameController.text.trim(),
                     description: descriptionController.text.trim().isEmpty
@@ -387,8 +388,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage> {
                   );
 
               if (mounted && roomId != null) {
-                Navigator.pop(context);
-                Navigator.pushNamed(context, '/room', arguments: roomId);
+                navigator.pop();
+                navigator.pushNamed('/room', arguments: roomId);
               }
             },
             child: const Text('Create'),

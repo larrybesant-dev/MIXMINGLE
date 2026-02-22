@@ -1,3 +1,6 @@
+﻿// Removed invalid imports
+// import 'dart:js_util' as js_util;
+// import 'package:mixmingle/helpers/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_routes.dart';
@@ -8,7 +11,7 @@ class MixMingleApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('🏗️ Building MixMingleApp...');
+    debugPrint('ðŸ—ï¸ Building MixMingleApp...');
 
     return ProviderScope(
       child: MaterialApp(
@@ -20,9 +23,9 @@ class MixMingleApp extends StatelessWidget {
         initialRoute: AppRoutes.splash,
         // Handle unknown routes
         onUnknownRoute: (settings) {
-          debugPrint('⚠️ Unknown route: ${settings.name}');
+          debugPrint('âš ï¸ Unknown route: ${settings.name}');
           return MaterialPageRoute(
-            builder: (_) => Scaffold(
+            builder: (ctx) => Scaffold(
               appBar: AppBar(title: const Text('Page Not Found')),
               body: Center(
                 child: Column(
@@ -35,7 +38,7 @@ class MixMingleApp extends StatelessWidget {
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: () =>
-                          Navigator.of(_).pushNamedAndRemoveUntil(
+                          Navigator.of(ctx).pushNamedAndRemoveUntil(
                             AppRoutes.splash,
                             (route) => false,
                           ),
