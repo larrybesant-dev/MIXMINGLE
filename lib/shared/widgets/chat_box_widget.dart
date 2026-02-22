@@ -126,7 +126,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.chat_bubble_outline,
             size: WidgetSizes.largeIconSize,
             color: DesignColors.accent,
@@ -172,7 +172,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
   Widget _buildMessageInputArea(bool darkMode) {
     return Container(
       color: DesignColors.surfaceDefault,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border(
           top: BorderSide(
             color: DesignColors.accentDark,
@@ -233,12 +233,12 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
             minLines: 1,
             decoration: InputDecoration(
               hintText: 'Say hi ðŸ‘‹ ... or share a vibe',
-              hintStyle: TextStyle(
+              hintStyle: const TextStyle(
                 color: DesignColors.textLightGray,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(BorderRadii.lg),
-                borderSide: BorderSide(
+                borderSide: const BorderSide(
                   color: DesignColors.accentDark,
                 ),
               ),
@@ -289,7 +289,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
         }
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        PopupMenuItem<String>(
+        const PopupMenuItem<String>(
           value: 'file',
           child: Row(
             children: [
@@ -298,12 +298,12 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
                 size: WidgetSizes.smallIconSize,
                 color: DesignColors.accent,
               ),
-              const SizedBox(width: Spacing.md),
-              const Text('Share File'),
+              SizedBox(width: Spacing.md),
+              Text('Share File'),
             ],
           ),
         ),
-        PopupMenuItem<String>(
+        const PopupMenuItem<String>(
           value: 'image',
           child: Row(
             children: [
@@ -312,8 +312,8 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
                 size: WidgetSizes.smallIconSize,
                 color: DesignColors.accent,
               ),
-              const SizedBox(width: Spacing.md),
-              const Text('Share Image'),
+              SizedBox(width: Spacing.md),
+              Text('Share Image'),
             ],
           ),
         ),
@@ -389,7 +389,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
             borderRadius: BorderRadius.circular(BorderRadii.circular),
             boxShadow: AppShadows.elevation2,
           ),
-          child: Icon(
+          child: const Icon(
             Icons.send,
             size: WidgetSizes.mediumIconSize,
             color: DesignColors.white,
@@ -449,7 +449,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
         hoverColor: DesignColors.accentDark,
         child: Padding(
           padding: const EdgeInsets.all(Spacing.xs),
-          child: Center(
+          child: Center( // ignore: prefer_const_constructors
             child: Text(
               item,
               style: DesignTypography.body.copyWith(
@@ -482,22 +482,22 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
 
   void _handleFileUpload() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('File upload coming soon'),
+      const SnackBar(
+        content: Text('File upload coming soon'),
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(Spacing.md),
-        duration: const Duration(milliseconds: 1500),
+        margin: EdgeInsets.all(Spacing.md),
+        duration: Duration(milliseconds: 1500),
       ),
     );
   }
 
   void _handleImageUpload() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Image upload coming soon'),
+      const SnackBar(
+        content: Text('Image upload coming soon'),
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(Spacing.md),
-        duration: const Duration(milliseconds: 1500),
+        margin: EdgeInsets.all(Spacing.md),
+        duration: Duration(milliseconds: 1500),
       ),
     );
   }
