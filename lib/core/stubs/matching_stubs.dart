@@ -36,7 +36,7 @@ enum RelationshipIntent {
   seriousRelationship,
 }
 
-enum PreferredGender { any, male, female, nonBinary }
+enum PreferredGender { any, male, female, nonBinary, everyone }
 
 /// Additional enums referenced by tests
 enum WeekendEnergy { energetic, balanced, homebody }
