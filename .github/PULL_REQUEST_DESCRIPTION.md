@@ -25,6 +25,7 @@
 |-----|---------|
 | `08920d0` | `feat(platform): conditional-import shims for web-only modules` |
 | `20364cb` | `chore(lint): staged lint re-enable + CI hardening` |
+| `345a673` | `docs: add PR description, PR template, contributing guide, and analysis rollback tools` |
 
 ---
 
