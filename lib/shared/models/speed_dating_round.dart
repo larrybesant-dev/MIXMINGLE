@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SpeedDatingRound {
@@ -141,3 +142,5 @@ class SpeedDatingRound {
     return 'SpeedDatingRound(id: $id, eventId: $eventId, currentRound: $currentRound/$totalRounds, participants: ${participants.length}, isActive: $isActive)';
   }
 }
+
+

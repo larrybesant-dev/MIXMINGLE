@@ -1,4 +1,4 @@
-/// Feature flags for gradual rollout and A/B testing
+﻿/// Feature flags for gradual rollout and A/B testing
 ///
 /// Usage:
 /// ```dart
@@ -22,7 +22,7 @@ class FeatureFlags {
   static const bool agoraRequireExplicitInit = false;
 
   /// Maximum concurrent video publishers in a single Agora channel
-  /// Agora does not limit connections per account — only per channel.
+  /// Agora does not limit connections per account â€” only per channel.
   /// For Flutter Web + Agora Web SDK, 12 publishers is the stable limit
   /// where Chrome stays smooth, CPU is controlled, and audio stays synced.
   static const int maxConcurrentAgoraConnections = 12;
@@ -61,5 +61,7 @@ class FeatureFlags {
   /// Auto-seed Firestore collections if missing
   static const bool autoSeedFirestore = true;
 }
+
+
 
 

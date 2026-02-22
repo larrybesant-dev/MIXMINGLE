@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:mix_and_mingle/shared/models/room.dart';
-import 'package:mix_and_mingle/providers/room_providers.dart';
-import 'package:mix_and_mingle/providers/video_media_providers.dart';
+import 'package:mixmingle/shared/models/room.dart';
+import 'package:mixmingle/providers/room_providers.dart';
+import 'package:mixmingle/providers/video_media_providers.dart';
 
 class VoiceRoomControls extends ConsumerWidget {
   final Room room;
@@ -701,7 +701,7 @@ class VoiceRoomControls extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                '⏱️',
+                'â±ï¸',
                 style: TextStyle(fontSize: 12, color: theme.colorScheme.onPrimary),
               ),
               const SizedBox(width: 4),

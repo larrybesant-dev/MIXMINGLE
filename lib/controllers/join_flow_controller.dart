@@ -1,22 +1,23 @@
-/// Join Flow Controller
-///
-/// Manages the ceremonial join experience:
-/// 1. Entering (150ms) - "Entering room…"
-/// 2. Connecting (400-1000ms) - "Connecting audio & video…"
-/// 3. Live (400ms) - "You're live" notification
-///
-/// Total minimum: 950ms (intentional delay for ceremonial feel)
-/// Reference: DESIGN_BIBLE.md Section C.4 (Join Flow Timing)
-library;
+﻿library;
 
 import 'package:flutter/material.dart';
 import '../core/design_system/design_constants.dart';
 
+/// Join Flow Controller
+///
+/// Manages the ceremonial join experience:
+/// 1. Entering (150ms) - "Entering roomâ€¦"
+/// 2. Connecting (400-1000ms) - "Connecting audio & videoâ€¦"
+/// 3. Live (400ms) - "You're live" notification
+///
+/// Total minimum: 950ms (intentional delay for ceremonial feel)
+/// Reference: DESIGN_BIBLE.md Section C.4 (Join Flow Timing)
+
 /// Phases of the join flow
 enum JoinPhase {
   idle,         // Not attempting to join
-  entering,     // Stage 1: "Entering room…" (150ms)
-  connecting,   // Stage 2: "Connecting audio & video…" (400-1000ms)
+  entering,     // Stage 1: "Entering roomâ€¦" (150ms)
+  connecting,   // Stage 2: "Connecting audio & videoâ€¦" (400-1000ms)
   live,         // Stage 3: "You're live" appears (400ms)
   error,        // Join failed
 }
@@ -28,9 +29,9 @@ extension JoinPhaseText on JoinPhase {
       case JoinPhase.idle:
         return 'Ready to join';
       case JoinPhase.entering:
-        return 'Entering room…';
+        return 'Entering roomâ€¦';
       case JoinPhase.connecting:
-        return 'Connecting audio & video…';
+        return 'Connecting audio & videoâ€¦';
       case JoinPhase.live:
         return 'You\'re live';
       case JoinPhase.error:
@@ -75,7 +76,7 @@ class JoinFlowController extends ChangeNotifier {
 
   /// Start the join flow with ceremonial timing
   ///
-  /// Runs: entering (150ms) → connecting (400-1000ms) → live (400ms)
+  /// Runs: entering (150ms) â†’ connecting (400-1000ms) â†’ live (400ms)
   /// Total minimum: 950ms
   Future<void> startJoinFlow({
     /// How long to wait during connecting phase
@@ -137,5 +138,3 @@ class JoinFlowController extends ChangeNotifier {
     notifyListeners();
   }
 }
-
-

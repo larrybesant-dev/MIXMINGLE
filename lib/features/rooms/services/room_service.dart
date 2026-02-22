@@ -1,5 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mix_and_mingle/shared/models/room.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mixmingle/shared/models/room.dart';
 import 'category_service.dart';
 
 /// Service for managing rooms in Firestore.
@@ -225,3 +225,5 @@ class RoomService {
     });
   }
 }
+
+

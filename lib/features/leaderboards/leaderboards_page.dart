@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/providers/providers.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/providers/providers.dart';
 
 class LeaderboardsPage extends ConsumerStatefulWidget {
   const LeaderboardsPage({super.key});
@@ -35,7 +35,7 @@ class _LeaderboardsPageState extends ConsumerState<LeaderboardsPage>
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('🏆 Leaderboards'),
+          title: const Text('ðŸ† Leaderboards'),
           backgroundColor: Colors.transparent,
           elevation: 0,
           bottom: TabBar(
@@ -147,7 +147,7 @@ class _LeaderboardsPageState extends ConsumerState<LeaderboardsPage>
             return _buildLeaderboardItem(
               rank: index + 1,
               userId: userId,
-              primaryStat: '$currentStreak 🔥',
+              primaryStat: '$currentStreak ðŸ”¥',
               secondaryStat: 'Best: $longestStreak days',
               icon: Icons.local_fire_department,
               color: _getRankColor(index + 1),
@@ -341,9 +341,9 @@ class _LeaderboardsPageState extends ConsumerState<LeaderboardsPage>
   }
 
   String _getRankDisplay(int rank) {
-    if (rank == 1) return '🥇';
-    if (rank == 2) return '🥈';
-    if (rank == 3) return '🥉';
+    if (rank == 1) return 'ðŸ¥‡';
+    if (rank == 2) return 'ðŸ¥ˆ';
+    if (rank == 3) return 'ðŸ¥‰';
     return '#$rank';
   }
 }

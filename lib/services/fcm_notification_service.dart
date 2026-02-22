@@ -1,4 +1,4 @@
-/// FCM Notifications Service - Friend Presence Alerts
+﻿/// FCM Notifications Service - Friend Presence Alerts
 ///
 /// Monitors friend presence changes and sends push notifications
 /// Reference: DESIGN_BIBLE.md Section G (Backend Integration)
@@ -10,7 +10,6 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firestore_service.dart';
 import '../core/utils/app_logger.dart';
 import '../app_routes.dart';
-import 'package:mix_and_mingle/shared/models/user_profile.dart';
 
 /// FCM Notification service for friend presence alerts
 class FcmNotificationService {
@@ -82,7 +81,7 @@ class FcmNotificationService {
       );
 
       AppLogger.info(
-        '[FCM] Sent friend online notification: $friendName → $recipientUserId',
+        '[FCM] Sent friend online notification: $friendName â†’ $recipientUserId',
       );
     } catch (e) {
       AppLogger.error('[FCM] Failed to notify friend online: $e');
@@ -103,7 +102,7 @@ class FcmNotificationService {
       );
 
       AppLogger.info(
-        '[FCM] Sent friend offline notification: $friendName → $recipientUserId',
+        '[FCM] Sent friend offline notification: $friendName â†’ $recipientUserId',
       );
     } catch (e) {
       AppLogger.error('[FCM] Failed to notify friend offline: $e');
@@ -128,7 +127,7 @@ class FcmNotificationService {
       );
 
       AppLogger.info(
-        '[FCM] Sent room invitation: $roomName ($invitedByName → $recipientUserId)',
+        '[FCM] Sent room invitation: $roomName ($invitedByName â†’ $recipientUserId)',
       );
     } catch (e) {
       AppLogger.error('[FCM] Failed to send room invitation: $e');
@@ -207,5 +206,3 @@ final notificationPermissionsProvider =
   final messaging = FirebaseMessaging.instance;
   return messaging.getNotificationSettings();
 });
-
-

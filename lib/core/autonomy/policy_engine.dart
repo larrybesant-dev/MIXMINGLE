@@ -1,4 +1,4 @@
-/// Policy Engine
+﻿/// Policy Engine
 ///
 /// Platform governance and policy enforcement system for
 /// community guidelines, automated policy updates, and violation detection.
@@ -300,7 +300,7 @@ class PolicyEngine {
     String? textContent,
     List<String>? mediaUrls,
   }) async {
-    debugPrint('📜 [PolicyEngine] Enforcing community guidelines for user: $userId');
+    debugPrint('ðŸ“œ [PolicyEngine] Enforcing community guidelines for user: $userId');
 
     final violations = <PolicyViolation>[];
 
@@ -341,10 +341,10 @@ class PolicyEngine {
         });
       }
 
-      debugPrint('✅ [PolicyEngine] Found ${violations.length} violations');
+      debugPrint('âœ… [PolicyEngine] Found ${violations.length} violations');
       return violations;
     } catch (e) {
-      debugPrint('❌ [PolicyEngine] Failed to enforce guidelines: $e');
+      debugPrint('âŒ [PolicyEngine] Failed to enforce guidelines: $e');
       return [];
     }
   }
@@ -442,7 +442,7 @@ class PolicyEngine {
     bool checkRegulations = true,
     bool checkTrends = true,
   }) async {
-    debugPrint('🔄 [PolicyEngine] Auto-updating policies');
+    debugPrint('ðŸ”„ [PolicyEngine] Auto-updating policies');
 
     final updatedPolicies = <PolicyDefinition>[];
 
@@ -493,10 +493,10 @@ class PolicyEngine {
         'count': updatedPolicies.length,
       });
 
-      debugPrint('✅ [PolicyEngine] Updated ${updatedPolicies.length} policies');
+      debugPrint('âœ… [PolicyEngine] Updated ${updatedPolicies.length} policies');
       return updatedPolicies;
     } catch (e) {
-      debugPrint('❌ [PolicyEngine] Failed to auto-update policies: $e');
+      debugPrint('âŒ [PolicyEngine] Failed to auto-update policies: $e');
       return [];
     }
   }
@@ -530,7 +530,7 @@ class PolicyEngine {
     required Stream<Map<String, dynamic>> contentStream,
     Duration? timeout,
   }) async {
-    debugPrint('🔍 [PolicyEngine] Starting real-time violation detection');
+    debugPrint('ðŸ” [PolicyEngine] Starting real-time violation detection');
 
     final violations = <PolicyViolation>[];
     final completer = Completer<List<PolicyViolation>>();
@@ -570,7 +570,7 @@ class PolicyEngine {
     DateTime? periodStart,
     DateTime? periodEnd,
   }) async {
-    debugPrint('📊 [PolicyEngine] Generating policy report');
+    debugPrint('ðŸ“Š [PolicyEngine] Generating policy report');
 
     final start = periodStart ?? DateTime.now().subtract(const Duration(days: 30));
     final end = periodEnd ?? DateTime.now();
@@ -654,10 +654,10 @@ class PolicyEngine {
       // Store report
       await _reportsCollection.doc(report.reportId).set(report.toMap());
 
-      debugPrint('✅ [PolicyEngine] Generated report with $totalViolations violations');
+      debugPrint('âœ… [PolicyEngine] Generated report with $totalViolations violations');
       return report;
     } catch (e) {
-      debugPrint('❌ [PolicyEngine] Failed to generate report: $e');
+      debugPrint('âŒ [PolicyEngine] Failed to generate report: $e');
       rethrow;
     }
   }
@@ -738,9 +738,9 @@ class PolicyEngine {
         await _initializeDefaultPolicies();
       }
 
-      debugPrint('📜 [PolicyEngine] Loaded ${_policies.length} policies');
+      debugPrint('ðŸ“œ [PolicyEngine] Loaded ${_policies.length} policies');
     } catch (e) {
-      debugPrint('❌ [PolicyEngine] Failed to load policies: $e');
+      debugPrint('âŒ [PolicyEngine] Failed to load policies: $e');
       await _initializeDefaultPolicies();
     }
   }

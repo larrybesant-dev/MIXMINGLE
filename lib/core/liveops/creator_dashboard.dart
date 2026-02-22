@@ -1,4 +1,4 @@
-/// Creator Dashboard Widget
+﻿/// Creator Dashboard Widget
 ///
 /// Displays creator program dashboard with stats, earnings,
 /// tier progress, and quick actions.

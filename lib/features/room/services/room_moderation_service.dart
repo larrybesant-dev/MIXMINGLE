@@ -1,9 +1,9 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/shared/models/room_role.dart';
-import 'package:mix_and_mingle/shared/models/room_event.dart';
-import 'package:mix_and_mingle/shared/models/chat_message.dart';
-import 'package:mix_and_mingle/features/room/providers/room_subcollection_providers.dart';
+import 'package:mixmingle/shared/models/room_role.dart';
+import 'package:mixmingle/shared/models/room_event.dart';
+import 'package:mixmingle/shared/models/chat_message.dart';
+import 'package:mixmingle/features/room/providers/room_subcollection_providers.dart';
 
 /// Service for room moderation actions (kick, ban, mute, role changes)
 class RoomModerationService {
@@ -299,3 +299,5 @@ final roomModerationServiceProvider = Provider<RoomModerationService>((ref) {
   final firestore = FirebaseFirestore.instance;
   return RoomModerationService(repository, firestore);
 });
+
+

@@ -85,3 +85,5 @@ class AgoraParticipant {
         'hasVideo: $hasVideo, hasAudio: $hasAudio, isSpeaking: $isSpeaking)';
   }
 }
+
+

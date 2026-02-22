@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/services/room_discovery_service.dart';
-import 'package:mix_and_mingle/shared/models/moderation.dart';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/shared/widgets/glow_text.dart';
-import 'package:mix_and_mingle/providers/all_providers.dart';
-import 'package:mix_and_mingle/shared/models/room.dart';
+import 'package:mixmingle/services/room_discovery_service.dart';
+import 'package:mixmingle/shared/models/moderation.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/shared/widgets/glow_text.dart';
+import 'package:mixmingle/providers/all_providers.dart';
+import 'package:mixmingle/shared/models/room.dart';
 import '../room/screens/room_page.dart';
 
 class RoomDiscoveryPage extends ConsumerStatefulWidget {
@@ -82,7 +82,7 @@ class _RoomDiscoveryPageState extends ConsumerState<RoomDiscoveryPage> with Sing
         children: [
           // Trending Rooms
           const GlowText(
-            text: '🔥 Trending Now',
+            text: 'ðŸ”¥ Trending Now',
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -113,7 +113,7 @@ class _RoomDiscoveryPageState extends ConsumerState<RoomDiscoveryPage> with Sing
 
           // New Rooms
           const GlowText(
-            text: '✨ New Rooms',
+            text: 'âœ¨ New Rooms',
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -141,7 +141,7 @@ class _RoomDiscoveryPageState extends ConsumerState<RoomDiscoveryPage> with Sing
 
           // Popular Tags
           const GlowText(
-            text: '🏷️ Popular Tags',
+            text: 'ðŸ·ï¸ Popular Tags',
             fontSize: 20,
             fontWeight: FontWeight.bold,
             color: Colors.white,

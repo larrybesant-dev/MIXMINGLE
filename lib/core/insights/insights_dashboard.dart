@@ -1,4 +1,4 @@
-/// Business Insights Dashboard Widget
+﻿/// Business Insights Dashboard Widget
 ///
 /// Visual dashboard for displaying business intelligence metrics,
 /// cohort analysis, revenue forecasts, and actionable insights.

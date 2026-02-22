@@ -1,10 +1,10 @@
-/// Energy Pulse Widget
+﻿/// Energy Pulse Widget
 ///
 /// Reusable widget to visualize room energy level with animated pulse.
 ///
 /// Features:
 /// - Animated pulse rings based on energy intensity
-/// - Color transitions: Calm (blue) → Active (amber) → Buzzing (red)
+/// - Color transitions: Calm (blue) â†’ Active (amber) â†’ Buzzing (red)
 /// - Energy value display (0.0-10.0)
 /// - Scales pulse intensity with energy level
 ///
@@ -149,7 +149,7 @@ class _EnergyPulseWidgetState extends State<EnergyPulseWidget>
                   height: widget.size,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    // ✅ Use colors from DesignColors
+                    // âœ… Use colors from DesignColors
                     color: displayColor.withValues(alpha: 0.2),
                     border: Border.all(
                       color: displayColor,
@@ -157,7 +157,7 @@ class _EnergyPulseWidgetState extends State<EnergyPulseWidget>
                     ),
                   ),
                   child: Center(
-                    // Display energy value (✅ DesignTypography.subheading)
+                    // Display energy value (âœ… DesignTypography.subheading)
                     child: Text(
                       widget.energy.toStringAsFixed(1),
                       style: DesignTypography.subheading.copyWith(
@@ -180,12 +180,9 @@ class _EnergyPulseWidgetState extends State<EnergyPulseWidget>
 /// Moved to design_constants.dart (RoomEnergyThresholds)
 /// But kept here as reference comment:
 ///
-/// Calm: energy < 2.0 → Blue
-/// Active: 2.0 ≤ energy < 5.0 → Amber
-/// Buzzing: energy ≥ 5.0 → Red
+/// Calm: energy < 2.0 â†’ Blue
+/// Active: 2.0 â‰¤ energy < 5.0 â†’ Amber
+/// Buzzing: energy â‰¥ 5.0 â†’ Red
 ///
 /// See: RoomEnergyThresholds.getEnergyColor(energy)
 /// See: RoomEnergyThresholds.getEnergyLabel(energy)
-
-
-

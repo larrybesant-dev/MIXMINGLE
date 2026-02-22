@@ -1,4 +1,4 @@
-/// Launch Readiness Report Widget
+﻿/// Launch Readiness Report Widget
 ///
 /// Displays a comprehensive pass/fail report of launch checklist items
 /// with highlighted blockers and actionable recommendations.
@@ -189,7 +189,7 @@ class _LaunchReadyBanner extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            isReady ? 'READY TO LAUNCH! 🚀' : 'NOT READY YET',
+            isReady ? 'READY TO LAUNCH! ðŸš€' : 'NOT READY YET',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
               color: Colors.white,
               fontWeight: FontWeight.bold,
@@ -519,15 +519,15 @@ Future<void> showLaunchReadinessReport(BuildContext context) {
 String generateReportText(FullChecklistReport report) {
   final buffer = StringBuffer();
 
-  buffer.writeln('═══════════════════════════════════════');
+  buffer.writeln('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
   buffer.writeln('        LAUNCH READINESS REPORT');
-  buffer.writeln('═══════════════════════════════════════');
+  buffer.writeln('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
   buffer.writeln();
-  buffer.writeln('Status: ${report.launchReady ? "✅ READY TO LAUNCH" : "⚠️ NOT READY"}');
+  buffer.writeln('Status: ${report.launchReady ? "âœ… READY TO LAUNCH" : "âš ï¸ NOT READY"}');
   buffer.writeln('Generated: ${report.timestamp}');
   buffer.writeln();
   buffer.writeln('SUMMARY');
-  buffer.writeln('───────────────────────────────────────');
+  buffer.writeln('â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€');
   buffer.writeln('Categories: ${report.passedCategories}/${report.totalCategories} passed');
 
   final totalChecks = report.results.fold<int>(0, (sum, r) => sum + r.totalCount);
@@ -538,27 +538,27 @@ String generateReportText(FullChecklistReport report) {
 
   if (report.blockers.isNotEmpty) {
     buffer.writeln('BLOCKERS');
-    buffer.writeln('───────────────────────────────────────');
+    buffer.writeln('â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€');
     for (final blocker in report.blockers) {
-      buffer.writeln('  ❌ $blocker');
+      buffer.writeln('  âŒ $blocker');
     }
     buffer.writeln();
   }
 
   buffer.writeln('DETAILED RESULTS');
-  buffer.writeln('───────────────────────────────────────');
+  buffer.writeln('â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€');
 
   for (final result in report.results) {
     buffer.writeln();
-    buffer.writeln('${result.passed ? "✅" : "⚠️"} ${result.category} (${result.passedCount}/${result.totalCount})');
+    buffer.writeln('${result.passed ? "âœ…" : "âš ï¸"} ${result.category} (${result.passedCount}/${result.totalCount})');
     for (final check in result.checks) {
-      buffer.writeln('  ${check.passed ? "✓" : "✗"} ${check.name}');
-      buffer.writeln('    └─ ${check.details}');
+      buffer.writeln('  ${check.passed ? "âœ“" : "âœ—"} ${check.name}');
+      buffer.writeln('    â””â”€ ${check.details}');
     }
   }
 
   buffer.writeln();
-  buffer.writeln('═══════════════════════════════════════');
+  buffer.writeln('â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•');
 
   return buffer.toString();
 }

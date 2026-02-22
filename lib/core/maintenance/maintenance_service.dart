@@ -1,4 +1,4 @@
-/// Maintenance Service
+﻿/// Maintenance Service
 ///
 /// Automated long-term maintenance tasks including archiving,
 /// cleanup, key rotation, and backup operations.
@@ -207,7 +207,7 @@ class MaintenanceService {
     final taskId = _generateTaskId();
     final startedAt = DateTime.now();
 
-    debugPrint('📦 [MaintenanceService] Starting room archival (taskId: $taskId)');
+    debugPrint('ðŸ“¦ [MaintenanceService] Starting room archival (taskId: $taskId)');
 
     final threshold = ageThreshold ?? _config.roomAgeThreshold;
     final batch = batchSize ?? _config.batchSize;
@@ -227,7 +227,7 @@ class MaintenanceService {
           .get();
 
       itemsProcessed = oldRoomsQuery.docs.length;
-      debugPrint('📦 [MaintenanceService] Found $itemsProcessed rooms to archive');
+      debugPrint('ðŸ“¦ [MaintenanceService] Found $itemsProcessed rooms to archive');
 
       if (!isDryRun) {
         final writeBatch = _firestore.batch();
@@ -270,7 +270,7 @@ class MaintenanceService {
       await _logMaintenance(result);
       _maintenanceController.add(result);
 
-      debugPrint('✅ [MaintenanceService] Archived $itemsArchived rooms');
+      debugPrint('âœ… [MaintenanceService] Archived $itemsArchived rooms');
       return result;
     } catch (e) {
       final result = MaintenanceResult(
@@ -288,7 +288,7 @@ class MaintenanceService {
       await _logMaintenance(result);
       _maintenanceController.add(result);
 
-      debugPrint('❌ [MaintenanceService] Failed to archive rooms: $e');
+      debugPrint('âŒ [MaintenanceService] Failed to archive rooms: $e');
       return result;
     }
   }
@@ -306,7 +306,7 @@ class MaintenanceService {
     final taskId = _generateTaskId();
     final startedAt = DateTime.now();
 
-    debugPrint('🧹 [MaintenanceService] Starting asset cleanup (taskId: $taskId)');
+    debugPrint('ðŸ§¹ [MaintenanceService] Starting asset cleanup (taskId: $taskId)');
 
     final threshold = unusedThreshold ?? const Duration(days: 30);
     final batch = batchSize ?? _config.batchSize;
@@ -326,7 +326,7 @@ class MaintenanceService {
           .get();
 
       itemsProcessed = unusedQuery.docs.length;
-      debugPrint('🧹 [MaintenanceService] Found $itemsProcessed unused assets');
+      debugPrint('ðŸ§¹ [MaintenanceService] Found $itemsProcessed unused assets');
 
       if (!isDryRun) {
         final writeBatch = _firestore.batch();
@@ -360,7 +360,7 @@ class MaintenanceService {
       await _logMaintenance(result);
       _maintenanceController.add(result);
 
-      debugPrint('✅ [MaintenanceService] Cleaned $itemsDeleted unused assets');
+      debugPrint('âœ… [MaintenanceService] Cleaned $itemsDeleted unused assets');
       return result;
     } catch (e) {
       final result = MaintenanceResult(
@@ -378,7 +378,7 @@ class MaintenanceService {
       await _logMaintenance(result);
       _maintenanceController.add(result);
 
-      debugPrint('❌ [MaintenanceService] Failed to clean assets: $e');
+      debugPrint('âŒ [MaintenanceService] Failed to clean assets: $e');
       return result;
     }
   }
@@ -392,7 +392,7 @@ class MaintenanceService {
     List<String>? keyTypes,
     bool? forceRotation,
   }) async {
-    debugPrint('🔑 [MaintenanceService] Starting key rotation');
+    debugPrint('ðŸ”‘ [MaintenanceService] Starting key rotation');
 
     final typesToRotate = keyTypes ?? ['api_key', 'webhook_secret', 'encryption_key'];
     final force = forceRotation ?? false;
@@ -431,7 +431,7 @@ class MaintenanceService {
             newRotation: DateTime.now(),
           ));
 
-          debugPrint('✅ [MaintenanceService] Rotated key: $keyType');
+          debugPrint('âœ… [MaintenanceService] Rotated key: $keyType');
         } else {
           results.add(KeyRotationResult(
             keyType: keyType,
@@ -440,7 +440,7 @@ class MaintenanceService {
             newRotation: lastRotation,
           ));
 
-          debugPrint('⏭️ [MaintenanceService] Skipped key rotation: $keyType (not due)');
+          debugPrint('â­ï¸ [MaintenanceService] Skipped key rotation: $keyType (not due)');
         }
       } catch (e) {
         results.add(KeyRotationResult(
@@ -450,7 +450,7 @@ class MaintenanceService {
           error: e.toString(),
         ));
 
-        debugPrint('❌ [MaintenanceService] Failed to rotate key $keyType: $e');
+        debugPrint('âŒ [MaintenanceService] Failed to rotate key $keyType: $e');
       }
     }
 
@@ -487,7 +487,7 @@ class MaintenanceService {
     List<String>? collections,
   }) async {
     final backupId = _generateBackupId();
-    debugPrint('💾 [MaintenanceService] Starting backup (id: $backupId, type: ${type.name})');
+    debugPrint('ðŸ’¾ [MaintenanceService] Starting backup (id: $backupId, type: ${type.name})');
 
     final collectionsToBackup = collections ?? [
       'users',
@@ -544,10 +544,10 @@ class MaintenanceService {
         'documents': totalDocuments,
       });
 
-      debugPrint('✅ [MaintenanceService] Backup completed: $totalDocuments documents');
+      debugPrint('âœ… [MaintenanceService] Backup completed: $totalDocuments documents');
       return result;
     } catch (e) {
-      debugPrint('❌ [MaintenanceService] Backup failed: $e');
+      debugPrint('âŒ [MaintenanceService] Backup failed: $e');
 
       await _backupsCollection.doc(backupId).set({
         'backupId': backupId,
@@ -579,7 +579,7 @@ class MaintenanceService {
     final taskId = _generateTaskId();
     final startedAt = DateTime.now();
 
-    debugPrint('🔍 [MaintenanceService] Validating data integrity');
+    debugPrint('ðŸ” [MaintenanceService] Validating data integrity');
 
     int itemsProcessed = 0;
     final issues = <Map<String, dynamic>>[];
@@ -635,7 +635,7 @@ class MaintenanceService {
       await _logMaintenance(result);
       _maintenanceController.add(result);
 
-      debugPrint('✅ [MaintenanceService] Integrity check complete: ${issues.length} issues found');
+      debugPrint('âœ… [MaintenanceService] Integrity check complete: ${issues.length} issues found');
       return result;
     } catch (e) {
       final result = MaintenanceResult(
@@ -652,7 +652,7 @@ class MaintenanceService {
       await _logMaintenance(result);
       _maintenanceController.add(result);
 
-      debugPrint('❌ [MaintenanceService] Integrity check failed: $e');
+      debugPrint('âŒ [MaintenanceService] Integrity check failed: $e');
       return result;
     }
   }
@@ -677,7 +677,7 @@ class MaintenanceService {
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      debugPrint('⚠️ [MaintenanceService] Failed to log maintenance: $e');
+      debugPrint('âš ï¸ [MaintenanceService] Failed to log maintenance: $e');
     }
   }
 

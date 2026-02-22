@@ -90,3 +90,5 @@ class ChatRoom {
     return 'ChatRoom(id: $id, participants: $participants, lastMessage: $lastMessage, lastMessageTime: $lastMessageTime, unreadCounts: $unreadCounts, isTyping: $isTyping)';
   }
 }
+
+

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/neon_colors.dart';
 import '../../../shared/widgets/neon_components.dart';
@@ -57,9 +57,11 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
         password: _passwordController.text,
       );
 
+      // Navigate to '/app' which triggers RootAuthGate to check auth and show authenticated app
+      debugPrint('âœ… [Login] Sign in successful. Navigating to /app...');
       if (mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil(
-          '/home',
+          '/app',
           (route) => false,
         );
       }

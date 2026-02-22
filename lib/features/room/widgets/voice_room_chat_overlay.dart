@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/shared/models/chat_message.dart';
-import 'package:mix_and_mingle/features/room/providers/room_subcollection_providers.dart';
+import 'package:mixmingle/shared/models/chat_message.dart';
+import 'package:mixmingle/features/room/providers/room_subcollection_providers.dart';
 
 /// Chat overlay widget for voice room
 class VoiceRoomChatOverlay extends ConsumerStatefulWidget {
@@ -66,7 +66,7 @@ class _VoiceRoomChatOverlayState extends ConsumerState<VoiceRoomChatOverlay> wit
 
     // Debug: Log what we're sending
     debugPrint(
-        '📤 Sending message: displayName="${widget.currentDisplayName}", userId="${widget.currentUserId}", message="$message"');
+        'ðŸ“¤ Sending message: displayName="${widget.currentDisplayName}", userId="${widget.currentUserId}", message="$message"');
 
     try {
       final repository = ref.read(roomSubcollectionRepositoryProvider);
@@ -89,7 +89,7 @@ class _VoiceRoomChatOverlayState extends ConsumerState<VoiceRoomChatOverlay> wit
       _messageController.clear();
       _scrollToBottom();
     } catch (e) {
-      debugPrint('❌ Error sending message: $e');
+      debugPrint('âŒ Error sending message: $e');
     }
   }
 
@@ -225,7 +225,7 @@ class _ChatMessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     debugPrint(
-        '💬 Rendering message bubble - senderId="${message.senderId}", senderName="${message.senderName}", isCurrentUser=$isCurrentUser, content="${message.content}"');
+        'ðŸ’¬ Rendering message bubble - senderId="${message.senderId}", senderName="${message.senderName}", isCurrentUser=$isCurrentUser, content="${message.content}"');
 
     // ChatMessage doesn't have isSystemMessage, so check content pattern
     final isSystemMessage = message.content.startsWith('[System]');

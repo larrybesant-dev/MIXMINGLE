@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/group_chat_message.dart';
 import '../models/group_chat_participant.dart';
@@ -161,3 +161,5 @@ class GroupChatService {
     await _rooms.doc(roomId).collection('participants').doc(user.uid).set(updates, SetOptions(merge: true));
   }
 }
+
+

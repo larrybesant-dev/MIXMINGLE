@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'services/auth_service.dart';
 
@@ -76,7 +76,7 @@ class _SimpleSignupPageState extends ConsumerState<SimpleSignupPage> {
             SizedBox(height: MediaQuery.of(context).size.height * 0.08),
             // Logo
             const Text(
-              '🎵',
+              'ðŸŽµ',
               textAlign: TextAlign.center,
               style: TextStyle(fontSize: 60),
             ),

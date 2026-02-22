@@ -1,4 +1,4 @@
-/// Room Categories Helper
+﻿/// Room Categories Helper
 /// Centralized room category constants and utilities
 library;
 
@@ -36,27 +36,27 @@ class RoomCategories {
   static String getDisplayName(String category) {
     switch (category.toLowerCase()) {
       case music:
-        return '🎵 Music';
+        return 'ðŸŽµ Music';
       case gaming:
-        return '🎮 Gaming';
+        return 'ðŸŽ® Gaming';
       case dating:
-        return '💕 Dating';
+        return 'ðŸ’• Dating';
       case fitness:
-        return '💪 Fitness';
+        return 'ðŸ’ª Fitness';
       case business:
-        return '💼 Business';
+        return 'ðŸ’¼ Business';
       case education:
-        return '📚 Education';
+        return 'ðŸ“š Education';
       case entertainment:
-        return '🎬 Entertainment';
+        return 'ðŸŽ¬ Entertainment';
       case socializing:
-        return '👥 Socializing';
+        return 'ðŸ‘¥ Socializing';
       case events:
-        return '🎉 Events';
+        return 'ðŸŽ‰ Events';
       case general:
-        return '💬 General';
+        return 'ðŸ’¬ General';
       default:
-        return '💬 ${category[0].toUpperCase()}${category.substring(1)}';
+        return 'ðŸ’¬ ${category[0].toUpperCase()}${category.substring(1)}';
     }
   }
 
@@ -64,27 +64,27 @@ class RoomCategories {
   static String getEmoji(String category) {
     switch (category.toLowerCase()) {
       case music:
-        return '🎵';
+        return 'ðŸŽµ';
       case gaming:
-        return '🎮';
+        return 'ðŸŽ®';
       case dating:
-        return '💕';
+        return 'ðŸ’•';
       case fitness:
-        return '💪';
+        return 'ðŸ’ª';
       case business:
-        return '💼';
+        return 'ðŸ’¼';
       case education:
-        return '📚';
+        return 'ðŸ“š';
       case entertainment:
-        return '🎬';
+        return 'ðŸŽ¬';
       case socializing:
-        return '👥';
+        return 'ðŸ‘¥';
       case events:
-        return '🎉';
+        return 'ðŸŽ‰';
       case general:
-        return '💬';
+        return 'ðŸ’¬';
       default:
-        return '💬';
+        return 'ðŸ’¬';
     }
   }
 
@@ -93,3 +93,5 @@ class RoomCategories {
     return all.contains(category.toLowerCase());
   }
 }
+
+

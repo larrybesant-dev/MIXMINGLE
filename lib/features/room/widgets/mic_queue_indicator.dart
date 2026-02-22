@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/providers/mic_providers.dart';
+import 'package:mixmingle/providers/mic_providers.dart';
 
 class MicQueueIndicator extends ConsumerWidget {
   final String roomId;
@@ -48,7 +48,7 @@ class MicQueueIndicator extends ConsumerWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    '🎤 Mics: $count/$maxMics',
+                    'ðŸŽ¤ Mics: $count/$maxMics',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: isAtCapacity ? Colors.orange[700] : Colors.blue[700],
@@ -67,7 +67,7 @@ class MicQueueIndicator extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        '⏳ $pendingCount',
+                        'â³ $pendingCount',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 10,
@@ -82,7 +82,7 @@ class MicQueueIndicator extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    '🔴 Mic queue full',
+                    'ðŸ”´ Mic queue full',
                     style: TextStyle(
                       fontSize: 10,
                       color: Colors.orange[600],

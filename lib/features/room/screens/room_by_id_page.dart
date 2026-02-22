@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mix_and_mingle/shared/models/room.dart';
+import 'package:mixmingle/shared/models/room.dart';
 import 'room_page.dart';
-import 'package:mix_and_mingle/shared/widgets/loading_widgets.dart';
-import 'package:mix_and_mingle/features/error/error_page.dart';
+import 'package:mixmingle/shared/widgets/loading_widgets.dart';
+import 'package:mixmingle/features/error/error_page.dart';
 
 /// Loads a room by Firestore document id and renders RoomPage
 class RoomByIdPage extends ConsumerWidget {

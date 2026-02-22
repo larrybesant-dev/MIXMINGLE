@@ -1,4 +1,4 @@
-/// Empire Dashboard Widget
+﻿/// Empire Dashboard Widget
 ///
 /// Displays global DAU, platform charts, creator health, network load, and federation growth.
 library;
@@ -58,7 +58,7 @@ class _EmpireDashboardState extends State<EmpireDashboard>
         });
       }
     } catch (e) {
-      debugPrint('❌ [EmpireDashboard] Failed to load data: $e');
+      debugPrint('âŒ [EmpireDashboard] Failed to load data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }

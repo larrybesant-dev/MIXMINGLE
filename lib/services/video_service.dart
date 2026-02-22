@@ -1,4 +1,4 @@
-class VideoService {
+﻿class VideoService {
   bool _isInitialized = false;
 
   Future<void> initialize() async {
@@ -24,3 +24,5 @@ class VideoService {
 
   dynamic get client => null; // Return null since we don't have a real client
 }
+
+

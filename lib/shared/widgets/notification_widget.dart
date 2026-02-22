@@ -1,3 +1,4 @@
+
 // Enhanced Notification Widget - Display app notifications with actions and animations
 
 import 'package:flutter/material.dart';
@@ -540,6 +541,8 @@ extension NotificationHelperX on WidgetRef {
     read(notificationsProvider.notifier).addNotification(notification);
   }
 }
+
+
 
 
 

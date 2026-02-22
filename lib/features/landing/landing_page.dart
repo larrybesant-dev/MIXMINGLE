@@ -1,13 +1,14 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mix_and_mingle/core/components/electric_button.dart';
-import 'package:mix_and_mingle/core/components/glass_card.dart';
-import 'package:mix_and_mingle/core/components/neon_badge.dart';
-import 'package:mix_and_mingle/core/components/section_header.dart';
-import 'package:mix_and_mingle/core/theme/colors_v2.dart';
-import 'package:mix_and_mingle/core/theme/spacing.dart';
-import 'package:mix_and_mingle/core/theme/typography_v2.dart';
-import 'package:mix_and_mingle/shared/widgets/mix_mingle_logo.dart';
+import 'package:mixmingle/core/components/electric_button.dart';
+import 'package:mixmingle/core/components/glass_card.dart';
+import 'package:mixmingle/core/components/neon_badge.dart';
+import 'package:mixmingle/core/components/section_header.dart';
+import 'package:mixmingle/core/theme/colors_v2.dart';
+import 'package:mixmingle/core/theme/spacing.dart';
+import 'package:mixmingle/core/theme/typography_v2.dart';
+import 'package:mixmingle/shared/widgets/mix_mingle_logo.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -19,6 +20,14 @@ class LandingPage extends StatefulWidget {
 class _LandingPageState extends State<LandingPage> with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  /// Web-safe image provider - returns null on web to avoid CORS errors
+  ImageProvider? _safeImageProvider(String? url) {
+    if (kIsWeb || url == null || url.isEmpty) {
+      return null; // Let gradient/placeholder show instead
+    }
+    return NetworkImage(url);
+  }
 
   @override
   void initState() {
@@ -64,36 +73,57 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('ðŸ  LANDING PAGE IS BUILDING');
     final textTheme = ElectricTypography.textTheme;
 
     return Scaffold(
       backgroundColor: ElectricColors.surface,
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            colors: [ElectricColors.surface, ElectricColors.surfaceElevated],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
+      body: Stack(
+        children: [
+          Container(
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                colors: [ElectricColors.surface, ElectricColors.surfaceElevated],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
+            ),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: Spacing.xxl),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _buildHeroSection(textTheme),
+                  _buildLiveActivity(textTheme),
+                  _buildMeetSingles(textTheme),
+                  _buildStatsSection(textTheme),
+                  _buildFeaturedSessions(textTheme),
+                  _buildHowItWorks(textTheme),
+                  _buildRisingStars(textTheme),
+                  _buildTestimonials(textTheme),
+                  _buildCTA(textTheme),
+                  _buildFooter(textTheme),
+                ],
+              ),
+            ),
           ),
-        ),
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: Spacing.xxl),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeroSection(textTheme),
-              _buildLiveActivity(textTheme),
-              _buildMeetSingles(textTheme),
-              _buildStatsSection(textTheme),
-              _buildFeaturedSessions(textTheme),
-              _buildHowItWorks(textTheme),
-              _buildRisingStars(textTheme),
-              _buildTestimonials(textTheme),
-              _buildCTA(textTheme),
-              _buildFooter(textTheme),
-            ],
+          // Debug indicator - top left
+          Positioned(
+            top: 40,
+            left: 10,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                'LANDING PAGE',
+                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -128,7 +158,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
               ],
             ),
             child: Text(
-              '🔥 NEW: Live Video Speed Dating',
+              'ðŸ”¥ NEW: Live Video Speed Dating',
               style: textTheme.labelLarge?.copyWith(
                 color: ElectricColors.onSurfacePrimary,
                 fontWeight: FontWeight.bold,
@@ -160,13 +190,19 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                 label: 'Sign Up Free',
                 icon: const Icon(Icons.star, size: 18),
                 variant: ElectricButtonVariant.secondary,
-                onPressed: () => Navigator.pushNamed(context, '/signup'),
+                onPressed: () {
+                  debugPrint('ðŸ”˜ Sign Up button pressed');
+                  Navigator.pushNamed(context, '/signup');
+                },
               ),
               ElectricButton(
                 label: 'Sign In',
                 icon: const Icon(Icons.login, size: 18),
                 variant: ElectricButtonVariant.secondary,
-                onPressed: () => Navigator.pushNamed(context, '/login'),
+                onPressed: () {
+                  debugPrint('ðŸ”˜ Sign In button pressed');
+                  Navigator.pushNamed(context, '/login');
+                },
               ),
             ],
           ),
@@ -193,7 +229,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
             final roomName = data['name'] ?? data['title'] ?? 'Untitled Room';
             final time = _getTimeAgo(data['createdAt']);
             activities.add({
-              'icon': '🔴',
+              'icon': 'ðŸ”´',
               'text': '$hostName went live in $roomName',
               'time': time,
               'status': NeonStatus.speaking,
@@ -204,9 +240,9 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
         // Show placeholder if no real data
         if (activities.isEmpty) {
           activities.addAll([
-            {'icon': '🎧', 'text': 'Be the first to go live!', 'time': 'Now', 'status': NeonStatus.online},
-            {'icon': '📡', 'text': 'Start your stream and connect', 'time': 'Today', 'status': NeonStatus.online},
-            {'icon': '🔴', 'text': 'Share your sound with the world', 'time': 'Soon', 'status': NeonStatus.speaking},
+            {'icon': 'ðŸŽ§', 'text': 'Be the first to go live!', 'time': 'Now', 'status': NeonStatus.online},
+            {'icon': 'ðŸ“¡', 'text': 'Start your stream and connect', 'time': 'Today', 'status': NeonStatus.online},
+            {'icon': 'ðŸ”´', 'text': 'Share your sound with the world', 'time': 'Soon', 'status': NeonStatus.speaking},
           ]);
         }
 
@@ -396,7 +432,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                                   NeonBadge(status: session['listeners'] > 0 ? NeonStatus.speaking : NeonStatus.offline, size: NeonBadgeSize.medium),
                                   const SizedBox(width: Spacing.xs),
                                   Text(
-                                    session['listeners'] > 0 ? 'LIVE · ${session['genre']}' : session['genre']! as String,
+                                    session['listeners'] > 0 ? 'LIVE Â· ${session['genre']}' : session['genre']! as String,
                                     style: textTheme.labelMedium?.copyWith(color: ElectricColors.onSurfaceSecondary),
                                   ),
                                 ],
@@ -446,9 +482,9 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
 
   Widget _buildHowItWorks(TextTheme textTheme) {
     final steps = [
-      {'step': '1', 'emoji': '🎧', 'title': 'Join a room', 'desc': 'Browse live rooms and drop in instantly.'},
-      {'step': '2', 'emoji': '📡', 'title': 'Go live', 'desc': 'Start your own stream with zero setup friction.'},
-      {'step': '3', 'emoji': '💸', 'title': 'Tip & connect', 'desc': 'Support creators and build connections.'},
+      {'step': '1', 'emoji': 'ðŸŽ§', 'title': 'Join a room', 'desc': 'Browse live rooms and drop in instantly.'},
+      {'step': '2', 'emoji': 'ðŸ“¡', 'title': 'Go live', 'desc': 'Start your own stream with zero setup friction.'},
+      {'step': '3', 'emoji': 'ðŸ’¸', 'title': 'Tip & connect', 'desc': 'Support creators and build connections.'},
     ];
 
     return Padding(
@@ -526,10 +562,18 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
           for (var doc in snapshot.data!.docs) {
             final data = doc.data() as Map<String, dynamic>;
             if (data['photoUrl'] != null || data['avatarUrl'] != null) {
+              final location = data['location'];
+              String locationStr = '';
+              if (location is Map) {
+                locationStr = location['city']?.toString() ?? '';
+              } else if (location is String) {
+                locationStr = location;
+              }
+
               profiles.add({
                 'name': data['displayName'] ?? data['username'] ?? 'User',
                 'age': data['age'],
-                'location': data['location']?['city'] ?? data['location'] ?? '',
+                'location': locationStr,
                 'photoUrl': data['photoUrl'] ?? data['avatarUrl'],
                 'isOnline': data['isOnline'] ?? false,
                 'lookingFor': data['lookingFor'] ?? 'Friends',
@@ -589,7 +633,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                             ],
                           ),
                           child: Text(
-                            '🔥 NEW',
+                            'ðŸ”¥ NEW',
                             style: textTheme.labelLarge?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -600,7 +644,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                     ),
                     const SizedBox(height: Spacing.sm),
                     Text(
-                      '💘 Live Video Speed Dating',
+                      'ðŸ’˜ Live Video Speed Dating',
                       style: textTheme.headlineSmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -646,7 +690,8 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                         child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Expanded(
+                        AspectRatio(
+                          aspectRatio: 1.0,
                           child: Stack(
                             children: [
                               Container(
@@ -655,9 +700,9 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                                   gradient: profile['photoUrl'] == null
                                       ? ElectricColors.electricDiagonal
                                       : null,
-                                  image: profile['photoUrl'] != null
+                                  image: _safeImageProvider(profile['photoUrl']) != null
                                       ? DecorationImage(
-                                          image: NetworkImage(profile['photoUrl']),
+                                          image: _safeImageProvider(profile['photoUrl'])!,
                                           fit: BoxFit.cover,
                                         )
                                       : null,
@@ -799,10 +844,10 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              dj['avatarUrl'] != null
+                              _safeImageProvider(dj['avatarUrl']) != null
                                   ? CircleAvatar(
                                       radius: 36,
-                                      backgroundImage: NetworkImage(dj['avatarUrl']),
+                                      backgroundImage: _safeImageProvider(dj['avatarUrl']),
                                     )
                                   : CircleAvatar(
                                       radius: 36,
@@ -839,13 +884,13 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
   Widget _buildTestimonials(TextTheme textTheme) {
     final testimonials = [
       {
-        'emoji': '🌊',
+        'emoji': 'ðŸŒŠ',
         'quote': 'Pure sonic adventure. Every room has its own vibe, every DJ tells a story.',
         'name': 'Sofia Waves',
         'title': 'Ambient Composer',
       },
       {
-        'emoji': '⚡',
+        'emoji': 'âš¡',
         'quote': 'This is where electronic music culture thrives. The community here is incredible.',
         'name': 'Kai Thunder',
         'title': 'Festival Curator',
@@ -989,7 +1034,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
           ),
           const SizedBox(height: Spacing.sm),
           Text(
-            '© 2026 Mix & Mingle. All rights reserved.',
+            'Â© 2026 Mix & Mingle. All rights reserved.',
             style: textTheme.labelSmall?.copyWith(color: ElectricColors.onSurfaceMuted),
           ),
         ],

@@ -1,4 +1,4 @@
-// Notifications Provider - Manages app notifications and alerts with FCM Integration
+﻿// Notifications Provider - Manages app notifications and alerts with FCM Integration
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/utils/app_logger.dart';
@@ -291,5 +291,7 @@ final filteredNotificationsProvider =
     }).toList();
   },
 );
+
+
 
 

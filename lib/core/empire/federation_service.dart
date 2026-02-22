@@ -1,4 +1,4 @@
-/// Federation Service
+﻿/// Federation Service
 ///
 /// Manages cross-app federation of identity, rooms, creators, and moderation signals.
 library;
@@ -351,7 +351,7 @@ class FederationService {
     String? avatarUrl,
     Map<String, dynamic>? claims,
   }) async {
-    debugPrint('🔗 [Federation] Federating identity: $localUserId <-> $remoteUserId');
+    debugPrint('ðŸ”— [Federation] Federating identity: $localUserId <-> $remoteUserId');
 
     // Verify partner exists and is active
     final partner = await getPartner(partnerId);
@@ -377,7 +377,7 @@ class FederationService {
 
     await identityRef.set(identity.toFirestore());
 
-    debugPrint('✅ [Federation] Identity federated: ${identity.federatedId}');
+    debugPrint('âœ… [Federation] Identity federated: ${identity.federatedId}');
     return identity;
   }
 
@@ -393,7 +393,7 @@ class FederationService {
   /// Unlink federated identity
   Future<void> unlinkIdentity(String federatedId) async {
     await _identitiesCollection.doc(federatedId).delete();
-    debugPrint('🔓 [Federation] Identity unlinked: $federatedId');
+    debugPrint('ðŸ”“ [Federation] Identity unlinked: $federatedId');
   }
 
   // ============================================================
@@ -407,7 +407,7 @@ class FederationService {
     required String remoteRoomId,
     required String name,
   }) async {
-    debugPrint('🏠 [Federation] Federating room: $localRoomId <-> $remoteRoomId');
+    debugPrint('ðŸ  [Federation] Federating room: $localRoomId <-> $remoteRoomId');
 
     final partner = await getPartner(partnerId);
     if (partner == null || partner.status != FederationStatus.active) {
@@ -430,7 +430,7 @@ class FederationService {
 
     await roomRef.set(room.toFirestore());
 
-    debugPrint('✅ [Federation] Room federated: ${room.federatedRoomId}');
+    debugPrint('âœ… [Federation] Room federated: ${room.federatedRoomId}');
     return room;
   }
 
@@ -470,7 +470,7 @@ class FederationService {
     await _roomsCollection.doc(federatedRoomId).update({
       'isActive': false,
     });
-    debugPrint('🔓 [Federation] Room defederated: $federatedRoomId');
+    debugPrint('ðŸ”“ [Federation] Room defederated: $federatedRoomId');
   }
 
   // ============================================================
@@ -486,7 +486,7 @@ class FederationService {
     String? avatarUrl,
     bool isVerified = false,
   }) async {
-    debugPrint('⭐ [Federation] Federating creator: $localCreatorId <-> $remoteCreatorId');
+    debugPrint('â­ [Federation] Federating creator: $localCreatorId <-> $remoteCreatorId');
 
     final partner = await getPartner(partnerId);
     if (partner == null || partner.status != FederationStatus.active) {
@@ -511,7 +511,7 @@ class FederationService {
 
     await creatorRef.set(creator.toFirestore());
 
-    debugPrint('✅ [Federation] Creator federated: ${creator.federatedCreatorId}');
+    debugPrint('âœ… [Federation] Creator federated: ${creator.federatedCreatorId}');
     return creator;
   }
 
@@ -540,7 +540,7 @@ class FederationService {
     DateTime? expiresAt,
     Map<String, dynamic>? evidence,
   }) async {
-    debugPrint('🚨 [Federation] Broadcasting moderation signal: $signalType');
+    debugPrint('ðŸš¨ [Federation] Broadcasting moderation signal: $signalType');
 
     // Get all active partners with moderation signal enabled
     final partnersSnapshot = await _partnersCollection
@@ -571,14 +571,14 @@ class FederationService {
       _signalController.add(signal);
     }
 
-    debugPrint('✅ [Federation] Moderation signal broadcasted');
+    debugPrint('âœ… [Federation] Moderation signal broadcasted');
   }
 
   /// Receive moderation signal from partner
   Future<void> receiveModerationSignal(ModerationSignal signal) async {
     await _signalsCollection.doc(signal.signalId).set(signal.toFirestore());
     _signalController.add(signal);
-    debugPrint('📥 [Federation] Received moderation signal: ${signal.signalId}');
+    debugPrint('ðŸ“¥ [Federation] Received moderation signal: ${signal.signalId}');
   }
 
   /// Get moderation signals for a user
@@ -608,7 +608,7 @@ class FederationService {
     List<FederatedEntityType>? enabledTypes,
     SyncDirection syncDirection = SyncDirection.bidirectional,
   }) async {
-    debugPrint('🤝 [Federation] Registering partner: $name');
+    debugPrint('ðŸ¤ [Federation] Registering partner: $name');
 
     final partnerRef = _partnersCollection.doc();
     final partner = FederationPartner(
@@ -625,7 +625,7 @@ class FederationService {
 
     await partnerRef.set(partner.toFirestore());
 
-    debugPrint('✅ [Federation] Partner registered: ${partner.partnerId}');
+    debugPrint('âœ… [Federation] Partner registered: ${partner.partnerId}');
     return partner;
   }
 
@@ -634,7 +634,7 @@ class FederationService {
     await _partnersCollection.doc(partnerId).update({
       'status': FederationStatus.active.name,
     });
-    debugPrint('✅ [Federation] Partner activated: $partnerId');
+    debugPrint('âœ… [Federation] Partner activated: $partnerId');
   }
 
   /// Suspend partner
@@ -642,7 +642,7 @@ class FederationService {
     await _partnersCollection.doc(partnerId).update({
       'status': FederationStatus.suspended.name,
     });
-    debugPrint('⏸️ [Federation] Partner suspended: $partnerId');
+    debugPrint('â¸ï¸ [Federation] Partner suspended: $partnerId');
   }
 
   /// Get partner by ID

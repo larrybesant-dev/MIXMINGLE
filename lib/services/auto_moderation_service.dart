@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../shared/models/moderation_action.dart';
 import '../shared/models/chat_message.dart';
@@ -100,11 +100,11 @@ class AutoModerationService {
       // Apply the action
       switch (action) {
         case ModerationType.timeout:
-          // ✅ SAFETY FIX: Check duration before applying timeout
+          // âœ… SAFETY FIX: Check duration before applying timeout
           if (duration != null) {
             await _applyTimeout(roomId, userId, duration);
           } else {
-            debugPrint('⚠️ Timeout action requires duration, but duration is null');
+            debugPrint('âš ï¸ Timeout action requires duration, but duration is null');
           }
           break;
         case ModerationType.ban:

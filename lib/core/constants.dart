@@ -1,4 +1,4 @@
-// App-wide constants for Mix & Mingle
+﻿// App-wide constants for Mix & Mingle
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 

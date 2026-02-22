@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:file_picker/file_picker.dart' as file_picker;
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/services/chat_service.dart';
-import 'package:mix_and_mingle/shared/models/chat_message.dart';
-import 'package:mix_and_mingle/shared/widgets/typing_indicator_widget.dart';
-import 'package:mix_and_mingle/providers/all_providers.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/services/chat_service.dart';
+import 'package:mixmingle/shared/models/chat_message.dart';
+import 'package:mixmingle/shared/widgets/typing_indicator_widget.dart';
+import 'package:mixmingle/providers/all_providers.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   final String? chatId;
@@ -198,7 +198,7 @@ class _ChatPageState extends ConsumerState<ChatPage> {
           );
 
           // Send file message
-          _cs.sendMessage(widget.chatId ?? '', '📎 ${file.name}');
+          _cs.sendMessage(widget.chatId ?? '', 'ðŸ“Ž ${file.name}');
 
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(

@@ -1,3 +1,4 @@
+﻿import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -64,7 +65,7 @@ final kickedUsersProvider = StreamProvider.family<List<String>, String>((ref, ro
       );
 });
 
-// 🔥 PHASE 3.1b: Enriched participants provider
+// ðŸ”¥ PHASE 3.1b: Enriched participants provider
 // Merges Agora real-time state (audio/video/speaking) with Firestore metadata (roles/timestamps)
 final enrichedParticipantsProvider = StreamProvider.family<List<EnrichedParticipant>, String>((ref, roomId) {
   final agoraParticipants = ref.watch(agoraParticipantsProvider);

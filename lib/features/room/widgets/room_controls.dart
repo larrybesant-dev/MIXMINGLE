@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/room_providers.dart';
 import '../../../shared/models/room.dart';
@@ -44,7 +44,7 @@ class RoomControls extends ConsumerWidget {
                     current.isRoomLocked ? Icons.lock : Icons.lock_open,
                     color: current.isRoomLocked ? Colors.amber : Colors.white70,
                   ),
-                  tooltip: '🔒 Lock',
+                  tooltip: 'ðŸ”’ Lock',
                 ),
               ),
             if (isHost)

@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/core/responsive/responsive_utils.dart';
-import 'package:mix_and_mingle/core/animations/app_animations.dart';
-import 'package:mix_and_mingle/providers/all_providers.dart';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/shared/widgets/async_value_view_enhanced.dart';
-import 'package:mix_and_mingle/shared/widgets/skeleton_loaders.dart';
-import 'package:mix_and_mingle/shared/models/event.dart';
+import 'package:mixmingle/core/responsive/responsive_utils.dart';
+import 'package:mixmingle/core/animations/app_animations.dart';
+import 'package:mixmingle/providers/all_providers.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
+import 'package:mixmingle/shared/widgets/skeleton_loaders.dart';
+import 'package:mixmingle/shared/models/event.dart';
 
 class EventDetailsPage extends ConsumerWidget {
   final String eventId;

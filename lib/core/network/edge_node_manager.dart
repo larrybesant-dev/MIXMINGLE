@@ -1,4 +1,4 @@
-/// Edge Node Manager
+﻿/// Edge Node Manager
 ///
 /// Manages edge nodes for low-latency content delivery and failover routing.
 library;
@@ -242,7 +242,7 @@ class EdgeNodeManager {
     int maxConnections = 10000,
     Map<String, dynamic>? metadata,
   }) async {
-    debugPrint('🖥️ [EdgeManager] Registering edge node: $name in ${region.name}');
+    debugPrint('ðŸ–¥ï¸ [EdgeManager] Registering edge node: $name in ${region.name}');
 
     final nodeRef = _nodesCollection.doc();
     final node = EdgeNode(
@@ -261,7 +261,7 @@ class EdgeNodeManager {
     await nodeRef.set(node.toFirestore());
     _nodeCache[node.id] = node;
 
-    debugPrint('✅ [EdgeManager] Edge node registered: ${node.id}');
+    debugPrint('âœ… [EdgeManager] Edge node registered: ${node.id}');
     return node;
   }
 
@@ -272,7 +272,7 @@ class EdgeNodeManager {
       'lastHealthCheck': Timestamp.now(),
     });
 
-    debugPrint('📊 [EdgeManager] Node $nodeId status: ${status.name}');
+    debugPrint('ðŸ“Š [EdgeManager] Node $nodeId status: ${status.name}');
 
     // Trigger failover if node went offline
     if (status == EdgeNodeStatus.offline || status == EdgeNodeStatus.maintenance) {
@@ -317,7 +317,7 @@ class EdgeNodeManager {
     await _nodesCollection.doc(nodeId).delete();
     _nodeCache.remove(nodeId);
 
-    debugPrint('🗑️ [EdgeManager] Edge node deregistered: $nodeId');
+    debugPrint('ðŸ—‘ï¸ [EdgeManager] Edge node deregistered: $nodeId');
   }
 
   // ============================================================
@@ -329,7 +329,7 @@ class EdgeNodeManager {
     required String oderId,
     Region? preferredRegion,
   }) async {
-    debugPrint('👤 [EdgeManager] Assigning user $oderId to edge');
+    debugPrint('ðŸ‘¤ [EdgeManager] Assigning user $oderId to edge');
 
     final region = preferredRegion ?? GlobalNetworkService.instance.currentRegion;
     final node = await _selectBestNode(region);
@@ -354,7 +354,7 @@ class EdgeNodeManager {
       'currentConnections': FieldValue.increment(1),
     });
 
-    debugPrint('✅ [EdgeManager] User $oderId assigned to ${node.name}');
+    debugPrint('âœ… [EdgeManager] User $oderId assigned to ${node.name}');
     return assignment;
   }
 
@@ -417,7 +417,7 @@ class EdgeNodeManager {
 
     await _assignmentsCollection.doc(oderId).delete();
 
-    debugPrint('👤 [EdgeManager] User $oderId released from edge');
+    debugPrint('ðŸ‘¤ [EdgeManager] User $oderId released from edge');
   }
 
   /// Get user's current assignment
@@ -436,7 +436,7 @@ class EdgeNodeManager {
     required String oderId,
     required String reason,
   }) async {
-    debugPrint('🔄 [EdgeManager] Initiating failover for $oderId: $reason');
+    debugPrint('ðŸ”„ [EdgeManager] Initiating failover for $oderId: $reason');
 
     final start = DateTime.now();
     final currentAssignment = await getUserAssignment(oderId);
@@ -487,7 +487,7 @@ class EdgeNodeManager {
     await failoverRef.set(failover.toFirestore());
     _failoverController.add(failover);
 
-    debugPrint('✅ [EdgeManager] Failover complete: ${newNode.name}');
+    debugPrint('âœ… [EdgeManager] Failover complete: ${newNode.name}');
     return failover;
   }
 
@@ -543,7 +543,7 @@ class EdgeNodeManager {
 
   /// Trigger failover for all users on a node
   Future<void> _triggerFailoverForNode(String nodeId) async {
-    debugPrint('🔄 [EdgeManager] Triggering failover for all users on node $nodeId');
+    debugPrint('ðŸ”„ [EdgeManager] Triggering failover for all users on node $nodeId');
 
     final snapshot = await _assignmentsCollection
         .where('edgeNodeId', isEqualTo: nodeId)
@@ -556,7 +556,7 @@ class EdgeNodeManager {
           reason: 'Node $nodeId unavailable',
         );
       } catch (e) {
-        debugPrint('❌ [EdgeManager] Failover failed for ${doc.id}: $e');
+        debugPrint('âŒ [EdgeManager] Failover failed for ${doc.id}: $e');
       }
     }
   }
@@ -572,7 +572,7 @@ class EdgeNodeManager {
       const Duration(seconds: 30),
       (_) => _performHealthChecks(),
     );
-    debugPrint('💓 [EdgeManager] Health monitoring started');
+    debugPrint('ðŸ’“ [EdgeManager] Health monitoring started');
   }
 
   Future<void> _performHealthChecks() async {
@@ -597,7 +597,7 @@ class EdgeNodeManager {
   /// Stop health monitoring
   void stopHealthMonitoring() {
     _healthCheckTimer?.cancel();
-    debugPrint('💓 [EdgeManager] Health monitoring stopped');
+    debugPrint('ðŸ’“ [EdgeManager] Health monitoring stopped');
   }
 
   // ============================================================

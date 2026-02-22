@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:mix_and_mingle/core/errors/app_error.dart';
-import 'package:mix_and_mingle/core/providers/connectivity_provider.dart';
+import 'package:mixmingle/core/errors/app_error.dart';
+import 'package:mixmingle/core/providers/connectivity_provider.dart';
 import 'loading_widgets.dart';
 
 class AsyncValueView<T> extends ConsumerWidget {
@@ -68,3 +68,5 @@ class AsyncValueView<T> extends ConsumerWidget {
     );
   }
 }
+
+

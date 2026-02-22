@@ -1,4 +1,4 @@
-/// Marketplace Service
+﻿/// Marketplace Service
 ///
 /// Manages the creator marketplace including service listings,
 /// purchases, revenue splits, and tier boosts.
@@ -367,7 +367,7 @@ class MarketplaceService {
     List<String>? tags,
     List<String>? images,
   }) async {
-    debugPrint('📦 [Marketplace] Listing service: $title');
+    debugPrint('ðŸ“¦ [Marketplace] Listing service: $title');
 
     try {
       final id = 'svc_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -403,10 +403,10 @@ class MarketplaceService {
         },
       );
 
-      debugPrint('✅ [Marketplace] Service listed: $id');
+      debugPrint('âœ… [Marketplace] Service listed: $id');
       return service;
     } catch (e) {
-      debugPrint('❌ [Marketplace] Failed to list service: $e');
+      debugPrint('âŒ [Marketplace] Failed to list service: $e');
       rethrow;
     }
   }
@@ -454,7 +454,7 @@ class MarketplaceService {
       });
       return true;
     } catch (e) {
-      debugPrint('❌ [Marketplace] Failed to activate service: $e');
+      debugPrint('âŒ [Marketplace] Failed to activate service: $e');
       return false;
     }
   }
@@ -469,7 +469,7 @@ class MarketplaceService {
     required String buyerId,
     String? notes,
   }) async {
-    debugPrint('💰 [Marketplace] Processing purchase for service: $serviceId');
+    debugPrint('ðŸ’° [Marketplace] Processing purchase for service: $serviceId');
 
     try {
       // Get service
@@ -527,10 +527,10 @@ class MarketplaceService {
         },
       );
 
-      debugPrint('✅ [Marketplace] Purchase completed: $purchaseId');
+      debugPrint('âœ… [Marketplace] Purchase completed: $purchaseId');
       return purchase;
     } catch (e) {
-      debugPrint('❌ [Marketplace] Purchase failed: $e');
+      debugPrint('âŒ [Marketplace] Purchase failed: $e');
       return null;
     }
   }
@@ -638,7 +638,7 @@ class MarketplaceService {
     required Duration duration,
     String? reason,
   }) async {
-    debugPrint('🚀 [Marketplace] Applying tier boost for: $creatorId');
+    debugPrint('ðŸš€ [Marketplace] Applying tier boost for: $creatorId');
 
     try {
       final id = 'boost_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -665,10 +665,10 @@ class MarketplaceService {
         },
       );
 
-      debugPrint('✅ [Marketplace] Boost applied: $id');
+      debugPrint('âœ… [Marketplace] Boost applied: $id');
       return boost;
     } catch (e) {
-      debugPrint('❌ [Marketplace] Failed to apply boost: $e');
+      debugPrint('âŒ [Marketplace] Failed to apply boost: $e');
       rethrow;
     }
   }

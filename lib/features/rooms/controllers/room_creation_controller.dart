@@ -1,5 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/shared/models/room.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mixmingle/shared/models/room.dart';
 import '../services/category_service.dart';
 import '../services/room_service.dart';
 
@@ -152,3 +152,5 @@ final roomCreationControllerProvider = Provider<RoomCreationController>((ref) {
     categoryService: categoryService,
   );
 });
+
+

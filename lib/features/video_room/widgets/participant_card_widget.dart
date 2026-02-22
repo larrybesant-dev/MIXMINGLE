@@ -1,4 +1,4 @@
-/// Participant Card Widget
+﻿/// Participant Card Widget
 ///
 /// Displays a single participant in a video room with:
 /// - Avatar
@@ -19,8 +19,8 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:mix_and_mingle/core/design_system/design_constants.dart';
-import 'package:mix_and_mingle/models/participant.dart';
+import 'package:mixmingle/core/design_system/design_constants.dart';
+import 'package:mixmingle/models/participant.dart';
 
 class ParticipantCardWidget extends StatefulWidget {
   /// Participant data (name, uid, speaking state, etc.)
@@ -138,11 +138,11 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
-        // ✅ Use DesignSpacing
+        // âœ… Use DesignSpacing
         padding: EdgeInsets.all(DesignSpacing.lg),
         margin: EdgeInsets.only(bottom: DesignSpacing.md),
 
-        // ✅ Use DesignBorders, DesignShadows, DesignColors
+        // âœ… Use DesignBorders, DesignShadows, DesignColors
         decoration: BoxDecoration(
           border: DesignBorders.cardDefault,
           borderRadius:
@@ -157,7 +157,7 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
             // Avatar + Name + Mute indicator
             Row(
               children: [
-                // ✅ Avatar
+                // âœ… Avatar
                 Container(
                   width: DesignSpacing.avatarMedium,
                   height: DesignSpacing.avatarMedium,
@@ -189,7 +189,7 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
 
                 SizedBox(width: DesignSpacing.lg),
 
-                // ✅ Name using DesignTypography
+                // âœ… Name using DesignTypography
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,6 +256,3 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
     return '${diff.inDays}d ago';
   }
 }
-
-
-

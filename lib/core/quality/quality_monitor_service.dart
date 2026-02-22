@@ -1,4 +1,4 @@
-/// Quality Monitor Service
+﻿/// Quality Monitor Service
 ///
 /// Monitors application quality metrics including room join failures,
 /// video stability, crash-free sessions, and auto-flags problematic rooms.
@@ -598,3 +598,5 @@ class QualityMonitorService {
     _alertController.close();
   }
 }
+
+

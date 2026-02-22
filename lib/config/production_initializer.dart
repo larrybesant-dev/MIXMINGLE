@@ -1,4 +1,4 @@
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+﻿import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -10,7 +10,7 @@ import '../services/error_tracking_service.dart';
 class ProductionInitializer {
   /// Initialize all required services for production
   static Future<void> initialize() async {
-    AppLogger.info('🚀 Initializing MixMingle for production...');
+    AppLogger.info('ðŸš€ Initializing MixMingle for production...');
 
     try {
       // 1. Initialize Firebase
@@ -28,9 +28,9 @@ class ProductionInitializer {
       // 5. Verify system health
       await _verifySystemHealth();
 
-      AppLogger.info('✅ Production initialization complete');
+      AppLogger.info('âœ… Production initialization complete');
     } catch (e) {
-      AppLogger.error('❌ Production initialization failed: $e');
+      AppLogger.error('âŒ Production initialization failed: $e');
       rethrow;
     }
   }
@@ -42,7 +42,7 @@ class ProductionInitializer {
       // Just verify connection
       // ignore: unused_local_variable
       final auth = FirebaseAuth.instance;
-      AppLogger.info('✅ Firebase initialized');
+      AppLogger.info('âœ… Firebase initialized');
     } catch (e) {
       AppLogger.error('Firebase initialization failed: $e');
       rethrow;
@@ -65,7 +65,7 @@ class ProductionInitializer {
         await crashlytics.setCustomKey('environment', EnvironmentConfig.isProduction ? 'production' : 'staging');
       }
 
-      AppLogger.info('✅ Crash reporting enabled');
+      AppLogger.info('âœ… Crash reporting enabled');
     } catch (e) {
       AppLogger.error('Crash reporting setup failed: $e');
     }
@@ -89,7 +89,7 @@ class ProductionInitializer {
         await analytics.setUserId(id: FirebaseAuth.instance.currentUser!.uid);
       }
 
-      AppLogger.info('✅ Analytics initialized');
+      AppLogger.info('âœ… Analytics initialized');
     } catch (e) {
       AppLogger.error('Analytics setup failed: $e');
     }
@@ -99,7 +99,7 @@ class ProductionInitializer {
     AppLogger.info('Setting up error tracking...');
     try {
       await ErrorTrackingService().initialize();
-      AppLogger.info('✅ Error tracking initialized');
+      AppLogger.info('âœ… Error tracking initialized');
     } catch (e) {
       AppLogger.error('Error tracking setup failed: $e');
     }
@@ -110,7 +110,7 @@ class ProductionInitializer {
     try {
       // Check if system is in maintenance mode
       // This would come from Firestore or Remote Config
-      AppLogger.info('✅ System health verified');
+      AppLogger.info('âœ… System health verified');
     } catch (e) {
       AppLogger.error('System health check failed: $e');
     }
@@ -121,3 +121,5 @@ class ProductionInitializer {
 // import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // import 'package:firebase_analytics/firebase_analytics.dart';
+
+

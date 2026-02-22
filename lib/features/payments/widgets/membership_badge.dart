@@ -1,4 +1,4 @@
-/// Membership Badge Widget
+﻿/// Membership Badge Widget
 ///
 /// Displays membership tier as a badge with neon styling.
 /// Used in profile headers, room UI, and chat displays.

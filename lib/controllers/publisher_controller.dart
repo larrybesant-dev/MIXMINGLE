@@ -1,4 +1,4 @@
-import '../models/publisher_state_model.dart';
+﻿import '../models/publisher_state_model.dart';
 
 class PublisherController {
   PublisherStateModel publisherState;
@@ -84,3 +84,5 @@ class PublisherController {
   bool get isPaused => publisherState.status == PublisherStatus.paused;
   bool get hasError => publisherState.status == PublisherStatus.error;
 }
+
+

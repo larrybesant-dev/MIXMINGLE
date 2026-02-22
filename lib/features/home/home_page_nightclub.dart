@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:url_launcher/url_launcher.dart';
@@ -145,7 +145,7 @@ class _NightclubHomePageState extends State<NightclubHomePage>
 
                 // Welcome message
                 const Text(
-                  'Welcome to Mix & Mingle 🎉',
+                  'Welcome to Mix & Mingle ðŸŽ‰',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.w300,

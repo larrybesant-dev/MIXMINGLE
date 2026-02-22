@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SpeedDatingResult {
@@ -109,3 +110,5 @@ class SpeedDatingResult {
     return 'SpeedDatingResult(id: $id, roundId: $roundId, userId: $userId, matchedUserId: $matchedUserId, isMutual: $isMutual, timestamp: $timestamp)';
   }
 }
+
+

@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import 'package:provider/provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
 import '../../../core/design_system/design_constants.dart';
 import '../../../controllers/agora_room_controller.dart';
 import '../../../controllers/join_flow_controller.dart';

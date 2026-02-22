@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use
+﻿// ignore_for_file: deprecated_member_use
 /// Top Bar Widget - Navigation bar with animated participant count and theme toggle
 ///
 /// Features:
@@ -133,7 +133,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
   /// Builds the logo/title section
   Widget _buildLogo(bool darkMode) {
     return Text(
-      '🎬 Mix & Mingle',
+      'ðŸŽ¬ Mix & Mingle',
       style: AppTextStyles.h5.copyWith(
         color: DesignColors.accent,
         fontWeight: FontWeight.bold,
@@ -615,7 +615,7 @@ class _AnimatedParticipantCountState extends State<_AnimatedParticipantCount>
       child: FadeTransition(
         opacity: _opacityAnimation,
         child: Text(
-          'LIVE • ${widget.count} participant${widget.count != 1 ? 's' : ''}',
+          'LIVE â€¢ ${widget.count} participant${widget.count != 1 ? 's' : ''}',
           style: AppTextStyles.caption.copyWith(
             fontWeight: FontWeight.bold,
             color: DesignColors.accent,
@@ -625,7 +625,3 @@ class _AnimatedParticipantCountState extends State<_AnimatedParticipantCount>
     );
   }
 }
-
-
-
-

@@ -1,4 +1,4 @@
-/// Room Discovery Screen
+﻿/// Room Discovery Screen
 ///
 /// Lists all available rooms with:
 /// - Room name
@@ -122,11 +122,11 @@ class _RoomDiscoveryScreenState extends State<RoomDiscoveryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // ✅ Use DesignColors.surfaceDefault background
+      // âœ… Use DesignColors.surfaceDefault background
       backgroundColor: DesignColors.surfaceDefault,
 
       appBar: AppBar(
-        // ✅ Use DesignColors for app bar
+        // âœ… Use DesignColors for app bar
         backgroundColor: DesignColors.surfaceDefault,
         elevation: 0,
         centerTitle: true,
@@ -303,6 +303,3 @@ class _RoomDiscoveryScreenState extends State<RoomDiscoveryScreen> {
     );
   }
 }
-
-
-

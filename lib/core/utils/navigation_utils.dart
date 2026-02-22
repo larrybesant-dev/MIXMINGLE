@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'app_logger.dart';
 
 /// Safe navigation utilities with mounted checks

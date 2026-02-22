@@ -1,10 +1,10 @@
-// ignore_for_file: deprecated_member_use
+﻿// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/features/matching/providers/matching_providers.dart';
-import 'package:mix_and_mingle/features/matching/models/match_model.dart';
-import 'package:mix_and_mingle/providers/auth_providers.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/features/matching/providers/matching_providers.dart';
+import 'package:mixmingle/features/matching/models/match_model.dart';
+import 'package:mixmingle/providers/auth_providers.dart';
 
 class MatchesPage extends ConsumerStatefulWidget {
   const MatchesPage({super.key});
@@ -68,7 +68,7 @@ class _MatchesPageState extends ConsumerState<MatchesPage> {
           showDialog(
             context: context,
             builder: (ctx) => AlertDialog(
-              title: const Text('🎉 It\'s a Match!'),
+              title: const Text('ðŸŽ‰ It\'s a Match!'),
               content: const Text('You both liked each other!'),
               actions: [
                 TextButton(
@@ -81,7 +81,7 @@ class _MatchesPageState extends ConsumerState<MatchesPage> {
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Like sent! ❤️'),
+              content: Text('Like sent! â¤ï¸'),
               duration: Duration(seconds: 1),
             ),
           );

@@ -1,4 +1,4 @@
-/// User Safety Provider
+﻿/// User Safety Provider
 /// Report and block users
 library;
 
@@ -50,7 +50,7 @@ class UserSafetyController extends Notifier<UserSafetyState> {
         isLoading: false,
       );
     } catch (e) {
-      debugPrint('❌ Error loading blocked users: $e');
+      debugPrint('âŒ Error loading blocked users: $e');
       state = state.copyWith(isLoading: false);
     }
   }
@@ -85,9 +85,9 @@ class UserSafetyController extends Notifier<UserSafetyState> {
         isLoading: false,
       );
 
-      debugPrint('✅ User blocked: $targetUserId');
+      debugPrint('âœ… User blocked: $targetUserId');
     } catch (e) {
-      debugPrint('❌ Error blocking user: $e');
+      debugPrint('âŒ Error blocking user: $e');
       state = state.copyWith(isLoading: false);
     }
   }
@@ -107,9 +107,9 @@ class UserSafetyController extends Notifier<UserSafetyState> {
         isLoading: false,
       );
 
-      debugPrint('✅ User unblocked: $targetUserId');
+      debugPrint('âœ… User unblocked: $targetUserId');
     } catch (e) {
-      debugPrint('❌ Error unblocking user: $e');
+      debugPrint('âŒ Error unblocking user: $e');
       state = state.copyWith(isLoading: false);
     }
   }
@@ -133,9 +133,9 @@ class UserSafetyController extends Notifier<UserSafetyState> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ User reported: $reportedUserId');
+      debugPrint('âœ… User reported: $reportedUserId');
     } catch (e) {
-      debugPrint('❌ Error reporting user: $e');
+      debugPrint('âŒ Error reporting user: $e');
       rethrow;
     }
   }
@@ -226,7 +226,7 @@ Future<void> showReportDialog({
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: Colors.white.withOpacity(0.1),
+                  fillColor: Colors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -259,7 +259,7 @@ Future<void> showReportDialog({
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.1),
+                    fillColor: Colors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -291,13 +291,13 @@ Future<void> showReportDialog({
                   maxLines: 3,
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Colors.white.withOpacity(0.1),
+                    fillColor: Colors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     hintText: 'Provide more context...',
                     hintStyle: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: Colors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                     ),
                   ),
                 ),

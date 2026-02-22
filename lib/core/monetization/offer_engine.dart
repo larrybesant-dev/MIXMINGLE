@@ -1,4 +1,4 @@
-/// Offer Engine
+﻿/// Offer Engine
 ///
 /// Manages personalized offers, churn prevention, creator support bundles,
 /// and event-based promotional offers.
@@ -765,3 +765,5 @@ class OfferEngine {
     _offerController.close();
   }
 }
+
+

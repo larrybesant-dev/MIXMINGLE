@@ -1,4 +1,4 @@
-/// Beta Feedback Form
+﻿/// Beta Feedback Form
 ///
 /// A comprehensive feedback form for beta testers with
 /// screenshot attachment, categorization, and priority selection.
@@ -478,7 +478,7 @@ class _BetaFeedbackFormState extends State<BetaFeedbackForm> {
         if (result.success) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Thank you for your feedback! 🎉'),
+              content: Text('Thank you for your feedback! ðŸŽ‰'),
               backgroundColor: Color(0xFF10B981),
             ),
           );

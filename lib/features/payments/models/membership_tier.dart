@@ -1,4 +1,4 @@
-/// Membership Tier Model
+﻿/// Membership Tier Model
 ///
 /// Defines the three membership tiers: Free, VIP, VIP+
 /// with their associated benefits and identifiers.

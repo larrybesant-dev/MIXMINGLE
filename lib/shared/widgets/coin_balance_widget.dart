@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:mix_and_mingle/features/payment/coin_purchase_page.dart';
-import 'package:mix_and_mingle/core/theme/colors.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:mixmingle/features/payment/coin_purchase_page.dart';
+import 'package:mixmingle/core/theme/colors.dart';
 
 /// Reusable widget for displaying coin balance and buy button
 /// Add this to your app bar, profile, or anywhere else

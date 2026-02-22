@@ -1,4 +1,4 @@
-/// Enterprise Service
+﻿/// Enterprise Service
 ///
 /// Manages enterprise/organization accounts including org rooms,
 /// moderation, analytics, and billing for business customers.
@@ -433,7 +433,7 @@ class EnterpriseService {
     OrgPlan plan = OrgPlan.starter,
     String? adminUserId,
   }) async {
-    debugPrint('🏢 [Enterprise] Creating organization: $name');
+    debugPrint('ðŸ¢ [Enterprise] Creating organization: $name');
 
     try {
       final id = 'org_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -477,10 +477,10 @@ class EnterpriseService {
         parameters: {'plan': plan.name},
       );
 
-      debugPrint('✅ [Enterprise] Organization created: $id');
+      debugPrint('âœ… [Enterprise] Organization created: $id');
       return org;
     } catch (e) {
-      debugPrint('❌ [Enterprise] Failed to create organization: $e');
+      debugPrint('âŒ [Enterprise] Failed to create organization: $e');
       rethrow;
     }
   }
@@ -625,7 +625,7 @@ class EnterpriseService {
     bool recordingEnabled = false,
     DateTime? scheduledAt,
   }) async {
-    debugPrint('🚪 [Enterprise] Creating org room: $title');
+    debugPrint('ðŸšª [Enterprise] Creating org room: $title');
 
     try {
       // Get org and plan limits
@@ -666,10 +666,10 @@ class EnterpriseService {
         },
       );
 
-      debugPrint('✅ [Enterprise] Org room created: $id');
+      debugPrint('âœ… [Enterprise] Org room created: $id');
       return room;
     } catch (e) {
-      debugPrint('❌ [Enterprise] Failed to create org room: $e');
+      debugPrint('âŒ [Enterprise] Failed to create org room: $e');
       rethrow;
     }
   }
@@ -728,7 +728,7 @@ class EnterpriseService {
     String? reason,
     Duration? duration,
   }) async {
-    debugPrint('⚔️ [Enterprise] Moderation action: ${type.name}');
+    debugPrint('âš”ï¸ [Enterprise] Moderation action: ${type.name}');
 
     try {
       final id = 'mod_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -757,10 +757,10 @@ class EnterpriseService {
         },
       );
 
-      debugPrint('✅ [Enterprise] Moderation action recorded: $id');
+      debugPrint('âœ… [Enterprise] Moderation action recorded: $id');
       return action;
     } catch (e) {
-      debugPrint('❌ [Enterprise] Moderation action failed: $e');
+      debugPrint('âŒ [Enterprise] Moderation action failed: $e');
       rethrow;
     }
   }
@@ -814,7 +814,7 @@ class EnterpriseService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    debugPrint('📊 [Enterprise] Fetching org analytics: $orgId');
+    debugPrint('ðŸ“Š [Enterprise] Fetching org analytics: $orgId');
 
     final periodStart = startDate ?? DateTime.now().subtract(const Duration(days: 30));
     final periodEnd = endDate ?? DateTime.now();
@@ -862,10 +862,10 @@ class EnterpriseService {
         periodEnd: periodEnd,
       );
 
-      debugPrint('✅ [Enterprise] Analytics fetched');
+      debugPrint('âœ… [Enterprise] Analytics fetched');
       return analytics;
     } catch (e) {
-      debugPrint('❌ [Enterprise] Failed to fetch analytics: $e');
+      debugPrint('âŒ [Enterprise] Failed to fetch analytics: $e');
       rethrow;
     }
   }
@@ -876,7 +876,7 @@ class EnterpriseService {
 
   /// Get organization billing
   Future<OrgBilling> orgBilling(String orgId) async {
-    debugPrint('💳 [Enterprise] Fetching org billing: $orgId');
+    debugPrint('ðŸ’³ [Enterprise] Fetching org billing: $orgId');
 
     try {
       final doc = await _billingCollection.doc(orgId).get();
@@ -922,7 +922,7 @@ class EnterpriseService {
             [],
       );
     } catch (e) {
-      debugPrint('❌ [Enterprise] Failed to fetch billing: $e');
+      debugPrint('âŒ [Enterprise] Failed to fetch billing: $e');
       rethrow;
     }
   }
@@ -968,7 +968,7 @@ class EnterpriseService {
 
       return true;
     } catch (e) {
-      debugPrint('❌ [Enterprise] Plan upgrade failed: $e');
+      debugPrint('âŒ [Enterprise] Plan upgrade failed: $e');
       return false;
     }
   }

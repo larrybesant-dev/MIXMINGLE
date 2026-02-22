@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import '../../providers/all_providers.dart';
@@ -273,10 +273,10 @@ class _AgoraTestPageState extends ConsumerState<AgoraTestPage> {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    '• Check Firebase Functions logs: firebase functions:log\n'
-                    '• Verify Agora credentials are correct\n'
-                    '• Ensure Firebase Functions are deployed\n'
-                    '• Check device permissions for camera/microphone',
+                    'â€¢ Check Firebase Functions logs: firebase functions:log\n'
+                    'â€¢ Verify Agora credentials are correct\n'
+                    'â€¢ Ensure Firebase Functions are deployed\n'
+                    'â€¢ Check device permissions for camera/microphone',
                     style: TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],

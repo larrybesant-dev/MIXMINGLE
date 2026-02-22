@@ -1,4 +1,4 @@
-/// Predictive Scaling Service
+﻿/// Predictive Scaling Service
 ///
 /// Predicts usage patterns and proactively scales resources
 /// before demand spikes occur.
@@ -159,7 +159,7 @@ class PredictiveScalingService {
   Future<List<PeakHourPrediction>> predictPeakHours({
     int daysAhead = 7,
   }) async {
-    debugPrint('📊 [PredictiveScaling] Predicting peak hours for next $daysAhead days');
+    debugPrint('ðŸ“Š [PredictiveScaling] Predicting peak hours for next $daysAhead days');
 
     try {
       // Load historical metrics
@@ -218,10 +218,10 @@ class PredictiveScalingService {
         'timestamp': DateTime.now().toIso8601String(),
       });
 
-      debugPrint('✅ [PredictiveScaling] Generated ${predictions.length} peak hour predictions');
+      debugPrint('âœ… [PredictiveScaling] Generated ${predictions.length} peak hour predictions');
       return predictions;
     } catch (e) {
-      debugPrint('❌ [PredictiveScaling] Failed to predict peak hours: $e');
+      debugPrint('âŒ [PredictiveScaling] Failed to predict peak hours: $e');
       rethrow;
     }
   }
@@ -306,7 +306,7 @@ class PredictiveScalingService {
     int hoursAhead = 4,
     int limit = 10,
   }) async {
-    debugPrint('📊 [PredictiveScaling] Predicting high-load rooms for next $hoursAhead hours');
+    debugPrint('ðŸ“Š [PredictiveScaling] Predicting high-load rooms for next $hoursAhead hours');
 
     try {
       // Fetch active and scheduled rooms
@@ -369,10 +369,10 @@ class PredictiveScalingService {
         'timestamp': DateTime.now().toIso8601String(),
       });
 
-      debugPrint('✅ [PredictiveScaling] Identified ${topPredictions.length} potentially high-load rooms');
+      debugPrint('âœ… [PredictiveScaling] Identified ${topPredictions.length} potentially high-load rooms');
       return topPredictions;
     } catch (e) {
-      debugPrint('❌ [PredictiveScaling] Failed to predict high-load rooms: $e');
+      debugPrint('âŒ [PredictiveScaling] Failed to predict high-load rooms: $e');
       rethrow;
     }
   }
@@ -462,7 +462,7 @@ class PredictiveScalingService {
     List<String>? regions,
     int? targetCapacity,
   }) async {
-    debugPrint('🔥 [PredictiveScaling] Pre-warming video pipelines');
+    debugPrint('ðŸ”¥ [PredictiveScaling] Pre-warming video pipelines');
 
     final warmupRegions = regions ?? ['us-central', 'europe-west', 'asia-east'];
     final capacity = targetCapacity ?? 100;
@@ -495,9 +495,9 @@ class PredictiveScalingService {
 
         results.add(warmup);
 
-        debugPrint('✅ [PredictiveScaling] Warmed $pipelinesWarmed pipelines in $region');
+        debugPrint('âœ… [PredictiveScaling] Warmed $pipelinesWarmed pipelines in $region');
       } catch (e) {
-        debugPrint('❌ [PredictiveScaling] Failed to warm pipelines in $region: $e');
+        debugPrint('âŒ [PredictiveScaling] Failed to warm pipelines in $region: $e');
         results.add(VideoPipelineWarmup(
           region: region,
           pipelinesWarmed: 0,
@@ -536,7 +536,7 @@ class PredictiveScalingService {
 
   /// Evaluate and trigger auto-scaling based on predictions
   Future<Map<String, dynamic>> evaluateAutoScaling() async {
-    debugPrint('📊 [PredictiveScaling] Evaluating auto-scaling triggers');
+    debugPrint('ðŸ“Š [PredictiveScaling] Evaluating auto-scaling triggers');
 
     final results = <String, dynamic>{
       'timestamp': DateTime.now().toIso8601String(),
@@ -618,7 +618,7 @@ class PredictiveScalingService {
         _hourlyLoadHistory[hour]!.add(load);
       }
     } catch (e) {
-      debugPrint('⚠️ [PredictiveScaling] Failed to load historical metrics: $e');
+      debugPrint('âš ï¸ [PredictiveScaling] Failed to load historical metrics: $e');
     }
   }
 
@@ -636,7 +636,7 @@ class PredictiveScalingService {
 
       await batch.commit();
     } catch (e) {
-      debugPrint('⚠️ [PredictiveScaling] Failed to store predictions: $e');
+      debugPrint('âš ï¸ [PredictiveScaling] Failed to store predictions: $e');
     }
   }
 
@@ -654,7 +654,7 @@ class PredictiveScalingService {
 
       await batch.commit();
     } catch (e) {
-      debugPrint('⚠️ [PredictiveScaling] Failed to store warmup results: $e');
+      debugPrint('âš ï¸ [PredictiveScaling] Failed to store warmup results: $e');
     }
   }
 

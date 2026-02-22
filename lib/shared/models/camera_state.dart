@@ -52,14 +52,16 @@ class CameraState {
   String get qualityIcon {
     switch (quality) {
       case CameraQuality.high:
-        return '📡'; // HD
+        return 'ðŸ“¡'; // HD
       case CameraQuality.medium:
-        return '📶'; // SD
+        return 'ðŸ“¶'; // SD
       case CameraQuality.low:
-        return '📱'; // Mobile
+        return 'ðŸ“±'; // Mobile
     }
   }
 
   @override
   String toString() => 'CameraState(uid: $uid, userName: $userName, quality: ${quality.name}, status: ${status.name})';
 }
+
+

@@ -1,4 +1,4 @@
-/// Closed Beta Service
+﻿/// Closed Beta Service
 ///
 /// Manages closed beta testing program including cohort management,
 /// beta updates distribution, feedback collection, and weekly summaries.
@@ -72,7 +72,7 @@ class ClosedBetaService {
           return await _activateCohort(cohortId!);
       }
     } catch (e) {
-      debugPrint('❌ [Beta] Cohort management failed: $e');
+      debugPrint('âŒ [Beta] Cohort management failed: $e');
       return CohortResult(
         success: false,
         error: e.toString(),
@@ -87,7 +87,7 @@ class ClosedBetaService {
     required int maxSize,
     required CohortType cohortType,
   }) async {
-    debugPrint('📦 [Beta] Creating cohort: $name');
+    debugPrint('ðŸ“¦ [Beta] Creating cohort: $name');
 
     final cohortRef = _firestore.collection(_cohortsCollection).doc();
     final cohortData = {
@@ -114,7 +114,7 @@ class ClosedBetaService {
       },
     );
 
-    debugPrint('✅ [Beta] Cohort created: ${cohortRef.id}');
+    debugPrint('âœ… [Beta] Cohort created: ${cohortRef.id}');
 
     return CohortResult(
       success: true,
@@ -130,7 +130,7 @@ class ClosedBetaService {
     List<String>? featureFlags,
     int? maxSize,
   }) async {
-    debugPrint('📝 [Beta] Updating cohort: $cohortId');
+    debugPrint('ðŸ“ [Beta] Updating cohort: $cohortId');
 
     final updates = <String, dynamic>{
       'updatedAt': FieldValue.serverTimestamp(),
@@ -151,7 +151,7 @@ class ClosedBetaService {
   }
 
   Future<CohortResult> _archiveCohort(String cohortId) async {
-    debugPrint('📁 [Beta] Archiving cohort: $cohortId');
+    debugPrint('ðŸ“ [Beta] Archiving cohort: $cohortId');
 
     await _firestore.collection(_cohortsCollection).doc(cohortId).update({
       'status': CohortStatus.archived.name,
@@ -166,7 +166,7 @@ class ClosedBetaService {
   }
 
   Future<CohortResult> _activateCohort(String cohortId) async {
-    debugPrint('✅ [Beta] Activating cohort: $cohortId');
+    debugPrint('âœ… [Beta] Activating cohort: $cohortId');
 
     await _firestore.collection(_cohortsCollection).doc(cohortId).update({
       'status': CohortStatus.active.name,
@@ -194,7 +194,7 @@ class ClosedBetaService {
           .map((doc) => BetaCohort.fromMap(doc.data() as Map<String, dynamic>))
           .toList();
     } catch (e) {
-      debugPrint('❌ [Beta] Failed to get cohorts: $e');
+      debugPrint('âŒ [Beta] Failed to get cohorts: $e');
       return [];
     }
   }
@@ -205,7 +205,7 @@ class ClosedBetaService {
     required List<String> userIds,
   }) async {
     try {
-      debugPrint('👥 [Beta] Adding ${userIds.length} testers to cohort $cohortId');
+      debugPrint('ðŸ‘¥ [Beta] Adding ${userIds.length} testers to cohort $cohortId');
 
       // Get cohort info
       final cohortDoc = await _firestore.collection(_cohortsCollection).doc(cohortId).get();
@@ -282,7 +282,7 @@ class ClosedBetaService {
         failed: failed,
       );
     } catch (e) {
-      debugPrint('❌ [Beta] Failed to add testers: $e');
+      debugPrint('âŒ [Beta] Failed to add testers: $e');
       return AddTesterResult(
         success: false,
         error: e.toString(),
@@ -304,7 +304,7 @@ class ClosedBetaService {
     String? downloadUrl,
   }) async {
     try {
-      debugPrint('📢 [Beta] Sending update: $title');
+      debugPrint('ðŸ“¢ [Beta] Sending update: $title');
 
       // Create update record
       final updateRef = _firestore.collection(_updatesCollection).doc();
@@ -343,7 +343,7 @@ class ClosedBetaService {
       }
 
       // Would integrate with push notifications
-      debugPrint('📬 [Beta] Would notify ${testerIds.length} testers');
+      debugPrint('ðŸ“¬ [Beta] Would notify ${testerIds.length} testers');
 
       await _analytics.logEvent(
         name: 'beta_update_sent',
@@ -360,7 +360,7 @@ class ClosedBetaService {
         notifiedCount: testerIds.length,
       );
     } catch (e) {
-      debugPrint('❌ [Beta] Failed to send update: $e');
+      debugPrint('âŒ [Beta] Failed to send update: $e');
       return UpdateResult(
         success: false,
         error: e.toString(),
@@ -430,7 +430,7 @@ class ClosedBetaService {
 
       return result;
     } catch (e) {
-      debugPrint('❌ [Beta] Failed to collect feedback: $e');
+      debugPrint('âŒ [Beta] Failed to collect feedback: $e');
       return FeedbackSubmissionResult(
         success: false,
         error: e.toString(),
@@ -447,7 +447,7 @@ class ClosedBetaService {
     DateTime? weekStart,
   }) async {
     try {
-      debugPrint('📊 [Beta] Generating weekly summary...');
+      debugPrint('ðŸ“Š [Beta] Generating weekly summary...');
 
       final start = weekStart ??
           DateTime.now().subtract(Duration(days: DateTime.now().weekday));
@@ -549,11 +549,11 @@ class ClosedBetaService {
         'data': summary.toMap(),
       });
 
-      debugPrint('✅ [Beta] Weekly summary generated');
+      debugPrint('âœ… [Beta] Weekly summary generated');
 
       return summary;
     } catch (e) {
-      debugPrint('❌ [Beta] Failed to generate summary: $e');
+      debugPrint('âŒ [Beta] Failed to generate summary: $e');
       rethrow;
     }
   }
@@ -565,7 +565,7 @@ class ClosedBetaService {
       if (!doc.exists) return null;
       return BetaTester.fromMap(doc.data()!);
     } catch (e) {
-      debugPrint('❌ [Beta] Failed to get tester: $e');
+      debugPrint('âŒ [Beta] Failed to get tester: $e');
       return null;
     }
   }
@@ -578,7 +578,7 @@ class ClosedBetaService {
         'sessionsCount': FieldValue.increment(1),
       });
     } catch (e) {
-      debugPrint('⚠️ [Beta] Failed to record activity: $e');
+      debugPrint('âš ï¸ [Beta] Failed to record activity: $e');
     }
   }
 }

@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import '../../core/utils/app_logger.dart';
 import 'video_room_state.dart';
@@ -6,7 +6,7 @@ import 'video_room_lifecycle.dart';
 
 /// Reference: DESIGN_BIBLE.md Section G (Complete Integration)
 /// Notifier pattern for video room - manages state transitions and side effects
-/// 🔄 RIVERPOD V3 MIGRATION: Using Notifier instead of StateNotifier
+/// ðŸ”„ RIVERPOD V3 MIGRATION: Using Notifier instead of StateNotifier
 class VideoRoomNotifier extends Notifier<VideoRoomState> {
   late final VideoRoomLifecycle _lifecycle;
   final String _appId;
@@ -39,7 +39,7 @@ class VideoRoomNotifier extends Notifier<VideoRoomState> {
 
     try {
       state = state.copyWith(isInitializing: true, error: null);
-      AppLogger.info('📱 Initializing video system...');
+      AppLogger.info('ðŸ“± Initializing video system...');
 
       // Initialize Agora SDK
       await _lifecycle.initialize();
@@ -57,14 +57,14 @@ class VideoRoomNotifier extends Notifier<VideoRoomState> {
         micEnabled: true,
       );
 
-      AppLogger.info('✅ Video system initialized');
+      AppLogger.info('âœ… Video system initialized');
     } catch (e) {
       debugPrint('[VIDEO_NOTIFIER] Initialization error: $e');
       state = state.copyWith(
         isInitializing: false,
         error: 'Failed to initialize video: $e',
       );
-      AppLogger.error('❌ Video initialization failed: $e');
+      AppLogger.error('âŒ Video initialization failed: $e');
       rethrow;
     }
   }
@@ -88,7 +88,7 @@ class VideoRoomNotifier extends Notifier<VideoRoomState> {
 
     try {
       state = state.copyWith(isJoining: true, error: null);
-      AppLogger.info('🔗 Joining room: $roomName...');
+      AppLogger.info('ðŸ”— Joining room: $roomName...');
 
       await _lifecycle.joinChannel(
         roomId: state.roomId,
@@ -102,14 +102,14 @@ class VideoRoomNotifier extends Notifier<VideoRoomState> {
         joinedAt: DateTime.now(),
       );
 
-      AppLogger.info('✅ Joined room successfully');
+      AppLogger.info('âœ… Joined room successfully');
     } catch (e) {
       debugPrint('[VIDEO_NOTIFIER] Join error: $e');
       state = state.copyWith(
         isJoining: false,
         error: 'Failed to join room: $e',
       );
-      AppLogger.error('❌ Failed to join room: $e');
+      AppLogger.error('âŒ Failed to join room: $e');
       rethrow;
     }
   }
@@ -123,7 +123,7 @@ class VideoRoomNotifier extends Notifier<VideoRoomState> {
 
     try {
       state = state.copyWith(isLeaving: true, error: null);
-      AppLogger.info('👋 Leaving room...');
+      AppLogger.info('ðŸ‘‹ Leaving room...');
 
       await _lifecycle.leaveChannel();
 
@@ -136,14 +136,14 @@ class VideoRoomNotifier extends Notifier<VideoRoomState> {
         remoteUserIds: const [],
       );
 
-      AppLogger.info('✅ Left room');
+      AppLogger.info('âœ… Left room');
     } catch (e) {
       debugPrint('[VIDEO_NOTIFIER] Leave error: $e');
       state = state.copyWith(
         isLeaving: false,
         error: 'Error during cleanup: $e',
       );
-      AppLogger.warning('⚠️ Cleanup error: $e');
+      AppLogger.warning('âš ï¸ Cleanup error: $e');
       // Don't rethrow - we want to allow app closing even if cleanup fails
     }
   }
@@ -156,9 +156,9 @@ class VideoRoomNotifier extends Notifier<VideoRoomState> {
     try {
       await _lifecycle.setMicMuted(!state.micEnabled);
       state = state.copyWith(micEnabled: !state.micEnabled);
-      AppLogger.info(state.micEnabled ? '🎤 Mic enabled' : '🔇 Mic muted');
+      AppLogger.info(state.micEnabled ? 'ðŸŽ¤ Mic enabled' : 'ðŸ”‡ Mic muted');
     } catch (e) {
-      AppLogger.error('❌ Microphone control failed: $e');
+      AppLogger.error('âŒ Microphone control failed: $e');
       rethrow;
     }
   }
@@ -171,9 +171,9 @@ class VideoRoomNotifier extends Notifier<VideoRoomState> {
     try {
       await _lifecycle.setVideoMuted(!state.cameraEnabled);
       state = state.copyWith(cameraEnabled: !state.cameraEnabled);
-      AppLogger.info(state.cameraEnabled ? '📹 Camera on' : '📹 Camera off');
+      AppLogger.info(state.cameraEnabled ? 'ðŸ“¹ Camera on' : 'ðŸ“¹ Camera off');
     } catch (e) {
-      AppLogger.error('❌ Camera control failed: $e');
+      AppLogger.error('âŒ Camera control failed: $e');
       rethrow;
     }
   }
@@ -224,6 +224,3 @@ final videoRoomStateSelector = Provider.family<
     ({String appId, String roomId, String userId})>((ref, params) {
   return ref.watch(videoRoomProvider(params));
 });
-
-
-

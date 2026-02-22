@@ -1,4 +1,4 @@
-/// Alpha Invite Widget
+﻿/// Alpha Invite Widget
 ///
 /// Displays alpha tester invitation status and provides
 /// quick access to the feedback form.

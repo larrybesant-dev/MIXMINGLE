@@ -1,4 +1,4 @@
-/// Internationalization (i18n) Service
+﻿/// Internationalization (i18n) Service
 ///
 /// Handles language detection, locale management, dynamic translation loading,
 /// and localized content formatting for global users.
@@ -98,62 +98,62 @@ class I18nService extends ChangeNotifier {
       code: 'en',
       name: 'English',
       nativeName: 'English',
-      flagEmoji: '🇺🇸',
+      flagEmoji: 'ðŸ‡ºðŸ‡¸',
     ),
     SupportedLocale(
       code: 'es',
       name: 'Spanish',
-      nativeName: 'Español',
-      flagEmoji: '🇪🇸',
+      nativeName: 'EspaÃ±ol',
+      flagEmoji: 'ðŸ‡ªðŸ‡¸',
     ),
     SupportedLocale(
       code: 'fr',
       name: 'French',
-      nativeName: 'Français',
-      flagEmoji: '🇫🇷',
+      nativeName: 'FranÃ§ais',
+      flagEmoji: 'ðŸ‡«ðŸ‡·',
     ),
     SupportedLocale(
       code: 'de',
       name: 'German',
       nativeName: 'Deutsch',
-      flagEmoji: '🇩🇪',
+      flagEmoji: 'ðŸ‡©ðŸ‡ª',
     ),
     SupportedLocale(
       code: 'pt',
       name: 'Portuguese',
-      nativeName: 'Português',
-      flagEmoji: '🇧🇷',
+      nativeName: 'PortuguÃªs',
+      flagEmoji: 'ðŸ‡§ðŸ‡·',
     ),
     SupportedLocale(
       code: 'ja',
       name: 'Japanese',
-      nativeName: '日本語',
-      flagEmoji: '🇯🇵',
+      nativeName: 'æ—¥æœ¬èªž',
+      flagEmoji: 'ðŸ‡¯ðŸ‡µ',
     ),
     SupportedLocale(
       code: 'ko',
       name: 'Korean',
-      nativeName: '한국어',
-      flagEmoji: '🇰🇷',
+      nativeName: 'í•œêµ­ì–´',
+      flagEmoji: 'ðŸ‡°ðŸ‡·',
     ),
     SupportedLocale(
       code: 'zh',
       name: 'Chinese (Simplified)',
-      nativeName: '简体中文',
-      flagEmoji: '🇨🇳',
+      nativeName: 'ç®€ä½“ä¸­æ–‡',
+      flagEmoji: 'ðŸ‡¨ðŸ‡³',
     ),
     SupportedLocale(
       code: 'ar',
       name: 'Arabic',
-      nativeName: 'العربية',
-      flagEmoji: '🇸🇦',
+      nativeName: 'Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©',
+      flagEmoji: 'ðŸ‡¸ðŸ‡¦',
       isRTL: true,
     ),
     SupportedLocale(
       code: 'hi',
       name: 'Hindi',
-      nativeName: 'हिन्दी',
-      flagEmoji: '🇮🇳',
+      nativeName: 'à¤¹à¤¿à¤¨à¥à¤¦à¥€',
+      flagEmoji: 'ðŸ‡®ðŸ‡³',
     ),
   ];
 

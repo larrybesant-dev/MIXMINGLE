@@ -51,25 +51,25 @@ class Activity {
   String get iconEmoji {
     switch (type) {
       case ActivityType.joinedRoom:
-        return '🚪';
+        return 'ðŸšª';
       case ActivityType.hostedRoom:
-        return '🎤';
+        return 'ðŸŽ¤';
       case ActivityType.attendedEvent:
-        return '🎉';
+        return 'ðŸŽ‰';
       case ActivityType.hostedEvent:
-        return '📅';
+        return 'ðŸ“…';
       case ActivityType.newFriend:
-        return '👋';
+        return 'ðŸ‘‹';
       case ActivityType.gotMatch:
-        return '💕';
+        return 'ðŸ’•';
       case ActivityType.achievementUnlocked:
-        return '🏆';
+        return 'ðŸ†';
       case ActivityType.leveledUp:
-        return '⭐';
+        return 'â­';
       case ActivityType.streakMilestone:
-        return '🔥';
+        return 'ðŸ”¥';
       default:
-        return '✨';
+        return 'âœ¨';
     }
   }
 

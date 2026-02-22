@@ -1,3 +1,4 @@
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/gamification_service.dart';
 import '../services/badge_service.dart';
@@ -603,3 +604,5 @@ class SubscriptionController extends Notifier<AsyncValue<void>> {
     }
   }
 }
+
+

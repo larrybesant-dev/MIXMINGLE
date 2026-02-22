@@ -54,11 +54,12 @@ linter:
     avoid_print: true # Use AppLogger instead
     avoid_slow_async_io: true
 
-    # Code quality
-    prefer_const_constructors: false # Too strict for current codebase
-    prefer_const_declarations: false # Too strict
-    prefer_final_fields: false # Too strict
-    prefer_final_locals: false # Too strict
+    # Code quality — Stage 1 re-enable (lint-stage-1 branch)
+    prefer_const_constructors: true
+    prefer_const_declarations: true
+    prefer_final_fields: true
+    prefer_final_locals: true
+    prefer_const_literals_to_create_immutables: true
     unnecessary_nullable_for_final_variable_declarations: true
 
     # Best practices

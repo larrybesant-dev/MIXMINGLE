@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
-import 'package:mix_and_mingle/shared/models/camera_state.dart';
-import 'package:mix_and_mingle/shared/models/camera_quality.dart';
-import 'package:mix_and_mingle/services/camera_service.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:mixmingle/shared/models/camera_state.dart';
+import 'package:mixmingle/shared/models/camera_quality.dart';
+import 'package:mixmingle/services/camera_service.dart';
 
 class CameraQualitySelector extends StatefulWidget {
   final String roomId;
@@ -148,7 +148,7 @@ class _CameraQualitySelectorState extends State<CameraQualitySelector> {
                 },
           title: Text(settings.displayName),
           subtitle: Text(
-            '${settings.fps}fps • ${settings.bitrate}kbps • ~${settings.bandwidth}MB/s',
+            '${settings.fps}fps â€¢ ${settings.bitrate}kbps â€¢ ~${settings.bandwidth}MB/s',
             style: TextStyle(
               fontSize: 12,
               color: isSelected ? Colors.blue : Colors.grey[600],
@@ -176,10 +176,10 @@ class _CameraQualitySelectorState extends State<CameraQualitySelector> {
         ),
         const SizedBox(height: 8),
         Text(
-          '📊 Resolution: ${settings.resolution}p\n'
-          '⚡ Bitrate: ${settings.bitrate} kbps\n'
-          '🎬 Frame Rate: ${settings.fps} fps\n'
-          '🌐 Bandwidth: ~${settings.bandwidth} MB/s',
+          'ðŸ“Š Resolution: ${settings.resolution}p\n'
+          'âš¡ Bitrate: ${settings.bitrate} kbps\n'
+          'ðŸŽ¬ Frame Rate: ${settings.fps} fps\n'
+          'ðŸŒ Bandwidth: ~${settings.bandwidth} MB/s',
           style: TextStyle(
             fontSize: 12,
             color: Colors.grey[700],

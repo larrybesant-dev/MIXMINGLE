@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import '../shared/models/subscription.dart';
 
 /// Service for managing user subscriptions and premium features
@@ -185,3 +185,5 @@ class SubscriptionService {
     ];
   }
 }
+
+

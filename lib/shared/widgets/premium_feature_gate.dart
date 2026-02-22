@@ -1,4 +1,4 @@
-/// Premium Feature Gate Widget
+﻿/// Premium Feature Gate Widget
 ///
 /// Restricts access to premium features based on membership tier.
 /// Shows upgrade prompt when user lacks required access.

@@ -1,4 +1,4 @@
-/// Platform Adapter
+﻿/// Platform Adapter
 ///
 /// Provides adaptive layouts, input bridges, and device capability detection
 /// for multi-platform support.
@@ -332,7 +332,7 @@ class PlatformAdapter {
   /// Refresh capabilities detection
   void refreshCapabilities() {
     _capabilities = _detectCapabilities();
-    debugPrint('🔄 [PlatformAdapter] Capabilities refreshed');
+    debugPrint('ðŸ”„ [PlatformAdapter] Capabilities refreshed');
   }
 
   // ============================================================

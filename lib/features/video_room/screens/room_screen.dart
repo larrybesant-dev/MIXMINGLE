@@ -1,4 +1,4 @@
-/// Room Screen
+﻿/// Room Screen
 ///
 /// Main video room UI displaying:
 /// - Join flow phase text
@@ -135,11 +135,11 @@ class _RoomScreenState extends State<RoomScreen> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // ✅ Use dark background
+      // âœ… Use dark background
       backgroundColor: DesignColors.surfaceDefault,
 
       appBar: AppBar(
-        // ✅ Use dark app bar
+        // âœ… Use dark app bar
         backgroundColor: DesignColors.surfaceDefault,
         elevation: 0,
         title: Text(
@@ -172,7 +172,7 @@ class _RoomScreenState extends State<RoomScreen> with TickerProviderStateMixin {
                       vertical: DesignSpacing.sm,
                     ),
                     decoration: BoxDecoration(
-                      // ✅ Use energy color
+                      // âœ… Use energy color
                       color: energyColor.withValues(alpha: 0.1),
                       border: Border.all(color: energyColor, width: 1),
                       borderRadius: BorderRadius.circular(20),
@@ -211,7 +211,7 @@ class _RoomScreenState extends State<RoomScreen> with TickerProviderStateMixin {
           }
 
           return Container(
-            // ✅ Use DesignSpacing and DesignColors
+            // âœ… Use DesignSpacing and DesignColors
             padding: EdgeInsets.all(DesignSpacing.lg),
             decoration: BoxDecoration(
               color: DesignColors.surfaceDefault,
@@ -313,7 +313,7 @@ class _RoomScreenState extends State<RoomScreen> with TickerProviderStateMixin {
                         height: 12,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          // ✅ Use DesignColors.accent
+                          // âœ… Use DesignColors.accent
                           color: DesignColors.accent.withValues(alpha: 0.6),
                         ),
                       ),
@@ -324,7 +324,7 @@ class _RoomScreenState extends State<RoomScreen> with TickerProviderStateMixin {
 
               SizedBox(height: DesignSpacing.xl),
 
-              // Phase text (✅ DesignTypography.heading)
+              // Phase text (âœ… DesignTypography.heading)
               Text(
                 displayText,
                 style: DesignTypography.heading,

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/semantics.dart';
 
 /// Accessibility utilities for enhanced user experience

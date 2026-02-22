@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/features/create_profile_page.dart';
-import 'package:mix_and_mingle/providers/auth_providers.dart';
+import 'package:mixmingle/features/create_profile_page.dart';
+import 'package:mixmingle/providers/auth_providers.dart';
 
 /// Guard that ensures user has completed their profile before accessing the child widget
 /// Redirects to profile creation page if profile is incomplete
@@ -16,7 +16,7 @@ class ProfileGuard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 🔥 Use Riverpod authStateProvider for reactive auth
+    // ðŸ”¥ Use Riverpod authStateProvider for reactive auth
     final authState = ref.watch(authStateProvider);
     final user = authState.value;
 

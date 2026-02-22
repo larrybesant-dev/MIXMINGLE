@@ -1,7 +1,7 @@
-/// Video Grid Widget - Enhanced with smooth animations and pin/unpin effects
+﻿/// Video Grid Widget - Enhanced with smooth animations and pin/unpin effects
 ///
 /// Features:
-/// - Smooth tile entry animation (scale 0.8→1.0, 300ms)
+/// - Smooth tile entry animation (scale 0.8â†’1.0, 300ms)
 /// - Pin/unpin visual effects with glowing border animation
 /// - Hover effects with scale and shadow elevation
 /// - Mini-profile popup on hover (desktop)
@@ -671,7 +671,3 @@ class _PinPulseAnimationState extends State<_PinPulseAnimation>
     );
   }
 }
-
-
-
-

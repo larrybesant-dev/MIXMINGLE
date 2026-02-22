@@ -1,4 +1,4 @@
-/// DESIGN SYSTEM - ANIMATION UTILITIES
+﻿/// DESIGN SYSTEM - ANIMATION UTILITIES
 ///
 /// Reusable animation builders that enforce DESIGN_BIBLE.md timings
 /// Reference: DESIGN_BIBLE.md Section C
@@ -483,5 +483,3 @@ class _RoomEnergyCardAnimationState extends State<RoomEnergyCardAnimation>
     );
   }
 }
-
-

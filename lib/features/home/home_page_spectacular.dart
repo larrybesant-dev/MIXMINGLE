@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
@@ -410,7 +410,7 @@ class _HomePageState extends ConsumerState<HomePage> with TickerProviderStateMix
             onChanged: (value) => ref.read(searchQueryProvider.notifier).update(value),
             style: const TextStyle(color: Colors.white, fontSize: 16),
             decoration: InputDecoration(
-              hintText: '🔍 Discover live rooms, DJs & vibes...',
+              hintText: 'ðŸ” Discover live rooms, DJs & vibes...',
               hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontSize: 14),
               prefixIcon: Transform.scale(
                 scale: _pulseAnimation.value * 0.1 + 0.9,
@@ -465,7 +465,7 @@ class _HomePageState extends ConsumerState<HomePage> with TickerProviderStateMix
                   builder: (context, child) {
                     return Transform.scale(
                       scale: _pulseAnimation.value * 0.2 + 0.8,
-                      child: const Text('🔥', style: TextStyle(fontSize: 24)),
+                      child: const Text('ðŸ”¥', style: TextStyle(fontSize: 24)),
                     );
                   },
                 ),
@@ -561,7 +561,7 @@ class _HomePageState extends ConsumerState<HomePage> with TickerProviderStateMix
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Be the first to start the party! 🎶',
+                          'Be the first to start the party! ðŸŽ¶',
                           style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 14),
                         ),
                       ],

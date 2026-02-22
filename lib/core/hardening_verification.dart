@@ -1,4 +1,4 @@
-// ignore_for_file: avoid_print
+﻿// ignore_for_file: avoid_print
 
 /// PHASE 7 - HARDENING & VERIFICATION
 ///
@@ -38,7 +38,7 @@ library;
 class ReloadSafetyTest {
   static void test() {
     print('''
-    ✅ TEST: Reload Mid-Call
+    âœ… TEST: Reload Mid-Call
     1. Start video room
     2. Verify camera active
     3. Hot reload (R)
@@ -51,7 +51,7 @@ class ReloadSafetyTest {
 /// TEST 2: Permission Denied Handling
 ///
 /// Steps:
-/// 1. Clear browser permissions (Settings → Cookies and Site Data → Clear)
+/// 1. Clear browser permissions (Settings â†’ Cookies and Site Data â†’ Clear)
 /// 2. Launch app, join room
 /// 3. When browser requests permission, DENY (click deny, not allow)
 /// 4. Expected: Game shows friendly error, doesn't crash
@@ -71,7 +71,7 @@ class ReloadSafetyTest {
 class PermissionDeniedTest {
   static void test() {
     print('''
-    ✅ TEST: Permission Denied
+    âœ… TEST: Permission Denied
     1. Clear browser permissions
     2. Deny camera permission
     3. Verify friendly error shown
@@ -83,7 +83,7 @@ class PermissionDeniedTest {
 /// TEST 3: Network Drop Recovery
 ///
 /// Steps:
-/// 1. Open Developer Tools (F12) → Network tab
+/// 1. Open Developer Tools (F12) â†’ Network tab
 /// 2. Join video room (confirm active)
 /// 3. Throttle network (Slow 3G)
 /// 4. Wait 10+ seconds
@@ -104,7 +104,7 @@ class PermissionDeniedTest {
 class NetworkDropTest {
   static void test() {
     print('''
-    ✅ TEST: Network Drop
+    âœ… TEST: Network Drop
     1. Open DevTools Network tab
     2. Start video room
     3. Throttle to Slow 3G
@@ -139,7 +139,7 @@ class NetworkDropTest {
 class RoomLeaveCleanupTest {
   static void test() {
     print('''
-    ✅ TEST: Room Leave Cleanup
+    âœ… TEST: Room Leave Cleanup
     1. Join video room
     2. Confirm camera/mic active
     3. Click Leave Room
@@ -172,7 +172,7 @@ class RoomLeaveCleanupTest {
 class UnauthorizedAccessTest {
   static void test() {
     print('''
-    ✅ TEST: Unauthorized Room Access
+    âœ… TEST: Unauthorized Room Access
     1. Log out completely
     2. Manually navigate to /rooms/room-123
     3. Verify redirected to login
@@ -198,7 +198,7 @@ class UnauthorizedAccessTest {
 class IncompleteProfileTest {
   static void test() {
     print('''
-    ✅ TEST: Incomplete Profile
+    âœ… TEST: Incomplete Profile
     1. Create new account (don't set displayName)
     2. Try to join room
     3. Verify error: "Complete your profile"
@@ -227,7 +227,7 @@ class IncompleteProfileTest {
 class MultiTabTest {
   static void test() {
     print('''
-    ✅ TEST: Multi-Tab
+    âœ… TEST: Multi-Tab
     1. Open app in 2 browser tabs
     2. Tab 1: Join room A, start camera
     3. Tab 2: Join room B, start camera
@@ -242,42 +242,42 @@ class MultiTabTest {
 ///
 /// Before marking production-ready, verify:
 ///
-/// ✅ Bridge Loading:
+/// âœ… Bridge Loading:
 ///    - window.AgoraWebBridgeV5 exists on page load
 ///    - All methods are functions (not undefined)
 ///    - SDK loads within 15 seconds
 ///
-/// ✅ Auth Flow:
+/// âœ… Auth Flow:
 ///    - Unauthenticated users blocked from rooms
 ///    - Email verification works
 ///    - Profile completion enforced
 ///    - Logout clears state properly
 ///
-/// ✅ Video Quality:
+/// âœ… Video Quality:
 ///    - 720p resolution achieved (if network allows)
 ///    - Audio clear (check browser DevTools audio)
 ///    - Minimal latency (<1s for local, <2s for remote)
 ///    - No packet loss shown in WebRTC stats
 ///
-/// ✅ Error States:
+/// âœ… Error States:
 ///    - All error paths show user-friendly messages
 ///    - No JavaScript exceptions in console
 ///    - No unhandled Promise rejections
 ///    - Timeouts handled with retries
 ///
-/// ✅ Performance:
+/// âœ… Performance:
 ///    - Initial load <3 seconds
 ///    - Join channel <5 seconds
 ///    - No memory leaks after 30+ minutes
 ///    - CPU usage <20% during call
 ///
-/// ✅ Firestore:
+/// âœ… Firestore:
 ///    - Presence docs created/updated/deleted correctly
 ///    - Messages indexed by timestamp
 ///    - Rules enforce auth correctly
 ///    - No orphaned data left after cleanup
 ///
-/// ✅ Browser Compatibility:
+/// âœ… Browser Compatibility:
 ///    - Chrome/Edge: Full support
 ///    - Firefox: Full support
 ///    - Safari: Full support (iOS 11+)
@@ -314,7 +314,7 @@ class ProductionReadinessChecklist {
   static void printChecklist() {
     print('\n=== PRODUCTION READINESS CHECKLIST ===\n');
     for (int i = 0; i < checks.length; i++) {
-      print('${i + 1}. ☐ ${checks[i]}');
+      print('${i + 1}. â˜ ${checks[i]}');
     }
     print('\n=====================================\n');
   }
@@ -323,5 +323,7 @@ class ProductionReadinessChecklist {
 void main() {
   ProductionReadinessChecklist.printChecklist();
 }
+
+
 
 

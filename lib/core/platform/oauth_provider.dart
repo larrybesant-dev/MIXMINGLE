@@ -1,4 +1,4 @@
-/// OAuth Provider
+﻿/// OAuth Provider
 ///
 /// Manages OAuth 2.0 authentication flows for the Mix & Mingle platform,
 /// including authorization code flow, token management, and provider integration.
@@ -276,7 +276,7 @@ class OAuthProvider {
     String? userInfoEndpoint,
     bool pkceEnabled = true,
   }) async {
-    debugPrint('🔐 [OAuthProvider] Configuring provider: ${type.name}');
+    debugPrint('ðŸ” [OAuthProvider] Configuring provider: ${type.name}');
 
     try {
       final endpoints = _getDefaultEndpoints(type);
@@ -301,10 +301,10 @@ class OAuthProvider {
         parameters: {'type': type.name},
       );
 
-      debugPrint('✅ [OAuthProvider] Provider configured: ${type.name}');
+      debugPrint('âœ… [OAuthProvider] Provider configured: ${type.name}');
       return config;
     } catch (e) {
-      debugPrint('❌ [OAuthProvider] Failed to configure provider: $e');
+      debugPrint('âŒ [OAuthProvider] Failed to configure provider: $e');
       rethrow;
     }
   }
@@ -395,7 +395,7 @@ class OAuthProvider {
     List<String>? additionalScopes,
     Map<String, String>? additionalParams,
   }) async {
-    debugPrint('🚀 [OAuthProvider] Starting authorization for: $providerId');
+    debugPrint('ðŸš€ [OAuthProvider] Starting authorization for: $providerId');
 
     try {
       // Get provider config
@@ -450,10 +450,10 @@ class OAuthProvider {
       final authUrl = Uri.parse(providerData['authorizationEndpoint'] as String)
           .replace(queryParameters: params);
 
-      debugPrint('✅ [OAuthProvider] Authorization URL generated');
+      debugPrint('âœ… [OAuthProvider] Authorization URL generated');
       return authUrl.toString();
     } catch (e) {
-      debugPrint('❌ [OAuthProvider] Failed to start authorization: $e');
+      debugPrint('âŒ [OAuthProvider] Failed to start authorization: $e');
       rethrow;
     }
   }
@@ -481,7 +481,7 @@ class OAuthProvider {
     String? error,
     String? errorDescription,
   }) async {
-    debugPrint('📥 [OAuthProvider] Handling callback');
+    debugPrint('ðŸ“¥ [OAuthProvider] Handling callback');
 
     // Check for errors
     if (error != null) {
@@ -539,10 +539,10 @@ class OAuthProvider {
         parameters: {'provider_id': request.providerId},
       );
 
-      debugPrint('✅ [OAuthProvider] Authorization successful');
+      debugPrint('âœ… [OAuthProvider] Authorization successful');
       return result;
     } catch (e) {
-      debugPrint('❌ [OAuthProvider] Callback handling failed: $e');
+      debugPrint('âŒ [OAuthProvider] Callback handling failed: $e');
       final result = OAuthConnectionResult.failure(e.toString());
       _connectionController.add(result);
       return result;
@@ -620,7 +620,7 @@ class OAuthProvider {
     required String providerId,
     required String refreshToken,
   }) async {
-    debugPrint('🔄 [OAuthProvider] Refreshing token');
+    debugPrint('ðŸ”„ [OAuthProvider] Refreshing token');
 
     try {
       // In production, make actual HTTP request
@@ -635,7 +635,7 @@ class OAuthProvider {
         expiresAt: now.add(const Duration(hours: 1)),
       );
     } catch (e) {
-      debugPrint('❌ [OAuthProvider] Token refresh failed: $e');
+      debugPrint('âŒ [OAuthProvider] Token refresh failed: $e');
       return null;
     }
   }
@@ -645,14 +645,14 @@ class OAuthProvider {
     required String providerId,
     required String accessToken,
   }) async {
-    debugPrint('🗑️ [OAuthProvider] Revoking tokens');
+    debugPrint('ðŸ—‘ï¸ [OAuthProvider] Revoking tokens');
 
     try {
       // In production, call revocation endpoint
       await Future.delayed(const Duration(milliseconds: 100));
       return true;
     } catch (e) {
-      debugPrint('❌ [OAuthProvider] Token revocation failed: $e');
+      debugPrint('âŒ [OAuthProvider] Token revocation failed: $e');
       return false;
     }
   }
@@ -689,7 +689,7 @@ class OAuthProvider {
       await _connectionsCollection.doc(connectionId).delete();
       return true;
     } catch (e) {
-      debugPrint('❌ [OAuthProvider] Disconnect failed: $e');
+      debugPrint('âŒ [OAuthProvider] Disconnect failed: $e');
       return false;
     }
   }

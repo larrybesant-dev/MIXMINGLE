@@ -1,4 +1,4 @@
-/// Integrations Service
+﻿/// Integrations Service
 ///
 /// Manages third-party platform integrations including payment providers,
 /// marketing platforms, CRM systems, and streaming platforms.
@@ -335,7 +335,7 @@ class IntegrationsService {
     List<String>? currencies,
     List<String>? methods,
   }) async {
-    debugPrint('💳 [Integrations] Integrating payment provider: ${provider.name}');
+    debugPrint('ðŸ’³ [Integrations] Integrating payment provider: ${provider.name}');
 
     try {
       final id = 'payment_${provider.name}_${DateTime.now().millisecondsSinceEpoch}';
@@ -387,10 +387,10 @@ class IntegrationsService {
         parameters: {'provider': provider.name, 'live_mode': liveMode},
       );
 
-      debugPrint('✅ [Integrations] Payment provider connected: ${provider.name}');
+      debugPrint('âœ… [Integrations] Payment provider connected: ${provider.name}');
       return IntegrationResult(success: true, integration: integration);
     } catch (e) {
-      debugPrint('❌ [Integrations] Payment integration failed: $e');
+      debugPrint('âŒ [Integrations] Payment integration failed: $e');
       return IntegrationResult(success: false, error: e.toString());
     }
   }
@@ -436,7 +436,7 @@ class IntegrationsService {
     List<String>? features,
     Map<String, dynamic>? trackingConfig,
   }) async {
-    debugPrint('📢 [Integrations] Integrating marketing platform: ${platform.name}');
+    debugPrint('ðŸ“¢ [Integrations] Integrating marketing platform: ${platform.name}');
 
     try {
       final id = 'marketing_${platform.name}_${DateTime.now().millisecondsSinceEpoch}';
@@ -485,10 +485,10 @@ class IntegrationsService {
         parameters: {'platform': platform.name},
       );
 
-      debugPrint('✅ [Integrations] Marketing platform connected: ${platform.name}');
+      debugPrint('âœ… [Integrations] Marketing platform connected: ${platform.name}');
       return IntegrationResult(success: true, integration: integration);
     } catch (e) {
-      debugPrint('❌ [Integrations] Marketing integration failed: $e');
+      debugPrint('âŒ [Integrations] Marketing integration failed: $e');
       return IntegrationResult(success: false, error: e.toString());
     }
   }
@@ -544,7 +544,7 @@ class IntegrationsService {
     SyncDirection direction = SyncDirection.bidirectional,
     Duration syncInterval = const Duration(hours: 1),
   }) async {
-    debugPrint('📊 [Integrations] Integrating CRM: ${system.name}');
+    debugPrint('ðŸ“Š [Integrations] Integrating CRM: ${system.name}');
 
     try {
       final id = 'crm_${system.name}_${DateTime.now().millisecondsSinceEpoch}';
@@ -593,10 +593,10 @@ class IntegrationsService {
         parameters: {'system': system.name},
       );
 
-      debugPrint('✅ [Integrations] CRM connected: ${system.name}');
+      debugPrint('âœ… [Integrations] CRM connected: ${system.name}');
       return IntegrationResult(success: true, integration: integration);
     } catch (e) {
-      debugPrint('❌ [Integrations] CRM integration failed: $e');
+      debugPrint('âŒ [Integrations] CRM integration failed: $e');
       return IntegrationResult(success: false, error: e.toString());
     }
   }
@@ -630,7 +630,7 @@ class IntegrationsService {
     bool simultaneousStream = true,
     StreamQuality quality = StreamQuality.hd,
   }) async {
-    debugPrint('📺 [Integrations] Integrating streaming platform: ${platform.name}');
+    debugPrint('ðŸ“º [Integrations] Integrating streaming platform: ${platform.name}');
 
     try {
       final id = 'streaming_${platform.name}_${DateTime.now().millisecondsSinceEpoch}';
@@ -684,10 +684,10 @@ class IntegrationsService {
         },
       );
 
-      debugPrint('✅ [Integrations] Streaming platform connected: ${platform.name}');
+      debugPrint('âœ… [Integrations] Streaming platform connected: ${platform.name}');
       return IntegrationResult(success: true, integration: integration);
     } catch (e) {
-      debugPrint('❌ [Integrations] Streaming integration failed: $e');
+      debugPrint('âŒ [Integrations] Streaming integration failed: $e');
       return IntegrationResult(success: false, error: e.toString());
     }
   }
@@ -725,7 +725,7 @@ class IntegrationsService {
       });
       return true;
     } catch (e) {
-      debugPrint('❌ [Integrations] Disconnect failed: $e');
+      debugPrint('âŒ [Integrations] Disconnect failed: $e');
       return false;
     }
   }
@@ -738,7 +738,7 @@ class IntegrationsService {
       });
       return true;
     } catch (e) {
-      debugPrint('❌ [Integrations] Sync failed: $e');
+      debugPrint('âŒ [Integrations] Sync failed: $e');
       return false;
     }
   }

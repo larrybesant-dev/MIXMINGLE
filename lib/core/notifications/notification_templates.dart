@@ -1,4 +1,4 @@
-/// Notification Templates
+﻿/// Notification Templates
 ///
 /// Predefined notification templates for various app events including
 /// daily return, favorite host live, room activity, referral rewards,
@@ -31,13 +31,13 @@ class NotificationTemplates {
     String body;
 
     if (currentStreak == 0) {
-      title = 'Your daily reward is waiting! 🎁';
+      title = 'Your daily reward is waiting! ðŸŽ';
       body = 'Claim your free $coinsAvailable coins and spotlight minutes!';
     } else if (currentStreak < 7) {
-      title = 'Keep your streak alive! 🔥';
+      title = 'Keep your streak alive! ðŸ”¥';
       body = '$currentStreak-day streak! Claim today for $coinsAvailable coins.';
     } else {
-      title = 'You\'re on fire! 🔥🔥';
+      title = 'You\'re on fire! ðŸ”¥ðŸ”¥';
       body = '$currentStreak-day streak! Double coins waiting for you!';
     }
 
@@ -70,7 +70,7 @@ class NotificationTemplates {
   }) {
     return NotificationTemplate(
       type: NotificationType.favoriteHostLive,
-      title: '$hostName is live! 🎤',
+      title: '$hostName is live! ðŸŽ¤',
       body: 'Join "$roomTitle" now!',
       data: {
         'route': '/room/$roomId',
@@ -103,7 +103,7 @@ class NotificationTemplates {
 
     switch (activityType) {
       case RoomActivityType.mentioned:
-        title = 'You were mentioned! 💬';
+        title = 'You were mentioned! ðŸ’¬';
         body = userName != null
             ? '$userName mentioned you in "$roomTitle"'
             : 'Someone mentioned you in "$roomTitle"';
@@ -111,7 +111,7 @@ class NotificationTemplates {
         break;
 
       case RoomActivityType.invited:
-        title = 'You\'re invited! 🎉';
+        title = 'You\'re invited! ðŸŽ‰';
         body = userName != null
             ? '$userName invited you to "$roomTitle"'
             : 'You\'ve been invited to "$roomTitle"';
@@ -119,25 +119,25 @@ class NotificationTemplates {
         break;
 
       case RoomActivityType.promoted:
-        title = 'You\'ve been promoted! ⭐';
+        title = 'You\'ve been promoted! â­';
         body = 'You\'re now a speaker in "$roomTitle"';
         icon = 'star';
         break;
 
       case RoomActivityType.trending:
-        title = 'Room is trending! 📈';
+        title = 'Room is trending! ðŸ“ˆ';
         body = '"$roomTitle" has ${participantCount ?? 'many'} people!';
         icon = 'trending_up';
         break;
 
       case RoomActivityType.ending:
-        title = 'Room ending soon ⏰';
+        title = 'Room ending soon â°';
         body = '"$roomTitle" will end in 5 minutes';
         icon = 'timer';
         break;
 
       case RoomActivityType.newHost:
-        title = 'New host! 🎤';
+        title = 'New host! ðŸŽ¤';
         body = '${userName ?? 'Someone'} is hosting "$roomTitle"';
         icon = 'person';
         break;
@@ -175,16 +175,16 @@ class NotificationTemplates {
     String body;
 
     if (totalReferrals == 1) {
-      title = 'Your first referral! 🎉';
+      title = 'Your first referral! ðŸŽ‰';
       body = '$referredUserName joined using your code! +$coinsEarned coins!';
     } else if (totalReferrals == 5) {
-      title = 'Super Referrer! ⭐';
+      title = 'Super Referrer! â­';
       body = '5 friends joined! $referredUserName earned you +$coinsEarned coins!';
     } else if (totalReferrals == 10) {
-      title = 'Referral Champion! 🏆';
+      title = 'Referral Champion! ðŸ†';
       body = '10 friends and counting! +$coinsEarned coins from $referredUserName!';
     } else {
-      title = 'Referral Reward! 💰';
+      title = 'Referral Reward! ðŸ’°';
       body = '$referredUserName joined! +$coinsEarned coins for you!';
     }
 
@@ -219,7 +219,7 @@ class NotificationTemplates {
 
     switch (offerType) {
       case VipOfferType.firstTimeOffer:
-        title = 'Special Offer Just for You! 🌟';
+        title = 'Special Offer Just for You! ðŸŒŸ';
         body = discountPercent != null
             ? '$discountPercent% off VIP - Limited time!'
             : 'Unlock VIP features at a special price!';
@@ -227,7 +227,7 @@ class NotificationTemplates {
         break;
 
       case VipOfferType.limitedTime:
-        title = 'Flash Sale! ⚡';
+        title = 'Flash Sale! âš¡';
         body = expiresIn != null
             ? '$discountPercent% off VIP for $expiresIn!'
             : 'Don\'t miss this VIP deal!';
@@ -235,25 +235,25 @@ class NotificationTemplates {
         break;
 
       case VipOfferType.weekendSpecial:
-        title = 'Weekend VIP Special! 🎊';
+        title = 'Weekend VIP Special! ðŸŽŠ';
         body = 'Celebrate with $discountPercent% off VIP membership!';
         color = '#E91E63'; // Pink
         break;
 
       case VipOfferType.loyaltyReward:
-        title = 'You\'ve Earned This! ❤️';
+        title = 'You\'ve Earned This! â¤ï¸';
         body = 'Exclusive VIP offer for loyal members like you!';
         color = '#F44336'; // Red
         break;
 
       case VipOfferType.upgradeReminder:
-        title = 'Ready to Upgrade? 👑';
+        title = 'Ready to Upgrade? ðŸ‘‘';
         body = 'Unlock unlimited rooms, weekly coins & more!';
         color = '#FFC107'; // Amber
         break;
 
       case VipOfferType.expiringSoon:
-        title = 'Your Offer Expires Soon! ⏰';
+        title = 'Your Offer Expires Soon! â°';
         body = expiresIn != null
             ? 'Only $expiresIn left to get $discountPercent% off VIP!'
             : 'Last chance to grab this VIP deal!';
@@ -311,7 +311,7 @@ class NotificationTemplates {
   }) {
     return NotificationTemplate(
       type: NotificationType.newFollower,
-      title: 'New Follower! 👋',
+      title: 'New Follower! ðŸ‘‹',
       body: '$userName started following you',
       data: {
         'route': '/profile/$userId',
@@ -332,7 +332,7 @@ class NotificationTemplates {
   }) {
     return NotificationTemplate(
       type: NotificationType.achievement,
-      title: 'Achievement Unlocked! 🏆',
+      title: 'Achievement Unlocked! ðŸ†',
       body: coinsReward != null
           ? '$achievementName - +$coinsReward coins!'
           : achievementName,
@@ -355,7 +355,7 @@ class NotificationTemplates {
   }) {
     return NotificationTemplate(
       type: NotificationType.eventReminder,
-      title: 'Event Starting Soon! 📅',
+      title: 'Event Starting Soon! ðŸ“…',
       body: '"$eventTitle" starts in $startsIn',
       data: {
         'route': '/event/$eventId',
@@ -391,9 +391,9 @@ class NotificationTemplates {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ [Notification] Sent ${template.type.name} to $userId');
+      debugPrint('âœ… [Notification] Sent ${template.type.name} to $userId');
     } catch (e) {
-      debugPrint('❌ [Notification] Failed to send: $e');
+      debugPrint('âŒ [Notification] Failed to send: $e');
     }
   }
 
@@ -423,9 +423,9 @@ class NotificationTemplates {
       }
 
       await batch.commit();
-      debugPrint('✅ [Notification] Batch sent to ${userIds.length} users');
+      debugPrint('âœ… [Notification] Batch sent to ${userIds.length} users');
     } catch (e) {
-      debugPrint('❌ [Notification] Failed to send batch: $e');
+      debugPrint('âŒ [Notification] Failed to send batch: $e');
     }
   }
 }

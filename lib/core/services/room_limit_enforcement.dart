@@ -1,4 +1,4 @@
-import '../../services/room_limit_manager.dart';
+﻿import '../../services/room_limit_manager.dart';
 import '../feature_flags.dart';
 import '../utils/app_logger.dart';
 
@@ -69,9 +69,9 @@ class RoomLimitEnforcement {
     try {
       final success = await _limitManager.addPublisher(roomId, userId);
       if (success) {
-        AppLogger.info('✅ Registered publisher: $userId in room $roomId');
+        AppLogger.info('âœ… Registered publisher: $userId in room $roomId');
       } else {
-        AppLogger.warning('❌ Failed to register publisher: room at capacity');
+        AppLogger.warning('âŒ Failed to register publisher: room at capacity');
       }
       return success;
     } catch (e) {
@@ -85,7 +85,7 @@ class RoomLimitEnforcement {
   static Future<void> unregisterPublisher(String roomId, String userId) async {
     try {
       await _limitManager.removePublisher(roomId, userId);
-      AppLogger.info('✅ Unregistered publisher: $userId from room $roomId');
+      AppLogger.info('âœ… Unregistered publisher: $userId from room $roomId');
     } catch (e) {
       AppLogger.error('Error unregistering publisher: $e');
     }
@@ -327,3 +327,5 @@ enum GoLiveButtonState {
   roomAtCapacity,
   error,
 }
+
+

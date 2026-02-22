@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mix_and_mingle/providers/auth_providers.dart';
+import 'package:mixmingle/providers/auth_providers.dart';
 
 class WithdrawalPage extends ConsumerStatefulWidget {
   const WithdrawalPage({super.key});
@@ -17,7 +17,7 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
 
-  // 🔥 Reactive auth getter using Riverpod authStateProvider
+  // ðŸ”¥ Reactive auth getter using Riverpod authStateProvider
   User? get currentUser => ref.watch(authStateProvider).value;
 
   Future<void> _submitWithdrawal() async {

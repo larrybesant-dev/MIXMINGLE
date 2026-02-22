@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// Base shimmer animation for skeleton loaders
 class ShimmerSkeleton extends StatefulWidget {

@@ -1,4 +1,4 @@
-class FeaturesConfig {
+﻿class FeaturesConfig {
   // Feature flags
   static const bool enableSpeedDating = true;
   static const bool enableEvents = true;
@@ -12,3 +12,5 @@ class FeaturesConfig {
   static const bool enableDebugMode = false;
   static const bool enableAnalytics = true;
 }
+
+

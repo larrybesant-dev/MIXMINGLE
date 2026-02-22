@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/questionnaire_answers.dart';
 import '../models/matching_profile.dart';
@@ -125,7 +125,7 @@ class _MatchCard extends ConsumerWidget {
                           ),
                         ),
                         Text(
-                          '${match.age} years old • ${match.distanceInMiles.toStringAsFixed(1)} miles away',
+                          '${match.age} years old â€¢ ${match.distanceInMiles.toStringAsFixed(1)} miles away',
                           style: TextStyle(color: Colors.grey[600]),
                         ),
                       ],
@@ -384,7 +384,7 @@ class _MatchDetailsSheet extends StatelessWidget {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('•  '),
+              const Text('â€¢  '),
               Expanded(child: Text(reason)),
             ],
           ),

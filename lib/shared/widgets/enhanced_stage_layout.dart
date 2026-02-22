@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import '../models/agora_participant.dart';
 
@@ -245,7 +245,7 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          '🎤 On Stage',
+                          'ðŸŽ¤ On Stage',
                           style: TextStyle(
                             color: Colors.amber[300],
                             fontSize: 13,
@@ -342,7 +342,7 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: const Text(
-                            '🎯 Your Turn',
+                            'ðŸŽ¯ Your Turn',
                             style: TextStyle(
                               color: Colors.pinkAccent,
                               fontSize: 12,

@@ -1,3 +1,6 @@
+﻿library;
+
+import 'package:flutter/material.dart';
 /// Chat Box Widget - Enhanced with message animations and smooth picker transitions
 ///
 /// Features:
@@ -14,7 +17,6 @@
 /// ```dart
 /// ChatBoxWidget()
 /// ```
-library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -41,12 +43,12 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
   late Animation<double> _pickerHeightAnimation;
 
   final List<String> _emojis = [
-    '😀', '😂', '😍', '🥰', '😎', '🤔', '😒', '🔥',
-    '💯', '👍', '👏', '🎉', '🎊', '💪', '✨', '🌟',
+    'ðŸ˜€', 'ðŸ˜‚', 'ðŸ˜', 'ðŸ¥°', 'ðŸ˜Ž', 'ðŸ¤”', 'ðŸ˜’', 'ðŸ”¥',
+    'ðŸ’¯', 'ðŸ‘', 'ðŸ‘', 'ðŸŽ‰', 'ðŸŽŠ', 'ðŸ’ª', 'âœ¨', 'ðŸŒŸ',
   ];
 
   final List<String> _stickers = [
-    '👋', '🤝', '💼', '🎯', '🎬', '🎨', '🎭', '🎮',
+    'ðŸ‘‹', 'ðŸ¤', 'ðŸ’¼', 'ðŸŽ¯', 'ðŸŽ¬', 'ðŸŽ¨', 'ðŸŽ­', 'ðŸŽ®',
   ];
 
   @override
@@ -138,7 +140,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
           ),
           const SizedBox(height: Spacing.sm),
           Text(
-            'Go find someone to chat with 👉',
+            'Go find someone to chat with ðŸ‘‰',
             style: AppTextStyles.body2.copyWith(
               color: DesignColors.textLightGray,
             ),
@@ -230,7 +232,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
             maxLines: 3,
             minLines: 1,
             decoration: InputDecoration(
-              hintText: 'Say hi 👋 ... or share a vibe',
+              hintText: 'Say hi ðŸ‘‹ ... or share a vibe',
               hintStyle: TextStyle(
                 color: DesignColors.textLightGray,
               ),
@@ -264,7 +266,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
 
         /// Sticker button
         _buildPickerButton(
-          label: '🎨',
+          label: 'ðŸŽ¨',
           onTap: _toggleStickerPicker,
           isActive: _showStickerPicker,
         ),
@@ -717,7 +719,3 @@ class _ChatMessageTile extends ConsumerWidget {
     }
   }
 }
-
-
-
-

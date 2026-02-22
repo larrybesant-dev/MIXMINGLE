@@ -1,21 +1,21 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../models/agora_participant.dart';
 
-/// Stage Layout — Spotlight + Thumbnails
+/// Stage Layout â€” Spotlight + Thumbnails
 /// Used in turn-based rooms to highlight the current speaker
 ///
 /// Layout:
 /// ```
-/// ┌─────────────────────────────────┐
-/// │                                 │
-/// │      Spotlight (Speaker)        │ ← Large, centered
-/// │                                 │
-/// └─────────────────────────────────┘
-/// ┌─────────────────────────────────┐
-/// │ Thumb  Thumb  Thumb  Thumb ...  │ ← 3-column grid, scrollable
-/// │ Thumb  Thumb  Thumb  Thumb ...  │
-/// │                                 │
-/// └─────────────────────────────────┘
+/// â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+/// â”‚                                 â”‚
+/// â”‚      Spotlight (Speaker)        â”‚ â† Large, centered
+/// â”‚                                 â”‚
+/// â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
+/// â”Œâ”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”
+/// â”‚ Thumb  Thumb  Thumb  Thumb ...  â”‚ â† 3-column grid, scrollable
+/// â”‚ Thumb  Thumb  Thumb  Thumb ...  â”‚
+/// â”‚                                 â”‚
+/// â””â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”˜
 /// ```
 class StageLayout extends StatefulWidget {
   final int? speakerId; // Agora UID of current speaker

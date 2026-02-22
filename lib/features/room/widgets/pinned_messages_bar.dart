@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/providers/chat_providers.dart';
+import 'package:mixmingle/providers/chat_providers.dart';
 
 class PinnedMessagesBar extends ConsumerWidget {
   final String roomId;

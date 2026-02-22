@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:mix_and_mingle/app_routes.dart';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:mixmingle/app_routes.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class SplashScreen extends StatelessWidget {

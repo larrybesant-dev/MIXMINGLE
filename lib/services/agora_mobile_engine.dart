@@ -1,4 +1,4 @@
-import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+﻿import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/foundation.dart';
 import '../models/remote_user.dart';
 import 'video_engine_interface.dart';
@@ -20,20 +20,20 @@ class AgoraMobileEngine implements IVideoEngine {
 
       _engine.registerEventHandler(RtcEngineEventHandler(
         onUserJoined: (connection, remoteUid, elapsed) {
-          debugPrint('🎥 Remote user joined: $remoteUid');
+          debugPrint('ðŸŽ¥ Remote user joined: $remoteUid');
           _remoteUsersMap[remoteUid] = RemoteUser(uid: remoteUid);
           _remoteUsersController.add(_remoteUsersMap.values.toList());
         },
         onUserOffline: (connection, remoteUid, reason) {
-          debugPrint('⛔ Remote user left: $remoteUid (reason: $reason)');
+          debugPrint('â›” Remote user left: $remoteUid (reason: $reason)');
           _remoteUsersMap.remove(remoteUid);
           _remoteUsersController.add(_remoteUsersMap.values.toList());
         },
       ));
 
-      debugPrint('✅ Agora Mobile Engine initialized');
+      debugPrint('âœ… Agora Mobile Engine initialized');
     } catch (e) {
-      debugPrint('❌ Error initializing Agora Mobile Engine: $e');
+      debugPrint('âŒ Error initializing Agora Mobile Engine: $e');
       rethrow;
     }
   }
@@ -47,9 +47,9 @@ class AgoraMobileEngine implements IVideoEngine {
         uid: uid,
         options: const ChannelMediaOptions(),
       );
-      debugPrint('✅ Joined channel: $channel with UID: $uid');
+      debugPrint('âœ… Joined channel: $channel with UID: $uid');
     } catch (e) {
-      debugPrint('❌ Error joining channel: $e');
+      debugPrint('âŒ Error joining channel: $e');
       rethrow;
     }
   }
@@ -60,9 +60,9 @@ class AgoraMobileEngine implements IVideoEngine {
       await _engine.leaveChannel();
       _remoteUsersMap.clear();
       _remoteUsersController.add([]);
-      debugPrint('✅ Left channel');
+      debugPrint('âœ… Left channel');
     } catch (e) {
-      debugPrint('❌ Error leaving channel: $e');
+      debugPrint('âŒ Error leaving channel: $e');
       rethrow;
     }
   }
@@ -72,9 +72,9 @@ class AgoraMobileEngine implements IVideoEngine {
     try {
       await _engine.enableLocalAudio(enableAudio);
       await _engine.enableLocalVideo(enableVideo);
-      debugPrint('✅ Local tracks enabled - Audio: $enableAudio, Video: $enableVideo');
+      debugPrint('âœ… Local tracks enabled - Audio: $enableAudio, Video: $enableVideo');
     } catch (e) {
-      debugPrint('❌ Error enabling local tracks: $e');
+      debugPrint('âŒ Error enabling local tracks: $e');
       rethrow;
     }
   }
@@ -83,9 +83,9 @@ class AgoraMobileEngine implements IVideoEngine {
   Future<void> setAudioMuted(bool muted) async {
     try {
       await _engine.muteLocalAudioStream(muted);
-      debugPrint('✅ Audio ${muted ? 'muted' : 'unmuted'}');
+      debugPrint('âœ… Audio ${muted ? 'muted' : 'unmuted'}');
     } catch (e) {
-      debugPrint('❌ Error setting audio mute: $e');
+      debugPrint('âŒ Error setting audio mute: $e');
       rethrow;
     }
   }
@@ -94,9 +94,9 @@ class AgoraMobileEngine implements IVideoEngine {
   Future<void> setVideoMuted(bool muted) async {
     try {
       await _engine.muteLocalVideoStream(muted);
-      debugPrint('✅ Video ${muted ? 'muted' : 'unmuted'}');
+      debugPrint('âœ… Video ${muted ? 'muted' : 'unmuted'}');
     } catch (e) {
-      debugPrint('❌ Error setting video mute: $e');
+      debugPrint('âŒ Error setting video mute: $e');
       rethrow;
     }
   }

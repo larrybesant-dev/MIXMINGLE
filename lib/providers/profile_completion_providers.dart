@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'auth_providers.dart';
 
 final profileCompletionProvider = Provider<bool>((ref) {
@@ -23,3 +23,5 @@ final needsOnboardingProvider = Provider<bool>((ref) {
 
   return currentUserProfile != null && !isProfileComplete;
 });
+
+

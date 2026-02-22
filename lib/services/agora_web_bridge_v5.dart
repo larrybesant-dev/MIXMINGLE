@@ -1,8 +1,8 @@
-// Agora Web Bridge v5 - Production-Ready Web Interop
+﻿// Agora Web Bridge v5 - Production-Ready Web Interop
 // Interfaces with window.agoraWebBridge from agora_bridge.js
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
-import 'package:mix_and_mingle/core/utils/app_logger.dart';
+import 'package:mixmingle/core/utils/app_logger.dart';
 import 'dart:async';
 import 'dart:js_interop';
 import 'dart:js_interop_unsafe';
@@ -79,13 +79,13 @@ class AgoraWebBridge {
       debugPrint('[BRIDGE] Checking bridge availability...');
 
       if (!isBridgeReady) {
-        debugPrint('[BRIDGE] ❌ JS bridge not ready - check agora_bridge.js loaded in index.html');
-        AppLogger.error('❌ Agora JS bridge not loaded');
+        debugPrint('[BRIDGE] âŒ JS bridge not ready - check agora_bridge.js loaded in index.html');
+        AppLogger.error('âŒ Agora JS bridge not loaded');
         return false;
       }
 
-      debugPrint('[BRIDGE] ✅ Bridge ready, initializing with appId: ${appId.substring(0, 8)}...');
-      AppLogger.info('🌐 Initializing Agora Web SDK v5...');
+      debugPrint('[BRIDGE] âœ… Bridge ready, initializing with appId: ${appId.substring(0, 8)}...');
+      AppLogger.info('ðŸŒ Initializing Agora Web SDK v5...');
 
       // Call the actual JS init function (this starts async SDK load)
       await _jsInit(appId.toJS).toDart;
@@ -103,11 +103,11 @@ class AgoraWebBridge {
 
       _initialized = true;
       _appId = appId;
-      AppLogger.info('✅ Agora Web SDK v5 initialized and state verified');
+      AppLogger.info('âœ… Agora Web SDK v5 initialized and state verified');
       debugPrint('[BRIDGE] Init successful with state verification');
       return true;
     } catch (e) {
-      AppLogger.error('❌ Agora init failed: $e');
+      AppLogger.error('âŒ Agora init failed: $e');
       debugPrint('[BRIDGE] Init error: $e');
       return false;
     }
@@ -123,21 +123,21 @@ class AgoraWebBridge {
 
     try {
       debugPrint('[BRIDGE] Joining channel (simple): $channel, uid: $uid');
-      AppLogger.info('🔗 Joining Agora channel: $channel...');
+      AppLogger.info('ðŸ”— Joining Agora channel: $channel...');
 
       final result = await _jsJoinChannel(token.toJS, channel.toJS, uid.toJS).toDart;
 
       if (result?.toDart == true) {
-        AppLogger.info('✅ Joined channel successfully');
+        AppLogger.info('âœ… Joined channel successfully');
         debugPrint('[BRIDGE] Join channel successful');
         return true;
       } else {
-        AppLogger.error('❌ Join channel returned false');
+        AppLogger.error('âŒ Join channel returned false');
         debugPrint('[BRIDGE] Join channel returned false');
         return false;
       }
     } catch (e) {
-      AppLogger.error('❌ Failed to join channel: $e');
+      AppLogger.error('âŒ Failed to join channel: $e');
       debugPrint('[BRIDGE] joinChannel error: $e');
       return false;
     }
@@ -154,7 +154,7 @@ class AgoraWebBridge {
 
     try {
       debugPrint('[BRIDGE] Joining channel: $channelName, uid: $uid');
-      AppLogger.info('🔗 Joining Agora channel: $channelName...');
+      AppLogger.info('ðŸ”— Joining Agora channel: $channelName...');
 
       final result = await _jsFlatJoinChannel(
         appId.toJS,
@@ -164,16 +164,16 @@ class AgoraWebBridge {
       ).toDart;
 
       if (result?.toDart == true) {
-        AppLogger.info('✅ Joined channel successfully');
+        AppLogger.info('âœ… Joined channel successfully');
         debugPrint('[BRIDGE] Join channel successful');
         return true;
       } else {
-        AppLogger.error('❌ Join channel returned false');
+        AppLogger.error('âŒ Join channel returned false');
         debugPrint('[BRIDGE] Join channel returned false');
         return false;
       }
     } catch (e) {
-      AppLogger.error('❌ Failed to join channel: $e');
+      AppLogger.error('âŒ Failed to join channel: $e');
       debugPrint('[BRIDGE] joinChannel error: $e');
       return false;
     }
@@ -185,18 +185,18 @@ class AgoraWebBridge {
 
     try {
       debugPrint('[BRIDGE] Leaving channel...');
-      AppLogger.info('👋 Leaving channel...');
+      AppLogger.info('ðŸ‘‹ Leaving channel...');
 
       final result = await _jsLeaveChannel().toDart;
 
       if (result?.toDart == true) {
-        AppLogger.info('✅ Left channel successfully');
+        AppLogger.info('âœ… Left channel successfully');
         debugPrint('[BRIDGE] Leave channel successful');
         return true;
       }
       return false;
     } catch (e) {
-      AppLogger.error('❌ Failed to leave channel: $e');
+      AppLogger.error('âŒ Failed to leave channel: $e');
       debugPrint('[BRIDGE] leaveChannel error: $e');
       return false;
     }
@@ -212,12 +212,12 @@ class AgoraWebBridge {
       final result = await _jsSetMicMuted(muted.toJS).toDart;
 
       if (result?.toDart == true) {
-        AppLogger.info('🎤 Microphone ${muted ? 'muted' : 'unmuted'}');
+        AppLogger.info('ðŸŽ¤ Microphone ${muted ? 'muted' : 'unmuted'}');
         return true;
       }
       return false;
     } catch (e) {
-      AppLogger.error('❌ Failed to set mic mute: $e');
+      AppLogger.error('âŒ Failed to set mic mute: $e');
       return false;
     }
   }
@@ -232,12 +232,12 @@ class AgoraWebBridge {
       final result = await _jsSetVideoMuted(muted.toJS).toDart;
 
       if (result?.toDart == true) {
-        AppLogger.info('📹 Video ${muted ? 'disabled' : 'enabled'}');
+        AppLogger.info('ðŸ“¹ Video ${muted ? 'disabled' : 'enabled'}');
         return true;
       }
       return false;
     } catch (e) {
-      AppLogger.error('❌ Failed to set video mute: $e');
+      AppLogger.error('âŒ Failed to set video mute: $e');
       return false;
     }
   }
@@ -252,12 +252,12 @@ class AgoraWebBridge {
       final result = await _jsCreateCameraTrack().toDart;
 
       if (result?.toDart == true) {
-        AppLogger.info('📹 Camera track created');
+        AppLogger.info('ðŸ“¹ Camera track created');
         return true;
       }
       return false;
     } catch (e) {
-      AppLogger.error('❌ Failed to create camera track: $e');
+      AppLogger.error('âŒ Failed to create camera track: $e');
       return false;
     }
   }
@@ -272,12 +272,12 @@ class AgoraWebBridge {
       final result = await _jsCreateMicrophoneTrack().toDart;
 
       if (result?.toDart == true) {
-        AppLogger.info('🎤 Microphone track created');
+        AppLogger.info('ðŸŽ¤ Microphone track created');
         return true;
       }
       return false;
     } catch (e) {
-      AppLogger.error('❌ Failed to create microphone track: $e');
+      AppLogger.error('âŒ Failed to create microphone track: $e');
       return false;
     }
   }
@@ -323,14 +323,14 @@ class AgoraWebBridge {
       // Step 1: Init
       final initOk = await init(appId);
       if (!initOk) {
-        AppLogger.error('❌ Full join failed at init');
+        AppLogger.error('âŒ Full join failed at init');
         return false;
       }
 
       // Step 2: Join channel
       final joinOk = await joinChannel(appId, channel, token, uid);
       if (!joinOk) {
-        AppLogger.error('❌ Full join failed at join channel');
+        AppLogger.error('âŒ Full join failed at join channel');
         return false;
       }
 
@@ -338,7 +338,7 @@ class AgoraWebBridge {
       if (enableCamera) {
         final cameraOk = await startCamera();
         if (!cameraOk) {
-          AppLogger.warning('⚠️ Camera failed but continuing...');
+          AppLogger.warning('âš ï¸ Camera failed but continuing...');
         }
       }
 
@@ -346,14 +346,14 @@ class AgoraWebBridge {
       if (enableMic) {
         final micOk = await startMic();
         if (!micOk) {
-          AppLogger.warning('⚠️ Mic failed but continuing...');
+          AppLogger.warning('âš ï¸ Mic failed but continuing...');
         }
       }
 
-      AppLogger.info('✅ Full room join complete');
+      AppLogger.info('âœ… Full room join complete');
       return true;
     } catch (e) {
-      AppLogger.error('❌ Full room join failed: $e');
+      AppLogger.error('âŒ Full room join failed: $e');
       return false;
     }
   }

@@ -1,4 +1,4 @@
-/// Launch Module
+﻿/// Launch Module
 ///
 /// Exports all launch-related services and widgets for Phase G.
 library;
@@ -31,3 +31,5 @@ export 'launch_countdown_widget.dart';
 // Hide types that conflict with feedback_service.dart
 export 'post_launch_service.dart'
     hide FeedbackStatus, FeedbackCategory, FeedbackSubmissionResult;
+
+

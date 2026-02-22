@@ -1,3 +1,4 @@
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../shared/models/user_profile.dart';
 import 'user_providers.dart';
@@ -91,3 +92,5 @@ String getDisplayNameInitial(String displayName) {
   }
   return displayName[0].toUpperCase();
 }
+
+

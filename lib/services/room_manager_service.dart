@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RoomManagerService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -69,3 +69,5 @@ class RoomManagerService {
     return _firestore.collection('rooms').where('ended', isEqualTo: false).snapshots();
   }
 }
+
+

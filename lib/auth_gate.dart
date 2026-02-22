@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,9 +28,9 @@ class AuthGate extends ConsumerWidget {
               final presenceService = ref.read(presenceServiceProvider);
               await presenceService.initializePresence();
               await presenceService.goOnline();
-              debugPrint('✅ Presence initialized for user ${user.uid}');
+              debugPrint('âœ… Presence initialized for user ${user.uid}');
             } catch (e) {
-              debugPrint('⚠️ Presence initialization failed: $e');
+              debugPrint('âš ï¸ Presence initialization failed: $e');
               // App continues - presence is optional for rendering
             }
           });

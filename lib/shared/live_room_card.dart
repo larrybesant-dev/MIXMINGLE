@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import '../core/theme/colors.dart';
+import 'design/design_colors.dart';
 import 'glow_text.dart';
+import 'package:flutter/material.dart';
 
 class LiveRoomCard extends StatefulWidget {
   final String roomName;
@@ -240,3 +240,4 @@ class _EqualizerBarsState extends State<_EqualizerBars>
     );
   }
 }
+

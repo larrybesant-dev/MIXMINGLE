@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:mix_and_mingle/shared/models/event.dart';
-import 'package:mix_and_mingle/shared/models/user_profile.dart';
-import 'package:mix_and_mingle/providers/events_providers.dart';
-import 'package:mix_and_mingle/providers/auth_providers.dart';
+import 'package:mixmingle/shared/models/event.dart';
+import 'package:mixmingle/shared/models/user_profile.dart';
+import 'package:mixmingle/providers/events_providers.dart';
+import 'package:mixmingle/providers/auth_providers.dart';
 
 /// Event card widget showing event info with friends attending
 class EventCard extends ConsumerWidget {

@@ -1,4 +1,4 @@
-/// Live Event Model
+﻿/// Live Event Model
 ///
 /// Defines the data model for live operations events including
 /// daily/weekly events, limited time offers, and room themes.
@@ -325,3 +325,5 @@ class CreatorSpotlight {
     'stats': stats,
   };
 }
+
+

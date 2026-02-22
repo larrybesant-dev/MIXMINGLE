@@ -1,4 +1,4 @@
-/// Optimization Engine
+﻿/// Optimization Engine
 ///
 /// Self-optimizing systems that automatically tune performance,
 /// capacity, and resource allocation based on real-time metrics.
@@ -179,7 +179,7 @@ class OptimizationEngine {
     int? deviceCpuPercent,
     int? participantCount,
   }) async {
-    debugPrint('🔧 [OptimizationEngine] Auto-tuning video quality for room: $roomId');
+    debugPrint('ðŸ”§ [OptimizationEngine] Auto-tuning video quality for room: $roomId');
 
     try {
       // Fetch room metrics
@@ -231,10 +231,10 @@ class OptimizationEngine {
         'optimization': optimization.toMap(),
       });
 
-      debugPrint('✅ [OptimizationEngine] Video quality optimized: $resolution@${frameRate}fps');
+      debugPrint('âœ… [OptimizationEngine] Video quality optimized: $resolution@${frameRate}fps');
       return optimization;
     } catch (e) {
-      debugPrint('❌ [OptimizationEngine] Failed to auto-tune video quality: $e');
+      debugPrint('âŒ [OptimizationEngine] Failed to auto-tune video quality: $e');
       rethrow;
     }
   }
@@ -288,7 +288,7 @@ class OptimizationEngine {
   Future<RoomCapacityOptimization> autoTuneRoomCapacity({
     required String roomId,
   }) async {
-    debugPrint('🔧 [OptimizationEngine] Auto-tuning capacity for room: $roomId');
+    debugPrint('ðŸ”§ [OptimizationEngine] Auto-tuning capacity for room: $roomId');
 
     try {
       // Fetch room data and history
@@ -354,10 +354,10 @@ class OptimizationEngine {
         'optimization': optimization.toMap(),
       });
 
-      debugPrint('✅ [OptimizationEngine] Room capacity optimized: $currentCapacity -> $recommendedCapacity');
+      debugPrint('âœ… [OptimizationEngine] Room capacity optimized: $currentCapacity -> $recommendedCapacity');
       return optimization;
     } catch (e) {
-      debugPrint('❌ [OptimizationEngine] Failed to auto-tune room capacity: $e');
+      debugPrint('âŒ [OptimizationEngine] Failed to auto-tune room capacity: $e');
       rethrow;
     }
   }
@@ -407,7 +407,7 @@ class OptimizationEngine {
   Future<FirestoreIndexOptimization> autoOptimizeFirestoreIndexes({
     required String collectionPath,
   }) async {
-    debugPrint('🔧 [OptimizationEngine] Analyzing Firestore indexes for: $collectionPath');
+    debugPrint('ðŸ”§ [OptimizationEngine] Analyzing Firestore indexes for: $collectionPath');
 
     try {
       // In production, this would analyze query patterns from Firebase console
@@ -460,10 +460,10 @@ class OptimizationEngine {
         'optimization': optimization.toMap(),
       });
 
-      debugPrint('✅ [OptimizationEngine] Index analysis complete: ${suggestedIndexes.length} suggestions');
+      debugPrint('âœ… [OptimizationEngine] Index analysis complete: ${suggestedIndexes.length} suggestions');
       return optimization;
     } catch (e) {
-      debugPrint('❌ [OptimizationEngine] Failed to analyze Firestore indexes: $e');
+      debugPrint('âŒ [OptimizationEngine] Failed to analyze Firestore indexes: $e');
       rethrow;
     }
   }
@@ -474,7 +474,7 @@ class OptimizationEngine {
 
   /// Automatically balance server regions based on user distribution
   Future<ServerRegionOptimization> autoBalanceServerRegions() async {
-    debugPrint('🔧 [OptimizationEngine] Analyzing server region distribution');
+    debugPrint('ðŸ”§ [OptimizationEngine] Analyzing server region distribution');
 
     try {
       // Fetch user location data
@@ -534,10 +534,10 @@ class OptimizationEngine {
         'optimization': optimization.toMap(),
       });
 
-      debugPrint('✅ [OptimizationEngine] Region analysis complete: Primary=$recommendedPrimary');
+      debugPrint('âœ… [OptimizationEngine] Region analysis complete: Primary=$recommendedPrimary');
       return optimization;
     } catch (e) {
-      debugPrint('❌ [OptimizationEngine] Failed to balance server regions: $e');
+      debugPrint('âŒ [OptimizationEngine] Failed to balance server regions: $e');
       rethrow;
     }
   }
@@ -548,7 +548,7 @@ class OptimizationEngine {
 
   /// Run all optimizations for a room
   Future<Map<String, dynamic>> optimizeRoom(String roomId) async {
-    debugPrint('🔧 [OptimizationEngine] Running full optimization for room: $roomId');
+    debugPrint('ðŸ”§ [OptimizationEngine] Running full optimization for room: $roomId');
 
     final results = <String, dynamic>{};
 
@@ -566,7 +566,7 @@ class OptimizationEngine {
 
   /// Run platform-wide optimization
   Future<Map<String, dynamic>> runPlatformOptimization() async {
-    debugPrint('🔧 [OptimizationEngine] Running platform-wide optimization');
+    debugPrint('ðŸ”§ [OptimizationEngine] Running platform-wide optimization');
 
     final results = <String, dynamic>{};
 
@@ -607,7 +607,7 @@ class OptimizationEngine {
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      debugPrint('⚠️ [OptimizationEngine] Failed to log optimization: $e');
+      debugPrint('âš ï¸ [OptimizationEngine] Failed to log optimization: $e');
     }
   }
 

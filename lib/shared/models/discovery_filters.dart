@@ -1,6 +1,5 @@
-/// Discovery Filters Model
-/// User preferences for filtering potential matches/connections
 library;
+
 
 class DiscoveryFilters {
   final int minAge;

@@ -1,4 +1,4 @@
-/// Coin Store Screen
+﻿/// Coin Store Screen
 ///
 /// Coin purchase screen with neon styling and animated effects.
 /// Features coin rain animation on successful purchase.

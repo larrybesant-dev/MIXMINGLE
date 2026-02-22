@@ -1,4 +1,4 @@
-/// Friends List Panel - Sliding drawer panel for friends list
+﻿/// Friends List Panel - Sliding drawer panel for friends list
 ///
 /// A lightweight, animated sliding panel showing friends list with
 /// quick actions. Designed to overlay from the right side of the screen.
@@ -23,7 +23,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/design_system/design_constants.dart';
 import '../../app_routes.dart';
 import 'gift_selector.dart';
-import 'package:mix_and_mingle/shared/models/user_profile.dart';
 
 /// Sliding friends list panel
 class FriendsListPanel extends StatefulWidget {

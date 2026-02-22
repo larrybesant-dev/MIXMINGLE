@@ -1,5 +1,5 @@
-// Friends List Provider - Manages friends with online/offline status, favorites, search
 
+// Friends List Provider - Manages friends with online/offline status, favorites, search
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_models.dart';
 
@@ -170,5 +170,7 @@ final totalUnreadMessagesProvider = Provider<int>((ref) {
   final friends = ref.watch(friendsProvider);
   return friends.fold<int>(0, (sum, friend) => sum + friend.unreadMessages);
 });
+
+
 
 

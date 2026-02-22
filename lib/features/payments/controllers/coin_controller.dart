@@ -1,4 +1,4 @@
-/// Coin Controller
+﻿/// Coin Controller
 ///
 /// Riverpod state management for coin balance and transactions.
 /// Provides providers for membership tier, coin balance, and purchase operations.
@@ -124,18 +124,18 @@ class PurchaseNotifier extends Notifier<PurchaseState> {
       if (result.success) {
         state = PurchaseState(
           isSuccess: true,
-          successMessage: 'Welcome to ${tier.displayName}! 🎉',
+          successMessage: 'Welcome to ${tier.displayName}! ðŸŽ‰',
         );
-        debugPrint('✅ [Purchase] Subscription successful: ${tier.displayName}');
+        debugPrint('âœ… [Purchase] Subscription successful: ${tier.displayName}');
         return true;
       } else {
         state = PurchaseState(error: result.errorMessage ?? 'Purchase failed');
-        debugPrint('❌ [Purchase] Subscription failed: ${result.errorMessage}');
+        debugPrint('âŒ [Purchase] Subscription failed: ${result.errorMessage}');
         return false;
       }
     } catch (e) {
       state = PurchaseState(error: 'An error occurred: $e');
-      debugPrint('❌ [Purchase] Error: $e');
+      debugPrint('âŒ [Purchase] Error: $e');
       return false;
     }
   }
@@ -166,19 +166,19 @@ class PurchaseNotifier extends Notifier<PurchaseState> {
 
         state = PurchaseState(
           isSuccess: true,
-          successMessage: 'You received $totalCoins coins! 🪙',
+          successMessage: 'You received $totalCoins coins! ðŸª™',
         );
-        debugPrint('✅ [Purchase] Coins purchased: $totalCoins');
+        debugPrint('âœ… [Purchase] Coins purchased: $totalCoins');
         return true;
       } else {
         await membership.logCoinPurchaseFailed(package, result.errorMessage ?? 'Unknown');
         state = PurchaseState(error: result.errorMessage ?? 'Purchase failed');
-        debugPrint('❌ [Purchase] Coin purchase failed: ${result.errorMessage}');
+        debugPrint('âŒ [Purchase] Coin purchase failed: ${result.errorMessage}');
         return false;
       }
     } catch (e) {
       state = PurchaseState(error: 'An error occurred: $e');
-      debugPrint('❌ [Purchase] Error: $e');
+      debugPrint('âŒ [Purchase] Error: $e');
       return false;
     }
   }
@@ -194,7 +194,7 @@ class PurchaseNotifier extends Notifier<PurchaseState> {
       if (result.success) {
         state = PurchaseState(
           isSuccess: true,
-          successMessage: 'Purchases restored successfully! ✓',
+          successMessage: 'Purchases restored successfully! âœ“',
         );
         return true;
       } else {

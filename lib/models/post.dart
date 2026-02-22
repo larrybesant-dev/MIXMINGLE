@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Types of posts
 enum PostType {
@@ -222,3 +222,5 @@ class Comment {
     return 'now';
   }
 }
+
+

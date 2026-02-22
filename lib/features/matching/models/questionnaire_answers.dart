@@ -1,4 +1,4 @@
-// import 'package:freezed_annotation/freezed_annotation.dart';
+﻿// import 'package:freezed_annotation/freezed_annotation.dart';
 
 // part 'questionnaire_answers.freezed.dart';
 // part 'questionnaire_answers.g.dart';
@@ -299,3 +299,5 @@ class QuestionnaireAnswers {
     return (completed / total) * 100;
   }
 }
+
+

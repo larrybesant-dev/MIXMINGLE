@@ -1,4 +1,4 @@
-/// Notifications Provider
+﻿/// Notifications Provider
 /// FCM token management and notification handling
 library;
 
@@ -55,12 +55,12 @@ class NotificationsController extends Notifier<NotificationsState> {
 
       final enabled = settings.authorizationStatus == AuthorizationStatus.authorized;
 
-      debugPrint('📱 Notification permission: ${settings.authorizationStatus}');
+      debugPrint('ðŸ“± Notification permission: ${settings.authorizationStatus}');
 
       if (enabled) {
         // Get FCM token
         final token = await _messaging.getToken();
-        debugPrint('📱 FCM Token: $token');
+        debugPrint('ðŸ“± FCM Token: $token');
 
         if (token != null) {
           // Save token to Firestore
@@ -77,7 +77,7 @@ class NotificationsController extends Notifier<NotificationsState> {
 
           // Listen for token refresh
           _messaging.onTokenRefresh.listen((newToken) {
-            debugPrint('📱 FCM Token refreshed: $newToken');
+            debugPrint('ðŸ“± FCM Token refreshed: $newToken');
             _firestore.collection('users').doc(userId).update({
               'fcmToken': newToken,
               'fcmTokenUpdatedAt': FieldValue.serverTimestamp(),
@@ -97,24 +97,24 @@ class NotificationsController extends Notifier<NotificationsState> {
             _handleBackgroundMessage(initialMessage);
           }
 
-          debugPrint('✅ FCM initialized successfully');
+          debugPrint('âœ… FCM initialized successfully');
         }
       } else {
         state = state.copyWith(
           isInitialized: true,
           notificationsEnabled: false,
         );
-        debugPrint('❌ Notification permission denied');
+        debugPrint('âŒ Notification permission denied');
       }
     } catch (e) {
-      debugPrint('❌ Error initializing FCM: $e');
+      debugPrint('âŒ Error initializing FCM: $e');
       state = state.copyWith(isInitialized: true);
     }
   }
 
   /// Handle foreground messages
   void _handleForegroundMessage(RemoteMessage message) {
-    debugPrint('📨 Foreground message: ${message.notification?.title}');
+    debugPrint('ðŸ“¨ Foreground message: ${message.notification?.title}');
 
     // TODO: Show in-app notification
     // You can use a package like flutter_local_notifications
@@ -123,7 +123,7 @@ class NotificationsController extends Notifier<NotificationsState> {
 
   /// Handle background/terminated messages
   void _handleBackgroundMessage(RemoteMessage message) {
-    debugPrint('📨 Background message: ${message.notification?.title}');
+    debugPrint('ðŸ“¨ Background message: ${message.notification?.title}');
 
     // Handle notification tap - deep link to relevant screen
     final data = message.data;
@@ -186,9 +186,9 @@ class NotificationsController extends Notifier<NotificationsState> {
         'createdAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ Notification queued for $targetUserId');
+      debugPrint('âœ… Notification queued for $targetUserId');
     } catch (e) {
-      debugPrint('❌ Error sending notification: $e');
+      debugPrint('âŒ Error sending notification: $e');
     }
   }
 
@@ -206,9 +206,9 @@ class NotificationsController extends Notifier<NotificationsState> {
         notificationsEnabled: false,
       );
 
-      debugPrint('✅ Unsubscribed from notifications');
+      debugPrint('âœ… Unsubscribed from notifications');
     } catch (e) {
-      debugPrint('❌ Error unsubscribing: $e');
+      debugPrint('âŒ Error unsubscribing: $e');
     }
   }
 }

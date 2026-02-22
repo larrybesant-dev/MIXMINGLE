@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Moderation action enum
@@ -251,3 +251,5 @@ final bannedUsersProvider = StreamProvider.family<List<String>, String>((ref, ro
   final service = ref.watch(roomModerationServiceProvider);
   return service.getBannedUsersStream(roomId);
 });
+
+

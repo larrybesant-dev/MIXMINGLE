@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/shared/models/camera_state.dart';
+import 'package:mixmingle/shared/models/camera_state.dart';
 
 class SpotlightView extends ConsumerWidget {
   final CameraState cameraState;

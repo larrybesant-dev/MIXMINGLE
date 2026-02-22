@@ -1,4 +1,4 @@
-/// Performance Service
+﻿/// Performance Service
 ///
 /// Centralized performance monitoring using Firebase Performance.
 /// Provides methods for custom traces, metrics, and HTTP monitoring.
@@ -26,9 +26,9 @@ class PerformanceService {
     try {
       // Enable performance collection
       await _performance.setPerformanceCollectionEnabled(true);
-      debugPrint('✅ [Performance] Initialized successfully');
+      debugPrint('âœ… [Performance] Initialized successfully');
     } catch (e) {
-      debugPrint('❌ [Performance] Initialization failed: $e');
+      debugPrint('âŒ [Performance] Initialization failed: $e');
     }
   }
 
@@ -50,16 +50,16 @@ class PerformanceService {
   Future<void> startTrace(String name) async {
     try {
       if (_activeTraces.containsKey(name)) {
-        debugPrint('⚠️ [Performance] Trace already active: $name');
+        debugPrint('âš ï¸ [Performance] Trace already active: $name');
         return;
       }
 
       final trace = _performance.newTrace(name);
       await trace.start();
       _activeTraces[name] = trace;
-      debugPrint('📊 [Performance] Trace started: $name');
+      debugPrint('ðŸ“Š [Performance] Trace started: $name');
     } catch (e) {
-      debugPrint('❌ [Performance] Failed to start trace $name: $e');
+      debugPrint('âŒ [Performance] Failed to start trace $name: $e');
     }
   }
 
@@ -68,14 +68,14 @@ class PerformanceService {
     try {
       final trace = _activeTraces.remove(name);
       if (trace == null) {
-        debugPrint('⚠️ [Performance] No active trace found: $name');
+        debugPrint('âš ï¸ [Performance] No active trace found: $name');
         return;
       }
 
       await trace.stop();
-      debugPrint('📊 [Performance] Trace stopped: $name');
+      debugPrint('ðŸ“Š [Performance] Trace stopped: $name');
     } catch (e) {
-      debugPrint('❌ [Performance] Failed to stop trace $name: $e');
+      debugPrint('âŒ [Performance] Failed to stop trace $name: $e');
     }
   }
 
@@ -84,14 +84,14 @@ class PerformanceService {
     try {
       final trace = _activeTraces[traceName];
       if (trace == null) {
-        debugPrint('⚠️ [Performance] No active trace found: $traceName');
+        debugPrint('âš ï¸ [Performance] No active trace found: $traceName');
         return;
       }
 
       trace.setMetric(metricName, value);
-      debugPrint('📊 [Performance] Metric set: $traceName.$metricName = $value');
+      debugPrint('ðŸ“Š [Performance] Metric set: $traceName.$metricName = $value');
     } catch (e) {
-      debugPrint('❌ [Performance] Failed to set metric: $e');
+      debugPrint('âŒ [Performance] Failed to set metric: $e');
     }
   }
 
@@ -100,14 +100,14 @@ class PerformanceService {
     try {
       final trace = _activeTraces[traceName];
       if (trace == null) {
-        debugPrint('⚠️ [Performance] No active trace found: $traceName');
+        debugPrint('âš ï¸ [Performance] No active trace found: $traceName');
         return;
       }
 
       trace.incrementMetric(metricName, incrementBy);
-      debugPrint('📊 [Performance] Metric incremented: $traceName.$metricName += $incrementBy');
+      debugPrint('ðŸ“Š [Performance] Metric incremented: $traceName.$metricName += $incrementBy');
     } catch (e) {
-      debugPrint('❌ [Performance] Failed to increment metric: $e');
+      debugPrint('âŒ [Performance] Failed to increment metric: $e');
     }
   }
 
@@ -116,14 +116,14 @@ class PerformanceService {
     try {
       final trace = _activeTraces[traceName];
       if (trace == null) {
-        debugPrint('⚠️ [Performance] No active trace found: $traceName');
+        debugPrint('âš ï¸ [Performance] No active trace found: $traceName');
         return;
       }
 
       trace.putAttribute(attributeName, value);
-      debugPrint('📊 [Performance] Attribute set: $traceName.$attributeName = $value');
+      debugPrint('ðŸ“Š [Performance] Attribute set: $traceName.$attributeName = $value');
     } catch (e) {
-      debugPrint('❌ [Performance] Failed to set attribute: $e');
+      debugPrint('âŒ [Performance] Failed to set attribute: $e');
     }
   }
 
@@ -151,11 +151,11 @@ class PerformanceService {
     try {
       final result = operation();
       stopwatch.stop();
-      debugPrint('📊 [Performance] $name completed in ${stopwatch.elapsedMilliseconds}ms');
+      debugPrint('ðŸ“Š [Performance] $name completed in ${stopwatch.elapsedMilliseconds}ms');
       return result;
     } catch (e) {
       stopwatch.stop();
-      debugPrint('❌ [Performance] $name failed after ${stopwatch.elapsedMilliseconds}ms: $e');
+      debugPrint('âŒ [Performance] $name failed after ${stopwatch.elapsedMilliseconds}ms: $e');
       rethrow;
     }
   }

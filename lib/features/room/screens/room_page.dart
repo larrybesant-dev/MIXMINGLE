@@ -1,20 +1,20 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mix_and_mingle/core/responsive/responsive_utils.dart';
-import 'package:mix_and_mingle/core/animations/app_animations.dart';
-import 'package:mix_and_mingle/shared/models/room.dart';
-import 'package:mix_and_mingle/shared/models/message.dart' as room_message;
-import 'package:mix_and_mingle/shared/widgets/glow_text.dart';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/providers/all_providers.dart';
-import 'package:mix_and_mingle/services/agora_video_service.dart';
-import 'package:mix_and_mingle/services/messaging_service.dart';
-import 'package:mix_and_mingle/services/room_manager_service.dart';
-import 'package:mix_and_mingle/features/room/widgets/participant_list_sidebar.dart';
-import 'package:mix_and_mingle/features/room/widgets/raised_hands_panel.dart';
-import 'package:mix_and_mingle/features/room/widgets/room_controls.dart';
+import 'package:mixmingle/core/responsive/responsive_utils.dart';
+import 'package:mixmingle/core/animations/app_animations.dart';
+import 'package:mixmingle/shared/models/room.dart';
+import 'package:mixmingle/shared/models/message.dart' as room_message;
+import 'package:mixmingle/shared/widgets/glow_text.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/providers/all_providers.dart';
+import 'package:mixmingle/services/agora_video_service.dart';
+import 'package:mixmingle/services/messaging_service.dart';
+import 'package:mixmingle/services/room_manager_service.dart';
+import 'package:mixmingle/features/room/widgets/participant_list_sidebar.dart';
+import 'package:mixmingle/features/room/widgets/raised_hands_panel.dart';
+import 'package:mixmingle/features/room/widgets/room_controls.dart';
 
 class RoomPage extends ConsumerStatefulWidget {
   final Room room;
@@ -77,7 +77,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
         });
       }
     } catch (e) {
-      debugPrint('❌ Video initialization failed: $e');
+      debugPrint('âŒ Video initialization failed: $e');
       if (mounted) {
         setState(() {
           _videoInitError = e.toString();
@@ -207,7 +207,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
       } else {
         await _roomManager.unlockRoom(widget.room.id);
       }
-      _showInfo(locked ? 'Room locked 🔒' : 'Room unlocked 🔓');
+      _showInfo(locked ? 'Room locked ðŸ”’' : 'Room unlocked ðŸ”“');
     } catch (e) {
       _showError('Failed to ${locked ? "lock" : "unlock"} room: $e');
     }
@@ -552,7 +552,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                                   return const Center(
                                     child: Text(
-                                      'No messages yet. Say hello! 👋',
+                                      'No messages yet. Say hello! ðŸ‘‹',
                                       style: TextStyle(color: Colors.white54),
                                     ),
                                   );
@@ -1094,7 +1094,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
         );
       }
     } catch (e) {
-      debugPrint('❌ Failed to send message: $e');
+      debugPrint('âŒ Failed to send message: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

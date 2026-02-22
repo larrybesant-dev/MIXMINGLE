@@ -1,3 +1,5 @@
+﻿import 'dart:js_util' as js_util;
+import 'package:mixmingle/helpers/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mix_and_mingle/core/responsive/responsive_utils.dart';
@@ -8,7 +10,7 @@ import 'package:mix_and_mingle/shared/widgets/club_background.dart';
 import 'package:mix_and_mingle/shared/widgets/loading_widgets.dart';
 import 'package:mix_and_mingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mix_and_mingle/shared/widgets/skeleton_loaders.dart';
-import 'package:mix_and_mingle/shared/models/speed_dating.dart';
+// TEMP DISABLED: import 'package:mix_and_mingle/shared/models/speed_dating.dart';
 
 class SpeedDatingLobbyPage extends ConsumerStatefulWidget {
   const SpeedDatingLobbyPage({super.key});
@@ -244,7 +246,7 @@ class _SpeedDatingLobbyPageState extends ConsumerState<SpeedDatingLobbyPage> {
 
             // Age & Location
             Text(
-              '${partner.age ?? 'Age not specified'} • ${partner.location ?? 'Location not specified'}',
+              '${partner.age ?? 'Age not specified'} â€¢ ${partner.location ?? 'Location not specified'}',
               style: TextStyle(
                 fontSize: Responsive.responsiveFontSize(context, 16),
                 color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),

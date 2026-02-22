@@ -1,4 +1,4 @@
-/// Scale Service
+﻿/// Scale Service
 ///
 /// Manages auto-scaling of rooms, video pipelines, Firestore listeners,
 /// and load distribution across regions for optimal performance at scale.
@@ -639,3 +639,5 @@ class ScaleService {
     _scaleActionController.close();
   }
 }
+
+

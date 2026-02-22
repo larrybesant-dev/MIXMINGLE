@@ -1,4 +1,4 @@
-/// Webhook Handler
+﻿/// Webhook Handler
 ///
 /// Manages webhook registrations, deliveries, and event
 /// handling for the Mix & Mingle platform.
@@ -240,7 +240,7 @@ class WebhookHandler {
     WebhookFormat format = WebhookFormat.json,
     int maxRetries = 3,
   }) async {
-    debugPrint('🔗 [WebhookHandler] Registering webhook for app: $appId');
+    debugPrint('ðŸ”— [WebhookHandler] Registering webhook for app: $appId');
 
     try {
       final id = _generateWebhookId();
@@ -274,10 +274,10 @@ class WebhookHandler {
         },
       );
 
-      debugPrint('✅ [WebhookHandler] Webhook registered: $id');
+      debugPrint('âœ… [WebhookHandler] Webhook registered: $id');
       return webhook;
     } catch (e) {
-      debugPrint('❌ [WebhookHandler] Failed to register webhook: $e');
+      debugPrint('âŒ [WebhookHandler] Failed to register webhook: $e');
       rethrow;
     }
   }
@@ -304,7 +304,7 @@ class WebhookHandler {
       });
       return true;
     } catch (e) {
-      debugPrint('❌ [WebhookHandler] Failed to update webhook: $e');
+      debugPrint('âŒ [WebhookHandler] Failed to update webhook: $e');
       return false;
     }
   }
@@ -317,7 +317,7 @@ class WebhookHandler {
       });
       return true;
     } catch (e) {
-      debugPrint('❌ [WebhookHandler] Failed to toggle webhook: $e');
+      debugPrint('âŒ [WebhookHandler] Failed to toggle webhook: $e');
       return false;
     }
   }
@@ -329,7 +329,7 @@ class WebhookHandler {
       await _firestore.collection('webhook_secrets').doc(webhookId).delete();
       return true;
     } catch (e) {
-      debugPrint('❌ [WebhookHandler] Failed to delete webhook: $e');
+      debugPrint('âŒ [WebhookHandler] Failed to delete webhook: $e');
       return false;
     }
   }
@@ -344,7 +344,7 @@ class WebhookHandler {
     required Map<String, dynamic> data,
     String? targetAppId,
   }) async {
-    debugPrint('📤 [WebhookHandler] Dispatching event: ${event.name}');
+    debugPrint('ðŸ“¤ [WebhookHandler] Dispatching event: ${event.name}');
 
     try {
       // Find matching webhooks
@@ -366,10 +366,10 @@ class WebhookHandler {
         _deliveryController.add(result);
       }
 
-      debugPrint('✅ [WebhookHandler] Dispatched to ${results.length} webhooks');
+      debugPrint('âœ… [WebhookHandler] Dispatched to ${results.length} webhooks');
       return results;
     } catch (e) {
-      debugPrint('❌ [WebhookHandler] Event dispatch failed: $e');
+      debugPrint('âŒ [WebhookHandler] Event dispatch failed: $e');
       return [];
     }
   }

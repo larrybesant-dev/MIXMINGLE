@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../shared/models/camera_state.dart';
@@ -31,9 +31,9 @@ class CameraService {
       } else {
         await _firestore.collection('rooms').doc(roomId).collection('camera').doc(userId).delete();
       }
-      debugPrint('✅ Camera toggled: $enable');
+      debugPrint('âœ… Camera toggled: $enable');
     } catch (e) {
-      debugPrint('❌ Failed to toggle camera: $e');
+      debugPrint('âŒ Failed to toggle camera: $e');
       rethrow;
     }
   }
@@ -52,9 +52,9 @@ class CameraService {
         'bitrate': settings.bitrate,
         'fps': settings.fps,
       });
-      debugPrint('✅ Camera quality set to: ${quality.name}');
+      debugPrint('âœ… Camera quality set to: ${quality.name}');
     } catch (e) {
-      debugPrint('❌ Failed to set camera quality: $e');
+      debugPrint('âŒ Failed to set camera quality: $e');
       rethrow;
     }
   }
@@ -74,9 +74,9 @@ class CameraService {
       // Apply new spotlight
       await roomRef.collection('camera').doc(targetUid).update({'isSpotlighted': true});
 
-      debugPrint('✅ Camera spotlighted: $targetUid');
+      debugPrint('âœ… Camera spotlighted: $targetUid');
     } catch (e) {
-      debugPrint('❌ Failed to spotlight camera: $e');
+      debugPrint('âŒ Failed to spotlight camera: $e');
       rethrow;
     }
   }
@@ -95,9 +95,9 @@ class CameraService {
         await doc.reference.update({'isSpotlighted': false});
       }
 
-      debugPrint('✅ Spotlight removed');
+      debugPrint('âœ… Spotlight removed');
     } catch (e) {
-      debugPrint('❌ Failed to remove spotlight: $e');
+      debugPrint('âŒ Failed to remove spotlight: $e');
       rethrow;
     }
   }
@@ -119,7 +119,7 @@ class CameraService {
               await _firestore.collection('rooms').doc(roomId).collection('participants').doc(doc.id).get();
 
           if (participantDoc.exists) {
-            // ✅ SAFETY FIX: Use optional chaining instead of force unwrap
+            // âœ… SAFETY FIX: Use optional chaining instead of force unwrap
             final data = participantDoc.data();
             if (data != null) {
               cameras.add(CameraState(
@@ -139,7 +139,7 @@ class CameraService {
             }
           }
         } catch (e) {
-          debugPrint('⚠️ Error loading camera $doc.id: $e');
+          debugPrint('âš ï¸ Error loading camera $doc.id: $e');
         }
       }
 
@@ -190,10 +190,10 @@ class CameraService {
         for (int i = 0; i < toRemove; i++) {
           await snapshot.docs[i].reference.delete();
         }
-        debugPrint('⚠️ Removed $toRemove cameras to enforce limit');
+        debugPrint('âš ï¸ Removed $toRemove cameras to enforce limit');
       }
     } catch (e) {
-      debugPrint('❌ Failed to enforce camera limit: $e');
+      debugPrint('âŒ Failed to enforce camera limit: $e');
     }
   }
 
@@ -205,7 +205,7 @@ class CameraService {
 
       return snapshot.docs.length;
     } catch (e) {
-      debugPrint('❌ Failed to get camera count: $e');
+      debugPrint('âŒ Failed to get camera count: $e');
       return 0;
     }
   }
@@ -217,7 +217,7 @@ class CameraService {
         'viewCount': FieldValue.increment(1),
       });
     } catch (e) {
-      debugPrint('⚠️ Failed to increment view count: $e');
+      debugPrint('âš ï¸ Failed to increment view count: $e');
     }
   }
 }

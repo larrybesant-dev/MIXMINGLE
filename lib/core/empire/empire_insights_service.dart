@@ -1,4 +1,4 @@
-/// Empire Insights Service
+﻿/// Empire Insights Service
 ///
 /// Provides analytics for global DAU, cross-platform usage, creator ecosystem health,
 /// network load, and federation growth.
@@ -390,7 +390,7 @@ class EmpireInsightsService {
     final targetDate = date ?? DateTime.now();
     final dateKey = _formatDateKey(targetDate);
 
-    debugPrint('📊 [Insights] Tracking global DAU for: $dateKey');
+    debugPrint('ðŸ“Š [Insights] Tracking global DAU for: $dateKey');
 
     // Aggregate user activity from various sources
     final snapshot = await _firestore
@@ -446,7 +446,7 @@ class EmpireInsightsService {
 
     _dauController.add(metrics);
 
-    debugPrint('✅ [Insights] DAU tracked: ${metrics.totalDAU}');
+    debugPrint('âœ… [Insights] DAU tracked: ${metrics.totalDAU}');
     return metrics;
   }
 
@@ -479,7 +479,7 @@ class EmpireInsightsService {
 
   /// Track cross-platform usage metrics
   Future<CrossPlatformMetrics> trackCrossPlatformUsage() async {
-    debugPrint('📱 [Insights] Tracking cross-platform usage');
+    debugPrint('ðŸ“± [Insights] Tracking cross-platform usage');
 
     final activeUsers = <PlatformType, int>{};
     final engagement = <PlatformType, double>{};
@@ -533,7 +533,7 @@ class EmpireInsightsService {
       'timestamp': Timestamp.now(),
     });
 
-    debugPrint('✅ [Insights] Cross-platform usage tracked');
+    debugPrint('âœ… [Insights] Cross-platform usage tracked');
     return metrics;
   }
 
@@ -543,7 +543,7 @@ class EmpireInsightsService {
 
   /// Track creator ecosystem health
   Future<CreatorEcosystemMetrics> trackCreatorEcosystemHealth() async {
-    debugPrint('⭐ [Insights] Tracking creator ecosystem health');
+    debugPrint('â­ [Insights] Tracking creator ecosystem health');
 
     // Get creator summary data
     final creatorsSnapshot = await _firestore
@@ -605,7 +605,7 @@ class EmpireInsightsService {
     // Store metrics
     await _creatorCollection.add(metrics.toFirestore());
 
-    debugPrint('✅ [Insights] Creator ecosystem tracked: ${metrics.totalCreators} creators');
+    debugPrint('âœ… [Insights] Creator ecosystem tracked: ${metrics.totalCreators} creators');
     return metrics;
   }
 
@@ -640,7 +640,7 @@ class EmpireInsightsService {
 
   /// Track network load metrics
   Future<NetworkLoadMetrics> trackNetworkLoad() async {
-    debugPrint('🌐 [Insights] Tracking network load');
+    debugPrint('ðŸŒ [Insights] Tracking network load');
 
     // Get latest network metrics
     final metricsDoc = await _firestore
@@ -688,7 +688,7 @@ class EmpireInsightsService {
 
     _loadController.add(metrics);
 
-    debugPrint('✅ [Insights] Network load tracked: ${metrics.requestsPerSecond} RPS');
+    debugPrint('âœ… [Insights] Network load tracked: ${metrics.requestsPerSecond} RPS');
     return metrics;
   }
 
@@ -710,7 +710,7 @@ class EmpireInsightsService {
 
   /// Track federation growth metrics
   Future<FederationGrowthMetrics> trackFederationGrowth() async {
-    debugPrint('🤝 [Insights] Tracking federation growth');
+    debugPrint('ðŸ¤ [Insights] Tracking federation growth');
 
     // Get federation statistics
     final partners = await _firestore.collection('federation_partners').get();
@@ -762,7 +762,7 @@ class EmpireInsightsService {
     // Store metrics
     await _federationCollection.add(metrics.toFirestore());
 
-    debugPrint('✅ [Insights] Federation growth tracked: ${metrics.totalPartners} partners');
+    debugPrint('âœ… [Insights] Federation growth tracked: ${metrics.totalPartners} partners');
     return metrics;
   }
 
@@ -786,7 +786,7 @@ class EmpireInsightsService {
 
   /// Get complete empire insights snapshot
   Future<Map<String, dynamic>> getEmpireSnapshot() async {
-    debugPrint('📈 [Insights] Generating empire snapshot');
+    debugPrint('ðŸ“ˆ [Insights] Generating empire snapshot');
 
     final results = await Future.wait([
       trackGlobalDAU(),

@@ -1,4 +1,4 @@
-/// Creator Economy Service
+﻿/// Creator Economy Service
 ///
 /// Manages creator earnings, payouts, tier management, bonuses,
 /// and retention incentives for the creator program.
@@ -39,7 +39,7 @@ class CreatorTierConfig {
       minMonthlyEarnings: map['minMonthlyEarnings'] as int,
       revenueSharePercent: (map['revenueSharePercent'] as num).toDouble(),
       benefits: List<String>.from(map['benefits'] ?? []),
-      badgeIcon: map['badgeIcon'] as String? ?? '⭐',
+      badgeIcon: map['badgeIcon'] as String? ?? 'â­',
     );
   }
 }
@@ -254,7 +254,7 @@ class CreatorEconomyService {
       minMonthlyEarnings: 0,
       revenueSharePercent: 0.70,
       benefits: ['Basic analytics', 'Standard support'],
-      badgeIcon: '🌱',
+      badgeIcon: 'ðŸŒ±',
     ),
     const CreatorTierConfig(
       id: 'rising',
@@ -263,7 +263,7 @@ class CreatorEconomyService {
       minMonthlyEarnings: 50,
       revenueSharePercent: 0.75,
       benefits: ['Enhanced analytics', 'Priority support', 'Custom room themes'],
-      badgeIcon: '⭐',
+      badgeIcon: 'â­',
     ),
     const CreatorTierConfig(
       id: 'established',
@@ -272,7 +272,7 @@ class CreatorEconomyService {
       minMonthlyEarnings: 200,
       revenueSharePercent: 0.80,
       benefits: ['Full analytics dashboard', 'Dedicated support', 'Featured placement'],
-      badgeIcon: '🌟',
+      badgeIcon: 'ðŸŒŸ',
     ),
     const CreatorTierConfig(
       id: 'partner',
@@ -281,7 +281,7 @@ class CreatorEconomyService {
       minMonthlyEarnings: 1000,
       revenueSharePercent: 0.85,
       benefits: ['All benefits', 'Revenue optimization', 'Brand partnerships'],
-      badgeIcon: '👑',
+      badgeIcon: 'ðŸ‘‘',
     ),
   ];
 
@@ -747,3 +747,5 @@ class CreatorEconomyService {
     _tierChangeController.close();
   }
 }
+
+

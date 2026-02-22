@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Service for room moderation actions
@@ -184,3 +184,5 @@ class ModerationService {
 final moderationServiceProvider = Provider<ModerationService>((ref) {
   return ModerationService();
 });
+
+

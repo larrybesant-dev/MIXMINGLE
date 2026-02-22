@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+﻿import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/app_logger.dart';
@@ -28,7 +28,7 @@ class RoomAccessDeniedException implements Exception {
 }
 
 /// Checks if user can access a specific room
-/// Enforces: auth → profile → room permissions
+/// Enforces: auth â†’ profile â†’ room permissions
 Future<bool> canAccessRoom({
   required String roomId,
   required String userId,
@@ -144,6 +144,8 @@ final roomAccessCheckProvider = FutureProvider.family<
     userId: params.userId,
   );
 });
+
+
 
 
 

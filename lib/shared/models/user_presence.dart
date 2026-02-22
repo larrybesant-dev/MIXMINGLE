@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// User presence status
@@ -68,3 +69,5 @@ class UserPresence {
     );
   }
 }
+
+

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// Mix & Mingle Brand Colors
 /// Nightclub/social vibe with vibrant energy

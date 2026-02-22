@@ -1,4 +1,4 @@
-/// User Discovery Page
+﻿/// User Discovery Page
 /// Browse and filter users to connect with
 library;
 
@@ -72,7 +72,7 @@ final user = ref.read(currentUserProvider).value;
         _isLoading = false;
       });
     } catch (e) {
-      debugPrint('❌ Error loading users: $e');
+      debugPrint('âŒ Error loading users: $e');
       setState(() => _isLoading = false);
     }
   }
@@ -145,7 +145,7 @@ final user = ref.read(currentUserProvider).value;
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: DesignColors.accent.withOpacity(0.2),
+                    color: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(12),
                     ),
@@ -235,13 +235,13 @@ final user = ref.read(currentUserProvider).value;
           Icon(
             Icons.search_off,
             size: 80,
-            color: DesignColors.white.withOpacity(0.3),
+            color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
           ),
           const SizedBox(height: 16),
           Text(
             'No users found',
             style: TextStyle(
-              color: DesignColors.white.withOpacity(0.7),
+              color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
               fontSize: 18,
             ),
           ),
@@ -344,9 +344,9 @@ final user = ref.read(currentUserProvider).value;
                               });
                             },
                             backgroundColor:
-                                DesignColors.accent.withOpacity(0.1),
+                                DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                             selectedColor:
-                                DesignColors.accent.withOpacity(0.3),
+                                DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                             checkmarkColor: DesignColors.white,
                             labelStyle:
                                 const TextStyle(color: DesignColors.white),

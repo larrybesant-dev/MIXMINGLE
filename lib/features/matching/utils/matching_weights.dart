@@ -1,4 +1,4 @@
-/// Weight configuration for the matching algorithm
+﻿/// Weight configuration for the matching algorithm
 class MatchingWeights {
   // Core Compatibility (40% total weight)
   static const double relationshipIntent = 15.0;
@@ -205,3 +205,5 @@ class MatchingScoringUtils {
     return normalizeScore(score);
   }
 }
+
+

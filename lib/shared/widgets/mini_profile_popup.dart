@@ -1,4 +1,4 @@
-/// Mini Profile Popup Widget
+﻿/// Mini Profile Popup Widget
 ///
 /// Displays a compact profile card on mouse hover over participant tiles.
 /// Shows user avatar, name, bio snippet, online status, and quick action buttons.

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/neon_colors.dart';
@@ -70,15 +70,17 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
         'uid': userCredential.user!.uid,
         'email': _emailController.text.trim(),
         'username': _usernameController.text.trim(),
+        'displayName': _usernameController.text.trim(), // Add displayName for auth gate
         'createdAt': FieldValue.serverTimestamp(),
         'profileImageUrl': '',
         'bio': '',
         'isVerified': false,
       });
 
+      debugPrint('âœ… [Signup] Account created. Navigating to /app...');
       if (mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil(
-          '/create-profile',
+          '/app',
           (route) => false,
         );
       }

@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GroupChatParticipant {
   final String uid;
@@ -39,3 +39,5 @@ class GroupChatParticipant {
     };
   }
 }
+
+

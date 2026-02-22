@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/features/voice_room/services/analytics_service.dart';
+import 'package:mixmingle/features/voice_room/services/analytics_service.dart';
 
 /// Analytics & Statistics Dashboard Widget
 ///
@@ -246,7 +246,7 @@ class AnalyticsDashboardWidget extends ConsumerWidget {
             ),
             _buildStatCard(
               'Rating',
-              '${stats.averageUserRating.toStringAsFixed(1)}⭐',
+              '${stats.averageUserRating.toStringAsFixed(1)}â­',
               Icons.star,
             ),
           ],
@@ -337,7 +337,7 @@ class AnalyticsDashboardWidget extends ConsumerWidget {
                     ),
                   ),
                   Text(
-                    '${user.totalSessions} sessions • ${_formatDuration(user.totalTimeInRoom)}',
+                    '${user.totalSessions} sessions â€¢ ${_formatDuration(user.totalTimeInRoom)}',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 10,
@@ -353,7 +353,7 @@ class AnalyticsDashboardWidget extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
-                '${user.userRating.toStringAsFixed(1)}⭐',
+                '${user.userRating.toStringAsFixed(1)}â­',
                 style: const TextStyle(
                   color: Color(0xFFFF4C4C),
                   fontSize: 11,

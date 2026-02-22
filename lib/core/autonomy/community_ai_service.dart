@@ -1,4 +1,4 @@
-/// Community AI Service
+﻿/// Community AI Service
 ///
 /// Machine-assisted community management with trend detection,
 /// growth pattern analysis, and automated feature recommendations.
@@ -269,7 +269,7 @@ class CommunityAIService {
     double minGrowthRate = 0.1,
     int minAffectedUsers = 100,
   }) async {
-    debugPrint('📈 [CommunityAI] Detecting emerging trends');
+    debugPrint('ðŸ“ˆ [CommunityAI] Detecting emerging trends');
 
     final trends = <EmergingTrend>[];
 
@@ -304,10 +304,10 @@ class CommunityAIService {
         'top_category': filtered.isNotEmpty ? filtered.first.category.name : 'none',
       });
 
-      debugPrint('✅ [CommunityAI] Detected ${filtered.length} emerging trends');
+      debugPrint('âœ… [CommunityAI] Detected ${filtered.length} emerging trends');
       return filtered;
     } catch (e) {
-      debugPrint('❌ [CommunityAI] Failed to detect trends: $e');
+      debugPrint('âŒ [CommunityAI] Failed to detect trends: $e');
       return [];
     }
   }
@@ -420,7 +420,7 @@ class CommunityAIService {
     int lookbackDays = 30,
     double minMagnitude = 0.15,
   }) async {
-    debugPrint('🔄 [CommunityAI] Detecting community shifts');
+    debugPrint('ðŸ”„ [CommunityAI] Detecting community shifts');
 
     final shifts = <CommunityShift>[];
 
@@ -449,10 +449,10 @@ class CommunityAIService {
         _shiftController.add(shift);
       }
 
-      debugPrint('✅ [CommunityAI] Detected ${shifts.length} community shifts');
+      debugPrint('âœ… [CommunityAI] Detected ${shifts.length} community shifts');
       return shifts;
     } catch (e) {
-      debugPrint('❌ [CommunityAI] Failed to detect shifts: $e');
+      debugPrint('âŒ [CommunityAI] Failed to detect shifts: $e');
       return [];
     }
   }
@@ -535,7 +535,7 @@ class CommunityAIService {
     int limit = 50,
     GrowthPatternType? filterType,
   }) async {
-    debugPrint('📊 [CommunityAI] Analyzing creator growth patterns');
+    debugPrint('ðŸ“Š [CommunityAI] Analyzing creator growth patterns');
 
     final patterns = <CreatorGrowthPattern>[];
 
@@ -589,10 +589,10 @@ class CommunityAIService {
         _growthController.add(pattern);
       }
 
-      debugPrint('✅ [CommunityAI] Analyzed ${patterns.length} creator growth patterns');
+      debugPrint('âœ… [CommunityAI] Analyzed ${patterns.length} creator growth patterns');
       return patterns;
     } catch (e) {
-      debugPrint('❌ [CommunityAI] Failed to analyze growth patterns: $e');
+      debugPrint('âŒ [CommunityAI] Failed to analyze growth patterns: $e');
       return [];
     }
   }
@@ -677,7 +677,7 @@ class CommunityAIService {
   Future<List<FeatureRecommendation>> autoRecommendFeatures({
     int maxRecommendations = 5,
   }) async {
-    debugPrint('💡 [CommunityAI] Generating feature recommendations');
+    debugPrint('ðŸ’¡ [CommunityAI] Generating feature recommendations');
 
     final recommendations = <FeatureRecommendation>[];
 
@@ -718,10 +718,10 @@ class CommunityAIService {
         'count': limited.length,
       });
 
-      debugPrint('✅ [CommunityAI] Generated ${limited.length} feature recommendations');
+      debugPrint('âœ… [CommunityAI] Generated ${limited.length} feature recommendations');
       return limited;
     } catch (e) {
-      debugPrint('❌ [CommunityAI] Failed to generate recommendations: $e');
+      debugPrint('âŒ [CommunityAI] Failed to generate recommendations: $e');
       return [];
     }
   }

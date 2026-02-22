@@ -1,5 +1,5 @@
-// Chat Messages Provider - Manages chat messages for rooms and direct messages
 
+// Chat Messages Provider - Manages chat messages for rooms and direct messages
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../shared/models/chat_message.dart';
 
@@ -20,7 +20,7 @@ List<ChatMessage> _generateMockMessages() {
       senderId: 'user2',
       senderName: 'Sarah Chen',
       senderAvatarUrl: 'https://i.pravatar.cc/150?u=sarah',
-      content: 'Yes! Just joined the call 👋',
+      content: 'Yes! Just joined the call ðŸ‘‹',
       timestamp: DateTime.now().subtract(const Duration(minutes: 9)),
       contentType: MessageContentType.text,
     ),
@@ -29,7 +29,7 @@ List<ChatMessage> _generateMockMessages() {
       senderId: 'user1',
       senderName: 'Alex Johnson',
       senderAvatarUrl: 'https://i.pravatar.cc/150?u=alex',
-      content: '😄',
+      content: 'ðŸ˜„',
       timestamp: DateTime.now().subtract(const Duration(minutes: 8)),
       contentType: MessageContentType.text,
     ),
@@ -137,5 +137,7 @@ final messagesByUserProvider = Provider<Map<String, List<ChatMessage>>>((ref) {
 
   return grouped;
 });
+
+
 
 

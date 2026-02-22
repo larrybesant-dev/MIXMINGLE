@@ -1,4 +1,4 @@
-/// Roadmap Service
+﻿/// Roadmap Service
 ///
 /// Manages feature requests, prioritization, and automatic
 /// roadmap generation based on impact and effort analysis.
@@ -281,7 +281,7 @@ class RoadmapService {
     FeatureCategory? category,
     List<String>? tags,
   }) async {
-    debugPrint('📝 [RoadmapService] Collecting feature request: $title');
+    debugPrint('ðŸ“ [RoadmapService] Collecting feature request: $title');
 
     try {
       // Auto-categorize if not provided
@@ -314,10 +314,10 @@ class RoadmapService {
         'tags_count': detectedTags.length,
       });
 
-      debugPrint('✅ [RoadmapService] Feature request collected: ${request.id}');
+      debugPrint('âœ… [RoadmapService] Feature request collected: ${request.id}');
       return request;
     } catch (e) {
-      debugPrint('❌ [RoadmapService] Failed to collect feature request: $e');
+      debugPrint('âŒ [RoadmapService] Failed to collect feature request: $e');
       rethrow;
     }
   }
@@ -387,7 +387,7 @@ class RoadmapService {
       });
       return true;
     } catch (e) {
-      debugPrint('❌ [RoadmapService] Failed to vote: $e');
+      debugPrint('âŒ [RoadmapService] Failed to vote: $e');
       return false;
     }
   }
@@ -400,7 +400,7 @@ class RoadmapService {
   Future<List<RankedFeature>> rankByImpact({
     int limit = 20,
   }) async {
-    debugPrint('📊 [RoadmapService] Ranking features by impact');
+    debugPrint('ðŸ“Š [RoadmapService] Ranking features by impact');
 
     try {
       final features = await _getAllFeatures();
@@ -424,10 +424,10 @@ class RoadmapService {
       // Sort by impact score
       rankedFeatures.sort((a, b) => b.impactScore.compareTo(a.impactScore));
 
-      debugPrint('✅ [RoadmapService] Ranked ${rankedFeatures.length} features by impact');
+      debugPrint('âœ… [RoadmapService] Ranked ${rankedFeatures.length} features by impact');
       return rankedFeatures.take(limit).toList();
     } catch (e) {
-      debugPrint('❌ [RoadmapService] Failed to rank by impact: $e');
+      debugPrint('âŒ [RoadmapService] Failed to rank by impact: $e');
       return [];
     }
   }
@@ -490,7 +490,7 @@ class RoadmapService {
   Future<List<RankedFeature>> rankByEffort({
     int limit = 20,
   }) async {
-    debugPrint('📊 [RoadmapService] Ranking features by effort');
+    debugPrint('ðŸ“Š [RoadmapService] Ranking features by effort');
 
     try {
       final features = await _getAllFeatures();
@@ -514,10 +514,10 @@ class RoadmapService {
       // Sort by effort score (lowest first = quick wins)
       rankedFeatures.sort((a, b) => a.effortScore.compareTo(b.effortScore));
 
-      debugPrint('✅ [RoadmapService] Ranked ${rankedFeatures.length} features by effort');
+      debugPrint('âœ… [RoadmapService] Ranked ${rankedFeatures.length} features by effort');
       return rankedFeatures.take(limit).toList();
     } catch (e) {
-      debugPrint('❌ [RoadmapService] Failed to rank by effort: $e');
+      debugPrint('âŒ [RoadmapService] Failed to rank by effort: $e');
       return [];
     }
   }
@@ -580,7 +580,7 @@ class RoadmapService {
     int quartersAhead = 4,
     int featuresPerQuarter = 5,
   }) async {
-    debugPrint('🗺️ [RoadmapService] Auto-generating roadmap');
+    debugPrint('ðŸ—ºï¸ [RoadmapService] Auto-generating roadmap');
 
     try {
       // Get all ranked features
@@ -685,10 +685,10 @@ class RoadmapService {
         'features': featureIndex,
       });
 
-      debugPrint('✅ [RoadmapService] Generated roadmap with $featureIndex features');
+      debugPrint('âœ… [RoadmapService] Generated roadmap with $featureIndex features');
       return roadmap;
     } catch (e) {
-      debugPrint('❌ [RoadmapService] Failed to generate roadmap: $e');
+      debugPrint('âŒ [RoadmapService] Failed to generate roadmap: $e');
       rethrow;
     }
   }

@@ -1,4 +1,4 @@
-/// Monetization Strategy Service
+﻿/// Monetization Strategy Service
 ///
 /// Manages VIP upsells, limited-time offers, and behavior-based
 /// monetization prompts to drive conversions.
@@ -88,7 +88,7 @@ class MonetizationStrategy {
 
       return offer;
     } catch (e) {
-      debugPrint('❌ [Monetization] Failed to show VIP upsell: $e');
+      debugPrint('âŒ [Monetization] Failed to show VIP upsell: $e');
       return null;
     }
   }
@@ -129,7 +129,7 @@ class MonetizationStrategy {
       }
 
       final offer = VipPlusUpsellOffer(
-        title: 'Upgrade to VIP+ 👑',
+        title: 'Upgrade to VIP+ ðŸ‘‘',
         subtitle: 'Unlock the ultimate experience',
         benefits: [
           'Unlimited room creation',
@@ -160,7 +160,7 @@ class MonetizationStrategy {
 
       return offer;
     } catch (e) {
-      debugPrint('❌ [Monetization] Failed to show VIP+ upsell: $e');
+      debugPrint('âŒ [Monetization] Failed to show VIP+ upsell: $e');
       return null;
     }
   }
@@ -240,7 +240,7 @@ class MonetizationStrategy {
 
       return offer;
     } catch (e) {
-      debugPrint('❌ [Monetization] Failed to create limited offer: $e');
+      debugPrint('âŒ [Monetization] Failed to create limited offer: $e');
       return null;
     }
   }
@@ -271,7 +271,7 @@ class MonetizationStrategy {
             await _trackVipRoomAttempt(userId);
             offer = BehaviorOffer(
               type: BehaviorOfferType.vipRoomAccess,
-              title: 'Want to join VIP rooms? 🌟',
+              title: 'Want to join VIP rooms? ðŸŒŸ',
               message: 'Upgrade to VIP to access exclusive rooms with top creators!',
               ctaLabel: 'Unlock VIP Rooms',
               ctaRoute: '/membership',
@@ -283,7 +283,7 @@ class MonetizationStrategy {
         case UserBehavior.ranOutOfCoins:
           offer = BehaviorOffer(
             type: BehaviorOfferType.coinBundle,
-            title: 'Running low on coins? 💰',
+            title: 'Running low on coins? ðŸ’°',
             message: 'Get a special bonus with your next coin purchase!',
             ctaLabel: 'Get Coins',
             ctaRoute: '/coin-store',
@@ -295,7 +295,7 @@ class MonetizationStrategy {
           if (membershipTier == 'free') {
             offer = BehaviorOffer(
               type: BehaviorOfferType.creatorPerk,
-              title: 'You\'re a natural host! 🎤',
+              title: 'You\'re a natural host! ðŸŽ¤',
               message: 'VIP members get unlimited room creation and creator tools.',
               ctaLabel: 'Become VIP',
               ctaRoute: '/membership',
@@ -307,7 +307,7 @@ class MonetizationStrategy {
           if (membershipTier == 'free') {
             offer = BehaviorOffer(
               type: BehaviorOfferType.engagementReward,
-              title: 'You\'re loving Mix & Mingle! ❤️',
+              title: 'You\'re loving Mix & Mingle! â¤ï¸',
               message: 'Here\'s a special offer just for you - 25% off VIP!',
               ctaLabel: 'Claim Offer',
               ctaRoute: '/membership',
@@ -319,7 +319,7 @@ class MonetizationStrategy {
         case UserBehavior.referredFriends:
           offer = BehaviorOffer(
             type: BehaviorOfferType.referralBonus,
-            title: 'Thanks for spreading the word! 🎉',
+            title: 'Thanks for spreading the word! ðŸŽ‰',
             message: 'Enjoy bonus coins for your referrals!',
             ctaLabel: 'See Rewards',
             ctaRoute: '/referrals',
@@ -340,7 +340,7 @@ class MonetizationStrategy {
 
       return offer;
     } catch (e) {
-      debugPrint('❌ [Monetization] Failed to create behavior offer: $e');
+      debugPrint('âŒ [Monetization] Failed to create behavior offer: $e');
       return null;
     }
   }
@@ -367,7 +367,7 @@ class MonetizationStrategy {
         'lastVipRoomAttempt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     } catch (e) {
-      debugPrint('❌ [Monetization] Failed to track VIP room attempt: $e');
+      debugPrint('âŒ [Monetization] Failed to track VIP room attempt: $e');
     }
   }
 
@@ -385,7 +385,7 @@ class MonetizationStrategy {
         },
       );
     } catch (e) {
-      debugPrint('❌ [Monetization] Failed to track upgrade started: $e');
+      debugPrint('âŒ [Monetization] Failed to track upgrade started: $e');
     }
   }
 
@@ -419,7 +419,7 @@ class MonetizationStrategy {
         'lifetimeValue': FieldValue.increment(price),
       }, SetOptions(merge: true));
     } catch (e) {
-      debugPrint('❌ [Monetization] Failed to track upgrade: $e');
+      debugPrint('âŒ [Monetization] Failed to track upgrade: $e');
     }
   }
 
@@ -435,7 +435,7 @@ class MonetizationStrategy {
       case UpsellTrigger.vipRoomBlocked:
         return VipUpsellOffer(
           offerType: 'vip_room_access',
-          title: 'Unlock VIP Rooms 🔓',
+          title: 'Unlock VIP Rooms ðŸ”“',
           subtitle: 'Get access to exclusive creator rooms',
           benefits: [
             'Join VIP-only rooms',
@@ -451,7 +451,7 @@ class MonetizationStrategy {
       case UpsellTrigger.roomLimitReached:
         return VipUpsellOffer(
           offerType: 'unlimited_rooms',
-          title: 'Create Unlimited Rooms 🎤',
+          title: 'Create Unlimited Rooms ðŸŽ¤',
           subtitle: 'No more limits on your creativity',
           benefits: [
             'Unlimited room creation',
@@ -467,7 +467,7 @@ class MonetizationStrategy {
       case UpsellTrigger.coinsLow:
         return VipUpsellOffer(
           offerType: 'coin_bonus',
-          title: 'Get Weekly Coin Bonus 💰',
+          title: 'Get Weekly Coin Bonus ðŸ’°',
           subtitle: 'Never run out of coins again',
           benefits: [
             '50 free coins every week',
@@ -483,7 +483,7 @@ class MonetizationStrategy {
       case UpsellTrigger.profileCompletion:
         return VipUpsellOffer(
           offerType: 'profile_boost',
-          title: 'Stand Out from the Crowd ✨',
+          title: 'Stand Out from the Crowd âœ¨',
           subtitle: 'Get noticed with VIP profile features',
           benefits: [
             'VIP profile badge',
@@ -499,7 +499,7 @@ class MonetizationStrategy {
       case UpsellTrigger.afterPurchase:
         return VipUpsellOffer(
           offerType: 'value_upgrade',
-          title: 'Get More for Your Money 🌟',
+          title: 'Get More for Your Money ðŸŒŸ',
           subtitle: 'VIP members save on every purchase',
           benefits: [
             '15% bonus on all coin purchases',
@@ -515,7 +515,7 @@ class MonetizationStrategy {
       case UpsellTrigger.general:
         return VipUpsellOffer(
           offerType: 'general',
-          title: 'Upgrade to VIP 🌟',
+          title: 'Upgrade to VIP ðŸŒŸ',
           subtitle: 'Unlock the full Mix & Mingle experience',
           benefits: [
             'VIP-only rooms',
@@ -532,15 +532,15 @@ class MonetizationStrategy {
   String _getOfferTitle(OfferType type, int discount) {
     switch (type) {
       case OfferType.vipMonthly:
-        return '$discount% off VIP Monthly! 🎉';
+        return '$discount% off VIP Monthly! ðŸŽ‰';
       case OfferType.vipYearly:
-        return '$discount% off VIP Yearly! 🎉';
+        return '$discount% off VIP Yearly! ðŸŽ‰';
       case OfferType.vipPlusMonthly:
-        return '$discount% off VIP+ Monthly! 👑';
+        return '$discount% off VIP+ Monthly! ðŸ‘‘';
       case OfferType.vipPlusYearly:
-        return '$discount% off VIP+ Yearly! 👑';
+        return '$discount% off VIP+ Yearly! ðŸ‘‘';
       case OfferType.coinBundle:
-        return '$discount% Bonus Coins! 💰';
+        return '$discount% Bonus Coins! ðŸ’°';
     }
   }
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../core/services/report_block_service.dart';
 import '../../core/utils/app_logger.dart';
 
@@ -317,10 +317,10 @@ class ReportBlockSheet {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            const Text('• Prevent them from contacting you'),
-            const Text('• Remove them from your followers'),
-            const Text('• Remove you from their followers'),
-            const Text('• Hide their content from you'),
+            const Text('â€¢ Prevent them from contacting you'),
+            const Text('â€¢ Remove them from your followers'),
+            const Text('â€¢ Remove you from their followers'),
+            const Text('â€¢ Hide their content from you'),
           ],
         ),
         actions: [

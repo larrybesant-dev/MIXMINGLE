@@ -1,4 +1,4 @@
-// import 'package:freezed_annotation/freezed_annotation.dart';
+﻿// import 'package:freezed_annotation/freezed_annotation.dart';
 
 // part 'match_score.freezed.dart';
 // part 'match_score.g.dart';
@@ -136,3 +136,5 @@ class MatchStatistics {
     );
   }
 }
+
+

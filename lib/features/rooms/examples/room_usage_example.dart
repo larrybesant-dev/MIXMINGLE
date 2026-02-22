@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/shared/models/room.dart';
+import 'package:mixmingle/shared/models/room.dart';
 import '../providers/room_providers.dart';
 
 /// Example: Creating a Room with Tags

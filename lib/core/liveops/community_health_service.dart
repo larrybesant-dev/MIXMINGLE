@@ -1,4 +1,4 @@
-/// Community Health Service
+﻿/// Community Health Service
 ///
 /// Monitors and maintains community health by detecting toxic behavior,
 /// spam, harassment, and automatically taking moderation actions.
@@ -824,3 +824,5 @@ class CommunityHealthService {
     _escalationController.close();
   }
 }
+
+

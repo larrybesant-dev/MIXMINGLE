@@ -1,4 +1,4 @@
-/// Dynamic Economy Service
+﻿/// Dynamic Economy Service
 ///
 /// Manages real-time coin inflation control, creator market balancing,
 /// dynamic gift pricing, and global event economy boosts.
@@ -327,7 +327,7 @@ class DynamicEconomyService {
 
   /// Monitor and control real-time coin inflation
   Future<CoinSupplyMetrics> realTimeCoinInflationControl() async {
-    debugPrint('💰 [Economy] Checking coin inflation');
+    debugPrint('ðŸ’° [Economy] Checking coin inflation');
 
     // Get current supply metrics
     final metricsDoc = await _metricsCollection.doc('coin_supply').get();
@@ -390,7 +390,7 @@ class DynamicEconomyService {
     await _metricsCollection.doc('coin_supply').set(updatedMetrics.toFirestore());
     _supplyController.add(updatedMetrics);
 
-    debugPrint('📊 [Economy] Inflation rate: ${dailyInflation.toStringAsFixed(2)}% ($trend)');
+    debugPrint('ðŸ“Š [Economy] Inflation rate: ${dailyInflation.toStringAsFixed(2)}% ($trend)');
     return updatedMetrics;
   }
 
@@ -398,7 +398,7 @@ class DynamicEconomyService {
     CoinSupplyMetrics metrics,
     double inflationRate,
   ) async {
-    debugPrint('⚠️ [Economy] Applying inflation controls');
+    debugPrint('âš ï¸ [Economy] Applying inflation controls');
 
     // Reduce minting rates
     await _metricsCollection.doc('minting_config').update({
@@ -427,12 +427,12 @@ class DynamicEconomyService {
     _inflationControlTimer = Timer.periodic(interval, (_) {
       realTimeCoinInflationControl();
     });
-    debugPrint('⏱️ [Economy] Inflation monitoring started');
+    debugPrint('â±ï¸ [Economy] Inflation monitoring started');
   }
 
   void stopInflationMonitoring() {
     _inflationControlTimer?.cancel();
-    debugPrint('⏱️ [Economy] Inflation monitoring stopped');
+    debugPrint('â±ï¸ [Economy] Inflation monitoring stopped');
   }
 
   // ============================================================
@@ -441,7 +441,7 @@ class DynamicEconomyService {
 
   /// Balance creator market distribution
   Future<CreatorMarketMetrics> creatorMarketBalancing() async {
-    debugPrint('⚖️ [Economy] Balancing creator market');
+    debugPrint('âš–ï¸ [Economy] Balancing creator market');
 
     // Get creator earnings data
     final creatorsSnapshot = await _firestore
@@ -509,7 +509,7 @@ class DynamicEconomyService {
     await _metricsCollection.doc('creator_market').set(metrics.toFirestore());
     _marketController.add(metrics);
 
-    debugPrint('📊 [Economy] Gini coefficient: ${giniCoefficient.toStringAsFixed(3)}');
+    debugPrint('ðŸ“Š [Economy] Gini coefficient: ${giniCoefficient.toStringAsFixed(3)}');
     return metrics;
   }
 
@@ -533,7 +533,7 @@ class DynamicEconomyService {
   }
 
   Future<void> _applyMarketBalancing(double giniCoefficient) async {
-    debugPrint('⚖️ [Economy] Applying market balancing measures');
+    debugPrint('âš–ï¸ [Economy] Applying market balancing measures');
 
     // Boost smaller creators
     await _metricsCollection.doc('creator_config').set({
@@ -549,7 +549,7 @@ class DynamicEconomyService {
 
   /// Adjust gift pricing based on supply and demand
   Future<List<GiftPricing>> dynamicGiftPricing() async {
-    debugPrint('🎁 [Economy] Adjusting gift pricing');
+    debugPrint('ðŸŽ [Economy] Adjusting gift pricing');
 
     final pricingSnapshot = await _giftPricingCollection.get();
     final updatedPricing = <GiftPricing>[];
@@ -574,7 +574,7 @@ class DynamicEconomyService {
       // Calculate new price
       final newPrice = (pricing.basePrice * demandMultiplier).round();
 
-      // Limit price changes to ±20% per day
+      // Limit price changes to Â±20% per day
       final maxChange = (pricing.currentPrice * 0.2).round();
       final finalPrice = (newPrice - pricing.currentPrice).abs() > maxChange
           ? pricing.currentPrice + (newPrice > pricing.currentPrice ? maxChange : -maxChange)
@@ -595,7 +595,7 @@ class DynamicEconomyService {
       updatedPricing.add(updated);
     }
 
-    debugPrint('✅ [Economy] Updated ${updatedPricing.length} gift prices');
+    debugPrint('âœ… [Economy] Updated ${updatedPricing.length} gift prices');
     return updatedPricing;
   }
 
@@ -611,12 +611,12 @@ class DynamicEconomyService {
     _pricingAdjustmentTimer = Timer.periodic(interval, (_) {
       dynamicGiftPricing();
     });
-    debugPrint('⏱️ [Economy] Pricing adjustment started');
+    debugPrint('â±ï¸ [Economy] Pricing adjustment started');
   }
 
   void stopPricingAdjustment() {
     _pricingAdjustmentTimer?.cancel();
-    debugPrint('⏱️ [Economy] Pricing adjustment stopped');
+    debugPrint('â±ï¸ [Economy] Pricing adjustment stopped');
   }
 
   // ============================================================
@@ -632,7 +632,7 @@ class DynamicEconomyService {
     required Duration duration,
     Map<String, dynamic>? conditions,
   }) async {
-    debugPrint('🚀 [Economy] Creating economy boost: $name');
+    debugPrint('ðŸš€ [Economy] Creating economy boost: $name');
 
     final boostRef = _boostsCollection.doc();
     final now = DateTime.now();
@@ -651,7 +651,7 @@ class DynamicEconomyService {
 
     await boostRef.set(boost.toFirestore());
 
-    debugPrint('✅ [Economy] Boost created: ${boost.boostId}');
+    debugPrint('âœ… [Economy] Boost created: ${boost.boostId}');
     return boost;
   }
 
@@ -686,7 +686,7 @@ class DynamicEconomyService {
       'isActive': false,
       'endTime': Timestamp.now(),
     });
-    debugPrint('🛑 [Economy] Boost ended: $boostId');
+    debugPrint('ðŸ›‘ [Economy] Boost ended: $boostId');
   }
 
   // ============================================================

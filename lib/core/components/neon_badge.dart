@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../theme/colors_v2.dart';
 
 /// NeonBadge: status indicator with neon glow and optional pulse animation.

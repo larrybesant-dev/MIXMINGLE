@@ -1,4 +1,4 @@
-/// Message types for voice room chat
+﻿/// Message types for voice room chat
 enum MessageType {
   text, // Regular text message
   system, // System notifications (join/leave/kick/ban)
@@ -163,3 +163,5 @@ class VoiceRoomChatMessage {
     );
   }
 }
+
+

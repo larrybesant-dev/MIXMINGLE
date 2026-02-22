@@ -1,4 +1,4 @@
-/// Federation Protocol
+﻿/// Federation Protocol
 ///
 /// Low-level protocol for federation handshakes, state sync, and conflict resolution.
 library;
@@ -294,7 +294,7 @@ class FederationProtocol {
     required String publicKey,
     Map<String, dynamic>? capabilities,
   }) async {
-    debugPrint('🤝 [Protocol] Initiating handshake with: $partnerId');
+    debugPrint('ðŸ¤ [Protocol] Initiating handshake with: $partnerId');
 
     try {
       // Generate session
@@ -345,10 +345,10 @@ class FederationProtocol {
         'expiresAt': Timestamp.fromDate(result.expiresAt!),
       });
 
-      debugPrint('✅ [Protocol] Handshake successful: $sessionId');
+      debugPrint('âœ… [Protocol] Handshake successful: $sessionId');
       return result;
     } catch (e) {
-      debugPrint('❌ [Protocol] Handshake failed: $e');
+      debugPrint('âŒ [Protocol] Handshake failed: $e');
       return HandshakeResult(
         success: false,
         sessionId: '',
@@ -397,7 +397,7 @@ class FederationProtocol {
     required String entityType,
     List<SyncDelta>? localDeltas,
   }) async {
-    debugPrint('🔄 [Protocol] Syncing $entityType with: $partnerId');
+    debugPrint('ðŸ”„ [Protocol] Syncing $entityType with: $partnerId');
 
     if (!hasActiveSession(partnerId)) {
       throw Exception('No active session with partner');
@@ -470,10 +470,10 @@ class FederationProtocol {
       // Persist sync state
       await _syncStatesCollection.doc(syncState.syncId).set(syncState.toFirestore());
 
-      debugPrint('✅ [Protocol] Sync completed: ${syncState.status}');
+      debugPrint('âœ… [Protocol] Sync completed: ${syncState.status}');
       return syncState;
     } catch (e) {
-      debugPrint('❌ [Protocol] Sync failed: $e');
+      debugPrint('âŒ [Protocol] Sync failed: $e');
       return syncState.copyWith(status: SyncStatus.error);
     }
   }
@@ -548,7 +548,7 @@ class FederationProtocol {
     required ConflictStrategy strategy,
     Map<String, dynamic>? manualResolution,
   }) async {
-    debugPrint('⚖️ [Protocol] Resolving conflict: $conflictId with $strategy');
+    debugPrint('âš–ï¸ [Protocol] Resolving conflict: $conflictId with $strategy');
 
     final conflictDoc = await _conflictsCollection.doc(conflictId).get();
     if (!conflictDoc.exists) {
@@ -604,7 +604,7 @@ class FederationProtocol {
       'resolution': resolution.toJson(),
     });
 
-    debugPrint('✅ [Protocol] Conflict resolved: $conflictId');
+    debugPrint('âœ… [Protocol] Conflict resolved: $conflictId');
     return resolution;
   }
 
@@ -675,7 +675,7 @@ class FederationProtocol {
       });
     }
 
-    debugPrint('👋 [Protocol] Disconnected from: $partnerId');
+    debugPrint('ðŸ‘‹ [Protocol] Disconnected from: $partnerId');
   }
 
   /// Get protocol statistics

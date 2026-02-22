@@ -1,3 +1,4 @@
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/events_service.dart';
 import '../shared/models/event.dart';
@@ -84,3 +85,5 @@ final removeRsvpActionProvider = FutureProvider.family<void, String>((ref, event
   ref.invalidate(eventAttendeesProvider((eventId: eventId, status: null)));
   ref.invalidate(userEventRsvpsProvider);
 });
+
+

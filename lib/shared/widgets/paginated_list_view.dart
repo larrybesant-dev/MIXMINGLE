@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:mix_and_mingle/core/pagination/pagination_controller.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:mixmingle/core/pagination/pagination_controller.dart';
 
 /// A reusable paginated list view widget
 class PaginatedListView<T> extends StatefulWidget {
@@ -268,3 +268,5 @@ class _PaginatedGridViewState<T> extends State<PaginatedGridView<T>> {
     );
   }
 }
+
+

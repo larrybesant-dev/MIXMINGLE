@@ -1,4 +1,4 @@
-/// Launch Build Service
+﻿/// Launch Build Service
 ///
 /// Manages iOS and Android build preparation for TestFlight
 /// and Play Store internal/production releases.
@@ -35,7 +35,7 @@ class LaunchBuildService {
     bool exportComplianceRequired = false,
   }) async {
     try {
-      debugPrint('🔧 [Build] Starting iOS internal build...');
+      debugPrint('ðŸ”§ [Build] Starting iOS internal build...');
 
       // Verify prerequisites
       final prereqResult = await _verifyIosPrerequisites();
@@ -56,7 +56,7 @@ flutter build ios --flavor $flavor --release
 cd ios && xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportPath build/ipa -exportOptionsPlist ExportOptions.plist
 ''';
 
-      debugPrint('📋 [Build] iOS build command:\n$buildCommand');
+      debugPrint('ðŸ“‹ [Build] iOS build command:\n$buildCommand');
 
       // Record build info
       await _recordBuildInfo(
@@ -73,7 +73,7 @@ cd ios && xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportP
         message: 'iOS internal build prepared. Run the command to build.',
       );
     } catch (e) {
-      debugPrint('❌ [Build] iOS internal build failed: $e');
+      debugPrint('âŒ [Build] iOS internal build failed: $e');
       return BuildResult(
         success: false,
         platform: BuildPlatform.ios,
@@ -88,7 +88,7 @@ cd ios && xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportP
     required int buildNumber,
   }) async {
     try {
-      debugPrint('🔧 [Build] Starting iOS production build...');
+      debugPrint('ðŸ”§ [Build] Starting iOS production build...');
 
       final prereqResult = await _verifyIosPrerequisites();
       if (!prereqResult.passed) {
@@ -123,7 +123,7 @@ cd ios && xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportP
         message: 'iOS production build prepared.',
       );
     } catch (e) {
-      debugPrint('❌ [Build] iOS production build failed: $e');
+      debugPrint('âŒ [Build] iOS production build failed: $e');
       return BuildResult(
         success: false,
         platform: BuildPlatform.ios,
@@ -141,7 +141,7 @@ cd ios && xcodebuild -exportArchive -archivePath build/Runner.xcarchive -exportP
     String flavor = 'production',
   }) async {
     try {
-      debugPrint('🔧 [Build] Starting Android internal build...');
+      debugPrint('ðŸ”§ [Build] Starting Android internal build...');
 
       final prereqResult = await _verifyAndroidPrerequisites();
       if (!prereqResult.passed) {
@@ -172,7 +172,7 @@ flutter build appbundle --flavor $flavor --release
         message: 'Android internal build prepared.',
       );
     } catch (e) {
-      debugPrint('❌ [Build] Android internal build failed: $e');
+      debugPrint('âŒ [Build] Android internal build failed: $e');
       return BuildResult(
         success: false,
         platform: BuildPlatform.android,
@@ -187,7 +187,7 @@ flutter build appbundle --flavor $flavor --release
     required int buildNumber,
   }) async {
     try {
-      debugPrint('🔧 [Build] Starting Android production build...');
+      debugPrint('ðŸ”§ [Build] Starting Android production build...');
 
       final prereqResult = await _verifyAndroidPrerequisites();
       if (!prereqResult.passed) {
@@ -222,7 +222,7 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
         message: 'Android production build prepared.',
       );
     } catch (e) {
-      debugPrint('❌ [Build] Android production build failed: $e');
+      debugPrint('âŒ [Build] Android production build failed: $e');
       return BuildResult(
         success: false,
         platform: BuildPlatform.android,
@@ -238,7 +238,7 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
   /// Verify flavor configurations exist
   Future<FlavorVerificationResult> verifyFlavors() async {
     try {
-      debugPrint('🔍 [Build] Verifying flavors...');
+      debugPrint('ðŸ” [Build] Verifying flavors...');
 
       final checks = <String, bool>{};
       final failures = <String>[];
@@ -273,8 +273,8 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
       final passed = failures.isEmpty;
 
       debugPrint(passed
-          ? '✅ [Build] Flavors verified'
-          : '❌ [Build] Flavor verification failed');
+          ? 'âœ… [Build] Flavors verified'
+          : 'âŒ [Build] Flavor verification failed');
 
       return FlavorVerificationResult(
         passed: passed,
@@ -282,7 +282,7 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
         failures: failures,
       );
     } catch (e) {
-      debugPrint('❌ [Build] Flavor verification error: $e');
+      debugPrint('âŒ [Build] Flavor verification error: $e');
       return FlavorVerificationResult(
         passed: false,
         checks: {},
@@ -294,7 +294,7 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
   /// Verify app icons are configured
   Future<IconVerificationResult> verifyIcons() async {
     try {
-      debugPrint('🔍 [Build] Verifying icons...');
+      debugPrint('ðŸ” [Build] Verifying icons...');
 
       final checks = <String, bool>{};
       final failures = <String>[];
@@ -332,8 +332,8 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
       final passed = failures.isEmpty;
 
       debugPrint(passed
-          ? '✅ [Build] Icons verified'
-          : '❌ [Build] Icon verification failed');
+          ? 'âœ… [Build] Icons verified'
+          : 'âŒ [Build] Icon verification failed');
 
       return IconVerificationResult(
         passed: passed,
@@ -341,7 +341,7 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
         failures: failures,
       );
     } catch (e) {
-      debugPrint('❌ [Build] Icon verification error: $e');
+      debugPrint('âŒ [Build] Icon verification error: $e');
       return IconVerificationResult(
         passed: false,
         checks: {},
@@ -353,7 +353,7 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
   /// Verify splash screens are configured
   Future<SplashVerificationResult> verifySplash() async {
     try {
-      debugPrint('🔍 [Build] Verifying splash screens...');
+      debugPrint('ðŸ” [Build] Verifying splash screens...');
 
       final checks = <String, bool>{};
       final failures = <String>[];
@@ -386,8 +386,8 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
       final passed = failures.isEmpty;
 
       debugPrint(passed
-          ? '✅ [Build] Splash screens verified'
-          : '❌ [Build] Splash verification failed');
+          ? 'âœ… [Build] Splash screens verified'
+          : 'âŒ [Build] Splash verification failed');
 
       return SplashVerificationResult(
         passed: passed,
@@ -395,7 +395,7 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
         failures: failures,
       );
     } catch (e) {
-      debugPrint('❌ [Build] Splash verification error: $e');
+      debugPrint('âŒ [Build] Splash verification error: $e');
       return SplashVerificationResult(
         passed: false,
         checks: {},
@@ -407,7 +407,7 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
   /// Verify privacy manifests (iOS 17+ requirement)
   Future<PrivacyManifestResult> verifyPrivacyManifests() async {
     try {
-      debugPrint('🔍 [Build] Verifying privacy manifests...');
+      debugPrint('ðŸ” [Build] Verifying privacy manifests...');
 
       final checks = <String, bool>{};
       final failures = <String>[];
@@ -436,7 +436,7 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
         for (final api in requiredAPIs) {
           if (!content.contains(api)) {
             // Not all APIs are required for all apps, just note them
-            debugPrint('ℹ️ [Build] API not declared: $api');
+            debugPrint('â„¹ï¸ [Build] API not declared: $api');
           }
         }
       } else {
@@ -459,8 +459,8 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
       final passed = failures.isEmpty;
 
       debugPrint(passed
-          ? '✅ [Build] Privacy manifests verified'
-          : '❌ [Build] Privacy manifest verification failed');
+          ? 'âœ… [Build] Privacy manifests verified'
+          : 'âŒ [Build] Privacy manifest verification failed');
 
       return PrivacyManifestResult(
         passed: passed,
@@ -468,7 +468,7 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
         failures: failures,
       );
     } catch (e) {
-      debugPrint('❌ [Build] Privacy manifest verification error: $e');
+      debugPrint('âŒ [Build] Privacy manifest verification error: $e');
       return PrivacyManifestResult(
         passed: false,
         checks: {},
@@ -536,7 +536,7 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
 
     // Check key.properties exists (for signing)
     if (!File('android/key.properties').existsSync()) {
-      debugPrint('⚠️ [Build] key.properties not found - signing may fail');
+      debugPrint('âš ï¸ [Build] key.properties not found - signing may fail');
       // Don't fail, just warn
     }
 
@@ -586,7 +586,7 @@ flutter build appbundle --flavor production --release --build-name=$version --bu
         'status': 'prepared',
       });
     } catch (e) {
-      debugPrint('⚠️ [Build] Failed to record build info: $e');
+      debugPrint('âš ï¸ [Build] Failed to record build info: $e');
     }
   }
 }

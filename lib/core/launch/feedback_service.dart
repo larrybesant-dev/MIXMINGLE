@@ -1,4 +1,4 @@
-/// Feedback Service
+﻿/// Feedback Service
 ///
 /// Handles user feedback collection, categorization, and reporting
 /// during beta phases to improve the app.
@@ -76,7 +76,7 @@ class FeedbackService {
         },
       );
 
-      debugPrint('✅ [Feedback] Submitted: $feedbackId');
+      debugPrint('âœ… [Feedback] Submitted: $feedbackId');
 
       return FeedbackSubmissionResult(
         success: true,
@@ -84,7 +84,7 @@ class FeedbackService {
         message: 'Thank you for your feedback!',
       );
     } catch (e) {
-      debugPrint('❌ [Feedback] Failed to submit: $e');
+      debugPrint('âŒ [Feedback] Failed to submit: $e');
       return FeedbackSubmissionResult(
         success: false,
         error: 'Failed to submit feedback. Please try again.',
@@ -262,11 +262,11 @@ class FeedbackService {
         'generatedAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ [Feedback] Weekly report generated: $total items');
+      debugPrint('âœ… [Feedback] Weekly report generated: $total items');
 
       return report;
     } catch (e) {
-      debugPrint('❌ [Feedback] Failed to generate report: $e');
+      debugPrint('âŒ [Feedback] Failed to generate report: $e');
       return FeedbackReport(
         periodStart: DateTime.now().subtract(const Duration(days: 7)),
         periodEnd: DateTime.now(),
@@ -347,7 +347,7 @@ class FeedbackService {
         );
       }).toList();
     } catch (e) {
-      debugPrint('❌ [Feedback] Failed to get user feedback: $e');
+      debugPrint('âŒ [Feedback] Failed to get user feedback: $e');
       return [];
     }
   }
@@ -374,9 +374,9 @@ class FeedbackService {
           .doc(feedbackId)
           .update(updateData);
 
-      debugPrint('✅ [Feedback] Status updated: $feedbackId -> ${status.name}');
+      debugPrint('âœ… [Feedback] Status updated: $feedbackId -> ${status.name}');
     } catch (e) {
-      debugPrint('❌ [Feedback] Failed to update status: $e');
+      debugPrint('âŒ [Feedback] Failed to update status: $e');
     }
   }
 
@@ -413,7 +413,7 @@ class FeedbackService {
         resolved: resolved,
       );
     } catch (e) {
-      debugPrint('❌ [Feedback] Failed to get stats: $e');
+      debugPrint('âŒ [Feedback] Failed to get stats: $e');
       return const FeedbackStats();
     }
   }
@@ -460,23 +460,23 @@ enum FeedbackCategory {
   String get emoji {
     switch (this) {
       case FeedbackCategory.bug:
-        return '🐛';
+        return 'ðŸ›';
       case FeedbackCategory.featureRequest:
-        return '💡';
+        return 'ðŸ’¡';
       case FeedbackCategory.uiUx:
-        return '🎨';
+        return 'ðŸŽ¨';
       case FeedbackCategory.usability:
-        return '👆';
+        return 'ðŸ‘†';
       case FeedbackCategory.suggestion:
-        return '✨';
+        return 'âœ¨';
       case FeedbackCategory.performance:
-        return '⚡';
+        return 'âš¡';
       case FeedbackCategory.content:
-        return '📝';
+        return 'ðŸ“';
       case FeedbackCategory.general:
-        return '💬';
+        return 'ðŸ’¬';
       case FeedbackCategory.other:
-        return '📌';
+        return 'ðŸ“Œ';
     }
   }
 }

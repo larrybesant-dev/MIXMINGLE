@@ -1,4 +1,4 @@
-/// Welcome Room Service
+﻿/// Welcome Room Service
 ///
 /// Manages the welcome room for new users, providing a friendly
 /// introduction to the Mix & Mingle community.
@@ -56,7 +56,7 @@ class WelcomeRoomService {
       _configCacheTime = DateTime.now();
       return _cachedConfig!;
     } catch (e) {
-      debugPrint('❌ [WelcomeRoom] Failed to fetch config: $e');
+      debugPrint('âŒ [WelcomeRoom] Failed to fetch config: $e');
       return const WelcomeRoomConfig();
     }
   }
@@ -68,7 +68,7 @@ class WelcomeRoomService {
       final config = await fetchWelcomeRoomConfig();
 
       if (!config.isEnabled) {
-        debugPrint('ℹ️ [WelcomeRoom] Welcome room is disabled');
+        debugPrint('â„¹ï¸ [WelcomeRoom] Welcome room is disabled');
         return null;
       }
 
@@ -80,7 +80,7 @@ class WelcomeRoomService {
       }
 
       if (roomId == null) {
-        debugPrint('ℹ️ [WelcomeRoom] No welcome room available');
+        debugPrint('â„¹ï¸ [WelcomeRoom] No welcome room available');
         return null;
       }
 
@@ -102,10 +102,10 @@ class WelcomeRoomService {
         'welcomeRoomJoinedAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ [WelcomeRoom] User $userId joined room $roomId');
+      debugPrint('âœ… [WelcomeRoom] User $userId joined room $roomId');
       return roomId;
     } catch (e) {
-      debugPrint('❌ [WelcomeRoom] Failed to join: $e');
+      debugPrint('âŒ [WelcomeRoom] Failed to join: $e');
       return null;
     }
   }
@@ -134,7 +134,7 @@ class WelcomeRoomService {
 
       return null;
     } catch (e) {
-      debugPrint('❌ [WelcomeRoom] Error finding room: $e');
+      debugPrint('âŒ [WelcomeRoom] Error finding room: $e');
       return null;
     }
   }
@@ -177,10 +177,10 @@ class WelcomeRoomService {
 
       await _firestore.collection('rooms').doc(roomId).set(roomData);
 
-      debugPrint('✅ [WelcomeRoom] Created new welcome room: $roomId');
+      debugPrint('âœ… [WelcomeRoom] Created new welcome room: $roomId');
       return roomId;
     } catch (e) {
-      debugPrint('❌ [WelcomeRoom] Failed to create room: $e');
+      debugPrint('âŒ [WelcomeRoom] Failed to create room: $e');
       return null;
     }
   }
@@ -199,7 +199,7 @@ class WelcomeRoomService {
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      debugPrint('❌ [WelcomeRoom] Failed to add user to room: $e');
+      debugPrint('âŒ [WelcomeRoom] Failed to add user to room: $e');
       rethrow;
     }
   }
@@ -223,7 +223,7 @@ class WelcomeRoomService {
           ? WelcomeRoomStatus.willCreate
           : WelcomeRoomStatus.unavailable;
     } catch (e) {
-      debugPrint('❌ [WelcomeRoom] Error getting status: $e');
+      debugPrint('âŒ [WelcomeRoom] Error getting status: $e');
       return WelcomeRoomStatus.error;
     }
   }
@@ -234,7 +234,7 @@ class WelcomeRoomService {
       final doc = await _firestore.collection('users').doc(userId).get();
       return doc.data()?['welcomeRoomJoined'] ?? false;
     } catch (e) {
-      debugPrint('❌ [WelcomeRoom] Error checking join status: $e');
+      debugPrint('âŒ [WelcomeRoom] Error checking join status: $e');
       return false;
     }
   }
@@ -257,12 +257,12 @@ class WelcomeRoomConfig {
 
   const WelcomeRoomConfig({
     this.isEnabled = true,
-    this.roomTitle = 'Welcome to Mix & Mingle! 🎉',
+    this.roomTitle = 'Welcome to Mix & Mingle! ðŸŽ‰',
     this.roomDescription = 'A friendly place for new members to meet the community and learn the ropes.',
     this.maxRoomCapacity = 50,
     this.autoCreateIfNone = true,
     this.welcomeMessages = const [
-      'Welcome to Mix & Mingle! 👋',
+      'Welcome to Mix & Mingle! ðŸ‘‹',
       'Feel free to say hi and introduce yourself!',
       'Need help? Just ask - our community is super friendly!',
     ],
@@ -271,7 +271,7 @@ class WelcomeRoomConfig {
   factory WelcomeRoomConfig.fromFirestore(Map<String, dynamic> data) {
     return WelcomeRoomConfig(
       isEnabled: data['isEnabled'] ?? true,
-      roomTitle: data['roomTitle'] ?? 'Welcome to Mix & Mingle! 🎉',
+      roomTitle: data['roomTitle'] ?? 'Welcome to Mix & Mingle! ðŸŽ‰',
       roomDescription: data['roomDescription'] ??
           'A friendly place for new members to meet the community.',
       maxRoomCapacity: data['maxRoomCapacity'] ?? 50,

@@ -1,12 +1,12 @@
+import 'package:flutter/material.dart';
+import 'design/design_colors.dart';
+import 'design/design_typography.dart';
 /// Loading States & UX Polish Guide
 ///
 /// This module demonstrates best practices for loading states and UX in the app.
 /// The goal: Users should always know what's happening, and the app should never
 /// feel broken or silent.
-library;
 
-import 'package:flutter/material.dart';
-import '../../core/design_system/design_constants.dart';
 
 /// Generic loading dialog with customizable message
 class LoadingDialog extends StatelessWidget {
@@ -44,11 +44,7 @@ class LoadingDialog extends StatelessWidget {
           Text(
             message,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: DesignColors.accent,
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
+            style: DesignTypography.body,
           ),
         ],
       ),
@@ -77,7 +73,7 @@ class LoadingDialog extends StatelessWidget {
   }
 
   /// Hide the loading dialog
-  static void hide(BuildContext context) {
+  void hide(BuildContext context) {
     if (Navigator.canPop(context)) {
       Navigator.pop(context);
     }
@@ -208,12 +204,12 @@ Future<T> showProgressFor<T>(
 
 /// Loading messages that should be shown based on operation
 const Map<String, String> loadingMessages = {
-  'initializing_sdk': '📱 Initializing video system...',
-  'requesting_permissions': '🔐 Requesting camera & microphone permissions...',
-  'joining_channel': '🔗 Joining conversation...',
-  'leaving_channel': '👋 Leaving room...',
-  'toggling_camera': '📹 Adjusting camera...',
-  'toggling_mic': '🎤 Adjusting microphone...',
+  'initializing_sdk': 'ðŸ“± Initializing video system...',
+  'requesting_permissions': 'ðŸ” Requesting camera & microphone permissions...',
+  'joining_channel': 'ðŸ”— Joining conversation...',
+  'leaving_channel': 'ðŸ‘‹ Leaving room...',
+  'toggling_camera': 'ðŸ“¹ Adjusting camera...',
+  'toggling_mic': 'ðŸŽ¤ Adjusting microphone...',
 };
 
 /// UX Patterns for Error Handling
@@ -292,6 +288,7 @@ class UXPolishLibrary {
     );
   }
 }
+
 
 
 

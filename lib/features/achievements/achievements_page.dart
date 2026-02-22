@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/shared/models/achievement.dart';
-import 'package:mix_and_mingle/providers/all_providers.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/shared/models/achievement.dart';
+import 'package:mixmingle/providers/all_providers.dart';
 
 class AchievementsPage extends ConsumerWidget {
   const AchievementsPage({super.key});
@@ -22,7 +22,7 @@ class AchievementsPage extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('🏆 Achievements'),
+          title: const Text('ðŸ† Achievements'),
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
@@ -70,7 +70,7 @@ class AchievementsPage extends ConsumerWidget {
                 const SizedBox(height: 24),
                 if (unlocked.isNotEmpty) ...[
                   const Text(
-                    '✨ Unlocked',
+                    'âœ¨ Unlocked',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -84,7 +84,7 @@ class AchievementsPage extends ConsumerWidget {
                 ],
                 if (locked.isNotEmpty) ...[
                   const Text(
-                    '🔒 Locked',
+                    'ðŸ”’ Locked',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -296,4 +296,3 @@ class AchievementsPage extends ConsumerWidget {
     return '${(diff.inDays / 30).floor()} months ago';
   }
 }
-

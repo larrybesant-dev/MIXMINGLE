@@ -1,3 +1,4 @@
+﻿import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,7 +54,7 @@ final userPresenceProvider = StreamProvider.family<UserPresence?, String>((ref, 
 
   // Get stream with built-in error handling and retry guards
   return presenceService.getUserPresence(userId).handleError((error, stackTrace) {
-    debugPrint('❌ userPresenceProvider error for $userId: $error');
+    debugPrint('âŒ userPresenceProvider error for $userId: $error');
     return null; // Return null on error instead of propagating
   });
 });
@@ -315,7 +316,7 @@ final userFollowingProvider = StreamProvider.family<List<UserProfile>, String>((
   yield [];
 });
 
-// ✅ P1.2: USER DISCOVERY WITH PAGINATION SUPPORT
+// âœ… P1.2: USER DISCOVERY WITH PAGINATION SUPPORT
 // The ProfileService queries now use .limit(20) to support pagination
 // UI implementations should use PaginationController to load users in batches
 // This reduces initial load time and Firestore costs significantly

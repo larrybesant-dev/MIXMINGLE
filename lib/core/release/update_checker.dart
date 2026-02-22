@@ -1,4 +1,4 @@
-/// Release Utilities
+﻿/// Release Utilities
 ///
 /// Helper utilities for release management, version checking, and update prompts.
 library;
@@ -55,7 +55,7 @@ class UpdateChecker {
             : updateUrlAndroid,
       );
     } catch (e) {
-      debugPrint('❌ [UpdateChecker] Failed to check for updates: $e');
+      debugPrint('âŒ [UpdateChecker] Failed to check for updates: $e');
       return UpdateInfo.noUpdate();
     }
   }

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// Video tile data for grid layout
 class VideoTile {
@@ -289,5 +289,3 @@ class DynamicVideoGrid extends StatelessWidget {
     );
   }
 }
-
-

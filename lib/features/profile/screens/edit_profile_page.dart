@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/shared/widgets/async_value_view_enhanced.dart';
-import 'package:mix_and_mingle/providers/profile_controller.dart';
-import 'package:mix_and_mingle/shared/models/user_profile.dart';
-import 'package:mix_and_mingle/shared/validation.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
+import 'package:mixmingle/providers/profile_controller.dart';
+import 'package:mixmingle/shared/models/user_profile.dart';
+import 'package:mixmingle/shared/validation.dart';
 
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
@@ -60,9 +60,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       final controller = ref.read(profileControllerProvider);
       final profileService = ref.read(profileServiceProvider);
 
-      debugPrint('🔧 Starting avatar upload for user: $userId');
+      debugPrint('ðŸ”§ Starting avatar upload for user: $userId');
       final url = await controller.uploadAvatar(picked, userId);
-      debugPrint('📸 Upload URL: $url');
+      debugPrint('ðŸ“¸ Upload URL: $url');
 
       if (url == null) {
         throw Exception('Upload returned null URL');
@@ -72,9 +72,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
       // Update the profile with the new photo URL
       final updatedProfile = currentProfile.copyWith(photoUrl: url);
-      debugPrint('💾 Saving profile with new photo URL');
+      debugPrint('ðŸ’¾ Saving profile with new photo URL');
       await profileService.updateUserProfile(updatedProfile);
-      debugPrint('✅ Profile saved successfully');
+      debugPrint('âœ… Profile saved successfully');
 
       // Invalidate the provider to refresh UI
       ref.invalidate(currentUserProfileProvider);
@@ -85,7 +85,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         );
       }
     } catch (e) {
-      debugPrint('❌ Avatar upload error: $e');
+      debugPrint('âŒ Avatar upload error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to upload avatar: $e'), backgroundColor: Colors.red),
@@ -108,9 +108,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       final controller = ref.read(profileControllerProvider);
       final profileService = ref.read(profileServiceProvider);
 
-      debugPrint('🔧 Starting cover photo upload for user: $userId');
+      debugPrint('ðŸ”§ Starting cover photo upload for user: $userId');
       final url = await controller.uploadCoverPhoto(picked, userId);
-      debugPrint('📸 Upload URL: $url');
+      debugPrint('ðŸ“¸ Upload URL: $url');
 
       if (url == null) {
         throw Exception('Upload returned null URL');
@@ -120,9 +120,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
       // Update the profile with the new cover photo URL
       final updatedProfile = currentProfile.copyWith(coverPhotoUrl: url);
-      debugPrint('💾 Saving profile with new cover photo URL');
+      debugPrint('ðŸ’¾ Saving profile with new cover photo URL');
       await profileService.updateUserProfile(updatedProfile);
-      debugPrint('✅ Profile saved successfully');
+      debugPrint('âœ… Profile saved successfully');
 
       // Invalidate the provider to refresh UI
       ref.invalidate(currentUserProfileProvider);
@@ -133,7 +133,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         );
       }
     } catch (e) {
-      debugPrint('❌ Cover photo upload error: $e');
+      debugPrint('âŒ Cover photo upload error: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to upload cover photo: $e'), backgroundColor: Colors.red),

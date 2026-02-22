@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../shared/models/broadcaster_queue.dart';
@@ -66,11 +66,11 @@ class BroadcasterService {
           .doc(user.uid)
           .set(queueEntry.toFirestore());
 
-      debugPrint('📡 Broadcaster request submitted. Queue position: $queuePosition');
+      debugPrint('ðŸ“¡ Broadcaster request submitted. Queue position: $queuePosition');
 
       return queueEntry;
     } catch (e) {
-      debugPrint('❌ Failed to request broadcast: $e');
+      debugPrint('âŒ Failed to request broadcast: $e');
       rethrow;
     }
   }
@@ -83,9 +83,9 @@ class BroadcasterService {
     try {
       await _firestore.collection('rooms').doc(roomId).collection('broadcasterQueue').doc(user.uid).delete();
 
-      debugPrint('❌ Broadcast request cancelled');
+      debugPrint('âŒ Broadcast request cancelled');
     } catch (e) {
-      debugPrint('❌ Failed to cancel request: $e');
+      debugPrint('âŒ Failed to cancel request: $e');
       rethrow;
     }
   }
@@ -119,7 +119,7 @@ class BroadcasterService {
               }))
           .toList();
     } catch (e) {
-      debugPrint('❌ Failed to get broadcaster queue: $e');
+      debugPrint('âŒ Failed to get broadcaster queue: $e');
       return [];
     }
   }
@@ -157,7 +157,7 @@ class BroadcasterService {
         ...doc.data()!,
       });
     } catch (e) {
-      debugPrint('❌ Failed to get queue status: $e');
+      debugPrint('âŒ Failed to get queue status: $e');
       return null;
     }
   }
@@ -176,9 +176,9 @@ class BroadcasterService {
         if (newStatus == 'pending') 'broadcastEndedAt': Timestamp.now(),
       });
 
-      debugPrint('✅ Broadcaster status updated: $newStatus');
+      debugPrint('âœ… Broadcaster status updated: $newStatus');
     } catch (e) {
-      debugPrint('❌ Failed to update status: $e');
+      debugPrint('âŒ Failed to update status: $e');
       rethrow;
     }
   }
@@ -195,7 +195,7 @@ class BroadcasterService {
       ) as BroadcasterQueue?;
 
       if (nextPending == null) {
-        debugPrint('📭 No pending broadcasts in queue');
+        debugPrint('ðŸ“­ No pending broadcasts in queue');
         return null;
       }
 
@@ -205,10 +205,10 @@ class BroadcasterService {
         'approved',
       );
 
-      debugPrint('✅ Approved broadcaster: ${nextPending.userName}');
+      debugPrint('âœ… Approved broadcaster: ${nextPending.userName}');
       return nextPending;
     } catch (e) {
-      debugPrint('❌ Failed to approve next: $e');
+      debugPrint('âŒ Failed to approve next: $e');
       return null;
     }
   }
@@ -224,7 +224,7 @@ class BroadcasterService {
 
       return snapshot.docs.length;
     } catch (e) {
-      debugPrint('❌ Failed to get broadcaster count: $e');
+      debugPrint('âŒ Failed to get broadcaster count: $e');
       return 0;
     }
   }
@@ -242,9 +242,9 @@ class BroadcasterService {
         'recordingStartedAt': Timestamp.now(),
       });
 
-      debugPrint('🎥 Recording started for broadcast: $userId');
+      debugPrint('ðŸŽ¥ Recording started for broadcast: $userId');
     } catch (e) {
-      debugPrint('❌ Failed to start recording: $e');
+      debugPrint('âŒ Failed to start recording: $e');
       rethrow;
     }
   }
@@ -259,9 +259,9 @@ class BroadcasterService {
         'recordingEndedAt': Timestamp.now(),
       });
 
-      debugPrint('⏹️ Recording stopped for broadcast: $userId');
+      debugPrint('â¹ï¸ Recording stopped for broadcast: $userId');
     } catch (e) {
-      debugPrint('❌ Failed to stop recording: $e');
+      debugPrint('âŒ Failed to stop recording: $e');
       rethrow;
     }
   }
@@ -278,7 +278,7 @@ class BroadcasterService {
 
       return snapshot.docs.length;
     } catch (e) {
-      debugPrint('❌ Failed to get pending count: $e');
+      debugPrint('âŒ Failed to get pending count: $e');
       return 0;
     }
   }

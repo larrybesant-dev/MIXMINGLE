@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/providers.dart';
 import '../../models/privacy_settings.dart';
@@ -382,7 +382,7 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '• ',
+          'â€¢ ',
           style: const TextStyle(
             color: Color(0xFFFF4C4C),
             fontWeight: FontWeight.bold,
@@ -414,7 +414,3 @@ class _PrivacySettingsPageState extends ConsumerState<PrivacySettingsPage> {
     );
   }
 }
-
-
-
-

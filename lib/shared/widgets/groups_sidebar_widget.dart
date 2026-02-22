@@ -1,4 +1,4 @@
-// Groups Sidebar Widget - Shows groups with active users and join/leave controls
+﻿// Groups Sidebar Widget - Shows groups with active users and join/leave controls
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -437,6 +437,3 @@ class _GroupTile extends StatelessWidget {
     );
   }
 }
-
-
-

@@ -1,4 +1,4 @@
-/// Ecosystem Dashboard Widget
+﻿/// Ecosystem Dashboard Widget
 ///
 /// Displays ecosystem health, growth metrics, and expansion opportunities.
 library;
@@ -58,7 +58,7 @@ class _EcosystemDashboardState extends State<EcosystemDashboard>
         });
       }
     } catch (e) {
-      debugPrint('❌ [EcosystemDashboard] Failed to load data: $e');
+      debugPrint('âŒ [EcosystemDashboard] Failed to load data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -586,7 +586,7 @@ class _EcosystemDashboardState extends State<EcosystemDashboard>
               campaign.name,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            subtitle: Text('${campaign.target.name.toUpperCase()} • ${campaign.type.name}'),
+            subtitle: Text('${campaign.target.name.toUpperCase()} â€¢ ${campaign.type.name}'),
             trailing: _buildStatusChip(campaign.status),
           ),
 
@@ -1093,7 +1093,7 @@ class _EcosystemDashboardState extends State<EcosystemDashboard>
                   'Requirements:',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                ...opportunity.requirements.map((r) => Text('• $r')),
+                ...opportunity.requirements.map((r) => Text('â€¢ $r')),
                 const SizedBox(height: 12),
               ],
               if (opportunity.risks.isNotEmpty) ...[
@@ -1101,7 +1101,7 @@ class _EcosystemDashboardState extends State<EcosystemDashboard>
                   'Risks:',
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
-                ...opportunity.risks.map((r) => Text('• $r')),
+                ...opportunity.risks.map((r) => Text('â€¢ $r')),
               ],
             ],
           ),

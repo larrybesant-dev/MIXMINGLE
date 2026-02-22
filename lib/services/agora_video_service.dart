@@ -58,7 +58,7 @@ class AgoraVideoService extends ChangeNotifier {
   int? _activeSpeakerUid; // Most active speaker by volume
   String? _agoraAppId; // Store App ID for platform service
 
-  // Track media state per user to prevent ghost users (uid → { hasVideo, hasAudio })
+  // Track media state per user to prevent ghost users (uid â†’ { hasVideo, hasAudio })
   final Map<int, Map<String, bool>> _remoteUserMediaState = {};
 
   // Broadcaster mode support for 100+ participants
@@ -105,18 +105,18 @@ class AgoraVideoService extends ChangeNotifier {
   /// Initialize Agora Engine with full event handlers
   Future<void> initialize() async {
     if (_isInitialized) {
-      DebugLog.info(_safeLog('ðŸ”„  Agora already initialized'));
+      DebugLog.info(_safeLog('Ã°Å¸â€â€ž  Agora already initialized'));
       return;
     }
 
     try {
-      DebugLog.info(_safeLog('ðŸŽ¬ Step 1: Initializing Agora SDK...'));
+      DebugLog.info(_safeLog('Ã°Å¸Å½Â¬ Step 1: Initializing Agora SDK...'));
       DebugLog.info(
         _safeLog(
-          'â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”',
+          'Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â',
         ),
       );
-      DebugLog.info(_safeLog('ðŸŽ¯ AGORA INIT - PLATFORM: ${kIsWeb ? "WEB (JS SDK)" : "NATIVE (Flutter SDK)"}'));
+      DebugLog.info(_safeLog('Ã°Å¸Å½Â¯ AGORA INIT - PLATFORM: ${kIsWeb ? "WEB (JS SDK)" : "NATIVE (Flutter SDK)"}'));
 
       // Get Agora App ID from Firestore config
       final configDoc = await _firestore.collection('config').doc('agora').get();
@@ -126,15 +126,15 @@ class AgoraVideoService extends ChangeNotifier {
         throw Exception('Agora App ID not configured in Firestore');
       }
       _agoraAppId = appId;
-      DebugLog.info(_safeLog('âœ… Agora App ID loaded (length: ${appId.length})'));
+      DebugLog.info(_safeLog('Ã¢Å“â€¦ Agora App ID loaded (length: ${appId.length})'));
 
       if (kIsWeb) {
         // WEB: Just mark as initialized, actual init happens on join
-        DebugLog.info(_safeLog('ðŸŒ Web platform - will initialize on join'));
+        DebugLog.info(_safeLog('Ã°Å¸Å’Â Web platform - will initialize on join'));
         _isInitialized = true;
         _engine = null; // No native engine on web      } else {
         // NATIVE: Initialize via platform service
-        DebugLog.info(_safeLog('ðŸ“± Initializing Agora Native SDK...'));
+        DebugLog.info(_safeLog('Ã°Å¸â€œÂ± Initializing Agora Native SDK...'));
         await AgoraPlatformService.initializeNative(appId);
         _engine = AgoraPlatformService.engine;
 
@@ -150,7 +150,7 @@ class AgoraVideoService extends ChangeNotifier {
         }
 
         _isInitialized = true;
-        DebugLog.info(_safeLog('âœ… Agora Native SDK initialized'));
+        DebugLog.info(_safeLog('Ã¢Å“â€¦ Agora Native SDK initialized'));
       }
 
       // Check initial permission status on web
@@ -160,9 +160,9 @@ class AgoraVideoService extends ChangeNotifier {
       }
 
       notifyListeners();
-      DebugLog.info(_safeLog('âœ… Agora SDK initialized successfully'));
+      DebugLog.info(_safeLog('Ã¢Å“â€¦ Agora SDK initialized successfully'));
     } catch (e, stackTrace) {
-      DebugLog.info(_safeLog('âŒ Agora initialization failed: $e'));
+      DebugLog.info(_safeLog('Ã¢ÂÅ’ Agora initialization failed: $e'));
       DebugLog.info(_safeLog('Stack trace: $stackTrace'));
       _error = e.toString();
       notifyListeners();
@@ -448,20 +448,20 @@ class AgoraVideoService extends ChangeNotifier {
     try {
       DebugLog.info(
         _safeLog(
-          'â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”',
+          'Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â',
         ),
       );
-      DebugLog.info(_safeLog('ðŸš€ JOIN ROOM SEQUENCE START'));
-      DebugLog.info(_safeLog('ðŸ“ Channel: $roomId'));
-      DebugLog.info(_safeLog('ðŸ“ Platform: ${kIsWeb ? "WEB" : "NATIVE"}'));
+      DebugLog.info(_safeLog('Ã°Å¸Å¡â‚¬ JOIN ROOM SEQUENCE START'));
+      DebugLog.info(_safeLog('Ã°Å¸â€œÂ Channel: $roomId'));
+      DebugLog.info(_safeLog('Ã°Å¸â€œÂ Platform: ${kIsWeb ? "WEB" : "NATIVE"}'));
       DebugLog.info(
         _safeLog(
-          'â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”',
+          'Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â',
         ),
       );
 
       // === CHECKPOINT 1: VERIFY AUTH STATE ===
-      DebugLog.info(_safeLog('ðŸ”’ [1/6] Verifying authentication state...'));
+      DebugLog.info(_safeLog('Ã°Å¸â€â€™ [1/6] Verifying authentication state...'));
       final user = _auth.currentUser;
 
       if (user == null) {
@@ -477,25 +477,25 @@ class AgoraVideoService extends ChangeNotifier {
         throw Exception('Authentication state not ready');
       }
 
-      DebugLog.info(_safeLog('âœ… [1/6] Auth verified'));
-      DebugLog.info(_safeLog('   â””â”€ User: ${user.email}'));
-      DebugLog.info(_safeLog('   â””â”€ UID: ${user.uid}'));
-      DebugLog.info(_safeLog('   â””â”€ Provider: ${user.providerData.map((p) => p.providerId).join(", ")}'));
+      DebugLog.info(_safeLog('Ã¢Å“â€¦ [1/6] Auth verified'));
+      DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ User: ${user.email}'));
+      DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ UID: ${user.uid}'));
+      DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ Provider: ${user.providerData.map((p) => p.providerId).join(", ")}'));
 
       // === CHECKPOINT 2: GET AGORA TOKEN ===
-      DebugLog.info(_safeLog('ðŸŽ« [2/6] Requesting Agora token...'));
+      DebugLog.info(_safeLog('Ã°Å¸Å½Â« [2/6] Requesting Agora token...'));
 
       // === CHECKPOINT 3: PERMISSIONS ===
       if (kIsWeb) {
-        DebugLog.info(_safeLog('ðŸŒ [3/6] Web platform - browser will prompt for permissions on join'));
+        DebugLog.info(_safeLog('Ã°Å¸Å’Â [3/6] Web platform - browser will prompt for permissions on join'));
       } else {
-        DebugLog.info(_safeLog('ðŸ“± [3/6] Requesting native permissions...'));
+        DebugLog.info(_safeLog('Ã°Å¸â€œÂ± [3/6] Requesting native permissions...'));
         final hasPermissions = await requestPermissions();
         if (!hasPermissions) {
-          DebugLog.info(_safeLog('âŒ Permissions denied'));
+          DebugLog.info(_safeLog('Ã¢ÂÅ’ Permissions denied'));
           throw Exception('Camera/Microphone permissions required');
         }
-        DebugLog.info(_safeLog('âœ… [3/6] Permissions granted'));
+        DebugLog.info(_safeLog('Ã¢Å“â€¦ [3/6] Permissions granted'));
       }
 
       // On web, also check permissions status for UI feedback
@@ -541,10 +541,10 @@ class AgoraVideoService extends ChangeNotifier {
         token = tokenValue;
         _localUid = tokenUid;
 
-        DebugLog.info(_safeLog('âœ… [2/6] Token obtained'));
-        DebugLog.info(_safeLog('   â””â”€ Length: ${token.length}'));
-        DebugLog.info(_safeLog('   â””â”€ UID: $tokenUid'));
-        DebugLog.info(_safeLog('   â””â”€ Channel: $roomId'));
+        DebugLog.info(_safeLog('Ã¢Å“â€¦ [2/6] Token obtained'));
+        DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ Length: ${token.length}'));
+        DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ UID: $tokenUid'));
+        DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ Channel: $roomId'));
       } catch (e, st) {
         DebugLog.info(_safeLog(' Agora token generation failed: $e'));
         DebugLog.info(_safeLog('Stack trace: $st'));
@@ -552,7 +552,7 @@ class AgoraVideoService extends ChangeNotifier {
       }
 
       // === CHECKPOINT 4: LOCAL VIDEO SETUP ===
-      DebugLog.info(_safeLog('ðŸ“¹ [4/6] Setting up local video...'));
+      DebugLog.info(_safeLog('Ã°Å¸â€œÂ¹ [4/6] Setting up local video...'));
       try {
         if (!kIsWeb) {
           // Native: Set up preview before join
@@ -560,10 +560,10 @@ class AgoraVideoService extends ChangeNotifier {
           await _engine!.setupLocalVideo(const VideoCanvas(uid: 0, renderMode: RenderModeType.renderModeFit));
           await _engine!.startPreview();
           await _engine!.muteLocalVideoStream(false);
-          DebugLog.info(_safeLog('âœ… [4/6] Local video preview started'));
+          DebugLog.info(_safeLog('Ã¢Å“â€¦ [4/6] Local video preview started'));
         } else {
           // Web: Preview happens automatically on join
-          DebugLog.info(_safeLog('âœ… [4/6] Web - local video will start on join'));
+          DebugLog.info(_safeLog('Ã¢Å“â€¦ [4/6] Web - local video will start on join'));
         }
 
         _isVideoMuted = false;
@@ -574,7 +574,7 @@ class AgoraVideoService extends ChangeNotifier {
       }
 
       // === CHECKPOINT 5: FIRESTORE PARTICIPANT ===
-      DebugLog.info(_safeLog('ðŸ“ [5/6] Adding user to Firestore participants...'));
+      DebugLog.info(_safeLog('Ã°Å¸â€œÂ [5/6] Adding user to Firestore participants...'));
       try {
         await _firestore.collection('rooms').doc(roomId).collection('participants').doc(user.uid).set({
           'userId': user.uid,
@@ -582,7 +582,7 @@ class AgoraVideoService extends ChangeNotifier {
           'displayName': user.displayName ?? 'User',
           'photoUrl': user.photoURL,
         });
-        DebugLog.info(_safeLog('âœ… [5/6] Participant added to Firestore'));
+        DebugLog.info(_safeLog('Ã¢Å“â€¦ [5/6] Participant added to Firestore'));
       } catch (e) {
         DebugLog.info(_safeLog('  Failed to add user to participants: $e'));
         // Don't fail - continue anyway
@@ -591,14 +591,14 @@ class AgoraVideoService extends ChangeNotifier {
       // === CHECKPOINT 6: JOIN CHANNEL ===
       DebugLog.info(
         _safeLog(
-          'â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”',
+          'Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â',
         ),
       );
-      DebugLog.info(_safeLog('ðŸ”— [6/6] Joining Agora channel...'));
-      DebugLog.info(_safeLog('   â””â”€ SDK: ${kIsWeb ? "Web JS" : "Native Flutter"}'));
-      DebugLog.info(_safeLog('   â””â”€ Channel: $roomId'));
-      DebugLog.info(_safeLog('   â””â”€ UID: $_localUid (from token)'));
-      DebugLog.info(_safeLog('   â””â”€ Token length: ${token.length}'));
+      DebugLog.info(_safeLog('Ã°Å¸â€â€” [6/6] Joining Agora channel...'));
+      DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ SDK: ${kIsWeb ? "Web JS" : "Native Flutter"}'));
+      DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ Channel: $roomId'));
+      DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ UID: $_localUid (from token)'));
+      DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ Token length: ${token.length}'));
 
       final joined = await AgoraPlatformService.joinChannel(
         appId: _agoraAppId!,
@@ -608,7 +608,7 @@ class AgoraVideoService extends ChangeNotifier {
       );
 
       if (!joined) {
-        DebugLog.info(_safeLog('âŒ Platform service returned false'));
+        DebugLog.info(_safeLog('Ã¢ÂÅ’ Platform service returned false'));
         throw Exception('Failed to join channel via platform service');
       }
 
@@ -617,15 +617,15 @@ class AgoraVideoService extends ChangeNotifier {
 
       DebugLog.info(
         _safeLog(
-          'â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”',
+          'Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â',
         ),
       );
-      DebugLog.info(_safeLog('âœ… [6/6] JOIN COMPLETE'));
-      DebugLog.info(_safeLog('âœ… Successfully in channel: $roomId'));
-      DebugLog.info(_safeLog('âœ… Waiting for remote users...'));
+      DebugLog.info(_safeLog('Ã¢Å“â€¦ [6/6] JOIN COMPLETE'));
+      DebugLog.info(_safeLog('Ã¢Å“â€¦ Successfully in channel: $roomId'));
+      DebugLog.info(_safeLog('Ã¢Å“â€¦ Waiting for remote users...'));
       DebugLog.info(
         _safeLog(
-          'â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”â”',
+          'Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â',
         ),
       );
       notifyListeners();
@@ -642,12 +642,12 @@ class AgoraVideoService extends ChangeNotifier {
   Future<void> leaveRoom() async {
     // Prevent double leaves
     if (!_isInChannel && _currentChannel == null) {
-      DebugLog.info(_safeLog('ðŸ”„  Not in any channel'));
+      DebugLog.info(_safeLog('Ã°Å¸â€â€ž  Not in any channel'));
       return;
     }
 
     try {
-      DebugLog.info(_safeLog('ðŸ‘‹ Leaving room...'));
+      DebugLog.info(_safeLog('Ã°Å¸â€˜â€¹ Leaving room...'));
 
       // Remove user from room participants collection
       if (_currentChannel != null) {
@@ -655,9 +655,9 @@ class AgoraVideoService extends ChangeNotifier {
         if (user != null) {
           try {
             await _firestore.collection('rooms').doc(_currentChannel).collection('participants').doc(user.uid).delete();
-            DebugLog.info(_safeLog('âœ… User removed from room participants'));
+            DebugLog.info(_safeLog('Ã¢Å“â€¦ User removed from room participants'));
           } catch (e) {
-            DebugLog.info(_safeLog('âš ï¸  Failed to remove user from participants: $e'));
+            DebugLog.info(_safeLog('Ã¢Å¡Â Ã¯Â¸Â  Failed to remove user from participants: $e'));
           }
         }
       }
@@ -690,7 +690,7 @@ class AgoraVideoService extends ChangeNotifier {
 
       notifyListeners();
 
-      DebugLog.info(_safeLog('âœ… Left room successfully'));
+      DebugLog.info(_safeLog('Ã¢Å“â€¦ Left room successfully'));
     } catch (e) {
       DebugLog.info(_safeLog(' Failed to leave room: $e'));
     }
@@ -702,7 +702,7 @@ class AgoraVideoService extends ChangeNotifier {
       _isMicMuted = !_isMicMuted;
       await AgoraPlatformService.setMicMuted(_isMicMuted);
       notifyListeners();
-      DebugLog.info(_safeLog('ðŸŽ¤ Mic ${_isMicMuted ? "muted" : "unmuted"}'));
+      DebugLog.info(_safeLog('Ã°Å¸Å½Â¤ Mic ${_isMicMuted ? "muted" : "unmuted"}'));
     } catch (e) {
       DebugLog.info(_safeLog(' Failed to toggle mic: $e'));
       _error = 'Mic toggle failed: $e';
@@ -727,9 +727,9 @@ class AgoraVideoService extends ChangeNotifier {
       }
 
       notifyListeners();
-      DebugLog.info(_safeLog('ðŸ“¹ Video ${_isVideoMuted ? "muted" : "unmuted"}'));
+      DebugLog.info(_safeLog('Ã°Å¸â€œÂ¹ Video ${_isVideoMuted ? "muted" : "unmuted"}'));
     } catch (e) {
-      DebugLog.info(_safeLog('ðŸ“¹ Failed to toggle video: $e'));
+      DebugLog.info(_safeLog('Ã°Å¸â€œÂ¹ Failed to toggle video: $e'));
       _error = 'Video toggle failed: $e';
       _isVideoMuted = !_isVideoMuted; // Revert on error
       notifyListeners();

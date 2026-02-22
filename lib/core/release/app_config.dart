@@ -1,4 +1,4 @@
-/// App Configuration for Release Engineering
+﻿/// App Configuration for Release Engineering
 ///
 /// Provides environment-specific configuration for dev, staging, and production builds.
 library;
@@ -27,7 +27,7 @@ class AppConfig {
   static void initialize(AppFlavor flavor) {
     _instance = AppConfig._();
     _instance!._flavor = flavor;
-    debugPrint('🏷️ [AppConfig] Initialized with flavor: ${flavor.name}');
+    debugPrint('ðŸ·ï¸ [AppConfig] Initialized with flavor: ${flavor.name}');
   }
 
   /// App name based on flavor

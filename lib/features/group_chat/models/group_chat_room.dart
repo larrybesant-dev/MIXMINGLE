@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GroupChatRoom {
   final String id;
@@ -43,3 +43,5 @@ class GroupChatRoom {
     };
   }
 }
+
+

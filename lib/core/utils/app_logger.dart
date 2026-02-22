@@ -1,14 +1,14 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 
 /// Mix & Mingle App Logger
 /// Debug-only logging utility for tracking errors and unexpected states
 class AppLogger {
-  static const String _prefix = '🎵 Mix&Mingle';
+  static const String _prefix = 'ðŸŽµ Mix&Mingle';
 
   /// Log an error with optional stack trace
   static void error(String message, [Object? error, StackTrace? stackTrace]) {
     if (kDebugMode) {
-      debugPrint('$_prefix ❌ ERROR: $message');
+      debugPrint('$_prefix âŒ ERROR: $message');
       if (error != null) {
         debugPrint('  Error: $error');
       }
@@ -21,7 +21,7 @@ class AppLogger {
   /// Log a warning
   static void warning(String message, [Object? details]) {
     if (kDebugMode) {
-      debugPrint('$_prefix ⚠️  WARNING: $message');
+      debugPrint('$_prefix âš ï¸  WARNING: $message');
       if (details != null) {
         debugPrint('  Details: $details');
       }
@@ -31,7 +31,7 @@ class AppLogger {
   /// Log info message
   static void info(String message) {
     if (kDebugMode) {
-      debugPrint('$_prefix ℹ️  INFO: $message');
+      debugPrint('$_prefix â„¹ï¸  INFO: $message');
     }
   }
 

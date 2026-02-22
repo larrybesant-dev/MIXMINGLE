@@ -1,4 +1,4 @@
-/// Business Intelligence & Insights Service
+﻿/// Business Intelligence & Insights Service
 ///
 /// Provides comprehensive business analytics including user cohort analysis,
 /// revenue forecasting, growth metrics, retention analytics, and actionable insights.
@@ -763,3 +763,5 @@ class InsightsService {
     _insightController.close();
   }
 }
+
+

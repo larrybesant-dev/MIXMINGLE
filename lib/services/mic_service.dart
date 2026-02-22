@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../shared/models/mic_state.dart';
@@ -25,9 +25,9 @@ class MicService {
         'gainLevel': 50,
       });
 
-      debugPrint('✅ Mic requested for room: $roomId');
+      debugPrint('âœ… Mic requested for room: $roomId');
     } catch (e) {
-      debugPrint('❌ Failed to request mic: $e');
+      debugPrint('âŒ Failed to request mic: $e');
       rethrow;
     }
   }
@@ -40,9 +40,9 @@ class MicService {
     try {
       await _firestore.collection('rooms').doc(roomId).collection('micQueue').doc(userId).delete();
 
-      debugPrint('✅ Mic request cancelled');
+      debugPrint('âœ… Mic request cancelled');
     } catch (e) {
-      debugPrint('❌ Failed to cancel mic request: $e');
+      debugPrint('âŒ Failed to cancel mic request: $e');
       rethrow;
     }
   }
@@ -55,9 +55,9 @@ class MicService {
         'approvedAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ Mic approved for user: $userId');
+      debugPrint('âœ… Mic approved for user: $userId');
     } catch (e) {
-      debugPrint('❌ Failed to approve mic: $e');
+      debugPrint('âŒ Failed to approve mic: $e');
       rethrow;
     }
   }
@@ -67,9 +67,9 @@ class MicService {
     try {
       await _firestore.collection('rooms').doc(roomId).collection('micQueue').doc(userId).delete();
 
-      debugPrint('✅ Mic revoked for user: $userId');
+      debugPrint('âœ… Mic revoked for user: $userId');
     } catch (e) {
-      debugPrint('❌ Failed to revoke mic: $e');
+      debugPrint('âŒ Failed to revoke mic: $e');
       rethrow;
     }
   }
@@ -82,9 +82,9 @@ class MicService {
     try {
       await _firestore.collection('rooms').doc(roomId).collection('micQueue').doc(userId).update({'isMuted': mute});
 
-      debugPrint('✅ Mute toggled: $mute');
+      debugPrint('âœ… Mute toggled: $mute');
     } catch (e) {
-      debugPrint('❌ Failed to toggle mute: $e');
+      debugPrint('âŒ Failed to toggle mute: $e');
       rethrow;
     }
   }
@@ -102,9 +102,9 @@ class MicService {
           .doc(userId)
           .update({'quality': quality.name});
 
-      debugPrint('✅ Mic quality set to: ${quality.name}');
+      debugPrint('âœ… Mic quality set to: ${quality.name}');
     } catch (e) {
-      debugPrint('❌ Failed to set mic quality: $e');
+      debugPrint('âŒ Failed to set mic quality: $e');
       rethrow;
     }
   }
@@ -122,9 +122,9 @@ class MicService {
           .doc(userId)
           .update({'gainLevel': gainLevel.clamp(0, 100)});
 
-      debugPrint('✅ Gain level set to: $gainLevel');
+      debugPrint('âœ… Gain level set to: $gainLevel');
     } catch (e) {
-      debugPrint('❌ Failed to set gain level: $e');
+      debugPrint('âŒ Failed to set gain level: $e');
       rethrow;
     }
   }
@@ -146,9 +146,9 @@ class MicService {
         },
       });
 
-      debugPrint('✅ Noise suppression configured');
+      debugPrint('âœ… Noise suppression configured');
     } catch (e) {
-      debugPrint('❌ Failed to set noise suppression: $e');
+      debugPrint('âŒ Failed to set noise suppression: $e');
       rethrow;
     }
   }
@@ -187,7 +187,7 @@ class MicService {
             ));
           }
         } catch (e) {
-          debugPrint('⚠️ Error loading mic state for ${doc.id}: $e');
+          debugPrint('âš ï¸ Error loading mic state for ${doc.id}: $e');
         }
       }
 
@@ -224,7 +224,7 @@ class MicService {
 
       return snapshot.docs.length;
     } catch (e) {
-      debugPrint('❌ Failed to get mic count: $e');
+      debugPrint('âŒ Failed to get mic count: $e');
       return 0;
     }
   }
@@ -241,7 +241,7 @@ class MicService {
 
       return snapshot.docs.length;
     } catch (e) {
-      debugPrint('❌ Failed to get pending mic count: $e');
+      debugPrint('âŒ Failed to get pending mic count: $e');
       return 0;
     }
   }

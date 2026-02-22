@@ -1,3 +1,4 @@
+
 /// Speed Dating Preferences Model
 /// Comprehensive matching preferences for video speed dating
 library;
@@ -173,3 +174,5 @@ class PreferenceOptions {
     'Other',
   ];
 }
+
+

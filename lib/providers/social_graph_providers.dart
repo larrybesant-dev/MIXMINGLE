@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/social_graph_service.dart';
 import '../shared/models/user_profile.dart';
 import '../shared/models/user_presence.dart';
@@ -137,3 +137,5 @@ final followActionProvider = FutureProvider.family<void, ({String userId, bool f
   ref.invalidate(isFollowingProvider(params.userId));
   ref.invalidate(followerCountProvider(params.userId));
 });
+
+

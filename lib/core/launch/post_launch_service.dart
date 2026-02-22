@@ -1,4 +1,4 @@
-/// Post-Launch Service
+﻿/// Post-Launch Service
 ///
 /// Manages feedback collection, categorization, prioritization,
 /// and reporting after public launch.
@@ -36,7 +36,7 @@ class PostLaunchService {
     String? screenshotUrl,
     Map<String, dynamic>? metadata,
   }) async {
-    debugPrint('📝 [PostLaunch] Collecting feedback from user: $userId');
+    debugPrint('ðŸ“ [PostLaunch] Collecting feedback from user: $userId');
 
     try {
       final feedbackId = 'fb_${DateTime.now().millisecondsSinceEpoch}_$userId';
@@ -69,7 +69,7 @@ class PostLaunchService {
         },
       );
 
-      debugPrint('✅ [PostLaunch] Feedback submitted: $feedbackId');
+      debugPrint('âœ… [PostLaunch] Feedback submitted: $feedbackId');
 
       return FeedbackSubmissionResult(
         success: true,
@@ -77,7 +77,7 @@ class PostLaunchService {
         message: 'Thank you for your feedback!',
       );
     } catch (e) {
-      debugPrint('❌ [PostLaunch] Failed to submit feedback: $e');
+      debugPrint('âŒ [PostLaunch] Failed to submit feedback: $e');
       return FeedbackSubmissionResult(
         success: false,
         feedbackId: null,
@@ -108,7 +108,7 @@ class PostLaunchService {
 
       return snapshot.docs.map((doc) => UserFeedback.fromMap(doc.data())).toList();
     } catch (e) {
-      debugPrint('❌ [PostLaunch] Failed to get feedback: $e');
+      debugPrint('âŒ [PostLaunch] Failed to get feedback: $e');
       return [];
     }
   }
@@ -124,7 +124,7 @@ class PostLaunchService {
     List<String>? tags,
     String? notes,
   }) async {
-    debugPrint('🏷️ [PostLaunch] Categorizing feedback: $feedbackId');
+    debugPrint('ðŸ·ï¸ [PostLaunch] Categorizing feedback: $feedbackId');
 
     try {
       await _firestore.collection(_feedbackCollection).doc(feedbackId).update({
@@ -143,7 +143,7 @@ class PostLaunchService {
         },
       );
 
-      debugPrint('✅ [PostLaunch] Feedback categorized');
+      debugPrint('âœ… [PostLaunch] Feedback categorized');
 
       return CategorizationResult(
         success: true,
@@ -151,7 +151,7 @@ class PostLaunchService {
         category: category,
       );
     } catch (e) {
-      debugPrint('❌ [PostLaunch] Failed to categorize: $e');
+      debugPrint('âŒ [PostLaunch] Failed to categorize: $e');
       return CategorizationResult(
         success: false,
         feedbackId: feedbackId,
@@ -209,7 +209,7 @@ class PostLaunchService {
 
   /// Prioritize fixes based on impact and frequency
   Future<PrioritizationResult> prioritizeFixes() async {
-    debugPrint('🎯 [PostLaunch] Prioritizing fixes...');
+    debugPrint('ðŸŽ¯ [PostLaunch] Prioritizing fixes...');
 
     try {
       // Get all categorized feedback
@@ -280,7 +280,7 @@ class PostLaunchService {
         });
       }
 
-      debugPrint('✅ [PostLaunch] ${issues.length} issues prioritized');
+      debugPrint('âœ… [PostLaunch] ${issues.length} issues prioritized');
 
       return PrioritizationResult(
         success: true,
@@ -288,7 +288,7 @@ class PostLaunchService {
         issues: issues,
       );
     } catch (e) {
-      debugPrint('❌ [PostLaunch] Failed to prioritize: $e');
+      debugPrint('âŒ [PostLaunch] Failed to prioritize: $e');
       return PrioritizationResult(
         success: false,
         totalFeedback: 0,
@@ -313,7 +313,7 @@ class PostLaunchService {
     required DateTime startDate,
     DateTime? endDate,
   }) async {
-    debugPrint('📊 [PostLaunch] Generating report...');
+    debugPrint('ðŸ“Š [PostLaunch] Generating report...');
 
     final end = endDate ?? DateTime.now();
 
@@ -411,11 +411,11 @@ class PostLaunchService {
         },
       );
 
-      debugPrint('✅ [PostLaunch] Report generated: ${report.id}');
+      debugPrint('âœ… [PostLaunch] Report generated: ${report.id}');
 
       return report;
     } catch (e) {
-      debugPrint('❌ [PostLaunch] Failed to generate report: $e');
+      debugPrint('âŒ [PostLaunch] Failed to generate report: $e');
       return PostLaunchReport(
         id: 'error',
         generatedAt: DateTime.now(),
@@ -452,33 +452,33 @@ class PostLaunchService {
 
     // Based on sentiment
     if (sentiment < -20) {
-      recommendations.add('🚨 User sentiment is significantly negative. Focus on addressing critical bugs and UX issues.');
+      recommendations.add('ðŸš¨ User sentiment is significantly negative. Focus on addressing critical bugs and UX issues.');
     } else if (sentiment < 0) {
-      recommendations.add('⚠️ User sentiment is slightly negative. Consider enhancing communication about known issues.');
+      recommendations.add('âš ï¸ User sentiment is slightly negative. Consider enhancing communication about known issues.');
     } else if (sentiment > 30) {
-      recommendations.add('✨ User sentiment is very positive! Consider highlighting testimonials in marketing.');
+      recommendations.add('âœ¨ User sentiment is very positive! Consider highlighting testimonials in marketing.');
     }
 
     // Based on top issues
     for (final issue in topIssues.take(3)) {
       switch (issue.category) {
         case FeedbackCategory.bug:
-          recommendations.add('🐛 Critical: ${issue.feedbackCount} bug reports. Schedule emergency bug fix sprint.');
+          recommendations.add('ðŸ› Critical: ${issue.feedbackCount} bug reports. Schedule emergency bug fix sprint.');
           break;
         case FeedbackCategory.performance:
-          recommendations.add('⚡ Performance issues reported by ${issue.feedbackCount} users. Profile and optimize.');
+          recommendations.add('âš¡ Performance issues reported by ${issue.feedbackCount} users. Profile and optimize.');
           break;
         case FeedbackCategory.videoAudio:
-          recommendations.add('🎥 Video/Audio issues affecting ${issue.feedbackCount} users. Review media stack.');
+          recommendations.add('ðŸŽ¥ Video/Audio issues affecting ${issue.feedbackCount} users. Review media stack.');
           break;
         case FeedbackCategory.uiux:
-          recommendations.add('🎨 UI/UX concerns from ${issue.feedbackCount} users. Schedule design review.');
+          recommendations.add('ðŸŽ¨ UI/UX concerns from ${issue.feedbackCount} users. Schedule design review.');
           break;
         case FeedbackCategory.featureRequest:
-          recommendations.add('💡 ${issue.feedbackCount} feature requests. Consider for product roadmap.');
+          recommendations.add('ðŸ’¡ ${issue.feedbackCount} feature requests. Consider for product roadmap.');
           break;
         case FeedbackCategory.payment:
-          recommendations.add('💳 Payment issues from ${issue.feedbackCount} users. Priority fix required.');
+          recommendations.add('ðŸ’³ Payment issues from ${issue.feedbackCount} users. Priority fix required.');
           break;
         case FeedbackCategory.general:
         case FeedbackCategory.other:
@@ -487,7 +487,7 @@ class PostLaunchService {
     }
 
     if (recommendations.isEmpty) {
-      recommendations.add('✅ No critical issues detected. Continue monitoring and iterating.');
+      recommendations.add('âœ… No critical issues detected. Continue monitoring and iterating.');
     }
 
     return recommendations;
@@ -522,7 +522,7 @@ class PostLaunchService {
 
       return true;
     } catch (e) {
-      debugPrint('❌ [PostLaunch] Failed to update status: $e');
+      debugPrint('âŒ [PostLaunch] Failed to update status: $e');
       return false;
     }
   }

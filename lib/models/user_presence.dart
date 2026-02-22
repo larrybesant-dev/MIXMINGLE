@@ -1,4 +1,4 @@
-/// User Presence Model
+﻿/// User Presence Model
 ///
 /// Tracks real-time user presence across the app
 /// Reference: DESIGN_BIBLE.md Section G.1 (Backend Integration)
@@ -49,13 +49,13 @@ extension PresenceStateExtension on PresenceState {
   String get displayText {
     switch (this) {
       case PresenceState.online:
-        return '🟢 Online';
+        return 'ðŸŸ¢ Online';
       case PresenceState.idle:
-        return '🟡 Idle';
+        return 'ðŸŸ¡ Idle';
       case PresenceState.away:
-        return '🔴 Away';
+        return 'ðŸ”´ Away';
       case PresenceState.offline:
-        return '⚫ Offline';
+        return 'âš« Offline';
     }
   }
 }
@@ -201,5 +201,7 @@ class UserPresence {
   String toString() =>
       'UserPresence($userId, state=$state, room=$roomId, publishing=$isPublishing, muted=$isMuted, video=$isVideoEnabled, lastUpdate=$lastUpdate)';
 }
+
+
 
 
