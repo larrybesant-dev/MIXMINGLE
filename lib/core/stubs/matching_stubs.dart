@@ -199,6 +199,58 @@ class MatchingProfile {
           kidsPreference: json['kidsPreference'] ?? json['kids_preference'],
           preferredGenders: json['preferredGenders'] ?? json['preferred_genders'],
         );
+
+  /// Tolerant copyWith used by tests. Accepts all known named parameters and
+  /// returns a new MatchingProfile with provided overrides.
+  MatchingProfile copyWith({
+    String? id,
+    dynamic latitude,
+    dynamic longitude,
+    dynamic lastActive,
+    dynamic createdAt,
+    dynamic userId,
+    dynamic displayName,
+    dynamic age,
+    dynamic relationshipIntent,
+    WeekendEnergy? weekendEnergy,
+    SocialStyle? socialStyle,
+    CommunicationStyle? communicationStyle,
+    QuestionnaireAnswers? answers,
+    dynamic minAge,
+    dynamic maxAge,
+    dynamic distancePreference,
+    dynamic smokingPreference,
+    dynamic drinkingPreference,
+    dynamic cannabisPreference,
+    dynamic petsPreference,
+    dynamic kidsPreference,
+    dynamic preferredGenders,
+  }) {
+    return MatchingProfile(
+      id: id ?? this.id,
+      latitude: latitude ?? this.latitude,
+      longitude: longitude ?? this.longitude,
+      lastActive: lastActive ?? this.lastActive,
+      createdAt: createdAt ?? this.createdAt,
+      userId: userId ?? this.userId,
+      displayName: displayName ?? this.displayName,
+      age: age ?? this.age,
+      relationshipIntent: relationshipIntent ?? this.relationshipIntent,
+      weekendEnergy: weekendEnergy ?? this.weekendEnergy,
+      socialStyle: socialStyle ?? this.socialStyle,
+      communicationStyle: communicationStyle ?? this.communicationStyle,
+      answers: answers ?? this.answers,
+      minAge: minAge ?? this.minAge,
+      maxAge: maxAge ?? this.maxAge,
+      distancePreference: distancePreference ?? this.distancePreference,
+      smokingPreference: smokingPreference ?? this.smokingPreference,
+      drinkingPreference: drinkingPreference ?? this.drinkingPreference,
+      cannabisPreference: cannabisPreference ?? this.cannabisPreference,
+      petsPreference: petsPreference ?? this.petsPreference,
+      kidsPreference: kidsPreference ?? this.kidsPreference,
+      preferredGenders: preferredGenders ?? this.preferredGenders,
+    );
+  }
 }
 
 /// Minimal PartnerVibe stub for tests
