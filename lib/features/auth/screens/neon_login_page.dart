@@ -113,7 +113,7 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // Title
-                        NeonText(
+                        const NeonText(
                           'WELCOME BACK',
                           fontSize: 24,
                           fontWeight: FontWeight.w900,
@@ -123,7 +123,7 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
-                        Text(
+                        const Text(
                           'Sign in to your Mix & Mingle account',
                           textAlign: TextAlign.center,
                           style: TextStyle(
@@ -199,7 +199,7 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
                           child: TextButton(
                             onPressed: () => Navigator.of(context)
                                 .pushNamed('/forgot-password'),
-                            child: Text(
+                            child: const Text(
                               'Forgot your password?',
                               style: TextStyle(
                                 color: NeonColors.neonBlue,
@@ -226,7 +226,7 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
+                            const Text(
                               "Don't have an account? ",
                               style: TextStyle(
                                 color: NeonColors.textSecondary,
@@ -236,7 +236,7 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
                             GestureDetector(
                               onTap: () =>
                                   Navigator.of(context).pushNamed('/signup'),
-                              child: Text(
+                              child: const Text(
                                 'Create one',
                                 style: TextStyle(
                                   color: NeonColors.neonBlue,
@@ -305,7 +305,7 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -327,7 +327,7 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
           ),
         ),
         const SizedBox(height: 16),
-        NeonText(
+        const NeonText(
           'MIX & MINGLE',
           fontSize: 26,
           fontWeight: FontWeight.w900,
@@ -336,7 +336,7 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
           glowRadius: 12,
         ),
         const SizedBox(height: 4),
-        Text(
+        const Text(
           'Global DJ Vibes',
           style: TextStyle(
             fontSize: 12,
