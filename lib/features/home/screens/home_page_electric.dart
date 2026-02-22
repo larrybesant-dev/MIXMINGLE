@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/room_providers.dart';
 import '../../../shared/club_background.dart';
@@ -229,36 +229,10 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric>
           ),
         ),
 
-        // Floating action buttons
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        floatingActionButton: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _buildFAB(
-                icon: Icons.explore,
-                label: 'BROWSE',
-                color: NeonColors.neonBlue,
-                onPressed: () =>
-                    Navigator.of(context).pushNamed('/browse-rooms'),
-              ),
-              _buildFAB(
-                icon: Icons.favorite,
-                label: 'MATCH',
-                color: NeonColors.neonPink,
-                onPressed: () =>
-                    Navigator.of(context).pushNamed('/speed-dating-lobby'),
-              ),
-              _buildFAB(
-                icon: Icons.fiber_manual_record,
-                label: 'GO LIVE',
-                color: NeonColors.neonOrange,
-                onPressed: () => Navigator.of(context).pushNamed('/go-live'),
-              ),
-            ],
-          ),
-        ),
+        // TEMP DISABLED: Floating action buttons (malformed layout blocking hit-testing)
+        // TODO: Replace with bottom navigation or single FAB
+        // floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        // floatingActionButton: [Multiple FABs not supported],
       ),
     );
   }
@@ -460,35 +434,6 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric>
                 ),
               ),
             ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFAB({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onPressed,
-  }) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        FloatingActionButton(
-          backgroundColor: color,
-          onPressed: onPressed,
-          mini: true,
-          heroTag: null,
-          child: Icon(icon),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: const TextStyle(
-            color: NeonColors.textPrimary,
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
           ),
         ),
       ],

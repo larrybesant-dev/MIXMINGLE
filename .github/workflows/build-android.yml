@@ -45,13 +45,24 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Building version: $VERSION"
 
+      # AGP 8.x may write APKs under android/ tree rather than build/app/
+      - name: 📋 Collect APK artifacts
+        run: |
+          mkdir -p build/app/outputs/flutter-apk
+          find android/app/build/outputs/apk -name '*.apk' \
+            -exec cp {} build/app/outputs/flutter-apk/ \; 2>/dev/null || true
+          echo "Final APKs:"
+          ls -lh build/app/outputs/flutter-apk/ || echo 'none found'
+
       - name: 📤 Upload APK artifacts
         uses: actions/upload-artifact@v4
         with:
           name: android-release-${{ steps.version.outputs.version }}
           path: |
             build/app/outputs/flutter-apk/*.apk
+            android/app/build/outputs/apk/release/*.apk
             build/app/outputs/bundle/release/*.aab
+          if-no-files-found: warn
           retention-days: 30
 
       - name: 🎉 Create GitHub Release

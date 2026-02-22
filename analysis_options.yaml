@@ -29,8 +29,6 @@ analyzer:
     - lib/_disabled/**
     - lib/features/_speed_dating_disabled/**
     - lib/features/_onboarding_disabled/**
-    # Web-only implementation files – safe to exclude; shims expose the API
-    - lib/**_web.dart
     # Test files – many stubs extend sealed classes and use raw variables intentionally
     - test/**
     - integration_test/**
@@ -39,12 +37,6 @@ analyzer:
     unnecessary_import: ignore
     duplicate_import: ignore
     uri_does_not_exist: ignore
-    # Suppress deprecation noise during progressive migration
-    deprecated_member_use: ignore
-    # Suppress unused locals in lib code (handled by dart fix --apply)
-    unused_local_variable: ignore
-    unused_element: ignore
-    unused_field: ignore
 
 linter:
   # The lint rules applied to this project can be customized in the
