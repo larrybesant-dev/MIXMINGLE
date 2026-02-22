@@ -1,7 +1,7 @@
 # PR: chore(lint): Stage 1 lint re-enable — style rules + dart fix
 
 > **Branch:** `lint-stage-1` → `develop`  
-> **Commit:** `6cb3a2f`
+> **Latest commit:** `4deac27`
 
 ---
 
@@ -18,8 +18,9 @@ all automated fixes via `dart fix --apply`.
 | `prefer_final_locals` | `false` | `true` |
 | `prefer_const_literals_to_create_immutables` | _(not set)_ | `true` |
 
-`dart fix --apply` resolved the majority of violations mechanically. **873 info-level
-issues remain** (0 errors, 0 warnings). They do not block CI (`--no-fatal-infos`).
+`dart fix --apply` resolved the majority of violations mechanically.  
+Manual follow-up commits fixed all 83 issues in `lib/shared/widgets/`.  
+**790 info-level issues remain** (0 errors, 0 warnings). They do not block CI (`--no-fatal-infos`).
 
 ---
 
@@ -77,7 +78,7 @@ then triage with the PowerShell snippet in `CONTRIBUTING.md`.
 Remaining issues will be fixed in small follow-up commits on this branch, one
 logical area at a time, and squashed before merge. Suggested order:
 
-1. `lib/shared/widgets/` — 3 files, ~81 issues
+1. ~~`lib/shared/widgets/` — 3 files, ~83 issues~~ ✅ **Done** (`a950546`, `c3d71cc`, `4deac27`)
 2. `lib/features/auth/` — 4 files, ~76 issues
 3. `lib/features/video_room/` — 6 files, ~94 issues
 4. `lib/features/profile/` — 1 file, ~24 issues
@@ -92,7 +93,7 @@ reduction, commit with `fix(lint): add const/final in <area>`.
 
 | Stage | Branch | Rules | Status |
 |-------|--------|-------|--------|
-| **Stage 1** | `lint-stage-1` | `prefer_const_*`, `prefer_final_*` | **In progress — 873 infos remain** |
+| **Stage 1** | `lint-stage-1` | `prefer_const_*`, `prefer_final_*` | **In progress — 790 infos remain** |
 | Stage 2 | `lint-stage-2` | `unused_local_variable`, `unused_element`, `unused_field` | Not started |
 | Stage 3 | `lint-stage-3` | Remove `lib/**_web.dart` from `exclude`; platform analysis | Not started |
 
@@ -115,7 +116,8 @@ reduction, commit with `fix(lint): add const/final in <area>`.
 - [x] Only mechanical `const`/`final` changes — no logic altered
 - [x] No new `dart:html` / non-shim web imports introduced
 - [ ] Unit tests passing locally
-- [ ] Follow-up commits to fix remaining 873 infos (can be done post-review)
+- [x] `lib/shared/widgets/` — 83 issues fixed in 3 commits
+- [ ] Follow-up commits to fix remaining 790 infos (can be done post-review)
 
 ### Reviewer
 - [ ] Spot-check 2–3 changed files: confirm only `const`/`final` additions
