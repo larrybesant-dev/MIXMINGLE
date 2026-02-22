@@ -258,14 +258,14 @@ class VoiceRoomParticipantList extends ConsumerWidget {
                               color: Colors.amber.shade700,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Row(
+                            child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Text(
+                                Text(
                                   '🎤',
                                   style: TextStyle(fontSize: 10),
                                 ),
-                                const SizedBox(width: 2),
+                                SizedBox(width: 2),
                                 Text(
                                   'Speaking',
                                   style: TextStyle(
@@ -287,14 +287,14 @@ class VoiceRoomParticipantList extends ConsumerWidget {
                               color: Colors.orange.shade600,
                               borderRadius: BorderRadius.circular(8),
                             ),
-                            child: Row(
+                            child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Text(
+                                Text(
                                   '🖐️',
                                   style: TextStyle(fontSize: 10),
                                 ),
-                                const SizedBox(width: 2),
+                                SizedBox(width: 2),
                                 Text(
                                   'Hand',
                                   style: TextStyle(

@@ -22,7 +22,7 @@ class EventCard extends ConsumerWidget {
     final currentUser = ref.watch(currentUserProvider).value;
     final friendsAttendingAsync = currentUser != null
         ? ref.watch(friendsAttendingEventProvider((userId: currentUser.id, eventId: event.id)))
-        : const AsyncValue<List<UserProfile>>.data(const []);
+        : const AsyncValue<List<UserProfile>>.data([]);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -96,7 +96,7 @@ class EventCard extends ConsumerWidget {
                 children: [
                   Icon(
                     event.isOnline ? Icons.videocam : Icons.location_on,
-                    color: Color(0xFFFFD700),
+                    color: const Color(0xFFFFD700),
                     size: 16,
                   ),
                   const SizedBox(width: 4),

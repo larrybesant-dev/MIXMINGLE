@@ -54,14 +54,14 @@ class LoadingOverlay extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (showLogo) ...const [
-              const PulseAnimation(
+              PulseAnimation(
                 child: Icon(
                   Icons.music_note,
                   size: 80,
                   color: ClubColors.primary,
                 ),
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: 32),
             ],
 
             const BrandedLoadingIndicator(size: 50),

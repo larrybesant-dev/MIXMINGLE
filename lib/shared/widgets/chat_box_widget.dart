@@ -289,7 +289,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
         }
       },
       itemBuilder: (BuildContext context) => const <PopupMenuEntry<String>>[
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'file',
           child: Row(
             children: [
@@ -303,7 +303,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
             ],
           ),
         ),
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'image',
           child: Row(
             children: [

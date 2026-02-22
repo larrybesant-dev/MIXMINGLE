@@ -67,10 +67,10 @@ class MiniProfilePopup extends ConsumerWidget {
         child: Container(
           width: 280,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: const [
+              colors: [
                 DesignColors.surfaceLight,
                 DesignColors.surfaceDefault,
               ],
@@ -412,8 +412,8 @@ void showMiniProfilePopup({
 
   // Calculate position to keep popup on screen
   final screenSize = MediaQuery.of(context).size;
-  final popupWidth = 280.0;
-  final popupHeight = 300.0;
+  const popupWidth = 280.0;
+  const popupHeight = 300.0;
 
   double left = position.dx;
   double top = position.dy;

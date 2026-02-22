@@ -144,8 +144,8 @@ class SkeletonTile extends StatelessWidget {
       child: Row(
         children: [
           if (showAvatar) ...const [
-            const SkeletonAvatar(radius: 20),
-            const SizedBox(width: 12),
+            SkeletonAvatar(radius: 20),
+            SizedBox(width: 12),
           ],
           Expanded(
             child: Column(

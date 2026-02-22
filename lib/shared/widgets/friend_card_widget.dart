@@ -63,7 +63,7 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
 
   bool _isHovered = false;
   // ignore: unused_field - kept for press state handling
-  bool _isPressed = false;
+  final bool _isPressed = false;
 
   @override
   void initState() {
@@ -188,7 +188,7 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
               ? NetworkImage(widget.friend.avatarUrl!)
               : null,
           child: widget.friend.avatarUrl == null
-              ? Icon(
+              ? const Icon(
                   Icons.person,
                   color: DesignColors.accent,
                 )
@@ -341,24 +341,24 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
       items: [
         PopupMenuItem(
           value: 'open_chat',
-          child: Text('💬 Open Chat', style: DesignTypography.body),
+          child: const Text('💬 Open Chat', style: DesignTypography.body),
           onTap: () => widget.onContextMenu?.call('open_chat', widget.friend),
         ),
         if (widget.friend.isOnline && widget.friend.roomId != null)
           PopupMenuItem(
             value: 'join_room',
-            child: Text('🎤 Join Room', style: DesignTypography.body),
+            child: const Text('🎤 Join Room', style: DesignTypography.body),
             onTap: () => _handleDoubleTap(),
           ),
         if (widget.friend.isOnline)
           PopupMenuItem(
             value: 'invite_to_room',
-            child: Text('📩 Invite to Room', style: DesignTypography.body),
+            child: const Text('📩 Invite to Room', style: DesignTypography.body),
             onTap: () => widget.onContextMenu?.call('invite_to_room', widget.friend),
           ),
         PopupMenuItem(
           value: 'view_profile',
-          child: Text('👤 View Profile', style: DesignTypography.body),
+          child: const Text('👤 View Profile', style: DesignTypography.body),
           onTap: () =>
               widget.onContextMenu?.call('view_profile', widget.friend),
         ),

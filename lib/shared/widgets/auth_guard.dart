@@ -58,17 +58,17 @@ class AuthGuard extends ConsumerWidget {
 
   Widget _buildLoadingWidget() {
     return ClubBackground(
-      child: Scaffold(
+      child: const Scaffold(
         backgroundColor: Colors.transparent,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircularProgressIndicator(
-                color: const Color(0xFFFF4C4C),
+                color: Color(0xFFFF4C4C),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 'Checking authentication...',
                 style: TextStyle(
                   color: Colors.white,

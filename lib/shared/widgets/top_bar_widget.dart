@@ -232,7 +232,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
         }
       },
       itemBuilder: (BuildContext context) => const <PopupMenuEntry<String>>[
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'quality_low',
           child: Row(
             children: [
@@ -245,7 +245,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
             ],
           ),
         ),
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'quality_medium',
           child: Row(
             children: [
@@ -258,7 +258,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
             ],
           ),
         ),
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'quality_high',
           child: Row(
             children: [
@@ -314,7 +314,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
         }
       },
       itemBuilder: (BuildContext context) => const <PopupMenuEntry<String>>[
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'camera_settings',
           child: Row(
             children: [
@@ -324,7 +324,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
             ],
           ),
         ),
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'audio_settings',
           child: Row(
             children: [

@@ -28,7 +28,7 @@ class CameraPermissionList extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return Center(
+          return const Center(
             child: Text(
               'Error loading permissions',
               style: TextStyle(color: Colors.red),
@@ -223,9 +223,9 @@ class _PermissionCardState extends ConsumerState<_PermissionCard> {
           children: [
             Row(
               children: [
-                CircleAvatar(
-                  backgroundColor: const Color(0xFFFF4C4C),
-                  child: const Icon(Icons.person, color: Colors.white),
+                const CircleAvatar(
+                  backgroundColor: Color(0xFFFF4C4C),
+                  child: Icon(Icons.person, color: Colors.white),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -254,9 +254,9 @@ class _PermissionCardState extends ConsumerState<_PermissionCard> {
                   ),
                 ),
                 if (!widget.showActions)
-                  Icon(
+                  const Icon(
                     Icons.check_circle,
-                    color: const Color(0xFF4CAF50),
+                    color: Color(0xFF4CAF50),
                     size: 24,
                   ),
               ],
@@ -264,7 +264,7 @@ class _PermissionCardState extends ConsumerState<_PermissionCard> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.access_time,
                   size: 14,
                   color: Colors.white54,
@@ -279,7 +279,7 @@ class _PermissionCardState extends ConsumerState<_PermissionCard> {
                 ),
                 if (widget.permission.expiresAt != null) ...[
                   const SizedBox(width: 12),
-                  Icon(
+                  const Icon(
                     Icons.timer,
                     size: 14,
                     color: Colors.orange,

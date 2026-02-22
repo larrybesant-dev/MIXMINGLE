@@ -150,9 +150,9 @@ class _FriendsListPanelState extends State<FriendsListPanel>
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
-          colors: const [DesignColors.accent, DesignColors.tertiary],
+          colors: [DesignColors.accent, DesignColors.tertiary],
         ),
       ),
       child: SafeArea(
@@ -585,7 +585,7 @@ class _FriendsListPanelState extends State<FriendsListPanel>
   Widget _buildNavigationBar() {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: DesignColors.surfaceLight,
         border: Border(
           top: BorderSide(color: DesignColors.divider),

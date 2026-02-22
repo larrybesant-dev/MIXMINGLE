@@ -105,7 +105,7 @@ class _TipOverlayState extends ConsumerState<TipOverlay>
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: const [DesignColors.gold, DesignColors.secondary],
+              colors: [DesignColors.gold, DesignColors.secondary],
             ),
             shape: BoxShape.circle,
             boxShadow: [
@@ -127,8 +127,8 @@ class _TipOverlayState extends ConsumerState<TipOverlay>
                   size: 28,
                 ),
                 if (widget.showLabel) ...const [
-                  const SizedBox(height: 4),
-                  const Text(
+                  SizedBox(height: 4),
+                  Text(
                     'Tip',
                     style: TextStyle(
                       color: Colors.white,
@@ -259,7 +259,7 @@ class _TipOverlayState extends ConsumerState<TipOverlay>
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: const [DesignColors.accent, DesignColors.tertiary],
+            colors: [DesignColors.accent, DesignColors.tertiary],
           ),
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
@@ -370,7 +370,7 @@ class TipOverlayCompact extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: const [DesignColors.gold, DesignColors.secondary],
+            colors: [DesignColors.gold, DesignColors.secondary],
           ),
           shape: BoxShape.circle,
           boxShadow: [

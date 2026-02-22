@@ -132,11 +132,11 @@ class _BrandedHeaderState extends State<BrandedHeader>
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
                                       return Container(
-                                        decoration: BoxDecoration(
+                                        decoration: const BoxDecoration(
                                           gradient: LinearGradient(
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
-                                            colors: const [
+                                            colors: [
                                               NeonColors.neonOrange,
                                               NeonColors.neonPurple,
                                             ],
@@ -195,11 +195,11 @@ class _BrandedHeaderState extends State<BrandedHeader>
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
-                                    decoration: BoxDecoration(
+                                    decoration: const BoxDecoration(
                                       gradient: LinearGradient(
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
-                                        colors: const [
+                                        colors: [
                                           NeonColors.neonOrange,
                                           NeonColors.neonPurple,
                                         ],

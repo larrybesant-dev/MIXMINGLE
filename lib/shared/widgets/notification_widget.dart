@@ -149,7 +149,7 @@ class _NotificationWidgetState extends ConsumerState<NotificationWidget>
                                 const SizedBox(height: 2),
                                 Text(
                                   'From ${widget.notification.senderName}',
-                                  style: TextStyle(
+                                  style: const TextStyle(
                                     color: DesignColors.accent,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w500,

@@ -73,7 +73,7 @@ class _VideoGridWidgetState extends ConsumerState<VideoGridWidget> {
           runSpacing: Spacing.md,
           alignment: WrapAlignment.center,
           children: participants.asMap().entries.map((entry) {
-            int index = entry.key;
+            final int index = entry.key;
             final participant = entry.value;
             final tileWidth =
                 (screenSize.width - (gridColumns + 1) * Spacing.md) / gridColumns;
@@ -109,7 +109,7 @@ class _VideoGridWidgetState extends ConsumerState<VideoGridWidget> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.videocam_off,
               size: WidgetSizes.largeIconSize,
               color: DesignColors.accent,
@@ -370,10 +370,10 @@ class _AnimatedVideoTileState extends ConsumerState<_AnimatedVideoTile>
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(BorderRadii.lg),
-          gradient: LinearGradient(
+          gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: const [
+            colors: [
               DesignColors.accent,
               DesignColors.accent,
             ],
@@ -386,7 +386,7 @@ class _AnimatedVideoTileState extends ConsumerState<_AnimatedVideoTile>
                   widget.participant.avatarUrl,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
-                    return Center(
+                    return const Center(
                       child: Icon(
                         Icons.person,
                         color: DesignColors.accent,
@@ -407,7 +407,7 @@ class _AnimatedVideoTileState extends ConsumerState<_AnimatedVideoTile>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.videocam_off,
             color: DesignColors.accent,
             size: WidgetSizes.largeIconSize,
@@ -428,7 +428,7 @@ class _AnimatedVideoTileState extends ConsumerState<_AnimatedVideoTile>
                     color: DesignColors.accent,
                     borderRadius: BorderRadius.circular(BorderRadii.lg),
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.person,
                     color: DesignColors.accent,
                     size: WidgetSizes.mediumIconSize,

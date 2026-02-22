@@ -24,7 +24,7 @@ class BadgeWidget extends ConsumerWidget {
     return badgeAsync.when(
       data: (badge) {
         if (badge == null) {
-          return SizedBox.shrink();
+          return const SizedBox.shrink();
         }
 
         final widget = Container(
@@ -40,7 +40,7 @@ class BadgeWidget extends ConsumerWidget {
               BoxShadow(
                 color: _getRarityColor(badge.rarity).withValues(alpha: 0.3),
                 blurRadius: 4,
-                offset: Offset(0, 2),
+                offset: const Offset(0, 2),
               ),
             ],
           ),
@@ -74,7 +74,7 @@ class BadgeWidget extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               widget,
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 badge.name,
                 style: TextStyle(
@@ -171,7 +171,7 @@ class BadgeCollectionWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (badgeIds.isEmpty) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
 
     final displayBadges = badgeIds.take(maxDisplay).toList();
@@ -253,7 +253,7 @@ class BadgeShowcaseDialog extends ConsumerWidget {
       child: Container(
         width: 400,
         height: 500,
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Row(
@@ -262,14 +262,14 @@ class BadgeShowcaseDialog extends ConsumerWidget {
                   'Badges',
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
-                Spacer(),
+                const Spacer(),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
-                  icon: Icon(Icons.close),
+                  icon: const Icon(Icons.close),
                 ),
               ],
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             Expanded(
               child: allBadgesAsync.when(
                 data: (allBadges) {
@@ -278,13 +278,13 @@ class BadgeShowcaseDialog extends ConsumerWidget {
                       .toList();
 
                   if (userBadges.isEmpty) {
-                    return Center(
+                    return const Center(
                       child: Text('No badges earned yet'),
                     );
                   }
 
                   return GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3,
                       crossAxisSpacing: 8,
                       mainAxisSpacing: 8,
@@ -301,8 +301,8 @@ class BadgeShowcaseDialog extends ConsumerWidget {
                     },
                   );
                 },
-                loading: () => Center(child: CircularProgressIndicator()),
-                error: (error, stackTrace) => Center(
+                loading: () => const Center(child: CircularProgressIndicator()),
+                error: (error, stackTrace) => const Center(
                   child: Text('Error loading badges'),
                 ),
               ),

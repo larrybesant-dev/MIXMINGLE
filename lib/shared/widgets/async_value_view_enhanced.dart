@@ -116,7 +116,7 @@ class _AsyncValueViewEnhancedState<T> extends ConsumerState<AsyncValueViewEnhanc
             content: Text(
               'Please wait before retrying... (${(backoffDuration.inSeconds - elapsed.inSeconds)}s)',
             ),
-            duration: Duration(seconds: 1),
+            duration: const Duration(seconds: 1),
           ),
         );
         return;

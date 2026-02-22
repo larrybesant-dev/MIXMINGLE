@@ -127,7 +127,7 @@ class _FriendsSidebarWidgetState extends ConsumerState<FriendsSidebarWidget> {
         children: [
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.people,
                 size: WidgetSizes.mediumIconSize,
                 color: DesignColors.textPrimary,
@@ -266,7 +266,7 @@ class _FriendsSidebarWidgetState extends ConsumerState<FriendsSidebarWidget> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.people_outline,
             size: 48,
             color: DesignColors.textSecondary,

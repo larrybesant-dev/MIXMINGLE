@@ -426,7 +426,7 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
       'tier': 'free',
       'name': 'Free',
       'price': 0,
-      'features': const [
+      'features': [
         'Basic messaging',
         'Join public rooms',
         'Limited gifts',
@@ -439,7 +439,7 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
       'name': 'Basic',
       'price': 4.99,
       'period': 'month',
-      'features': const [
+      'features': [
         'Priority matching',
         'Advanced filters',
         'Read receipts',
@@ -455,7 +455,7 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
       'name': 'Premium',
       'price': 9.99,
       'period': 'month',
-      'features': const [
+      'features': [
         'All Basic features',
         'Unlimited rooms',
         'Screen sharing',
@@ -471,7 +471,7 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
       'name': 'VIP',
       'price': 19.99,
       'period': 'month',
-      'features': const [
+      'features': [
         'All Premium features',
         'Exclusive badges',
         'Priority support',
