@@ -144,7 +144,7 @@ class SkeletonTile extends StatelessWidget {
       child: Row(
         children: [
           if (showAvatar) ...[
-            SkeletonAvatar(radius: 20),
+            const SkeletonAvatar(radius: 20),
             const SizedBox(width: 12),
           ],
           Expanded(
@@ -152,10 +152,10 @@ class SkeletonTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Title line
-                SkeletonText(
+                const SkeletonText(
                   width: 200,
                   height: 14,
-                  margin: const EdgeInsets.only(bottom: 8),
+                  margin: EdgeInsets.only(bottom: 8),
                 ),
                 // Subtitle lines
                 ...List.generate(
@@ -209,8 +209,8 @@ class SkeletonCard extends StatelessWidget {
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(12),
+            const Padding(
+              padding: EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -218,18 +218,18 @@ class SkeletonCard extends StatelessWidget {
                   SkeletonText(
                     width: 200,
                     height: 16,
-                    margin: const EdgeInsets.only(bottom: 8),
+                    margin: EdgeInsets.only(bottom: 8),
                   ),
                   // Subtitle
                   SkeletonText(
                     width: 150,
                     height: 12,
-                    margin: const EdgeInsets.only(bottom: 8),
+                    margin: EdgeInsets.only(bottom: 8),
                   ),
                   // Description (2 lines)
                   SkeletonText(
                     height: 12,
-                    margin: const EdgeInsets.only(bottom: 4),
+                    margin: EdgeInsets.only(bottom: 4),
                   ),
                   SkeletonText(
                     width: 180,
@@ -271,13 +271,13 @@ class SkeletonBubble extends StatelessWidget {
           constraints: BoxConstraints(
             maxWidth: MediaQuery.of(context).size.width * 0.7,
           ),
-          child: Column(
+          child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SkeletonText(
                 width: 180,
                 height: 12,
-                margin: const EdgeInsets.only(bottom: 4),
+                margin: EdgeInsets.only(bottom: 4),
               ),
               SkeletonText(
                 width: 150,
@@ -302,7 +302,7 @@ class SkeletonProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ShimmerSkeleton(
+    return const ShimmerSkeleton(
       child: Column(
         children: [
           // Avatar
@@ -311,13 +311,13 @@ class SkeletonProfileHeader extends StatelessWidget {
           SkeletonText(
             width: 200,
             height: 18,
-            margin: const EdgeInsets.only(bottom: 8),
+            margin: EdgeInsets.only(bottom: 8),
           ),
           // Bio
           SkeletonText(
             width: 250,
             height: 12,
-            margin: const EdgeInsets.only(bottom: 16),
+            margin: EdgeInsets.only(bottom: 16),
           ),
           // Stats row (3 items)
           Row(
