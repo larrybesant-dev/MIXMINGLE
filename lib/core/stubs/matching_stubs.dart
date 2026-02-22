@@ -61,6 +61,10 @@ class QuestionnaireAnswers {
     }
     return (filled / total).clamp(0.0, 1.0).toDouble();
   }
+
+  /// Minimal isComplete getter used by tests.
+  /// Consider the questionnaire complete when completionPercentage is 1.0.
+  bool get isComplete => completionPercentage >= 1.0;
 }
 
 /// Minimal matching profile used by tests.
@@ -84,6 +88,13 @@ class MatchingProfile {
   final dynamic minAge;
   final dynamic maxAge;
   final dynamic distancePreference;
+  // Additional preference fields referenced by tests
+  final dynamic smokingPreference;
+  final dynamic drinkingPreference;
+  final dynamic cannabisPreference;
+  final dynamic petsPreference;
+  final dynamic kidsPreference;
+  final dynamic preferredGenders;
 
   /// Constructor is const and tolerant: `id` has a stable default so tests that
   /// call `MatchingProfile()` without arguments compile.
@@ -104,6 +115,12 @@ class MatchingProfile {
     this.minAge,
     this.maxAge,
     this.distancePreference,
+    this.smokingPreference,
+    this.drinkingPreference,
+    this.cannabisPreference,
+    this.petsPreference,
+    this.kidsPreference,
+    this.preferredGenders,
   });
 }
 
