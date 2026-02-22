@@ -193,7 +193,7 @@ class _NeonSplashPageState extends State<NeonSplashPage>
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
-                                    decoration: BoxDecoration(
+                                    decoration: const BoxDecoration(
                                       gradient: LinearGradient(
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
@@ -225,7 +225,7 @@ class _NeonSplashPageState extends State<NeonSplashPage>
               // Animated brand name
               FadeTransition(
                 opacity: _textOpacity,
-                child: Column(
+                child: const Column(
                   children: [
                     NeonText(
                       'MIX & MINGLE',
@@ -236,7 +236,7 @@ class _NeonSplashPageState extends State<NeonSplashPage>
                       glowRadius: 16,
                       letterSpacing: 2,
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
                       'GLOBAL DJ VIBES',
                       style: TextStyle(
@@ -255,7 +255,7 @@ class _NeonSplashPageState extends State<NeonSplashPage>
               // Loading indicator
               FadeTransition(
                 opacity: _textOpacity,
-                child: Column(
+                child: const Column(
                   children: [
                     SizedBox(
                       width: 40,
@@ -267,7 +267,7 @@ class _NeonSplashPageState extends State<NeonSplashPage>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Text(
                       'CONNECTING...',
                       style: TextStyle(
