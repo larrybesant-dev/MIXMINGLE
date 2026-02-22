@@ -131,7 +131,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         // Title
-                        NeonText(
+                        const NeonText(
                           'JOIN THE PARTY',
                           fontSize: 24,
                           fontWeight: FontWeight.w900,
@@ -141,7 +141,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 8),
-                        Text(
+                        const Text(
                           'Create your Mix & Mingle account',
                           textAlign: TextAlign.center,
                           style: TextStyle(
@@ -255,7 +255,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
+                            const Text(
                               'Already have an account? ',
                               style: TextStyle(
                                 color: NeonColors.textSecondary,
@@ -265,7 +265,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
                             GestureDetector(
                               onTap: () =>
                                   Navigator.of(context).pushNamed('/login'),
-                              child: Text(
+                              child: const Text(
                                 'Sign in',
                                 style: TextStyle(
                                   color: NeonColors.neonOrange,
@@ -333,7 +333,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
@@ -355,7 +355,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
           ),
         ),
         const SizedBox(height: 12),
-        NeonText(
+        const NeonText(
           'MIX & MINGLE',
           fontSize: 24,
           fontWeight: FontWeight.w900,
@@ -497,9 +497,9 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
           child: GestureDetector(
             onTap: () => setState(() => _agreeToTerms = !_agreeToTerms),
             child: RichText(
-              text: TextSpan(
+              text: const TextSpan(
                 children: [
-                  const TextSpan(
+                  TextSpan(
                     text: 'I agree to the ',
                     style: TextStyle(
                       color: NeonColors.textSecondary,
@@ -516,7 +516,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
                     ),
                     // Add tap handler if needed
                   ),
-                  const TextSpan(
+                  TextSpan(
                     text: ' and ',
                     style: TextStyle(
                       color: NeonColors.textSecondary,
