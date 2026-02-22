@@ -33,7 +33,7 @@ class RoomCapacityIndicator extends ConsumerWidget {
 
     return capacityAsync.when(
       data: (publisherCount) {
-        final limit = FeatureFlags.maxConcurrentAgoraConnections;
+        const limit = FeatureFlags.maxConcurrentAgoraConnections;
         final isNearLimit = publisherCount >= (limit * 0.75).ceil();
         final isAtLimit = publisherCount >= limit;
 
@@ -72,7 +72,7 @@ class RoomCapacityCard extends ConsumerWidget {
 
     return capacityAsync.when(
       data: (publisherCount) {
-        final limit = FeatureFlags.maxConcurrentAgoraConnections;
+        const limit = FeatureFlags.maxConcurrentAgoraConnections;
         final percentage = ((publisherCount / limit) * 100).toInt();
         final isAtLimit = publisherCount >= limit;
         final isNearLimit = publisherCount >= (limit * 0.75).ceil();
@@ -207,7 +207,7 @@ class CapacityBadge extends ConsumerWidget {
 
     return capacityAsync.when(
       data: (publisherCount) {
-        final limit = FeatureFlags.maxConcurrentAgoraConnections;
+        const limit = FeatureFlags.maxConcurrentAgoraConnections;
         final isAtLimit = publisherCount >= limit;
         final isNearLimit = publisherCount >= (limit * 0.75).ceil();
 
@@ -283,7 +283,7 @@ class RoomFullOverlay extends ConsumerWidget {
 
     return capacityAsync.when(
       data: (publisherCount) {
-        final limit = FeatureFlags.maxConcurrentAgoraConnections;
+        const limit = FeatureFlags.maxConcurrentAgoraConnections;
         final isAtLimit = publisherCount >= limit;
 
         if (!isAtLimit) {
@@ -298,7 +298,7 @@ class RoomFullOverlay extends ConsumerWidget {
             child: Center(
               child: AlertDialog(
                 title: const Text('ðŸ”´ Room is Full'),
-                content: Text(
+                content: const Text(
                   'This room has reached its maximum capacity of $limit video publishers. '
                   'No additional video streams can be added at this time.\n\n'
                   'You can still join as an audience member and chat.',
@@ -345,7 +345,7 @@ class GoLiveButton extends ConsumerWidget {
 
     return capacityAsync.when(
       data: (publisherCount) {
-        final limit = FeatureFlags.maxConcurrentAgoraConnections;
+        const limit = FeatureFlags.maxConcurrentAgoraConnections;
         final isAtLimit = publisherCount >= limit;
 
         return Tooltip(
