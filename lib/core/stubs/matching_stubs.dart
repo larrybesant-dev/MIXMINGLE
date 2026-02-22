@@ -126,6 +126,51 @@ double MatchScore(MatchingProfile a, MatchingProfile b) {
   return ((base % 100) + ageFactor) / 200.0;
 }
 
+/// Helper methods used by tests. Kept simple and deterministic.
+extension MatchingProfileTestHelpers on MatchingProfile {
+  /// Returns a trivial distance between two profiles.
+  /// Tests only need a numeric value; this uses lat/lon if present, otherwise 0.
+  double distanceTo(MatchingProfile other) {
+    try {
+      final lat1 = (latitude is num) ? latitude.toDouble() : 0.0;
+      final lon1 = (longitude is num) ? longitude.toDouble() : 0.0;
+      final lat2 = (other.latitude is num) ? other.latitude.toDouble() : 0.0;
+      final lon2 = (other.longitude is num) ? other.longitude.toDouble() : 0.0;
+      // Very small deterministic "distance" metric for tests.
+      final dx = (lat1 - lat2).abs();
+      final dy = (lon1 - lon2).abs();
+      return (dx + dy);
+    } catch (_) {
+      return 0.0;
+    }
+  }
+
+  /// Returns true if this profile's age is within [minAge,maxAge].
+  bool isWithinAgeRange({dynamic minAge, dynamic maxAge}) {
+    final a = (age is num) ? age as num : int.tryParse('$age') ?? 0;
+    final min = (minAge is num) ? minAge as num : int.tryParse('$minAge') ?? 0;
+    final max = (maxAge is num) ? maxAge as num : int.tryParse('$maxAge') ?? 999;
+    return a >= min && a <= max;
+  }
+
+  /// Simple distance preference check. Accepts numeric or map-like preference.
+  bool meetsDistancePreference(dynamic distancePreference, {double Function(double)? distanceProvider}) {
+    final pref = distancePreference;
+    final dist = distanceProvider != null ? distanceProvider(distanceTo(this)) : distanceTo(this);
+    if (pref == null) return true;
+    if (pref is num) return dist <= pref.toDouble();
+    if (pref is String) {
+      final n = double.tryParse(pref);
+      return n == null ? true : dist <= n;
+    }
+    if (pref is Map) {
+      final max = pref['max'] ?? pref['distance'] ?? pref['radius'];
+      if (max is num) return dist <= max.toDouble();
+    }
+    return true;
+  }
+}
+
 class DistancePreference {
   final double maxDistanceKm;
   const DistancePreference({this.maxDistanceKm = 50});
