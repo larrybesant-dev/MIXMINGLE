@@ -49,6 +49,18 @@ enum CommunicationStyle { expressive, empathetic, logicalPractical }
 class QuestionnaireAnswers {
   final Map<String, dynamic> answers;
   const QuestionnaireAnswers([Map<String, dynamic>? a]) : answers = a ?? <String, dynamic>{};
+
+  /// Minimal completion percentage used by tests.
+  /// Returns a stable numeric value derived from answers for deterministic tests.
+  double get completionPercentage {
+    if (answers.isEmpty) return 0.0;
+    final total = answers.length;
+    var filled = 0;
+    for (final v in answers.values) {
+      if (v != null && v.toString().isNotEmpty) filled++;
+    }
+    return (filled / total).clamp(0.0, 1.0).toDouble();
+  }
 }
 
 /// Minimal matching profile used by tests.
@@ -68,6 +80,10 @@ class MatchingProfile {
   final SocialStyle? socialStyle;
   final CommunicationStyle? communicationStyle;
   final QuestionnaireAnswers answers;
+  // Accept common preference parameters used by tests even when passed to other helpers.
+  final dynamic minAge;
+  final dynamic maxAge;
+  final dynamic distancePreference;
 
   /// Constructor is const and tolerant: `id` has a stable default so tests that
   /// call `MatchingProfile()` without arguments compile.
@@ -85,6 +101,9 @@ class MatchingProfile {
     this.socialStyle,
     this.communicationStyle,
     this.answers = const QuestionnaireAnswers(),
+    this.minAge,
+    this.maxAge,
+    this.distancePreference,
   });
 }
 
