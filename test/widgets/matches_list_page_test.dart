@@ -1,5 +1,10 @@
+library;
+
+library matches_list_page_test;
+
+@TestOn('chrome')
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mix_and_mingle/features/matching/screens/matches_list_page.dart';
+import 'package:mixmingle/features/matching/screens/matches_list_page.dart';
 
 void main() {
   group('MatchesPage Widget Tests', () {

@@ -7,9 +7,11 @@
 /// - Participant info display
 /// - Responsive grid sizing
 /// - Error states and fallbacks
+library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mixmingle/design/design_colors.dart';
 import '../test_helpers.dart';
 
 // Mock VideoGridWidget for testing
@@ -19,11 +21,11 @@ class MockVideoGridWidget extends StatefulWidget {
   final Function(String)? onRemove;
 
   const MockVideoGridWidget({
-    Key? key,
+    super.key,
     required this.participants,
     this.onPin,
     this.onRemove,
-  }) : super(key: key);
+  });
 
   @override
   State<MockVideoGridWidget> createState() => _MockVideoGridWidgetState();
@@ -203,7 +205,7 @@ class _MockVideoGridWidgetState extends State<MockVideoGridWidget>
                         child: Center(
                           child: Text(
                             '${participant['unreadCount']}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: DesignColors.accent,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
