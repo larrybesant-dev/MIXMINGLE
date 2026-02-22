@@ -232,12 +232,12 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
         }
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        PopupMenuItem<String>(
+        const PopupMenuItem<String>(
           value: 'quality_low',
           child: Row(
             children: [
-              const Icon(Icons.video_call, size: WidgetSizes.smallIconSize),
-              const SizedBox(width: Spacing.md),
+              Icon(Icons.video_call, size: WidgetSizes.smallIconSize),
+              SizedBox(width: Spacing.md),
               Text(
                 'Low Quality (180p)',
                 style: AppTextStyles.body2,
@@ -245,12 +245,12 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
             ],
           ),
         ),
-        PopupMenuItem<String>(
+        const PopupMenuItem<String>(
           value: 'quality_medium',
           child: Row(
             children: [
-              const Icon(Icons.video_call, size: WidgetSizes.smallIconSize),
-              const SizedBox(width: Spacing.md),
+              Icon(Icons.video_call, size: WidgetSizes.smallIconSize),
+              SizedBox(width: Spacing.md),
               Text(
                 'Medium Quality (360p)',
                 style: AppTextStyles.body2,
@@ -258,12 +258,12 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
             ],
           ),
         ),
-        PopupMenuItem<String>(
+        const PopupMenuItem<String>(
           value: 'quality_high',
           child: Row(
             children: [
-              const Icon(Icons.video_call, size: WidgetSizes.smallIconSize),
-              const SizedBox(width: Spacing.md),
+              Icon(Icons.video_call, size: WidgetSizes.smallIconSize),
+              SizedBox(width: Spacing.md),
               Text(
                 'High Quality (720p)',
                 style: AppTextStyles.body2,
@@ -304,32 +304,32 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
           _showCameraSettingsDialog(context, ref);
         } else if (result == 'audio_settings') {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Audio settings coming soon'),
+            const SnackBar(
+              content: Text('Audio settings coming soon'),
               behavior: SnackBarBehavior.floating,
-              margin: const EdgeInsets.all(Spacing.md),
-              duration: const Duration(milliseconds: 1500),
+              margin: EdgeInsets.all(Spacing.md),
+              duration: Duration(milliseconds: 1500),
             ),
           );
         }
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        PopupMenuItem<String>(
+        const PopupMenuItem<String>(
           value: 'camera_settings',
           child: Row(
             children: [
-              const Icon(Icons.camera_alt, size: WidgetSizes.smallIconSize),
-              const SizedBox(width: Spacing.md),
+              Icon(Icons.camera_alt, size: WidgetSizes.smallIconSize),
+              SizedBox(width: Spacing.md),
               Text('Camera Settings', style: AppTextStyles.body2),
             ],
           ),
         ),
-        PopupMenuItem<String>(
+        const PopupMenuItem<String>(
           value: 'audio_settings',
           child: Row(
             children: [
-              const Icon(Icons.settings_voice, size: WidgetSizes.smallIconSize),
-              const SizedBox(width: Spacing.md),
+              Icon(Icons.settings_voice, size: WidgetSizes.smallIconSize),
+              SizedBox(width: Spacing.md),
               Text('Audio Settings', style: AppTextStyles.body2),
             ],
           ),
@@ -344,7 +344,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
+        title: const Text(
           'Notifications',
           style: AppTextStyles.h4,
         ),
@@ -356,7 +356,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.notifications_off,
                         size: WidgetSizes.largeIconSize,
                         color: DesignColors.accent,
@@ -413,7 +413,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
+        title: const Text(
           'Camera Approval Settings',
           style: AppTextStyles.h4,
         ),
@@ -423,13 +423,13 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              const Text(
                 'Who can see your camera?',
                 style: AppTextStyles.body1,
               ),
               const SizedBox(height: Spacing.lg),
               RadioListTile<String>(
-                title: Text(
+                title: const Text(
                   'Ask each time',
                   style: AppTextStyles.body1,
                 ),
@@ -444,7 +444,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
                 },
               ),
               RadioListTile<String>(
-                title: Text(
+                title: const Text(
                   'Allow all',
                   style: AppTextStyles.body1,
                 ),
@@ -459,7 +459,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
                 },
               ),
               RadioListTile<String>(
-                title: Text(
+                title: const Text(
                   'Deny all',
                   style: AppTextStyles.body1,
                 ),
@@ -546,7 +546,7 @@ class _PulsingLiveIndicatorState extends State<_PulsingLiveIndicator>
             Container(
               width: 8,
               height: 8,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: DesignColors.accent,
                 shape: BoxShape.circle,
               ),
