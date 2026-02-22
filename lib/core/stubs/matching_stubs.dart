@@ -251,6 +251,20 @@ class MatchingProfile {
       preferredGenders: preferredGenders ?? this.preferredGenders,
     );
   }
+
+  /// Common alternate constructors used in tests and fixtures.
+  /// All delegate to fromJson to accept flexible keys and named params.
+  const MatchingProfile.fromSnapshot(dynamic snapshot)
+      : this.fromJson(snapshot is Map ? Map<String, dynamic>.from(snapshot) : <String, dynamic>{});
+
+  const MatchingProfile.fromDocument(dynamic doc)
+      : this.fromJson(doc is Map ? Map<String, dynamic>.from(doc) : <String, dynamic>{});
+
+  const MatchingProfile.fromFirestore(dynamic doc)
+      : this.fromJson(doc is Map ? Map<String, dynamic>.from(doc) : <String, dynamic>{});
+
+  const MatchingProfile.fromMapLike(dynamic mapLike)
+      : this.fromJson(mapLike is Map ? Map<String, dynamic>.from(mapLike) : <String, dynamic>{});
 }
 
 /// Minimal PartnerVibe stub for tests
