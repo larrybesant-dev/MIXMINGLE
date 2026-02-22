@@ -98,7 +98,7 @@ class _PermissionAwareVideoViewState extends ConsumerState<PermissionAwareVideoV
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: [
+            children: const [
               const SizedBox(
                 width: 48,
                 height: 48,
@@ -149,7 +149,7 @@ class _PermissionAwareVideoViewState extends ConsumerState<PermissionAwareVideoV
               const SizedBox(height: 8),
               if (isPermanentlyDenied)
                 Column(
-                  children: [
+                  children: const [
                     const Text(
                       'Camera blocked in browser settings',
                       textAlign: TextAlign.center,

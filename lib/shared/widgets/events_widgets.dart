@@ -22,7 +22,7 @@ class EventCard extends ConsumerWidget {
     final currentUser = ref.watch(currentUserProvider).value;
     final friendsAttendingAsync = currentUser != null
         ? ref.watch(friendsAttendingEventProvider((userId: currentUser.id, eventId: event.id)))
-        : const AsyncValue<List<UserProfile>>.data([]);
+        : const AsyncValue<List<UserProfile>>.data(const []);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),

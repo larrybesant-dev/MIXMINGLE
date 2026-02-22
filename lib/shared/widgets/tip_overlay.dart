@@ -52,10 +52,10 @@ class _TipOverlayState extends ConsumerState<TipOverlay>
   late Animation<double> _pulseAnimation;
   bool _isExpanded = false;
 
-  final List<Map<String, dynamic>> _quickGifts = [
-    {'emoji': '🌹', 'amount': 5, 'name': 'Rose'},
-    {'emoji': '❤️', 'amount': 10, 'name': 'Heart'},
-    {'emoji': '💎', 'amount': 25, 'name': 'Diamond'},
+  final List<Map<String, dynamic>> _quickGifts = const [
+    {'emoji': 'ðŸŒ¹', 'amount': 5, 'name': 'Rose'},
+    {'emoji': 'â¤ï¸', 'amount': 10, 'name': 'Heart'},
+    {'emoji': 'ðŸ’Ž', 'amount': 25, 'name': 'Diamond'},
   ];
 
   @override
@@ -105,7 +105,7 @@ class _TipOverlayState extends ConsumerState<TipOverlay>
             gradient: const LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [DesignColors.gold, DesignColors.secondary],
+              colors: const [DesignColors.gold, DesignColors.secondary],
             ),
             shape: BoxShape.circle,
             boxShadow: [
@@ -126,7 +126,7 @@ class _TipOverlayState extends ConsumerState<TipOverlay>
                   color: Colors.white,
                   size: 28,
                 ),
-                if (widget.showLabel) ...[
+                if (widget.showLabel) ...const [
                   const SizedBox(height: 4),
                   const Text(
                     'Tip',
@@ -259,7 +259,7 @@ class _TipOverlayState extends ConsumerState<TipOverlay>
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [DesignColors.accent, DesignColors.tertiary],
+            colors: const [DesignColors.accent, DesignColors.tertiary],
           ),
           borderRadius: BorderRadius.circular(30),
           boxShadow: [
@@ -370,7 +370,7 @@ class TipOverlayCompact extends StatelessWidget {
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [DesignColors.gold, DesignColors.secondary],
+            colors: const [DesignColors.gold, DesignColors.secondary],
           ),
           shape: BoxShape.circle,
           boxShadow: [

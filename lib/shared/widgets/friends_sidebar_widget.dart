@@ -77,8 +77,8 @@ class _FriendsSidebarWidgetState extends ConsumerState<FriendsSidebarWidget> {
         }
         return result;
       },
-      loading: () => <Friend>[],
-      error: (_, __) => <Friend>[],
+      loading: () => const <Friend>[],
+      error: (_, __) => const <Friend>[],
     );
 
     return CollapsibleSidebar(

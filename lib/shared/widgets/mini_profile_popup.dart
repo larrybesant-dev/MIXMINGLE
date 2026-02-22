@@ -70,7 +70,7 @@ class MiniProfilePopup extends ConsumerWidget {
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
+              colors: const [
                 DesignColors.surfaceLight,
                 DesignColors.surfaceDefault,
               ],

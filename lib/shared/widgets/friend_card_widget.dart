@@ -137,10 +137,10 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
               ),
               color: DesignColors.accent,
               boxShadow: _isHovered
-                  ? [
+                  ? const [
                       DesignShadows.medium,
                     ]
-                  : [
+                  : const [
                       DesignShadows.subtle,
                     ],
             ),

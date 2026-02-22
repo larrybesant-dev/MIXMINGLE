@@ -36,7 +36,7 @@ class CameraPermissionList extends ConsumerWidget {
           );
         }
 
-        final permissions = snapshot.data ?? [];
+        final permissions = snapshot.data ?? const [];
 
         if (permissions.isEmpty) {
           return Center(

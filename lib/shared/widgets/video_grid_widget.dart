@@ -48,7 +48,7 @@ class _VideoGridWidgetState extends ConsumerState<VideoGridWidget> {
   @override
   void initState() {
     super.initState();
-    videoOrder = [];
+    videoOrder = const [];
   }
 
   @override
@@ -373,7 +373,7 @@ class _AnimatedVideoTileState extends ConsumerState<_AnimatedVideoTile>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
+            colors: const [
               DesignColors.accent,
               DesignColors.accent,
             ],

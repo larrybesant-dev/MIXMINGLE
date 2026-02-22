@@ -24,7 +24,7 @@ class _CameraPermissionRequestDialogState
   bool _isRequesting = false;
   Duration? _selectedDuration;
 
-  final List<Duration?> _durationOptions = [
+  final List<Duration?> _durationOptions = const [
     null, // Permanent
     const Duration(hours: 1),
     const Duration(hours: 24),

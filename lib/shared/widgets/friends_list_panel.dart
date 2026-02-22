@@ -152,7 +152,7 @@ class _FriendsListPanelState extends State<FriendsListPanel>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [DesignColors.accent, DesignColors.tertiary],
+          colors: const [DesignColors.accent, DesignColors.tertiary],
         ),
       ),
       child: SafeArea(

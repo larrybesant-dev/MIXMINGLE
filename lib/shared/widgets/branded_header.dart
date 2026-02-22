@@ -136,7 +136,7 @@ class _BrandedHeaderState extends State<BrandedHeader>
                                           gradient: LinearGradient(
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
-                                            colors: [
+                                            colors: const [
                                               NeonColors.neonOrange,
                                               NeonColors.neonPurple,
                                             ],
@@ -199,7 +199,7 @@ class _BrandedHeaderState extends State<BrandedHeader>
                                       gradient: LinearGradient(
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
-                                        colors: [
+                                        colors: const [
                                           NeonColors.neonOrange,
                                           NeonColors.neonPurple,
                                         ],

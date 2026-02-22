@@ -16,7 +16,7 @@ class CoinShop extends ConsumerStatefulWidget {
 class _CoinShopState extends ConsumerState<CoinShop> {
   bool _isLoading = false;
 
-  final List<Map<String, dynamic>> _coinPackages = [
+  final List<Map<String, dynamic>> _coinPackages = const [
     {
       'id': 'starter',
       'name': 'Starter Pack',
@@ -421,12 +421,12 @@ class SubscriptionManager extends ConsumerStatefulWidget {
 class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
   bool _isLoading = false;
 
-  final List<Map<String, dynamic>> _subscriptionPlans = [
+  final List<Map<String, dynamic>> _subscriptionPlans = const [
     {
       'tier': 'free',
       'name': 'Free',
       'price': 0,
-      'features': [
+      'features': const [
         'Basic messaging',
         'Join public rooms',
         'Limited gifts',
@@ -439,7 +439,7 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
       'name': 'Basic',
       'price': 4.99,
       'period': 'month',
-      'features': [
+      'features': const [
         'Priority matching',
         'Advanced filters',
         'Read receipts',
@@ -455,7 +455,7 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
       'name': 'Premium',
       'price': 9.99,
       'period': 'month',
-      'features': [
+      'features': const [
         'All Basic features',
         'Unlimited rooms',
         'Screen sharing',
@@ -471,7 +471,7 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
       'name': 'VIP',
       'price': 19.99,
       'period': 'month',
-      'features': [
+      'features': const [
         'All Premium features',
         'Exclusive badges',
         'Priority support',

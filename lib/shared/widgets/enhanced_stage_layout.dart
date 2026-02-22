@@ -495,7 +495,7 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
-                      colors: [
+                      colors: const [
                         Colors.black87,
                         Colors.transparent,
                       ],

@@ -55,8 +55,8 @@ class _GroupsSidebarWidgetState extends ConsumerState<GroupsSidebarWidget> {
         }
         return filtered;
       },
-      loading: () => [],
-      error: (_, __) => [],
+      loading: () => const [],
+      error: (_, __) => const [],
     );
 
     return Container(
