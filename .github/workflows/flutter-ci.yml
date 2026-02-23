@@ -39,8 +39,11 @@ jobs:
       - name: 🔎 Analyze code
         run: flutter analyze --no-fatal-infos
 
-      - name: 🧪 Run unit tests
-        run: flutter test --coverage --reporter expanded
+      - name: 🌐 Install Chrome (web tests)
+        run: sudo apt-get update -qq && sudo apt-get install -y google-chrome-stable
+
+      - name: 🧪 Run unit tests (web)
+        run: flutter test test/unit --platform=chrome --dart-define=FLUTTER_WEB_TEST=true --coverage --reporter expanded
 
       - name: 📊 Upload coverage to Codecov
         uses: codecov/codecov-action@v3
