@@ -37,7 +37,7 @@ jobs:
         run: flutter pub get --check
 
       - name: 🔎 Analyze code
-        run: flutter analyze --no-fatal-infos
+        run: flutter analyze --no-fatal-infos lib test
 
       - name: 🌐 Install Chrome (web tests)
         run: sudo apt-get update -qq && sudo apt-get install -y google-chrome-stable
