@@ -308,7 +308,7 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
                             ),
                           if (speaker.isSpeaking) ...[
                             const SizedBox(width: 8),
-                            Icon(
+                            const Icon(
                               Icons.graphic_eq,
                               color: Colors.greenAccent,
                               size: 16,
@@ -491,7 +491,7 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
                 right: 0,
                 height: 60,
                 child: Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,

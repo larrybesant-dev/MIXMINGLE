@@ -44,15 +44,15 @@ class RoomCapacityIndicator extends ConsumerWidget {
                 : DesignColors.success;
 
         return Text(
-          'ðŸ‘¥ $publisherCount/$limit on camera',
+          '👥 $publisherCount/$limit on camera',
           style: (style ?? const TextStyle(fontSize: 12)).copyWith(
             color: textColor ?? displayColor,
             fontWeight: isNearLimit ? FontWeight.bold : FontWeight.normal,
           ),
         );
       },
-      loading: () => const Text('ðŸ‘¥ Loading...'),
-      error: (err, _) => const Text('ðŸ‘¥ Error'),
+      loading: () => const Text('👥 Loading...'),
+      error: (err, _) => const Text('👥 Error'),
     );
   }
 }
@@ -102,7 +102,7 @@ class RoomCapacityCard extends ConsumerWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'ðŸ“¹ Video Publishers',
+                    '📹 Video Publishers',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -137,7 +137,7 @@ class RoomCapacityCard extends ConsumerWidget {
               // Status message
               if (isAtLimit)
                 Text(
-                  'ðŸ”´ Room is full! No more video publishers can join.',
+                  '🔴 Room is full! No more video publishers can join.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: DesignColors.error,
                         fontWeight: FontWeight.w500,
@@ -145,7 +145,7 @@ class RoomCapacityCard extends ConsumerWidget {
                 )
               else if (isNearLimit)
                 Text(
-                  'âš ï¸ Room is nearly full ($percentage% capacity). Quality may degrade.',
+                  '⚠️ Room is nearly full ($percentage% capacity). Quality may degrade.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: DesignColors.warning,
                         fontWeight: FontWeight.w500,
@@ -153,7 +153,7 @@ class RoomCapacityCard extends ConsumerWidget {
                 )
               else
                 Text(
-                  'âœ… Room has space for ${limit - publisherCount} more video publishers',
+                  '✅ Room has space for ${limit - publisherCount} more video publishers',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: DesignColors.success,
                       ),
@@ -297,7 +297,7 @@ class RoomFullOverlay extends ConsumerWidget {
             color: DesignColors.overlay,
             child: Center(
               child: AlertDialog(
-                title: const Text('ðŸ”´ Room is Full'),
+                title: const Text('🔴 Room is Full'),
                 content: const Text(
                   'This room has reached its maximum capacity of $limit video publishers. '
                   'No additional video streams can be added at this time.\n\n'
@@ -374,5 +374,3 @@ class GoLiveButton extends ConsumerWidget {
     );
   }
 }
-
-

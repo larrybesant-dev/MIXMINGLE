@@ -48,7 +48,7 @@ class _VideoGridWidgetState extends ConsumerState<VideoGridWidget> {
   @override
   void initState() {
     super.initState();
-    videoOrder = [];
+    videoOrder = const [];
   }
 
   @override

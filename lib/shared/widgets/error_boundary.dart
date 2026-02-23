@@ -167,7 +167,7 @@ class ErrorHandler {
     }
 
     // Show user-friendly error message
-    String message = _getErrorMessage(error);
+    final String message = _getErrorMessage(error);
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(

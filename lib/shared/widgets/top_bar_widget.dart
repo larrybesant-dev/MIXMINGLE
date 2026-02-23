@@ -1,4 +1,4 @@
-﻿// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use
 /// Top Bar Widget - Navigation bar with animated participant count and theme toggle
 ///
 /// Features:
@@ -231,8 +231,8 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
           ref.read(videoQualityProvider.notifier).setQuality(VideoQuality.high);
         }
       },
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        const PopupMenuItem<String>(
+      itemBuilder: (BuildContext context) => const <PopupMenuEntry<String>>[
+        PopupMenuItem<String>(
           value: 'quality_low',
           child: Row(
             children: [
@@ -245,7 +245,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
             ],
           ),
         ),
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'quality_medium',
           child: Row(
             children: [
@@ -258,7 +258,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
             ],
           ),
         ),
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'quality_high',
           child: Row(
             children: [
@@ -313,8 +313,8 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
           );
         }
       },
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        const PopupMenuItem<String>(
+      itemBuilder: (BuildContext context) => const <PopupMenuEntry<String>>[
+        PopupMenuItem<String>(
           value: 'camera_settings',
           child: Row(
             children: [
@@ -324,7 +324,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
             ],
           ),
         ),
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'audio_settings',
           child: Row(
             children: [

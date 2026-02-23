@@ -1,4 +1,4 @@
-﻿/// Friend Card Widget - Design System Compliant
+/// Friend Card Widget - Design System Compliant
 ///
 /// Displays a friend with:
 /// - Avatar + online indicator
@@ -20,14 +20,14 @@ import '../../utils/multi_window_room_manager.dart';
 /// Friend card showing online status and room info
 ///
 /// Features:
-/// - âœ… Custom card (no Material Card)
-/// - âœ… Online indicator pulse animation
-/// - âœ… Hover glow effect
-/// - âœ… Double-click to join friend's room
-/// - âœ… Right-click context menu
-/// - âœ… All colors from DesignColors
-/// - âœ… All spacing from DesignSpacing
-/// - âœ… All animations from DesignAnimations
+/// - ✅ Custom card (no Material Card)
+/// - ✅ Online indicator pulse animation
+/// - ✅ Hover glow effect
+/// - ✅ Double-click to join friend's room
+/// - ✅ Right-click context menu
+/// - ✅ All colors from DesignColors
+/// - ✅ All spacing from DesignSpacing
+/// - ✅ All animations from DesignAnimations
 class FriendCardWidget extends ConsumerStatefulWidget {
   /// Friend data with presence
   final FriendWithPresence friend;
@@ -63,7 +63,7 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
 
   bool _isHovered = false;
   // ignore: unused_field - kept for press state handling
-  bool _isPressed = false;
+  final bool _isPressed = false;
 
   @override
   void initState() {
@@ -137,10 +137,10 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
               ),
               color: DesignColors.accent,
               boxShadow: _isHovered
-                  ? [
+                  ? const [
                       DesignShadows.medium,
                     ]
-                  : [
+                  : const [
                       DesignShadows.subtle,
                     ],
             ),
@@ -188,7 +188,7 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
               ? NetworkImage(widget.friend.avatarUrl!)
               : null,
           child: widget.friend.avatarUrl == null
-              ? Icon(
+              ? const Icon(
                   Icons.person,
                   color: DesignColors.accent,
                 )
@@ -341,24 +341,24 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
       items: [
         PopupMenuItem(
           value: 'open_chat',
-          child: Text('ðŸ’¬ Open Chat', style: DesignTypography.body),
+          child: const Text('💬 Open Chat', style: DesignTypography.body),
           onTap: () => widget.onContextMenu?.call('open_chat', widget.friend),
         ),
         if (widget.friend.isOnline && widget.friend.roomId != null)
           PopupMenuItem(
             value: 'join_room',
-            child: Text('ðŸŽ¤ Join Room', style: DesignTypography.body),
+            child: const Text('🎤 Join Room', style: DesignTypography.body),
             onTap: () => _handleDoubleTap(),
           ),
         if (widget.friend.isOnline)
           PopupMenuItem(
             value: 'invite_to_room',
-            child: Text('ðŸ“© Invite to Room', style: DesignTypography.body),
+            child: const Text('📩 Invite to Room', style: DesignTypography.body),
             onTap: () => widget.onContextMenu?.call('invite_to_room', widget.friend),
           ),
         PopupMenuItem(
           value: 'view_profile',
-          child: Text('ðŸ‘¤ View Profile', style: DesignTypography.body),
+          child: const Text('👤 View Profile', style: DesignTypography.body),
           onTap: () =>
               widget.onContextMenu?.call('view_profile', widget.friend),
         ),
@@ -366,7 +366,7 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
         PopupMenuItem(
           value: 'remove',
           child: Text(
-            'ðŸ—‘ï¸ Remove Friend',
+            '🗑️ Remove Friend',
             style: DesignTypography.body.copyWith(color: DesignColors.accent),
           ),
           onTap: () => widget.onContextMenu?.call('remove', widget.friend),
@@ -375,3 +375,6 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
     );
   }
 }
+
+
+

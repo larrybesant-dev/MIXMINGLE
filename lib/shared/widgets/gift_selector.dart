@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/providers/providers.dart';
 
@@ -22,7 +22,7 @@ class _GiftSelectorState extends ConsumerState<GiftSelector> {
   final _messageController = TextEditingController();
   int _selectedAmount = 10;
 
-  final List<Map<String, dynamic>> _gifts = [
+  final List<Map<String, dynamic>> _gifts = const [
     {'name': 'Rose', 'amount': 5, 'emoji': 'ðŸŒ¹'},
     {'name': 'Heart', 'amount': 10, 'emoji': 'â¤ï¸'},
     {'name': 'Diamond', 'amount': 25, 'emoji': 'ðŸ’Ž'},

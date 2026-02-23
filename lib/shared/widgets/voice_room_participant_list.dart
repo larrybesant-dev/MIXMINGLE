@@ -262,7 +262,7 @@ class VoiceRoomParticipantList extends ConsumerWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'ðŸŽ¤',
+                                  '🎤',
                                   style: TextStyle(fontSize: 10),
                                 ),
                                 SizedBox(width: 2),
@@ -291,7 +291,7 @@ class VoiceRoomParticipantList extends ConsumerWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'ðŸ–ï¸',
+                                  '🖐️',
                                   style: TextStyle(fontSize: 10),
                                 ),
                                 SizedBox(width: 2),

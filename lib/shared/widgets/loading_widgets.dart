@@ -103,8 +103,8 @@ class FullScreenLoader extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              CircularProgressIndicator(
-                color: const Color(0xFFFF4C4C),
+              const CircularProgressIndicator(
+                color: Color(0xFFFF4C4C),
               ),
               const SizedBox(height: 24),
               GlowText(

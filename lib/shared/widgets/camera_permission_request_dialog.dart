@@ -24,11 +24,11 @@ class _CameraPermissionRequestDialogState
   bool _isRequesting = false;
   Duration? _selectedDuration;
 
-  final List<Duration?> _durationOptions = [
+  final List<Duration?> _durationOptions = const [
     null, // Permanent
-    const Duration(hours: 1),
-    const Duration(hours: 24),
-    const Duration(days: 7),
+    Duration(hours: 1),
+    Duration(hours: 24),
+    Duration(days: 7),
   ];
 
   String _getDurationLabel(Duration? duration) {
@@ -83,10 +83,10 @@ class _CameraPermissionRequestDialogState
         borderRadius: BorderRadius.circular(16),
         side: const BorderSide(color: Color(0xFFFF4C4C), width: 2),
       ),
-      title: Row(
+      title: const Row(
         children: [
-          const Icon(Icons.videocam, color: Color(0xFFFF4C4C)),
-          const SizedBox(width: 8),
+          Icon(Icons.videocam, color: Color(0xFFFF4C4C)),
+          SizedBox(width: 8),
           Expanded(
             child: Text(
               'Request Camera Access',

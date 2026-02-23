@@ -55,8 +55,8 @@ class _GroupsSidebarWidgetState extends ConsumerState<GroupsSidebarWidget> {
         }
         return filtered;
       },
-      loading: () => [],
-      error: (_, __) => [],
+      loading: () => const [],
+      error: (_, __) => const [],
     );
 
     return Container(
@@ -97,7 +97,7 @@ class _GroupsSidebarWidgetState extends ConsumerState<GroupsSidebarWidget> {
                           color: DesignColors.textPrimary,
                         ),
                         const SizedBox(width: 8),
-                        Text(
+                        const Text(
                           'Groups',
                           style: TextStyle(
                             fontSize: 18,
@@ -132,7 +132,7 @@ class _GroupsSidebarWidgetState extends ConsumerState<GroupsSidebarWidget> {
                         padding: const EdgeInsets.only(top: 4),
                         child: Text(
                           '$unreadCount unread',
-                          style: TextStyle(
+                          style: const TextStyle(
                             fontSize: 12,
                             color: DesignColors.error,
                             fontWeight: FontWeight.bold,
@@ -228,7 +228,7 @@ class _GroupsSidebarWidgetState extends ConsumerState<GroupsSidebarWidget> {
           // Groups list
           Expanded(
             child: displayedGroups.isEmpty
-                ? Center(
+                ? const Center(
                     child: Text(
                       'No groups found',
                       style: TextStyle(
@@ -385,7 +385,7 @@ class _GroupTile extends StatelessWidget {
         ),
         subtitle: Row(
           children: [
-            Icon(
+            const Icon(
               Icons.people_outline,
               size: 14,
               color: DesignColors.textSecondary,
@@ -393,7 +393,7 @@ class _GroupTile extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               '${group.participantIds.length}/${group.maxParticipants}',
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 12,
                 color: DesignColors.textSecondary,
               ),

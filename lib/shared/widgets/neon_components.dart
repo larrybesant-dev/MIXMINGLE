@@ -454,7 +454,7 @@ class _NeonInputFieldState extends State<NeonInputField>
               fillColor: NeonColors.darkCard,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
+                borderSide: const BorderSide(
                   color: NeonColors.divider,
                   width: 1.5,
                 ),

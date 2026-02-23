@@ -95,11 +95,11 @@ class _PermissionAwareVideoViewState extends ConsumerState<PermissionAwareVideoV
     if (_isCheckingPermission) {
       return Container(
         color: const Color(0xFF1E1E2F),
-        child: Center(
+        child: const Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(
+              SizedBox(
                 width: 48,
                 height: 48,
                 child: CircularProgressIndicator(
@@ -107,8 +107,8 @@ class _PermissionAwareVideoViewState extends ConsumerState<PermissionAwareVideoV
                   strokeWidth: 3,
                 ),
               ),
-              const SizedBox(height: 16),
-              const Text(
+              SizedBox(height: 16),
+              Text(
                 'Checking permissions...',
                 style: TextStyle(
                   color: Colors.white70,
@@ -148,9 +148,9 @@ class _PermissionAwareVideoViewState extends ConsumerState<PermissionAwareVideoV
               ),
               const SizedBox(height: 8),
               if (isPermanentlyDenied)
-                Column(
+                const Column(
                   children: [
-                    const Text(
+                    Text(
                       'Camera blocked in browser settings',
                       textAlign: TextAlign.center,
                       style: TextStyle(
@@ -159,8 +159,8 @@ class _PermissionAwareVideoViewState extends ConsumerState<PermissionAwareVideoV
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    const Text(
+                    SizedBox(height: 8),
+                    Text(
                       'Please unblock camera access in browser settings to view this video',
                       textAlign: TextAlign.center,
                       style: TextStyle(

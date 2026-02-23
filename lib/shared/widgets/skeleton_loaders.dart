@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Base shimmer animation for skeleton loaders
 class ShimmerSkeleton extends StatefulWidget {
@@ -143,9 +143,9 @@ class SkeletonTile extends StatelessWidget {
       padding: padding,
       child: Row(
         children: [
-          if (showAvatar) ...[
-            const SkeletonAvatar(radius: 20),
-            const SizedBox(width: 12),
+          if (showAvatar) ...const [
+            SkeletonAvatar(radius: 20),
+            SizedBox(width: 12),
           ],
           Expanded(
             child: Column(

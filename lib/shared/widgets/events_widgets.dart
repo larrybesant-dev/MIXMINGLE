@@ -96,7 +96,7 @@ class EventCard extends ConsumerWidget {
                 children: [
                   Icon(
                     event.isOnline ? Icons.videocam : Icons.location_on,
-                    color: Color(0xFFFFD700),
+                    color: const Color(0xFFFFD700),
                     size: 16,
                   ),
                   const SizedBox(width: 4),

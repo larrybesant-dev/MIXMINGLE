@@ -1,4 +1,4 @@
-﻿library;
+library;
 
 import 'package:flutter/material.dart';
 /// Chat Box Widget - Enhanced with message animations and smooth picker transitions
@@ -42,12 +42,12 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
   bool _showStickerPicker = false;
   late Animation<double> _pickerHeightAnimation;
 
-  final List<String> _emojis = [
+  final List<String> _emojis = const [
     'ðŸ˜€', 'ðŸ˜‚', 'ðŸ˜', 'ðŸ¥°', 'ðŸ˜Ž', 'ðŸ¤”', 'ðŸ˜’', 'ðŸ”¥',
     'ðŸ’¯', 'ðŸ‘', 'ðŸ‘', 'ðŸŽ‰', 'ðŸŽŠ', 'ðŸ’ª', 'âœ¨', 'ðŸŒŸ',
   ];
 
-  final List<String> _stickers = [
+  final List<String> _stickers = const [
     'ðŸ‘‹', 'ðŸ¤', 'ðŸ’¼', 'ðŸŽ¯', 'ðŸŽ¬', 'ðŸŽ¨', 'ðŸŽ­', 'ðŸŽ®',
   ];
 
@@ -288,8 +288,8 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
           _handleImageUpload();
         }
       },
-      itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        const PopupMenuItem<String>(
+      itemBuilder: (BuildContext context) => const <PopupMenuEntry<String>>[
+        PopupMenuItem<String>(
           value: 'file',
           child: Row(
             children: [
@@ -303,7 +303,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
             ],
           ),
         ),
-        const PopupMenuItem<String>(
+        PopupMenuItem<String>(
           value: 'image',
           child: Row(
             children: [
@@ -355,7 +355,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
           decoration: BoxDecoration(
             color: isActive ? DesignColors.accent : DesignColors.surfaceAlt,
             borderRadius: BorderRadius.circular(BorderRadii.circular),
-            boxShadow: isActive ? AppShadows.elevation2 : [],
+            boxShadow: isActive ? AppShadows.elevation2 : const [],
           ),
           child: icon != null
               ? Icon(

@@ -132,7 +132,7 @@ class _BrandedHeaderState extends State<BrandedHeader>
                                     fit: BoxFit.cover,
                                     errorBuilder: (context, error, stackTrace) {
                                       return Container(
-                                        decoration: BoxDecoration(
+                                        decoration: const BoxDecoration(
                                           gradient: LinearGradient(
                                             begin: Alignment.topLeft,
                                             end: Alignment.bottomRight,
@@ -195,7 +195,7 @@ class _BrandedHeaderState extends State<BrandedHeader>
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
-                                    decoration: BoxDecoration(
+                                    decoration: const BoxDecoration(
                                       gradient: LinearGradient(
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
