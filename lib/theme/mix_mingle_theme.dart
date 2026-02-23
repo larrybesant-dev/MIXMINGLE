@@ -56,7 +56,7 @@ class MixMingleTheme {
   // ThemeData
   static ThemeData get themeData => ThemeData(
     primaryColor: primary,
-    colorScheme: ColorScheme(
+    colorScheme: const ColorScheme(
       brightness: Brightness.light,
       primary: primary,
       secondary: secondary,
@@ -73,7 +73,7 @@ class MixMingleTheme {
       elevation: elevation,
       titleTextStyle: title.copyWith(color: Colors.white),
     ),
-    textTheme: TextTheme(
+    textTheme: const TextTheme(
       displayLarge: title,
       titleLarge: subtitle,
       bodyLarge: body,

@@ -315,9 +315,9 @@ class _StageLayoutState extends State<StageLayout> with SingleTickerProviderStat
               right: 0,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.black87,
-                  borderRadius: const BorderRadius.only(
+                  borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(8),
                     bottomRight: Radius.circular(8),
                   ),

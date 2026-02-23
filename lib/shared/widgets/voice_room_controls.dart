@@ -707,7 +707,7 @@ class VoiceRoomControls extends ConsumerWidget {
               const SizedBox(width: 4),
               Text(
                 '$minutes:${seconds.toString().padLeft(2, '0')}',
-                style: TextStyle(
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,

@@ -22,7 +22,7 @@ class RemoteVideoTile extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            Center(
+            const Center(
               child: Icon(
                 kIsWeb ? Icons.videocam_off : Icons.person,
                 color: Colors.white54,

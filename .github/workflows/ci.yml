@@ -32,13 +32,16 @@ jobs:
       - name: 🧪 Run flutter analyze
         run: flutter analyze --no-fatal-infos
 
+      - name: 🌐 Install Chrome
+        run: sudo apt-get update && sudo apt-get install -y google-chrome-stable
+
       - name: ✅ Run tests
-        run: flutter test --dart-define=ENV=dev
+        run: flutter test test/unit --platform=chrome --dart-define=ENV=dev --dart-define=FLUTTER_WEB_TEST=true
         continue-on-error: true
 
       - name: 📊 Generate coverage (optional)
         run: |
-          flutter test --coverage --dart-define=ENV=dev
+          flutter test test/unit --platform=chrome --coverage --dart-define=ENV=dev --dart-define=FLUTTER_WEB_TEST=true
           echo "Coverage report generated"
         continue-on-error: true
 

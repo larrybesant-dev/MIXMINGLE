@@ -103,7 +103,7 @@ class _UpgradePrompt extends StatelessWidget {
                 ),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.lock,
                 color: Colors.white,
                 size: 32,
