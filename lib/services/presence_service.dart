@@ -1,3 +1,4 @@
+﻿import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -109,7 +110,7 @@ class PresenceService {
     // Prevent infinite retry loops
     final retryKey = 'getUserPresence_$userId';
     if (_retryCounters[retryKey] != null && _retryCounters[retryKey]! >= _maxRetries) {
-      debugPrint('⚠️ Max retries reached for getUserPresence($userId)');
+      debugPrint('âš ï¸ Max retries reached for getUserPresence($userId)');
       return Stream.value(null);
     }
 
@@ -121,7 +122,7 @@ class PresenceService {
     // Create new stream controller with error handling
     final controller = StreamController<UserPresence?>.broadcast(
       onCancel: () {
-        debugPrint('🔌 Presence stream cancelled for user: $userId');
+        debugPrint('ðŸ”Œ Presence stream cancelled for user: $userId');
         _cleanupStream(userId);
       },
     );
@@ -160,7 +161,7 @@ class PresenceService {
             controller.add(presence);
           }
         } catch (e, stackTrace) {
-          debugPrint('❌ Error parsing presence data: $e');
+          debugPrint('âŒ Error parsing presence data: $e');
           debugPrint('Stack trace: $stackTrace');
           if (!controller.isClosed) {
             controller.add(null); // Emit null instead of error
@@ -168,7 +169,7 @@ class PresenceService {
         }
       },
       onError: (error, stackTrace) {
-        debugPrint('❌ Presence stream error for $userId: $error');
+        debugPrint('âŒ Presence stream error for $userId: $error');
         debugPrint('Stack trace: $stackTrace');
 
         // Increment retry counter
@@ -182,7 +183,7 @@ class PresenceService {
         // Retry with exponential backoff if under max retries
         if (_retryCounters[retryKey]! < _maxRetries) {
           final delay = _retryDelay * _retryCounters[retryKey]!;
-          debugPrint('🔄 Retrying presence listener in ${delay.inSeconds}s...');
+          debugPrint('ðŸ”„ Retrying presence listener in ${delay.inSeconds}s...');
 
           Future.delayed(delay, () {
             if (!controller.isClosed) {
@@ -191,7 +192,7 @@ class PresenceService {
             }
           });
         } else {
-          debugPrint('⛔ Max retries reached for presence listener: $userId');
+          debugPrint('â›” Max retries reached for presence listener: $userId');
           _cleanupStream(userId);
         }
       },
@@ -241,18 +242,18 @@ class PresenceService {
               try {
                 return UserPresence.fromMap(doc.data());
               } catch (e) {
-                debugPrint('⚠️ Failed to parse presence for doc ${doc.id}: $e');
+                debugPrint('âš ï¸ Failed to parse presence for doc ${doc.id}: $e');
                 return null;
               }
             })
             .whereType<UserPresence>() // Filter out nulls
             .toList();
       } catch (e) {
-        debugPrint('❌ Error mapping users presence: $e');
+        debugPrint('âŒ Error mapping users presence: $e');
         return <UserPresence>[];
       }
     }).handleError((error, stackTrace) {
-      debugPrint('❌ getUsersPresence stream error: $error');
+      debugPrint('âŒ getUsersPresence stream error: $error');
       debugPrint('Stack trace: $stackTrace');
       return <UserPresence>[]; // Return empty list on error
     });
@@ -285,7 +286,7 @@ class PresenceService {
 
   /// Cleanup with proper resource disposal
   void dispose() {
-    debugPrint('🧹 Disposing PresenceService...');
+    debugPrint('ðŸ§¹ Disposing PresenceService...');
     _presenceTimer?.cancel();
 
     // Close all stream controllers

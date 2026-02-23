@@ -1,26 +1,24 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
-import 'package:mix_and_mingle/shared/models/room.dart';
-import 'package:mix_and_mingle/shared/models/agora_participant.dart';
-import 'package:mix_and_mingle/shared/models/room_role.dart';
-import 'package:mix_and_mingle/shared/models/room_event.dart';
-import 'package:mix_and_mingle/providers/all_providers.dart';
-import 'package:mix_and_mingle/providers/room_providers.dart' as legacy_room_providers;
-import 'package:mix_and_mingle/services/agora_video_service.dart';
-import 'package:mix_and_mingle/core/utils/app_logger.dart';
-import 'package:mix_and_mingle/features/room/widgets/voice_room_chat_overlay.dart';
-import 'package:mix_and_mingle/features/room/widgets/moderation_panel.dart';
-import 'dart:html' as html;
-import 'dart:ui_web' as ui_web;
-
+import 'package:mixmingle/shared/models/room.dart';
+import 'package:mixmingle/shared/models/agora_participant.dart';
+import 'package:mixmingle/shared/models/room_role.dart';
+import 'package:mixmingle/shared/models/room_event.dart';
+import 'package:mixmingle/providers/all_providers.dart';
+import 'package:mixmingle/providers/room_providers.dart' as legacy_room_providers;
+import 'package:mixmingle/services/agora_video_service.dart';
+import 'package:mixmingle/core/utils/app_logger.dart';
+import 'package:mixmingle/features/room/widgets/voice_room_chat_overlay.dart';
+import 'package:mixmingle/features/room/widgets/moderation_panel.dart';
+import 'package:mixmingle/utils/web_platform_view_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mix_and_mingle/shared/models/user.dart';
-import 'package:mix_and_mingle/shared/widgets/enhanced_stage_layout.dart';
-import 'package:mix_and_mingle/features/room/widgets/dynamic_video_grid.dart';
+import 'package:mixmingle/shared/models/user.dart';
+import 'package:mixmingle/shared/widgets/enhanced_stage_layout.dart';
+import 'package:mixmingle/features/room/widgets/dynamic_video_grid.dart';
 
 /// Full RoomPage Widget Tree
 /// A complete, production-ready room screen with:
@@ -57,7 +55,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
   String? _errorMessage;
   bool _showParticipantList = true;
 
-  // 🔥 Reactive auth getter using Riverpod authStateProvider
+  // ðŸ”¥ Reactive auth getter using Riverpod authStateProvider
   // CRITICAL: Always use ref.watch here, not direct FirebaseAuth.instance.currentUser
   // Returns Firebase Auth User (has .uid property)
   firebase_auth.User? get currentUser => ref.watch(authStateProvider).maybeWhen(
@@ -78,13 +76,13 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
   // ignore: unused_field
   int _turnDurationSeconds = 60; // Used when turn-based speaking is fully implemented
 
-  // 🔥 PHASE 3.1d: Periodic Agora → Firestore sync timer
+  // ðŸ”¥ PHASE 3.1d: Periodic Agora â†’ Firestore sync timer
   Timer? _agoraSyncTimer;
 
-  // 🔥 PHASE 3.1: Cache current room for deep widget tree access
+  // ðŸ”¥ PHASE 3.1: Cache current room for deep widget tree access
   late Room _currentRoom;
 
-  // 🔥 PHASE 3.1b: Cache current participants for deep widget tree access
+  // ðŸ”¥ PHASE 3.1b: Cache current participants for deep widget tree access
   List<EnrichedParticipant> _currentParticipants = [];
 
   // Track registered platform view IDs to prevent duplicate registration
@@ -123,7 +121,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
     // Removed _startAgoraSyncTimer() to prevent unnecessary duplicate writes
   }
 
-  // 🔥 PHASE 3.1d: Sync local Agora state to Firestore
+  // ðŸ”¥ PHASE 3.1d: Sync local Agora state to Firestore
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // ignore: unused_local_variable
@@ -150,20 +148,20 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
   }
 
   Future<void> _initializeAndJoinRoom() async {
-    AppLogger.info('🔥 [JOIN] Function called - _isInitializing: $_isInitializing, _isJoined: $_isJoined');
+    AppLogger.info('ðŸ”¥ [JOIN] Function called - _isInitializing: $_isInitializing, _isJoined: $_isJoined');
     if (_isInitializing || _isJoined) {
-      AppLogger.info('🔥 [JOIN] Early return - already initializing or joined');
+      AppLogger.info('ðŸ”¥ [JOIN] Early return - already initializing or joined');
       return;
     }
 
-    AppLogger.info('🔥 [JOIN] Setting state to initializing');
+    AppLogger.info('ðŸ”¥ [JOIN] Setting state to initializing');
     setState(() {
       _isInitializing = true;
       _errorMessage = null;
     });
 
     try {
-      AppLogger.info('🔥 [JOIN] Getting agora service and user');
+      AppLogger.info('ðŸ”¥ [JOIN] Getting agora service and user');
       final agoraService = ref.read(agoraVideoServiceProvider);
 
       // CRITICAL FIX: Get fresh user from currentUserProvider (User from shared/models/user.dart)
@@ -173,13 +171,13 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
         user = await ref.read(currentUserProvider.future).timeout(
           const Duration(seconds: 10),
           onTimeout: () {
-            AppLogger.warning('🔐 Auth provider timeout (10s), throwing to trigger fallback');
+            AppLogger.warning('ðŸ” Auth provider timeout (10s), throwing to trigger fallback');
             authErrorDetails = 'Provider timeout';
             throw TimeoutException('Auth provider did not resolve in time');
           },
         );
       } catch (e) {
-        AppLogger.warning('🔐 Auth provider error: $e');
+        AppLogger.warning('ðŸ” Auth provider error: $e');
         if (authErrorDetails.isEmpty) {
           authErrorDetails = 'Provider error: $e';
         }
@@ -195,7 +193,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
         }
       }
 
-      AppLogger.info('🔥 [JOIN] User: ${user?.email ?? "NULL"} (Details: $authErrorDetails)');
+      AppLogger.info('ðŸ”¥ [JOIN] User: ${user?.email ?? "NULL"} (Details: $authErrorDetails)');
       if (user == null) {
         final errorMsg = authErrorDetails.isNotEmpty
             ? 'Authentication failed - $authErrorDetails. Please sign in again.'
@@ -203,10 +201,10 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
         throw Exception(errorMsg);
       }
 
-      AppLogger.info('🔥 [JOIN] Checking if Agora is initialized: ${agoraService.isInitialized}');
+      AppLogger.info('ðŸ”¥ [JOIN] Checking if Agora is initialized: ${agoraService.isInitialized}');
 
       // CRITICAL FIX: Verify user has access to room (not banned/removed)
-      AppLogger.info('🔥 [JOIN] Verifying room access permission');
+      AppLogger.info('ðŸ”¥ [JOIN] Verifying room access permission');
       try {
         final roomDoc = await FirebaseFirestore.instance.collection('rooms').doc(widget.room.id).get();
         if (!roomDoc.exists) {
@@ -221,25 +219,25 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
         }
 
         // Note: Kicked users can rejoin, so we don't block them
-        AppLogger.info('🔥 [JOIN] Room access verified ✅');
+        AppLogger.info('ðŸ”¥ [JOIN] Room access verified âœ…');
       } catch (e) {
-        AppLogger.error('🔥 Room permission check failed', e, null);
+        AppLogger.error('ðŸ”¥ Room permission check failed', e, null);
         throw Exception('Cannot access room: ${e.toString()}');
       }
 
       // Initialize Agora engine if needed
       if (!agoraService.isInitialized) {
-        AppLogger.info('🔥 [JOIN] Initializing Agora engine...');
-        debugPrint('🎬 Initializing Agora engine...');
+        AppLogger.info('ðŸ”¥ [JOIN] Initializing Agora engine...');
+        debugPrint('ðŸŽ¬ Initializing Agora engine...');
         await agoraService.initialize();
-        AppLogger.info('🔥 [JOIN] Agora initialized');
+        AppLogger.info('ðŸ”¥ [JOIN] Agora initialized');
       }
 
       // Join room with Agora
-      AppLogger.info('🔥 [JOIN] About to join room: ${widget.room.id}');
-      debugPrint('📢 Joining room: ${widget.room.id}');
+      AppLogger.info('ðŸ”¥ [JOIN] About to join room: ${widget.room.id}');
+      debugPrint('ðŸ“¢ Joining room: ${widget.room.id}');
       await agoraService.joinRoom(widget.room.id);
-      AppLogger.info('🔥 [JOIN] joinRoom completed');
+      AppLogger.info('ðŸ”¥ [JOIN] joinRoom completed');
 
       // Trigger tile animation
       _tileAnimationController.forward();
@@ -252,11 +250,11 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
         });
 
         // System message will be added automatically via Firestore trigger
-        debugPrint('✅ Successfully joined room');
+        debugPrint('âœ… Successfully joined room');
       }
     } catch (e) {
-      debugPrint('❌ Failed to initialize room: $e');
-      AppLogger.error('🔥 Room initialization failed', e, null);
+      debugPrint('âŒ Failed to initialize room: $e');
+      AppLogger.error('ðŸ”¥ Room initialization failed', e, null);
       if (mounted) {
         setState(() {
           _errorMessage = e.toString();
@@ -289,19 +287,19 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
             ),
           );
         } catch (e) {
-          debugPrint('⚠️ Failed to remove from Firestore: $e');
+          debugPrint('âš ï¸ Failed to remove from Firestore: $e');
         }
       }
 
       // System message will be added automatically via Firestore trigger
-      debugPrint('👋 Leaving room...');
+      debugPrint('ðŸ‘‹ Leaving room...');
       await agoraService.leaveRoom();
 
       if (mounted) {
         Navigator.of(context).pop();
       }
     } catch (e) {
-      debugPrint('⚠️ Error leaving room: $e');
+      debugPrint('âš ï¸ Error leaving room: $e');
       // Still navigate even if error
       if (mounted) {
         Navigator.of(context).pop();
@@ -340,7 +338,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
   //     }
   //   });
 
-  //   debugPrint('⏱️ Speaker timer started: $_speakerTimeRemaining seconds');
+  //   debugPrint('â±ï¸ Speaker timer started: $_speakerTimeRemaining seconds');
   // }
 
   // Unused - pending full turn-based implementation
@@ -367,9 +365,9 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
   //     // Only auto-advance if the room is still in turn-based mode and we're a moderator
   //     // TODO: Implement turn-based speaking - method not yet available in RoomService
   //     // await roomService.grantTurnFromQueue(widget.room.id, user.id);
-  //     debugPrint('⏰ Auto-advance feature pending implementation');
+  //     debugPrint('â° Auto-advance feature pending implementation');
   //   } catch (e) {
-  //     debugPrint('⚠️ Auto-advance failed: $e');
+  //     debugPrint('âš ï¸ Auto-advance failed: $e');
   //   }
   // }
 
@@ -378,9 +376,9 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
       setState(() {
         _speakerTimeRemaining += additionalSeconds;
       });
-      debugPrint('⏱️ Speaker time extended by $additionalSeconds seconds');
+      debugPrint('â±ï¸ Speaker time extended by $additionalSeconds seconds');
     } catch (e) {
-      debugPrint('⚠️ Failed to extend time: $e');
+      debugPrint('âš ï¸ Failed to extend time: $e');
     }
   }
 
@@ -403,9 +401,9 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
         // await roomService.grantTurnFromQueue(widget.room.id, user.id);
       }
 
-      debugPrint('⏩ Speaker transition feature pending implementation');
+      debugPrint('â© Speaker transition feature pending implementation');
     } catch (e) {
-      debugPrint('⚠️ Failed to skip speaker: $e');
+      debugPrint('âš ï¸ Failed to skip speaker: $e');
     }
   }
 
@@ -424,9 +422,9 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
     if (_isJoined) {
       try {
         ref.read(agoraVideoServiceProvider).leaveRoom().then((_) {
-          debugPrint('✅ Room cleanup complete');
+          debugPrint('âœ… Room cleanup complete');
         }).catchError((e) {
-          debugPrint('⚠️ Error during room cleanup: $e');
+          debugPrint('âš ï¸ Error during room cleanup: $e');
         });
       } catch (e) {
         debugPrint('Error during dispose: $e');
@@ -458,7 +456,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
       );
 
       if (wasUnauthenticated && isNowAuthenticated && !_isJoined && !_isInitializing) {
-        AppLogger.info('🔐 Auth state changed: unauthenticated → authenticated, retrying room join');
+        AppLogger.info('ðŸ” Auth state changed: unauthenticated â†’ authenticated, retrying room join');
         _initializeAndJoinRoom();
       }
     });
@@ -475,10 +473,10 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
       orElse: () => null,
     );
 
-    // 🔥 PHASE 3.1: Watch live room stream for real-time updates
+    // ðŸ”¥ PHASE 3.1: Watch live room stream for real-time updates
     final roomAsync = ref.watch(roomProvider(widget.room.id));
 
-    // 🔥 PHASE 3.1b: Watch enriched participants stream for real-time participant sync
+    // ðŸ”¥ PHASE 3.1b: Watch enriched participants stream for real-time participant sync
     final participantsAsync = ref.watch(enrichedParticipantsProvider(widget.room.id));
 
     return roomAsync.when(
@@ -529,7 +527,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
             bottomNavigationBar: _buildControlBar(agoraService, currentUser, currentUserProfile),
           ),
           error: (error, stack) {
-            debugPrint('❌ Participants stream error: $error');
+            debugPrint('âŒ Participants stream error: $error');
             // Fallback to cached participants on error
             return Scaffold(
               backgroundColor: Colors.black,
@@ -547,7 +545,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
         ),
       ),
       error: (error, stack) {
-        debugPrint('❌ Room stream error: $error');
+        debugPrint('âŒ Room stream error: $error');
         // Fallback to widget.room on error
         return Scaffold(
           backgroundColor: Colors.black,
@@ -582,7 +580,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
           Row(
             children: [
               Text(
-                '$participantCount ${participantCount == 1 ? 'participant' : 'participants'} • ${room.category}',
+                '$participantCount ${participantCount == 1 ? 'participant' : 'participants'} â€¢ ${room.category}',
                 style: const TextStyle(color: Colors.white70, fontSize: 12),
               ),
               if (_turnBased && _currentSpeakerUserId != null) ...[
@@ -591,7 +589,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(color: Colors.amber.shade700, borderRadius: BorderRadius.circular(4)),
                   child: const Text(
-                    '🎤 Speaking',
+                    'ðŸŽ¤ Speaking',
                     style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -1104,17 +1102,9 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
     // Register the HTML view only once to prevent "ViewFactory already registered" errors
     if (!_registeredViewIds.contains(viewId)) {
       _registeredViewIds.add(viewId);
-      // ignore: undefined_prefixed_name
-      ui_web.platformViewRegistry.registerViewFactory(
+      registerVideoViewFactory(
         viewId,
-        (int viewId) {
-          final element = html.DivElement()
-            ..id = isLocal ? 'local-video' : 'remote-video-$uid'
-            ..style.width = '100%'
-            ..style.height = '100%'
-            ..style.objectFit = 'cover';
-          return element;
-        },
+        isLocal ? 'local-video' : 'remote-video-$uid',
       );
     }
 
@@ -1123,7 +1113,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
 
   /// Participant list sidebar
   Widget _buildParticipantSidebar(Map<int, AgoraParticipant> agoraParticipants) {
-    // 🔥 PHASE 3.1b: Watch enriched participants (Agora + Firestore merged)
+    // ðŸ”¥ PHASE 3.1b: Watch enriched participants (Agora + Firestore merged)
     final enrichedParticipantsAsync = ref.watch(enrichedParticipantsProvider(widget.room.id));
 
     return enrichedParticipantsAsync.when(
@@ -1214,7 +1204,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
         ),
       ),
       error: (error, stack) {
-        debugPrint('❌ Enriched participants error: $error');
+        debugPrint('âŒ Enriched participants error: $error');
         // Fallback to Agora-only view
         return _buildParticipantSidebarFallback(agoraParticipants);
       },
@@ -1620,7 +1610,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
     }
   }
 
-  /// 🔥 PHASE 3.1b: Enriched participant list item with full metadata
+  /// ðŸ”¥ PHASE 3.1b: Enriched participant list item with full metadata
   Widget _buildEnrichedParticipantListItem(EnrichedParticipant participant) {
     final isCurrentSpeaker = participant.userId == _currentSpeakerUserId;
 
@@ -1655,7 +1645,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
                 ),
               ),
 
-            // 🔥 PHASE 3.1c: Raised hand badge (from Firestore raisedHands list)
+            // ðŸ”¥ PHASE 3.1c: Raised hand badge (from Firestore raisedHands list)
             if (_currentRoom.raisedHands.contains(participant.userId))
               Positioned(
                 bottom: 0,
@@ -1738,7 +1728,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // 🔥 PHASE 3.1c: Approve button for host/moderators when hand is raised
+            // ðŸ”¥ PHASE 3.1c: Approve button for host/moderators when hand is raised
             if (_isCurrentUserModerator() && _currentRoom.raisedHands.contains(participant.userId))
               IconButton(
                 icon: const Icon(Icons.check_circle, color: Colors.amber, size: 20),
@@ -1765,7 +1755,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
               size: 16,
             ),
 
-            // 🔥 PHASE 3.1e: Moderation menu for host/moderators
+            // ðŸ”¥ PHASE 3.1e: Moderation menu for host/moderators
             if (_isCurrentUserModerator() && !_isOwnProfile(participant.userId))
               PopupMenuButton<String>(
                 icon: Icon(Icons.more_vert, color: Colors.grey[400], size: 16),
@@ -1846,7 +1836,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
     );
   }
 
-  // 🔥 PHASE 3.1c: Raised hand management methods
+  // ðŸ”¥ PHASE 3.1c: Raised hand management methods
   bool _isCurrentUserModerator() {
     final user = currentUser;
     if (user == null) return false;
@@ -1926,7 +1916,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
     }
   }
 
-  // 🔥 PHASE 3.1e: Moderation action handler
+  // ðŸ”¥ PHASE 3.1e: Moderation action handler
   Future<void> _handleModerationAction(String action, EnrichedParticipant participant) async {
     final user = currentUser;
     if (user == null) return;
@@ -2222,7 +2212,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
                         currentUser?.displayName ??
                         'Anonymous';
                     debugPrint(
-                        '🎤 Opening chat - Profile: displayName="${currentUserProfile?.displayName}", username="${currentUserProfile?.username}", Auth: displayName="${currentUser?.displayName}", Final: "$displayName"');
+                        'ðŸŽ¤ Opening chat - Profile: displayName="${currentUserProfile?.displayName}", username="${currentUserProfile?.username}", Auth: displayName="${currentUser?.displayName}", Final: "$displayName"');
                     showVoiceRoomChat(
                       context,
                       roomId: widget.room.id,
@@ -2232,7 +2222,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
                   },
                 ),
 
-                // 🔥 PHASE 3.1c: Raise/Lower Hand button for listeners
+                // ðŸ”¥ PHASE 3.1c: Raise/Lower Hand button for listeners
                 if (!_isCurrentUserSpeaker() && !_isCurrentUserModerator())
                   _buildControlButton(
                     icon: _hasCurrentUserRaisedHand() ? Icons.pan_tool : Icons.front_hand,
@@ -2372,11 +2362,11 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
                 _buildHelpSection(
                   title: 'Control Buttons',
                   items: [
-                    ('🎤 Mic', 'Turn your microphone on/off'),
-                    ('📹 Camera', 'Enable/disable your video'),
-                    ('🔄 Flip', 'Switch between front and back camera'),
-                    ('💬 Chat', 'Open room chat and see messages'),
-                    ('📞 Leave', 'Exit the room and return home'),
+                    ('ðŸŽ¤ Mic', 'Turn your microphone on/off'),
+                    ('ðŸ“¹ Camera', 'Enable/disable your video'),
+                    ('ðŸ”„ Flip', 'Switch between front and back camera'),
+                    ('ðŸ’¬ Chat', 'Open room chat and see messages'),
+                    ('ðŸ“ž Leave', 'Exit the room and return home'),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -2386,9 +2376,9 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
                   _buildHelpSection(
                     title: 'Stage Mode (One Speaker)',
                     items: [
-                      ('🎤 Raise Hand', 'Request to speak'),
-                      ('🎤 End Turn', 'Pass your turn to someone else'),
-                      ('📋 Queue', 'Host: Grant next person from queue'),
+                      ('ðŸŽ¤ Raise Hand', 'Request to speak'),
+                      ('ðŸŽ¤ End Turn', 'Pass your turn to someone else'),
+                      ('ðŸ“‹ Queue', 'Host: Grant next person from queue'),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -2399,9 +2389,9 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
                   _buildHelpSection(
                     title: 'Turn-Based Conversation',
                     items: [
-                      ('⏱️ Timer', 'Each speaker gets limited time'),
-                      ('🎤 Speaking', 'Badge shows who currently has the floor'),
-                      ('📋 Queue', 'People waiting appear in order'),
+                      ('â±ï¸ Timer', 'Each speaker gets limited time'),
+                      ('ðŸŽ¤ Speaking', 'Badge shows who currently has the floor'),
+                      ('ðŸ“‹ Queue', 'People waiting appear in order'),
                     ],
                   ),
                   const SizedBox(height: 16),

@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Room member presence model - represents a user's presence in a room
@@ -57,9 +58,9 @@ class RoomMember {
   String getBadge() {
     switch (role) {
       case 'host':
-        return '👑 Host';
+        return 'ðŸ‘‘ Host';
       case 'mod':
-        return '👮 Mod';
+        return 'ðŸ‘® Mod';
       default:
         return '';
     }
@@ -68,3 +69,5 @@ class RoomMember {
   @override
   String toString() => 'RoomMember(userId: $userId, displayName: $displayName, online: $online)';
 }
+
+

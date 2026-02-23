@@ -1,4 +1,4 @@
-/// Represents a remote user in a video channel
+﻿/// Represents a remote user in a video channel
 class RemoteUser {
   final int uid;
   bool videoEnabled;
@@ -58,3 +58,5 @@ class RemoteUser {
   @override
   int get hashCode => uid.hashCode;
 }
+
+

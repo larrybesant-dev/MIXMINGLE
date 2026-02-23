@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Recording state enum
 enum RecordingState { idle, recording, paused, completed }
@@ -221,3 +221,5 @@ class RoomRecordingServiceNotifier extends Notifier<RecordingInfo?> {
     state = null;
   }
 }
+
+

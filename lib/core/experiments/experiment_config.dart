@@ -1,4 +1,4 @@
-/// Experiment Configuration
+﻿/// Experiment Configuration
 ///
 /// Defines experiment variants for A/B testing including
 /// onboarding, paywall, and retention experiments.
@@ -415,3 +415,5 @@ class _PlaceholderDate implements DateTime {
     return now.subtract(const Duration(days: 30));
   }
 }
+
+

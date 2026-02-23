@@ -1,4 +1,4 @@
-/// Multi-Platform Deployment Service
+﻿/// Multi-Platform Deployment Service
 ///
 /// Manages deployment and distribution across web, desktop, TV, VR, and wearables.
 library;
@@ -219,7 +219,7 @@ class MultiplatformService {
     BuildConfig config = BuildConfig.release,
     Map<String, dynamic>? options,
   }) async {
-    debugPrint('🌐 [Multiplatform] Deploying to web: v$version');
+    debugPrint('ðŸŒ [Multiplatform] Deploying to web: v$version');
 
     return _deploy(
       platform: DeploymentPlatform.web,
@@ -243,7 +243,7 @@ class MultiplatformService {
     List<String> targets = const ['windows', 'macos', 'linux'],
     Map<String, dynamic>? options,
   }) async {
-    debugPrint('🖥️ [Multiplatform] Deploying to desktop: v$version');
+    debugPrint('ðŸ–¥ï¸ [Multiplatform] Deploying to desktop: v$version');
 
     return _deploy(
       platform: DeploymentPlatform.desktop,
@@ -270,7 +270,7 @@ class MultiplatformService {
     List<String> targets = const ['android_tv', 'apple_tv', 'fire_tv'],
     Map<String, dynamic>? options,
   }) async {
-    debugPrint('📺 [Multiplatform] Deploying to TV: v$version');
+    debugPrint('ðŸ“º [Multiplatform] Deploying to TV: v$version');
 
     return _deploy(
       platform: DeploymentPlatform.tv,
@@ -297,7 +297,7 @@ class MultiplatformService {
     List<String> targets = const ['meta_quest', 'psvr'],
     Map<String, dynamic>? options,
   }) async {
-    debugPrint('🥽 [Multiplatform] Deploying to VR: v$version');
+    debugPrint('ðŸ¥½ [Multiplatform] Deploying to VR: v$version');
 
     return _deploy(
       platform: DeploymentPlatform.vr,
@@ -325,7 +325,7 @@ class MultiplatformService {
     List<String> targets = const ['apple_watch', 'wear_os'],
     Map<String, dynamic>? options,
   }) async {
-    debugPrint('⌚ [Multiplatform] Deploying to wearables: v$version');
+    debugPrint('âŒš [Multiplatform] Deploying to wearables: v$version');
 
     return _deploy(
       platform: DeploymentPlatform.wearables,
@@ -413,7 +413,7 @@ class MultiplatformService {
         'buildUrl': 'https://cdn.mixmingle.app/builds/$deploymentId',
       });
 
-      debugPrint('✅ [Multiplatform] Deployment $deploymentId completed');
+      debugPrint('âœ… [Multiplatform] Deployment $deploymentId completed');
     } catch (e) {
       await _deploymentsCollection.doc(deploymentId).update({
         'status': DeploymentStatus.failed.name,
@@ -421,7 +421,7 @@ class MultiplatformService {
         'errorMessage': e.toString(),
       });
 
-      debugPrint('❌ [Multiplatform] Deployment $deploymentId failed: $e');
+      debugPrint('âŒ [Multiplatform] Deployment $deploymentId failed: $e');
     }
   }
 
@@ -469,10 +469,10 @@ class MultiplatformService {
         'errorMessage': 'Deployment cancelled by user',
       });
 
-      debugPrint('🛑 [Multiplatform] Deployment $deploymentId cancelled');
+      debugPrint('ðŸ›‘ [Multiplatform] Deployment $deploymentId cancelled');
       return true;
     } catch (e) {
-      debugPrint('❌ [Multiplatform] Failed to cancel deployment: $e');
+      debugPrint('âŒ [Multiplatform] Failed to cancel deployment: $e');
       return false;
     }
   }
@@ -492,7 +492,7 @@ class MultiplatformService {
           .get();
 
       if (previousSnapshot.docs.length < 2) {
-        debugPrint('⚠️ [Multiplatform] No previous deployment to rollback to');
+        debugPrint('âš ï¸ [Multiplatform] No previous deployment to rollback to');
         return false;
       }
 
@@ -501,10 +501,10 @@ class MultiplatformService {
         'status': DeploymentStatus.rolledBack.name,
       });
 
-      debugPrint('↩️ [Multiplatform] Deployment $deploymentId rolled back');
+      debugPrint('â†©ï¸ [Multiplatform] Deployment $deploymentId rolled back');
       return true;
     } catch (e) {
-      debugPrint('❌ [Multiplatform] Failed to rollback deployment: $e');
+      debugPrint('âŒ [Multiplatform] Failed to rollback deployment: $e');
       return false;
     }
   }
@@ -532,7 +532,7 @@ class MultiplatformService {
     Map<String, dynamic> updates,
   ) async {
     await _platformConfigsCollection.doc(platform.name).update(updates);
-    debugPrint('✅ [Multiplatform] Platform config updated: ${platform.name}');
+    debugPrint('âœ… [Multiplatform] Platform config updated: ${platform.name}');
   }
 
   /// Enable/disable platform
@@ -540,7 +540,7 @@ class MultiplatformService {
     await _platformConfigsCollection.doc(platform.name).update({
       'isEnabled': enabled,
     });
-    debugPrint('${enabled ? '✅' : '❌'} [Multiplatform] Platform ${platform.name} ${enabled ? 'enabled' : 'disabled'}');
+    debugPrint('${enabled ? 'âœ…' : 'âŒ'} [Multiplatform] Platform ${platform.name} ${enabled ? 'enabled' : 'disabled'}');
   }
 
   // ============================================================

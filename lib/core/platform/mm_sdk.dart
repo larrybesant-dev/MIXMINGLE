@@ -1,4 +1,4 @@
-/// Mix & Mingle SDK
+﻿/// Mix & Mingle SDK
 ///
 /// Client SDK for integrating Mix & Mingle functionality
 /// into external applications.

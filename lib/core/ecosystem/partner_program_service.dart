@@ -1,4 +1,4 @@
-/// Partner Program Service
+﻿/// Partner Program Service
 ///
 /// Manages partner registration, tier assignment, revenue sharing,
 /// and analytics for the partner program.
@@ -379,7 +379,7 @@ class PartnerProgramService {
     String? companyName,
     String? website,
   }) async {
-    debugPrint('🤝 [PartnerProgram] Registering partner: $name');
+    debugPrint('ðŸ¤ [PartnerProgram] Registering partner: $name');
 
     try {
       final id = 'partner_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -410,10 +410,10 @@ class PartnerProgramService {
         },
       );
 
-      debugPrint('✅ [PartnerProgram] Partner registered: $id');
+      debugPrint('âœ… [PartnerProgram] Partner registered: $id');
       return partner;
     } catch (e) {
-      debugPrint('❌ [PartnerProgram] Failed to register partner: $e');
+      debugPrint('âŒ [PartnerProgram] Failed to register partner: $e');
       rethrow;
     }
   }
@@ -487,7 +487,7 @@ class PartnerProgramService {
     required PartnerTier tier,
     String? reason,
   }) async {
-    debugPrint('⬆️ [PartnerProgram] Assigning tier: ${tier.name} to $partnerId');
+    debugPrint('â¬†ï¸ [PartnerProgram] Assigning tier: ${tier.name} to $partnerId');
 
     try {
       final doc = await _partnersCollection.doc(partnerId).get();
@@ -517,10 +517,10 @@ class PartnerProgramService {
         );
       }
 
-      debugPrint('✅ [PartnerProgram] Partner tier updated: ${tier.name}');
+      debugPrint('âœ… [PartnerProgram] Partner tier updated: ${tier.name}');
       return updatedPartner;
     } catch (e) {
-      debugPrint('❌ [PartnerProgram] Failed to assign tier: $e');
+      debugPrint('âŒ [PartnerProgram] Failed to assign tier: $e');
       rethrow;
     }
   }
@@ -577,7 +577,7 @@ class PartnerProgramService {
 
   /// Calculate partner revenue share
   Future<RevenueShare> partnerRevenueShare(String partnerId) async {
-    debugPrint('💰 [PartnerProgram] Calculating revenue share: $partnerId');
+    debugPrint('ðŸ’° [PartnerProgram] Calculating revenue share: $partnerId');
 
     try {
       final partner = await getPartner(partnerId);
@@ -603,10 +603,10 @@ class PartnerProgramService {
         calculatedAt: DateTime.now(),
       );
 
-      debugPrint('✅ [PartnerProgram] Revenue share: ${revenueShare.totalPercentage}%');
+      debugPrint('âœ… [PartnerProgram] Revenue share: ${revenueShare.totalPercentage}%');
       return revenueShare;
     } catch (e) {
-      debugPrint('❌ [PartnerProgram] Failed to calculate revenue share: $e');
+      debugPrint('âŒ [PartnerProgram] Failed to calculate revenue share: $e');
       rethrow;
     }
   }
@@ -663,7 +663,7 @@ class PartnerProgramService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    debugPrint('📊 [PartnerProgram] Fetching partner analytics: $partnerId');
+    debugPrint('ðŸ“Š [PartnerProgram] Fetching partner analytics: $partnerId');
 
     final periodStart = startDate ?? DateTime.now().subtract(const Duration(days: 30));
     final periodEnd = endDate ?? DateTime.now();
@@ -736,10 +736,10 @@ class PartnerProgramService {
         periodEnd: periodEnd,
       );
 
-      debugPrint('✅ [PartnerProgram] Analytics fetched');
+      debugPrint('âœ… [PartnerProgram] Analytics fetched');
       return analytics;
     } catch (e) {
-      debugPrint('❌ [PartnerProgram] Failed to fetch analytics: $e');
+      debugPrint('âŒ [PartnerProgram] Failed to fetch analytics: $e');
       rethrow;
     }
   }
@@ -754,7 +754,7 @@ class PartnerProgramService {
     required String referredUserId,
     String? referralCode,
   }) async {
-    debugPrint('📝 [PartnerProgram] Recording referral');
+    debugPrint('ðŸ“ [PartnerProgram] Recording referral');
 
     try {
       final id = 'ref_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -777,7 +777,7 @@ class PartnerProgramService {
 
       return referral;
     } catch (e) {
-      debugPrint('❌ [PartnerProgram] Failed to record referral: $e');
+      debugPrint('âŒ [PartnerProgram] Failed to record referral: $e');
       rethrow;
     }
   }
@@ -819,7 +819,7 @@ class PartnerProgramService {
         },
       );
     } catch (e) {
-      debugPrint('❌ [PartnerProgram] Failed to convert referral: $e');
+      debugPrint('âŒ [PartnerProgram] Failed to convert referral: $e');
       rethrow;
     }
   }
@@ -834,7 +834,7 @@ class PartnerProgramService {
     required double amount,
     required PayoutMethod method,
   }) async {
-    debugPrint('💸 [PartnerProgram] Requesting payout: \$$amount');
+    debugPrint('ðŸ’¸ [PartnerProgram] Requesting payout: \$$amount');
 
     try {
       final partner = await getPartner(partnerId);
@@ -857,7 +857,7 @@ class PartnerProgramService {
 
       return payout;
     } catch (e) {
-      debugPrint('❌ [PartnerProgram] Failed to request payout: $e');
+      debugPrint('âŒ [PartnerProgram] Failed to request payout: $e');
       rethrow;
     }
   }

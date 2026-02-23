@@ -1,4 +1,4 @@
-/// Ecosystem Growth Service
+﻿/// Ecosystem Growth Service
 ///
 /// Manages platform growth including creator/partner/app recruitment
 /// and growth campaigns.
@@ -404,7 +404,7 @@ class EcosystemGrowthService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    debugPrint('🎯 [EcosystemGrowth] Creating creator recruitment: $name');
+    debugPrint('ðŸŽ¯ [EcosystemGrowth] Creating creator recruitment: $name');
 
     try {
       final id = 'recruit_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -449,10 +449,10 @@ class EcosystemGrowthService {
         },
       );
 
-      debugPrint('✅ [EcosystemGrowth] Creator recruitment created: $id');
+      debugPrint('âœ… [EcosystemGrowth] Creator recruitment created: $id');
       return campaign;
     } catch (e) {
-      debugPrint('❌ [EcosystemGrowth] Failed to create recruitment: $e');
+      debugPrint('âŒ [EcosystemGrowth] Failed to create recruitment: $e');
       rethrow;
     }
   }
@@ -474,7 +474,7 @@ class EcosystemGrowthService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    debugPrint('🎯 [EcosystemGrowth] Creating partner recruitment: $name');
+    debugPrint('ðŸŽ¯ [EcosystemGrowth] Creating partner recruitment: $name');
 
     try {
       final id = 'recruit_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -511,10 +511,10 @@ class EcosystemGrowthService {
 
       _campaignController.add(campaign);
 
-      debugPrint('✅ [EcosystemGrowth] Partner recruitment created: $id');
+      debugPrint('âœ… [EcosystemGrowth] Partner recruitment created: $id');
       return campaign;
     } catch (e) {
-      debugPrint('❌ [EcosystemGrowth] Failed to create recruitment: $e');
+      debugPrint('âŒ [EcosystemGrowth] Failed to create recruitment: $e');
       rethrow;
     }
   }
@@ -536,7 +536,7 @@ class EcosystemGrowthService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    debugPrint('🎯 [EcosystemGrowth] Creating app recruitment: $name');
+    debugPrint('ðŸŽ¯ [EcosystemGrowth] Creating app recruitment: $name');
 
     try {
       final id = 'recruit_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -573,10 +573,10 @@ class EcosystemGrowthService {
 
       _campaignController.add(campaign);
 
-      debugPrint('✅ [EcosystemGrowth] App recruitment created: $id');
+      debugPrint('âœ… [EcosystemGrowth] App recruitment created: $id');
       return campaign;
     } catch (e) {
-      debugPrint('❌ [EcosystemGrowth] Failed to create recruitment: $e');
+      debugPrint('âŒ [EcosystemGrowth] Failed to create recruitment: $e');
       rethrow;
     }
   }
@@ -597,7 +597,7 @@ class EcosystemGrowthService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    debugPrint('📈 [EcosystemGrowth] Creating growth campaign: $name');
+    debugPrint('ðŸ“ˆ [EcosystemGrowth] Creating growth campaign: $name');
 
     try {
       final id = 'growth_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -640,10 +640,10 @@ class EcosystemGrowthService {
         },
       );
 
-      debugPrint('✅ [EcosystemGrowth] Growth campaign created: $id');
+      debugPrint('âœ… [EcosystemGrowth] Growth campaign created: $id');
       return campaign;
     } catch (e) {
-      debugPrint('❌ [EcosystemGrowth] Failed to create growth campaign: $e');
+      debugPrint('âŒ [EcosystemGrowth] Failed to create growth campaign: $e');
       rethrow;
     }
   }
@@ -663,7 +663,7 @@ class EcosystemGrowthService {
     int followerCount = 0,
     Map<String, dynamic>? profile,
   }) async {
-    debugPrint('📝 [EcosystemGrowth] Adding lead for campaign: $campaignId');
+    debugPrint('ðŸ“ [EcosystemGrowth] Adding lead for campaign: $campaignId');
 
     try {
       final id = 'lead_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -686,10 +686,10 @@ class EcosystemGrowthService {
 
       _leadController.add(lead);
 
-      debugPrint('✅ [EcosystemGrowth] Lead added: $id');
+      debugPrint('âœ… [EcosystemGrowth] Lead added: $id');
       return lead;
     } catch (e) {
-      debugPrint('❌ [EcosystemGrowth] Failed to add lead: $e');
+      debugPrint('âŒ [EcosystemGrowth] Failed to add lead: $e');
       rethrow;
     }
   }
@@ -716,7 +716,7 @@ class EcosystemGrowthService {
       await _leadsCollection.doc(leadId).update(updates);
       return true;
     } catch (e) {
-      debugPrint('❌ [EcosystemGrowth] Failed to update lead: $e');
+      debugPrint('âŒ [EcosystemGrowth] Failed to update lead: $e');
       return false;
     }
   }
@@ -769,7 +769,7 @@ class EcosystemGrowthService {
 
   /// Get ecosystem health metrics
   Future<EcosystemHealth> getEcosystemHealth() async {
-    debugPrint('💚 [EcosystemGrowth] Calculating ecosystem health');
+    debugPrint('ðŸ’š [EcosystemGrowth] Calculating ecosystem health');
 
     try {
       // In production, these would come from actual data
@@ -799,7 +799,7 @@ class EcosystemGrowthService {
 
       return health;
     } catch (e) {
-      debugPrint('❌ [EcosystemGrowth] Failed to calculate health: $e');
+      debugPrint('âŒ [EcosystemGrowth] Failed to calculate health: $e');
       rethrow;
     }
   }
@@ -810,7 +810,7 @@ class EcosystemGrowthService {
 
   /// Identify expansion opportunities
   Future<List<ExpansionOpportunity>> getExpansionOpportunities() async {
-    debugPrint('🔍 [EcosystemGrowth] Fetching expansion opportunities');
+    debugPrint('ðŸ” [EcosystemGrowth] Fetching expansion opportunities');
 
     try {
       final snapshot = await _opportunitiesCollection
@@ -845,7 +845,7 @@ class EcosystemGrowthService {
         );
       }).toList();
     } catch (e) {
-      debugPrint('❌ [EcosystemGrowth] Failed to fetch opportunities: $e');
+      debugPrint('âŒ [EcosystemGrowth] Failed to fetch opportunities: $e');
       return _getDefaultOpportunities();
     }
   }
@@ -929,7 +929,7 @@ class EcosystemGrowthService {
       });
       return true;
     } catch (e) {
-      debugPrint('❌ [EcosystemGrowth] Failed to pause campaign: $e');
+      debugPrint('âŒ [EcosystemGrowth] Failed to pause campaign: $e');
       return false;
     }
   }
@@ -943,7 +943,7 @@ class EcosystemGrowthService {
       });
       return true;
     } catch (e) {
-      debugPrint('❌ [EcosystemGrowth] Failed to resume campaign: $e');
+      debugPrint('âŒ [EcosystemGrowth] Failed to resume campaign: $e');
       return false;
     }
   }

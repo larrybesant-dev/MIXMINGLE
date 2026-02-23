@@ -1,4 +1,4 @@
-/// Participant model for room presence tracking
+﻿/// Participant model for room presence tracking
 ///
 /// Stores participant data and state (speaking, present, join time)
 /// Used by: AgoraController, FirestoreService, ParticipantCard
@@ -112,5 +112,7 @@ class Participant {
     );
   }
 }
+
+
 
 

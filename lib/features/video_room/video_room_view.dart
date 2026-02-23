@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/app_logger.dart';
 import 'video_room_controller.dart';
@@ -306,6 +306,3 @@ class VideoRoomBody extends StatelessWidget {
     );
   }
 }
-
-
-

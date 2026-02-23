@@ -1,4 +1,4 @@
-/// Abstract interface for video engine - implemented by both Web and Mobile
+﻿/// Abstract interface for video engine - implemented by both Web and Mobile
 ///
 /// This interface ensures Web and Mobile implementations are interchangeable.
 /// UI code should ONLY use this interface, never concrete implementations.
@@ -90,3 +90,5 @@ abstract class IVideoEngine {
   /// Dispose resources when done
   Future<void> dispose();
 }
+
+

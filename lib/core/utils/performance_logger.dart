@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 
 /// Performance logging utilities (debug mode only)
 class PerformanceLogger {
@@ -17,7 +17,7 @@ class PerformanceLogger {
 
     final startTime = _startTimes[operationName];
     if (startTime == null) {
-      debugPrint('⚠️ PerformanceLogger: No start time for $operationName');
+      debugPrint('âš ï¸ PerformanceLogger: No start time for $operationName');
       return;
     }
 
@@ -30,11 +30,11 @@ class PerformanceLogger {
 
     // Log the duration
     final detailsStr = details != null ? ' ($details)' : '';
-    debugPrint('⏱️ $operationName: ${duration.inMilliseconds}ms$detailsStr');
+    debugPrint('â±ï¸ $operationName: ${duration.inMilliseconds}ms$detailsStr');
 
     // Warn if slow
     if (duration.inMilliseconds > 1000) {
-      debugPrint('🐌 SLOW OPERATION: $operationName took ${duration.inMilliseconds}ms');
+      debugPrint('ðŸŒ SLOW OPERATION: $operationName took ${duration.inMilliseconds}ms');
     }
   }
 
@@ -95,11 +95,11 @@ $operationName Statistics:
     if (!kDebugMode) return;
 
     if (_durations.isEmpty) {
-      debugPrint('📊 No performance data collected');
+      debugPrint('ðŸ“Š No performance data collected');
       return;
     }
 
-    debugPrint('📊 Performance Statistics:');
+    debugPrint('ðŸ“Š Performance Statistics:');
     debugPrint('=' * 50);
     for (final operationName in _durations.keys) {
       debugPrint(getStats(operationName));
@@ -117,21 +117,21 @@ $operationName Statistics:
   static void logMetric(String name, dynamic value, {String? unit}) {
     if (!kDebugMode) return;
     final unitStr = unit != null ? ' $unit' : '';
-    debugPrint('📈 $name: $value$unitStr');
+    debugPrint('ðŸ“ˆ $name: $value$unitStr');
   }
 
   /// Log memory usage
   static void logMemoryUsage(String context) {
     if (!kDebugMode) return;
     // Note: Actual memory usage would require platform-specific implementations
-    debugPrint('💾 Memory check at: $context');
+    debugPrint('ðŸ’¾ Memory check at: $context');
   }
 
   /// Log frame time
   static void logFrameTime(Duration frameTime) {
     if (!kDebugMode) return;
     if (frameTime.inMilliseconds > 16) {
-      debugPrint('🎬 Slow frame: ${frameTime.inMilliseconds}ms');
+      debugPrint('ðŸŽ¬ Slow frame: ${frameTime.inMilliseconds}ms');
     }
   }
 }
@@ -154,7 +154,7 @@ class WidgetPerformanceTracker {
 
     final duration = DateTime.now().difference(_buildStartTime!);
     if (duration.inMilliseconds > 16) {
-      debugPrint('🔴 Slow widget build: $widgetName took ${duration.inMilliseconds}ms');
+      debugPrint('ðŸ”´ Slow widget build: $widgetName took ${duration.inMilliseconds}ms');
     }
     _buildStartTime = null;
   }

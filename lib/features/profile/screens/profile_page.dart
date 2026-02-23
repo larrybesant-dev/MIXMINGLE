@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
-import 'package:mix_and_mingle/providers/providers.dart';
-import 'package:mix_and_mingle/shared/models/user.dart' as user_model;
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/shared/widgets/glow_text.dart';
-import 'package:mix_and_mingle/shared/widgets/neon_button.dart';
-import 'package:mix_and_mingle/shared/widgets/async_value_view.dart';
-import 'package:mix_and_mingle/app_routes.dart';
+import 'package:mixmingle/providers/providers.dart';
+import 'package:mixmingle/shared/models/user.dart' as user_model;
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/shared/widgets/glow_text.dart';
+import 'package:mixmingle/shared/widgets/neon_button.dart';
+import 'package:mixmingle/shared/widgets/async_value_view.dart';
+import 'package:mixmingle/app_routes.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -218,7 +218,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           const SizedBox(height: 12),
           _buildStatRow('Joined', DateFormat('MMM yyyy').format(user.createdAt)),
           _buildStatRow('Last Active', 'Recently'),
-          _buildStatRow('Verification', '✓ Verified'),
+          _buildStatRow('Verification', 'âœ“ Verified'),
 
           _buildDivider(),
 

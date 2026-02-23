@@ -1,3 +1,6 @@
+// Removed invalid library directive and broken imports
+// import 'dart:js_util' as js_util;
+// import 'package:mixmingle/helpers/helpers.dart';
 /// DESIGN SYSTEM CONSTANTS
 ///
 /// Hard-coded enforcement of DESIGN_BIBLE.md
@@ -7,6 +10,8 @@
 /// Last Updated: February 2026
 /// Theme: Dark DJ Streaming Vibe - Navy/Orange/Blue neon aesthetic
 library;
+
+// Removed invalid library directive
 
 import 'package:flutter/material.dart';
 
@@ -208,10 +213,10 @@ class DesignSpacing {
 
 class DesignAnimations {
   // Join flow timing (CRITICAL - non-negotiable)
-  // Stage 1: "Entering room…"
+  // Stage 1: "Entering roomâ€¦"
   static const Duration joinStage1Duration = Duration(milliseconds: 150);
 
-  // Stage 2: "Connecting audio & video…" (variable, but user sees spinner after 150ms)
+  // Stage 2: "Connecting audio & videoâ€¦" (variable, but user sees spinner after 150ms)
   static const Duration joinStage2MinDuration = Duration(milliseconds: 400);
   static const Duration joinStage2MaxDuration = Duration(milliseconds: 1000);
 
@@ -357,8 +362,8 @@ class RoomEnergyThresholds {
 
 enum JoinPhase {
   initial,      // Before join is clicked
-  entering,     // Stage 1: "Entering room…" (150ms)
-  connecting,   // Stage 2: "Connecting audio…" (400–1000ms)
+  entering,     // Stage 1: "Entering roomâ€¦" (150ms)
+  connecting,   // Stage 2: "Connecting audioâ€¦" (400â€“1000ms)
   live,         // Stage 3: "You're live" (400ms fade-in)
   error,        // Join failed
   left,         // User left room
@@ -370,9 +375,9 @@ extension JoinPhaseExtension on JoinPhase {
       case JoinPhase.initial:
         return 'Ready to join';
       case JoinPhase.entering:
-        return 'Entering room…';
+        return 'Entering roomâ€¦';
       case JoinPhase.connecting:
-        return 'Connecting audio & video…';
+        return 'Connecting audio & videoâ€¦';
       case JoinPhase.live:
         return 'You\'re live';
       case JoinPhase.error:
@@ -403,7 +408,7 @@ extension JoinPhaseExtension on JoinPhase {
 enum NotificationType {
   userArrived,    // "Emma just joined"
   userLeft,       // "Emma left the room"
-  userSpeaking,   // "Emma is speaking…"
+  userSpeaking,   // "Emma is speakingâ€¦"
   youAreLive,     // "You're live with 5 others"
   error,          // Error message
 }
@@ -441,7 +446,7 @@ extension NotificationTypeExtension on NotificationType {
 // Deviations require documented approval with reference to DESIGN_BIBLE.md.
 //
 // Example:
-//   ✅ Container(
+//   âœ… Container(
 //       decoration: BoxDecoration(
 //         borderRadius: BorderRadius.circular(DesignSpacing.cardBorderRadius),
 //         color: DesignColors.accent,
@@ -449,7 +454,7 @@ extension NotificationTypeExtension on NotificationType {
 //       ),
 //     )
 //
-//   ❌ Container(
+//   âŒ Container(
 //       decoration: BoxDecoration(
 //         borderRadius: BorderRadius.circular(8),
 //         color: DesignColors.accent,
@@ -475,3 +480,6 @@ class DesignConstants {
 }
 
 
+
+
+// (flutter/material.dart imported at top of file)

@@ -1,4 +1,4 @@
-/// Auto Recovery Service
+﻿/// Auto Recovery Service
 ///
 /// Provides automatic recovery mechanisms for common failure scenarios
 /// including video pipeline restarts, Agora reconnection, and Firestore
@@ -483,3 +483,5 @@ class AutoRecoveryService {
     _recoveryCompleteController.close();
   }
 }
+
+

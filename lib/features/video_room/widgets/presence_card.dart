@@ -1,4 +1,4 @@
-/// CANONICAL EXAMPLE: Presence Card Widget
+﻿/// CANONICAL EXAMPLE: Presence Card Widget
 ///
 /// This file demonstrates the CORRECT way to implement a card that shows
 /// a participant in a Video Room. It enforces:
@@ -20,12 +20,12 @@ import '../../../core/design_system/design_animations.dart';
 /// Participant presence card shown in room participant list.
 ///
 /// Features:
-/// - ✅ Custom card (no Material Card)
-/// - ✅ Speaking pulse animation
-/// - ✅ Arrival/departure slide animation
-/// - ✅ All colors from DesignColors
-/// - ✅ All spacing from DesignSpacing
-/// - ✅ All animations from DesignAnimations
+/// - âœ… Custom card (no Material Card)
+/// - âœ… Speaking pulse animation
+/// - âœ… Arrival/departure slide animation
+/// - âœ… All colors from DesignColors
+/// - âœ… All spacing from DesignSpacing
+/// - âœ… All animations from DesignAnimations
 class PresenceCard extends StatefulWidget {
   /// Participant name (e.g., "Emma")
   final String participantName;
@@ -147,11 +147,11 @@ class _PresenceCardState extends State<PresenceCard>
     return GestureDetector(
       onTap: widget.onTap,
       child: Container(
-        // ✅ Spacing: use DesignSpacing
+        // âœ… Spacing: use DesignSpacing
         padding: EdgeInsets.all(DesignSpacing.lg), // 16px
         margin: EdgeInsets.only(bottom: DesignSpacing.md), // 12px gap between cards
 
-        // ✅ Design: custom borders, shadows, no Material Card
+        // âœ… Design: custom borders, shadows, no Material Card
         decoration: BoxDecoration(
           border: DesignBorders.cardDefault,
           borderRadius: BorderRadius.circular(DesignSpacing.cardBorderRadius),
@@ -165,7 +165,7 @@ class _PresenceCardState extends State<PresenceCard>
             // Top row: Avatar + Name + Mute indicator
             Row(
               children: [
-                // ✅ Avatar
+                // âœ… Avatar
                 Container(
                   width: DesignSpacing.avatarMedium,
                   height: DesignSpacing.avatarMedium,
@@ -194,7 +194,7 @@ class _PresenceCardState extends State<PresenceCard>
                 // Spacer
                 SizedBox(width: DesignSpacing.lg), // 16px gap
 
-                // ✅ Name (typography: subheading)
+                // âœ… Name (typography: subheading)
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,57 +399,54 @@ class _PresenceCardTestScreenState extends State<PresenceCardTestScreen> {
 
 /*
 PATTERN 1: Import Design System
-✅ import './core/design_system/design_constants.dart';
-✅ import './core/design_system/design_animations.dart';
+âœ… import './core/design_system/design_constants.dart';
+âœ… import './core/design_system/design_animations.dart';
 
 PATTERN 2: Colors
-✅ color: DesignColors.accent
-✅ color: DesignColors.accent
-✅ color: DesignColors.accent
-❌ color: DesignColors.accent
-❌ color: DesignColors.accent
+âœ… color: DesignColors.accent
+âœ… color: DesignColors.accent
+âœ… color: DesignColors.accent
+âŒ color: DesignColors.accent
+âŒ color: DesignColors.accent
 
 PATTERN 3: Typography
-✅ style: DesignTypography.subheading
-✅ style: DesignTypography.caption
-❌ style: DesignTypography.body
+âœ… style: DesignTypography.subheading
+âœ… style: DesignTypography.caption
+âŒ style: DesignTypography.body
 
 PATTERN 4: Spacing
-✅ padding: EdgeInsets.all(DesignSpacing.lg)
-✅ height: DesignSpacing.avatarMedium
-✅ gap: SizedBox(height: DesignSpacing.md)
-❌ padding: EdgeInsets.all(DesignSpacing.lg)
-❌ height: 40
+âœ… padding: EdgeInsets.all(DesignSpacing.lg)
+âœ… height: DesignSpacing.avatarMedium
+âœ… gap: SizedBox(height: DesignSpacing.md)
+âŒ padding: EdgeInsets.all(DesignSpacing.lg)
+âŒ height: 40
 
 PATTERN 5: Borders & Shadows
-✅ decoration: BoxDecoration(
+âœ… decoration: BoxDecoration(
     border: DesignBorders.cardDefault,
     boxShadow: [DesignShadows.subtle],
   )
-❌ No Material Card
-❌ No Material shadows
+âŒ No Material Card
+âŒ No Material shadows
 
 PATTERN 6: Animations
-✅ duration: DesignAnimations.presenceSlideInDuration
-✅ curve: DesignAnimations.easeOutCubic
-✅ AnimatedBuilder with DesignAnimations durations
-❌ Duration(milliseconds: 250)
-❌ Curves.easeOut
+âœ… duration: DesignAnimations.presenceSlideInDuration
+âœ… curve: DesignAnimations.easeOutCubic
+âœ… AnimatedBuilder with DesignAnimations durations
+âŒ Duration(milliseconds: 250)
+âŒ Curves.easeOut
 
 PATTERN 7: Custom Widgets
-✅ Everything extended from StatelessWidget/StatefulWidget
-✅ All building with Container + BoxDecoration
-✅ All interactions via GestureDetector
-❌ No Material Card
-❌ No Material Button
-❌ No Material ListTile
+âœ… Everything extended from StatelessWidget/StatefulWidget
+âœ… All building with Container + BoxDecoration
+âœ… All interactions via GestureDetector
+âŒ No Material Card
+âŒ No Material Button
+âŒ No Material ListTile
 
 PATTERN 8: Testing
-✅ Test that widget respects DesignAnimations durations
-✅ Test that colors use DesignColors
-✅ Test animation triggers at right times
-✅ flutter test test/design_constants_test.dart
+âœ… Test that widget respects DesignAnimations durations
+âœ… Test that colors use DesignColors
+âœ… Test animation triggers at right times
+âœ… flutter test test/design_constants_test.dart
 */
-
-
-

@@ -1,4 +1,4 @@
-/// Share Service
+﻿/// Share Service
 ///
 /// Handles sharing functionality for spotlight clips, room invites,
 /// and multi-cam screenshots using native share APIs.
@@ -74,7 +74,7 @@ class ShareService {
         shareStatus: result.status,
       );
     } catch (e) {
-      debugPrint('❌ [Share] Failed to share room: $e');
+      debugPrint('âŒ [Share] Failed to share room: $e');
       return ShareResult(
         success: false,
         error: e.toString(),
@@ -139,7 +139,7 @@ class ShareService {
         shareStatus: result.status,
       );
     } catch (e) {
-      debugPrint('❌ [Share] Failed to share clip: $e');
+      debugPrint('âŒ [Share] Failed to share clip: $e');
       return ShareResult(
         success: false,
         error: e.toString(),
@@ -188,7 +188,7 @@ class ShareService {
         shareStatus: result.status,
       );
     } catch (e) {
-      debugPrint('❌ [Share] Failed to share clip with media: $e');
+      debugPrint('âŒ [Share] Failed to share clip with media: $e');
       return ShareResult(
         success: false,
         error: e.toString(),
@@ -249,7 +249,7 @@ class ShareService {
         shareStatus: result.status,
       );
     } catch (e) {
-      debugPrint('❌ [Share] Failed to share screenshot: $e');
+      debugPrint('âŒ [Share] Failed to share screenshot: $e');
       return ShareResult(
         success: false,
         error: e.toString(),
@@ -292,7 +292,7 @@ class ShareService {
         shareStatus: result.status,
       );
     } catch (e) {
-      debugPrint('❌ [Share] Failed to share profile: $e');
+      debugPrint('âŒ [Share] Failed to share profile: $e');
       return ShareResult(
         success: false,
         error: e.toString(),
@@ -348,7 +348,7 @@ class ShareService {
         shareStatus: result.status,
       );
     } catch (e) {
-      debugPrint('❌ [Share] Failed to share event: $e');
+      debugPrint('âŒ [Share] Failed to share event: $e');
       return ShareResult(
         success: false,
         error: e.toString(),
@@ -397,7 +397,7 @@ class ShareService {
         shareStatus: result.status,
       );
     } catch (e) {
-      debugPrint('❌ [Share] Failed to share referral: $e');
+      debugPrint('âŒ [Share] Failed to share referral: $e');
       return ShareResult(
         success: false,
         error: e.toString(),
@@ -446,7 +446,7 @@ class ShareService {
         lastSharedAt: (data?['lastSharedAt'] as Timestamp?)?.toDate(),
       );
     } catch (e) {
-      debugPrint('❌ [Share] Failed to get stats: $e');
+      debugPrint('âŒ [Share] Failed to get stats: $e');
       return const ShareStats();
     }
   }

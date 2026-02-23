@@ -1,4 +1,4 @@
-/// Home Page Electric
+﻿/// Home Page Electric
 /// Main landing page after onboarding completion
 /// Shows: Live Rooms, Speed Dating, Discovery, Chats
 library;
@@ -89,7 +89,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           },
           destinations: _destinations,
           backgroundColor: DesignColors.background,
-          indicatorColor: DesignColors.accent.withOpacity(0.2),
+          indicatorColor: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
         ),
       ),
     );
@@ -128,13 +128,13 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Column(
+                child: Column(mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Welcome back,',
                       style: TextStyle(
-                        color: DesignColors.white.withOpacity(0.7),
+                        color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                         fontSize: 16,
                       ),
                     ),
@@ -155,7 +155,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(
+                child: Column(mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
@@ -177,14 +177,14 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(20),
-                child: Column(
+                child: Column(mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         const Text(
-                          '🔥 Live Rooms',
+                          'ðŸ”¥ Live Rooms',
                           style: TextStyle(
                             color: DesignColors.white,
                             fontSize: 20,
@@ -220,9 +220,11 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           child: NeonGlowCard(
             glowColor: DesignColors.gold,
             onTap: () {
+              debugPrint('ðŸ”˜ Speed Dating button pressed');
               Navigator.pushNamed(context, '/speed-dating/lobby');
             },
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   Icons.speed,
@@ -247,9 +249,11 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           child: NeonGlowCard(
             glowColor: DesignColors.accent,
             onTap: () {
+              debugPrint('ðŸ”˜ Rooms button pressed');
               setState(() => _selectedIndex = 2);
             },
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
                   Icons.video_call,
@@ -274,7 +278,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   }
 
   Widget _buildLiveRoomsPreview() {
-    final rooms = ref.watch(liveRoomsProvider).take(3).toList();
+    final roomsAsync = ref.watch(liveRoomsProvider);
+    final rooms = roomsAsync.value?.take(3).toList() ?? [];
 
     if (rooms.isEmpty) {
       return const Center(
@@ -286,6 +291,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     }
 
     return Column(
+      mainAxisSize: MainAxisSize.min,
       children: rooms
           .map((room) => NeonGlowCard(
                 glowColor: DesignColors.accent,
@@ -298,7 +304,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: DesignColors.accent.withOpacity(0.2),
+                        color: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
@@ -310,6 +316,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
@@ -324,7 +331,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                           Text(
                             '${room.viewerCount} watching',
                             style: TextStyle(
-                              color: DesignColors.white.withOpacity(0.7),
+                              color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                               fontSize: 12,
                             ),
                           ),
@@ -361,7 +368,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(20),
-        child: Column(
+        child: Column(mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
@@ -401,7 +408,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   /// Rooms Tab
   Widget _buildRoomsTab() {
     return Center(
-      child: Column(
+      child: Column(mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Text(
@@ -434,7 +441,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   /// Profile Tab
   Widget _buildProfileTab() {
     return Center(
-      child: Column(
+      child: Column(mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Text(

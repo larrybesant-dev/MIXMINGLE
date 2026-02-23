@@ -1,4 +1,4 @@
-/// Governance Dashboard
+﻿/// Governance Dashboard
 ///
 /// Dashboard widget for displaying policy health, enforcement metrics,
 /// and community trends for platform governance.
@@ -485,7 +485,7 @@ class _GovernanceDashboardState extends State<GovernanceDashboard> {
                   style: const TextStyle(fontWeight: FontWeight.w600),
                 ),
                 Text(
-                  '${trend.category.name} • ${trend.stage.name}',
+                  '${trend.category.name} â€¢ ${trend.stage.name}',
                   style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                 ),
               ],

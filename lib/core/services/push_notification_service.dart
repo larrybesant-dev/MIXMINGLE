@@ -417,7 +417,7 @@ class PushNotificationService {
   }) async {
     await sendNotification(
       recipientId: recipientId,
-      title: 'New Match! 🎉',
+      title: 'New Match! ðŸŽ‰',
       body: 'You matched with $matchName',
       type: 'match',
       data: {'userId': matchId},

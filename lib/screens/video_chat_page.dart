@@ -1,4 +1,4 @@
-// Video Chat Main Page - Responsive layout with video grid, sidebars, and chat
+﻿// Video Chat Main Page - Responsive layout with video grid, sidebars, and chat
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -102,5 +102,3 @@ class VideoChatPage extends ConsumerWidget {
     );
   }
 }
-
-

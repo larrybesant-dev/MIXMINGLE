@@ -1,4 +1,4 @@
-/// Platform API Service
+﻿/// Platform API Service
 ///
 /// Manages external app registration, authentication, and API exposure
 /// for the Mix & Mingle platform ecosystem.
@@ -255,7 +255,7 @@ class PlatformAPIService {
     String? redirectUri,
     Map<String, dynamic>? metadata,
   }) async {
-    debugPrint('📱 [PlatformAPI] Registering external app: $name');
+    debugPrint('ðŸ“± [PlatformAPI] Registering external app: $name');
 
     try {
       // Validate scopes
@@ -310,10 +310,10 @@ class PlatformAPIService {
         },
       );
 
-      debugPrint('✅ [PlatformAPI] App registered: $appId');
+      debugPrint('âœ… [PlatformAPI] App registered: $appId');
       return app;
     } catch (e) {
-      debugPrint('❌ [PlatformAPI] Failed to register app: $e');
+      debugPrint('âŒ [PlatformAPI] Failed to register app: $e');
       rethrow;
     }
   }
@@ -349,14 +349,14 @@ class PlatformAPIService {
     required String clientSecret,
     List<String>? requestedScopes,
   }) async {
-    debugPrint('🔐 [PlatformAPI] Authenticating client: $clientId');
+    debugPrint('ðŸ” [PlatformAPI] Authenticating client: $clientId');
 
     try {
       // Find app by client ID
       final appsQuery = await _appsCollection.where('clientId', isEqualTo: clientId).limit(1).get();
 
       if (appsQuery.docs.isEmpty) {
-        debugPrint('❌ [PlatformAPI] Client not found');
+        debugPrint('âŒ [PlatformAPI] Client not found');
         return null;
       }
 
@@ -365,14 +365,14 @@ class PlatformAPIService {
 
       // Check app status
       if (app.status != AppStatus.approved) {
-        debugPrint('❌ [PlatformAPI] App not approved: ${app.status}');
+        debugPrint('âŒ [PlatformAPI] App not approved: ${app.status}');
         return null;
       }
 
       // Verify client secret
       final secretHash = _hashSecret(clientSecret);
       if (secretHash != app.clientSecretHash) {
-        debugPrint('❌ [PlatformAPI] Invalid client secret');
+        debugPrint('âŒ [PlatformAPI] Invalid client secret');
 
         // Log failed attempt
         await _logAPIAccess(
@@ -391,7 +391,7 @@ class PlatformAPIService {
           : app.scopes;
 
       if (grantedScopes.isEmpty) {
-        debugPrint('❌ [PlatformAPI] No valid scopes requested');
+        debugPrint('âŒ [PlatformAPI] No valid scopes requested');
         return null;
       }
 
@@ -422,10 +422,10 @@ class PlatformAPIService {
         metadata: {'scopes': grantedScopes},
       );
 
-      debugPrint('✅ [PlatformAPI] Token issued for: ${app.appId}');
+      debugPrint('âœ… [PlatformAPI] Token issued for: ${app.appId}');
       return accessToken;
     } catch (e) {
-      debugPrint('❌ [PlatformAPI] Authentication failed: $e');
+      debugPrint('âŒ [PlatformAPI] Authentication failed: $e');
       return null;
     }
   }
@@ -457,7 +457,7 @@ class PlatformAPIService {
 
       return accessToken;
     } catch (e) {
-      debugPrint('❌ [PlatformAPI] Token validation failed: $e');
+      debugPrint('âŒ [PlatformAPI] Token validation failed: $e');
       return null;
     }
   }
@@ -468,7 +468,7 @@ class PlatformAPIService {
 
   /// Expose room APIs for external consumption
   List<APIEndpoint> exposeRoomAPIs() {
-    debugPrint('🚪 [PlatformAPI] Exposing Room APIs');
+    debugPrint('ðŸšª [PlatformAPI] Exposing Room APIs');
 
     return [
       const APIEndpoint(
@@ -523,7 +523,7 @@ class PlatformAPIService {
 
   /// Expose creator APIs for external consumption
   List<APIEndpoint> exposeCreatorAPIs() {
-    debugPrint('⭐ [PlatformAPI] Exposing Creator APIs');
+    debugPrint('â­ [PlatformAPI] Exposing Creator APIs');
 
     return [
       const APIEndpoint(
@@ -571,7 +571,7 @@ class PlatformAPIService {
 
   /// Expose analytics APIs for external consumption
   List<APIEndpoint> exposeAnalyticsAPIs() {
-    debugPrint('📊 [PlatformAPI] Exposing Analytics APIs');
+    debugPrint('ðŸ“Š [PlatformAPI] Exposing Analytics APIs');
 
     return [
       const APIEndpoint(
@@ -653,7 +653,7 @@ class PlatformAPIService {
       });
       return true;
     } catch (e) {
-      debugPrint('❌ [PlatformAPI] Failed to approve app: $e');
+      debugPrint('âŒ [PlatformAPI] Failed to approve app: $e');
       return false;
     }
   }
@@ -675,7 +675,7 @@ class PlatformAPIService {
 
       return true;
     } catch (e) {
-      debugPrint('❌ [PlatformAPI] Failed to revoke app: $e');
+      debugPrint('âŒ [PlatformAPI] Failed to revoke app: $e');
       return false;
     }
   }

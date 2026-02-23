@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mix_and_mingle/shared/models/moderation_action.dart';
+import 'package:mixmingle/shared/models/moderation_action.dart';
 
 class ModStatsCard extends StatelessWidget {
   final String roomId;

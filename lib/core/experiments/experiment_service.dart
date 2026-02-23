@@ -1,4 +1,4 @@
-/// Experiment Service
+﻿/// Experiment Service
 ///
 /// Manages A/B testing and experimentation including user assignment,
 /// exposure tracking, and outcome measurement.
@@ -495,3 +495,5 @@ class ExperimentService {
     return variance > 0 ? variance : 0.0;
   }
 }
+
+

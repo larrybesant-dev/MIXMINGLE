@@ -1,4 +1,4 @@
-/// Live Monitoring Dashboard Widget
+﻿/// Live Monitoring Dashboard Widget
 ///
 /// Displays key app health metrics with color-coded status indicators.
 library;
@@ -215,7 +215,7 @@ class _MetricsGrid extends StatelessWidget {
                 status: crashMetrics.status,
                 details: [
                   'Crashes: ${crashMetrics.crashCount}',
-                  'Target: ≥99.5%',
+                  'Target: â‰¥99.5%',
                 ],
               ),
             ),

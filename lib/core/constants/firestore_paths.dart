@@ -1,4 +1,4 @@
-/// Centralized Firestore collection and document paths
+﻿/// Centralized Firestore collection and document paths
 ///
 /// Use these constants to ensure consistent path naming across the app.
 class FirestorePaths {
@@ -45,3 +45,5 @@ class FirestorePaths {
   static String groupChatDoc(String groupId) => '$groupChats/$groupId';
   static String matchDoc(String matchId) => '$matches/$matchId';
 }
+
+

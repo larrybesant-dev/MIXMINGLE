@@ -1,3 +1,4 @@
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../services/auth_service.dart';
@@ -294,3 +295,5 @@ final sendEmailVerificationProvider = FutureProvider((ref) async {
     await user.sendEmailVerification();
   }
 });
+
+

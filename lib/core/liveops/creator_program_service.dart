@@ -1,4 +1,4 @@
-/// Creator Program Service
+﻿/// Creator Program Service
 ///
 /// Manages the creator program including applications, tiers,
 /// earnings, analytics, and dashboard functionality.
@@ -736,3 +736,5 @@ extension TierRequirementsExtension on TierRequirements {
     'perks': perks,
   };
 }
+
+

@@ -1,4 +1,4 @@
-/// Quick Reference: Agora Voice/Video Room Integration
+﻿/// Quick Reference: Agora Voice/Video Room Integration
 ///
 /// This file demonstrates how to use the new Agora service with
 /// participant and video tile providers.
@@ -197,29 +197,31 @@
 /// KEY FEATURES NOW AVAILABLE
 /// ============================================================================
 ///
-/// ✅ Participant list with real-time updates
-/// ✅ Display names fetched from Firestore (cached)
-/// ✅ Camera on/off indicators
-/// ✅ Mic on/off indicators
-/// ✅ Speaking indicators (volume-based)
-/// ✅ Video tiles automatically managed
-/// ✅ Clean event-driven architecture
-/// ✅ Full debug logging
+/// âœ… Participant list with real-time updates
+/// âœ… Display names fetched from Firestore (cached)
+/// âœ… Camera on/off indicators
+/// âœ… Mic on/off indicators
+/// âœ… Speaking indicators (volume-based)
+/// âœ… Video tiles automatically managed
+/// âœ… Clean event-driven architecture
+/// âœ… Full debug logging
 ///
 /// ============================================================================
 /// DEBUGGING
 /// ============================================================================
 ///
 /// All Agora events are logged with emojis:
-/// - 🎥 Initialization
-/// - ✅ Success
-/// - ❌ Errors
-/// - 👤 User join/leave
-/// - 📹 Video state changes
-/// - 🎤 Audio state changes
-/// - 🔌 Connection state
-/// - ⚠️  Warnings
+/// - ðŸŽ¥ Initialization
+/// - âœ… Success
+/// - âŒ Errors
+/// - ðŸ‘¤ User join/leave
+/// - ðŸ“¹ Video state changes
+/// - ðŸŽ¤ Audio state changes
+/// - ðŸ”Œ Connection state
+/// - âš ï¸  Warnings
 ///
 /// Check your console for these logs to troubleshoot issues.
 ///
 library;
+
+

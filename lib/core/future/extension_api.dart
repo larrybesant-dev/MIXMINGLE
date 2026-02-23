@@ -1,4 +1,4 @@
-/// Extension API
+﻿/// Extension API
 ///
 /// Provides a plugin architecture for extending Mix & Mingle
 /// with custom functionality, room modes, and creator tools.
@@ -261,7 +261,7 @@ class ExtensionAPI {
     List<String>? requiredPermissions,
     Map<String, dynamic>? config,
   }) async {
-    debugPrint('🔌 [ExtensionAPI] Registering plugin: $name ($id)');
+    debugPrint('ðŸ”Œ [ExtensionAPI] Registering plugin: $name ($id)');
 
     final warnings = <String>[];
 
@@ -321,7 +321,7 @@ class ExtensionAPI {
         'version': version,
       });
 
-      debugPrint('✅ [ExtensionAPI] Plugin registered: $name');
+      debugPrint('âœ… [ExtensionAPI] Plugin registered: $name');
 
       return PluginRegistrationResult(
         pluginId: id,
@@ -330,7 +330,7 @@ class ExtensionAPI {
         warnings: warnings,
       );
     } catch (e) {
-      debugPrint('❌ [ExtensionAPI] Failed to register plugin: $e');
+      debugPrint('âŒ [ExtensionAPI] Failed to register plugin: $e');
 
       return PluginRegistrationResult(
         pluginId: id,
@@ -395,7 +395,7 @@ class ExtensionAPI {
     Future<void> Function(String roomId)? onRoomCreated,
     Future<void> Function(String roomId)? onRoomEnded,
   }) async {
-    debugPrint('🎭 [ExtensionAPI] Registering room mode: $name ($id)');
+    debugPrint('ðŸŽ­ [ExtensionAPI] Registering room mode: $name ($id)');
 
     try {
       // Validate
@@ -452,7 +452,7 @@ class ExtensionAPI {
         'has_video': supportsVideo,
       });
 
-      debugPrint('✅ [ExtensionAPI] Room mode registered: $name');
+      debugPrint('âœ… [ExtensionAPI] Room mode registered: $name');
 
       return PluginRegistrationResult(
         pluginId: id,
@@ -460,7 +460,7 @@ class ExtensionAPI {
         registeredAt: DateTime.now(),
       );
     } catch (e) {
-      debugPrint('❌ [ExtensionAPI] Failed to register room mode: $e');
+      debugPrint('âŒ [ExtensionAPI] Failed to register room mode: $e');
 
       return PluginRegistrationResult(
         pluginId: id,
@@ -487,7 +487,7 @@ class ExtensionAPI {
     Widget Function(BuildContext context, String creatorId)? toolBuilder,
     Future<Map<String, dynamic>> Function(String creatorId, Map<String, dynamic> input)? execute,
   }) async {
-    debugPrint('🛠️ [ExtensionAPI] Registering creator tool: $name ($id)');
+    debugPrint('ðŸ› ï¸ [ExtensionAPI] Registering creator tool: $name ($id)');
 
     try {
       // Validate
@@ -528,7 +528,7 @@ class ExtensionAPI {
         'type': type.name,
       });
 
-      debugPrint('✅ [ExtensionAPI] Creator tool registered: $name');
+      debugPrint('âœ… [ExtensionAPI] Creator tool registered: $name');
 
       return PluginRegistrationResult(
         pluginId: id,
@@ -536,7 +536,7 @@ class ExtensionAPI {
         registeredAt: DateTime.now(),
       );
     } catch (e) {
-      debugPrint('❌ [ExtensionAPI] Failed to register creator tool: $e');
+      debugPrint('âŒ [ExtensionAPI] Failed to register creator tool: $e');
 
       return PluginRegistrationResult(
         pluginId: id,
@@ -570,7 +570,7 @@ class ExtensionAPI {
       _pluginController.add(_plugins[pluginId]!);
       return true;
     } catch (e) {
-      debugPrint('❌ [ExtensionAPI] Failed to update plugin status: $e');
+      debugPrint('âŒ [ExtensionAPI] Failed to update plugin status: $e');
       return false;
     }
   }
@@ -583,10 +583,10 @@ class ExtensionAPI {
       _plugins.remove(pluginId);
       await _pluginsCollection.doc(pluginId).delete();
 
-      debugPrint('🗑️ [ExtensionAPI] Unregistered plugin: $pluginId');
+      debugPrint('ðŸ—‘ï¸ [ExtensionAPI] Unregistered plugin: $pluginId');
       return true;
     } catch (e) {
-      debugPrint('❌ [ExtensionAPI] Failed to unregister plugin: $e');
+      debugPrint('âŒ [ExtensionAPI] Failed to unregister plugin: $e');
       return false;
     }
   }
@@ -662,7 +662,7 @@ class ExtensionAPI {
 
   /// Load plugins from Firestore
   Future<void> loadPlugins() async {
-    debugPrint('🔌 [ExtensionAPI] Loading plugins from Firestore');
+    debugPrint('ðŸ”Œ [ExtensionAPI] Loading plugins from Firestore');
 
     try {
       // Load plugins
@@ -718,9 +718,9 @@ class ExtensionAPI {
         );
       }
 
-      debugPrint('✅ [ExtensionAPI] Loaded ${_plugins.length} plugins, ${_roomModes.length} room modes, ${_creatorTools.length} creator tools');
+      debugPrint('âœ… [ExtensionAPI] Loaded ${_plugins.length} plugins, ${_roomModes.length} room modes, ${_creatorTools.length} creator tools');
     } catch (e) {
-      debugPrint('❌ [ExtensionAPI] Failed to load plugins: $e');
+      debugPrint('âŒ [ExtensionAPI] Failed to load plugins: $e');
     }
   }
 

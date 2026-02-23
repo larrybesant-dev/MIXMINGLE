@@ -1,3 +1,4 @@
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/event_chat_service.dart';
 import '../shared/models/chat_message.dart';
@@ -31,3 +32,5 @@ final sendEventMessageProvider = FutureProvider.family<void, ({
   // Invalidate chat to refresh
   ref.invalidate(eventChatProvider(params.eventId));
 });
+
+

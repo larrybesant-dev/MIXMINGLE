@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/features/voice_room/services/advanced_mic_service.dart';
+import 'package:mixmingle/features/voice_room/services/advanced_mic_service.dart';
 
 /// Advanced Microphone Control Widget
 ///

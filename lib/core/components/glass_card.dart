@@ -1,4 +1,4 @@
-import 'dart:ui';
+﻿import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/colors_v2.dart';
 import '../theme/spacing.dart';
@@ -46,13 +46,11 @@ class GlassCard extends StatelessWidget {
 
     if (onTap == null) return card;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: card,
-      ),
+    // Use GestureDetector instead of Material+InkWell to avoid infinite height issue
+    // Trade-off: No ripple effect, but clickable and no layout errors
+    return GestureDetector(
+      onTap: onTap,
+      child: card,
     );
   }
 }

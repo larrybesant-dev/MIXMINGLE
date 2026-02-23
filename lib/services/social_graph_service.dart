@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../shared/models/user_profile.dart';
 
@@ -250,3 +250,5 @@ class SocialGraphService {
     return latDiff < 0.5 && lonDiff < 0.5;
   }
 }
+
+

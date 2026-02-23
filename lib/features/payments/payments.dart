@@ -1,4 +1,4 @@
-/// Payments Feature
+﻿/// Payments Feature
 ///
 /// Exports all payments-related functionality:
 /// - Membership tiers and benefits
@@ -28,3 +28,5 @@ export 'widgets/neon_coin_package_card.dart';
 export 'screens/paywall_screen.dart';
 export 'screens/coin_store_screen.dart';
 export 'screens/wallet_page.dart';
+
+

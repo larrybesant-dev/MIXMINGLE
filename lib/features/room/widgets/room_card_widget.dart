@@ -1,4 +1,4 @@
-/// Room Card Widget
+﻿/// Room Card Widget
 ///
 /// Displays a room in room discovery with:
 /// - Room name
@@ -27,7 +27,7 @@ class RoomCardWidget extends StatefulWidget {
   /// Room display name
   final String roomName;
 
-  /// Number of participants currently in room
+  /// Participant count
   final int participantCount;
 
   /// Room energy level (0.0-10.0)
@@ -106,10 +106,10 @@ class _RoomCardWidgetState extends State<RoomCardWidget>
             CurvedAnimation(parent: _hoverController, curve: Curves.easeOut),
           ),
           child: Container(
-            // ✅ Use DesignSpacing
+            // âœ… Use DesignSpacing
             padding: EdgeInsets.all(DesignSpacing.lg),
 
-            // ✅ Use DesignBorders, DesignShadows, DesignColors
+            // âœ… Use DesignBorders, DesignShadows, DesignColors
             decoration: BoxDecoration(
               border: _hovering
                   ? DesignBorders.cardHovered
@@ -126,7 +126,7 @@ class _RoomCardWidgetState extends State<RoomCardWidget>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Room name (✅ DesignTypography.heading)
+                // Room name (âœ… DesignTypography.heading)
                 Text(
                   widget.roomName,
                   style: DesignTypography.heading,
@@ -139,7 +139,7 @@ class _RoomCardWidgetState extends State<RoomCardWidget>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    // Participant count (✅ DesignTypography.caption)
+                    // Participant count (âœ… DesignTypography.caption)
                     Text(
                       '${widget.participantCount} people',
                       style: DesignTypography.caption,
@@ -161,7 +161,7 @@ class _RoomCardWidgetState extends State<RoomCardWidget>
                               vertical: DesignSpacing.sm,
                             ),
                             decoration: BoxDecoration(
-                              // ✅ Use energy color from RoomEnergyThresholds
+                              // âœ… Use energy color from RoomEnergyThresholds
                               color: energyColor.withValues(alpha: 0.1),
                               border: Border.all(
                                 color: energyColor,
@@ -189,6 +189,3 @@ class _RoomCardWidgetState extends State<RoomCardWidget>
     );
   }
 }
-
-
-

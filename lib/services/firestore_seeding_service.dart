@@ -1,4 +1,4 @@
-import 'package:cloud_functions/cloud_functions.dart';
+﻿import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import '../core/utils/app_logger.dart';
@@ -13,13 +13,13 @@ class FirestoreSeedingService {
     try {
       final user = _auth.currentUser;
       if (user == null) {
-        AppLogger.warning('🌱 Cannot seed: user not authenticated');
+        AppLogger.warning('ðŸŒ± Cannot seed: user not authenticated');
         debugPrint('[SEEDING] User not authenticated');
         return false;
       }
 
       debugPrint('[SEEDING] Calling seedFirestore for user ${user.uid}');
-      AppLogger.info('🌱 Initializing Firestore collections...');
+      AppLogger.info('ðŸŒ± Initializing Firestore collections...');
 
       final response = await _functions
           .httpsCallable('seedFirestore')
@@ -34,19 +34,17 @@ class FirestoreSeedingService {
       final data = response.data as Map<dynamic, dynamic>?;
 
       if (data?['success'] == true) {
-        debugPrint('[SEEDING] ✅ Collections initialized');
-        AppLogger.info('✅ Firestore collections ready: messages, notifications, tips');
+        debugPrint('[SEEDING] âœ… Collections initialized');
+        AppLogger.info('âœ… Firestore collections ready: messages, notifications, tips');
         return true;
       } else {
-        debugPrint('[SEEDING] ❌ Seeding returned false');
+        debugPrint('[SEEDING] âŒ Seeding returned false');
         return false;
       }
     } catch (e) {
       debugPrint('[SEEDING] Error: $e');
-      AppLogger.error('❌ Firestore seeding failed: $e');
+      AppLogger.error('âŒ Firestore seeding failed: $e');
       return false;
     }
   }
 }
-
-

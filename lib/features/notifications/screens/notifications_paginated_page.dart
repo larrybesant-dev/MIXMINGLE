@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart' hide Notification;
+﻿import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mix_and_mingle/core/pagination/pagination_controller.dart';
-import 'package:mix_and_mingle/shared/models/notification.dart';
-import 'package:mix_and_mingle/shared/widgets/paginated_list_view.dart';
-import 'package:mix_and_mingle/providers/providers.dart';
+import 'package:mixmingle/core/pagination/pagination_controller.dart';
+import 'package:mixmingle/shared/models/notification.dart';
+import 'package:mixmingle/shared/widgets/paginated_list_view.dart';
+import 'package:mixmingle/providers/providers.dart';
 
 /// Paginated notifications page with real-time updates
 class NotificationsPaginatedPage extends ConsumerStatefulWidget {

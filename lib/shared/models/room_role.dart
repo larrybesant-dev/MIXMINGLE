@@ -1,3 +1,4 @@
+
 /// Enum for room participant roles
 enum RoomRole {
   owner, // Room creator - full control
@@ -191,3 +192,5 @@ class RoomParticipant {
     );
   }
 }
+
+

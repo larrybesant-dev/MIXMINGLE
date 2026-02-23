@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../shared/models/typing_indicator.dart';
@@ -58,7 +58,7 @@ class TypingService {
 
     // Prevent infinite retry loops
     if (_retryCounters[retryKey] != null && _retryCounters[retryKey]! >= _maxRetries) {
-      debugPrint('⚠️ Max retries reached for getTypingIndicators($chatId)');
+      debugPrint('âš ï¸ Max retries reached for getTypingIndicators($chatId)');
       return Stream.value([]);
     }
 
@@ -70,7 +70,7 @@ class TypingService {
     // Create new stream controller with error handling
     final controller = StreamController<List<TypingIndicator>>.broadcast(
       onCancel: () {
-        debugPrint('🔌 Typing indicators stream cancelled for chat: $chatId');
+        debugPrint('ðŸ”Œ Typing indicators stream cancelled for chat: $chatId');
         _cleanupStream(chatId);
       },
     );
@@ -110,7 +110,7 @@ class TypingService {
                 try {
                   return TypingIndicator.fromMap(doc.data());
                 } catch (e) {
-                  debugPrint('⚠️ Failed to parse typing indicator: $e');
+                  debugPrint('âš ï¸ Failed to parse typing indicator: $e');
                   return null;
                 }
               })
@@ -123,7 +123,7 @@ class TypingService {
             controller.add(indicators);
           }
         } catch (e, stackTrace) {
-          debugPrint('❌ Error processing typing indicators: $e');
+          debugPrint('âŒ Error processing typing indicators: $e');
           debugPrint('Stack trace: $stackTrace');
           if (!controller.isClosed) {
             controller.add([]); // Emit empty list instead of error
@@ -131,7 +131,7 @@ class TypingService {
         }
       },
       onError: (error, stackTrace) {
-        debugPrint('❌ Typing indicators stream error for $chatId: $error');
+        debugPrint('âŒ Typing indicators stream error for $chatId: $error');
         debugPrint('Stack trace: $stackTrace');
 
         // Increment retry counter
@@ -145,7 +145,7 @@ class TypingService {
         // Retry with exponential backoff if under max retries
         if (_retryCounters[retryKey]! < _maxRetries) {
           final delay = _retryDelay * _retryCounters[retryKey]!;
-          debugPrint('🔄 Retrying typing listener in ${delay.inSeconds}s...');
+          debugPrint('ðŸ”„ Retrying typing listener in ${delay.inSeconds}s...');
 
           Future.delayed(delay, () {
             if (!controller.isClosed) {
@@ -154,7 +154,7 @@ class TypingService {
             }
           });
         } else {
-          debugPrint('⛔ Max retries reached for typing listener: $chatId');
+          debugPrint('â›” Max retries reached for typing listener: $chatId');
           _cleanupStream(chatId);
         }
       },
@@ -197,7 +197,7 @@ class TypingService {
 
   /// Dispose with proper resource cleanup
   void dispose() {
-    debugPrint('🧹 Disposing TypingService...');
+    debugPrint('ðŸ§¹ Disposing TypingService...');
 
     for (var timer in _typingTimers.values) {
       timer?.cancel();

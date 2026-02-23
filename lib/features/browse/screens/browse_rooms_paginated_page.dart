@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mix_and_mingle/core/pagination/pagination_controller.dart';
-import 'package:mix_and_mingle/shared/models/room.dart';
-import 'package:mix_and_mingle/shared/widgets/paginated_list_view.dart';
+import 'package:mixmingle/core/pagination/pagination_controller.dart';
+import 'package:mixmingle/shared/models/room.dart';
+import 'package:mixmingle/shared/widgets/paginated_list_view.dart';
 
 /// Example implementation of paginated rooms browse page
 /// This shows how to use PaginationController with the reusable PaginatedListView widget
@@ -63,7 +63,7 @@ class _BrowseRoomsPaginatedPageState extends ConsumerState<BrowseRoomsPaginatedP
             child: Card(
               child: ListTile(
                 title: Text(room.name ?? room.title),
-                subtitle: Text('${room.participantIds.length} members • ${room.viewerCount} viewers'),
+                subtitle: Text('${room.participantIds.length} members â€¢ ${room.viewerCount} viewers'),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
                   // Navigate to room details

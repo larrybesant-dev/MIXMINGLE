@@ -1,4 +1,4 @@
-/// Neon Tier Card Widget
+﻿/// Neon Tier Card Widget
 ///
 /// Displays membership tier card with neon VIP Lounge aesthetic.
 /// Features animated glow effects and gold trim for premium tiers.

@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import '../models/remote_user.dart';
 import 'video_engine_interface.dart';
 import 'agora_web_engine.dart';
@@ -28,7 +28,7 @@ class VideoEngineService implements IVideoEngine {
     } else {
       _engine = AgoraMobileEngine();
     }
-    debugPrint('🎥 VideoEngineService initialized for ${kIsWeb ? 'Web' : 'Mobile'}');
+    debugPrint('ðŸŽ¥ VideoEngineService initialized for ${kIsWeb ? 'Web' : 'Mobile'}');
   }
 
   @override

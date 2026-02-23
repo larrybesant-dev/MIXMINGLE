@@ -1,4 +1,4 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import 'analytics_service.dart';
 import '../providers/providers.dart';
@@ -233,3 +233,5 @@ class AnalyticsTracker {
     return service.getProviderPerformance(providerName);
   }
 }
+
+

@@ -1,8 +1,9 @@
-/// UI Constants - Centralized theme, spacing, and animation constants
 library;
 
 import 'package:flutter/material.dart';
 import '../../core/design_system/design_constants.dart';
+/// UI Constants - Centralized theme, spacing, and animation constants
+
 
 /// Animation durations for smooth transitions
 class AnimationDurations {
@@ -217,6 +218,3 @@ class ZIndices {
   static const int tooltip = 120;
   static const int overlay = 130;
 }
-
-
-

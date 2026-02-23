@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../providers/all_providers.dart';
@@ -46,15 +46,15 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
                 const SizedBox(height: 16),
                 const Text('This action will permanently delete:'),
                 const SizedBox(height: 8),
-                const Text('• Your profile and personal information'),
-                const Text('• All your created events'),
-                const Text('• Your messages and conversations'),
-                const Text('• Your photos and media'),
-                const Text('• Your subscription data'),
-                const Text('• All other account data'),
+                const Text('â€¢ Your profile and personal information'),
+                const Text('â€¢ All your created events'),
+                const Text('â€¢ Your messages and conversations'),
+                const Text('â€¢ Your photos and media'),
+                const Text('â€¢ Your subscription data'),
+                const Text('â€¢ All other account data'),
                 const SizedBox(height: 16),
                 const Text(
-                  '⚠️ This action cannot be undone!',
+                  'âš ï¸ This action cannot be undone!',
                   style: TextStyle(
                     color: Colors.red,
                     fontWeight: FontWeight.bold,
@@ -71,7 +71,7 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
                   const SizedBox(height: 8),
                   ...warnings.map((warning) => Padding(
                         padding: const EdgeInsets.only(bottom: 4),
-                        child: Text('⚠️ $warning'),
+                        child: Text('âš ï¸ $warning'),
                       )),
                 ],
               ],
@@ -366,7 +366,7 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('• $label'),
+          Text('â€¢ $label'),
           Text(
             value,
             style: const TextStyle(fontWeight: FontWeight.bold),
@@ -380,8 +380,7 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
     if (kIsWeb) {
       // Web download using conditional import
       final bytes = utf8.encode(jsonData);
-      final uint8List = Uint8List.fromList(bytes);
-      downloadJsonOnWeb(uint8List, filename);
+      downloadJsonOnWeb(Uint8List.fromList(bytes), filename);
     } else {
       // Mobile - would need path_provider and file writing
       // For now, just show the user they need to implement this

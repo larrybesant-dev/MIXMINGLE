@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:mix_and_mingle/shared/models/camera_state.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:mixmingle/shared/models/camera_state.dart';
 
 class FreezeDetector extends StatelessWidget {
   final CameraState cameraState;
@@ -32,8 +32,8 @@ class FreezeDetector extends StatelessWidget {
   /// Get frozen status text
   static String getFrozenStatusText(CameraState camera) {
     if (camera.isFrozen) {
-      return '❄️ FROZEN - No video feed';
+      return 'â„ï¸ FROZEN - No video feed';
     }
-    return '✅ Streaming normally';
+    return 'âœ… Streaming normally';
   }
 }

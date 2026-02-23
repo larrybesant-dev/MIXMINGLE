@@ -1,4 +1,4 @@
-import 'package:cloud_functions/cloud_functions.dart';
+﻿import 'package:cloud_functions/cloud_functions.dart';
 import '../models/tip.dart';
 
 class TippingService {
@@ -43,3 +43,5 @@ class TippingService {
     }
   }
 }
+
+

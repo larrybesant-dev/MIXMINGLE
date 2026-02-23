@@ -1,4 +1,4 @@
-/// Scheduler
+﻿/// Scheduler
 ///
 /// Manages scheduled tasks including hourly, daily, and weekly
 /// maintenance and automation routines.
@@ -152,7 +152,7 @@ class Scheduler {
         break;
     }
 
-    debugPrint('📋 [Scheduler] Registered task: ${task.name} (${task.frequency.name})');
+    debugPrint('ðŸ“‹ [Scheduler] Registered task: ${task.name} (${task.frequency.name})');
   }
 
   /// Unregister a task
@@ -213,7 +213,7 @@ class Scheduler {
         lastRun: DateTime.now(),
         consecutiveFailures: task.consecutiveFailures + 1,
       );
-      debugPrint('❌ [Scheduler] Task ${task.name} failed: $e');
+      debugPrint('âŒ [Scheduler] Task ${task.name} failed: $e');
       return false;
     }
   }
@@ -377,7 +377,7 @@ class Scheduler {
       });
     });
 
-    debugPrint('⏰ [Scheduler] Started');
+    debugPrint('â° [Scheduler] Started');
     debugPrint('   Next hourly: $nextHour');
     debugPrint('   Next daily: $nextMidnight');
     debugPrint('   Next weekly: $nextSunday');
@@ -394,7 +394,7 @@ class Scheduler {
 
     final enabledTasks = tasks.where((t) => t.isEnabled).toList();
 
-    debugPrint('🏃 [Scheduler] Running ${frequency.name} tasks (${enabledTasks.length} enabled)');
+    debugPrint('ðŸƒ [Scheduler] Running ${frequency.name} tasks (${enabledTasks.length} enabled)');
 
     for (final task in enabledTasks) {
       try {
@@ -408,7 +408,7 @@ class Scheduler {
           consecutiveFailures: 0,
         );
 
-        debugPrint('✅ [Scheduler] Task "${task.name}" completed');
+        debugPrint('âœ… [Scheduler] Task "${task.name}" completed');
       } catch (e) {
         failed++;
         errors.add('${task.name}: $e');
@@ -420,7 +420,7 @@ class Scheduler {
           consecutiveFailures: task.consecutiveFailures + 1,
         );
 
-        debugPrint('❌ [Scheduler] Task "${task.name}" failed: $e');
+        debugPrint('âŒ [Scheduler] Task "${task.name}" failed: $e');
       }
     }
 

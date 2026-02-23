@@ -1,4 +1,4 @@
-/// Referral Service
+﻿/// Referral Service
 ///
 /// Manages referral codes, tracking, and rewards for viral growth.
 library;
@@ -64,10 +64,10 @@ class ReferralService {
         parameters: {'user_id': userId, 'code': code},
       );
 
-      debugPrint('✅ [Referral] Generated code: $code for user: $userId');
+      debugPrint('âœ… [Referral] Generated code: $code for user: $userId');
       return code;
     } catch (e) {
-      debugPrint('❌ [Referral] Failed to generate code: $e');
+      debugPrint('âŒ [Referral] Failed to generate code: $e');
       rethrow;
     }
   }
@@ -111,7 +111,7 @@ class ReferralService {
 
       return doc.data()?['code'] as String?;
     } catch (e) {
-      debugPrint('❌ [Referral] Failed to get code: $e');
+      debugPrint('âŒ [Referral] Failed to get code: $e');
       return null;
     }
   }
@@ -231,7 +231,7 @@ class ReferralService {
         );
       });
     } catch (e) {
-      debugPrint('❌ [Referral] Failed to redeem code: $e');
+      debugPrint('âŒ [Referral] Failed to redeem code: $e');
       return ReferralRedemptionResult(
         success: false,
         message: 'Failed to redeem referral code',
@@ -272,7 +272,7 @@ class ReferralService {
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      debugPrint('❌ [Referral] Failed to track reward: $e');
+      debugPrint('âŒ [Referral] Failed to track reward: $e');
     }
   }
 
@@ -316,7 +316,7 @@ class ReferralService {
         referrals: referrals,
       );
     } catch (e) {
-      debugPrint('❌ [Referral] Failed to get stats: $e');
+      debugPrint('âŒ [Referral] Failed to get stats: $e');
       return const ReferralStats();
     }
   }
@@ -357,7 +357,7 @@ class ReferralService {
         );
       }).toList();
     } catch (e) {
-      debugPrint('❌ [Referral] Failed to get leaderboard: $e');
+      debugPrint('âŒ [Referral] Failed to get leaderboard: $e');
       return [];
     }
   }

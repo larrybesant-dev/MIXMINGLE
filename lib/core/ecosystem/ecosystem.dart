@@ -1,4 +1,4 @@
-/// Ecosystem Module Barrel Export
+﻿/// Ecosystem Module Barrel Export
 ///
 /// Exports all ecosystem-related services and widgets for
 /// Phase K - Platform & Ecosystem Expansion.
@@ -15,3 +15,5 @@ export 'partner_portal.dart';
 // Ecosystem Growth Engine
 export 'ecosystem_growth_service.dart';
 export 'ecosystem_dashboard.dart';
+
+

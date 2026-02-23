@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum WithdrawalStatus {
   pending,
@@ -159,3 +159,5 @@ class WithdrawalRequest {
     return 'WithdrawalRequest(id: $id, userId: $userId, coinAmount: $coinAmount, usdAmount: \$$usdAmount, status: $status, requestedAt: $requestedAt)';
   }
 }
+
+

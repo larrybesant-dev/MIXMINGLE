@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/room.dart';
 import '../../core/utils/app_logger.dart';
@@ -7,7 +7,7 @@ import 'room_access_gate.dart';
 import '../../core/design_system/design_constants.dart';
 
 /// Wrapper that enforces room access gating
-/// Checks auth → profile → room permissions before rendering RoomPage
+/// Checks auth â†’ profile â†’ room permissions before rendering RoomPage
 class RoomAccessWrapper extends ConsumerWidget {
   final Room room;
   final String userId;
@@ -88,6 +88,3 @@ class RoomAccessWrapper extends ConsumerWidget {
     );
   }
 }
-
-
-

@@ -1,4 +1,4 @@
-/// Retention Service
+﻿/// Retention Service
 ///
 /// Manages retention loops including daily rewards, weekly perks,
 /// room streaks, and creator badges to keep users engaged.
@@ -113,13 +113,13 @@ class RetentionService {
           coinsGranted: coinsToGrant,
           currentStreak: currentStreak,
           message: currentStreak >= 7
-              ? '🔥 $currentStreak-day streak! Double coins!'
-              : '✨ +$coinsToGrant coins! Day $currentStreak streak',
+              ? 'ðŸ”¥ $currentStreak-day streak! Double coins!'
+              : 'âœ¨ +$coinsToGrant coins! Day $currentStreak streak',
           nextClaimTime: today.add(const Duration(days: 1)),
         );
       });
     } catch (e) {
-      debugPrint('❌ [Retention] Failed to grant daily coins: $e');
+      debugPrint('âŒ [Retention] Failed to grant daily coins: $e');
       return DailyRewardResult(
         success: false,
         coinsGranted: 0,
@@ -173,11 +173,11 @@ class RetentionService {
         return SpotlightRewardResult(
           success: true,
           minutesGranted: dailySpotlightMinutes,
-          message: '✨ +$dailySpotlightMinutes spotlight minutes!',
+          message: 'âœ¨ +$dailySpotlightMinutes spotlight minutes!',
         );
       });
     } catch (e) {
-      debugPrint('❌ [Retention] Failed to grant spotlight: $e');
+      debugPrint('âŒ [Retention] Failed to grant spotlight: $e');
       return SpotlightRewardResult(
         success: false,
         minutesGranted: 0,
@@ -210,7 +210,7 @@ class RetentionService {
       await _firestore.collection('notifications').add({
         'userId': userId,
         'type': 'daily_return',
-        'title': 'Your daily reward is waiting! 🎁',
+        'title': 'Your daily reward is waiting! ðŸŽ',
         'body': streak > 1
             ? 'Keep your $streak-day streak alive! Claim your bonus coins now.'
             : 'Claim your free coins and spotlight minutes!',
@@ -227,7 +227,7 @@ class RetentionService {
         parameters: {'user_id': userId, 'streak': streak},
       );
     } catch (e) {
-      debugPrint('❌ [Retention] Failed to send daily notification: $e');
+      debugPrint('âŒ [Retention] Failed to send daily notification: $e');
     }
   }
 
@@ -303,11 +303,11 @@ class RetentionService {
           success: true,
           perksGranted: perks,
           bonusCoins: bonusCoins,
-          message: '🌟 Weekly VIP perks claimed!',
+          message: 'ðŸŒŸ Weekly VIP perks claimed!',
         );
       });
     } catch (e) {
-      debugPrint('❌ [Retention] Failed to grant weekly VIP perks: $e');
+      debugPrint('âŒ [Retention] Failed to grant weekly VIP perks: $e');
       return WeeklyRewardResult(
         success: false,
         perksGranted: [],
@@ -330,7 +330,7 @@ class RetentionService {
           id: 'music_monday',
           name: 'Music Monday',
           description: 'Share your favorite tunes and discover new music!',
-          emoji: '🎵',
+          emoji: 'ðŸŽµ',
           category: 'music',
           bonusCoins: 5,
         ),
@@ -338,7 +338,7 @@ class RetentionService {
           id: 'trivia_tuesday',
           name: 'Trivia Tuesday',
           description: 'Test your knowledge in fun trivia rooms!',
-          emoji: '🧠',
+          emoji: 'ðŸ§ ',
           category: 'games',
           bonusCoins: 10,
         ),
@@ -346,7 +346,7 @@ class RetentionService {
           id: 'wellness_wednesday',
           name: 'Wellness Wednesday',
           description: 'Focus on self-care and mental health.',
-          emoji: '🧘',
+          emoji: 'ðŸ§˜',
           category: 'wellness',
           bonusCoins: 5,
         ),
@@ -354,7 +354,7 @@ class RetentionService {
           id: 'throwback_thursday',
           name: 'Throwback Thursday',
           description: 'Reminisce about the good old days!',
-          emoji: '📼',
+          emoji: 'ðŸ“¼',
           category: 'nostalgia',
           bonusCoins: 5,
         ),
@@ -362,7 +362,7 @@ class RetentionService {
           id: 'fun_friday',
           name: 'Fun Friday',
           description: 'Party time! Let loose and have fun.',
-          emoji: '🎉',
+          emoji: 'ðŸŽ‰',
           category: 'party',
           bonusCoins: 10,
         ),
@@ -370,7 +370,7 @@ class RetentionService {
           id: 'social_saturday',
           name: 'Social Saturday',
           description: 'Make new friends and connections!',
-          emoji: '🤝',
+          emoji: 'ðŸ¤',
           category: 'social',
           bonusCoins: 5,
         ),
@@ -378,7 +378,7 @@ class RetentionService {
           id: 'chill_sunday',
           name: 'Chill Sunday',
           description: 'Relax and unwind with good conversation.',
-          emoji: '☕',
+          emoji: 'â˜•',
           category: 'chill',
           bonusCoins: 5,
         ),
@@ -388,7 +388,7 @@ class RetentionService {
       final dayOfWeek = now.weekday - 1; // 0-6
       return [themes[dayOfWeek]];
     } catch (e) {
-      debugPrint('❌ [Retention] Failed to generate themes: $e');
+      debugPrint('âŒ [Retention] Failed to generate themes: $e');
       return [];
     }
   }
@@ -487,7 +487,7 @@ class RetentionService {
         );
       });
     } catch (e) {
-      debugPrint('❌ [Retention] Failed to track streaks: $e');
+      debugPrint('âŒ [Retention] Failed to track streaks: $e');
       return RoomStreakResult(
         currentStreak: 0,
         longestStreak: 0,
@@ -521,7 +521,7 @@ class RetentionService {
             id: 'first_room',
             name: 'Room Starter',
             description: 'Hosted your first room',
-            emoji: '🎤',
+            emoji: 'ðŸŽ¤',
             requirement: 1,
             stat: 'roomsHosted',
           ),
@@ -529,7 +529,7 @@ class RetentionService {
             id: 'room_pro',
             name: 'Room Pro',
             description: 'Hosted 10 rooms',
-            emoji: '🎯',
+            emoji: 'ðŸŽ¯',
             requirement: 10,
             stat: 'roomsHosted',
           ),
@@ -537,7 +537,7 @@ class RetentionService {
             id: 'host_master',
             name: 'Host Master',
             description: 'Hosted 50 rooms',
-            emoji: '👑',
+            emoji: 'ðŸ‘‘',
             requirement: 50,
             stat: 'roomsHosted',
           ),
@@ -545,7 +545,7 @@ class RetentionService {
             id: 'crowd_pleaser',
             name: 'Crowd Pleaser',
             description: 'Reached 100 total listeners',
-            emoji: '👥',
+            emoji: 'ðŸ‘¥',
             requirement: 100,
             stat: 'totalListeners',
           ),
@@ -553,7 +553,7 @@ class RetentionService {
             id: 'influencer',
             name: 'Influencer',
             description: 'Reached 1000 total listeners',
-            emoji: '⭐',
+            emoji: 'â­',
             requirement: 1000,
             stat: 'totalListeners',
           ),
@@ -561,7 +561,7 @@ class RetentionService {
             id: 'marathon_host',
             name: 'Marathon Host',
             description: 'Hosted for 10+ hours total',
-            emoji: '⏱️',
+            emoji: 'â±ï¸',
             requirement: 600, // 10 hours in minutes
             stat: 'totalMinutesHosted',
           ),
@@ -599,7 +599,7 @@ class RetentionService {
 
       return newBadges;
     } catch (e) {
-      debugPrint('❌ [Retention] Failed to track creator badges: $e');
+      debugPrint('âŒ [Retention] Failed to track creator badges: $e');
       return [];
     }
   }
@@ -639,7 +639,7 @@ class RetentionService {
           .doc(badgeId)
           .set({
         'name': '$streak-Day ${isHosting ? 'Hosting' : 'Participation'} Streak',
-        'emoji': streak >= 100 ? '🏆' : (streak >= 30 ? '🥇' : '🔥'),
+        'emoji': streak >= 100 ? 'ðŸ†' : (streak >= 30 ? 'ðŸ¥‡' : 'ðŸ”¥'),
         'earnedAt': FieldValue.serverTimestamp(),
       });
 
@@ -652,7 +652,7 @@ class RetentionService {
         },
       );
     } catch (e) {
-      debugPrint('❌ [Retention] Failed to award streak badge: $e');
+      debugPrint('âŒ [Retention] Failed to award streak badge: $e');
     }
   }
 
@@ -673,7 +673,7 @@ class RetentionService {
         longestLoginStreak: rewardsDoc.data()?['longestLoginStreak'] ?? 0,
       );
     } catch (e) {
-      debugPrint('❌ [Retention] Failed to get stats: $e');
+      debugPrint('âŒ [Retention] Failed to get stats: $e');
       return const RetentionStats();
     }
   }

@@ -9,7 +9,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/membership_tier.dart';
 import '../services/revenuecat_service.dart';
 import '../services/membership_service.dart';
-import '../../../core/design_system/design_constants.dart';
 import '../../../core/theme/neon_colors.dart';
 import '../../../shared/widgets/neon_components.dart';
 import '../../../shared/widgets/club_background.dart';
@@ -55,11 +54,11 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
     final currentTier = MembershipService.instance.currentTier;
 
     return Scaffold(
-      backgroundColor: DesignColors.background,
+      backgroundColor: Colors.black,
       body: Stack(
         children: [
           // Background
-          ClubBackground(),
+          ClubBackground(child: const SizedBox.expand()),
 
           // Content
           SafeArea(
@@ -154,8 +153,8 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
   Widget _buildTitle() {
     return NeonText(
       'Unlock Premium Features',
-      size: 32,
-      weight: FontWeight.bold,
+      fontSize: 32,
+      fontWeight: FontWeight.bold,
       glowColor: NeonColors.neonBlue,
     );
   }
@@ -324,7 +323,7 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          benefit,
+                          benefit.title,
                           style: TextStyle(
                             color: Colors.white.withAlpha(204),
                             fontSize: 13,
@@ -356,8 +355,8 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
       children: [
         NeonText(
           'All ${_selectedTier.displayName} Benefits',
-          size: 24,
-          weight: FontWeight.bold,
+          fontSize: 24,
+          fontWeight: FontWeight.bold,
           glowColor: _selectedTier.primaryColor,
         ),
 
@@ -376,7 +375,7 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      benefit,
+                      benefit.title,
                       style: TextStyle(
                         color: Colors.white.withAlpha(230),
                         fontSize: 15,
@@ -396,10 +395,10 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
     final isUpgradable = _selectedTier.isHigherThan(currentTier);
 
     return NeonButton(
-      text: isUpgradable
+      label: isUpgradable
           ? 'Upgrade to ${_selectedTier.displayName}'
           : 'Current Plan',
-      onPressed: isUpgradable ? _handlePurchase : null,
+      onPressed: isUpgradable ? _handlePurchase : () {},
       glowColor: _selectedTier.primaryColor,
       isLoading: _isProcessing,
     );
@@ -468,7 +467,7 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('✅ Upgraded to ${_selectedTier.displayName}!'),
+            content: Text('âœ… Upgraded to ${_selectedTier.displayName}!'),
             backgroundColor: _selectedTier.primaryColor,
           ),
         );
@@ -481,7 +480,7 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(result.error ?? 'Purchase failed'),
+            content: Text(result.errorMessage ?? 'Purchase failed'),
             backgroundColor: Colors.red,
           ),
         );

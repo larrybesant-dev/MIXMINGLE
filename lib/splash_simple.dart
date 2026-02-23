@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class SimpleSplashPage extends StatefulWidget {
   const SimpleSplashPage({super.key});
@@ -28,7 +28,7 @@ class _SimpleSplashPageState extends State<SimpleSplashPage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
-              '🎵',
+              'ðŸŽµ',
               style: TextStyle(fontSize: 100),
             ),
             const SizedBox(height: 20),

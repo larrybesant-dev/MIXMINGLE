@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SpeedDatingRound {
   final String id;
@@ -57,3 +57,5 @@ class SpeedDatingRound {
     };
   }
 }
+
+

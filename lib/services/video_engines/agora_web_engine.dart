@@ -1,4 +1,4 @@
-/// Agora Web Bridge - implements IVideoEngine for Web platform
+﻿/// Agora Web Bridge - implements IVideoEngine for Web platform
 ///
 /// This is the single source of truth for Web video functionality.
 /// All calls to JS are wrapped here and Stream-ified for Riverpod compatibility.
@@ -82,7 +82,7 @@ class AgoraWebEngine implements IVideoEngine {
 
       _initialized = true;
       _setupEventCallbacks();
-      debugPrint('[AGORA_WEB] ✅ Initialization complete');
+      debugPrint('[AGORA_WEB] âœ… Initialization complete');
     } catch (e) {
       AppLogger.error('Initialization failed: $e');
       throw VideoEngineException('Failed to initialize Agora Web Engine', originalError: e);
@@ -128,7 +128,7 @@ class AgoraWebEngine implements IVideoEngine {
         micOn: true,
       );
 
-      debugPrint('[AGORA_WEB] ✅ Joined channel');
+      debugPrint('[AGORA_WEB] âœ… Joined channel');
     } catch (e) {
       AppLogger.error('Join channel failed: $e');
       _connectionStateController.add(ChannelState.disconnected);
@@ -161,7 +161,7 @@ class AgoraWebEngine implements IVideoEngine {
       _localMediaState = null;
       _connectionStateController.add(ChannelState.disconnected);
 
-      debugPrint('[AGORA_WEB] ✅ Left channel');
+      debugPrint('[AGORA_WEB] âœ… Left channel');
     } catch (e) {
       AppLogger.error('Leave channel failed: $e');
       throw VideoEngineException('Failed to leave channel', originalError: e);
@@ -200,7 +200,7 @@ class AgoraWebEngine implements IVideoEngine {
         micOn: enableAudio,
       );
 
-      debugPrint('[AGORA_WEB] ✅ Local tracks updated');
+      debugPrint('[AGORA_WEB] âœ… Local tracks updated');
     } catch (e) {
       AppLogger.error('Enable local tracks failed: $e');
       throw VideoEngineException('Failed to enable local tracks', originalError: e);
@@ -238,7 +238,7 @@ class AgoraWebEngine implements IVideoEngine {
         );
       }
 
-      debugPrint('[AGORA_WEB] ✅ Audio mute state: $muted');
+      debugPrint('[AGORA_WEB] âœ… Audio mute state: $muted');
     } catch (e) {
       AppLogger.error('Set audio muted failed: $e');
       throw VideoEngineException('Failed to set audio muted', originalError: e);
@@ -276,7 +276,7 @@ class AgoraWebEngine implements IVideoEngine {
         );
       }
 
-      debugPrint('[AGORA_WEB] ✅ Video mute state: $muted');
+      debugPrint('[AGORA_WEB] âœ… Video mute state: $muted');
     } catch (e) {
       AppLogger.error('Set video muted failed: $e');
       throw VideoEngineException('Failed to set video muted', originalError: e);
@@ -315,7 +315,7 @@ class AgoraWebEngine implements IVideoEngine {
         _remoteUsersController.add(remoteUsers);
       }
 
-      debugPrint('[AGORA_WEB] ✅ Remote audio muted');
+      debugPrint('[AGORA_WEB] âœ… Remote audio muted');
     } catch (e) {
       AppLogger.error('Mute remote audio failed: $e');
       throw VideoEngineException('Failed to mute remote audio', originalError: e);
@@ -354,7 +354,7 @@ class AgoraWebEngine implements IVideoEngine {
         _remoteUsersController.add(remoteUsers);
       }
 
-      debugPrint('[AGORA_WEB] ✅ Remote video muted');
+      debugPrint('[AGORA_WEB] âœ… Remote video muted');
     } catch (e) {
       AppLogger.error('Mute remote video failed: $e');
       throw VideoEngineException('Failed to mute remote video', originalError: e);
@@ -422,5 +422,3 @@ class AgoraWebEngine implements IVideoEngine {
     }
   }
 }
-
-

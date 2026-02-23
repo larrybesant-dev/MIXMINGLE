@@ -1,4 +1,4 @@
-/// Launch Marketing Service
+﻿/// Launch Marketing Service
 ///
 /// Generates press kits, launch notes, store descriptions,
 /// and creator onboarding guides for public launch.
@@ -32,7 +32,7 @@ class LaunchMarketingService {
     required String version,
     String? customDescription,
   }) async {
-    debugPrint('📰 [Marketing] Generating press kit...');
+    debugPrint('ðŸ“° [Marketing] Generating press kit...');
 
     try {
       // Get app info
@@ -76,11 +76,11 @@ class LaunchMarketingService {
         },
       );
 
-      debugPrint('✅ [Marketing] Press kit generated: ${pressKit.id}');
+      debugPrint('âœ… [Marketing] Press kit generated: ${pressKit.id}');
 
       return pressKit;
     } catch (e) {
-      debugPrint('❌ [Marketing] Failed to generate press kit: $e');
+      debugPrint('âŒ [Marketing] Failed to generate press kit: $e');
       rethrow;
     }
   }
@@ -96,7 +96,7 @@ class LaunchMarketingService {
     List<String>? bugFixes,
     List<String>? knownIssues,
   }) async {
-    debugPrint('📝 [Marketing] Generating launch notes...');
+    debugPrint('ðŸ“ [Marketing] Generating launch notes...');
 
     try {
       final notes = LaunchNotes(
@@ -123,11 +123,11 @@ class LaunchMarketingService {
         },
       );
 
-      debugPrint('✅ [Marketing] Launch notes generated');
+      debugPrint('âœ… [Marketing] Launch notes generated');
 
       return notes;
     } catch (e) {
-      debugPrint('❌ [Marketing] Failed to generate launch notes: $e');
+      debugPrint('âŒ [Marketing] Failed to generate launch notes: $e');
       rethrow;
     }
   }
@@ -141,7 +141,7 @@ class LaunchMarketingService {
     String? customTitle,
     String? customSubtitle,
   }) async {
-    debugPrint('🏪 [Marketing] Generating store descriptions...');
+    debugPrint('ðŸª [Marketing] Generating store descriptions...');
 
     try {
       final descriptions = StoreDescriptions(
@@ -171,11 +171,11 @@ class LaunchMarketingService {
 
       await _analytics.logEvent(name: 'store_descriptions_generated');
 
-      debugPrint('✅ [Marketing] Store descriptions generated');
+      debugPrint('âœ… [Marketing] Store descriptions generated');
 
       return descriptions;
     } catch (e) {
-      debugPrint('❌ [Marketing] Failed to generate store descriptions: $e');
+      debugPrint('âŒ [Marketing] Failed to generate store descriptions: $e');
       rethrow;
     }
   }
@@ -186,7 +186,7 @@ class LaunchMarketingService {
 
   /// Generate creator onboarding guide
   Future<CreatorGuide> generateCreatorOnboardingGuide() async {
-    debugPrint('👤 [Marketing] Generating creator onboarding guide...');
+    debugPrint('ðŸ‘¤ [Marketing] Generating creator onboarding guide...');
 
     try {
       final guide = CreatorGuide(
@@ -210,11 +210,11 @@ class LaunchMarketingService {
 
       await _analytics.logEvent(name: 'creator_guide_generated');
 
-      debugPrint('✅ [Marketing] Creator guide generated');
+      debugPrint('âœ… [Marketing] Creator guide generated');
 
       return guide;
     } catch (e) {
-      debugPrint('❌ [Marketing] Failed to generate creator guide: $e');
+      debugPrint('âŒ [Marketing] Failed to generate creator guide: $e');
       rethrow;
     }
   }
@@ -306,29 +306,29 @@ class LaunchMarketingService {
   };
 
   String _generateWhatsNew(List<String> highlights) {
-    return highlights.map((h) => '• $h').join('\n');
+    return highlights.map((h) => 'â€¢ $h').join('\n');
   }
 
   String _generateAppStoreDescription() => '''
 Meet new people and make real connections with MixMingle, the live video chat app that brings people together!
 
-🎥 LIVE VIDEO CHAT
+ðŸŽ¥ LIVE VIDEO CHAT
 Jump into video rooms and meet interesting people from around the world. No swiping required - just real conversations!
 
-🤝 SMART MATCHING
+ðŸ¤ SMART MATCHING
 Our intelligent matching system connects you with people who share your interests. Find your community and build lasting friendships.
 
-⭐ VIP EXPERIENCE
+â­ VIP EXPERIENCE
 Unlock exclusive features with VIP membership:
-• Priority matching
-• Exclusive badges
-• Enhanced profiles
-• Ad-free experience
+â€¢ Priority matching
+â€¢ Exclusive badges
+â€¢ Enhanced profiles
+â€¢ Ad-free experience
 
-🎨 BECOME A CREATOR
+ðŸŽ¨ BECOME A CREATOR
 Build your audience, go live, and earn through gifts and tips. Join thousands of creators already on MixMingle!
 
-🛡️ SAFE & MODERATED
+ðŸ›¡ï¸ SAFE & MODERATED
 Your safety is our priority. We have 24/7 moderation, reporting tools, and community guidelines to keep MixMingle a positive place.
 
 Download MixMingle today and start making genuine connections!
@@ -352,47 +352,47 @@ MixMingle: Where Real Connections Happen
 
 Looking for genuine conversations and meaningful connections? MixMingle is the live video chat app that makes meeting new people fun, easy, and safe.
 
-🔥 WHY MIXMINGLE?
+ðŸ”¥ WHY MIXMINGLE?
 
-✨ Live Video Rooms
+âœ¨ Live Video Rooms
 Skip the endless swiping! Jump directly into live video conversations with interesting people. Create rooms for any topic - hobbies, music, gaming, or just casual chat.
 
-💫 Smart Match Technology
+ðŸ’« Smart Match Technology
 Our AI-powered matching connects you with compatible people based on your interests, making every conversation count.
 
-🎁 Interactive Features
-• Send virtual gifts during streams
-• React with fun emojis
-• Chat while watching
-• Join as viewer or participant
+ðŸŽ Interactive Features
+â€¢ Send virtual gifts during streams
+â€¢ React with fun emojis
+â€¢ Chat while watching
+â€¢ Join as viewer or participant
 
-🏆 VIP Perks
+ðŸ† VIP Perks
 Go VIP for the ultimate experience:
 - Stand out with exclusive badges
 - Get priority in matching
 - Unlock premium features
 - Ad-free browsing
 
-🎬 Creator Program
+ðŸŽ¬ Creator Program
 Got personality? Build your following on MixMingle! Go live, engage your audience, and earn real rewards through our creator monetization program.
 
-🛡️ Safe Community
+ðŸ›¡ï¸ Safe Community
 We take safety seriously:
 - 24/7 active moderation
 - One-tap reporting
 - Verified profiles available
 - Strict community guidelines
 
-📲 FEATURES
+ðŸ“² FEATURES
 
-• HD video chat
-• Interest-based matching
-• Virtual gifts & economy
-• Real-time chat
-• Creator tools
-• Profile customization
-• Activity tracking
-• Weekly challenges
+â€¢ HD video chat
+â€¢ Interest-based matching
+â€¢ Virtual gifts & economy
+â€¢ Real-time chat
+â€¢ Creator tools
+â€¢ Profile customization
+â€¢ Activity tracking
+â€¢ Weekly challenges
 
 Join millions of users making real connections on MixMingle. Download now and start chatting!
 
@@ -469,12 +469,12 @@ As a creator, you'll have access to powerful tools to build your audience, engag
   String _getCommunityGuidelines() => '''
 As a creator, you're a role model for our community. Please follow these guidelines:
 
-• Be respectful to all viewers regardless of background
-• No harassment, bullying, or hate speech
-• Keep content appropriate for all ages (no adult content)
-• No spam, scams, or misleading content
-• Protect viewer privacy
-• Report violations you witness
+â€¢ Be respectful to all viewers regardless of background
+â€¢ No harassment, bullying, or hate speech
+â€¢ Keep content appropriate for all ages (no adult content)
+â€¢ No spam, scams, or misleading content
+â€¢ Protect viewer privacy
+â€¢ Report violations you witness
 
 Violations may result in warnings, suspensions, or permanent bans.
 ''';

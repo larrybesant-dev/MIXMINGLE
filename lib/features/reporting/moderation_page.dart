@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import '../../services/reporting_service.dart';
@@ -141,7 +141,7 @@ class _ModerationPageState extends State<ModerationPage> {
             Text('Type: ${_getTypeText(type)}'),
             if (createdAt != null)
               Text(
-                'Submitted: ${DateFormat('MMM d, yyyy • h:mm a').format(createdAt)}',
+                'Submitted: ${DateFormat('MMM d, yyyy â€¢ h:mm a').format(createdAt)}',
                 style: theme.textTheme.bodySmall,
               ),
           ],

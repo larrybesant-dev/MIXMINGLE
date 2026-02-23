@@ -1,4 +1,4 @@
-/// Seasonal Event Banner Widget
+﻿/// Seasonal Event Banner Widget
 ///
 /// Displays seasonal event banners, countdowns, and promotional
 /// content for active and upcoming events.

@@ -1,4 +1,4 @@
-/// Friend Presence Monitoring Service
+﻿/// Friend Presence Monitoring Service
 ///
 /// Tracks friend presence changes and triggers notifications
 /// Throttles updates to 10-15 seconds per design
@@ -252,5 +252,7 @@ final managedFriendPresenceNotificationsProvider =
 
   return Future.value(null);
 });
+
+
 
 

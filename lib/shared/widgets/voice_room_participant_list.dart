@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/shared/models/room.dart';
-import 'package:mix_and_mingle/providers/providers.dart';
-import 'package:mix_and_mingle/providers/user_display_name_provider.dart';
+import 'package:mixmingle/shared/models/room.dart';
+import 'package:mixmingle/providers/providers.dart';
+import 'package:mixmingle/providers/user_display_name_provider.dart';
 
 class VoiceRoomParticipantList extends ConsumerWidget {
   final Room room;
@@ -262,7 +262,7 @@ class VoiceRoomParticipantList extends ConsumerWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Text(
-                                  '🎤',
+                                  'ðŸŽ¤',
                                   style: TextStyle(fontSize: 10),
                                 ),
                                 const SizedBox(width: 2),
@@ -291,7 +291,7 @@ class VoiceRoomParticipantList extends ConsumerWidget {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Text(
-                                  '🖐️',
+                                  'ðŸ–ï¸',
                                   style: TextStyle(fontSize: 10),
                                 ),
                                 const SizedBox(width: 2),

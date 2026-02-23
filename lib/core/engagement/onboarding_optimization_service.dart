@@ -1,4 +1,4 @@
-/// Onboarding Optimization Service
+﻿/// Onboarding Optimization Service
 ///
 /// Provides optimization tracking for the onboarding funnel,
 /// auto-join welcome room functionality, and first interaction nudges.
@@ -54,9 +54,9 @@ class OnboardingOptimizationService {
         });
       }
 
-      debugPrint('🚀 [Onboarding] Funnel start tracked');
+      debugPrint('ðŸš€ [Onboarding] Funnel start tracked');
     } catch (e) {
-      debugPrint('❌ [Onboarding] Failed to track start: $e');
+      debugPrint('âŒ [Onboarding] Failed to track start: $e');
     }
   }
 
@@ -98,9 +98,9 @@ class OnboardingOptimizationService {
         'onboardingDurationSeconds': durationSeconds,
       });
 
-      debugPrint('✅ [Onboarding] Funnel complete tracked (${durationSeconds}s)');
+      debugPrint('âœ… [Onboarding] Funnel complete tracked (${durationSeconds}s)');
     } catch (e) {
-      debugPrint('❌ [Onboarding] Failed to track complete: $e');
+      debugPrint('âŒ [Onboarding] Failed to track complete: $e');
     }
   }
 
@@ -112,7 +112,7 @@ class OnboardingOptimizationService {
       final alreadyJoined = prefs.getBool(_welcomeRoomJoinedKey) ?? false;
 
       if (alreadyJoined) {
-        debugPrint('ℹ️ [Onboarding] Welcome room already joined');
+        debugPrint('â„¹ï¸ [Onboarding] Welcome room already joined');
         return null;
       }
 
@@ -131,12 +131,12 @@ class OnboardingOptimizationService {
           },
         );
 
-        debugPrint('✅ [Onboarding] Auto-joined welcome room: $roomId');
+        debugPrint('âœ… [Onboarding] Auto-joined welcome room: $roomId');
       }
 
       return roomId;
     } catch (e) {
-      debugPrint('❌ [Onboarding] Failed to auto-join welcome room: $e');
+      debugPrint('âŒ [Onboarding] Failed to auto-join welcome room: $e');
       return null;
     }
   }
@@ -162,7 +162,7 @@ class OnboardingOptimizationService {
 
       return interactionsSnapshot.docs.isEmpty;
     } catch (e) {
-      debugPrint('❌ [Onboarding] Error checking first interaction: $e');
+      debugPrint('âŒ [Onboarding] Error checking first interaction: $e');
       return false;
     }
   }
@@ -184,13 +184,13 @@ class OnboardingOptimizationService {
       );
 
       return FirstInteractionNudge(
-        title: 'Say Hello! 👋',
+        title: 'Say Hello! ðŸ‘‹',
         message: 'Join a room and start chatting to make your first connection!',
         actionLabel: 'Find a Room',
         actionRoute: '/discover',
       );
     } catch (e) {
-      debugPrint('❌ [Onboarding] Failed to create nudge: $e');
+      debugPrint('âŒ [Onboarding] Failed to create nudge: $e');
       return null;
     }
   }
@@ -206,9 +206,9 @@ class OnboardingOptimizationService {
         parameters: {'user_id': userId},
       );
 
-      debugPrint('✅ [Onboarding] First interaction marked complete');
+      debugPrint('âœ… [Onboarding] First interaction marked complete');
     } catch (e) {
-      debugPrint('❌ [Onboarding] Failed to mark first interaction: $e');
+      debugPrint('âŒ [Onboarding] Failed to mark first interaction: $e');
     }
   }
 
@@ -227,7 +227,7 @@ class OnboardingOptimizationService {
         firstInteractionCompleted: data['firstInteractionCompleted'] as bool? ?? false,
       );
     } catch (e) {
-      debugPrint('❌ [Onboarding] Failed to get metrics: $e');
+      debugPrint('âŒ [Onboarding] Failed to get metrics: $e');
       return null;
     }
   }
@@ -256,7 +256,7 @@ class OnboardingOptimizationService {
         'timestamp': FieldValue.serverTimestamp(),
       });
     } catch (e) {
-      debugPrint('❌ [Onboarding] Failed to track step: $e');
+      debugPrint('âŒ [Onboarding] Failed to track step: $e');
     }
   }
 
@@ -267,9 +267,9 @@ class OnboardingOptimizationService {
       await prefs.remove(_onboardingStartTimeKey);
       await prefs.remove(_firstInteractionCompletedKey);
       await prefs.remove(_welcomeRoomJoinedKey);
-      debugPrint('🔄 [Onboarding] Optimization flags reset');
+      debugPrint('ðŸ”„ [Onboarding] Optimization flags reset');
     } catch (e) {
-      debugPrint('❌ [Onboarding] Failed to reset flags: $e');
+      debugPrint('âŒ [Onboarding] Failed to reset flags: $e');
     }
   }
 }

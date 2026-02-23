@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Room statistics model
@@ -251,3 +251,5 @@ final recentActivityProvider = StreamProvider.family<List<Map<String, dynamic>>,
   final service = ref.watch(analyticsServiceProvider);
   return service.getRecentActivityStream(roomId);
 });
+
+

@@ -1,4 +1,4 @@
-/// Launch Countdown Widget
+﻿/// Launch Countdown Widget
 ///
 /// Displays countdown to public launch date with days remaining
 /// and link to early access/beta signup.
@@ -141,7 +141,7 @@ class _LaunchCountdownWidgetState extends State<LaunchCountdownWidget>
         ),
         const SizedBox(height: 12),
         Text(
-          'WE\'RE LIVE! 🎉',
+          'WE\'RE LIVE! ðŸŽ‰',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             color: widget.textColor ?? Colors.white,
             fontWeight: FontWeight.bold,
@@ -490,7 +490,7 @@ class FloatingLaunchCountdown extends StatelessWidget {
                   GestureDetector(
                     onTap: onEarlyAccessTap,
                     child: Text(
-                      'Get early access →',
+                      'Get early access â†’',
                       style: TextStyle(
                         color: Colors.amber.shade200,
                         fontSize: 12,

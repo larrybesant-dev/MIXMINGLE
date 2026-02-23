@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use
+﻿// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -140,7 +140,7 @@ class EventCardHorizontal extends ConsumerWidget {
                       Icon(
                         Icons.calendar_today,
                         size: 14,
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                       ),
                       const SizedBox(width: 6),
                       Text(
@@ -153,7 +153,7 @@ class EventCardHorizontal extends ConsumerWidget {
                       Icon(
                         Icons.access_time,
                         size: 14,
-                        color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        color: theme.colorScheme.onSurface.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                       ),
                       const SizedBox(width: 6),
                       Text(

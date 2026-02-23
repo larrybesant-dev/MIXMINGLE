@@ -1,3 +1,6 @@
+﻿library;
+
+import 'package:flutter/material.dart';
 /// Chat Box Widget - Enhanced with message animations and smooth picker transitions
 ///
 /// Features:
@@ -14,7 +17,6 @@
 /// ```dart
 /// ChatBoxWidget()
 /// ```
-library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -41,12 +43,12 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
   late Animation<double> _pickerHeightAnimation;
 
   final List<String> _emojis = [
-    '😀', '😂', '😍', '🥰', '😎', '🤔', '😒', '🔥',
-    '💯', '👍', '👏', '🎉', '🎊', '💪', '✨', '🌟',
+    'ðŸ˜€', 'ðŸ˜‚', 'ðŸ˜', 'ðŸ¥°', 'ðŸ˜Ž', 'ðŸ¤”', 'ðŸ˜’', 'ðŸ”¥',
+    'ðŸ’¯', 'ðŸ‘', 'ðŸ‘', 'ðŸŽ‰', 'ðŸŽŠ', 'ðŸ’ª', 'âœ¨', 'ðŸŒŸ',
   ];
 
   final List<String> _stickers = [
-    '👋', '🤝', '💼', '🎯', '🎬', '🎨', '🎭', '🎮',
+    'ðŸ‘‹', 'ðŸ¤', 'ðŸ’¼', 'ðŸŽ¯', 'ðŸŽ¬', 'ðŸŽ¨', 'ðŸŽ­', 'ðŸŽ®',
   ];
 
   @override
@@ -124,7 +126,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.chat_bubble_outline,
             size: WidgetSizes.largeIconSize,
             color: DesignColors.accent,
@@ -138,7 +140,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
           ),
           const SizedBox(height: Spacing.sm),
           Text(
-            'Go find someone to chat with 👉',
+            'Go find someone to chat with ðŸ‘‰',
             style: AppTextStyles.body2.copyWith(
               color: DesignColors.textLightGray,
             ),
@@ -170,7 +172,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
   Widget _buildMessageInputArea(bool darkMode) {
     return Container(
       color: DesignColors.surfaceDefault,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         border: Border(
           top: BorderSide(
             color: DesignColors.accentDark,
@@ -230,13 +232,13 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
             maxLines: 3,
             minLines: 1,
             decoration: InputDecoration(
-              hintText: 'Say hi 👋 ... or share a vibe',
-              hintStyle: TextStyle(
+              hintText: 'Say hi ðŸ‘‹ ... or share a vibe',
+              hintStyle: const TextStyle(
                 color: DesignColors.textLightGray,
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(BorderRadii.lg),
-                borderSide: BorderSide(
+                borderSide: const BorderSide(
                   color: DesignColors.accentDark,
                 ),
               ),
@@ -264,7 +266,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
 
         /// Sticker button
         _buildPickerButton(
-          label: '🎨',
+          label: 'ðŸŽ¨',
           onTap: _toggleStickerPicker,
           isActive: _showStickerPicker,
         ),
@@ -287,7 +289,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
         }
       },
       itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-        PopupMenuItem<String>(
+        const PopupMenuItem<String>(
           value: 'file',
           child: Row(
             children: [
@@ -296,12 +298,12 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
                 size: WidgetSizes.smallIconSize,
                 color: DesignColors.accent,
               ),
-              const SizedBox(width: Spacing.md),
-              const Text('Share File'),
+              SizedBox(width: Spacing.md),
+              Text('Share File'),
             ],
           ),
         ),
-        PopupMenuItem<String>(
+        const PopupMenuItem<String>(
           value: 'image',
           child: Row(
             children: [
@@ -310,8 +312,8 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
                 size: WidgetSizes.smallIconSize,
                 color: DesignColors.accent,
               ),
-              const SizedBox(width: Spacing.md),
-              const Text('Share Image'),
+              SizedBox(width: Spacing.md),
+              Text('Share Image'),
             ],
           ),
         ),
@@ -387,7 +389,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
             borderRadius: BorderRadius.circular(BorderRadii.circular),
             boxShadow: AppShadows.elevation2,
           ),
-          child: Icon(
+          child: const Icon(
             Icons.send,
             size: WidgetSizes.mediumIconSize,
             color: DesignColors.white,
@@ -447,7 +449,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
         hoverColor: DesignColors.accentDark,
         child: Padding(
           padding: const EdgeInsets.all(Spacing.xs),
-          child: Center(
+          child: Center( // ignore: prefer_const_constructors
             child: Text(
               item,
               style: DesignTypography.body.copyWith(
@@ -480,22 +482,22 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
 
   void _handleFileUpload() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('File upload coming soon'),
+      const SnackBar(
+        content: Text('File upload coming soon'),
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(Spacing.md),
-        duration: const Duration(milliseconds: 1500),
+        margin: EdgeInsets.all(Spacing.md),
+        duration: Duration(milliseconds: 1500),
       ),
     );
   }
 
   void _handleImageUpload() {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Image upload coming soon'),
+      const SnackBar(
+        content: Text('Image upload coming soon'),
         behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(Spacing.md),
-        duration: const Duration(milliseconds: 1500),
+        margin: EdgeInsets.all(Spacing.md),
+        duration: Duration(milliseconds: 1500),
       ),
     );
   }
@@ -717,7 +719,3 @@ class _ChatMessageTile extends ConsumerWidget {
     }
   }
 }
-
-
-
-

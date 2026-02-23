@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:math' as math;
 import '../../providers/providers.dart';
@@ -337,7 +337,7 @@ class _HomePageState extends ConsumerState<HomePage> with TickerProviderStateMix
         onChanged: (value) => ref.read(searchQueryProvider.notifier).update(value),
         style: const TextStyle(color: Colors.white),
         decoration: InputDecoration(
-          hintText: '🔍 Search live rooms, DJs, or genres...',
+          hintText: 'ðŸ” Search live rooms, DJs, or genres...',
           hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
           prefixIcon: const Icon(Icons.search, color: Color(0xFFFFD700)),
           suffixIcon: AnimatedBuilder(
@@ -392,7 +392,7 @@ class _HomePageState extends ConsumerState<HomePage> with TickerProviderStateMix
             child: Row(
               children: [
                 const GlowText(
-                  text: '🔥 LIVE NOW',
+                  text: 'ðŸ”¥ LIVE NOW',
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   color: Color(0xFFFF4C4C),
@@ -464,7 +464,7 @@ class _HomePageState extends ConsumerState<HomePage> with TickerProviderStateMix
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Be the first to go live! 🎤',
+                          'Be the first to go live! ðŸŽ¤',
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.6),
                             fontSize: 14,

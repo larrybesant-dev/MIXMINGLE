@@ -1,4 +1,4 @@
-import 'dart:io';
+﻿import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image/image.dart' as img;
@@ -149,7 +149,7 @@ class ImageOptimizationService {
         final optimizedSize = optimized.length / 1024; // KB
         final reduction = ((originalSize - optimizedSize) / originalSize * 100).toStringAsFixed(1);
         AppLogger.info(
-            'Image optimized: ${originalSize.toStringAsFixed(1)}KB → ${optimizedSize.toStringAsFixed(1)}KB ($reduction% reduction)');
+            'Image optimized: ${originalSize.toStringAsFixed(1)}KB â†’ ${optimizedSize.toStringAsFixed(1)}KB ($reduction% reduction)');
       }
 
       return optimizedFile;
@@ -169,3 +169,5 @@ enum ThumbnailSize {
   final int height;
   final int quality;
 }
+
+

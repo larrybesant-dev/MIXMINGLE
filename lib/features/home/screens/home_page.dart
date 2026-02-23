@@ -1,12 +1,12 @@
-// ignore_for_file: use_build_context_synchronously
+﻿// ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/shared/widgets/neon_button.dart';
-import 'package:mix_and_mingle/app_routes.dart';
-import 'package:mix_and_mingle/providers/profile_completion_providers.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/shared/widgets/neon_button.dart';
+import 'package:mixmingle/app_routes.dart';
+import 'package:mixmingle/providers/profile_completion_providers.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});

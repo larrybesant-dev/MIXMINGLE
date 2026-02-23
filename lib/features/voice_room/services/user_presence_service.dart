@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// User presence status enum
@@ -177,3 +177,5 @@ final typingUsersProvider = StreamProvider.family<List<UserPresence>, String>((r
   final service = ref.watch(userPresenceServiceProvider);
   return service.getTypingUsersStream(roomId);
 });
+
+

@@ -1,4 +1,4 @@
-/// Network Trust Service
+﻿/// Network Trust Service
 ///
 /// Provides global ban propagation, cross-app safety signals, federated toxicity detection,
 /// and global appeals system.
@@ -404,7 +404,7 @@ class NetworkTrustService {
     List<String>? targetPartners,
     Map<String, dynamic>? evidence,
   }) async {
-    debugPrint('🚫 [Trust] Issuing ${type.name} ban for: $userId');
+    debugPrint('ðŸš« [Trust] Issuing ${type.name} ban for: $userId');
 
     final banRef = _bansCollection.doc();
     final ban = NetworkBan(
@@ -434,12 +434,12 @@ class NetworkTrustService {
 
     _banController.add(ban);
 
-    debugPrint('✅ [Trust] Ban issued: ${ban.banId}');
+    debugPrint('âœ… [Trust] Ban issued: ${ban.banId}');
     return ban;
   }
 
   Future<void> _propagateBan(NetworkBan ban) async {
-    debugPrint('📤 [Trust] Propagating ban to federation partners');
+    debugPrint('ðŸ“¤ [Trust] Propagating ban to federation partners');
 
     // In production, this would send to federation partners via API
     // For now, store propagation record
@@ -474,7 +474,7 @@ class NetworkTrustService {
       'revokeReason': reason,
     });
 
-    debugPrint('✅ [Trust] Ban revoked: $banId');
+    debugPrint('âœ… [Trust] Ban revoked: $banId');
   }
 
   // ============================================================
@@ -492,7 +492,7 @@ class NetworkTrustService {
     Duration? validFor,
     Map<String, dynamic>? context,
   }) async {
-    debugPrint('🚨 [Trust] Recording safety signal: ${type.name} from $sourceApp');
+    debugPrint('ðŸš¨ [Trust] Recording safety signal: ${type.name} from $sourceApp');
 
     final signalRef = _signalsCollection.doc();
     final signal = SafetySignal(
@@ -515,7 +515,7 @@ class NetworkTrustService {
 
     _signalController.add(signal);
 
-    debugPrint('✅ [Trust] Safety signal recorded: ${signal.signalId}');
+    debugPrint('âœ… [Trust] Safety signal recorded: ${signal.signalId}');
     return signal;
   }
 
@@ -549,7 +549,7 @@ class NetworkTrustService {
     required String content,
     String? userId,
   }) async {
-    debugPrint('🔍 [Trust] Analyzing content for toxicity: $contentId');
+    debugPrint('ðŸ” [Trust] Analyzing content for toxicity: $contentId');
 
     // Simulated toxicity analysis (in production, use ML model)
     final scores = _analyzeContent(content);
@@ -593,7 +593,7 @@ class NetworkTrustService {
       );
     }
 
-    debugPrint('✅ [Trust] Toxicity analysis complete: ${isToxic ? 'TOXIC' : 'CLEAN'}');
+    debugPrint('âœ… [Trust] Toxicity analysis complete: ${isToxic ? 'TOXIC' : 'CLEAN'}');
     return result;
   }
 
@@ -667,7 +667,7 @@ class NetworkTrustService {
     String? additionalContext,
     List<String>? attachments,
   }) async {
-    debugPrint('📝 [Trust] Submitting appeal for ban: $banId');
+    debugPrint('ðŸ“ [Trust] Submitting appeal for ban: $banId');
 
     // Verify ban exists
     final banDoc = await _bansCollection.doc(banId).get();
@@ -711,7 +711,7 @@ class NetworkTrustService {
 
     _appealController.add(appeal);
 
-    debugPrint('✅ [Trust] Appeal submitted: ${appeal.appealId}');
+    debugPrint('âœ… [Trust] Appeal submitted: ${appeal.appealId}');
     return appeal;
   }
 
@@ -722,7 +722,7 @@ class NetworkTrustService {
     required String reviewedBy,
     String? notes,
   }) async {
-    debugPrint('⚖️ [Trust] Reviewing appeal: $appealId -> $decision');
+    debugPrint('âš–ï¸ [Trust] Reviewing appeal: $appealId -> $decision');
 
     final appealDoc = await _appealsCollection.doc(appealId).get();
     if (!appealDoc.exists) {
@@ -750,7 +750,7 @@ class NetworkTrustService {
     // Update trust profile
     await _updateTrustProfile(appeal.userId);
 
-    debugPrint('✅ [Trust] Appeal reviewed: $appealId');
+    debugPrint('âœ… [Trust] Appeal reviewed: $appealId');
   }
 
   /// Get appeals for a user
@@ -779,7 +779,7 @@ class NetworkTrustService {
   // ============================================================
 
   Future<void> _updateTrustProfile(String userId) async {
-    debugPrint('📊 [Trust] Updating trust profile: $userId');
+    debugPrint('ðŸ“Š [Trust] Updating trust profile: $userId');
 
     final bans = await getActiveBans(userId);
     final signals = await getSafetySignals(userId, limit: 100);

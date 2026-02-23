@@ -1,3 +1,4 @@
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -63,8 +64,8 @@ class AuthService {
 
       return result;
     } on FirebaseAuthException catch (e, stack) {
-      debugPrint('🔴 Firebase Auth Error: ${e.code}');
-      debugPrint('🔴 Message: ${e.message}');
+      debugPrint('ðŸ”´ Firebase Auth Error: ${e.code}');
+      debugPrint('ðŸ”´ Message: ${e.message}');
 
       // Track authentication errors
       await _errorTracking.recordError(
@@ -76,7 +77,7 @@ class AuthService {
 
       throw Exception('Sign in failed: [${e.code}] ${e.message}');
     } catch (e, stack) {
-      debugPrint('🔴 Unexpected error: $e');
+      debugPrint('ðŸ”´ Unexpected error: $e');
       await _errorTracking.recordError(e, stack, reason: 'Unexpected sign in error');
       throw Exception('Sign in failed: $e');
     }

@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import '../shared/models/camera_permission.dart';
@@ -76,10 +76,10 @@ class CameraPermissionService {
         },
       );
 
-      debugPrint('✅ Camera permission requested: ${currentUser.uid} -> $ownerId');
+      debugPrint('âœ… Camera permission requested: ${currentUser.uid} -> $ownerId');
       return permissionRef.id;
     } catch (e) {
-      debugPrint('❌ Error requesting camera permission: $e');
+      debugPrint('âŒ Error requesting camera permission: $e');
       throw CameraPermissionException('Failed to request permission: $e');
     }
   }
@@ -121,9 +121,9 @@ class CameraPermissionService {
         },
       );
 
-      debugPrint('✅ Camera permission granted: $permissionId');
+      debugPrint('âœ… Camera permission granted: $permissionId');
     } catch (e) {
-      debugPrint('❌ Error granting camera permission: $e');
+      debugPrint('âŒ Error granting camera permission: $e');
       throw CameraPermissionException('Failed to grant permission: $e');
     }
   }
@@ -153,9 +153,9 @@ class CameraPermissionService {
         'respondedAt': Timestamp.now(),
       });
 
-      debugPrint('✅ Camera permission denied: $permissionId');
+      debugPrint('âœ… Camera permission denied: $permissionId');
     } catch (e) {
-      debugPrint('❌ Error denying camera permission: $e');
+      debugPrint('âŒ Error denying camera permission: $e');
       throw CameraPermissionException('Failed to deny permission: $e');
     }
   }
@@ -197,9 +197,9 @@ class CameraPermissionService {
         },
       );
 
-      debugPrint('✅ Camera permission revoked: $permissionId');
+      debugPrint('âœ… Camera permission revoked: $permissionId');
     } catch (e) {
-      debugPrint('❌ Error revoking camera permission: $e');
+      debugPrint('âŒ Error revoking camera permission: $e');
       throw CameraPermissionException('Failed to revoke permission: $e');
     }
   }
@@ -238,7 +238,7 @@ class CameraPermissionService {
 
       return false;
     } catch (e) {
-      debugPrint('❌ Error checking camera permission: $e');
+      debugPrint('âŒ Error checking camera permission: $e');
       return false;
     }
   }
@@ -310,7 +310,7 @@ class CameraPermissionService {
         'read': false,
       });
     } catch (e) {
-      debugPrint('❌ Error creating notification: $e');
+      debugPrint('âŒ Error creating notification: $e');
     }
   }
 }

@@ -1,4 +1,4 @@
-/// Creator Payout Report
+﻿/// Creator Payout Report
 ///
 /// Generates weekly and monthly payout reports for creators.
 library;

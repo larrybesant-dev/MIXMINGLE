@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Room chat message model - represents a single message in a room
@@ -47,3 +48,5 @@ class RoomMessage {
   @override
   String toString() => 'RoomMessage(id: $id, senderId: $senderId, text: $text)';
 }
+
+

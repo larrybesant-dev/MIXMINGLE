@@ -1,4 +1,4 @@
-/// Deep Link Service
+﻿/// Deep Link Service
 ///
 /// Handles incoming deep links for room invites, referrals,
 /// profiles, and events with auto-join functionality.
@@ -48,7 +48,7 @@ class DeepLinkService {
       final path = uri.path;
       final queryParams = uri.queryParameters;
 
-      debugPrint('📱 [DeepLink] Parsing: $uri');
+      debugPrint('ðŸ“± [DeepLink] Parsing: $uri');
 
       // Room invite link
       if (path.startsWith(roomPrefix)) {
@@ -102,7 +102,7 @@ class DeepLinkService {
 
       return null;
     } catch (e) {
-      debugPrint('❌ [DeepLink] Failed to parse: $e');
+      debugPrint('âŒ [DeepLink] Failed to parse: $e');
       return null;
     }
   }
@@ -140,7 +140,7 @@ class DeepLinkService {
           return _handleClipLink(deepLink);
       }
     } catch (e) {
-      debugPrint('❌ [DeepLink] Failed to handle: $e');
+      debugPrint('âŒ [DeepLink] Failed to handle: $e');
       return DeepLinkResult(
         success: false,
         error: 'Failed to process link',
@@ -349,7 +349,7 @@ class DeepLinkService {
         },
       );
 
-      debugPrint('✅ [DeepLink] Auto-joined room: $roomId');
+      debugPrint('âœ… [DeepLink] Auto-joined room: $roomId');
 
       return AutoJoinResult(
         success: true,
@@ -357,7 +357,7 @@ class DeepLinkService {
         roomTitle: roomData['title'] ?? roomData['name'],
       );
     } catch (e) {
-      debugPrint('❌ [DeepLink] Auto-join failed: $e');
+      debugPrint('âŒ [DeepLink] Auto-join failed: $e');
       return AutoJoinResult(
         success: false,
         error: 'Failed to join room',

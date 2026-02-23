@@ -1,4 +1,4 @@
-/// Chats List Page
+﻿/// Chats List Page
 /// View all conversations
 library;
 
@@ -127,7 +127,7 @@ class ChatsListPage extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: DesignColors.accent.withOpacity(0.3),
+                  backgroundColor: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                   backgroundImage:
                       otherUserPhoto != null ? NetworkImage(otherUserPhoto) : null,
                   child: otherUserPhoto == null
@@ -193,7 +193,7 @@ class ChatsListPage extends ConsumerWidget {
                       Text(
                         timeago.format(lastMessageTimestamp),
                         style: TextStyle(
-                          color: DesignColors.white.withOpacity(0.5),
+                          color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                           fontSize: 12,
                         ),
                       ),
@@ -203,7 +203,7 @@ class ChatsListPage extends ConsumerWidget {
                 Text(
                   lastMessage ?? 'No messages yet',
                   style: TextStyle(
-                    color: DesignColors.white.withOpacity(0.7),
+                    color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
                     fontSize: 14,
                     fontWeight:
                         unreadCount > 0 ? FontWeight.w600 : FontWeight.normal,
@@ -228,13 +228,13 @@ class ChatsListPage extends ConsumerWidget {
           Icon(
             Icons.chat_bubble_outline,
             size: 80,
-            color: DesignColors.white.withOpacity(0.3),
+            color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
           ),
           const SizedBox(height: 16),
           Text(
             'No messages yet',
             style: TextStyle(
-              color: DesignColors.white.withOpacity(0.7),
+              color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
               fontSize: 18,
             ),
           ),

@@ -1,4 +1,4 @@
-/// Roadmap Dashboard Widget
+﻿/// Roadmap Dashboard Widget
 ///
 /// Displays upcoming features, priorities, and timelines
 /// for the platform roadmap.
@@ -59,7 +59,7 @@ class _RoadmapDashboardState extends State<RoadmapDashboard>
         });
       }
     } catch (e) {
-      debugPrint('❌ [RoadmapDashboard] Failed to load data: $e');
+      debugPrint('âŒ [RoadmapDashboard] Failed to load data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }

@@ -1,4 +1,4 @@
-/// Trust Network Dashboard Widget
+﻿/// Trust Network Dashboard Widget
 ///
 /// Displays global trust metrics, cross-app violations, and appeals queue.
 library;
@@ -57,7 +57,7 @@ class _TrustNetworkDashboardState extends State<TrustNetworkDashboard>
         });
       }
     } catch (e) {
-      debugPrint('❌ [TrustDashboard] Failed to load data: $e');
+      debugPrint('âŒ [TrustDashboard] Failed to load data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }

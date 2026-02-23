@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mix_and_mingle/app.dart';
+import 'package:mixmingle/app.dart';
 
 void main() {
   testWidgets('Login flow widget test', (WidgetTester tester) async {

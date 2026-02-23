@@ -1,4 +1,4 @@
-/// Economy Dashboard Widget
+﻿/// Economy Dashboard Widget
 ///
 /// Displays inflation metrics, creator market health, and economic stability indicators.
 library;
@@ -64,7 +64,7 @@ class _EconomyDashboardState extends State<EconomyDashboard>
         });
       }
     } catch (e) {
-      debugPrint('❌ [EconomyDashboard] Failed to load data: $e');
+      debugPrint('âŒ [EconomyDashboard] Failed to load data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -760,7 +760,7 @@ class _EconomyDashboardState extends State<EconomyDashboard>
                     const SizedBox(height: 8),
                     ...s.warnings.map((w) => Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Text('• $w'),
+                          child: Text('â€¢ $w'),
                         )),
                   ],
                 ),
@@ -794,7 +794,7 @@ class _EconomyDashboardState extends State<EconomyDashboard>
                     const SizedBox(height: 8),
                     ...s.recommendations.map((r) => Padding(
                           padding: const EdgeInsets.symmetric(vertical: 4),
-                          child: Text('• $r'),
+                          child: Text('â€¢ $r'),
                         )),
                   ],
                 ),

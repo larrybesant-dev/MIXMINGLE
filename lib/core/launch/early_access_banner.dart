@@ -1,4 +1,4 @@
-/// Early Access Banner Widget
+﻿/// Early Access Banner Widget
 ///
 /// Displays the current launch phase status with a link to
 /// provide feedback during beta phases.
@@ -126,11 +126,11 @@ class EarlyAccessBanner extends StatelessWidget {
   String _getPhaseEmoji() {
     switch (phase) {
       case LaunchPhase.internalAlpha:
-        return '🔬';
+        return 'ðŸ”¬';
       case LaunchPhase.closedBeta:
-        return '🧪';
+        return 'ðŸ§ª';
       case LaunchPhase.openBeta:
-        return '🚀';
+        return 'ðŸš€';
       case LaunchPhase.production:
         return '';
     }

@@ -1,4 +1,4 @@
-/// RevenueCat Service - Stub for compilation
+﻿/// RevenueCat Service - Stub for compilation
 /// TODO: Implement full RevenueCat integration
 library;
 
@@ -16,8 +16,9 @@ class RevenueCatService {
 
   /// Purchase a membership tier
   Future<void> purchaseMembership(MembershipTier tier) async {
-    // TODO: Implement RevenueCat purchase flow
-    throw UnimplementedError('RevenueCat purchase not yet implemented');
+    // DEV STUB â€” monetization disabled
+    // TODO: Implement RevenueCat purchase flow when ready
+    return;
   }
 
   /// Restore purchases
@@ -31,3 +32,5 @@ class RevenueCatService {
     return [];
   }
 }
+
+

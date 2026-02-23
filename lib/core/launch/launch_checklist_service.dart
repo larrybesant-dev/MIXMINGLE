@@ -1,4 +1,4 @@
-/// Launch Checklist Service
+﻿/// Launch Checklist Service
 ///
 /// Verifies all launch requirements are met: analytics, Crashlytics,
 /// performance traces, moderation flows, payments, retention loops,
@@ -27,7 +27,7 @@ class LaunchChecklistService {
 
   /// Verify all analytics events are firing correctly
   Future<ChecklistResult> verifyAnalytics() async {
-    debugPrint('🔍 [Checklist] Verifying analytics...');
+    debugPrint('ðŸ” [Checklist] Verifying analytics...');
 
     final checks = <CheckItem>[];
     bool allPassed = true;
@@ -103,7 +103,7 @@ class LaunchChecklistService {
         timestamp: DateTime.now(),
       );
     } catch (e) {
-      debugPrint('❌ [Checklist] Analytics verification failed: $e');
+      debugPrint('âŒ [Checklist] Analytics verification failed: $e');
       return ChecklistResult(
         category: 'Analytics',
         passed: false,
@@ -125,7 +125,7 @@ class LaunchChecklistService {
 
   /// Verify Crashlytics is properly configured
   Future<ChecklistResult> verifyCrashlytics() async {
-    debugPrint('🔍 [Checklist] Verifying Crashlytics...');
+    debugPrint('ðŸ” [Checklist] Verifying Crashlytics...');
 
     final checks = <CheckItem>[];
     bool allPassed = true;
@@ -189,7 +189,7 @@ class LaunchChecklistService {
         timestamp: DateTime.now(),
       );
     } catch (e) {
-      debugPrint('❌ [Checklist] Crashlytics verification failed: $e');
+      debugPrint('âŒ [Checklist] Crashlytics verification failed: $e');
       return ChecklistResult(
         category: 'Crashlytics',
         passed: false,
@@ -211,7 +211,7 @@ class LaunchChecklistService {
 
   /// Verify performance traces are configured
   Future<ChecklistResult> verifyPerformanceTraces() async {
-    debugPrint('🔍 [Checklist] Verifying performance traces...');
+    debugPrint('ðŸ” [Checklist] Verifying performance traces...');
 
     final checks = <CheckItem>[];
     bool allPassed = true;
@@ -275,7 +275,7 @@ class LaunchChecklistService {
         timestamp: DateTime.now(),
       );
     } catch (e) {
-      debugPrint('❌ [Checklist] Performance verification failed: $e');
+      debugPrint('âŒ [Checklist] Performance verification failed: $e');
       return ChecklistResult(
         category: 'Performance Traces',
         passed: false,
@@ -297,7 +297,7 @@ class LaunchChecklistService {
 
   /// Verify moderation flows are in place
   Future<ChecklistResult> verifyModerationFlows() async {
-    debugPrint('🔍 [Checklist] Verifying moderation flows...');
+    debugPrint('ðŸ” [Checklist] Verifying moderation flows...');
 
     final checks = <CheckItem>[];
     bool allPassed = true;
@@ -391,7 +391,7 @@ class LaunchChecklistService {
         timestamp: DateTime.now(),
       );
     } catch (e) {
-      debugPrint('❌ [Checklist] Moderation verification failed: $e');
+      debugPrint('âŒ [Checklist] Moderation verification failed: $e');
       return ChecklistResult(
         category: 'Moderation Flows',
         passed: false,
@@ -413,7 +413,7 @@ class LaunchChecklistService {
 
   /// Verify payment systems are ready
   Future<ChecklistResult> verifyPayments() async {
-    debugPrint('🔍 [Checklist] Verifying payments...');
+    debugPrint('ðŸ” [Checklist] Verifying payments...');
 
     final checks = <CheckItem>[];
     bool allPassed = true;
@@ -497,7 +497,7 @@ class LaunchChecklistService {
         timestamp: DateTime.now(),
       );
     } catch (e) {
-      debugPrint('❌ [Checklist] Payments verification failed: $e');
+      debugPrint('âŒ [Checklist] Payments verification failed: $e');
       return ChecklistResult(
         category: 'Payments',
         passed: false,
@@ -519,7 +519,7 @@ class LaunchChecklistService {
 
   /// Verify retention loops are configured
   Future<ChecklistResult> verifyRetentionLoops() async {
-    debugPrint('🔍 [Checklist] Verifying retention loops...');
+    debugPrint('ðŸ” [Checklist] Verifying retention loops...');
 
     final checks = <CheckItem>[];
     bool allPassed = true;
@@ -619,7 +619,7 @@ class LaunchChecklistService {
         timestamp: DateTime.now(),
       );
     } catch (e) {
-      debugPrint('❌ [Checklist] Retention verification failed: $e');
+      debugPrint('âŒ [Checklist] Retention verification failed: $e');
       return ChecklistResult(
         category: 'Retention Loops',
         passed: false,
@@ -641,7 +641,7 @@ class LaunchChecklistService {
 
   /// Verify referral system is ready
   Future<ChecklistResult> verifyReferralSystem() async {
-    debugPrint('🔍 [Checklist] Verifying referral system...');
+    debugPrint('ðŸ” [Checklist] Verifying referral system...');
 
     final checks = <CheckItem>[];
     bool allPassed = true;
@@ -722,7 +722,7 @@ class LaunchChecklistService {
         timestamp: DateTime.now(),
       );
     } catch (e) {
-      debugPrint('❌ [Checklist] Referral verification failed: $e');
+      debugPrint('âŒ [Checklist] Referral verification failed: $e');
       return ChecklistResult(
         category: 'Referral System',
         passed: false,
@@ -744,7 +744,7 @@ class LaunchChecklistService {
 
   /// Run complete launch checklist verification
   Future<FullChecklistReport> runFullVerification() async {
-    debugPrint('🚀 [Checklist] Running full verification...');
+    debugPrint('ðŸš€ [Checklist] Running full verification...');
 
     final results = <ChecklistResult>[];
 
@@ -794,8 +794,8 @@ class LaunchChecklistService {
     });
 
     debugPrint(allPassed
-        ? '✅ [Checklist] All verifications passed!'
-        : '⚠️ [Checklist] ${blockers.length} blockers found');
+        ? 'âœ… [Checklist] All verifications passed!'
+        : 'âš ï¸ [Checklist] ${blockers.length} blockers found');
 
     return report;
   }

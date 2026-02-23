@@ -1,4 +1,4 @@
-/// Internal Alpha Service
+﻿/// Internal Alpha Service
 ///
 /// Manages internal alpha testing program including tester invitations,
 /// build distribution, feedback collection, and reporting.
@@ -40,7 +40,7 @@ class InternalAlphaService {
     String? customMessage,
   }) async {
     try {
-      debugPrint('📧 [Alpha] Inviting ${emails.length} internal testers...');
+      debugPrint('ðŸ“§ [Alpha] Inviting ${emails.length} internal testers...');
 
       final existingCount = await _getActiveTesterCount();
       if (existingCount + emails.length > maxInternalTesters) {
@@ -89,7 +89,7 @@ class InternalAlphaService {
           invited.add(email);
         } catch (e) {
           failed.add(email);
-          debugPrint('❌ [Alpha] Failed to invite $email: $e');
+          debugPrint('âŒ [Alpha] Failed to invite $email: $e');
         }
       }
 
@@ -104,7 +104,7 @@ class InternalAlphaService {
         },
       );
 
-      debugPrint('✅ [Alpha] Invited ${invited.length} testers');
+      debugPrint('âœ… [Alpha] Invited ${invited.length} testers');
 
       return InviteResult(
         success: true,
@@ -112,7 +112,7 @@ class InternalAlphaService {
         failed: failed,
       );
     } catch (e) {
-      debugPrint('❌ [Alpha] Failed to invite testers: $e');
+      debugPrint('âŒ [Alpha] Failed to invite testers: $e');
       return InviteResult(
         success: false,
         invited: [],
@@ -139,7 +139,7 @@ class InternalAlphaService {
       final snapshot = await query.get();
       return snapshot.docs.map((doc) => AlphaTester.fromMap(doc.data() as Map<String, dynamic>)).toList();
     } catch (e) {
-      debugPrint('❌ [Alpha] Failed to get testers: $e');
+      debugPrint('âŒ [Alpha] Failed to get testers: $e');
       return [];
     }
   }
@@ -165,10 +165,10 @@ class InternalAlphaService {
         parameters: {'email': email},
       );
 
-      debugPrint('✅ [Alpha] Tester activated: $email');
+      debugPrint('âœ… [Alpha] Tester activated: $email');
       return true;
     } catch (e) {
-      debugPrint('❌ [Alpha] Failed to activate tester: $e');
+      debugPrint('âŒ [Alpha] Failed to activate tester: $e');
       return false;
     }
   }
@@ -194,7 +194,7 @@ class InternalAlphaService {
 
       await query.docs.first.reference.update(update);
     } catch (e) {
-      debugPrint('⚠️ [Alpha] Failed to record activity: $e');
+      debugPrint('âš ï¸ [Alpha] Failed to record activity: $e');
     }
   }
 
@@ -211,7 +211,7 @@ class InternalAlphaService {
     List<String>? targetTesters, // null means all active testers
   }) async {
     try {
-      debugPrint('📦 [Alpha] Distributing build $version ($buildNumber)...');
+      debugPrint('ðŸ“¦ [Alpha] Distributing build $version ($buildNumber)...');
 
       // Create build record
       final buildRef = _firestore.collection(_buildsCollection).doc();
@@ -254,7 +254,7 @@ class InternalAlphaService {
         },
       );
 
-      debugPrint('✅ [Alpha] Build distributed to ${testers.length} testers');
+      debugPrint('âœ… [Alpha] Build distributed to ${testers.length} testers');
 
       return DistributeResult(
         success: true,
@@ -262,7 +262,7 @@ class InternalAlphaService {
         notifiedCount: testers.length,
       );
     } catch (e) {
-      debugPrint('❌ [Alpha] Failed to distribute build: $e');
+      debugPrint('âŒ [Alpha] Failed to distribute build: $e');
       return DistributeResult(
         success: false,
         error: e.toString(),
@@ -278,7 +278,7 @@ class InternalAlphaService {
         'downloads': FieldValue.arrayUnion([testerEmail]),
       });
     } catch (e) {
-      debugPrint('⚠️ [Alpha] Failed to record download: $e');
+      debugPrint('âš ï¸ [Alpha] Failed to record download: $e');
     }
   }
 
@@ -327,7 +327,7 @@ class InternalAlphaService {
 
       return result;
     } catch (e) {
-      debugPrint('❌ [Alpha] Failed to collect feedback: $e');
+      debugPrint('âŒ [Alpha] Failed to collect feedback: $e');
       return FeedbackSubmissionResult(
         success: false,
         error: e.toString(),
@@ -345,7 +345,7 @@ class InternalAlphaService {
     DateTime? endDate,
   }) async {
     try {
-      debugPrint('📊 [Alpha] Generating internal report...');
+      debugPrint('ðŸ“Š [Alpha] Generating internal report...');
 
       final start = startDate ?? DateTime.now().subtract(const Duration(days: 7));
       final end = endDate ?? DateTime.now();
@@ -444,11 +444,11 @@ class InternalAlphaService {
         'data': report.toMap(),
       });
 
-      debugPrint('✅ [Alpha] Report generated');
+      debugPrint('âœ… [Alpha] Report generated');
 
       return report;
     } catch (e) {
-      debugPrint('❌ [Alpha] Failed to generate report: $e');
+      debugPrint('âŒ [Alpha] Failed to generate report: $e');
       rethrow;
     }
   }
@@ -478,7 +478,7 @@ class InternalAlphaService {
 
   Future<void> _notifyTester(AlphaTester tester, Map<String, dynamic> buildData) async {
     // Would integrate with NotificationService to send push/email
-    debugPrint('📬 [Alpha] Would notify ${tester.email} about build ${buildData['version']}');
+    debugPrint('ðŸ“¬ [Alpha] Would notify ${tester.email} about build ${buildData['version']}');
   }
 
   Future<void> _updateTesterFeedbackCount(String email) async {

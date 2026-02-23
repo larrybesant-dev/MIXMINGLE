@@ -50,7 +50,7 @@ class WindowManager {
   void snapWindowToEdge(VideoWindowController window, Size screenSize) {
     final pos = window.windowState.position;
     final size = window.windowState.size;
-    
+
     EdgeInsets? edges;
     if (pos.dx <= 10) {
       edges = const EdgeInsets.only(left: 0);

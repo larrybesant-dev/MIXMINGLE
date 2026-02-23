@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
-import 'package:mix_and_mingle/features/room/widgets/video_grid_layout.dart';
+import 'package:mixmingle/features/room/widgets/video_grid_layout.dart';
 
 /// Video tile states for display
 enum VideoTileState {

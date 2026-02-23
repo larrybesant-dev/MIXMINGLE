@@ -1,4 +1,4 @@
-enum PrivacyLevel {
+﻿enum PrivacyLevel {
   public,
   friendsOnly,
   private,
@@ -110,3 +110,5 @@ class PrivacySettings {
     );
   }
 }
+
+

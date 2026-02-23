@@ -1,4 +1,5 @@
 // Mic states and enums
+// Mic states and enums
 enum MicStatus {
   inactive, // Not in use
   muted, // Muted but active
@@ -53,15 +54,15 @@ class MicState {
   String get statusIcon {
     switch (status) {
       case MicStatus.active:
-        return '🎤'; // Speaking
+        return 'ðŸŽ¤'; // Speaking
       case MicStatus.muted:
-        return '🔇'; // Muted
+        return 'ðŸ”‡'; // Muted
       case MicStatus.noiseDetected:
-        return '🔊'; // Noise suppression
+        return 'ðŸ”Š'; // Noise suppression
       case MicStatus.error:
-        return '❌'; // Error
+        return 'âŒ'; // Error
       case MicStatus.inactive:
-        return '⭕'; // Inactive
+        return 'â­•'; // Inactive
     }
   }
 

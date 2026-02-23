@@ -1,9 +1,72 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
-import 'package:mix_and_mingle/shared/models/room.dart';
+import 'package:mixmingle/shared/models/room.dart';
 
 class RoomService {
+    // Advanced role management
+    Future<void> promoteToCoHost(String roomId, String userId) async {
+      await _firestore.collection('rooms').doc(roomId).update({
+        'moderators': FieldValue.arrayUnion([userId]),
+        'roleMap.$userId': 'coHost',
+      });
+    }
+
+    Future<void> demoteFromCoHost(String roomId, String userId) async {
+      await _firestore.collection('rooms').doc(roomId).update({
+        'moderators': FieldValue.arrayRemove([userId]),
+        'roleMap.$userId': 'guest',
+      });
+    }
+
+    Future<void> transferHostRole(String roomId, String newHostId) async {
+      await _firestore.collection('rooms').doc(roomId).update({
+        'hostId': newHostId,
+        'roleMap.$newHostId': 'host',
+      });
+    }
+
+    // Spotlight stage layout
+    Future<void> setSpotlighted(String roomId, String userId, bool isSpotlighted) async {
+      await _firestore.collection('rooms').doc(roomId).update({
+        'spotlighted': isSpotlighted ? FieldValue.arrayUnion([userId]) : FieldValue.arrayRemove([userId]),
+        'participantMap.$userId.isSpotlighted': isSpotlighted,
+      });
+    }
+
+    // Breakout room hooks (future-ready)
+    Future<void> createBreakoutRoom(String parentRoomId, String name, List<String> participantUids) async {
+      // Skeleton only: store under parent room
+      await _firestore.collection('rooms').doc(parentRoomId).collection('breakoutRooms').add({
+        'name': name,
+        'participantUids': participantUids,
+        'createdAt': DateTime.now().toIso8601String(),
+      });
+    }
+
+    // Reliability: Retry flows for join/leave, token, permissions
+    Future<T> retry<T>(Future<T> Function() action, {int maxAttempts = 3, Duration delay = const Duration(seconds: 2)}) async {
+      int attempts = 0;
+      while (true) {
+        try {
+          return await action();
+        } catch (e) {
+          attempts++;
+          if (attempts >= maxAttempts) rethrow;
+          await Future.delayed(delay);
+        }
+      }
+    }
+
+    // Graceful teardown on navigation away
+    Future<void> teardownRoom(String roomId, String userId) async {
+      try {
+        await leaveVoiceRoom(roomId, userId);
+        // Additional teardown logic (Agora, providers, etc.)
+      } catch (e) {
+        debugPrint('Teardown error: $e');
+      }
+    }
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
 
@@ -108,7 +171,7 @@ class RoomService {
         });
       });
     } catch (e) {
-      debugPrint('❌ Failed to join room: $e');
+      debugPrint('âŒ Failed to join room: $e');
       rethrow;
     }
   }
@@ -156,7 +219,7 @@ class RoomService {
         await endVoiceRoom(roomId);
       }
     } catch (e) {
-      debugPrint('❌ Failed to leave room: $e');
+      debugPrint('âŒ Failed to leave room: $e');
       rethrow;
     }
   }
@@ -194,7 +257,7 @@ class RoomService {
         });
       });
     } catch (e) {
-      debugPrint('❌ Failed to request to speak: $e');
+      debugPrint('âŒ Failed to request to speak: $e');
       throw Exception('Failed to request to speak: $e');
     }
   }
@@ -230,7 +293,7 @@ class RoomService {
         });
       });
     } catch (e) {
-      debugPrint('❌ Failed to stop speaking: $e');
+      debugPrint('âŒ Failed to stop speaking: $e');
       throw Exception('Failed to stop speaking: $e');
     }
   }
@@ -261,7 +324,7 @@ class RoomService {
         transaction.update(roomRef, {'moderators': updatedModerators});
       });
     } catch (e) {
-      debugPrint('❌ Failed to make moderator: $e');
+      debugPrint('âŒ Failed to make moderator: $e');
       throw Exception('Failed to make moderator: $e');
     }
   }
@@ -294,7 +357,7 @@ class RoomService {
         });
       });
     } catch (e) {
-      debugPrint('❌ Failed to remove moderator: $e');
+      debugPrint('âŒ Failed to remove moderator: $e');
       throw Exception('Failed to remove moderator: $e');
     }
   }
@@ -335,7 +398,7 @@ class RoomService {
         });
       });
     } catch (e) {
-      debugPrint('❌ Failed to kick user: $e');
+      debugPrint('âŒ Failed to kick user: $e');
       throw Exception('Failed to kick user: $e');
     }
   }
@@ -407,9 +470,9 @@ class RoomService {
           'lastActiveAt': FieldValue.serverTimestamp(),
         });
       });
-      debugPrint('🔇 User muted: $targetUserId');
+      debugPrint('ðŸ”‡ User muted: $targetUserId');
     } catch (e) {
-      debugPrint('❌ Failed to mute user: $e');
+      debugPrint('âŒ Failed to mute user: $e');
       throw Exception('Failed to mute user: $e');
     }
   }
@@ -440,9 +503,9 @@ class RoomService {
           'lastActiveAt': FieldValue.serverTimestamp(),
         });
       });
-      debugPrint('🔊 User unmuted: $targetUserId');
+      debugPrint('ðŸ”Š User unmuted: $targetUserId');
     } catch (e) {
-      debugPrint('❌ Failed to unmute user: $e');
+      debugPrint('âŒ Failed to unmute user: $e');
       throw Exception('Failed to unmute user: $e');
     }
   }
@@ -485,9 +548,9 @@ class RoomService {
           });
         }
       });
-      debugPrint('⭐ User spotlighted: $targetUserId');
+      debugPrint('â­ User spotlighted: $targetUserId');
     } catch (e) {
-      debugPrint('❌ Failed to spotlight user: $e');
+      debugPrint('âŒ Failed to spotlight user: $e');
       throw Exception('Failed to spotlight user: $e');
     }
   }
@@ -515,9 +578,9 @@ class RoomService {
           'updatedAt': FieldValue.serverTimestamp(),
         });
       });
-      debugPrint('⭐ Spotlight removed');
+      debugPrint('â­ Spotlight removed');
     } catch (e) {
-      debugPrint('❌ Failed to remove spotlight: $e');
+      debugPrint('âŒ Failed to remove spotlight: $e');
       throw Exception('Failed to remove spotlight: $e');
     }
   }
@@ -767,7 +830,7 @@ class RoomService {
       'listeners': updatedListeners,
     });
 
-    debugPrint('🎤 Turn granted to: $userId');
+    debugPrint('ðŸŽ¤ Turn granted to: $userId');
   }
 
   /// End the current speaker's turn (turn-based mode)
@@ -800,7 +863,7 @@ class RoomService {
       'currentSpeakerId': FieldValue.delete(),
     });
 
-    debugPrint('⏹️ Turn ended for: ${room.currentSpeakerId}');
+    debugPrint('â¹ï¸ Turn ended for: ${room.currentSpeakerId}');
   }
 
   // ============================================================================
@@ -841,7 +904,7 @@ class RoomService {
       'speakerQueue': updatedQueue,
     });
 
-    debugPrint('🖐️ Hand raised by: $userId');
+    debugPrint('ðŸ–ï¸ Hand raised by: $userId');
   }
 
   /// User lowers hand (withdraws request)
@@ -864,7 +927,7 @@ class RoomService {
       'speakerQueue': updatedQueue,
     });
 
-    debugPrint('👇 Hand lowered by: $userId');
+    debugPrint('ðŸ‘‡ Hand lowered by: $userId');
   }
 
   /// Approve raised hand - promote listener to speaker (Phase 3.1c)
@@ -901,9 +964,9 @@ class RoomService {
           'speakers': updatedSpeakers,
         });
       });
-      debugPrint('✅ Approved raised hand: $targetUserId → now speaker');
+      debugPrint('âœ… Approved raised hand: $targetUserId â†’ now speaker');
     } catch (e) {
-      debugPrint('❌ Failed to approve raised hand: $e');
+      debugPrint('âŒ Failed to approve raised hand: $e');
       throw Exception('Failed to approve raised hand: $e');
     }
   }
@@ -957,7 +1020,7 @@ class RoomService {
       'listeners': updatedListeners,
     });
 
-    debugPrint('🎤 Turn granted to: $nextSpeakerId from queue');
+    debugPrint('ðŸŽ¤ Turn granted to: $nextSpeakerId from queue');
   }
 
   /// Get speaker queue (for UI display)
@@ -981,9 +1044,9 @@ class RoomService {
         'lastActiveAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('🎤 Mic state updated: $userId → ${isMuted ? "muted" : "unmuted"}');
+      debugPrint('ðŸŽ¤ Mic state updated: $userId â†’ ${isMuted ? "muted" : "unmuted"}');
     } catch (e) {
-      debugPrint('❌ Failed to update mic state: $e');
+      debugPrint('âŒ Failed to update mic state: $e');
       // Retry once
       try {
         await Future.delayed(const Duration(milliseconds: 500));
@@ -993,7 +1056,7 @@ class RoomService {
           'lastActiveAt': FieldValue.serverTimestamp(),
         });
       } catch (retryError) {
-        debugPrint('❌ Retry failed for mic state: $retryError');
+        debugPrint('âŒ Retry failed for mic state: $retryError');
       }
     }
   }
@@ -1008,9 +1071,9 @@ class RoomService {
         'lastActiveAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('🎥 Camera state updated: $userId → ${isOff ? "off" : "on"}');
+      debugPrint('ðŸŽ¥ Camera state updated: $userId â†’ ${isOff ? "off" : "on"}');
     } catch (e) {
-      debugPrint('❌ Failed to update camera state: $e');
+      debugPrint('âŒ Failed to update camera state: $e');
       // Retry once
       try {
         await Future.delayed(const Duration(milliseconds: 500));
@@ -1020,7 +1083,7 @@ class RoomService {
           'lastActiveAt': FieldValue.serverTimestamp(),
         });
       } catch (retryError) {
-        debugPrint('❌ Retry failed for camera state: $retryError');
+        debugPrint('âŒ Retry failed for camera state: $retryError');
       }
     }
   }
@@ -1037,11 +1100,11 @@ class RoomService {
 
       // Only log when speaking starts (not every volume indication)
       if (isSpeaking) {
-        debugPrint('🔊 Speaking state: $userId is speaking');
+        debugPrint('ðŸ”Š Speaking state: $userId is speaking');
       }
     } catch (e) {
       // Silent fail for speaking state (happens frequently)
-      debugPrint('⚠️ Failed to update speaking state: $e');
+      debugPrint('âš ï¸ Failed to update speaking state: $e');
     }
   }
 
@@ -1056,11 +1119,11 @@ class RoomService {
       });
 
       if (quality == 'poor' || quality == 'unknown') {
-        debugPrint('📶 Network quality: $userId → $quality');
+        debugPrint('ðŸ“¶ Network quality: $userId â†’ $quality');
       }
     } catch (e) {
       // Silent fail for network quality updates
-      debugPrint('⚠️ Failed to update network quality: $e');
+      debugPrint('âš ï¸ Failed to update network quality: $e');
     }
   }
 
@@ -1074,9 +1137,9 @@ class RoomService {
         'lastActiveAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('🔄 Connection state: $userId → $state');
+      debugPrint('ðŸ”„ Connection state: $userId â†’ $state');
     } catch (e) {
-      debugPrint('⚠️ Failed to update connection state: $e');
+      debugPrint('âš ï¸ Failed to update connection state: $e');
     }
   }
 
@@ -1090,9 +1153,9 @@ class RoomService {
         'lastActiveAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ User online: $userId');
+      debugPrint('âœ… User online: $userId');
     } catch (e) {
-      debugPrint('⚠️ Failed to mark user online: $e');
+      debugPrint('âš ï¸ Failed to mark user online: $e');
     }
   }
 
@@ -1107,9 +1170,9 @@ class RoomService {
         'lastActiveAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('❌ User offline: $userId');
+      debugPrint('âŒ User offline: $userId');
     } catch (e) {
-      debugPrint('⚠️ Failed to mark user offline: $e');
+      debugPrint('âš ï¸ Failed to mark user offline: $e');
     }
   }
 

@@ -1,4 +1,4 @@
-/// Safety AI Service
+﻿/// Safety AI Service
 ///
 /// AI-powered content moderation and safety features including
 /// toxicity detection, harassment prevention, spam filtering,
@@ -825,3 +825,5 @@ class SafetyAIService {
     _riskAlertController.close();
   }
 }
+
+

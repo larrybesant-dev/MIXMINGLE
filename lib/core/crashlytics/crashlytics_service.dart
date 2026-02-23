@@ -1,4 +1,4 @@
-/// Crashlytics Service
+﻿/// Crashlytics Service
 ///
 /// Centralized crash reporting using Firebase Crashlytics.
 /// Provides methods for logging errors, setting user identifiers,
@@ -31,7 +31,7 @@ class CrashlyticsService {
   /// Initialize Crashlytics with error handlers
   Future<void> initialize() async {
     if (!_isSupported) {
-      debugPrint('ℹ️ [Crashlytics] Skipped on web (not supported)');
+      debugPrint('â„¹ï¸ [Crashlytics] Skipped on web (not supported)');
       return;
     }
 
@@ -41,13 +41,13 @@ class CrashlyticsService {
 
       // Set up Flutter error handler
       FlutterError.onError = (FlutterErrorDetails details) {
-        debugPrint('❌ [Crashlytics] Flutter error: ${details.exception}');
+        debugPrint('âŒ [Crashlytics] Flutter error: ${details.exception}');
         _crashlytics?.recordFlutterFatalError(details);
       };
 
-      debugPrint('✅ [Crashlytics] Initialized successfully');
+      debugPrint('âœ… [Crashlytics] Initialized successfully');
     } catch (e) {
-      debugPrint('❌ [Crashlytics] Initialization failed: $e');
+      debugPrint('âŒ [Crashlytics] Initialization failed: $e');
     }
   }
 
@@ -60,9 +60,9 @@ class CrashlyticsService {
     if (!_isSupported) return;
     try {
       await _crashlytics?.setUserIdentifier(userId);
-      debugPrint('📊 [Crashlytics] User ID set: $userId');
+      debugPrint('ðŸ“Š [Crashlytics] User ID set: $userId');
     } catch (e) {
-      debugPrint('❌ [Crashlytics] Failed to set user ID: $e');
+      debugPrint('âŒ [Crashlytics] Failed to set user ID: $e');
     }
   }
 
@@ -71,9 +71,9 @@ class CrashlyticsService {
     if (!_isSupported) return;
     try {
       await _crashlytics?.setCustomKey('membership_tier', tier);
-      debugPrint('📊 [Crashlytics] Membership tier set: $tier');
+      debugPrint('ðŸ“Š [Crashlytics] Membership tier set: $tier');
     } catch (e) {
-      debugPrint('❌ [Crashlytics] Failed to set membership tier: $e');
+      debugPrint('âŒ [Crashlytics] Failed to set membership tier: $e');
     }
   }
 
@@ -93,7 +93,7 @@ class CrashlyticsService {
         await _crashlytics?.setCustomKey(key, value.toString());
       }
     } catch (e) {
-      debugPrint('❌ [Crashlytics] Failed to set custom key: $e');
+      debugPrint('âŒ [Crashlytics] Failed to set custom key: $e');
     }
   }
 
@@ -110,7 +110,7 @@ class CrashlyticsService {
     Iterable<Object> information = const [],
   }) async {
     // Always log to console for debugging
-    debugPrint('❌ [Crashlytics] Recording error: $exception');
+    debugPrint('âŒ [Crashlytics] Recording error: $exception');
     if (!_isSupported) return;
     try {
       await _crashlytics?.recordError(
@@ -121,18 +121,18 @@ class CrashlyticsService {
         information: information,
       );
     } catch (e) {
-      debugPrint('❌ [Crashlytics] Failed to record error: $e');
+      debugPrint('âŒ [Crashlytics] Failed to record error: $e');
     }
   }
 
   /// Log a message to Crashlytics
   Future<void> log(String message) async {
-    debugPrint('📝 [Crashlytics] Log: $message');
+    debugPrint('ðŸ“ [Crashlytics] Log: $message');
     if (!_isSupported) return;
     try {
       await _crashlytics?.log(message);
     } catch (e) {
-      debugPrint('❌ [Crashlytics] Failed to log message: $e');
+      debugPrint('âŒ [Crashlytics] Failed to log message: $e');
     }
   }
 
@@ -281,10 +281,10 @@ class CrashlyticsService {
   /// Force a test crash (for testing Crashlytics setup)
   void testCrash() {
     if (!_isSupported) {
-      debugPrint('ℹ️ [Crashlytics] Test crash skipped on web');
+      debugPrint('â„¹ï¸ [Crashlytics] Test crash skipped on web');
       return;
     }
-    debugPrint('🔥 [Crashlytics] Triggering test crash');
+    debugPrint('ðŸ”¥ [Crashlytics] Triggering test crash');
     _crashlytics?.crash();
   }
 }

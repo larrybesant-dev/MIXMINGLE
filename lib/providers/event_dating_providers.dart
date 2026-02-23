@@ -1,11 +1,13 @@
+﻿
+import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../services/events_service.dart';
-import '../services/speed_dating_service.dart';
+// TEMP DISABLED: import '../services/speed_dating_service.dart';
 import '../shared/models/event.dart';
-import '../shared/models/speed_dating.dart';
+// TEMP DISABLED: import '../shared/models/speed_dating.dart';
 import 'auth_providers.dart';
 
 /// Event filters model
@@ -59,7 +61,8 @@ class EventFiltersNotifier extends Notifier<EventFilters> {
 /// Service providers
 final eventsServiceProvider = Provider<EventsService>((ref) => EventsService());
 
-final speedDatingServiceProvider = Provider<SpeedDatingService>((ref) => SpeedDatingService());
+// TEMP DISABLED: Speed dating service
+// final speedDatingServiceProvider = Provider<SpeedDatingService>((ref) => SpeedDatingService());
 
 /// ============================================================================
 /// EVENT PROVIDERS
@@ -338,35 +341,30 @@ class EventSearchController extends Notifier<AsyncValue<List<Event>>> {
 /// SPEED DATING PROVIDERS
 /// ============================================================================
 
-/// Active speed dating session provider
-final activeSpeedDatingSessionProvider = StreamProvider<SpeedDatingSession?>((ref) async* {
-  final currentUser = ref.watch(currentUserProvider).value;
-  if (currentUser == null) {
-    yield null;
-    return;
-  }
+// TEMP DISABLED: Speed dating providers
+// final activeSpeedDatingSessionProvider = StreamProvider<SpeedDatingSession?>((ref) async* {
+//   final currentUser = ref.watch(currentUserProvider).value;
+//   if (currentUser == null) {
+//     yield null;
+//     return;
+//   }
+//   await for (final _ in Stream.periodic(const Duration(seconds: 3))) {
+//     try {
+//       yield null;
+//     } catch (e) {
+//       yield null;
+//     }
+//   }
+// });
 
-  await for (final _ in Stream.periodic(const Duration(seconds: 3))) {
-    try {
-      // Query for active session where participants contains currentUser.id
-      yield null; // Would query Firestore
-    } catch (e) {
-      yield null;
-    }
-  }
-});
-
-/// Speed dating matches provider
-final speedDatingMatchesProvider = StreamProvider<List<SpeedDatingMatch>>((ref) async* {
-  final currentUser = ref.watch(currentUserProvider).value;
-  if (currentUser == null) {
-    yield [];
-    return;
-  }
-
-  // Query speed_dating_results where userId = currentUser.id and isMutual = true
-  yield [];
-});
+// final speedDatingMatchesProvider = StreamProvider<List<SpeedDatingMatch>>((ref) async* {
+//   final currentUser = ref.watch(currentUserProvider).value;
+//   if (currentUser == null) {
+//     yield [];
+//     return;
+//   }
+//   yield [];
+// });
 
 /* DISABLED FOR V1: Speed dating controller references disabled SpeedDatingService methods
 /// Speed dating controller

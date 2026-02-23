@@ -1,4 +1,4 @@
-/// Flavor Configuration
+﻿/// Flavor Configuration
 ///
 /// Entry points for different build flavors.
 library;
@@ -9,21 +9,21 @@ import 'app_config.dart';
 /// Development flavor entry point
 void mainDev() {
   AppConfig.initialize(AppFlavor.dev);
-  debugPrint('🔧 Starting Mix & Mingle in DEVELOPMENT mode');
+  debugPrint('ðŸ”§ Starting Mix & Mingle in DEVELOPMENT mode');
   // Import and call main() from main.dart
 }
 
 /// Staging flavor entry point
 void mainStaging() {
   AppConfig.initialize(AppFlavor.staging);
-  debugPrint('🧪 Starting Mix & Mingle in STAGING mode');
+  debugPrint('ðŸ§ª Starting Mix & Mingle in STAGING mode');
   // Import and call main() from main.dart
 }
 
 /// Production flavor entry point
 void mainProduction() {
   AppConfig.initialize(AppFlavor.production);
-  debugPrint('🚀 Starting Mix & Mingle in PRODUCTION mode');
+  debugPrint('ðŸš€ Starting Mix & Mingle in PRODUCTION mode');
   // Import and call main() from main.dart
 }
 

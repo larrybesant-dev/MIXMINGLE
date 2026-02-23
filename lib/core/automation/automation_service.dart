@@ -1,4 +1,4 @@
-/// Automation Service
+﻿/// Automation Service
 ///
 /// Handles automatic cleanup, archival, and maintenance tasks
 /// to keep the system healthy and efficient.
@@ -133,7 +133,7 @@ class AutomationService {
           .get();
 
       if (snapshot.docs.isEmpty) {
-        debugPrint('🧹 [Automation] No inactive rooms found');
+        debugPrint('ðŸ§¹ [Automation] No inactive rooms found');
       } else {
         final batch = _firestore.batch();
 
@@ -158,11 +158,11 @@ class AutomationService {
         }
 
         await batch.commit();
-        debugPrint('🧹 [Automation] Cleaned $processedCount inactive rooms');
+        debugPrint('ðŸ§¹ [Automation] Cleaned $processedCount inactive rooms');
       }
     } catch (e) {
       error = e.toString();
-      debugPrint('❌ [Automation] Failed to clean inactive rooms: $e');
+      debugPrint('âŒ [Automation] Failed to clean inactive rooms: $e');
     }
 
     final result = AutomationResult(
@@ -222,11 +222,11 @@ class AutomationService {
         }
 
         await batch.commit();
-        debugPrint('📦 [Automation] Archived $processedCount old messages');
+        debugPrint('ðŸ“¦ [Automation] Archived $processedCount old messages');
       }
     } catch (e) {
       error = e.toString();
-      debugPrint('❌ [Automation] Failed to archive messages: $e');
+      debugPrint('âŒ [Automation] Failed to archive messages: $e');
     }
 
     final result = AutomationResult(
@@ -294,10 +294,10 @@ class AutomationService {
         }
       }
 
-      debugPrint('🗑️ [Automation] Purged $processedCount old logs');
+      debugPrint('ðŸ—‘ï¸ [Automation] Purged $processedCount old logs');
     } catch (e) {
       error = e.toString();
-      debugPrint('❌ [Automation] Failed to purge logs: $e');
+      debugPrint('âŒ [Automation] Failed to purge logs: $e');
     }
 
     final result = AutomationResult(
@@ -367,11 +367,11 @@ class AutomationService {
         }
 
         await batch.commit();
-        debugPrint('👻 [Automation] Fixed $processedCount stale presence records');
+        debugPrint('ðŸ‘» [Automation] Fixed $processedCount stale presence records');
       }
     } catch (e) {
       error = e.toString();
-      debugPrint('❌ [Automation] Failed to detect stale presence: $e');
+      debugPrint('âŒ [Automation] Failed to detect stale presence: $e');
     }
 
     final result = AutomationResult(
@@ -469,10 +469,10 @@ class AutomationService {
         }
       }
 
-      debugPrint('🔧 [Automation] Fixed $processedCount corrupted room states');
+      debugPrint('ðŸ”§ [Automation] Fixed $processedCount corrupted room states');
     } catch (e) {
       error = e.toString();
-      debugPrint('❌ [Automation] Failed to fix room states: $e');
+      debugPrint('âŒ [Automation] Failed to fix room states: $e');
     }
 
     final result = AutomationResult(

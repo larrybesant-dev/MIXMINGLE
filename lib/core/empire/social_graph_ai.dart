@@ -1,4 +1,4 @@
-/// AI-Assisted Social Graph Service
+﻿/// AI-Assisted Social Graph Service
 ///
 /// Provides AI-powered friend recommendations, room recommendations,
 /// creator discovery, and community detection.
@@ -332,7 +332,7 @@ class SocialGraphAI {
     String oderId, {
     int limit = 20,
   }) async {
-    debugPrint('👥 [SocialGraphAI] Predicting friend connections for $oderId');
+    debugPrint('ðŸ‘¥ [SocialGraphAI] Predicting friend connections for $oderId');
 
     final profile = await _getOrCreateProfile(oderId);
     final candidates = await _findFriendCandidates(profile);
@@ -346,7 +346,7 @@ class SocialGraphAI {
     await _cacheRecommendations(oderId, 'friends', recommendations);
 
     _friendRecsController.add(recommendations);
-    debugPrint('✅ [SocialGraphAI] Generated ${recommendations.length} friend recommendations');
+    debugPrint('âœ… [SocialGraphAI] Generated ${recommendations.length} friend recommendations');
 
     return recommendations;
   }
@@ -526,7 +526,7 @@ class SocialGraphAI {
     String oderId, {
     int limit = 20,
   }) async {
-    debugPrint('🏠 [SocialGraphAI] Recommending rooms for $oderId');
+    debugPrint('ðŸ  [SocialGraphAI] Recommending rooms for $oderId');
 
     final profile = await _getOrCreateProfile(oderId);
     final recommendations = <RoomRecommendation>[];
@@ -593,7 +593,7 @@ class SocialGraphAI {
     // Sort by score
     recommendations.sort((a, b) => b.score.compareTo(a.score));
 
-    debugPrint('✅ [SocialGraphAI] Recommended ${recommendations.length} rooms');
+    debugPrint('âœ… [SocialGraphAI] Recommended ${recommendations.length} rooms');
     return recommendations.take(limit).toList();
   }
 
@@ -606,7 +606,7 @@ class SocialGraphAI {
     String oderId, {
     int limit = 20,
   }) async {
-    debugPrint('⭐ [SocialGraphAI] Recommending creators for $oderId');
+    debugPrint('â­ [SocialGraphAI] Recommending creators for $oderId');
 
     final profile = await _getOrCreateProfile(oderId);
     final recommendations = <CreatorRecommendation>[];
@@ -677,7 +677,7 @@ class SocialGraphAI {
 
     recommendations.sort((a, b) => b.score.compareTo(a.score));
 
-    debugPrint('✅ [SocialGraphAI] Recommended ${recommendations.length} creators');
+    debugPrint('âœ… [SocialGraphAI] Recommended ${recommendations.length} creators');
     return recommendations.take(limit).toList();
   }
 
@@ -687,7 +687,7 @@ class SocialGraphAI {
 
   /// Detect emerging communities
   Future<List<DetectedCommunity>> detectEmergingCommunities() async {
-    debugPrint('🔍 [SocialGraphAI] Detecting emerging communities');
+    debugPrint('ðŸ” [SocialGraphAI] Detecting emerging communities');
 
     final communities = <DetectedCommunity>[];
 
@@ -783,7 +783,7 @@ class SocialGraphAI {
     }
 
     _communitiesController.add(communities);
-    debugPrint('✅ [SocialGraphAI] Detected ${communities.length} communities');
+    debugPrint('âœ… [SocialGraphAI] Detected ${communities.length} communities');
 
     return communities;
   }

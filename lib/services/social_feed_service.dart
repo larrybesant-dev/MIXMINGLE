@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../models/post.dart';
@@ -52,10 +52,10 @@ class SocialFeedService {
         'isVisible': true,
       });
 
-      debugPrint('✅ [SocialFeed] Post created: ${postRef.id}');
+      debugPrint('âœ… [SocialFeed] Post created: ${postRef.id}');
       return postRef.id;
     } catch (e) {
-      debugPrint('❌ [SocialFeed] Error creating post: $e');
+      debugPrint('âŒ [SocialFeed] Error creating post: $e');
       return null;
     }
   }
@@ -106,7 +106,7 @@ class SocialFeedService {
       posts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return posts.take(limit).toList();
     } catch (e) {
-      debugPrint('❌ [SocialFeed] Error getting feed: $e');
+      debugPrint('âŒ [SocialFeed] Error getting feed: $e');
       return [];
     }
   }
@@ -160,10 +160,10 @@ class SocialFeedService {
         'likeCount': likes.length,
       });
 
-      debugPrint('✅ [SocialFeed] Post ${isLiked ? 'unliked' : 'liked'}');
+      debugPrint('âœ… [SocialFeed] Post ${isLiked ? 'unliked' : 'liked'}');
       return !isLiked;
     } catch (e) {
-      debugPrint('❌ [SocialFeed] Error toggling like: $e');
+      debugPrint('âŒ [SocialFeed] Error toggling like: $e');
       return false;
     }
   }
@@ -194,10 +194,10 @@ class SocialFeedService {
         'commentCount': FieldValue.increment(1),
       });
 
-      debugPrint('✅ [SocialFeed] Comment added');
+      debugPrint('âœ… [SocialFeed] Comment added');
       return commentRef.id;
     } catch (e) {
-      debugPrint('❌ [SocialFeed] Error adding comment: $e');
+      debugPrint('âŒ [SocialFeed] Error adding comment: $e');
       return null;
     }
   }
@@ -250,10 +250,10 @@ class SocialFeedService {
         'timestamp': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ [SocialFeed] Post tipped $coinAmount coins');
+      debugPrint('âœ… [SocialFeed] Post tipped $coinAmount coins');
       return true;
     } catch (e) {
-      debugPrint('❌ [SocialFeed] Error tipping post: $e');
+      debugPrint('âŒ [SocialFeed] Error tipping post: $e');
       return false;
     }
   }
@@ -272,10 +272,10 @@ class SocialFeedService {
         'deletedAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('✅ [SocialFeed] Post deleted');
+      debugPrint('âœ… [SocialFeed] Post deleted');
       return true;
     } catch (e) {
-      debugPrint('❌ [SocialFeed] Error deleting post: $e');
+      debugPrint('âŒ [SocialFeed] Error deleting post: $e');
       return false;
     }
   }

@@ -1,5 +1,5 @@
+import 'design/design_colors.dart';
 import 'package:flutter/material.dart';
-import '../core/theme/colors.dart';
 
 class GlowText extends StatelessWidget {
   final String text;
@@ -27,7 +27,6 @@ class GlowText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textColor = color ?? Colors.white;
     final glow = glowColor ?? ClubColors.glowingRed;
     final radius = glowRadius ?? 4.0;
 
@@ -36,12 +35,11 @@ class GlowText extends StatelessWidget {
       style: TextStyle(
         fontSize: fontSize,
         fontWeight: fontWeight,
-        color: textColor,
+        color: color ?? Colors.white,
         shadows: [
           Shadow(
             color: glow.withValues(alpha: 0.8),
             blurRadius: radius,
-            offset: Offset.zero,
           ),
           Shadow(
             color: glow.withValues(alpha: 0.4),

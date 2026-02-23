@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Terms and legal agreements management
 class TermsService {
@@ -134,3 +134,5 @@ If you have questions about this privacy policy, please contact us at privacy@mi
     ''';
   }
 }
+
+

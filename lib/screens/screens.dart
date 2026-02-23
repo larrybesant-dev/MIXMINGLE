@@ -1,4 +1,4 @@
-/// Screens barrel file - Re-exports all main screens for easy importing
+﻿/// Screens barrel file - Re-exports all main screens for easy importing
 ///
 /// This provides a centralized import point matching scaffold conventions:
 /// ```dart
@@ -48,11 +48,11 @@ export '../features/feed/social_feed_page.dart';
 export '../features/feed/create_post_dialog.dart';
 
 // ============================================================
-// SPEED DATING SCREENS
+// SPEED DATING SCREENS (TEMP DISABLED)
 // ============================================================
-export '../features/speed_dating/screens/speed_dating_lobby_page.dart';
-export '../features/speed_dating/screens/speed_dating_call_page.dart';
-export '../features/speed_dating/screens/speed_dating_decision_page.dart';
+// export '../features/speed_dating/screens/speed_dating_lobby_page.dart';
+// export '../features/speed_dating/screens/speed_dating_call_page.dart';
+// export '../features/speed_dating/screens/speed_dating_decision_page.dart';
 
 // ============================================================
 // MATCHING SCREENS
@@ -84,9 +84,9 @@ export '../features/payments/screens/wallet_page.dart';
 export '../features/withdrawal/withdrawal_page.dart';
 
 // ============================================================
-// ONBOARDING SCREENS
+// ONBOARDING SCREENS (TEMP DISABLED)
 // ============================================================
-export '../features/onboarding/screens/onboarding_page.dart';
+// export '../features/onboarding/screens/onboarding_page.dart';
 export '../features/landing/landing_page.dart';
 
 // ============================================================
@@ -111,3 +111,5 @@ export '../features/moderation/screens/moderator_dashboard_page.dart';
 // ============================================================
 export '../features/legal/privacy_policy_page.dart';
 export '../features/legal/terms_of_service_page.dart';
+
+

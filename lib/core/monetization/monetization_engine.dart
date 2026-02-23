@@ -1,4 +1,4 @@
-/// Monetization Engine
+﻿/// Monetization Engine
 ///
 /// Advanced monetization system with dynamic pricing, surge pricing,
 /// creator revenue share, VIP boosts, and seasonal adjustments.
@@ -703,3 +703,5 @@ class MonetizationEngine {
     _priceChangeController.close();
   }
 }
+
+

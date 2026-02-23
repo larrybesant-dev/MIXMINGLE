@@ -1,9 +1,9 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mix_and_mingle/services/email_verification_service.dart';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/shared/widgets/neon_button.dart';
-import 'package:mix_and_mingle/app_routes.dart';
+import 'package:mixmingle/services/email_verification_service.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/shared/widgets/neon_button.dart';
+import 'package:mixmingle/app_routes.dart';
 
 class EmailVerificationPage extends StatefulWidget {
   const EmailVerificationPage({super.key});

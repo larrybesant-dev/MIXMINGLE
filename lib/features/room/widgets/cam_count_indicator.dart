@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/providers/camera_providers.dart';
+import 'package:mixmingle/providers/camera_providers.dart';
 
 class CamCountIndicator extends ConsumerWidget {
   final String roomId;
@@ -45,7 +45,7 @@ class CamCountIndicator extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    '🎥 Cameras: $count/$maxCameras',
+                    'ðŸŽ¥ Cameras: $count/$maxCameras',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: isAtCapacity ? Colors.red[700] : Colors.blue[700],
@@ -74,7 +74,7 @@ class CamCountIndicator extends ConsumerWidget {
 
               // Status message
               Text(
-                isAtCapacity ? '🔴 Room at camera capacity' : '📊 $percentFull% full',
+                isAtCapacity ? 'ðŸ”´ Room at camera capacity' : 'ðŸ“Š $percentFull% full',
                 style: TextStyle(
                   fontSize: 12,
                   color: isAtCapacity ? Colors.red[600] : Colors.blue[600],

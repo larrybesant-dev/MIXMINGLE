@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/terms_service.dart';
 import '../../core/utils/app_logger.dart';
@@ -38,7 +38,7 @@ class _TermsAcceptanceDialogState extends ConsumerState<TermsAcceptanceDialog> {
           ]),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return SizedBox(
+              return const SizedBox(
                 height: 200,
                 child: Center(
                   child: Column(
@@ -55,17 +55,17 @@ class _TermsAcceptanceDialogState extends ConsumerState<TermsAcceptanceDialog> {
 
             if (snapshot.hasError) {
               return Padding(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.error, size: 48, color: Colors.red),
-                    SizedBox(height: 16),
-                    Text('Error loading terms. Please try again.'),
-                    SizedBox(height: 16),
+                    const Icon(Icons.error, size: 48, color: Colors.red),
+                    const SizedBox(height: 16),
+                    const Text('Error loading terms. Please try again.'),
+                    const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: () => Navigator.pop(context),
-                      child: Text('Dismiss'),
+                      child: const Text('Dismiss'),
                     ),
                   ],
                 ),
@@ -82,12 +82,12 @@ class _TermsAcceptanceDialogState extends ConsumerState<TermsAcceptanceDialog> {
                       'Legal Requirements',
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
                     Text(
                       'Before using MixMingle, please review and accept our legal documents.',
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
                     // Terms acceptance section
                     _buildCheckboxRow(
@@ -103,15 +103,15 @@ class _TermsAcceptanceDialogState extends ConsumerState<TermsAcceptanceDialog> {
                       onChanged: (value) => setState(() => _acceptedPrivacy = value ?? false),
                     ),
 
-                    SizedBox(height: 20),
+                    const SizedBox(height: 20),
 
                     // Read documents button
                     TextButton(
                       onPressed: () => _showDocumentsDialog(context, termsService),
-                      child: Text('Read full documents'),
+                      child: const Text('Read full documents'),
                     ),
 
-                    SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
                     // Action buttons
                     Row(
@@ -127,7 +127,7 @@ class _TermsAcceptanceDialogState extends ConsumerState<TermsAcceptanceDialog> {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.grey[300],
                           ),
-                          child: Text('Decline'),
+                          child: const Text('Decline'),
                         ),
                         ElevatedButton(
                           onPressed: (_acceptedTerms && _acceptedPrivacy && !_loading)
@@ -138,12 +138,12 @@ class _TermsAcceptanceDialogState extends ConsumerState<TermsAcceptanceDialog> {
                                 }
                               : null,
                           child: _loading
-                              ? SizedBox(
+                              ? const SizedBox(
                                   width: 20,
                                   height: 20,
                                   child: CircularProgressIndicator(strokeWidth: 2),
                                 )
-                              : Text('Accept'),
+                              : const Text('Accept'),
                         ),
                       ],
                     ),
@@ -174,7 +174,7 @@ class _TermsAcceptanceDialogState extends ConsumerState<TermsAcceptanceDialog> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Legal Documents'),
+        title: const Text('Legal Documents'),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -185,20 +185,20 @@ class _TermsAcceptanceDialogState extends ConsumerState<TermsAcceptanceDialog> {
                   Expanded(
                     child: TextButton(
                       onPressed: () => setState(() {}),
-                      child: Text('Terms of Service'),
+                      child: const Text('Terms of Service'),
                     ),
                   ),
                   Expanded(
                     child: TextButton(
                       onPressed: () => setState(() {}),
-                      child: Text('Privacy Policy'),
+                      child: const Text('Privacy Policy'),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               // Document content would go here
-              Text(
+              const Text(
                 'Please review the full legal documents to ensure you understand our policies.',
                 style: TextStyle(fontSize: 12),
               ),
@@ -208,7 +208,7 @@ class _TermsAcceptanceDialogState extends ConsumerState<TermsAcceptanceDialog> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Close'),
+            child: const Text('Close'),
           ),
         ],
       ),

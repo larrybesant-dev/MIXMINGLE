@@ -13,8 +13,6 @@ import 'features/auth/screens/neon_login_page.dart';
 import 'features/auth/screens/neon_signup_page.dart';
 import 'features/auth/forgot_password_page.dart';
 import 'core/theme/neon_theme.dart';
-// TODO: Re-enable once Riverpod providers are migrated to 3.x
-// import 'services/push_notification_service.dart';
 import 'core/utils/app_logger.dart';
 import 'core/health_check_system.dart';
 import 'core/crashlytics/crashlytics_service.dart';
@@ -40,11 +38,11 @@ void main() {
       // Initialize Flutter bindings FIRST - inside the guarded zone
       WidgetsFlutterBinding.ensureInitialized();
 
-      debugPrint('🚀 Starting app initialization...');
+      debugPrint('ðŸš€ Starting app initialization...');
 
       // Set custom error widget for release mode (shows grey by default)
       ErrorWidget.builder = (FlutterErrorDetails details) {
-        debugPrint('🔴 ErrorWidget building for: ${details.exception}');
+        debugPrint('ðŸ”´ ErrorWidget building for: ${details.exception}');
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           home: Scaffold(
@@ -76,18 +74,18 @@ void main() {
 
       try {
         // Initialize Firebase ONCE - block on this
-        debugPrint('🔥 Initializing Firebase...');
+        debugPrint('ðŸ”¥ Initializing Firebase...');
         await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-        debugPrint('✅ Firebase initialized successfully');
+        debugPrint('âœ… Firebase initialized successfully');
         AppLogger.info('Firebase initialized successfully');
 
         // Initialize Crashlytics BEFORE anything else that might error
-        debugPrint('💥 Initializing Crashlytics...');
+        debugPrint('ðŸ’¥ Initializing Crashlytics...');
         await CrashlyticsService.instance.initialize();
 
         // Set up Flutter error handler for Crashlytics
         FlutterError.onError = (FlutterErrorDetails details) {
-          debugPrint('❌ FLUTTER ERROR: ${details.exception}');
+          debugPrint('âŒ FLUTTER ERROR: ${details.exception}');
           debugPrint('Stack: ${details.stack}');
           AppLogger.error('Flutter Error: ${details.exception}');
           // Skip Crashlytics on web (not supported)
@@ -95,57 +93,57 @@ void main() {
             FirebaseCrashlytics.instance.recordFlutterFatalError(details);
           }
         };
-        debugPrint('✅ Crashlytics initialized');
+        debugPrint('âœ… Crashlytics initialized');
 
         // Initialize Performance Monitoring
-        debugPrint('📊 Initializing Performance Monitoring...');
+        debugPrint('ðŸ“Š Initializing Performance Monitoring...');
         await PerformanceService.instance.initialize();
-        debugPrint('✅ Performance Monitoring initialized');
+        debugPrint('âœ… Performance Monitoring initialized');
 
         // Set up FCM background message handler
-        debugPrint('📱 Setting up FCM...');
+        debugPrint('ðŸ“± Setting up FCM...');
         FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
-        debugPrint('✅ FCM background handler registered');
+        debugPrint('âœ… FCM background handler registered');
 
         // Initialize local notifications (don't block app startup if it fails)
-        debugPrint('📱 Initializing local notifications...');
+        debugPrint('ðŸ“± Initializing local notifications...');
         NotificationService().initialize().then((_) {
-          debugPrint('✅ Notifications initialized successfully');
+          debugPrint('âœ… Notifications initialized successfully');
         }).catchError((e) {
-          debugPrint('⚠️  Notification initialization non-fatal failure: $e');
+          debugPrint('âš ï¸  Notification initialization non-fatal failure: $e');
           AppLogger.warning('Notifications unavailable: $e');
           CrashlyticsService.instance.recordError(e, reason: 'notification_init_failure');
         });
 
         // Initialize FCM notifications (don't block app startup if it fails)
-        debugPrint('📱 FCM notification setup deferred to auth gate...');
+        debugPrint('ðŸ“± FCM notification setup deferred to auth gate...');
 
         // Run health checks
-        debugPrint('🏥 Running project health checks...');
+        debugPrint('ðŸ¥ Running project health checks...');
         final healthChecker = ProjectHealthChecker();
         await healthChecker.runAllChecks();
-        final healthStatus = healthChecker.isHealthy ? '✅ HEALTHY' : '⚠️  ISSUES DETECTED';
+        final healthStatus = healthChecker.isHealthy ? 'âœ… HEALTHY' : 'âš ï¸  ISSUES DETECTED';
         debugPrint('Health check status: $healthStatus');
         AppLogger.info('Health check completed: $healthStatus');
       } catch (e, stackTrace) {
-        debugPrint('❌ Initialization error: $e');
+        debugPrint('âŒ Initialization error: $e');
         AppLogger.error('Initialization failed: $e');
         CrashlyticsService.instance.recordError(e, stackTrace: stackTrace, reason: 'app_init_failure');
         // App will still start even if services fail, but user may experience missing features
       }
 
-      debugPrint('🚀 Running app with Riverpod and Provider setup...');
+      debugPrint('ðŸš€ Running app with Riverpod and Provider setup...');
 
       runApp(
         riverpod.ProviderScope(
           child: MultiProvider(
             providers: [
-              // ✅ Agora Service (singleton)
+              // âœ… Agora Service (singleton)
               Provider<AgoraService>(
                 create: (_) => AgoraService(),
               ),
 
-              // ✅ Room Firestore Service (singleton)
+              // âœ… Room Firestore Service (singleton)
               Provider<RoomFirestoreService>(
                 create: (_) => RoomFirestoreService(),
               ),
@@ -157,7 +155,7 @@ void main() {
     },
     (error, stackTrace) {
       // Handle async errors with Crashlytics
-      debugPrint('❌ ASYNC ERROR: $error');
+      debugPrint('âŒ ASYNC ERROR: $error');
       debugPrint('Stack: $stackTrace');
       AppLogger.error('Async Error: $error');
       CrashlyticsService.instance.recordError(
@@ -197,7 +195,7 @@ class _AlwaysLandingApp extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const RootAuthGate());
           default:
             // Unknown routes go back to landing
-            debugPrint('⛔ [AlwaysLanding] Unknown route: ${settings.name}');
+            debugPrint('🛑 [AlwaysLanding] Unknown route: ${settings.name}');
             return MaterialPageRoute(builder: (_) => const LandingPage());
         }
       },

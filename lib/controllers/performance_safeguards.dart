@@ -1,4 +1,4 @@
-import '../models/room_video_state_model.dart';
+﻿import '../models/room_video_state_model.dart';
 import '../controllers/publisher_controller.dart';
 
 class PerformanceSafeguards {
@@ -141,3 +141,4 @@ class PerformanceSafeguards {
     }
   }
 }
+

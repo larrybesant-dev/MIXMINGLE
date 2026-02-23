@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/neon_colors.dart';
 import '../../../shared/widgets/neon_components.dart';
@@ -79,12 +79,12 @@ class _NeonSplashPageState extends State<NeonSplashPage>
 
     try {
       // Check authentication status
-      debugPrint('🔍 Checking Firebase auth status...');
+      debugPrint('ðŸ” Checking Firebase auth status...');
       final user = FirebaseAuth.instance.currentUser;
-      debugPrint('✅ Firebase auth check complete. User: ${user?.email}');
+      debugPrint('âœ… Firebase auth check complete. User: ${user?.email}');
 
       if (user != null) {
-        debugPrint('👤 User authenticated, navigating to home...');
+        debugPrint('ðŸ‘¤ User authenticated, navigating to home...');
         if (mounted) {
           Navigator.of(context).pushNamedAndRemoveUntil(
             '/home',
@@ -92,7 +92,7 @@ class _NeonSplashPageState extends State<NeonSplashPage>
           );
         }
       } else {
-        debugPrint('🔐 No user authenticated, navigating to login...');
+        debugPrint('ðŸ” No user authenticated, navigating to login...');
         if (mounted) {
           Navigator.of(context).pushNamedAndRemoveUntil(
             '/login',
@@ -101,7 +101,7 @@ class _NeonSplashPageState extends State<NeonSplashPage>
         }
       }
     } catch (e) {
-      debugPrint('❌ Error in _navigateToNextScreen: $e');
+      debugPrint('âŒ Error in _navigateToNextScreen: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),
@@ -193,7 +193,7 @@ class _NeonSplashPageState extends State<NeonSplashPage>
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) {
                                   return Container(
-                                    decoration: BoxDecoration(
+                                    decoration: const BoxDecoration(
                                       gradient: LinearGradient(
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
@@ -225,7 +225,7 @@ class _NeonSplashPageState extends State<NeonSplashPage>
               // Animated brand name
               FadeTransition(
                 opacity: _textOpacity,
-                child: Column(
+                child: const Column(
                   children: [
                     NeonText(
                       'MIX & MINGLE',
@@ -236,7 +236,7 @@ class _NeonSplashPageState extends State<NeonSplashPage>
                       glowRadius: 16,
                       letterSpacing: 2,
                     ),
-                    const SizedBox(height: 8),
+                    SizedBox(height: 8),
                     Text(
                       'GLOBAL DJ VIBES',
                       style: TextStyle(
@@ -255,7 +255,7 @@ class _NeonSplashPageState extends State<NeonSplashPage>
               // Loading indicator
               FadeTransition(
                 opacity: _textOpacity,
-                child: Column(
+                child: const Column(
                   children: [
                     SizedBox(
                       width: 40,
@@ -267,7 +267,7 @@ class _NeonSplashPageState extends State<NeonSplashPage>
                         ),
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    SizedBox(height: 16),
                     Text(
                       'CONNECTING...',
                       style: TextStyle(

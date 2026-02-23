@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 /// Mix & Mingle Neon Club Color Palette
 /// Electric aesthetic with vibrant neon accents - based on official brand

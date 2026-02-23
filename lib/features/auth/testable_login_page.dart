@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:mix_and_mingle/services/auth_service.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:mixmingle/services/auth_service.dart';
 
 /// Testable login page for unit and widget tests
 /// Accepts dependency injection for AuthService

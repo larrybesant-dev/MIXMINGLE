@@ -1,4 +1,4 @@
-import 'video_tile_model.dart';
+﻿import 'video_tile_model.dart';
 import 'window_state_model.dart';
 import 'publisher_state_model.dart';
 
@@ -109,3 +109,5 @@ class RoomVideoStateModel {
 
   int get activePublishers => publishers.where((p) => p.status == PublisherStatus.publishing).length;
 }
+
+

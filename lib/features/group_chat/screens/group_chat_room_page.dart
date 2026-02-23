@@ -1,13 +1,13 @@
-import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+﻿import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/group_chat_message.dart';
 import '../models/group_chat_participant.dart';
 import '../providers/group_chat_providers.dart';
-import 'package:mix_and_mingle/shared/widgets/async_value_view_enhanced.dart';
-import 'package:mix_and_mingle/shared/widgets/skeleton_loaders.dart';
-import 'package:mix_and_mingle/providers/user_providers.dart';
+import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
+import 'package:mixmingle/shared/widgets/skeleton_loaders.dart';
+import 'package:mixmingle/providers/user_providers.dart';
 
 class GroupChatRoomPage extends ConsumerStatefulWidget {
   final String roomId;

@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import '../../core/design_system/design_constants.dart';
@@ -50,7 +50,7 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
         }
       },
       onError: (e) {
-        debugPrint('❌ [Feed] Error loading feed: $e');
+        debugPrint('âŒ [Feed] Error loading feed: $e');
         if (mounted) {
           setState(() => _isLoading = false);
         }
@@ -63,12 +63,10 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
   }
 
   Future<void> _toggleLike(Post post) async {
-    if (_currentUserId == null) return;
     await _feedService.toggleLike(post.id, _currentUserId!);
   }
 
   void _showCreatePostDialog() {
-    if (_currentUserId == null) return;
     showDialog(
       context: context,
       builder: (ctx) => CreatePostDialog(userId: _currentUserId!),
@@ -83,12 +81,12 @@ class _SocialFeedPageState extends State<SocialFeedPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (ctx) => _CommentsSheet(post: post, userId: _currentUserId),
+      builder: (ctx) => _CommentsSheet(post: post, userId: _currentUserId!),
     );
   }
 
   void _showTipDialog(Post post) {
-    if (_currentUserId == null || _currentUserId == post.userId) return;
+    if (_currentUserId! == post.userId) return;
     showDialog(
       context: context,
       builder: (ctx) => _TipDialog(
@@ -432,7 +430,7 @@ class _CommentsSheetState extends State<_CommentsSheet> {
 
   Future<void> _submitComment() async {
     final content = _commentController.text.trim();
-    if (content.isEmpty || widget.userId == null) return;
+    if (content.isEmpty) return;
 
     setState(() => _isSubmitting = true);
 

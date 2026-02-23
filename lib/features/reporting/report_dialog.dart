@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../../services/reporting_service.dart';
 
 /// Dialog for submitting a report

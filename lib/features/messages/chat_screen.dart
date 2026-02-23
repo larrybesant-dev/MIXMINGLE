@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
@@ -898,7 +898,7 @@ class MessageBubble extends ConsumerWidget {
   }
 
   void _showReactionPicker(BuildContext context) {
-    final commonEmojis = ['👍', '❤️', '😂', '😮', '😢', '😡', '🎉', '🔥'];
+    final commonEmojis = ['ðŸ‘', 'â¤ï¸', 'ðŸ˜‚', 'ðŸ˜®', 'ðŸ˜¢', 'ðŸ˜¡', 'ðŸŽ‰', 'ðŸ”¥'];
 
     showModalBottomSheet(
       context: context,

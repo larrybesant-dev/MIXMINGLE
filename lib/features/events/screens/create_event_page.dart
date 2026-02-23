@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:mix_and_mingle/shared/models/event.dart';
-import 'package:mix_and_mingle/providers/events_controller.dart';
-import 'package:mix_and_mingle/providers/providers.dart';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/shared/validation.dart';
+import 'package:mixmingle/shared/models/event.dart';
+import 'package:mixmingle/providers/events_controller.dart';
+import 'package:mixmingle/providers/providers.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/shared/validation.dart';
 
 class CreateEventPage extends ConsumerStatefulWidget {
   const CreateEventPage({super.key});

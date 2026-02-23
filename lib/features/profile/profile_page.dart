@@ -1,14 +1,15 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../providers/providers.dart';
 import '../../models/user.dart';
 import '../../models/privacy_settings.dart';
-import '../../models/speed_dating.dart';
+// TEMP DISABLED: import '../../models/speed_dating.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../shared/neon_button.dart';
 import '../../shared/auth_guard.dart';
+import '../../shared/stubs/dev_stubs.dart';
 import '../room/screens/voice_room_page.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {

@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:mix_and_mingle/shared/models/camera_state.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:mixmingle/shared/models/camera_state.dart';
 
 class CameraTile extends StatelessWidget {
   final CameraState cameraState;
@@ -241,5 +241,3 @@ class CameraTile extends StatelessWidget {
     }
   }
 }
-
-

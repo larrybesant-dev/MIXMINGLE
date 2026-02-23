@@ -1,4 +1,4 @@
-/// Trust Framework Service
+﻿/// Trust Framework Service
 ///
 /// Manages platform governance including creator/partner/app certification,
 /// trust scores, and rule enforcement.
@@ -342,7 +342,7 @@ class TrustFrameworkService {
     List<String>? badges,
     Duration? validFor,
   }) async {
-    debugPrint('🏆 [TrustFramework] Certifying creator: $creatorId');
+    debugPrint('ðŸ† [TrustFramework] Certifying creator: $creatorId');
 
     try {
       final id = 'cert_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -384,10 +384,10 @@ class TrustFrameworkService {
         },
       );
 
-      debugPrint('✅ [TrustFramework] Creator certified: $id');
+      debugPrint('âœ… [TrustFramework] Creator certified: $id');
       return certification;
     } catch (e) {
-      debugPrint('❌ [TrustFramework] Failed to certify creator: $e');
+      debugPrint('âŒ [TrustFramework] Failed to certify creator: $e');
       rethrow;
     }
   }
@@ -447,7 +447,7 @@ class TrustFrameworkService {
     List<String>? badges,
     Duration? validFor,
   }) async {
-    debugPrint('🏆 [TrustFramework] Certifying partner: $partnerId');
+    debugPrint('ðŸ† [TrustFramework] Certifying partner: $partnerId');
 
     try {
       final id = 'cert_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -481,10 +481,10 @@ class TrustFrameworkService {
         parameters: {'type': type.name},
       );
 
-      debugPrint('✅ [TrustFramework] Partner certified: $id');
+      debugPrint('âœ… [TrustFramework] Partner certified: $id');
       return certification;
     } catch (e) {
-      debugPrint('❌ [TrustFramework] Failed to certify partner: $e');
+      debugPrint('âŒ [TrustFramework] Failed to certify partner: $e');
       rethrow;
     }
   }
@@ -501,7 +501,7 @@ class TrustFrameworkService {
     List<String>? badges,
     Duration? validFor,
   }) async {
-    debugPrint('🏆 [TrustFramework] Certifying app: $appId');
+    debugPrint('ðŸ† [TrustFramework] Certifying app: $appId');
 
     try {
       final id = 'cert_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
@@ -541,10 +541,10 @@ class TrustFrameworkService {
         parameters: {'type': type.name},
       );
 
-      debugPrint('✅ [TrustFramework] App certified: $id');
+      debugPrint('âœ… [TrustFramework] App certified: $id');
       return certification;
     } catch (e) {
-      debugPrint('❌ [TrustFramework] Failed to certify app: $e');
+      debugPrint('âŒ [TrustFramework] Failed to certify app: $e');
       rethrow;
     }
   }
@@ -562,7 +562,7 @@ class TrustFrameworkService {
     RuleSeverity? severity,
     List<String>? evidence,
   }) async {
-    debugPrint('⚖️ [TrustFramework] Enforcing rule: $ruleId');
+    debugPrint('âš–ï¸ [TrustFramework] Enforcing rule: $ruleId');
 
     try {
       // Get rule details
@@ -607,10 +607,10 @@ class TrustFrameworkService {
         },
       );
 
-      debugPrint('✅ [TrustFramework] Violation recorded: $id');
+      debugPrint('âœ… [TrustFramework] Violation recorded: $id');
       return violation;
     } catch (e) {
-      debugPrint('❌ [TrustFramework] Failed to enforce rule: $e');
+      debugPrint('âŒ [TrustFramework] Failed to enforce rule: $e');
       rethrow;
     }
   }
@@ -675,16 +675,16 @@ class TrustFrameworkService {
     for (final action in actions) {
       switch (action.type) {
         case 'warn':
-          debugPrint('📢 Warning issued to $entityId');
+          debugPrint('ðŸ“¢ Warning issued to $entityId');
           break;
         case 'restrict':
-          debugPrint('🚫 Restricted $entityId');
+          debugPrint('ðŸš« Restricted $entityId');
           break;
         case 'suspend':
-          debugPrint('⏸️ Suspended $entityId');
+          debugPrint('â¸ï¸ Suspended $entityId');
           break;
         case 'terminate':
-          debugPrint('❌ Terminated $entityId');
+          debugPrint('âŒ Terminated $entityId');
           break;
         default:
           debugPrint('Unknown action: ${action.type}');
@@ -904,7 +904,7 @@ class TrustFrameworkService {
       });
       return true;
     } catch (e) {
-      debugPrint('❌ [TrustFramework] Failed to resolve violation: $e');
+      debugPrint('âŒ [TrustFramework] Failed to resolve violation: $e');
       return false;
     }
   }
@@ -922,7 +922,7 @@ class TrustFrameworkService {
       });
       return true;
     } catch (e) {
-      debugPrint('❌ [TrustFramework] Failed to revoke certification: $e');
+      debugPrint('âŒ [TrustFramework] Failed to revoke certification: $e');
       return false;
     }
   }

@@ -1,4 +1,4 @@
-/// Launch Service
+﻿/// Launch Service
 ///
 /// Manages launch phases including internal alpha, closed beta,
 /// open beta, and production release.
@@ -53,7 +53,7 @@ class LaunchService {
       _phaseCacheTime = DateTime.now();
       return _cachedPhase!;
     } catch (e) {
-      debugPrint('❌ [Launch] Failed to get phase: $e');
+      debugPrint('âŒ [Launch] Failed to get phase: $e');
       return LaunchPhase.production;
     }
   }
@@ -86,7 +86,7 @@ class LaunchService {
         parameters: {'phase': 'internal_alpha'},
       );
 
-      debugPrint('✅ [Launch] Internal alpha started');
+      debugPrint('âœ… [Launch] Internal alpha started');
 
       return LaunchPhaseResult(
         success: true,
@@ -94,7 +94,7 @@ class LaunchService {
         message: 'Internal alpha phase started',
       );
     } catch (e) {
-      debugPrint('❌ [Launch] Failed to start internal alpha: $e');
+      debugPrint('âŒ [Launch] Failed to start internal alpha: $e');
       return LaunchPhaseResult(
         success: false,
         phase: LaunchPhase.internalAlpha,
@@ -132,7 +132,7 @@ class LaunchService {
         parameters: {'phase': 'closed_beta', 'max_users': maxUsers},
       );
 
-      debugPrint('✅ [Launch] Closed beta started');
+      debugPrint('âœ… [Launch] Closed beta started');
 
       return LaunchPhaseResult(
         success: true,
@@ -140,7 +140,7 @@ class LaunchService {
         message: 'Closed beta phase started with $maxUsers max users',
       );
     } catch (e) {
-      debugPrint('❌ [Launch] Failed to start closed beta: $e');
+      debugPrint('âŒ [Launch] Failed to start closed beta: $e');
       return LaunchPhaseResult(
         success: false,
         phase: LaunchPhase.closedBeta,
@@ -176,7 +176,7 @@ class LaunchService {
         parameters: {'phase': 'open_beta'},
       );
 
-      debugPrint('✅ [Launch] Open beta started');
+      debugPrint('âœ… [Launch] Open beta started');
 
       return LaunchPhaseResult(
         success: true,
@@ -184,7 +184,7 @@ class LaunchService {
         message: 'Open beta phase started',
       );
     } catch (e) {
-      debugPrint('❌ [Launch] Failed to start open beta: $e');
+      debugPrint('âŒ [Launch] Failed to start open beta: $e');
       return LaunchPhaseResult(
         success: false,
         phase: LaunchPhase.openBeta,
@@ -217,7 +217,7 @@ class LaunchService {
         parameters: {},
       );
 
-      debugPrint('🚀 [Launch] Production launched!');
+      debugPrint('ðŸš€ [Launch] Production launched!');
 
       return LaunchPhaseResult(
         success: true,
@@ -225,7 +225,7 @@ class LaunchService {
         message: 'Congratulations! App is now in production!',
       );
     } catch (e) {
-      debugPrint('❌ [Launch] Failed to go to production: $e');
+      debugPrint('âŒ [Launch] Failed to go to production: $e');
       return LaunchPhaseResult(
         success: false,
         phase: LaunchPhase.production,
@@ -253,7 +253,7 @@ class LaunchService {
           return true;
       }
     } catch (e) {
-      debugPrint('❌ [Launch] Failed to check user access: $e');
+      debugPrint('âŒ [Launch] Failed to check user access: $e');
       return false;
     }
   }
@@ -287,7 +287,7 @@ class LaunchService {
         parameters: {'user_id': userId},
       );
     } catch (e) {
-      debugPrint('❌ [Launch] Failed to add beta user: $e');
+      debugPrint('âŒ [Launch] Failed to add beta user: $e');
     }
   }
 
@@ -300,7 +300,7 @@ class LaunchService {
           .get();
       return snapshot.count ?? 0;
     } catch (e) {
-      debugPrint('❌ [Launch] Failed to get beta count: $e');
+      debugPrint('âŒ [Launch] Failed to get beta count: $e');
       return 0;
     }
   }
@@ -316,7 +316,7 @@ class LaunchService {
       final features = doc.data()?['features'] as Map<String, dynamic>? ?? {};
       return features[featureName] ?? false;
     } catch (e) {
-      debugPrint('❌ [Launch] Failed to check feature: $e');
+      debugPrint('âŒ [Launch] Failed to check feature: $e');
       return false;
     }
   }
@@ -328,7 +328,7 @@ class LaunchService {
       final features = doc.data()?['features'] as Map<String, dynamic>? ?? {};
       return features.map((key, value) => MapEntry(key, value as bool));
     } catch (e) {
-      debugPrint('❌ [Launch] Failed to get features: $e');
+      debugPrint('âŒ [Launch] Failed to get features: $e');
       return {};
     }
   }
@@ -356,7 +356,7 @@ class LaunchService {
         enabledFeatures: features,
       );
     } catch (e) {
-      debugPrint('❌ [Launch] Failed to get status: $e');
+      debugPrint('âŒ [Launch] Failed to get status: $e');
       return LaunchStatus(phase: LaunchPhase.production);
     }
   }
@@ -408,11 +408,11 @@ enum LaunchPhase {
   String get badge {
     switch (this) {
       case LaunchPhase.internalAlpha:
-        return '🔬 Alpha';
+        return 'ðŸ”¬ Alpha';
       case LaunchPhase.closedBeta:
-        return '🧪 Beta';
+        return 'ðŸ§ª Beta';
       case LaunchPhase.openBeta:
-        return '🚀 Open Beta';
+        return 'ðŸš€ Open Beta';
       case LaunchPhase.production:
         return '';
     }

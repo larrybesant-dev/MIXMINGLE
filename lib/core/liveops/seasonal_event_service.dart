@@ -1,4 +1,4 @@
-/// Seasonal Event Service
+﻿/// Seasonal Event Service
 ///
 /// Manages seasonal events, holiday celebrations, special modes,
 /// and time-limited experiences within the application.
@@ -635,3 +635,5 @@ class SeasonalEventService {
     _progressController.close();
   }
 }
+
+

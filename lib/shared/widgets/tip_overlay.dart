@@ -1,4 +1,4 @@
-/// Tip Overlay Widget
+﻿/// Tip Overlay Widget
 ///
 /// Floating action button for quick tipping in video/voice rooms.
 /// Provides a one-tap way to send gifts to the room host or participants.
@@ -53,9 +53,9 @@ class _TipOverlayState extends ConsumerState<TipOverlay>
   bool _isExpanded = false;
 
   final List<Map<String, dynamic>> _quickGifts = [
-    {'emoji': '🌹', 'amount': 5, 'name': 'Rose'},
-    {'emoji': '❤️', 'amount': 10, 'name': 'Heart'},
-    {'emoji': '💎', 'amount': 25, 'name': 'Diamond'},
+    {'emoji': 'ðŸŒ¹', 'amount': 5, 'name': 'Rose'},
+    {'emoji': 'â¤ï¸', 'amount': 10, 'name': 'Heart'},
+    {'emoji': 'ðŸ’Ž', 'amount': 25, 'name': 'Diamond'},
   ];
 
   @override

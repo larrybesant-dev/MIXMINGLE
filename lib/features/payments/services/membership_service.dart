@@ -1,4 +1,4 @@
-/// Membership Service
+﻿/// Membership Service
 ///
 /// Handles Firestore integration for membership and coin data.
 /// Syncs RevenueCat entitlements with Firestore user documents.
@@ -54,7 +54,7 @@ class MembershipService {
     _currentUserId = userId;
 
     try {
-      debugPrint('🎫 [Membership] Initializing for user: $userId');
+      debugPrint('ðŸŽ« [Membership] Initializing for user: $userId');
 
       // Initialize RevenueCat
       await RevenueCatService.instance.initialize(userId);
@@ -67,9 +67,9 @@ class MembershipService {
       // Load current data from Firestore
       await _loadUserMembershipData();
 
-      debugPrint('✅ [Membership] Initialized successfully');
+      debugPrint('âœ… [Membership] Initialized successfully');
     } catch (e) {
-      debugPrint('❌ [Membership] Init error: $e');
+      debugPrint('âŒ [Membership] Init error: $e');
     }
   }
 
@@ -89,7 +89,7 @@ class MembershipService {
         _coinBalanceStreamController?.add(_coinBalance);
       }
     } catch (e) {
-      debugPrint('❌ [Membership] Failed to load user data: $e');
+      debugPrint('âŒ [Membership] Failed to load user data: $e');
     }
   }
 
@@ -133,9 +133,9 @@ class MembershipService {
         );
       }
 
-      debugPrint('✅ [Membership] Synced tier to Firestore: ${tier.displayName}');
+      debugPrint('âœ… [Membership] Synced tier to Firestore: ${tier.displayName}');
     } catch (e) {
-      debugPrint('❌ [Membership] Failed to sync tier: $e');
+      debugPrint('âŒ [Membership] Failed to sync tier: $e');
     }
   }
 
@@ -146,7 +146,7 @@ class MembershipService {
     try {
       final newBalance = _coinBalance + change;
       if (newBalance < 0) {
-        debugPrint('⚠️ [Membership] Insufficient coins');
+        debugPrint('âš ï¸ [Membership] Insufficient coins');
         return false;
       }
 
@@ -171,10 +171,10 @@ class MembershipService {
       _coinBalance = newBalance;
       _coinBalanceStreamController?.add(_coinBalance);
 
-      debugPrint('✅ [Membership] Coin balance updated: $change -> $newBalance');
+      debugPrint('âœ… [Membership] Coin balance updated: $change -> $newBalance');
       return true;
     } catch (e) {
-      debugPrint('❌ [Membership] Failed to update coins: $e');
+      debugPrint('âŒ [Membership] Failed to update coins: $e');
       return false;
     }
   }
@@ -191,7 +191,7 @@ class MembershipService {
   /// Deduct coins (for gifts, spotlight, etc.)
   Future<bool> deductCoins(int amount, CoinTransactionType type, {String? description}) async {
     if (_coinBalance < amount) {
-      debugPrint('⚠️ [Membership] Insufficient coins: $_coinBalance < $amount');
+      debugPrint('âš ï¸ [Membership] Insufficient coins: $_coinBalance < $amount');
       return false;
     }
     return updateCoinBalance(-amount, type, description: description);
@@ -260,7 +260,7 @@ class MembershipService {
           .map((doc) => CoinTransaction.fromFirestore(doc.data(), doc.id))
           .toList();
     } catch (e) {
-      debugPrint('❌ [Membership] Failed to get transaction history: $e');
+      debugPrint('âŒ [Membership] Failed to get transaction history: $e');
       return [];
     }
   }
@@ -270,7 +270,7 @@ class MembershipService {
     try {
       await _analytics.logEvent(name: name, parameters: params);
     } catch (e) {
-      debugPrint('⚠️ [Analytics] Failed to log event: $e');
+      debugPrint('âš ï¸ [Analytics] Failed to log event: $e');
     }
   }
 

@@ -1,4 +1,4 @@
-/// Global Network Service
+﻿/// Global Network Service
 ///
 /// Manages multi-region routing, latency-adaptive video, global presence sync,
 /// and cross-region room mirroring.
@@ -235,13 +235,13 @@ class GlobalNetworkService {
 
   /// Initialize multi-region routing
   Future<void> multiRegionRouting({String? userId}) async {
-    debugPrint('🌍 [GlobalNetwork] Initializing multi-region routing');
+    debugPrint('ðŸŒ [GlobalNetwork] Initializing multi-region routing');
 
     // Detect best region based on latency
     final bestRegion = await _detectBestRegion();
     _currentRegion = bestRegion;
 
-    debugPrint('📍 [GlobalNetwork] Selected region: ${bestRegion.name}');
+    debugPrint('ðŸ“ [GlobalNetwork] Selected region: ${bestRegion.name}');
 
     // Start periodic latency measurements
     _startLatencyMeasurements();
@@ -329,7 +329,7 @@ class GlobalNetworkService {
 
       // Switch if significantly better (>20% improvement)
       if (bestLatency < currentLatency * 0.8) {
-        debugPrint('🔄 [GlobalNetwork] Switching region: ${_currentRegion?.name} -> ${best.name}');
+        debugPrint('ðŸ”„ [GlobalNetwork] Switching region: ${_currentRegion?.name} -> ${best.name}');
         _currentRegion = best;
       }
     }
@@ -417,7 +417,7 @@ class GlobalNetworkService {
     score -= packetLoss * 1000; // -10 points for 1% packet loss
     score -= jitter * 2; // -20 points for 10ms jitter
 
-    debugPrint('📊 [GlobalNetwork] Network score: ${score.toStringAsFixed(1)}');
+    debugPrint('ðŸ“Š [GlobalNetwork] Network score: ${score.toStringAsFixed(1)}');
 
     if (score >= 90) return VideoQuality.uhd;
     if (score >= 75) return VideoQuality.hd;
@@ -502,7 +502,7 @@ class GlobalNetworkService {
 
   /// Sync user presence globally
   Future<void> globalPresenceSync(String userId) async {
-    debugPrint('👤 [GlobalNetwork] Starting presence sync for $userId');
+    debugPrint('ðŸ‘¤ [GlobalNetwork] Starting presence sync for $userId');
 
     // Update presence immediately
     await _updatePresence(userId, isOnline: true);
@@ -537,7 +537,7 @@ class GlobalNetworkService {
 
       _presenceController.add(presence);
     } catch (e) {
-      debugPrint('❌ [GlobalNetwork] Failed to update presence: $e');
+      debugPrint('âŒ [GlobalNetwork] Failed to update presence: $e');
     }
   }
 
@@ -578,7 +578,7 @@ class GlobalNetworkService {
   Future<void> stopPresenceSync(String userId) async {
     _presenceSyncTimer?.cancel();
     await _updatePresence(userId, isOnline: false);
-    debugPrint('👤 [GlobalNetwork] Presence sync stopped for $userId');
+    debugPrint('ðŸ‘¤ [GlobalNetwork] Presence sync stopped for $userId');
   }
 
   // ============================================================
@@ -590,7 +590,7 @@ class GlobalNetworkService {
     required String roomId,
     required Region targetRegion,
   }) async {
-    debugPrint('🪞 [GlobalNetwork] Creating room mirror: $roomId -> ${targetRegion.name}');
+    debugPrint('ðŸªž [GlobalNetwork] Creating room mirror: $roomId -> ${targetRegion.name}');
 
     final mirrorRef = _mirrorsCollection.doc();
     final edgeNode = await _getEdgeNodeForRegion(targetRegion);
@@ -608,7 +608,7 @@ class GlobalNetworkService {
 
     await mirrorRef.set(mirror.toFirestore());
 
-    debugPrint('✅ [GlobalNetwork] Room mirror created: ${mirror.mirrorId}');
+    debugPrint('âœ… [GlobalNetwork] Room mirror created: ${mirror.mirrorId}');
     return mirror;
   }
 
@@ -644,7 +644,7 @@ class GlobalNetworkService {
     await _mirrorsCollection.doc(mirrorId).update({
       'isActive': false,
     });
-    debugPrint('🪞 [GlobalNetwork] Room mirror deactivated: $mirrorId');
+    debugPrint('ðŸªž [GlobalNetwork] Room mirror deactivated: $mirrorId');
   }
 
   // ============================================================

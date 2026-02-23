@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Typing indicator for showing when users are typing in chat
@@ -37,3 +38,5 @@ class TypingIndicator {
     return DateTime.now().difference(startedAt).inSeconds < 5;
   }
 }
+
+

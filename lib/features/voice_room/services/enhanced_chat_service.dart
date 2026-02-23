@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Chat message model for Module C
@@ -197,3 +197,5 @@ final pinnedChatMessagesProvider = StreamProvider.family<List<ChatMessage>, Stri
   final chatService = ref.watch(enhancedChatServiceProvider);
   return chatService.getPinnedMessagesStream(roomId);
 });
+
+

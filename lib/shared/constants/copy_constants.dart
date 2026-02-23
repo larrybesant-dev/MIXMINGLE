@@ -1,20 +1,26 @@
+// Remove unused imports
+// import 'dart:js_util' as js_util;
+// import 'package:mixmingle/helpers/helpers.dart';
 /// Mix & Mingle Humanized Copy Constants
 /// Centralized, human-friendly text strings for the entire app
 /// Tone: Playful, safe, inclusive. Short sentences. Contractions. No jargon.
 library;
 
 class CopyConstants {
+  // Add any missing project-specific imports if needed
+
+
   // ============================================================================
-  // 1️⃣ SPLASH & ONBOARDING
+  // 1ï¸âƒ£ SPLASH & ONBOARDING
   // ============================================================================
 
   static const String splashMessage = 'Finding your people...';
 
   // ============================================================================
-  // 2️⃣ LOGIN SCREEN
+  // 2ï¸âƒ£ LOGIN SCREEN
   // ============================================================================
 
-  static const String loginTitle = 'Hey again 👋';
+  static const String loginTitle = 'Hey again ðŸ‘‹';
   static const String loginSubtitle = 'Let\'s get you back in the room';
 
   static const String loginEmailLabel = 'Email address';
@@ -31,7 +37,7 @@ class CopyConstants {
   static const String loginSignUp = 'Create an account';
 
   // Login Error Messages
-  static const String loginErrorEmptyFields = 'We need both your email and password 👆';
+  static const String loginErrorEmptyFields = 'We need both your email and password ðŸ‘†';
   static const String loginErrorUserNotFound = 'Hmm, we don\'t recognize that email. Mind double-checking?';
   static const String loginErrorWrongPassword = 'Wrong password. Give it another shot?';
   static const String loginErrorNetwork = 'Can\'t reach our servers right now. Check your connection and try again.';
@@ -42,10 +48,10 @@ class CopyConstants {
   static const String loginSuccessMessage = 'Welcome back! Loading your room...';
 
   // ============================================================================
-  // 3️⃣ SIGNUP SCREEN
+  // 3ï¸âƒ£ SIGNUP SCREEN
   // ============================================================================
 
-  static const String signupTitle = 'Let\'s get you started 🎉';
+  static const String signupTitle = 'Let\'s get you started ðŸŽ‰';
   static const String signupSubtitle = 'It only takes 30 seconds, we promise';
 
   static const String signupNameLabel = 'What\'s your name?';
@@ -63,7 +69,7 @@ class CopyConstants {
   static const String signupSignIn = 'Sign in here';
 
   // Signup Error Messages
-  static const String signupErrorEmptyFields = 'Oops — we need all the info 👆';
+  static const String signupErrorEmptyFields = 'Oops â€” we need all the info ðŸ‘†';
   static const String signupErrorShortPassword = 'Your password needs at least 6 characters';
   static const String signupErrorEmailTaken = 'That email\'s already taken. Want to log in instead?';
   static const String signupErrorNetwork = 'Can\'t connect right now. Try again in a sec?';
@@ -71,13 +77,13 @@ class CopyConstants {
 
   // Signup Loading States
   static const String signupLoadingMessage = 'Creating your account...';
-  static const String signupSuccessMessage = 'Welcome to the party! 🎊 Setting up your profile...';
+  static const String signupSuccessMessage = 'Welcome to the party! ðŸŽŠ Setting up your profile...';
 
   // ============================================================================
-  // 4️⃣ HOME SCREEN
+  // 4ï¸âƒ£ HOME SCREEN
   // ============================================================================
 
-  static const String homeGreeting = 'Hey, there! 👋';
+  static const String homeGreeting = 'Hey, there! ðŸ‘‹';
   static const String homeSubGreeting = 'Ready to meet someone new?';
 
   // Navigation Cards
@@ -112,20 +118,20 @@ class CopyConstants {
   static const String navFavorites = 'Favorites';
 
   // ============================================================================
-  // 5️⃣ BROWSE ROOMS
+  // 5ï¸âƒ£ BROWSE ROOMS
   // ============================================================================
 
   static const String browseRoomsTitle = 'Jump into a room';
-  static const String browseRoomsSubtitle = 'Pick one — or start your own';
+  static const String browseRoomsSubtitle = 'Pick one â€” or start your own';
 
   static const String browseSearchHint = 'Looking for something specific?';
   static const String browseFilterTooltip = 'Narrow it down';
 
   static const String browseCategoryAll = 'All vibes';
-  static const String browseCategoryMusic = '🎵 Music';
-  static const String browseCategoryGaming = '🎮 Gaming';
-  static const String browseCategoryChat = '💬 Chat';
-  static const String browseCategoryLive = '🔴 Live';
+  static const String browseCategoryMusic = 'ðŸŽµ Music';
+  static const String browseCategoryGaming = 'ðŸŽ® Gaming';
+  static const String browseCategoryChat = 'ðŸ’¬ Chat';
+  static const String browseCategoryLive = 'ðŸ”´ Live';
 
   static const String browseCreateRoom = 'Start your room';
 
@@ -139,14 +145,14 @@ class CopyConstants {
   static const String browseJoinButton = 'Join the fun';
 
   // ============================================================================
-  // 6️⃣ CHAT & MESSAGES
+  // 6ï¸âƒ£ CHAT & MESSAGES
   // ============================================================================
 
   static const String chatEmptyTitle = 'Your inbox is empty';
-  static const String chatEmptyMessage = 'Go find someone to chat with 👉';
+  static const String chatEmptyMessage = 'Go find someone to chat with ðŸ‘‰';
 
-  static const String chatInputHint = 'Say hi 👋 ... or share a vibe';
-  static const String chatSendTooltip = 'Send your magic ✨';
+  static const String chatInputHint = 'Say hi ðŸ‘‹ ... or share a vibe';
+  static const String chatSendTooltip = 'Send your magic âœ¨';
 
   static const String chatTypingIndicator = 'is typing...';
   static const String chatTypingLong = 'is thinking of something good...';
@@ -154,22 +160,22 @@ class CopyConstants {
   static const String chatOnlineStatus = 'Online now';
   static const String chatOfflineStatus = 'Was here ';
 
-  static const String chatPinnedLabel = '📌 Pinned — read first';
+  static const String chatPinnedLabel = 'ðŸ“Œ Pinned â€” read first';
   static const String chatUnsendLabel = 'Unsend';
   static const String chatBlockLabel = 'Block this person';
   static const String chatReportLabel = 'Report & block';
 
   // Message States
   static const String chatSending = 'Sending...';
-  static const String chatSent = '✔️'; // Single checkmark
-  static const String chatDelivered = '✔✔'; // Double checkmark
-  static const String chatRead = '✔✔'; // Double checkmark (bright)
+  static const String chatSent = 'âœ”ï¸'; // Single checkmark
+  static const String chatDelivered = 'âœ”âœ”'; // Double checkmark
+  static const String chatRead = 'âœ”âœ”'; // Double checkmark (bright)
 
   // ============================================================================
-  // 7️⃣ ERRORS & VALIDATION
+  // 7ï¸âƒ£ ERRORS & VALIDATION
   // ============================================================================
 
-  static const String errorGeneric = 'Oops — something went wrong. Mind trying again?';
+  static const String errorGeneric = 'Oops â€” something went wrong. Mind trying again?';
   static const String errorNetwork = 'Can\'t reach the server right now. Check your connection?';
   static const String errorPermission = 'We need your permission for this one. Check your settings?';
   static const String errorNotFound = 'This doesn\'t exist anymore... but something else might surprise you';
@@ -180,7 +186,7 @@ class CopyConstants {
   static const String errorAlreadyInRoom = 'You\'re already in this room!';
 
   // ============================================================================
-  // 8️⃣ EMPTY STATES (Pre-built Components)
+  // 8ï¸âƒ£ EMPTY STATES (Pre-built Components)
   // ============================================================================
 
   static const String emptyNoEventsTitle = 'No events yet';
@@ -199,10 +205,10 @@ class CopyConstants {
   static const String emptyNoMatchesMessage = 'Keep exploring. Your person is out there.';
 
   static const String emptyNotificationsTitle = 'All caught up!';
-  static const String emptyNotificationsMessage = 'You\'re not missing anything. Yet 😉';
+  static const String emptyNotificationsMessage = 'You\'re not missing anything. Yet ðŸ˜‰';
 
   // ============================================================================
-  // 9️⃣ BUTTONS & ACTIONS
+  // 9ï¸âƒ£ BUTTONS & ACTIONS
   // ============================================================================
 
   // Primary Actions
@@ -227,7 +233,7 @@ class CopyConstants {
   static const String buttonLearnMore = 'Tell me more';
 
   // ============================================================================
-  // 🔟 FORM FIELDS & LABELS
+  // ðŸ”Ÿ FORM FIELDS & LABELS
   // ============================================================================
 
   // Profile Form
@@ -251,7 +257,7 @@ class CopyConstants {
   static const String formLookingForHint = 'Friends? Dating? Both?';
 
   // ============================================================================
-  // 1️⃣0️⃣ SETTINGS & PREFERENCES
+  // 1ï¸âƒ£0ï¸âƒ£ SETTINGS & PREFERENCES
   // ============================================================================
 
   static const String settingsAccount = 'Your account';
@@ -267,7 +273,7 @@ class CopyConstants {
   static const String settingsDeleteWarning = 'This is permanent. We\'ll delete everything.';
 
   // ============================================================================
-  // 1️⃣0️⃣ + 1️⃣ LOADING & WAITING STATES
+  // 1ï¸âƒ£0ï¸âƒ£ + 1ï¸âƒ£ LOADING & WAITING STATES
   // ============================================================================
 
   static const String loadingGeneric = 'One sec...';
@@ -279,22 +285,22 @@ class CopyConstants {
   static const String loadingSaving = 'Saving your changes...';
 
   // ============================================================================
-  // 1️⃣0️⃣ + 2️⃣ NOTIFICATIONS & ALERTS
+  // 1ï¸âƒ£0ï¸âƒ£ + 2ï¸âƒ£ NOTIFICATIONS & ALERTS
   // ============================================================================
 
   // In-App Notifications
   static const String notifNewMessage = '[Message preview]';
   static const String notifUserJoinedRoom = 'just hopped in';
-  static const String notifHostLive = 'just went live 🔴';
-  static const String notifMatchFound = 'It\'s a match! 🎉';
+  static const String notifHostLive = 'just went live ðŸ”´';
+  static const String notifMatchFound = 'It\'s a match! ðŸŽ‰';
   static const String notifFriendRequest = 'wants to connect';
-  static const String notifBirthday = 'Happy birthday, [Name]! 🎂';
+  static const String notifBirthday = 'Happy birthday, [Name]! ðŸŽ‚';
 
   // ============================================================================
   // TONE GUIDELINES (for reference in code comments)
   // ============================================================================
   /*
-   * ✅ DO:
+   * âœ… DO:
    * - Use contractions ("you're", "it's", "can't")
    * - Keep sentences short (under 15 words)
    * - Use emojis sparingly (one per screen max)
@@ -302,7 +308,7 @@ class CopyConstants {
    * - Add gentle humor where appropriate
    * - Say "you" not "users"
    *
-   * ❌ DON'T:
+   * âŒ DON'T:
    * - Use robotic language ("submit", "proceed", "access")
    * - Over-explain
    * - Use corporate jargon
@@ -310,6 +316,8 @@ class CopyConstants {
    * - Show too many options at once
    */
 }
+
+
 
 
 

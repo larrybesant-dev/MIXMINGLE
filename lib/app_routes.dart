@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'auth_gate.dart';
 import 'core/guards/profile_guard.dart';
@@ -30,7 +30,7 @@ import 'features/events/screens/events_list_page.dart';
 import 'features/events/screens/event_details_page.dart';
 import 'features/events/screens/event_chat_page.dart';
 // Speed Dating imports
-import 'features/speed_dating/screens/speed_dating_lobby_page.dart';
+// TEMP DISABLED: import 'features/speed_dating/screens/speed_dating_lobby_page.dart';
 // Social Feed imports
 import 'features/feed/social_feed_page.dart';
 import 'features/room/screens/room_page.dart';
@@ -51,13 +51,12 @@ import 'features/discover_users/discover_users_page.dart';
 import 'features/match_preferences_page.dart';
 import 'features/landing/landing_page.dart';
 import 'features/create_profile_page.dart';
-import 'features/onboarding/screens/onboarding_page.dart';
+// TEMP DISABLED: import 'features/onboarding/screens/onboarding_page.dart';
 import 'features/error/error_page.dart';
 import 'screens/test_video_engine_screen.dart';
 import 'screens/video_chat_page.dart';
 import 'shared/models/room.dart';
 import 'features/debug/health_dashboard.dart';
-import 'package:mix_and_mingle/shared/models/user_profile.dart';
 
 /// Slide transition directions
 enum SlideDirection {
@@ -361,8 +360,13 @@ class AppRoutes {
         );
 
       case onboarding:
+        // TEMP DISABLED: Onboarding bypassed
         return _createSlideRoute(
-          page: const AuthGate(child: OnboardingPage()),
+          page: const Scaffold(
+            body: Center(
+              child: Text('Onboarding temporarily disabled'),
+            ),
+          ),
           settings: settings,
           direction: SlideDirection.up,
         );
@@ -592,7 +596,7 @@ class AppRoutes {
         final roomId = queryParams['roomId'] as String?;
         final room = queryParams['room'] as Room?;
 
-        // ✅ SECURITY FIX: Ensure at least one of roomId or room is provided
+        // âœ… SECURITY FIX: Ensure at least one of roomId or room is provided
         if (roomId == null && room == null) {
           return _createFadeRoute(
             page: ErrorPage(errorMessage: 'Room ID or Room object is required'),
@@ -840,5 +844,3 @@ class AppRoutes {
     }
   }
 }
-
-

@@ -1,11 +1,11 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/app_routes.dart';
-import 'package:mix_and_mingle/providers/profile_completion_providers.dart';
-import 'package:mix_and_mingle/core/theme/neon_widgets.dart';
-import 'package:mix_and_mingle/core/theme/colors.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/app_routes.dart';
+import 'package:mixmingle/providers/profile_completion_providers.dart';
+import 'package:mixmingle/core/theme/neon_widgets.dart';
+import 'package:mixmingle/core/theme/colors.dart';
 
 class HomePageNeon extends ConsumerWidget {
   const HomePageNeon({super.key});

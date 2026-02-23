@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/providers/providers.dart';
+import 'package:mixmingle/providers/providers.dart';
 
 class GiftSelector extends ConsumerStatefulWidget {
   final String receiverId;
@@ -23,12 +23,12 @@ class _GiftSelectorState extends ConsumerState<GiftSelector> {
   int _selectedAmount = 10;
 
   final List<Map<String, dynamic>> _gifts = [
-    {'name': 'Rose', 'amount': 5, 'emoji': '🌹'},
-    {'name': 'Heart', 'amount': 10, 'emoji': '❤️'},
-    {'name': 'Diamond', 'amount': 25, 'emoji': '💎'},
-    {'name': 'Crown', 'amount': 50, 'emoji': '👑'},
-    {'name': 'Rocket', 'amount': 100, 'emoji': '🚀'},
-    {'name': 'Castle', 'amount': 250, 'emoji': '🏰'},
+    {'name': 'Rose', 'amount': 5, 'emoji': 'ðŸŒ¹'},
+    {'name': 'Heart', 'amount': 10, 'emoji': 'â¤ï¸'},
+    {'name': 'Diamond', 'amount': 25, 'emoji': 'ðŸ’Ž'},
+    {'name': 'Crown', 'amount': 50, 'emoji': 'ðŸ‘‘'},
+    {'name': 'Rocket', 'amount': 100, 'emoji': 'ðŸš€'},
+    {'name': 'Castle', 'amount': 250, 'emoji': 'ðŸ°'},
   ];
 
   @override

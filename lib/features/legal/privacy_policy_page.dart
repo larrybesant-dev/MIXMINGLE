@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 
 class PrivacyPolicyPage extends StatelessWidget {
@@ -35,39 +35,39 @@ class PrivacyPolicyPage extends StatelessWidget {
             _buildSection(
               '1. Information We Collect',
               'We collect information that you provide directly to us, including:\n\n'
-                  '• Account Information: Email address, display name, profile photo, bio, location, interests, and date of birth\n'
-                  '• User Content: Messages, event creations, photos, videos, and other content you share\n'
-                  '• Communications: Your communications with us and other users\n'
-                  '• Payment Information: When you subscribe to premium features (processed securely through our payment providers)',
+                  'â€¢ Account Information: Email address, display name, profile photo, bio, location, interests, and date of birth\n'
+                  'â€¢ User Content: Messages, event creations, photos, videos, and other content you share\n'
+                  'â€¢ Communications: Your communications with us and other users\n'
+                  'â€¢ Payment Information: When you subscribe to premium features (processed securely through our payment providers)',
             ),
             _buildSection(
               '2. Automatically Collected Information',
               'When you use our services, we automatically collect:\n\n'
-                  '• Device Information: Device type, operating system, unique device identifiers\n'
-                  '• Usage Data: App features used, events attended, interactions with other users\n'
-                  '• Location Data: Approximate location (with your permission) for event recommendations\n'
-                  '• Analytics: App performance, crashes, and usage patterns via Firebase Analytics',
+                  'â€¢ Device Information: Device type, operating system, unique device identifiers\n'
+                  'â€¢ Usage Data: App features used, events attended, interactions with other users\n'
+                  'â€¢ Location Data: Approximate location (with your permission) for event recommendations\n'
+                  'â€¢ Analytics: App performance, crashes, and usage patterns via Firebase Analytics',
             ),
             _buildSection(
               '3. How We Use Your Information',
               'We use your information to:\n\n'
-                  '• Provide, maintain, and improve our services\n'
-                  '• Create and manage your account\n'
-                  '• Enable video chat and messaging features\n'
-                  '• Recommend events and connect you with other users\n'
-                  '• Process payments and manage subscriptions\n'
-                  '• Send notifications about messages, events, and app updates\n'
-                  '• Ensure safety and prevent fraud or abuse\n'
-                  '• Comply with legal obligations\n'
-                  '• Analyze usage to improve user experience',
+                  'â€¢ Provide, maintain, and improve our services\n'
+                  'â€¢ Create and manage your account\n'
+                  'â€¢ Enable video chat and messaging features\n'
+                  'â€¢ Recommend events and connect you with other users\n'
+                  'â€¢ Process payments and manage subscriptions\n'
+                  'â€¢ Send notifications about messages, events, and app updates\n'
+                  'â€¢ Ensure safety and prevent fraud or abuse\n'
+                  'â€¢ Comply with legal obligations\n'
+                  'â€¢ Analyze usage to improve user experience',
             ),
             _buildSection(
               '4. Information Sharing',
               'We DO NOT sell your personal information. We may share your information:\n\n'
-                  '• With Other Users: Profile information is visible to other users; messages are shared with recipients\n'
-                  '• Service Providers: Firebase (Google), Agora (video chat), payment processors, analytics providers\n'
-                  '• Legal Requirements: When required by law, court order, or to protect rights and safety\n'
-                  '• Business Transfers: In connection with mergers, acquisitions, or asset sales',
+                  'â€¢ With Other Users: Profile information is visible to other users; messages are shared with recipients\n'
+                  'â€¢ Service Providers: Firebase (Google), Agora (video chat), payment processors, analytics providers\n'
+                  'â€¢ Legal Requirements: When required by law, court order, or to protect rights and safety\n'
+                  'â€¢ Business Transfers: In connection with mergers, acquisitions, or asset sales',
             ),
             _buildSection(
               '5. Data Retention',
@@ -76,21 +76,21 @@ class PrivacyPolicyPage extends StatelessWidget {
             _buildSection(
               '6. Your Rights (GDPR/CCPA)',
               'You have the right to:\n\n'
-                  '• Access: Request a copy of your personal data\n'
-                  '• Rectification: Correct inaccurate information\n'
-                  '• Erasure: Request deletion of your data\n'
-                  '• Data Portability: Receive your data in a machine-readable format\n'
-                  '• Object: Object to processing of your data\n'
-                  '• Withdraw Consent: Withdraw consent at any time\n\n'
+                  'â€¢ Access: Request a copy of your personal data\n'
+                  'â€¢ Rectification: Correct inaccurate information\n'
+                  'â€¢ Erasure: Request deletion of your data\n'
+                  'â€¢ Data Portability: Receive your data in a machine-readable format\n'
+                  'â€¢ Object: Object to processing of your data\n'
+                  'â€¢ Withdraw Consent: Withdraw consent at any time\n\n'
                   'To exercise these rights, go to Account Settings or contact us at privacy@mixandmingle.com',
             ),
             _buildSection(
               '7. Security',
               'We implement appropriate technical and organizational measures to protect your data, including:\n\n'
-                  '• Encryption of data in transit and at rest\n'
-                  '• Regular security audits\n'
-                  '• Access controls and authentication\n'
-                  '• Secure data centers (Firebase/Google Cloud)\n\n'
+                  'â€¢ Encryption of data in transit and at rest\n'
+                  'â€¢ Regular security audits\n'
+                  'â€¢ Access controls and authentication\n'
+                  'â€¢ Secure data centers (Firebase/Google Cloud)\n\n'
                   'However, no method of transmission over the internet is 100% secure.',
             ),
             _buildSection(
@@ -104,17 +104,17 @@ class PrivacyPolicyPage extends StatelessWidget {
             _buildSection(
               '10. Cookies and Tracking',
               'We use cookies and similar technologies for:\n\n'
-                  '• Authentication and security\n'
-                  '• Preferences and settings\n'
-                  '• Analytics and performance monitoring\n\n'
+                  'â€¢ Authentication and security\n'
+                  'â€¢ Preferences and settings\n'
+                  'â€¢ Analytics and performance monitoring\n\n'
                   'You can control cookies through your browser settings.',
             ),
             _buildSection(
               '11. Third-Party Services',
               'Our app integrates with:\n\n'
-                  '• Firebase (Google): Authentication, database, storage, analytics\n'
-                  '• Agora: Real-time video and audio communication\n'
-                  '• Payment Processors: Stripe or similar for subscriptions\n\n'
+                  'â€¢ Firebase (Google): Authentication, database, storage, analytics\n'
+                  'â€¢ Agora: Real-time video and audio communication\n'
+                  'â€¢ Payment Processors: Stripe or similar for subscriptions\n\n'
                   'These services have their own privacy policies that govern their use of your information.',
             ),
             _buildSection(

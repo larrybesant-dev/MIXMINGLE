@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum RoomPrivacy { public, private }
 
@@ -53,7 +53,6 @@ class Room {
   final List<String> raisedHands;
   final int turnDurationSeconds;
 
-  // Broadcaster mode support for 100+ participants
   final List<String> activeBroadcasters; // UIDs of current broadcasters
   final int maxBroadcasters; // Max simultaneous broadcasters (default 20)
 
@@ -400,3 +399,5 @@ class Room {
   @override
   int get hashCode => id.hashCode;
 }
+
+

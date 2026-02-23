@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'colors.dart';
 
 /// Neon Glow Box - elevated card with glow effect

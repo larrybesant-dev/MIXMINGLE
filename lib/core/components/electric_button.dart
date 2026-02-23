@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import '../theme/colors_v2.dart';
 import '../theme/typography_v2.dart';
 import '../theme/spacing.dart';
@@ -79,62 +79,61 @@ class _ElectricButtonState extends State<ElectricButton> with SingleTickerProvid
       },
       child: Opacity(
         opacity: widget.isEnabled ? 1.0 : 0.6,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: styles.gradient,
-            color: styles.background,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: styles.shadows,
-            border: styles.border,
-          ),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: widget.isEnabled ? widget.onPressed : null,
+        child: GestureDetector(
+          onTap: widget.isEnabled ? () {
+            debugPrint('ðŸ”˜ ElectricButton tapped: ${widget.label}');
+            widget.onPressed?.call();
+          } : null,
+          onTapDown: _handleTapDown,
+          onTapUp: _handleTapUp,
+          onTapCancel: _handleTapCancel,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: styles.gradient,
+              color: styles.background,
               borderRadius: BorderRadius.circular(12),
-              onTapDown: _handleTapDown,
-              onTapUp: _handleTapUp,
-              onTapCancel: _handleTapCancel,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: Spacing.lg,
-                  vertical: Spacing.sm,
-                ),
-                child: Row(
-                  mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    if (widget.isLoading) ...[
-                      SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(styles.foreground),
-                        ),
-                      ),
-                      const SizedBox(width: Spacing.sm),
-                    ] else if (widget.icon != null) ...[
-                      IconTheme(
-                        data: IconThemeData(color: styles.foreground, size: 18),
-                        child: widget.icon!,
-                      ),
-                      const SizedBox(width: Spacing.sm),
-                    ],
-                    Flexible(
-                      child: Text(
-                        widget.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: ElectricTypography.textTheme.titleMedium?.copyWith(
-                          color: styles.foreground,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.2,
-                        ),
+              boxShadow: styles.shadows,
+              border: styles.border,
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.lg,
+                vertical: Spacing.sm,
+              ),
+              child: Row(
+                mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (widget.isLoading) ...[
+                    SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(styles.foreground),
                       ),
                     ),
+                    const SizedBox(width: Spacing.sm),
+                  ] else if (widget.icon != null) ...[
+                    IconTheme(
+                      data: IconThemeData(color: styles.foreground, size: 18),
+                      child: widget.icon!,
+                    ),
+                    const SizedBox(width: Spacing.sm),
                   ],
-                ),
+                  Flexible(
+                    child: Text(
+                      widget.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ElectricTypography.textTheme.titleMedium?.copyWith(
+                        color: styles.foreground,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.2,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

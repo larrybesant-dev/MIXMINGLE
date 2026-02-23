@@ -1,13 +1,13 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import 'package:mix_and_mingle/shared/models/event.dart';
-import 'package:mix_and_mingle/providers/events_controller.dart' hide eventProvider;
-import 'package:mix_and_mingle/providers/event_dating_providers.dart'
+import 'package:mixmingle/shared/models/event.dart';
+import 'package:mixmingle/providers/events_controller.dart' hide eventProvider;
+import 'package:mixmingle/providers/event_dating_providers.dart'
     hide eventsServiceProvider, attendingEventsProvider;
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/shared/widgets/async_value_view_enhanced.dart';
-import 'package:mix_and_mingle/shared/widgets/skeleton_loaders.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
+import 'package:mixmingle/shared/widgets/skeleton_loaders.dart';
 import 'event_details_page.dart';
 import 'create_event_page.dart';
 

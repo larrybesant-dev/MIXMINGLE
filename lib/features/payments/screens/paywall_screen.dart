@@ -1,4 +1,4 @@
-/// Paywall Screen
+﻿/// Paywall Screen
 ///
 /// Premium membership selection screen with Neon Club + VIP Lounge aesthetic.
 /// Features animated spotlight, gold trim, and neon glow effects.

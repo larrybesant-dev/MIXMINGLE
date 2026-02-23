@@ -1,4 +1,4 @@
-/// Autonomy Module
+﻿/// Autonomy Module
 ///
 /// Exports all autonomous optimization and governance components.
 library;
@@ -8,3 +8,5 @@ export 'governance_dashboard.dart';
 export 'optimization_engine.dart';
 export 'policy_engine.dart';
 export 'predictive_scaling.dart';
+
+

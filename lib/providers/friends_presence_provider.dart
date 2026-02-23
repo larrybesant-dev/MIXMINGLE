@@ -1,3 +1,4 @@
+
 /// Friends Provider with Real-Time Presence Integration
 ///
 /// Combines user friends list with live presence data
@@ -272,5 +273,7 @@ final friendsPresenceStreamProvider =
   final friendsList = ref.watch(friendsWithPresenceProvider(userId));
   return Stream.value(friendsList);
 });
+
+
 
 

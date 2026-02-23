@@ -1,4 +1,4 @@
-/// Enterprise Dashboard Widget
+﻿/// Enterprise Dashboard Widget
 ///
 /// Displays organization metrics, room controls, and billing overview.
 library;
@@ -66,7 +66,7 @@ class _EnterpriseDashboardState extends State<EnterpriseDashboard>
         });
       }
     } catch (e) {
-      debugPrint('❌ [EnterpriseDashboard] Failed to load data: $e');
+      debugPrint('âŒ [EnterpriseDashboard] Failed to load data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }

@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mix_and_mingle/services/auth_service.dart';
-import 'package:mix_and_mingle/services/profile_service.dart';
-import 'package:mix_and_mingle/shared/models/user_profile.dart';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'profile_edit_page.dart';
+import 'package:mixmingle/services/auth_service.dart';
+import 'package:mixmingle/services/profile_service.dart';
+import 'package:mixmingle/shared/models/user_profile.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import '../../../features/profile/screens/edit_profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -35,7 +35,7 @@ class _HomePageState extends State<HomePage> {
     final result = await Navigator.push<UserProfile>(
       context,
       MaterialPageRoute(
-        builder: (context) => ProfileEditPage(initialProfile: _profile),
+        builder: (context) => const EditProfilePage(),
       ),
     );
 
@@ -89,7 +89,7 @@ class _HomePageState extends State<HomePage> {
                     if (_profile?.location != null && _profile!.location!.isNotEmpty) ...[
                       const SizedBox(height: 8),
                       Text(
-                        "📍 ${_profile!.location!}",
+                        "ðŸ“ ${_profile!.location!}",
                         style: TextStyle(fontSize: 16),
                       ),
                     ],

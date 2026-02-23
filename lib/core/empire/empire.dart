@@ -1,4 +1,4 @@
-/// Empire Module
+﻿/// Empire Module
 ///
 /// Empire-level services including AI social graph, dynamic economy, federation,
 /// network trust, and analytics.
@@ -22,3 +22,5 @@ export 'trust_network_dashboard.dart';
 // Empire Insights
 export 'empire_insights_service.dart';
 export 'empire_dashboard.dart';
+
+

@@ -1,4 +1,4 @@
-/// Trust Dashboard Widget
+﻿/// Trust Dashboard Widget
 ///
 /// Displays certifications, violations, and trust scores.
 library;
@@ -71,7 +71,7 @@ class _TrustDashboardState extends State<TrustDashboard>
         });
       }
     } catch (e) {
-      debugPrint('❌ [TrustDashboard] Failed to load data: $e');
+      debugPrint('âŒ [TrustDashboard] Failed to load data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -682,13 +682,13 @@ class _TrustDashboardState extends State<TrustDashboard>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('• Verified identity'),
-                        const Text('• Verified email'),
-                        const Text('• Accept terms of service'),
+                        const Text('â€¢ Verified identity'),
+                        const Text('â€¢ Verified email'),
+                        const Text('â€¢ Accept terms of service'),
                         if (type == CertificationType.professional)
-                          const Text('• 1,000+ followers'),
+                          const Text('â€¢ 1,000+ followers'),
                         if (type == CertificationType.premium)
-                          const Text('• Premium subscription'),
+                          const Text('â€¢ Premium subscription'),
                       ],
                     ),
                   ),
@@ -759,7 +759,7 @@ class _TrustDashboardState extends State<TrustDashboard>
               if (violation.evidence.isNotEmpty) ...[
                 const SizedBox(height: 16),
                 const Text('Evidence:', style: TextStyle(fontWeight: FontWeight.bold)),
-                ...violation.evidence.map((e) => Text('• $e')),
+                ...violation.evidence.map((e) => Text('â€¢ $e')),
               ],
             ],
           ),

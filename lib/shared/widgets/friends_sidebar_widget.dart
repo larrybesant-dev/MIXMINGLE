@@ -1,4 +1,4 @@
-/// Friends Sidebar Widget - Enhanced with collapsible behavior, animations, and hover effects
+﻿/// Friends Sidebar Widget - Enhanced with collapsible behavior, animations, and hover effects
 ///
 /// Features:
 /// - Smooth collapse/expand animation (300ms)
@@ -246,7 +246,7 @@ class _FriendsSidebarWidgetState extends ConsumerState<FriendsSidebarWidget> {
           const SizedBox(width: Spacing.sm),
           Expanded(
             child: FilterChip(
-              label: const Text('⭐'),
+              label: const Text('â­'),
               selected: _showFavoritesOnly,
               onSelected: (selected) {
                 setState(() => _showFavoritesOnly = selected);
@@ -628,7 +628,3 @@ class _PulsingOnlineIndicatorState extends State<_PulsingOnlineIndicator>
     );
   }
 }
-
-
-
-

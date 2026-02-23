@@ -1,4 +1,4 @@
-/// RevenueCat Service
+﻿/// RevenueCat Service
 ///
 /// Handles all RevenueCat integration for subscriptions and consumables.
 /// Manages offerings, purchases, entitlements, and restore flow.
@@ -149,7 +149,7 @@ class RevenueCatService extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      debugPrint('🛒 [RevenueCat] Initializing...');
+      debugPrint('ðŸ›’ [RevenueCat] Initializing...');
 
       // In production, you would initialize RevenueCat here:
       // await Purchases.setDebugLogsEnabled(kDebugMode);
@@ -169,10 +169,10 @@ class RevenueCatService extends ChangeNotifier {
       await _checkEntitlements();
 
       _isInitialized = true;
-      debugPrint('✅ [RevenueCat] Initialized successfully');
+      debugPrint('âœ… [RevenueCat] Initialized successfully');
     } catch (e) {
       _errorMessage = 'Failed to initialize purchases: $e';
-      debugPrint('❌ [RevenueCat] Init error: $e');
+      debugPrint('âŒ [RevenueCat] Init error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -182,7 +182,7 @@ class RevenueCatService extends ChangeNotifier {
   /// Fetch available offerings
   Future<void> _fetchOfferings() async {
     try {
-      debugPrint('📦 [RevenueCat] Fetching offerings...');
+      debugPrint('ðŸ“¦ [RevenueCat] Fetching offerings...');
 
       // In production:
       // final offerings = await Purchases.getOfferings();
@@ -315,9 +315,9 @@ class RevenueCatService extends ChangeNotifier {
         ),
       ];
 
-      debugPrint('✅ [RevenueCat] Fetched ${_offerings.length} offerings');
+      debugPrint('âœ… [RevenueCat] Fetched ${_offerings.length} offerings');
     } catch (e) {
-      debugPrint('❌ [RevenueCat] Failed to fetch offerings: $e');
+      debugPrint('âŒ [RevenueCat] Failed to fetch offerings: $e');
       _errorMessage = 'Failed to load store products';
     }
   }
@@ -325,7 +325,7 @@ class RevenueCatService extends ChangeNotifier {
   /// Check current entitlements
   Future<void> _checkEntitlements() async {
     try {
-      debugPrint('🔍 [RevenueCat] Checking entitlements...');
+      debugPrint('ðŸ” [RevenueCat] Checking entitlements...');
 
       // In production:
       // final customerInfo = await Purchases.getCustomerInfo();
@@ -341,10 +341,19 @@ class RevenueCatService extends ChangeNotifier {
       _currentTier = MembershipTier.free;
 
       _tierStreamController?.add(_currentTier);
-      debugPrint('✅ [RevenueCat] Current tier: ${_currentTier.displayName}');
+      debugPrint('âœ… [RevenueCat] Current tier: ${_currentTier.displayName}');
     } catch (e) {
-      debugPrint('❌ [RevenueCat] Failed to check entitlements: $e');
+      debugPrint('âŒ [RevenueCat] Failed to check entitlements: $e');
     }
+  }
+
+  /// Purchase membership by tier (stub wrapper for purchaseSubscription)
+  Future<PurchaseResult> purchaseMembership(MembershipTier tier) async {
+    // DEV STUB - Map tier to product ID
+    final productId = tier == MembershipTier.vipPlus
+        ? RevenueCatConfig.vipPlusMonthly
+        : RevenueCatConfig.vipMonthly;
+    return purchaseSubscription(productId);
   }
 
   /// Purchase a subscription
@@ -353,7 +362,7 @@ class RevenueCatService extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      debugPrint('💳 [RevenueCat] Purchasing subscription: $productId');
+      debugPrint('ðŸ’³ [RevenueCat] Purchasing subscription: $productId');
 
       // In production:
       // final customerInfo = await Purchases.purchaseProduct(productId);
@@ -373,10 +382,10 @@ class RevenueCatService extends ChangeNotifier {
       _tierStreamController?.add(_currentTier);
       notifyListeners();
 
-      debugPrint('✅ [RevenueCat] Purchase successful: ${newTier.displayName}');
+      debugPrint('âœ… [RevenueCat] Purchase successful: ${newTier.displayName}');
       return PurchaseResult.success(tier: newTier, productId: productId);
     } catch (e) {
-      debugPrint('❌ [RevenueCat] Purchase failed: $e');
+      debugPrint('âŒ [RevenueCat] Purchase failed: $e');
       return PurchaseResult.failure('Purchase failed: $e');
     } finally {
       _isLoading = false;
@@ -390,7 +399,7 @@ class RevenueCatService extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      debugPrint('💳 [RevenueCat] Purchasing coins: ${package.productId}');
+      debugPrint('ðŸ’³ [RevenueCat] Purchasing coins: ${package.productId}');
 
       // In production:
       // await Purchases.purchaseProduct(package.productId);
@@ -400,13 +409,13 @@ class RevenueCatService extends ChangeNotifier {
 
       final totalCoins = package.getTotalCoinsForTier(_currentTier);
 
-      debugPrint('✅ [RevenueCat] Coins purchased: $totalCoins');
+      debugPrint('âœ… [RevenueCat] Coins purchased: $totalCoins');
       return PurchaseResult.success(
         coins: totalCoins,
         productId: package.productId,
       );
     } catch (e) {
-      debugPrint('❌ [RevenueCat] Coin purchase failed: $e');
+      debugPrint('âŒ [RevenueCat] Coin purchase failed: $e');
       return PurchaseResult.failure('Purchase failed: $e');
     } finally {
       _isLoading = false;
@@ -420,7 +429,7 @@ class RevenueCatService extends ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      debugPrint('♻️ [RevenueCat] Restoring purchases...');
+      debugPrint('â™»ï¸ [RevenueCat] Restoring purchases...');
 
       // In production:
       // final customerInfo = await Purchases.restorePurchases();
@@ -430,10 +439,10 @@ class RevenueCatService extends ChangeNotifier {
       await Future.delayed(const Duration(seconds: 2));
       await _checkEntitlements();
 
-      debugPrint('✅ [RevenueCat] Purchases restored');
+      debugPrint('âœ… [RevenueCat] Purchases restored');
       return PurchaseResult.success(tier: _currentTier);
     } catch (e) {
-      debugPrint('❌ [RevenueCat] Restore failed: $e');
+      debugPrint('âŒ [RevenueCat] Restore failed: $e');
       return PurchaseResult.failure('Restore failed: $e');
     } finally {
       _isLoading = false;
@@ -455,13 +464,13 @@ class RevenueCatService extends ChangeNotifier {
   /// Log out (call when user logs out)
   Future<void> logOut() async {
     try {
-      debugPrint('👋 [RevenueCat] Logging out...');
+      debugPrint('ðŸ‘‹ [RevenueCat] Logging out...');
       // In production: await Purchases.logOut();
       _currentTier = MembershipTier.free;
       _tierStreamController?.add(_currentTier);
       notifyListeners();
     } catch (e) {
-      debugPrint('❌ [RevenueCat] Logout error: $e');
+      debugPrint('âŒ [RevenueCat] Logout error: $e');
     }
   }
 

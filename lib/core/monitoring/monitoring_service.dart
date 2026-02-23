@@ -1,4 +1,4 @@
-/// Monitoring Service
+﻿/// Monitoring Service
 ///
 /// Tracks key app health metrics including crash-free sessions,
 /// room join success rates, video reliability, retention, and VIP conversion.
@@ -70,11 +70,11 @@ class MonitoringService {
 
       await _recordMetric('crash_free_sessions', metrics.toMap());
 
-      debugPrint('📊 [Monitor] Crash-free rate: ${crashFreeRate.toStringAsFixed(2)}%');
+      debugPrint('ðŸ“Š [Monitor] Crash-free rate: ${crashFreeRate.toStringAsFixed(2)}%');
 
       return metrics;
     } catch (e) {
-      debugPrint('❌ [Monitor] Failed to track crash metrics: $e');
+      debugPrint('âŒ [Monitor] Failed to track crash metrics: $e');
       return CrashMetrics(
         date: date ?? DateTime.now(),
         totalSessions: 0,
@@ -159,11 +159,11 @@ class MonitoringService {
 
       await _recordMetric('room_join_success', metrics.toMap());
 
-      debugPrint('📊 [Monitor] Room join success: ${successRate.toStringAsFixed(2)}%');
+      debugPrint('ðŸ“Š [Monitor] Room join success: ${successRate.toStringAsFixed(2)}%');
 
       return metrics;
     } catch (e) {
-      debugPrint('❌ [Monitor] Failed to track room join metrics: $e');
+      debugPrint('âŒ [Monitor] Failed to track room join metrics: $e');
       return RoomJoinMetrics(
         date: date ?? DateTime.now(),
         totalAttempts: 0,
@@ -258,11 +258,11 @@ class MonitoringService {
 
       await _recordMetric('video_reliability', metrics.toMap());
 
-      debugPrint('📊 [Monitor] Video reliability: ${reliabilityScore.toStringAsFixed(2)}%');
+      debugPrint('ðŸ“Š [Monitor] Video reliability: ${reliabilityScore.toStringAsFixed(2)}%');
 
       return metrics;
     } catch (e) {
-      debugPrint('❌ [Monitor] Failed to track video metrics: $e');
+      debugPrint('âŒ [Monitor] Failed to track video metrics: $e');
       return VideoMetrics(
         date: date ?? DateTime.now(),
         totalSessions: 0,
@@ -342,11 +342,11 @@ class MonitoringService {
 
       await _recordMetric('retention', metrics.toMap());
 
-      debugPrint('📊 [Monitor] D7 retention: ${d7Retention.toStringAsFixed(2)}%');
+      debugPrint('ðŸ“Š [Monitor] D7 retention: ${d7Retention.toStringAsFixed(2)}%');
 
       return metrics;
     } catch (e) {
-      debugPrint('❌ [Monitor] Failed to track retention metrics: $e');
+      debugPrint('âŒ [Monitor] Failed to track retention metrics: $e');
       return RetentionMetrics(
         date: date ?? DateTime.now(),
         d1Retention: 0,
@@ -479,11 +479,11 @@ class MonitoringService {
 
       await _recordMetric('vip_conversion', metrics.toMap());
 
-      debugPrint('📊 [Monitor] VIP conversion: ${conversionRate.toStringAsFixed(2)}%');
+      debugPrint('ðŸ“Š [Monitor] VIP conversion: ${conversionRate.toStringAsFixed(2)}%');
 
       return metrics;
     } catch (e) {
-      debugPrint('❌ [Monitor] Failed to track conversion metrics: $e');
+      debugPrint('âŒ [Monitor] Failed to track conversion metrics: $e');
       return ConversionMetrics(
         date: date ?? DateTime.now(),
         totalUsers: 0,
@@ -550,7 +550,7 @@ class MonitoringService {
         ...data,
       });
     } catch (e) {
-      debugPrint('⚠️ [Monitor] Failed to record metric: $e');
+      debugPrint('âš ï¸ [Monitor] Failed to record metric: $e');
     }
   }
 

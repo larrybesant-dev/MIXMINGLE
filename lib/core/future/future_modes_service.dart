@@ -1,4 +1,4 @@
-/// Future Modes Service
+﻿/// Future Modes Service
 ///
 /// Prototyping and experimentation service for new room modes,
 /// interaction types, and monetization paths.
@@ -256,7 +256,7 @@ class FutureModesService {
     int count = 3,
     List<String>? targetAudience,
   }) async {
-    debugPrint('🎭 [FutureModesService] Generating $count room mode prototypes');
+    debugPrint('ðŸŽ­ [FutureModesService] Generating $count room mode prototypes');
 
     final prototypes = <RoomModePrototype>[];
     final templates = _getRoomModeTemplates();
@@ -294,7 +294,7 @@ class FutureModesService {
       'count': prototypes.length,
     });
 
-    debugPrint('✅ [FutureModesService] Created ${prototypes.length} room mode prototypes');
+    debugPrint('âœ… [FutureModesService] Created ${prototypes.length} room mode prototypes');
     return prototypes;
   }
 
@@ -368,7 +368,7 @@ class FutureModesService {
     int count = 3,
     InteractionCategory? category,
   }) async {
-    debugPrint('🤝 [FutureModesService] Generating $count interaction type prototypes');
+    debugPrint('ðŸ¤ [FutureModesService] Generating $count interaction type prototypes');
 
     final prototypes = <InteractionTypePrototype>[];
     final templates = _getInteractionTemplates();
@@ -406,7 +406,7 @@ class FutureModesService {
       _interactionPrototypeController.add(prototype);
     }
 
-    debugPrint('✅ [FutureModesService] Created ${prototypes.length} interaction prototypes');
+    debugPrint('âœ… [FutureModesService] Created ${prototypes.length} interaction prototypes');
     return prototypes;
   }
 
@@ -481,7 +481,7 @@ class FutureModesService {
     int count = 3,
     MonetizationType? type,
   }) async {
-    debugPrint('💰 [FutureModesService] Generating $count monetization prototypes');
+    debugPrint('ðŸ’° [FutureModesService] Generating $count monetization prototypes');
 
     final prototypes = <MonetizationPathPrototype>[];
     final templates = _getMonetizationTemplates();
@@ -521,7 +521,7 @@ class FutureModesService {
       _monetizationPrototypeController.add(prototype);
     }
 
-    debugPrint('✅ [FutureModesService] Created ${prototypes.length} monetization prototypes');
+    debugPrint('âœ… [FutureModesService] Created ${prototypes.length} monetization prototypes');
     return prototypes;
   }
 
@@ -662,10 +662,10 @@ class FutureModesService {
         if (newStatus == PrototypeStatus.launched) 'launchedAt': DateTime.now().toIso8601String(),
       });
 
-      debugPrint('✅ [FutureModesService] Updated prototype status: $prototypeId -> ${newStatus.name}');
+      debugPrint('âœ… [FutureModesService] Updated prototype status: $prototypeId -> ${newStatus.name}');
       return true;
     } catch (e) {
-      debugPrint('❌ [FutureModesService] Failed to update prototype status: $e');
+      debugPrint('âŒ [FutureModesService] Failed to update prototype status: $e');
       return false;
     }
   }
@@ -680,10 +680,10 @@ class FutureModesService {
         'feedback': FieldValue.arrayUnion([feedback.toMap()]),
       });
 
-      debugPrint('✅ [FutureModesService] Added feedback to prototype: $prototypeId');
+      debugPrint('âœ… [FutureModesService] Added feedback to prototype: $prototypeId');
       return true;
     } catch (e) {
-      debugPrint('❌ [FutureModesService] Failed to add feedback: $e');
+      debugPrint('âŒ [FutureModesService] Failed to add feedback: $e');
       return false;
     }
   }
@@ -714,10 +714,10 @@ class FutureModesService {
         'name': data['name'],
       });
 
-      debugPrint('🚀 [FutureModesService] Launched prototype: ${data['name']}');
+      debugPrint('ðŸš€ [FutureModesService] Launched prototype: ${data['name']}');
       return true;
     } catch (e) {
-      debugPrint('❌ [FutureModesService] Failed to launch prototype: $e');
+      debugPrint('âŒ [FutureModesService] Failed to launch prototype: $e');
       return false;
     }
   }

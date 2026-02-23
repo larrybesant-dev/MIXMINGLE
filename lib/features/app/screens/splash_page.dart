@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'dart:async';
-import 'package:mix_and_mingle/shared/widgets/club_background.dart';
-import 'package:mix_and_mingle/shared/widgets/glow_text.dart';
+import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/shared/widgets/glow_text.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -20,12 +20,12 @@ class _SplashPageState extends State<SplashPage> {
   @override
   void initState() {
     super.initState();
-    debugPrint('🎬 SplashPage initState called');
+    debugPrint('ðŸŽ¬ SplashPage initState called');
 
     // Minimum splash delay (show branding)
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted && !_hasNavigated) {
-        debugPrint('⏰ Minimum delay passed - checking if auth already resolved');
+        debugPrint('â° Minimum delay passed - checking if auth already resolved');
         setState(() {
           _hasMinimumDelayPassed = true;
         });
@@ -38,7 +38,7 @@ class _SplashPageState extends State<SplashPage> {
     // Listen to Firebase auth state changes directly (no providers)
     _authSubscription = firebase_auth.FirebaseAuth.instance.authStateChanges().listen((user) {
       if (mounted && !_hasNavigated && _hasMinimumDelayPassed) {
-        debugPrint('🔔 Auth state changed: ${user != null ? "user present" : "no user"}');
+        debugPrint('ðŸ”” Auth state changed: ${user != null ? "user present" : "no user"}');
         _tryNavigate();
       }
     });
@@ -46,7 +46,7 @@ class _SplashPageState extends State<SplashPage> {
     // Timeout as safety net - 15 seconds
     _timeoutTimer = Timer(const Duration(seconds: 15), () {
       if (mounted && !_hasNavigated) {
-        debugPrint('⚠️ Splash timeout (15s) - forcing navigation to login');
+        debugPrint('âš ï¸ Splash timeout (15s) - forcing navigation to login');
         _hasNavigated = true;
         Navigator.of(context).pushReplacementNamed('/login');
       }
@@ -58,15 +58,15 @@ class _SplashPageState extends State<SplashPage> {
 
     final user = firebase_auth.FirebaseAuth.instance.currentUser;
     if (!_hasNavigated) {
-      debugPrint('📊 Auth resolved: user=${user?.uid ?? "null"}');
+      debugPrint('ðŸ“Š Auth resolved: user=${user?.uid ?? "null"}');
       _hasNavigated = true;
       _timeoutTimer?.cancel();
 
       if (user != null) {
-        debugPrint('✅ User authenticated - navigating to /home');
+        debugPrint('âœ… User authenticated - navigating to /home');
         Navigator.of(context).pushReplacementNamed('/home');
       } else {
-        debugPrint('ℹ️ No user - navigating to /login');
+        debugPrint('â„¹ï¸ No user - navigating to /login');
         Navigator.of(context).pushReplacementNamed('/login');
       }
     }

@@ -1,4 +1,4 @@
-/// Load Monitor
+﻿/// Load Monitor
 ///
 /// Tracks active rooms, concurrent streams, Firestore load, and Agora load
 /// to provide real-time metrics for scaling decisions.
@@ -215,7 +215,7 @@ class LoadMonitor {
       message: 'High active room count',
     );
 
-    debugPrint('📊 [LoadMonitor] Active rooms: $count');
+    debugPrint('ðŸ“Š [LoadMonitor] Active rooms: $count');
     return count;
   }
 
@@ -239,7 +239,7 @@ class LoadMonitor {
       message: 'High concurrent stream count',
     );
 
-    debugPrint('📊 [LoadMonitor] Concurrent streams: $count');
+    debugPrint('ðŸ“Š [LoadMonitor] Concurrent streams: $count');
     return count;
   }
 
@@ -280,7 +280,7 @@ class LoadMonitor {
       message: 'High Firestore operation rate',
     );
 
-    debugPrint('📊 [LoadMonitor] Firestore ops: ${readOps.toStringAsFixed(2)} reads/s, ${writeOps.toStringAsFixed(2)} writes/s');
+    debugPrint('ðŸ“Š [LoadMonitor] Firestore ops: ${readOps.toStringAsFixed(2)} reads/s, ${writeOps.toStringAsFixed(2)} writes/s');
 
     return {
       'readOps': readOps,
@@ -309,7 +309,7 @@ class LoadMonitor {
       message: 'High Agora channel count',
     );
 
-    debugPrint('📊 [LoadMonitor] Agora channels: $_agoraChannels');
+    debugPrint('ðŸ“Š [LoadMonitor] Agora channels: $_agoraChannels');
     return _agoraChannels;
   }
 

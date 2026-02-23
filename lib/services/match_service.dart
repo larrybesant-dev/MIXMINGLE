@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
@@ -70,9 +70,9 @@ class MatchService {
     try {
       await _likeUserWithRetry(likerId, likedUserId);
       _recordLike(likerId);
-      debugPrint('✅ User $likerId liked $likedUserId');
+      debugPrint('âœ… User $likerId liked $likedUserId');
     } catch (e) {
-      debugPrint('❌ Failed to like user: $e');
+      debugPrint('âŒ Failed to like user: $e');
       throw MatchException('Failed to like user: $e', code: 'like-failed');
     }
   }
@@ -113,11 +113,11 @@ class MatchService {
           });
         }
       } else {
-        debugPrint('⚠️ User already liked');
+        debugPrint('âš ï¸ User already liked');
       }
     } catch (e) {
       if (attempt < _maxRetries) {
-        debugPrint('⚠️ Retry attempt ${attempt + 1} for like operation');
+        debugPrint('âš ï¸ Retry attempt ${attempt + 1} for like operation');
         await Future.delayed(_retryDelay * (attempt + 1));
         return _likeUserWithRetry(likerId, likedUserId, attempt: attempt + 1);
       }
@@ -172,9 +172,9 @@ class MatchService {
 
     try {
       await _unlikeUserWithRetry(likerId, likedUserId);
-      debugPrint('✅ User $likerId unliked $likedUserId');
+      debugPrint('âœ… User $likerId unliked $likedUserId');
     } catch (e) {
-      debugPrint('❌ Failed to unlike user: $e');
+      debugPrint('âŒ Failed to unlike user: $e');
       throw MatchException('Failed to unlike user: $e', code: 'unlike-failed');
     }
   }
@@ -195,7 +195,7 @@ class MatchService {
       await batch.commit();
     } catch (e) {
       if (attempt < _maxRetries) {
-        debugPrint('⚠️ Retry attempt ${attempt + 1} for unlike operation');
+        debugPrint('âš ï¸ Retry attempt ${attempt + 1} for unlike operation');
         await Future.delayed(_retryDelay * (attempt + 1));
         return _unlikeUserWithRetry(likerId, likedUserId, attempt: attempt + 1);
       }
@@ -211,7 +211,7 @@ class MatchService {
       // Check if match already exists
       final existingMatch = await _findMatch(user1Id, user2Id);
       if (existingMatch != null) {
-        debugPrint('⚠️ Match already exists');
+        debugPrint('âš ï¸ Match already exists');
         return;
       }
 
@@ -255,13 +255,13 @@ class MatchService {
       // Send match notifications (non-blocking, outside transaction)
       if (matchId != null) {
         _sendMatchNotifications(user1Id, user2Id, matchId!).catchError((e) {
-          debugPrint('⚠️ Failed to send match notifications: $e');
+          debugPrint('âš ï¸ Failed to send match notifications: $e');
         });
       }
 
-      debugPrint('✅ Match created: $matchId with chat: $chatId');
+      debugPrint('âœ… Match created: $matchId with chat: $chatId');
     } catch (e) {
-      debugPrint('❌ Failed to create match: $e');
+      debugPrint('âŒ Failed to create match: $e');
       throw MatchException('Failed to create match: $e', code: 'match-creation-failed');
     }
   }
@@ -320,9 +320,9 @@ class MatchService {
         }
       });
 
-      debugPrint('✅ Unmatched users: $userId and $otherUserId');
+      debugPrint('âœ… Unmatched users: $userId and $otherUserId');
     } catch (e) {
-      debugPrint('❌ Failed to unmatch: $e');
+      debugPrint('âŒ Failed to unmatch: $e');
       throw MatchException('Failed to unmatch: $e', code: 'unmatch-failed');
     }
   }
@@ -341,7 +341,7 @@ class MatchService {
 
       return likeQuery.docs.isNotEmpty;
     } catch (e) {
-      debugPrint('❌ Failed to check like status: $e');
+      debugPrint('âŒ Failed to check like status: $e');
       return false;
     }
   }
@@ -357,7 +357,7 @@ class MatchService {
 
       return likesQuery.docs.map((doc) => doc['likedUserId'] as String).toList();
     } catch (e) {
-      debugPrint('❌ Failed to get user likes: $e');
+      debugPrint('âŒ Failed to get user likes: $e');
       return [];
     }
   }
@@ -373,7 +373,7 @@ class MatchService {
 
       return likesQuery.docs.map((doc) => doc['likerId'] as String).toList();
     } catch (e) {
-      debugPrint('❌ Failed to get users who liked: $e');
+      debugPrint('âŒ Failed to get users who liked: $e');
       return [];
     }
   }
@@ -399,7 +399,7 @@ class MatchService {
 
       return matchUserIds;
     } catch (e) {
-      debugPrint('❌ Failed to get user matches: $e');
+      debugPrint('âŒ Failed to get user matches: $e');
       return [];
     }
   }
@@ -455,10 +455,10 @@ class MatchService {
           .take(limit)
           .toList();
 
-      debugPrint('✅ Found ${filteredDocs.length} potential matches');
+      debugPrint('âœ… Found ${filteredDocs.length} potential matches');
       return filteredDocs;
     } catch (e) {
-      debugPrint('❌ Failed to get potential matches: $e');
+      debugPrint('âŒ Failed to get potential matches: $e');
       return [];
     }
   }
@@ -475,10 +475,10 @@ class MatchService {
         'unreadCount': {uid1: 0, uid2: 0},
       });
 
-      debugPrint('✅ Chat created for match: ${doc.id}');
+      debugPrint('âœ… Chat created for match: ${doc.id}');
       return doc.id;
     } catch (e) {
-      debugPrint('❌ Failed to create chat: $e');
+      debugPrint('âŒ Failed to create chat: $e');
       throw MatchException('Failed to create chat: $e', code: 'chat-creation-failed');
     }
   }

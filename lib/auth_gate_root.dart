@@ -1,11 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/design_system/design_constants.dart';
 import 'features/auth/screens/neon_login_page.dart';
 import 'features/auth/screens/neon_signup_page.dart';
 import 'features/auth/forgot_password_page.dart';
-import 'features/onboarding_flow.dart';
+// TEMP DISABLED: import 'features/onboarding_flow.dart';
 import 'features/landing/landing_page.dart';
+import 'features/home/home_page_electric.dart';
 import 'app.dart';
 import 'providers/all_providers.dart';
 import 'core/theme/neon_theme.dart';
@@ -20,10 +21,10 @@ import 'core/utils/app_logger.dart';
 /// Flow:
 /// 1. App starts
 /// 2. Root Auth Gate watches authStateProvider (Firebase auth stream)
-/// 3. If user is null → Show unauthenticated app (landing/login/signup)
-/// 4. If user exists → Watch currentUserProvider (loaded profile)
-/// 5. If profile incomplete → Show profile creation
-/// 6. If profile complete → Show main app
+/// 3. If user is null â†’ Show unauthenticated app (landing/login/signup)
+/// 4. If user exists â†’ Watch currentUserProvider (loaded profile)
+/// 5. If profile incomplete â†’ Show profile creation
+/// 6. If profile complete â†’ Show main app
 ///
 /// NO exceptions. NO bypasses. NO race conditions.
 /// ============================================================================
@@ -39,13 +40,13 @@ class RootAuthGate extends ConsumerWidget {
     return authState.when(
       // Auth state still resolving - show loading splash
       loading: () {
-        debugPrint('⏳ [RootAuthGate] Firebase auth state still loading...');
+        debugPrint('â³ [RootAuthGate] Firebase auth state still loading...');
         return const _SplashLoadingScreen();
       },
 
       // Auth error - show splash and log
       error: (error, stack) {
-        debugPrint('❌ [RootAuthGate] Auth state error: $error');
+        debugPrint('âŒ [RootAuthGate] Auth state error: $error');
         AppLogger.error('Auth gate error: $error');
         return const _SplashLoadingScreen();
       },
@@ -53,12 +54,12 @@ class RootAuthGate extends ConsumerWidget {
       // No user authenticated - show login/signup flow
       data: (user) {
         if (user == null) {
-          debugPrint('🔓 [RootAuthGate] No user authenticated');
+          debugPrint('ðŸ”“ [RootAuthGate] No user authenticated');
           return const _UnauthenticatedApp();
         }
 
         // User is authenticated - check if profile is complete
-        debugPrint('✅ [RootAuthGate] User authenticated: ${user.email}');
+        debugPrint('âœ… [RootAuthGate] User authenticated: ${user.email}');
 
         return _AuthenticatedAppGate(userId: user.uid);
       },
@@ -67,7 +68,7 @@ class RootAuthGate extends ConsumerWidget {
 }
 
 /// ============================================================================
-/// UNAUTHENTICATED APP - Landing → Login/Signup
+/// UNAUTHENTICATED APP - Landing â†’ Login/Signup
 /// ============================================================================
 /// Shows only to users who are not logged in.
 class _UnauthenticatedApp extends StatelessWidget {
@@ -81,7 +82,7 @@ class _UnauthenticatedApp extends StatelessWidget {
       theme: NeonTheme.darkTheme,
       home: const LandingPage(),
       onGenerateRoute: (settings) {
-        debugPrint('🔓 [Unauthenticated] Route: ${settings.name}');
+        debugPrint('ðŸ”“ [Unauthenticated] Route: ${settings.name}');
         switch (settings.name) {
           case '/':
           case '/landing':
@@ -96,7 +97,7 @@ class _UnauthenticatedApp extends StatelessWidget {
             );
           default:
             // Block all other routes - send back to landing
-            debugPrint('⛔ [Unauthenticated] Blocked access to: ${settings.name}');
+            debugPrint('â›” [Unauthenticated] Blocked access to: ${settings.name}');
             return MaterialPageRoute(builder: (_) => const LandingPage());
         }
       },
@@ -119,34 +120,35 @@ class _AuthenticatedAppGate extends ConsumerWidget {
     // Watch the current user's profile
     final userState = ref.watch(currentUserProvider);
 
-    debugPrint('👤 [AuthenticatedGate] Checking profile for: $userId');
+    debugPrint('ðŸ‘¤ [AuthenticatedGate] Checking profile for: $userId');
 
     return userState.when(
       // Still loading profile
       loading: () {
-        debugPrint('⏳ [AuthenticatedGate] Loading user profile...');
+        debugPrint('â³ [AuthenticatedGate] Loading user profile...');
         return const _SplashLoadingScreen();
       },
 
       // Error loading profile - still show splash
       error: (error, stack) {
-        debugPrint('⚠️ [AuthenticatedGate] Profile load error: $error');
+        debugPrint('âš ï¸ [AuthenticatedGate] Profile load error: $error');
         return const _SplashLoadingScreen();
       },
 
       // Profile loaded
       data: (user) {
-        // Check if profile is complete - displayName must exist and not be empty
-        debugPrint('📄 [AuthenticatedGate] User data: ${user != null ? "exists" : "null"}');
+        // Check if profile is complete - either displayName OR username must exist
+        debugPrint('ðŸ“„ [AuthenticatedGate] User data: ${user != null ? "exists" : "null"}');
         if (user != null) {
-          debugPrint('🔑 [AuthenticatedGate] User fields: displayName="${user.displayName}", username="${user.username}", email="${user.email}"');
+          debugPrint('ðŸ”‘ [AuthenticatedGate] User fields: displayName="${user.displayName}", username="${user.username}", email="${user.email}"');
         }
 
         final displayName = user?.displayName ?? '';
-        debugPrint('👤 [AuthenticatedGate] displayName extracted: "$displayName" (isEmpty: ${displayName.isEmpty})');
+        final username = user?.username ?? '';
+        debugPrint('ðŸ‘¤ [AuthenticatedGate] displayName="$displayName", username="$username"');
 
-        if (displayName.isNotEmpty) {
-          debugPrint('✅ [AuthenticatedGate] Profile complete. Showing app.');
+        if (displayName.isNotEmpty || username.isNotEmpty) {
+          debugPrint('âœ… [AuthenticatedGate] Profile complete. Showing app.');
 
           // Initialize optional services non-blocking
           _initializeOptionalServices(ref, userId);
@@ -156,7 +158,7 @@ class _AuthenticatedAppGate extends ConsumerWidget {
           return const MixMingleApp();
         }
 
-        debugPrint('🚧 [AuthenticatedGate] Profile incomplete. Forcing completion.');
+        debugPrint('ðŸš§ [AuthenticatedGate] Profile incomplete. Forcing completion.');
         return _ProfileIncompleteApp(userId: userId);
       },
     );
@@ -167,20 +169,20 @@ class _AuthenticatedAppGate extends ConsumerWidget {
     Future.microtask(() async {
       try {
         // Initialize presence (non-blocking)
-        debugPrint('📱 [Init] Initializing presence for $userId...');
+        debugPrint('ðŸ“± [Init] Initializing presence for $userId...');
         final presenceService = ref.read(presenceServiceProvider);
         await presenceService.initializePresence();
         await presenceService.goOnline();
-        debugPrint('✅ [Init] Presence initialized');
+        debugPrint('âœ… [Init] Presence initialized');
 
         // Initialize FCM notifications (non-blocking)
-        debugPrint('📱 [Init] Initializing FCM notifications...');
+        debugPrint('ðŸ“± [Init] Initializing FCM notifications...');
         // FCM setup happens in main.dart, this is just for reference
-        debugPrint('✅ [Init] FCM notifications ready');
+        debugPrint('âœ… [Init] FCM notifications ready');
 
         AppLogger.info('Post-auth initialization complete');
       } catch (e) {
-        debugPrint('⚠️ [Init] Optional service init failed (non-fatal): $e');
+        debugPrint('âš ï¸ [Init] Optional service init failed (non-fatal): $e');
         AppLogger.warning('Optional service initialization failed: $e');
         // App continues - these services are not critical for rendering
       }
@@ -199,26 +201,18 @@ class _ProfileIncompleteApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('🚧 [ProfileIncomplete] Showing onboarding for $userId');
+    debugPrint('ðŸš§ [ProfileIncomplete] Redirecting to home for $userId');
 
+    // TEMP DISABLED: Onboarding bypassed
     return MaterialApp(
-      title: 'Mix & Mingle - Complete Your Profile',
+      title: 'Mix & Mingle',
       debugShowCheckedModeBanner: false,
       theme: NeonTheme.darkTheme,
-      home: OnboardingFlow(),
+      home: HomePageElectric(), // Skip onboarding, go to home (not const)
       onGenerateRoute: (settings) {
-        debugPrint('🚧 [ProfileIncomplete] Route: ${settings.name}');
-        switch (settings.name) {
-          case '/create-profile':
-          case '/onboarding':
-            return MaterialPageRoute(builder: (_) => OnboardingFlow());
-          case '/logout':
-            // Allow logout even from profile creation
-            return MaterialPageRoute(builder: (_) => const LandingPage());
-          default:
-            // Everything else blocked - stay on onboarding
-            return MaterialPageRoute(builder: (_) => OnboardingFlow());
-        }
+        debugPrint('ðŸš§ [ProfileIncomplete] Route: ${settings.name}');
+        // All routes lead to home since onboarding is disabled
+        return MaterialPageRoute(builder: (_) => HomePageElectric());
       },
     );
   }
@@ -289,5 +283,3 @@ class _SplashLoadingScreen extends StatelessWidget {
     );
   }
 }
-
-

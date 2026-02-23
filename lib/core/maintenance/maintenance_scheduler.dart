@@ -1,4 +1,4 @@
-/// Maintenance Scheduler
+﻿/// Maintenance Scheduler
 ///
 /// Schedules and orchestrates maintenance tasks on monthly,
 /// quarterly, and annual cycles.
@@ -241,7 +241,7 @@ class MaintenanceScheduler {
 
   /// Start automatic scheduling
   void startAutoScheduler() {
-    debugPrint('⏰ [MaintenanceScheduler] Starting automatic scheduler');
+    debugPrint('â° [MaintenanceScheduler] Starting automatic scheduler');
 
     // Check every hour if maintenance is due
     _schedulerTimer = Timer.periodic(const Duration(hours: 1), (_) {
@@ -256,7 +256,7 @@ class MaintenanceScheduler {
   void stopAutoScheduler() {
     _schedulerTimer?.cancel();
     _schedulerTimer = null;
-    debugPrint('⏰ [MaintenanceScheduler] Stopped automatic scheduler');
+    debugPrint('â° [MaintenanceScheduler] Stopped automatic scheduler');
   }
 
   Future<void> _checkScheduledMaintenance() async {
@@ -271,7 +271,7 @@ class MaintenanceScheduler {
     if (now.day == _config.monthlyDayOfMonth) {
       final lastMonthly = await _getLastMaintenance(MaintenanceCycle.monthly);
       if (lastMonthly == null || lastMonthly.month != now.month) {
-        debugPrint('⏰ [MaintenanceScheduler] Running scheduled monthly maintenance');
+        debugPrint('â° [MaintenanceScheduler] Running scheduled monthly maintenance');
         await runMonthlyMaintenance();
       }
     }
@@ -280,7 +280,7 @@ class MaintenanceScheduler {
     if (_isQuarterlyDue(now)) {
       final lastQuarterly = await _getLastMaintenance(MaintenanceCycle.quarterly);
       if (lastQuarterly == null || _getQuarter(lastQuarterly) != _getQuarter(now)) {
-        debugPrint('⏰ [MaintenanceScheduler] Running scheduled quarterly maintenance');
+        debugPrint('â° [MaintenanceScheduler] Running scheduled quarterly maintenance');
         await runQuarterlyMaintenance();
       }
     }
@@ -289,7 +289,7 @@ class MaintenanceScheduler {
     if (now.month == _config.annualMonth && now.day == _config.annualDayOfMonth) {
       final lastAnnual = await _getLastMaintenance(MaintenanceCycle.annual);
       if (lastAnnual == null || lastAnnual.year != now.year) {
-        debugPrint('⏰ [MaintenanceScheduler] Running scheduled annual maintenance');
+        debugPrint('â° [MaintenanceScheduler] Running scheduled annual maintenance');
         await runAnnualMaintenance();
       }
     }
@@ -322,7 +322,7 @@ class MaintenanceScheduler {
 
   /// Run monthly maintenance tasks
   Future<MonthlyMaintenanceReport> runMonthlyMaintenance() async {
-    debugPrint('📅 [MaintenanceScheduler] Starting monthly maintenance');
+    debugPrint('ðŸ“… [MaintenanceScheduler] Starting monthly maintenance');
     final startTime = DateTime.now();
 
     final scheduleEntry = MaintenanceScheduleEntry(
@@ -404,10 +404,10 @@ class MaintenanceScheduler {
         'success': allSuccessful,
       });
 
-      debugPrint('✅ [MaintenanceScheduler] Monthly maintenance completed');
+      debugPrint('âœ… [MaintenanceScheduler] Monthly maintenance completed');
       return report;
     } catch (e) {
-      debugPrint('❌ [MaintenanceScheduler] Monthly maintenance failed: $e');
+      debugPrint('âŒ [MaintenanceScheduler] Monthly maintenance failed: $e');
 
       final failedEntry = scheduleEntry.copyWith(
         completedAt: DateTime.now(),
@@ -436,7 +436,7 @@ class MaintenanceScheduler {
 
   /// Run quarterly maintenance tasks
   Future<QuarterlyMaintenanceReport> runQuarterlyMaintenance() async {
-    debugPrint('📅 [MaintenanceScheduler] Starting quarterly maintenance');
+    debugPrint('ðŸ“… [MaintenanceScheduler] Starting quarterly maintenance');
     final startTime = DateTime.now();
     final quarter = _getQuarter(startTime);
 
@@ -517,10 +517,10 @@ class MaintenanceScheduler {
         'success': allSuccessful,
       });
 
-      debugPrint('✅ [MaintenanceScheduler] Quarterly maintenance completed');
+      debugPrint('âœ… [MaintenanceScheduler] Quarterly maintenance completed');
       return report;
     } catch (e) {
-      debugPrint('❌ [MaintenanceScheduler] Quarterly maintenance failed: $e');
+      debugPrint('âŒ [MaintenanceScheduler] Quarterly maintenance failed: $e');
 
       final failedEntry = scheduleEntry.copyWith(
         completedAt: DateTime.now(),
@@ -549,7 +549,7 @@ class MaintenanceScheduler {
 
   /// Run annual maintenance tasks
   Future<AnnualMaintenanceReport> runAnnualMaintenance() async {
-    debugPrint('📅 [MaintenanceScheduler] Starting annual maintenance');
+    debugPrint('ðŸ“… [MaintenanceScheduler] Starting annual maintenance');
     final startTime = DateTime.now();
     final year = startTime.year;
 
@@ -639,10 +639,10 @@ class MaintenanceScheduler {
         'duration_ms': duration.inMilliseconds,
       });
 
-      debugPrint('✅ [MaintenanceScheduler] Annual maintenance completed');
+      debugPrint('âœ… [MaintenanceScheduler] Annual maintenance completed');
       return report;
     } catch (e) {
-      debugPrint('❌ [MaintenanceScheduler] Annual maintenance failed: $e');
+      debugPrint('âŒ [MaintenanceScheduler] Annual maintenance failed: $e');
 
       final failedEntry = scheduleEntry.copyWith(
         completedAt: DateTime.now(),

@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Subscription tiers available in the app
@@ -163,3 +164,5 @@ class UserSubscription {
     );
   }
 }
+
+

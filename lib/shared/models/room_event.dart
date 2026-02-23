@@ -1,4 +1,4 @@
-/// Event types for room activity tracking
+﻿/// Event types for room activity tracking
 enum RoomEventType {
   userJoined,
   userLeft,
@@ -237,3 +237,5 @@ class RoomEvent {
     );
   }
 }
+
+

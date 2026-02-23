@@ -1,4 +1,4 @@
-/// Wallet Page
+﻿/// Wallet Page
 ///
 /// Comprehensive wallet screen showing coin balance, transaction history,
 /// and quick actions for coin management.

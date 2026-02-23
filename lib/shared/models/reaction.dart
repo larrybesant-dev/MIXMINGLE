@@ -48,35 +48,35 @@ class Reaction {
 }
 
 enum ReactionType {
-  wave, // 👋 Free
-  heart, // ❤️ Free
-  celebrate, // 🎉 Free
-  fire, // 🔥 5 coins
-  rose, // 🌹 10 coins
-  diamond, // 💎 25 coins
-  crown, // 👑 50 coins
-  trophy, // 🏆 100 coins
+  wave, // ðŸ‘‹ Free
+  heart, // â¤ï¸ Free
+  celebrate, // ðŸŽ‰ Free
+  fire, // ðŸ”¥ 5 coins
+  rose, // ðŸŒ¹ 10 coins
+  diamond, // ðŸ’Ž 25 coins
+  crown, // ðŸ‘‘ 50 coins
+  trophy, // ðŸ† 100 coins
 }
 
 extension ReactionTypeExtension on ReactionType {
   String get emoji {
     switch (this) {
       case ReactionType.wave:
-        return '👋';
+        return 'ðŸ‘‹';
       case ReactionType.heart:
-        return '❤️';
+        return 'â¤ï¸';
       case ReactionType.celebrate:
-        return '🎉';
+        return 'ðŸŽ‰';
       case ReactionType.fire:
-        return '🔥';
+        return 'ðŸ”¥';
       case ReactionType.rose:
-        return '🌹';
+        return 'ðŸŒ¹';
       case ReactionType.diamond:
-        return '💎';
+        return 'ðŸ’Ž';
       case ReactionType.crown:
-        return '👑';
+        return 'ðŸ‘‘';
       case ReactionType.trophy:
-        return '🏆';
+        return 'ðŸ†';
     }
   }
 
@@ -120,3 +120,5 @@ extension ReactionTypeExtension on ReactionType {
     }
   }
 }
+
+

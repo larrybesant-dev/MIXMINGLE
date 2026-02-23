@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../shared/models/achievement.dart';
 import '../shared/models/user_level.dart';
@@ -259,7 +259,7 @@ class GamificationService {
         await logActivity(
           userId: userId,
           type: ActivityType.streakMilestone,
-          description: '$newStreak day streak! 🔥',
+          description: '$newStreak day streak! ðŸ”¥',
           metadata: {'streak': newStreak},
         );
       }

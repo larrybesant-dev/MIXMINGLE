@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user.dart';
 import '../shared/models/room.dart';
 import '../models/message.dart';
-import '../models/notification.dart';
+import '../models/notification.dart' as notif;
 import '../models/tip.dart';
 import '../models/media_item.dart';
 import '../models/privacy_settings.dart';
@@ -118,17 +118,17 @@ class FirestoreService {
   }
 
   // Notifications
-  Stream<List<Notification>> getNotificationsStream(String userId) {
+  Stream<List<notif.Notification>> getNotificationsStream(String userId) {
     return _firestore
         .collection('users')
         .doc(userId)
         .collection('notifications')
         .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => Notification.fromMap(doc.data())).toList());
+        .map((snapshot) => snapshot.docs.map((doc) => notif.Notification.fromMap(doc.data())).toList());
   }
 
-  Future<void> createNotification(Notification notification) async {
+  Future<void> createNotification(notif.Notification notification) async {
     await _firestore.collection('users').doc(notification.userId).collection('notifications').add(notification.toMap());
   }
 
@@ -258,4 +258,32 @@ class FirestoreService {
   Future<void> updateUserFields(String userId, Map<String, dynamic> fields) async {
     await _firestore.collection('users').doc(userId).update(fields);
   }
+
+  // TEMP STUBS: Notification methods (not yet implemented)
+  Future<void> sendFriendOnlineNotification(
+    String recipientUserId,
+    String friendUserId,
+    String friendName,
+  ) async {
+    // TODO: Implement friend online notification
+  }
+
+  Future<void> sendFriendOfflineNotification(
+    String recipientUserId,
+    String friendUserId,
+    String friendName,
+  ) async {
+    // TODO: Implement friend offline notification
+  }
+
+  Future<void> sendRoomInvitation(
+    String invitedByUserId,
+    String invitedByName,
+    String recipientUserId,
+    String roomId,
+    String roomName,
+  ) async {
+    // TODO: Implement room invitation notification
+  }
 }
+

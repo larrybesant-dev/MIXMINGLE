@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import '../../core/design_system/design_constants.dart';
 
@@ -84,6 +84,3 @@ SafeAvatar buildAvatarWithIcon({
     child: Icon(icon, color: iconColor ?? DesignColors.accent),
   );
 }
-
-
-

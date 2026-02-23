@@ -1,4 +1,4 @@
-/// Marketplace Dashboard Widget
+﻿/// Marketplace Dashboard Widget
 ///
 /// Displays creator services, earnings, and boosts information.
 library;
@@ -65,7 +65,7 @@ class _MarketplaceDashboardState extends State<MarketplaceDashboard>
         });
       }
     } catch (e) {
-      debugPrint('❌ [MarketplaceDashboard] Failed to load data: $e');
+      debugPrint('âŒ [MarketplaceDashboard] Failed to load data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }

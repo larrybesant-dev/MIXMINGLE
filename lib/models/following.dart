@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Model representing a following relationship between users
 class Following {
@@ -46,3 +46,5 @@ class Following {
     return false;
   }
 }
+
+

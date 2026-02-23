@@ -1,4 +1,4 @@
-/// Partner Portal Widget
+﻿/// Partner Portal Widget
 ///
 /// Partner dashboard showing metrics, tools, and payouts.
 library;
@@ -73,7 +73,7 @@ class _PartnerPortalState extends State<PartnerPortal>
         setState(() => _isLoading = false);
       }
     } catch (e) {
-      debugPrint('❌ [PartnerPortal] Failed to load data: $e');
+      debugPrint('âŒ [PartnerPortal] Failed to load data: $e');
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -1132,7 +1132,7 @@ class _PartnerPortalState extends State<PartnerPortal>
         ),
         title: Text('\$${payout.amount.toStringAsFixed(2)}'),
         subtitle: Text(
-          '${payout.method.name.toUpperCase()} • ${_formatDate(payout.createdAt)}',
+          '${payout.method.name.toUpperCase()} â€¢ ${_formatDate(payout.createdAt)}',
         ),
         trailing: _buildPayoutStatusChip(payout.status),
       ),

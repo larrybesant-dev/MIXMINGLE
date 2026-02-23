@@ -1,5 +1,5 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/shared/models/room_role.dart';
+﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mixmingle/shared/models/room_role.dart';
 
 /// Provider for voice room chat messages - manages local state for each room
 /// Use as: ref.watch(voiceRoomChatProvider(roomId)).messages
@@ -51,3 +51,5 @@ class VoiceRoomChatNotifier extends StateNotifier<List<VoiceRoomChatMessage>> {
 final roomRolesProvider = Provider.autoDispose.family<Map<String, RoomParticipant>, String>((ref, roomId) {
   return {};
 });
+
+

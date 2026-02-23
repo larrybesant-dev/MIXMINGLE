@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
@@ -107,13 +107,13 @@ class BetaLandingPage extends ConsumerWidget {
                       ),
                       const SizedBox(height: 16),
                       _buildFeatureItem(
-                          '🎥 Real-time video chat in live rooms'),
+                          'ðŸŽ¥ Real-time video chat in live rooms'),
                       _buildFeatureItem(
-                          '💬 Instant messaging with participants'),
-                      _buildFeatureItem('🎭 Create and join themed rooms'),
-                      _buildFeatureItem('🎁 Send tips to performers'),
-                      _buildFeatureItem('📱 Works on web, mobile, and desktop'),
-                      _buildFeatureItem('🌟 Club-style UI with neon effects'),
+                          'ðŸ’¬ Instant messaging with participants'),
+                      _buildFeatureItem('ðŸŽ­ Create and join themed rooms'),
+                      _buildFeatureItem('ðŸŽ Send tips to performers'),
+                      _buildFeatureItem('ðŸ“± Works on web, mobile, and desktop'),
+                      _buildFeatureItem('ðŸŒŸ Club-style UI with neon effects'),
                     ],
                   ),
                 ),
@@ -166,7 +166,7 @@ class BetaLandingPage extends ConsumerWidget {
                   child: const Column(
                     children: [
                       Text(
-                        '🚧 Beta Testing Notice',
+                        'ðŸš§ Beta Testing Notice',
                         style: TextStyle(
                           color: Colors.orange,
                           fontWeight: FontWeight.bold,

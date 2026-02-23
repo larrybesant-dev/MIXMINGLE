@@ -141,3 +141,5 @@ class Notification {
     return 'Notification(id: $id, userId: $userId, type: $type, title: $title, isRead: $isRead, timestamp: $timestamp)';
   }
 }
+
+

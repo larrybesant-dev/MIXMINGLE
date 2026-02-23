@@ -1,4 +1,4 @@
-// UI State Providers - Dark/Light mode, video quality, engagement features
+﻿// UI State Providers - Dark/Light mode, video quality, engagement features
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_models.dart';
@@ -232,5 +232,7 @@ final userPreferencesProvider =
     NotifierProvider<UserPreferencesNotifier, Map<String, dynamic>>(
   () => UserPreferencesNotifier(),
 );
+
+
 
 

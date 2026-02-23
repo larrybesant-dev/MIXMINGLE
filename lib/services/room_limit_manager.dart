@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../core/feature_flags.dart';
 import '../core/utils/app_logger.dart';
@@ -40,7 +40,7 @@ class RoomLimitManager extends ChangeNotifier {
 
       if (isAtCapacity) {
         AppLogger.warning(
-          '🔴 Room $roomId is at capacity: '
+          'ðŸ”´ Room $roomId is at capacity: '
           '${activePublishers.length}/$maxPublishers publishers'
         );
       }
@@ -118,7 +118,7 @@ class RoomLimitManager extends ChangeNotifier {
       // Check if at capacity
       if (currentPublishers.length >= maxPublishers) {
         AppLogger.warning(
-          '❌ Cannot add publisher: room at capacity '
+          'âŒ Cannot add publisher: room at capacity '
           '(${currentPublishers.length}/$maxPublishers)'
         );
         return false;
@@ -136,7 +136,7 @@ class RoomLimitManager extends ChangeNotifier {
       notifyListeners();
 
       AppLogger.info(
-        '✅ Added publisher: $userId '
+        'âœ… Added publisher: $userId '
         '(${updatedPublishers.length}/$maxPublishers)'
       );
 
@@ -172,7 +172,7 @@ class RoomLimitManager extends ChangeNotifier {
       notifyListeners();
 
       AppLogger.info(
-        '✅ Removed publisher: $userId '
+        'âœ… Removed publisher: $userId '
         '(${updatedPublishers.length}/$maxPublishers)'
       );
     } catch (e) {
@@ -284,7 +284,7 @@ class RoomLimitManager extends ChangeNotifier {
       final utilizationPercent = (publisherCount / maxPublishers * 100).toStringAsFixed(1);
 
       AppLogger.info(
-        '📊 Room $roomId capacity: $publisherCount/$maxPublishers ($utilizationPercent%)'
+        'ðŸ“Š Room $roomId capacity: $publisherCount/$maxPublishers ($utilizationPercent%)'
       );
     } catch (e) {
       AppLogger.error('Error logging room metrics: $e');

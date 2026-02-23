@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/models/room.dart';
 import '../providers/room_subcollection_providers.dart';
@@ -229,9 +229,9 @@ class ParticipantListSidebar extends ConsumerWidget {
         items.add(const PopupMenuDivider());
         // Sprint 2: Smarter mute/unmute based on room.mutedUsers
         if (isMutedByHost) {
-          items.add(const PopupMenuItem(value: 'unmute', child: Text('🔊 Unmute Audio')));
+          items.add(const PopupMenuItem(value: 'unmute', child: Text('ðŸ”Š Unmute Audio')));
         } else {
-          items.add(const PopupMenuItem(value: 'mute', child: Text('🔇 Mute Audio')));
+          items.add(const PopupMenuItem(value: 'mute', child: Text('ðŸ”‡ Mute Audio')));
         }
         items.add(const PopupMenuItem(value: 'disable_video', child: Text('Disable Video')));
         items.add(const PopupMenuItem(value: 'enable_video', child: Text('Enable Video')));
@@ -240,10 +240,10 @@ class ParticipantListSidebar extends ConsumerWidget {
           items.add(const PopupMenuItem(
             value: 'removed',
             enabled: false,
-            child: Text('❌ Removed', style: TextStyle(color: Colors.grey)),
+            child: Text('âŒ Removed', style: TextStyle(color: Colors.grey)),
           ));
         } else {
-          items.add(const PopupMenuItem(value: 'kick', child: Text('❌ Remove from Room')));
+          items.add(const PopupMenuItem(value: 'kick', child: Text('âŒ Remove from Room')));
         }
         return items;
       },

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 class BlockedUserTile extends StatelessWidget {
   final String blockedUserId;
@@ -21,7 +21,7 @@ class BlockedUserTile extends StatelessWidget {
     return ListTile(
       leading: CircleAvatar(
         backgroundImage: avatarUrl != null ? NetworkImage(avatarUrl!) : null,
-        child: avatarUrl == null ? const Icon(Icons.person) : null,
+        child: null,
       ),
       title: Text(
         displayName ?? blockedUserId,

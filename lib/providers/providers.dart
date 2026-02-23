@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
@@ -34,7 +34,7 @@ final analyticsServiceProvider = Provider<AnalyticsService>((ref) => AnalyticsSe
 // DEPRECATED: Use agoraVideoServiceProvider instead
 // DISABLED: Commented out to prevent dual engine initialization
 // final agoraServiceProvider = Provider<AgoraService>((ref) {
-//   debugPrint('⚠️ agoraServiceProvider accessed - please use agoraVideoServiceProvider instead');
+//   debugPrint('âš ï¸ agoraServiceProvider accessed - please use agoraVideoServiceProvider instead');
 //   return AgoraService();
 // });
 final messagingServiceProvider = Provider<MessagingService>((ref) => MessagingService());

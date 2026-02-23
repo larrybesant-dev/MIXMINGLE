@@ -1,4 +1,4 @@
-/// Neon Coin Package Card Widget
+﻿/// Neon Coin Package Card Widget
 ///
 /// Displays coin package for purchase with neon styling.
 /// Features gold glow effects and bonus coin indicators.
@@ -357,7 +357,7 @@ class _CoinIconState extends State<_CoinIcon>
                 ),
                 // Coin symbol
                 Text(
-                  '¢',
+                  'Â¢',
                   style: TextStyle(
                     color: const Color(0xFF7D5600),
                     fontSize: widget.size * 0.5,

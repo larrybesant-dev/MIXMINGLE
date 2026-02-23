@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/social_graph_providers.dart';
 import '../../providers/user_providers.dart'; // For profileServiceProvider and currentUserProfileProvider

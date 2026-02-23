@@ -1,4 +1,4 @@
-/// Service for classifying rooms based on their tags.
+﻿/// Service for classifying rooms based on their tags.
 class CategoryService {
   /// Category mapping with priority order: Music > Gaming > Chat > Live > Other
   static const Map<String, List<String>> _categoryKeywords = {
@@ -126,3 +126,5 @@ class CategoryService {
     return null;
   }
 }
+
+

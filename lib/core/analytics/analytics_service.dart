@@ -1,4 +1,4 @@
-/// Analytics Service
+﻿/// Analytics Service
 ///
 /// Centralized analytics tracking using Firebase Analytics.
 /// Provides methods for logging events, setting user properties,
@@ -36,9 +36,9 @@ class AnalyticsService {
         name: name,
         parameters: parameters,
       );
-      debugPrint('📊 [Analytics] Event logged: $name');
+      debugPrint('ðŸ“Š [Analytics] Event logged: $name');
     } catch (e) {
-      debugPrint('❌ [Analytics] Failed to log event $name: $e');
+      debugPrint('âŒ [Analytics] Failed to log event $name: $e');
     }
   }
 
@@ -46,9 +46,9 @@ class AnalyticsService {
   Future<void> setUserId(String? userId) async {
     try {
       await _analytics.setUserId(id: userId);
-      debugPrint('📊 [Analytics] User ID set: ${userId ?? 'null'}');
+      debugPrint('ðŸ“Š [Analytics] User ID set: ${userId ?? 'null'}');
     } catch (e) {
-      debugPrint('❌ [Analytics] Failed to set user ID: $e');
+      debugPrint('âŒ [Analytics] Failed to set user ID: $e');
     }
   }
 
@@ -77,9 +77,9 @@ class AnalyticsService {
           value: version,
         );
       }
-      debugPrint('📊 [Analytics] User properties set');
+      debugPrint('ðŸ“Š [Analytics] User properties set');
     } catch (e) {
-      debugPrint('❌ [Analytics] Failed to set user properties: $e');
+      debugPrint('âŒ [Analytics] Failed to set user properties: $e');
     }
   }
 
@@ -90,9 +90,9 @@ class AnalyticsService {
   }) async {
     try {
       await _analytics.setUserProperty(name: name, value: value);
-      debugPrint('📊 [Analytics] User property set: $name = $value');
+      debugPrint('ðŸ“Š [Analytics] User property set: $name = $value');
     } catch (e) {
-      debugPrint('❌ [Analytics] Failed to set user property: $e');
+      debugPrint('âŒ [Analytics] Failed to set user property: $e');
     }
   }
 
@@ -106,9 +106,9 @@ class AnalyticsService {
         screenName: screenName,
         screenClass: screenClass,
       );
-      debugPrint('📊 [Analytics] Screen view: $screenName');
+      debugPrint('ðŸ“Š [Analytics] Screen view: $screenName');
     } catch (e) {
-      debugPrint('❌ [Analytics] Failed to log screen view: $e');
+      debugPrint('âŒ [Analytics] Failed to log screen view: $e');
     }
   }
 

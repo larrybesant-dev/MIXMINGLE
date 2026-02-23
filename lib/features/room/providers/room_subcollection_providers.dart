@@ -1,8 +1,8 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mix_and_mingle/shared/models/room_role.dart';
-import 'package:mix_and_mingle/shared/models/chat_message.dart';
-import 'package:mix_and_mingle/shared/models/room_event.dart';
+import 'package:mixmingle/shared/models/room_role.dart';
+import 'package:mixmingle/shared/models/chat_message.dart';
+import 'package:mixmingle/shared/models/room_event.dart';
 
 /// Firestore instance provider
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
@@ -182,3 +182,5 @@ final roomSubcollectionRepositoryProvider = Provider<RoomSubcollectionRepository
   final firestore = ref.watch(firestoreProvider);
   return RoomSubcollectionRepository(firestore);
 });
+
+
