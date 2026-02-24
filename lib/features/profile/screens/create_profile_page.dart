@@ -159,18 +159,40 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
         }
 
         final controller = ref.read(storageControllerProvider.notifier);
-        final url = await controller.uploadImage(pickedFile, uid);
+        String? uploadError;
+        String? url;
+        try {
+          url = await controller.uploadImage(pickedFile, uid);
+          // If controller silently returned null, check its error state
+          if (url == null) {
+            final errorState = ref.read(storageControllerProvider);
+            uploadError = errorState.whenOrNull(
+              error: (e, _) => e.toString(),
+            ) ?? 'Upload returned no URL — check Storage rules & CORS.';
+          }
+        } catch (e) {
+          uploadError = e.toString();
+        }
         if (mounted) {
           setState(() {
             _isUploadingImage = false;
-            if (url != null) {
-              _profileImageUrl = url;
-            }
+            if (url != null) _profileImageUrl = url;
           });
-          if (url == null) {
+          if (uploadError != null) {
+            final isCors = uploadError.toLowerCase().contains('cors') ||
+                uploadError.toLowerCase().contains('xmlhttprequest') ||
+                uploadError.toLowerCase().contains('access-control') ||
+                uploadError.toLowerCase().contains('network');
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text('Photo upload failed — please try again.')),
+              SnackBar(
+                content: Text(
+                  isCors
+                      ? 'Upload blocked: run tools/apply-cors.ps1 to fix web uploads.'
+                      : 'Photo upload failed: $uploadError',
+                ),
+                duration: const Duration(seconds: 6),
+                backgroundColor: isCors ? const Color(0xFFB00020) : null,
+              ),
             );
           }
         }
@@ -179,7 +201,10 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
       if (mounted) {
         setState(() => _isUploadingImage = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e')),
+          SnackBar(
+            content: Text('Error picking image: $e'),
+            duration: const Duration(seconds: 6),
+          ),
         );
       }
     }

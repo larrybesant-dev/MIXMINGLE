@@ -33,7 +33,16 @@ class StorageService {
 
       return await ref.getDownloadURL();
     } catch (e) {
-      throw Exception('Failed to upload image: $e');
+      final msg = e.toString();
+      // Detect CORS errors early with a clear message
+      if (kIsWeb && (msg.contains('XMLHttpRequest') || msg.contains('CORS') ||
+          msg.contains('NetworkError') || msg.contains('Failed to fetch'))) {
+        debugPrint('[StorageService] ⚠️ CORS error — run tools/apply-cors.ps1');
+        throw Exception(
+            'CORS error: Web uploads blocked. Run tools/apply-cors.ps1 to configure Firebase Storage CORS. Original: $msg');
+      }
+      debugPrint('[StorageService] uploadImage error: $msg');
+      throw Exception('Failed to upload image: $msg');
     }
   }
 
