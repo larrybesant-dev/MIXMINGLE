@@ -116,36 +116,75 @@ class DesignColors {
 // ==============================================================================
 
 class DesignTypography {
+  // Display / Page Title — page headers, splash, profile name
+  static const TextStyle display = TextStyle(
+    fontSize: 30,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.5,
+    color: DesignColors.white,
+    height: 1.1,
+    shadows: DesignColors.primaryGlow,
+  );
+
+  // Display large (32 px)
+  static const TextStyle displayLarge = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.bold,
+    letterSpacing: -0.5,
+    color: DesignColors.white,
+    height: 1.1,
+  );
+
+  // Section Title (20–22 px, SemiBold) — "About", "Rooms", "Vibes"
+  static const TextStyle sectionTitle = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    color: DesignColors.white,
+    height: 1.3,
+    letterSpacing: 0.2,
+  );
+
   // Heading - Room name, prominent text
   static const TextStyle heading = TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.bold,
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
     color: DesignColors.white,
-    height: 1.2,
+    height: 1.25,
   );
 
   // Subheading - Participant name, secondary content
   static const TextStyle subheading = TextStyle(
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: FontWeight.w600,
     color: DesignColors.white,
     height: 1.3,
   );
 
-  // Body - Standard text
+  // Body - Standard text (14–16 px, Regular)
   static const TextStyle body = TextStyle(
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: FontWeight.normal,
     color: DesignColors.white,
-    height: 1.4,
+    height: 1.5,
+    letterSpacing: 0.15,
   );
 
-  // Caption - Helper text, timestamps
+  // Body small
+  static const TextStyle bodySm = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.normal,
+    color: DesignColors.textGray,
+    height: 1.4,
+    letterSpacing: 0.25,
+  );
+
+  // Caption - Helper text, timestamps (12–13 px, Medium weight)
   static const TextStyle caption = TextStyle(
     fontSize: 12,
-    fontWeight: FontWeight.normal,
-    color: DesignColors.white,
+    fontWeight: FontWeight.w500,
+    color: DesignColors.textGray,
     height: 1.3,
+    letterSpacing: 0.4,
   );
 
   // Label - Button text, badges
@@ -158,18 +197,11 @@ class DesignTypography {
 
   // Button - Control text
   static const TextStyle button = TextStyle(
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: FontWeight.w600,
     color: DesignColors.white,
     height: 1.2,
-  );
-
-  // Display - Large, prominent headings
-  static const TextStyle display = TextStyle(
-    fontSize: 32,
-    fontWeight: FontWeight.bold,
-    color: DesignColors.white,
-    height: 1.1,
+    letterSpacing: 0.3,
   );
 }
 
@@ -178,32 +210,60 @@ class DesignTypography {
 // ==============================================================================
 
 class DesignSpacing {
-  // Insets
+  // ── Core tokens (Layout Guide §1) ──────────────────────────────────────
+  /// 4 px — tiny gaps, icon padding
   static const double xs = 4;
+  static const double spaceXS = 4;
+
+  /// 8 px — small gaps, label spacing
   static const double sm = 8;
+  static const double spaceSM = 8;
+
+  /// 12 px — standard padding inside cards
   static const double md = 12;
+  static const double spaceMD = 12;
+
+  /// 16 px — default page padding
   static const double lg = 16;
+  static const double spaceLG = 16;
+
+  /// 24 px — section spacing
   static const double xl = 24;
+  static const double spaceXL = 24;
+
+  /// 32 px — large headers, top spacing
   static const double xxl = 32;
+  static const double spaceXXL = 32;
 
-  // Card spacing
-  static const double cardPadding = lg; // 16px inside cards
-  static const double cardSpacing = md; // 12px between cards
-  static const double cardBorderRadius = 12.0;
+  // ── Card spacing ────────────────────────────────────────────────────────
+  static const double cardPadding = lg;      // 16 px inside cards
+  static const double cardSpacing = lg;      // 16 px between cards
+  static const double cardBorderRadius = 18.0; // 16–20 px range
 
-  // Button sizing
-  static const double buttonMinHeight = 44;
-  static const double buttonMinWidth = 100;
-  static const double buttonPadding = lg; // 16px horizontal, 12px vertical
-  static const double buttonBorderRadius = 12.0;
+  // ── Button sizing (Layout Guide §3) ─────────────────────────────────────
+  static const double buttonMinHeight = 52;   // 48–56 px
+  static const double buttonMinWidth = 120;
+  static const double buttonPadding = lg;
+  static const double buttonBorderRadius = 14.0; // 12–16 px range
 
-  // Avatar sizes
-  static const double avatarLarge = 48;
-  static const double avatarMedium = 40;
-  static const double avatarSmall = 32;
+  // ── Input sizing ────────────────────────────────────────────────────────
+  static const double inputHeight = 48;
+  static const double inputPadding = md; // 12 px
+  static const double inputBorderRadius = 12.0;
 
-  // Control bar
-  static const double controlBarHeight = 80;
+  // ── Avatar sizes (radii) ─────────────────────────────────────────────────
+  /// Profile hero — 108 px diameter, radius 54
+  static const double avatarHeroRadius = 54;
+  static const double avatarLarge = 32;  // 64 px diameter
+  static const double avatarMedium = 24; // 48 px diameter
+  static const double avatarSmall = 20;  // 40 px diameter
+
+  // ── Page structure ────────────────────────────────────────────────────────
+  static const double headerHeight = 64;     // 56–72 px
+  static const double headerHeightLg = 72;
+
+  // ── Control bar (rooms) ──────────────────────────────────────────────────
+  static const double controlBarHeight = 72; // Layout Guide §6
   static const double controlSpacing = lg;
 }
 

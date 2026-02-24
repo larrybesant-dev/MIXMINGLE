@@ -261,7 +261,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
         }
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.xl),
+          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -269,23 +269,23 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                 title: 'Live Activity',
                 subtitle: 'Real-time motion from across the grid',
               ),
-              const SizedBox(height: Spacing.md),
+              const SizedBox(height: Spacing.sm),
               ...activities.map((activity) => Padding(
-                    padding: const EdgeInsets.only(bottom: Spacing.sm),
+                    padding: const EdgeInsets.only(bottom: Spacing.xs),
                     child: GlassCard(
-                      padding: const EdgeInsets.all(Spacing.md),
+                      padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.xs),
                       child: Row(
                         children: [
-                          Text(activity['icon']! as String, style: const TextStyle(fontSize: 24)),
-                          const SizedBox(width: Spacing.md),
-                          NeonBadge(status: activity['status']! as NeonStatus, size: NeonBadgeSize.medium),
+                          Text(activity['icon']! as String, style: const TextStyle(fontSize: 16)),
                           const SizedBox(width: Spacing.sm),
+                          NeonBadge(status: activity['status']! as NeonStatus, size: NeonBadgeSize.small),
+                          const SizedBox(width: Spacing.xs),
                           Expanded(
                             child: Text(
                               activity['text']! as String,
-                              style: textTheme.bodyMedium?.copyWith(
+                              style: textTheme.bodySmall?.copyWith(
                                 color: ElectricColors.onSurfacePrimary,
-                                height: 1.4,
+                                height: 1.3,
                               ),
                             ),
                           ),
@@ -898,7 +898,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
   Widget _buildTestimonials(TextTheme textTheme) {
     final testimonials = [
       {
-        'emoji': 'ðŸŒŠ',
+        'emoji': '🌊',
         'quote': 'Pure sonic adventure. Every room has its own vibe, every DJ tells a story.',
         'name': 'Sofia Waves',
         'title': 'Ambient Composer',

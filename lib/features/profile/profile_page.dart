@@ -1,6 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../core/design_system/design_constants.dart';
+import '../../core/design_system/app_layout.dart';
 import '../../shared/providers/providers.dart';
 import '../../shared/models/user.dart';
 import '../../shared/models/privacy_settings.dart';
@@ -177,18 +179,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
           ),
           // User avatar positioned at bottom
           Positioned(
-            bottom: -50,
-            left: 20,
+            bottom: -(AppSizes.avatarHeroRadius - 6),
+            left: AppSpacing.spaceLG,
             child: Container(
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: const Color(0xFFFF4C4C),
-                  width: 4,
+                  color: DesignColors.accent,
+                  width: AppSizes.neonRingWidth + 1,
                 ),
-                boxShadow: const [
+                boxShadow: [
                   BoxShadow(
-                    color: Color(0x80FF4C4C),
+                    color: DesignColors.accent.withValues(alpha: 0.5),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),
@@ -196,15 +198,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
               ),
               child: CircleAvatar(
                 key: ValueKey(user.avatarUrl),
-                radius: 60,
+                radius: AppSizes.avatarHeroRadius,
                 backgroundImage: user.avatarUrl.isNotEmpty
                     ? NetworkImage('${user.avatarUrl}?t=${DateTime.now().millisecondsSinceEpoch}')
                     : null,
-                backgroundColor: const Color(0xFFFF4C4C),
+                backgroundColor: DesignColors.accent.withValues(alpha: 0.3),
                 child: user.avatarUrl.isEmpty
-                    ? const Icon(
+                    ? Icon(
                         Icons.person,
-                        size: 50,
+                        size: AppSizes.avatarHeroRadius * 0.8,
                         color: Colors.white,
                       )
                     : null,
@@ -218,7 +220,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
 
   Widget _buildProfileHeader(User user, PrivacySettings? privacySettings) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 60, 20, 20),
+      padding: EdgeInsets.fromLTRB(
+          AppSpacing.spaceLG,
+          AppSizes.avatarHeroRadius + AppSpacing.spaceLG,
+          AppSpacing.spaceLG,
+          AppSpacing.spaceLG),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -232,16 +238,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                       text: _isFieldVisible('displayName', privacySettings) ? (user.displayName ?? "") : user.username,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: const Color(0xFFFFD700),
-                      glowColor: const Color(0xFFFF4C4C),
+                      color: DesignColors.gold,
+                      glowColor: DesignColors.accent,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: AppSpacing.spaceXS),
                     Text(
                       _isFieldVisible('displayName', privacySettings) ? '@${user.username}' : 'Private Profile',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: Colors.white70,
-                      ),
+                      style: AppTypography.bodySm,
                     ),
                   ],
                 ),
@@ -249,17 +252,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
               _buildStats(user),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.spaceLG),
           if (user.bio.isNotEmpty && _isFieldVisible('bio', privacySettings))
             Text(
               user.bio,
-              style: const TextStyle(
-                fontSize: 16,
-                color: Colors.white,
-                height: 1.4,
-              ),
+              style: AppTypography.body,
             ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.spaceLG),
           _buildActionButtons(),
         ],
       ),
@@ -270,9 +269,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
     return Row(
       children: [
         _buildStatItem('${user.followersCount}', 'Followers'),
-        const SizedBox(width: 20),
+        const SizedBox(width: AppSpacing.spaceLG),
         _buildStatItem('${user.followingCount}', 'Following'),
-        const SizedBox(width: 20),
+        const SizedBox(width: AppSpacing.spaceLG),
         _buildStatItem('${user.liveSessionsHosted}', 'Rooms'),
       ],
     );
@@ -283,17 +282,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
       children: [
         GlowText(
           text: value,
-          fontSize: 18,
+          fontSize: 20,
           fontWeight: FontWeight.bold,
-          color: const Color(0xFFFFD700),
-          glowColor: const Color(0xFFFF4C4C),
+          color: DesignColors.gold,
+          glowColor: DesignColors.accent,
         ),
         Text(
           label,
-          style: const TextStyle(
-            fontSize: 12,
-            color: Colors.white70,
-          ),
+          style: AppTypography.caption,
         ),
       ],
     );
@@ -313,7 +309,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: AppSpacing.spaceMD),
         Expanded(
           child: Semantics(
             label: 'Settings',
@@ -354,7 +350,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
         }
 
         return ListView.builder(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpacing.spaceLG),
           itemCount: activities.length,
           itemBuilder: (context, index) {
             final activity = activities[index];
@@ -364,7 +360,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
 
             return Card(
               color: Colors.white.withValues(alpha: 0.1),
-              margin: const EdgeInsets.only(bottom: 12),
+              margin: const EdgeInsets.only(bottom: AppSpacing.spaceMD),
               child: ListTile(
                 leading: Icon(
                   _getActivityIcon(type),
@@ -372,12 +368,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                 ),
                 title: Text(
                   description,
-                  style: const TextStyle(color: Colors.white),
+                  style: AppTypography.bodySm.copyWith(color: DesignColors.white),
                 ),
                 subtitle: timestamp != null
                     ? Text(
                         _formatTimestamp(timestamp.toDate()),
-                        style: const TextStyle(color: Colors.white70),
+                        style: AppTypography.caption,
                       )
                     : null,
               ),

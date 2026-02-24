@@ -6,6 +6,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design_system/design_constants.dart';
+import '../../core/design_system/app_layout.dart';
 import '../../shared/models/user_profile.dart';
 import '../../shared/models/room.dart';
 import '../../shared/widgets/club_background.dart';
@@ -109,7 +110,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
             ],
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.spaceSM),
         const Text(
           'MIX & MINGLE',
           style: TextStyle(
@@ -121,20 +122,21 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           ),
         ),
         if (profile?.vibeTag != null) ...[
-          const SizedBox(width: 10),
+          const SizedBox(width: AppSpacing.spaceSM),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.spaceSM, vertical: AppSpacing.spaceXS),
             decoration: BoxDecoration(
               color: _vc(profile!.vibeTag).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppSizes.chipBorderRadius),
               border: Border.all(color: _vc(profile.vibeTag).withValues(alpha: 0.45)),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(_vi(profile.vibeTag), size: 10, color: _vc(profile.vibeTag)),
-              const SizedBox(width: 4),
+              Icon(_vi(profile.vibeTag), size: 11, color: _vc(profile.vibeTag)),
+              const SizedBox(width: AppSpacing.spaceXS),
               Text(profile.vibeTag!,
-                  style: TextStyle(color: _vc(profile.vibeTag),
-                      fontSize: 10, fontWeight: FontWeight.w700)),
+                  style: AppTypography.chipLabel.copyWith(
+                      color: _vc(profile.vibeTag))),
             ]),
           ),
         ],
@@ -183,7 +185,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 60,
+          height: AppSizes.bottomNavHeight,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(items.length, (i) {
@@ -197,7 +199,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(AppSpacing.spaceSM - 2),
                       decoration: BoxDecoration(
                         color: selected
                             ? DesignColors.accent.withValues(alpha: 0.15)
@@ -210,16 +212,15 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                       ),
                       child: Icon(
                         selected ? item.activeIcon : item.icon,
-                        size: 22,
+                        size: AppSizes.iconNav,
                         color: selected ? DesignColors.accent : DesignColors.textGray,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: AppSpacing.spaceXS - 2),
                     Text(item.label,
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                        style: AppTypography.navLabel.copyWith(
                           color: selected ? DesignColors.accent : DesignColors.textGray,
+                          fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                         )),
                   ]),
                 ),
@@ -279,44 +280,37 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
         ? '${p.topVibe} vibes — x${p.topVibeCount} rooms'
         : vibe != null ? '$vibe vibes today' : null;
 
+    final sw = MediaQuery.sizeOf(context).width;
+    final hPad = AppLayout.responsivePaddingH(sw);
+
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            padding: EdgeInsets.fromLTRB(hPad, AppSpacing.spaceLG, hPad, 0),
             child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('$greeting,',
-                  style: TextStyle(
-                      color: DesignColors.white.withValues(alpha: 0.6),
-                      fontSize: 15)),
-              const SizedBox(height: 4),
-              Text(name,
-                  style: const TextStyle(
-                      color: DesignColors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
-                      shadows: DesignColors.primaryGlow)),
+              Text('$greeting,', style: AppTypography.greeting),
+              const SizedBox(height: AppSpacing.spaceXS),
+              Text(name, style: AppTypography.display),
               if (vibe != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.spaceSM),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.spaceSM + 2,
+                      vertical: AppSpacing.spaceXS),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(colors: [
                       _vc(vibe).withValues(alpha: 0.2),
                       _vc(vibe).withValues(alpha: 0.05),
                     ]),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(AppSizes.chipBorderRadius),
                     border: Border.all(color: _vc(vibe).withValues(alpha: 0.4)),
                   ),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(_vi(vibe), size: 12, color: _vc(vibe)),
-                    const SizedBox(width: 5),
+                    Icon(_vi(vibe), size: 13, color: _vc(vibe)),
+                    const SizedBox(width: AppSpacing.spaceXS),
                     Text(vibeLabel ?? '$vibe vibes today',
-                        style: TextStyle(
-                            color: _vc(vibe),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600)),
+                        style: AppTypography.chipLabel.copyWith(color: _vc(vibe))),
                   ]),
                 ),
               ],
@@ -325,7 +319,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
         ),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+            padding: EdgeInsets.fromLTRB(hPad, AppSpacing.spaceXL, hPad, 0),
             child: Row(children: [
               Expanded(child: _ctaCard(
                 icon: Icons.add_circle_outline,
@@ -334,7 +328,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                 color: const Color(0xFFFF4D8B),
                 onTap: () => Navigator.pushNamed(context, '/create-room'),
               )),
-              const SizedBox(width: 12),
+              const SizedBox(width: AppSpacing.spaceMD),
               Expanded(child: _ctaCard(
                 icon: Icons.bolt,
                 label: 'Speed Dating',
@@ -350,27 +344,24 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           SliverToBoxAdapter(child: _buildVibeSuggestionBanner(p)),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 28, 0, 0),
+            padding: EdgeInsets.fromLTRB(hPad, AppSpacing.spaceXXL - 4, 0, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('🔥 Heating Up',
-                    style: TextStyle(
-                        color: DesignColors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800)),
+                Text('🔥 Heating Up', style: AppTypography.sectionTitle),
                 TextButton(
                   onPressed: () => setState(() => _selectedIndex = 2),
                   child: Text('See All',
-                      style: TextStyle(color: DesignColors.accent, fontSize: 13)),
+                      style: AppTypography.caption.copyWith(
+                          color: DesignColors.accent)),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.spaceSM),
               ],
             ),
           ),
         ),
-        SliverToBoxAdapter(child: _buildHeatingUpRail(heatingUp)),
-        const SliverToBoxAdapter(child: SizedBox(height: 30)),
+        SliverToBoxAdapter(child: _buildHeatingUpRail(heatingUp, hPad)),
+        const SliverToBoxAdapter(child: AppSectionGap()),
       ],
     );
   }
@@ -383,26 +374,29 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
         .getVibeSuggestion(p);
     if (suggestion == null) return const SizedBox.shrink();
     const nudgeColor = Color(0xFFFFAB00);
+    final sw2 = MediaQuery.sizeOf(context).width;
+    final hPad2 = AppLayout.responsivePaddingH(sw2);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      padding: EdgeInsets.fromLTRB(hPad2, AppSpacing.spaceLG, hPad2, 0),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.spaceMD + 2, vertical: AppSpacing.spaceSM + 2),
         decoration: BoxDecoration(
           color: nudgeColor.withValues(alpha: 0.09),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
           border: Border.all(color: nudgeColor.withValues(alpha: 0.4)),
         ),
         child: Row(children: [
-          const Icon(Icons.lightbulb_outline, size: 18, color: nudgeColor),
-          const SizedBox(width: 10),
+          const Icon(Icons.lightbulb_outline, size: AppSizes.iconStandard - 6, color: nudgeColor),
+          const SizedBox(width: AppSpacing.spaceSM + 2),
           Expanded(
             child: Text(suggestion,
-                style: const TextStyle(
-                    color: nudgeColor, fontSize: 12, fontWeight: FontWeight.w600)),
+                style: AppTypography.caption.copyWith(
+                    color: nudgeColor, fontWeight: FontWeight.w600)),
           ),
           GestureDetector(
             onTap: () => setState(() => _dismissedSuggestion = true),
-            child: const Icon(Icons.close, size: 16, color: nudgeColor),
+            child: const Icon(Icons.close, size: AppSizes.iconStandard - 8, color: nudgeColor),
           ),
         ]),
       ),
@@ -419,7 +413,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+        padding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.spaceLG, horizontal: AppSpacing.spaceMD + 2),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -429,56 +424,55 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
               color.withValues(alpha: 0.05),
             ],
           ),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
           border: Border.all(color: color.withValues(alpha: 0.4)),
           boxShadow: [BoxShadow(color: color.withValues(alpha: 0.12), blurRadius: 12)],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(icon, color: color, size: 26),
-          const SizedBox(height: 8),
+          Icon(icon, color: color, size: AppSizes.iconLarge),
+          const SizedBox(height: AppSpacing.spaceSM),
           Text(label,
-              style: const TextStyle(
-                  color: DesignColors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800)),
-          const SizedBox(height: 2),
-          Text(sublabel,
-              style: const TextStyle(color: DesignColors.textGray, fontSize: 11)),
+              style: AppTypography.bodySm.copyWith(
+                  color: DesignColors.white, fontWeight: FontWeight.w800)),
+          const SizedBox(height: AppSpacing.spaceXS - 2),
+          Text(sublabel, style: AppTypography.captionSm),
         ]),
       ),
     );
   }
 
-  Widget _buildHeatingUpRail(List<Room> rooms) {
+  Widget _buildHeatingUpRail(List<Room> rooms, double hPad) {
     if (rooms.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(hPad),
         child: Container(
           alignment: Alignment.center,
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.spaceXL),
           decoration: BoxDecoration(
             color: DesignColors.accent.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
             border: Border.all(color: DesignColors.accent.withValues(alpha: 0.15)),
           ),
           child: Column(children: [
-            const Icon(Icons.mic_none_outlined, size: 40, color: DesignColors.accent),
-            const SizedBox(height: 10),
+            const Icon(Icons.mic_none_outlined,
+                size: AppSizes.iconXl + 8, color: DesignColors.accent),
+            const SizedBox(height: AppSpacing.spaceSM + 2),
             const Text('No live rooms yet — be the first!',
-                style: TextStyle(color: DesignColors.textGray, fontSize: 14)),
-            const SizedBox(height: 14),
+                style: AppTypography.bodySm),
+            const SizedBox(height: AppSpacing.spaceMD + 2),
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, '/create-room'),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.spaceXL, vertical: AppSpacing.spaceSM + 2),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                       colors: [Color(0xFF4A90FF), Color(0xFF8B5CF6)]),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius:
+                      BorderRadius.circular(AppSizes.buttonBorderRadius + 10),
                 ),
                 child: const Text('Start a Room',
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w700)),
+                    style: AppTypography.buttonLabel),
               ),
             ),
           ]),
@@ -486,9 +480,13 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       );
     }
     return SizedBox(
-      height: 160,
+      height: 164,
       child: ListView.builder(
-        padding: const EdgeInsets.only(left: 20, right: 8, top: 8, bottom: 8),
+        padding: EdgeInsets.only(
+            left: hPad,
+            right: AppSpacing.spaceSM,
+            top: AppSpacing.spaceSM,
+            bottom: AppSpacing.spaceSM),
         scrollDirection: Axis.horizontal,
         itemCount: rooms.length,
         itemBuilder: (_, i) {
@@ -497,25 +495,27 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           return GestureDetector(
             onTap: () => Navigator.pushNamed(context, '/room', arguments: room.id),
             child: Container(
-              width: 160,
-              margin: const EdgeInsets.only(right: 12),
+              width: 164,
+              margin: const EdgeInsets.only(right: AppSpacing.spaceMD),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [color.withValues(alpha: 0.2), DesignColors.background],
                 ),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
                 border: Border.all(color: color.withValues(alpha: 0.35)),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(AppSpacing.spaceMD),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppSpacing.spaceSM - 2,
+                        vertical: AppSpacing.spaceXS - 2),
                     decoration: BoxDecoration(
                         color: Colors.red.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(4)),
+                        borderRadius: BorderRadius.circular(AppSpacing.spaceXS)),
                     child: const Text('LIVE',
                         style: TextStyle(
                             color: Colors.white,
@@ -527,24 +527,23 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                   Text(room.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: AppTypography.bodySm.copyWith(
                           color: DesignColors.white,
-                          fontSize: 13,
                           fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSpacing.spaceXS),
                   Row(children: [
-                    Icon(Icons.remove_red_eye_outlined, size: 11, color: color),
-                    const SizedBox(width: 3),
+                    Icon(Icons.remove_red_eye_outlined,
+                        size: AppSpacing.spaceMD - 1, color: color),
+                    const SizedBox(width: AppSpacing.spaceXS - 1),
                     Text('${room.viewerCount}',
-                        style: TextStyle(
-                            color: color, fontSize: 11, fontWeight: FontWeight.w600)),
-                    const SizedBox(width: 6),
+                        style: AppTypography.captionSm.copyWith(
+                            color: color, fontWeight: FontWeight.w600)),
+                    const SizedBox(width: AppSpacing.spaceSM - 2),
                     const Icon(Icons.videocam_outlined,
                         size: 11, color: DesignColors.textGray),
-                    const SizedBox(width: 3),
+                    const SizedBox(width: AppSpacing.spaceXS - 1),
                     Text('${room.camCount}',
-                        style: const TextStyle(
-                            color: DesignColors.textGray, fontSize: 11)),
+                        style: AppTypography.captionSm),
                   ]),
                 ]),
               ),
@@ -558,14 +557,14 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     Widget _buildSpeedDatingTab() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(AppSpacing.spaceXL),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 100,
-              height: 100,
+              width: AppSizes.avatarHero,
+              height: AppSizes.avatarHero,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: DesignColors.gold.withValues(alpha: 0.12),
@@ -577,33 +576,33 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
               ),
               child: const Icon(Icons.bolt, size: 52, color: DesignColors.gold),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: AppSpacing.spaceXL),
             const Text(
               'SPEED DATING',
               style: TextStyle(
                   color: DesignColors.white,
-                  fontSize: 32,
+                  fontSize: 30,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1.5,
                   shadows: DesignColors.secondaryGlow),
             ),
-            const SizedBox(height: 10),
-            const Text(
+            const SizedBox(height: AppSpacing.spaceSM + 2),
+            Text(
               'Match. Connect. Vibe. — 5-minute video dates.',
               textAlign: TextAlign.center,
-              style: TextStyle(color: DesignColors.textGray, fontSize: 14),
+              style: AppTypography.bodySm,
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: AppSpacing.spaceXXL + 8),
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, '/discover-rooms'),
               child: Container(
                 width: double.infinity,
-                height: 52,
+                height: AppSizes.buttonHeight,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                       colors: [DesignColors.gold, Color(0xFFFF6B35)]),
-                  borderRadius: BorderRadius.circular(26),
+                  borderRadius: BorderRadius.circular(AppSizes.buttonBorderRadius + 10),
                   boxShadow: [
                     BoxShadow(
                         color: DesignColors.gold.withValues(alpha: 0.35),
@@ -613,11 +612,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                 ),
                 child: const Text(
                   'START SPEED DATING',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1),
+                  style: AppTypography.buttonLabel,
                 ),
               ),
             ),

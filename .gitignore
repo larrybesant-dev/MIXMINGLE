@@ -132,3 +132,8 @@ libapp.so*
 windows/flutter/ephemeral/
 windows/flutter/ephemeral-backup-*/
 
+
+# Android build outputs (too large for GitHub)
+android/app/build/
+android/build/
+

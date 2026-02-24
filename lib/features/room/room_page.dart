@@ -8,6 +8,8 @@ import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../shared/neon_button.dart';
 import '../../shared/gift_selector.dart';
+import '../../core/design_system/design_constants.dart';
+import '../../core/design_system/app_layout.dart';
 
 class RoomPage extends ConsumerStatefulWidget {
   final Room room;
@@ -117,8 +119,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
             text: widget.room.name ?? widget.room.title,
             fontSize: 20,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFFFFD700),
-            glowColor: const Color(0xFFFF4C4C),
+            color: DesignColors.gold,
+            glowColor: DesignColors.accent,
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -136,18 +138,25 @@ class _RoomPageState extends ConsumerState<RoomPage> {
         body: Column(
           children: [
             // Video area with Agora video views
-            Container(
-              height: 300,
-              decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFFF4C4C).withValues(alpha: 0.5), width: 2),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(color: const Color(0xFFFF4C4C).withValues(alpha: 0.3), blurRadius: 10, spreadRadius: 2),
-                ],
-              ),
-              margin: const EdgeInsets.all(16),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.spaceLG),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                        color: DesignColors.accent.withValues(alpha: 0.5),
+                        width: 2),
+                    borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
+                    boxShadow: [
+                      BoxShadow(
+                          color: DesignColors.accent.withValues(alpha: 0.3),
+                          blurRadius: 12,
+                          spreadRadius: 2),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius - 2),
                 child: _isAgoraInitialized && ref.read(agoraVideoServiceProvider).engine != null
                     ? Stack(
                         children: [
@@ -162,14 +171,14 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                             ),
                           // Local video (small overlay)
                           Positioned(
-                            top: 10,
-                            right: 10,
+                            top: AppSpacing.spaceSM + 2,
+                            right: AppSpacing.spaceSM + 2,
                             width: 100,
                             height: 133,
                             child: Container(
                               decoration: BoxDecoration(
-                                border: Border.all(color: Colors.white, width: 2),
-                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(color: DesignColors.white, width: 2),
+                                borderRadius: BorderRadius.circular(AppSpacing.spaceSM),
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(4),
@@ -188,35 +197,42 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                         ],
                       )
                     : Container(
-                        color: const Color(0xFF1E1E2F),
-                        child: const Center(
+                        color: DesignColors.surfaceDefault,
+                        child: Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              CircularProgressIndicator(color: Color(0xFFFF4C4C)),
-                              SizedBox(height: 16),
-                              GlowText(text: 'Initializing video...', fontSize: 16, glowColor: Color(0xFFFF4C4C)),
+                              CircularProgressIndicator(
+                                  color: DesignColors.accent),
+                              const SizedBox(height: AppSpacing.spaceLG),
+                              GlowText(
+                                  text: 'Initializing video...',
+                                  fontSize: 16,
+                                  glowColor: DesignColors.accent),
                             ],
                           ),
-                        ),
-                      ),
-              ),
-            ),
+                        )), // closes loading Container / Center
+              ),  // ClipRRect
+            ),  // Container(decoration)
+          ),  // AspectRatio
+        ),  // Padding
             // Messages area
             Expanded(
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
+                margin: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.spaceLG),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: const Color(0xFFFF4C4C).withValues(alpha: 0.3), width: 1),
+                  borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
+                  border: Border.all(
+                      color: DesignColors.accent.withValues(alpha: 0.3), width: 1),
                 ),
                 child: messagesAsync.when(
                   data: (messages) {
                     final currentUser = ref.watch(currentUserProvider);
                     return ListView.builder(
                       controller: _scrollController,
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(AppSpacing.spaceLG),
                       itemCount: messages.length,
                       itemBuilder: (context, index) {
                         return MessageBubble(message: messages[index], currentUserId: currentUser.value?.id ?? '');
@@ -224,13 +240,13 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                     );
                   },
                   loading: () => const Center(
-                    child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF4C4C))),
+                    child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(DesignColors.accent)),
                   ),
                   error: (error, stack) => Center(
                     child: GlowText(
                       text: 'Error loading messages: ${error.toString()}',
                       fontSize: 14,
-                      color: const Color(0xFFFF4C4C),
+                      color: DesignColors.accent,
                     ),
                   ),
                 ),
@@ -239,7 +255,9 @@ class _RoomPageState extends ConsumerState<RoomPage> {
             // Video controls
             if (_isAgoraInitialized) ...[
               Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16),
+                height: AppSizes.controlBarHeight,
+                margin: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.spaceLG),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -260,7 +278,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                         }
                       },
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: AppSpacing.spaceLG),
                     _buildVideoControlButton(
                       icon: ref.watch(agoraVideoServiceProvider).isVideoMuted ? Icons.videocam_off : Icons.videocam,
                       label: ref.watch(agoraVideoServiceProvider).isVideoMuted ? 'Camera On' : 'Camera Off',
@@ -281,17 +299,22 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: AppSpacing.spaceLG),
             ],
             // Message input with nightclub styling
             Container(
-              margin: const EdgeInsets.all(16),
+              margin: const EdgeInsets.all(AppSpacing.spaceLG),
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFFF4C4C).withValues(alpha: 0.3), width: 1),
+                borderRadius:
+                    BorderRadius.circular(AppSizes.buttonBorderRadius + 10),
+                border: Border.all(
+                    color: DesignColors.accent.withValues(alpha: 0.3), width: 1),
                 boxShadow: [
-                  BoxShadow(color: const Color(0xFFFF4C4C).withValues(alpha: 0.2), blurRadius: 8, spreadRadius: 1),
+                  BoxShadow(
+                      color: DesignColors.accent.withValues(alpha: 0.2),
+                      blurRadius: 8,
+                      spreadRadius: 1),
                 ],
               ),
               child: Row(
@@ -304,17 +327,19 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                         hintText: 'Type a message...',
                         hintStyle: TextStyle(color: Colors.white70),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        contentPadding: EdgeInsets.symmetric(
+                            horizontal: AppSpacing.spaceXL,
+                            vertical: AppSpacing.spaceLG),
                       ),
                       onSubmitted: (_) => _sendMessage(),
                     ),
                   ),
                   Container(
-                    margin: const EdgeInsets.only(right: 8),
+                    margin: const EdgeInsets.only(right: AppSpacing.spaceSM),
                     child: NeonButton(
                       onPressed: _sendMessage,
-                      padding: const EdgeInsets.all(12),
-                      child: const Icon(Icons.send, size: 20),
+                      padding: const EdgeInsets.all(AppSpacing.spaceMD),
+                      child: const Icon(Icons.send, size: AppSizes.iconStandard),
                     ),
                   ),
                 ],
@@ -374,24 +399,26 @@ class _RoomPageState extends ConsumerState<RoomPage> {
 
   Widget _buildVideoControlButton({required IconData icon, required String label, required VoidCallback onPressed}) {
     return Container(
-      width: 80,
-      height: 60,
+      width: 88,
+      height: AppSizes.controlBarHeight - 12,
       decoration: BoxDecoration(
-        color: const Color(0xFF2A2A3D),
-        borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.3), width: 2),
+        color: DesignColors.surfaceLight,
+        borderRadius: BorderRadius.circular(AppSizes.buttonBorderRadius + 4),
+        border: Border.all(
+            color: DesignColors.gold.withValues(alpha: 0.3), width: 2),
       ),
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(AppSizes.buttonBorderRadius + 4),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: Colors.white, size: 20),
-            const SizedBox(height: 2),
+            Icon(icon, color: Colors.white, size: AppSizes.iconLarge),
+            const SizedBox(height: AppSpacing.spaceXS),
             Text(
               label,
-              style: const TextStyle(color: Colors.white70, fontSize: 10),
+              style: AppTypography.captionSm.copyWith(
+                  color: DesignColors.textGray),
               textAlign: TextAlign.center,
             ),
           ],
