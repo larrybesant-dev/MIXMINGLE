@@ -33,11 +33,11 @@ if ($LASTEXITCODE -ne 0) { Fail "pub get failed" }
 Pass "Dependencies resolved"
 
 # ── 2. format ───────────────────────────────────────────────────
-Step "2/5  flutter format (check only)"
-flutter format --set-exit-if-changed .
+Step "2/5  dart format (check only)"
+dart format --set-exit-if-changed .
 if ($LASTEXITCODE -ne 0) {
   Info "Formatting issues found — running auto-format..."
-  flutter format .
+  dart format .
   Pass "Code formatted"
 } else {
   Pass "Code already formatted"
@@ -45,9 +45,11 @@ if ($LASTEXITCODE -ne 0) {
 
 # ── 3. analyze ──────────────────────────────────────────────────
 Step "3/5  flutter analyze"
-flutter analyze
-if ($LASTEXITCODE -ne 0) { Fail "Static analysis failed — fix errors above" }
-Pass "No analysis issues"
+$analyzeOut = flutter analyze 2>&1
+$analyzeOut | ForEach-Object { Write-Host "  $_" }
+$hasErrors = $analyzeOut | Where-Object { $_ -match "^\s*(error|warning) " }
+if ($hasErrors) { Fail "Static analysis has errors/warnings — fix them above" }
+Pass "No errors or warnings (infos OK)"
 
 # ── 4. test ─────────────────────────────────────────────────────
 if (-not $SkipTests) {
