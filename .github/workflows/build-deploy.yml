@@ -173,7 +173,7 @@ jobs:
   # Deploy to Firebase Hosting (Web)
   # ===========================================
   deploy-web:
-    name: Deploy Web
+    name: Deploy Web (Production)
     needs: build-web
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
@@ -193,6 +193,33 @@ jobs:
           repoToken: '${{ secrets.GITHUB_TOKEN }}'
           firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
           channelId: live
+          projectId: mix-mingle-prod
+
+  # ===========================================
+  # Deploy Preview (develop branch → staging)
+  # ===========================================
+  deploy-preview:
+    name: Deploy Web (Preview / Staging)
+    needs: build-web
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download web artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: web-release
+          path: build/web
+
+      - name: Deploy to Firebase Hosting (Preview Channel)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: '${{ secrets.GITHUB_TOKEN }}'
+          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          channelId: develop-preview
+          expires: 7d
           projectId: mix-mingle-prod
 
   # ===========================================

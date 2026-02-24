@@ -257,7 +257,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     final p = profileAsync.asData?.value;
     final roomsAsync = ref.watch(liveRoomsProvider);
     // #2 Composite heating-up score: joinVelocity x2 + viewerCount
-    final liveRooms = ([...(roomsAsync.value ?? [])])
+    final liveRooms = <Room>[...(roomsAsync.value ?? <Room>[])]
       ..sort((a, b) {
         final aScore = (a.joinVelocity * 2) + a.viewerCount;
         final bScore = (b.joinVelocity * 2) + b.viewerCount;

@@ -2,6 +2,38 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "🧹 Founder Sweep",
+			"type": "shell",
+			"command": "powershell",
+			"args": [
+				"-ExecutionPolicy", "Bypass",
+				"-File", "${workspaceFolder}/tools/founder_sweep.ps1"
+			],
+			"group": { "kind": "build", "isDefault": true },
+			"presentation": {
+				"echo": true, "reveal": "always",
+				"focus": true, "panel": "dedicated",
+				"showReuseMessage": false, "clear": true
+			},
+			"problemMatcher": []
+		},
+		{
+			"label": "🌐 Build Web Release",
+			"type": "shell",
+			"command": "flutter",
+			"args": ["build", "web", "--release"],
+			"presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+			"problemMatcher": []
+		},
+		{
+			"label": "🤖 Build Android Release (APK)",
+			"type": "shell",
+			"command": "flutter",
+			"args": ["build", "apk", "--release"],
+			"presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+			"problemMatcher": []
+		},
+		{
 			"type": "shell",
 			"label": "flutter pub get",
 			"command": "flutter",
