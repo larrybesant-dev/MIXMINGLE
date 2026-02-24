@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'design/design_colors.dart';
-import 'design/design_typography.dart';
+import '../core/design_system/design_constants.dart';
 /// Loading States & UX Polish Guide
 ///
 /// This module demonstrates best practices for loading states and UX in the app.

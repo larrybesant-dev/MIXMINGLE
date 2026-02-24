@@ -1,10 +1,10 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../providers/all_providers.dart';
+import '../../shared/providers/all_providers.dart';
 import '../../services/moderation_service.dart';
 import '../../shared/widgets/async_value_view_enhanced.dart';
-import '../../app_routes.dart';
+import '../../app/app_routes.dart';
 
 /// Blocked users provider
 final blockedUsersProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {

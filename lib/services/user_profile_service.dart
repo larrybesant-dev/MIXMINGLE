@@ -1,6 +1,6 @@
 // lib/services/user_profile_service.dart
 
-import '../models/user_profile_model.dart';
+import '../shared/models/user_profile_model.dart';
 
 class UserProfileService {
   final Map<String, UserProfileModel> _profiles = {};

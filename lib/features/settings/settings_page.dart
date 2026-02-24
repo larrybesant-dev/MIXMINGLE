@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/providers.dart';
+import '../../shared/providers/providers.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 

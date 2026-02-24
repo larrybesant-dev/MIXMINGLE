@@ -1,8 +1,8 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../models/direct_message.dart';
-import '../models/message.dart';
-import '../models/user.dart';
+import '../shared/models/direct_message.dart';
+import '../shared/models/message.dart';
+import '../shared/models/user.dart';
 import 'analytics_service.dart';
 import 'notification_service.dart';
 

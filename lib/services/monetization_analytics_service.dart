@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -119,7 +119,7 @@ class MonetizationAnalyticsService {
       return UserEngagementMetrics.fromMap(result.data ?? {});
     } catch (e) {
       debugPrint('Error getting user engagement metrics: $e');
-      return UserEngagementMetrics(
+      return const UserEngagementMetrics(
         totalUsers: 0,
         activeUsers: 0,
         newUsers: 0,
@@ -142,7 +142,7 @@ class MonetizationAnalyticsService {
       return RevenueMetrics.fromMap(result.data ?? {});
     } catch (e) {
       debugPrint('Error getting revenue metrics: $e');
-      return RevenueMetrics(
+      return const RevenueMetrics(
         totalRevenue: 0,
         monthlyRecurringRevenue: 0,
         revenueByCategory: {},

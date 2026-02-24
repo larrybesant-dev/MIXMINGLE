@@ -1,4 +1,4 @@
-﻿/// Participant Card Widget
+/// Participant Card Widget
 ///
 /// Displays a single participant in a video room with:
 /// - Avatar
@@ -20,7 +20,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:mixmingle/core/design_system/design_constants.dart';
-import 'package:mixmingle/models/participant.dart';
+import 'package:mixmingle/shared/models/participant.dart';
 
 class ParticipantCardWidget extends StatefulWidget {
   /// Participant data (name, uid, speaking state, etc.)
@@ -139,8 +139,8 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
       onTap: widget.onTap,
       child: Container(
         // âœ… Use DesignSpacing
-        padding: EdgeInsets.all(DesignSpacing.lg),
-        margin: EdgeInsets.only(bottom: DesignSpacing.md),
+        padding: const EdgeInsets.all(DesignSpacing.lg),
+        margin: const EdgeInsets.only(bottom: DesignSpacing.md),
 
         // âœ… Use DesignBorders, DesignShadows, DesignColors
         decoration: BoxDecoration(
@@ -148,7 +148,7 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
           borderRadius:
               BorderRadius.circular(DesignSpacing.cardBorderRadius),
           color: DesignColors.accent,
-          boxShadow: [DesignShadows.subtle],
+          boxShadow: const [DesignShadows.subtle],
         ),
 
         child: Column(
@@ -175,19 +175,19 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
                           child: Image.network(
                             widget.participant.avatarUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Icon(
+                            errorBuilder: (_, __, ___) => const Icon(
                               Icons.person,
                               color: DesignColors.accent,
                             ),
                           ),
                         )
-                      : Icon(
+                      : const Icon(
                           Icons.person,
                           color: DesignColors.accent,
                         ),
                 ),
 
-                SizedBox(width: DesignSpacing.lg),
+                const SizedBox(width: DesignSpacing.lg),
 
                 // âœ… Name using DesignTypography
                 Expanded(
@@ -200,9 +200,9 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
                         overflow: TextOverflow.ellipsis,
                       ),
                       if (widget.participant.isSpeaking) ...[
-                        SizedBox(height: DesignSpacing.xs),
+                        const SizedBox(height: DesignSpacing.xs),
                         Container(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: DesignSpacing.sm,
                             vertical: DesignSpacing.xs,
                           ),
@@ -224,7 +224,7 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
 
                 // Mute icon if not speaking
                 if (!widget.participant.isSpeaking)
-                  Icon(
+                  const Icon(
                     Icons.mic_off,
                     color: DesignColors.accent,
                     size: 20,
@@ -234,7 +234,7 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
 
             // Join time
             Padding(
-              padding: EdgeInsets.only(top: DesignSpacing.md),
+              padding: const EdgeInsets.only(top: DesignSpacing.md),
               child: Text(
                 _formatJoinTime(),
                 style: DesignTypography.caption,

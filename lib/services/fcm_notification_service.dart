@@ -9,7 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'firestore_service.dart';
 import '../core/utils/app_logger.dart';
-import '../app_routes.dart';
+import '../app/app_routes.dart';
 
 /// FCM Notification service for friend presence alerts
 class FcmNotificationService {

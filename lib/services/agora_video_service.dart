@@ -8,9 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 import 'agora_platform_service.dart';
 import 'agora_web_bridge_v2.dart';
-import '../providers/agora_participant_provider.dart';
-import '../providers/agora_video_tile_provider.dart';
-import '../providers/user_display_name_provider.dart';
+import '../shared/providers/agora_participant_provider.dart';
+import '../shared/providers/agora_video_tile_provider.dart';
+import '../shared/providers/user_display_name_provider.dart';
 import '../shared/models/agora_participant.dart';
 import '../core/logging/debug_log.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart' as agora show UserInfo;
@@ -363,7 +363,7 @@ class AgoraVideoService extends ChangeNotifier {
 
       DebugLog.info(_safeLog(' Requesting camera and microphone permissions...'));
 
-      Map<Permission, PermissionStatus> statuses = await [Permission.camera, Permission.microphone].request();
+      final Map<Permission, PermissionStatus> statuses = await [Permission.camera, Permission.microphone].request();
 
       // Parse permission statuses
       final cameraStatus = statuses[Permission.camera];
@@ -376,7 +376,7 @@ class AgoraVideoService extends ChangeNotifier {
       _isCameraPermissionPermanentlyDenied = cameraStatus?.isPermanentlyDenied ?? false;
       _isMicPermissionPermanentlyDenied = micStatus?.isPermanentlyDenied ?? false;
 
-      bool allGranted = statuses.values.every((status) => status.isGranted);
+      final bool allGranted = statuses.values.every((status) => status.isGranted);
 
       if (!allGranted) {
         DebugLog.info(_safeLog('  Some permissions denied'));

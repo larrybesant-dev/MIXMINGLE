@@ -3,9 +3,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
-import 'package:mixmingle/app_routes.dart';
+import 'package:mixmingle/app/app_routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mixmingle/providers/all_providers.dart';
+import 'package:mixmingle/shared/providers/all_providers.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 
 class SettingsPage extends ConsumerWidget {

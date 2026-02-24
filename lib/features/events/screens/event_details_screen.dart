@@ -2,7 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/core/responsive/responsive_utils.dart';
 import 'package:mixmingle/core/animations/app_animations.dart';
-import 'package:mixmingle/providers/all_providers.dart';
+import 'package:mixmingle/shared/providers/all_providers.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/shared/widgets/skeleton_loaders.dart';
@@ -27,7 +27,7 @@ class EventDetailsPage extends ConsumerWidget {
         body: AsyncValueViewEnhanced(
           value: eventAsync,
           maxRetries: 3,
-          skeleton: SkeletonCard(),
+          skeleton: const SkeletonCard(),
           screenName: 'EventDetailsScreen',
           providerName: 'eventProvider',
           onRetry: () => ref.invalidate(eventProvider(eventId)),
@@ -337,11 +337,11 @@ class EventDetailsPage extends ConsumerWidget {
     bool isPast,
   ) {
     if (isPast) {
-      return SizedBox(
+      return const SizedBox(
         width: double.infinity,
         child: ElevatedButton(
           onPressed: null,
-          child: const Text('Event Ended'),
+          child: Text('Event Ended'),
         ),
       );
     }

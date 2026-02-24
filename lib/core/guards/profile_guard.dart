@@ -1,8 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/features/create_profile_page.dart';
-import 'package:mixmingle/providers/auth_providers.dart';
+import 'package:mixmingle/features/profile/screens/create_profile_page.dart';
+import 'package:mixmingle/shared/providers/auth_providers.dart';
 
 /// Guard that ensures user has completed their profile before accessing the child widget
 /// Redirects to profile creation page if profile is incomplete
@@ -69,11 +69,13 @@ class ProfileGuard extends ConsumerWidget {
           final hasDisplayName =
               profileData?['displayName'] != null && (profileData!['displayName'] as String).isNotEmpty;
           final hasUsername = profileData?['username'] != null && (profileData!['username'] as String).isNotEmpty;
-          final hasAge = profileData?['age'] != null;
+          // Use 'birthday' — the actual field written by UserProfile.toMap().
+          // ('age' is never stored; it is derived from birthday at runtime.)
+          final hasBirthday = profileData?['birthday'] != null;
           final hasGender = profileData?['gender'] != null;
 
-          // Profile is complete if it has at least display name or username, age, and gender
-          if ((hasDisplayName || hasUsername) && hasAge && hasGender) {
+          // Profile is complete if it has at least display name or username, birthday, and gender
+          if ((hasDisplayName || hasUsername) && hasBirthday && hasGender) {
             return child;
           }
         }

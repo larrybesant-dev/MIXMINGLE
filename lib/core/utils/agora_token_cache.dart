@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 /// Cached Agora token with expiration
@@ -21,7 +21,7 @@ class CachedAgoraToken {
 
   /// Check if token is still valid (with 2 minute buffer)
   bool get isValid {
-    final bufferMs = 2 * 60 * 1000; // 2 minute buffer before expiry
+    const bufferMs = 2 * 60 * 1000; // 2 minute buffer before expiry
     return DateTime.now().millisecondsSinceEpoch < (expiresAtMs - bufferMs);
   }
 

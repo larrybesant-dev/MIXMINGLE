@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/design_system/design_constants.dart';
-import '../../../models/chat_message.dart';
+import '../../../shared/models/chat_message.dart';
 
 class ChatOverlayWidget extends StatefulWidget {
   final List<ChatMessage> messages;
@@ -173,12 +173,12 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
               top: 8,
               right: 8,
               child: Container(
-                padding: EdgeInsets.all(4),
-                decoration: BoxDecoration(
+                padding: const EdgeInsets.all(4),
+                decoration: const BoxDecoration(
                   color: DesignColors.error,
                   shape: BoxShape.circle,
                 ),
-                constraints: BoxConstraints(
+                constraints: const BoxConstraints(
                   minWidth: 18,
                   minHeight: 18,
                 ),
@@ -200,8 +200,8 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
 
   Widget _buildChatHeader() {
     return Container(
-      padding: EdgeInsets.all(DesignSpacing.md),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(DesignSpacing.md),
+      decoration: const BoxDecoration(
         border: Border(
           bottom: BorderSide(
             color: DesignColors.surface,
@@ -210,12 +210,12 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
       ),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.chat,
             color: DesignColors.accent,
             size: 20,
           ),
-          SizedBox(width: DesignSpacing.sm),
+          const SizedBox(width: DesignSpacing.sm),
           Text(
             'Room Chat',
             style: DesignTypography.body.copyWith(
@@ -225,7 +225,7 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
           ),
           Expanded(child: Container()),
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.close,
               color: DesignColors.textSecondary,
               size: 20,
@@ -248,7 +248,7 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
               color: DesignColors.textSecondary.withValues(alpha: 0.5),
               size: 48,
             ),
-            SizedBox(height: DesignSpacing.md),
+            const SizedBox(height: DesignSpacing.md),
             Text(
               'No messages yet',
               style: DesignTypography.body.copyWith(
@@ -268,7 +268,7 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
 
     return ListView.builder(
       controller: _scrollController,
-      padding: EdgeInsets.all(DesignSpacing.md),
+      padding: const EdgeInsets.all(DesignSpacing.md),
       itemCount: widget.messages.length,
       itemBuilder: (context, index) {
         final message = widget.messages[index];
@@ -281,7 +281,7 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
     final isCurrentUser = message.senderId == widget.currentUserId;
 
     return Container(
-      margin: EdgeInsets.only(bottom: DesignSpacing.sm),
+      margin: const EdgeInsets.only(bottom: DesignSpacing.sm),
       child: Row(
         mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
@@ -289,8 +289,8 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
             Container(
               width: 32,
               height: 32,
-              margin: EdgeInsets.only(right: DesignSpacing.sm),
-              decoration: BoxDecoration(
+              margin: const EdgeInsets.only(right: DesignSpacing.sm),
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [DesignColors.accent, DesignColors.gold],
                 ),
@@ -309,7 +309,7 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
 
           Flexible(
             child: Container(
-              padding: EdgeInsets.all(DesignSpacing.sm),
+              padding: const EdgeInsets.all(DesignSpacing.sm),
               decoration: BoxDecoration(
                 color: isCurrentUser
                     ? DesignColors.accent
@@ -355,8 +355,8 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
 
   Widget _buildMessageInput() {
     return Container(
-      padding: EdgeInsets.all(DesignSpacing.md),
-      decoration: BoxDecoration(
+      padding: const EdgeInsets.all(DesignSpacing.md),
+      decoration: const BoxDecoration(
         border: Border(
           top: BorderSide(
             color: DesignColors.surface,
@@ -379,7 +379,7 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
                 ),
                 filled: true,
                 fillColor: DesignColors.background,
-                contentPadding: EdgeInsets.symmetric(
+                contentPadding: const EdgeInsets.symmetric(
                   horizontal: DesignSpacing.md,
                   vertical: DesignSpacing.sm,
                 ),
@@ -388,14 +388,14 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
               onSubmitted: (_) => _sendMessage(),
             ),
           ),
-          SizedBox(width: DesignSpacing.sm),
+          const SizedBox(width: DesignSpacing.sm),
           Container(
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               color: DesignColors.accent,
               shape: BoxShape.circle,
             ),
             child: IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.send,
                 color: DesignColors.white,
                 size: 20,

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/design_system/design_constants.dart';
 
 class HostControlsWidget extends StatelessWidget {
@@ -27,15 +27,15 @@ class HostControlsWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isHost) return SizedBox.shrink();
+    if (!isHost) return const SizedBox.shrink();
 
     return Container(
-      padding: EdgeInsets.all(DesignSpacing.lg),
-      margin: EdgeInsets.all(DesignSpacing.lg),
+      padding: const EdgeInsets.all(DesignSpacing.lg),
+      margin: const EdgeInsets.all(DesignSpacing.lg),
       decoration: BoxDecoration(
         color: DesignColors.surface.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(16),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: DesignColors.shadowColor,
             blurRadius: 10,
@@ -49,12 +49,12 @@ class HostControlsWidget extends StatelessWidget {
           // Header
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.admin_panel_settings,
                 color: DesignColors.gold,
                 size: 20,
               ),
-              SizedBox(width: DesignSpacing.sm),
+              const SizedBox(width: DesignSpacing.sm),
               Text(
                 'Host Controls',
                 style: DesignTypography.body.copyWith(
@@ -65,7 +65,7 @@ class HostControlsWidget extends StatelessWidget {
             ],
           ),
 
-          SizedBox(height: DesignSpacing.md),
+          const SizedBox(height: DesignSpacing.md),
 
           // Controls grid
           Wrap(
@@ -106,7 +106,7 @@ class HostControlsWidget extends StatelessWidget {
             ],
           ),
 
-          SizedBox(height: DesignSpacing.md),
+          const SizedBox(height: DesignSpacing.md),
 
           // Max participants slider
           Column(
@@ -155,7 +155,7 @@ class HostControlsWidget extends StatelessWidget {
         style: ElevatedButton.styleFrom(
           backgroundColor: color,
           foregroundColor: DesignColors.white,
-          padding: EdgeInsets.symmetric(
+          padding: const EdgeInsets.symmetric(
             horizontal: DesignSpacing.md,
             vertical: DesignSpacing.sm,
           ),

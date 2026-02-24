@@ -2,7 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/models/achievement.dart';
-import 'package:mixmingle/providers/all_providers.dart';
+import 'package:mixmingle/shared/providers/all_providers.dart';
 
 class AchievementsPage extends ConsumerWidget {
   const AchievementsPage({super.key});

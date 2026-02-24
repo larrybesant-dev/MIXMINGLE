@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/providers/providers.dart';
+import 'package:mixmingle/shared/providers/providers.dart';
 
 /// Widget that shows who is typing in a room/chat
 class TypingIndicatorWidget extends ConsumerWidget {

@@ -1,6 +1,6 @@
 // lib/services/recording_service.dart
 
-import '../models/recording_session_model.dart';
+import '../shared/models/recording_session_model.dart';
 
 class RecordingService {
   final List<RecordingSessionModel> _sessions = [];

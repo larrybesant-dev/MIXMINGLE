@@ -1,4 +1,4 @@
-﻿/// Rooms List Page
+/// Rooms List Page
 /// Browse and join live video rooms
 library;
 
@@ -31,7 +31,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: NeonText(
+          title: const NeonText(
             'LIVE ROOMS',
             fontSize: 24,
             fontWeight: FontWeight.w900,
@@ -140,7 +140,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage> {
               ),
               child: Stack(
                 children: [
-                  Center(
+                  const Center(
                   child: Icon(
                     Icons.video_call,
                     color: DesignColors.accent,
@@ -203,7 +203,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage> {
                 const SizedBox(height: 8),
                 Row(
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.people,
                       size: 14,
                       color: DesignColors.gold,
@@ -211,7 +211,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage> {
                     const SizedBox(width: 4),
                     Text(
                       '${room.viewerCount} watching',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: DesignColors.gold,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -242,7 +242,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage> {
           ),
 
           // Join button
-          Icon(
+          const Icon(
             Icons.arrow_forward_ios,
             color: DesignColors.accent,
             size: 20,

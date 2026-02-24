@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
-import '../models/video_tile_model.dart';
-import '../models/window_state_model.dart';
+import 'package:flutter/material.dart';
+import '../../../shared/models/video_tile_model.dart';
+import '../../../shared/models/window_state_model.dart';
 
 class VideoWindowController {
   VideoTileModel videoTile;

@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/providers/camera_providers.dart';
+import 'package:mixmingle/shared/providers/camera_providers.dart';
 import 'camera_tile.dart';
 
 class CameraGrid extends ConsumerWidget {
@@ -48,7 +48,7 @@ class CameraGrid extends ConsumerWidget {
 
         // Responsive grid
         final crossAxisCount = _getGridCrossAxisCount(context);
-        final childAspectRatio = 16 / 9; // 16:9 aspect ratio for cameras
+        const childAspectRatio = 16 / 9; // 16:9 aspect ratio for cameras
 
         return GridView.builder(
           padding: const EdgeInsets.all(12),

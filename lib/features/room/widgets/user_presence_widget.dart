@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/features/voice_room/services/user_presence_service.dart';
+import 'package:mixmingle/features/room/services/user_presence_service.dart';
 
 /// User Presence Indicator Widget
 ///
@@ -239,15 +239,15 @@ class RoomPresencePanelWidget extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(
                 Icons.people,
-                color: const Color(0xFFFF4C4C),
+                color: Color(0xFFFF4C4C),
                 size: 18,
               ),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 'Who\'s Online',
                 style: TextStyle(
                   color: Colors.white,

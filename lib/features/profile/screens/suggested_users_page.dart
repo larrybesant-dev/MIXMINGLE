@@ -8,8 +8,8 @@ import '../../../core/design_system/design_constants.dart';
 import '../../../shared/widgets/club_background.dart';
 import '../../../shared/widgets/neon_components.dart';
 import '../../../shared/widgets/presence_indicator.dart';
-import '../../../providers/social_graph_providers.dart';
-import '../../../providers/auth_providers.dart';
+import '../../../shared/providers/social_graph_providers.dart';
+import '../../../shared/providers/auth_providers.dart';
 
 /// Suggested Users - Discover people to connect with
 class SuggestedUsersPage extends ConsumerWidget {
@@ -24,7 +24,7 @@ class SuggestedUsersPage extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: NeonText(
+          title: const NeonText(
             'DISCOVER PEOPLE',
             fontSize: 20,
             fontWeight: FontWeight.w900,
@@ -175,7 +175,7 @@ class SuggestedUsersPage extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.people,
                             size: 14,
                             color: DesignColors.gold,
@@ -183,7 +183,7 @@ class SuggestedUsersPage extends ConsumerWidget {
                           const SizedBox(width: 4),
                           Text(
                             '${user.followersCount ?? 0} followers',
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: DesignColors.gold,
                               fontSize: 12,
                             ),

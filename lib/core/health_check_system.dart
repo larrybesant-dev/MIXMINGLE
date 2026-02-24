@@ -102,14 +102,23 @@ class ProjectHealthChecker {
     final stopwatch = Stopwatch()..start();
     try {
       final firestore = FirebaseFirestore.instance;
-      // Attempt to fetch metadata without triggering full query
+      // Attempt to fetch a restricted collection. A permission-denied response
+      // confirms Firestore is reachable and rules are active — not an error.
       await firestore.collection('_metadata_').limit(1).get().timeout(
             const Duration(seconds: 5),
             onTimeout: () => throw TimeoutException('Firestore timeout'),
           );
       _addResult('Firestore Database', true, null, stopwatch.elapsed);
     } catch (e) {
-      _addResult('Firestore Database', false, e.toString(), stopwatch.elapsed);
+      final err = e.toString();
+      // permission-denied = Firestore is reachable, rules are enforcing auth (correct)
+      if (err.contains('permission-denied') || err.contains('PERMISSION_DENIED')) {
+        _addResult('Firestore Database', true,
+            'Security rules active (unauthenticated access blocked — OK)',
+            stopwatch.elapsed);
+      } else {
+        _addResult('Firestore Database', false, err, stopwatch.elapsed);
+      }
     }
   }
 

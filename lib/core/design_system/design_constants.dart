@@ -418,13 +418,13 @@ extension NotificationTypeExtension on NotificationType {
     switch (this) {
       case NotificationType.userArrived:
       case NotificationType.userLeft:
-        return Duration(seconds: 3);
+        return const Duration(seconds: 3);
       case NotificationType.youAreLive:
-        return Duration(seconds: 2);
+        return const Duration(seconds: 2);
       case NotificationType.error:
-        return Duration(seconds: 4);
+        return const Duration(seconds: 4);
       default:
-        return Duration(seconds: 3);
+        return const Duration(seconds: 3);
     }
   }
 

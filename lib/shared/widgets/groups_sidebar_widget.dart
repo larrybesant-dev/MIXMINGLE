@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/app_models.dart';
-import '../../providers/groups_provider.dart';
-import '../../providers/ui_provider.dart';
+import '../../shared/providers/app_models.dart';
+import '../../shared/providers/groups_provider.dart';
+import '../../shared/providers/ui_provider.dart';
 import '../../core/design_system/design_constants.dart';
 
 class GroupsSidebarWidget extends ConsumerStatefulWidget {

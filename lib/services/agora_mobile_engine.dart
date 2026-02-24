@@ -1,6 +1,6 @@
-﻿import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/foundation.dart';
-import '../models/remote_user.dart';
+import '../shared/models/remote_user.dart';
 import 'video_engine_interface.dart';
 import 'dart:async';
 

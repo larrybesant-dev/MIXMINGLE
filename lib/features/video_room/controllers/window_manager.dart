@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/window_state_model.dart';
-import '../controllers/video_window_controller.dart';
+import '../../../shared/models/window_state_model.dart';
+import 'video_window_controller.dart';
 
 class WindowManager {
   final List<VideoWindowController> _windows = [];

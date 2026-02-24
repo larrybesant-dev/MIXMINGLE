@@ -4,7 +4,7 @@ import 'package:mixmingle/shared/models/report.dart' show ReportType;
 import 'package:mixmingle/shared/models/moderation.dart' show UserReport;
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/glow_text.dart';
-import 'package:mixmingle/providers/all_providers.dart';
+import 'package:mixmingle/shared/providers/all_providers.dart';
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});

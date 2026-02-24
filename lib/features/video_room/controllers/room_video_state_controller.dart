@@ -1,10 +1,10 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../core/utils/app_logger.dart';
-import '../models/room_video_state_model.dart';
-import '../models/video_tile_model.dart';
-import '../models/window_state_model.dart';
-import '../models/publisher_state_model.dart';
+import '../../../core/utils/app_logger.dart';
+import '../../../shared/models/room_video_state_model.dart';
+import '../../../shared/models/video_tile_model.dart';
+import '../../../shared/models/window_state_model.dart';
+import '../../../shared/models/publisher_state_model.dart';
 
 class RoomVideoStateController {
   final String roomId;

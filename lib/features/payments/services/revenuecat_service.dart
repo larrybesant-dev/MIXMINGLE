@@ -1,4 +1,4 @@
-﻿/// RevenueCat Service
+/// RevenueCat Service
 ///
 /// Handles all RevenueCat integration for subscriptions and consumables.
 /// Manages offerings, purchases, entitlements, and restore flow.
@@ -190,10 +190,10 @@ class RevenueCatService extends ChangeNotifier {
 
       // Simulated offerings for development
       _offerings = [
-        StoreOffering(
+        const StoreOffering(
           identifier: 'vip',
           products: [
-            const StoreProduct(
+            StoreProduct(
               identifier: RevenueCatConfig.vipMonthly,
               title: 'VIP Monthly',
               description: 'VIP membership billed monthly',
@@ -202,7 +202,7 @@ class RevenueCatService extends ChangeNotifier {
               currencyCode: 'USD',
               type: ProductType.subscription,
             ),
-            const StoreProduct(
+            StoreProduct(
               identifier: RevenueCatConfig.vipYearly,
               title: 'VIP Yearly',
               description: 'VIP membership billed yearly',
@@ -212,7 +212,7 @@ class RevenueCatService extends ChangeNotifier {
               type: ProductType.subscription,
             ),
           ],
-          monthlyProduct: const StoreProduct(
+          monthlyProduct: StoreProduct(
             identifier: RevenueCatConfig.vipMonthly,
             title: 'VIP Monthly',
             description: 'VIP membership billed monthly',
@@ -221,7 +221,7 @@ class RevenueCatService extends ChangeNotifier {
             currencyCode: 'USD',
             type: ProductType.subscription,
           ),
-          annualProduct: const StoreProduct(
+          annualProduct: StoreProduct(
             identifier: RevenueCatConfig.vipYearly,
             title: 'VIP Yearly',
             description: 'VIP membership billed yearly',
@@ -231,10 +231,10 @@ class RevenueCatService extends ChangeNotifier {
             type: ProductType.subscription,
           ),
         ),
-        StoreOffering(
+        const StoreOffering(
           identifier: 'vip_plus',
           products: [
-            const StoreProduct(
+            StoreProduct(
               identifier: RevenueCatConfig.vipPlusMonthly,
               title: 'VIP+ Monthly',
               description: 'VIP+ membership billed monthly',
@@ -243,7 +243,7 @@ class RevenueCatService extends ChangeNotifier {
               currencyCode: 'USD',
               type: ProductType.subscription,
             ),
-            const StoreProduct(
+            StoreProduct(
               identifier: RevenueCatConfig.vipPlusYearly,
               title: 'VIP+ Yearly',
               description: 'VIP+ membership billed yearly',
@@ -253,7 +253,7 @@ class RevenueCatService extends ChangeNotifier {
               type: ProductType.subscription,
             ),
           ],
-          monthlyProduct: const StoreProduct(
+          monthlyProduct: StoreProduct(
             identifier: RevenueCatConfig.vipPlusMonthly,
             title: 'VIP+ Monthly',
             description: 'VIP+ membership billed monthly',
@@ -262,7 +262,7 @@ class RevenueCatService extends ChangeNotifier {
             currencyCode: 'USD',
             type: ProductType.subscription,
           ),
-          annualProduct: const StoreProduct(
+          annualProduct: StoreProduct(
             identifier: RevenueCatConfig.vipPlusYearly,
             title: 'VIP+ Yearly',
             description: 'VIP+ membership billed yearly',

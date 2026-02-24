@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/providers/camera_providers.dart';
+import 'package:mixmingle/shared/providers/camera_providers.dart';
 
 class CamCountIndicator extends ConsumerWidget {
   final String roomId;

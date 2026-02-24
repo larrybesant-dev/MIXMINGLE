@@ -1,8 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
-import '../../providers/all_providers.dart';
-import '../../models/room.dart';
+import '../../shared/providers/all_providers.dart';
+import '../../shared/models/room.dart';
 import 'message_bubble.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';

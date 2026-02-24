@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/providers.dart';
+import './providers/providers.dart';
 import '../shared/club_background.dart';
 import '../shared/glow_text.dart';
 
@@ -21,8 +21,8 @@ class AuthGuard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Check if we're in test mode (bypass authentication for testing)
-    final isTestMode =
-        const bool.fromEnvironment('TEST_MODE', defaultValue: false);
+    const isTestMode =
+        bool.fromEnvironment('TEST_MODE', defaultValue: false);
 
     if (isTestMode) {
       return child;

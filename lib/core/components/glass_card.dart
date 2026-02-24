@@ -1,4 +1,4 @@
-﻿import 'dart:ui';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/colors_v2.dart';
 import '../theme/spacing.dart';
@@ -109,9 +109,9 @@ _GlassStyle _styleForElevation(GlassCardElevation level) {
           BoxShadow(
             color: ElectricColors.neonMagenta.withValues(alpha: 0.22),
             blurRadius: 18,
-            offset: Offset(0, 8),
+            offset: const Offset(0, 8),
           ),
-          BoxShadow(
+          const BoxShadow(
             color: ElectricColors.glassShadow,
             blurRadius: 14,
             offset: Offset(0, 6),
@@ -134,14 +134,14 @@ _GlassStyle _styleForElevation(GlassCardElevation level) {
           BoxShadow(
             color: ElectricColors.neonMagenta.withValues(alpha: 0.28),
             blurRadius: 24,
-            offset: Offset(0, 10),
+            offset: const Offset(0, 10),
           ),
           BoxShadow(
             color: ElectricColors.electricCyan.withValues(alpha: 0.18),
             blurRadius: 18,
-            offset: Offset(0, 6),
+            offset: const Offset(0, 6),
           ),
-          BoxShadow(
+          const BoxShadow(
             color: ElectricColors.glassShadow,
             blurRadius: 16,
             offset: Offset(0, 8),

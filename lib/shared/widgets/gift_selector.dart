@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/providers/providers.dart';
+import 'package:mixmingle/shared/providers/providers.dart';
 
 class GiftSelector extends ConsumerStatefulWidget {
   final String receiverId;

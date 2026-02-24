@@ -1,16 +1,16 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'core/design_system/design_constants.dart';
-import 'features/auth/screens/neon_login_page.dart';
-import 'features/auth/screens/neon_signup_page.dart';
-import 'features/auth/forgot_password_page.dart';
-// TEMP DISABLED: import 'features/onboarding_flow.dart';
-import 'features/landing/landing_page.dart';
-import 'features/home/home_page_electric.dart';
+import '../core/design_system/design_constants.dart';
+import '../features/auth/screens/neon_login_page.dart';
+import '../features/auth/screens/neon_signup_page.dart';
+import '../features/auth/forgot_password_page.dart';
+// TEMP DISABLED: import '../features/onboarding_flow.dart';
+import '../features/landing/landing_page.dart';
+import '../features/home/home_page_electric.dart';
 import 'app.dart';
-import 'providers/all_providers.dart';
-import 'core/theme/neon_theme.dart';
-import 'core/utils/app_logger.dart';
+import '../shared/providers/all_providers.dart';
+import '../core/theme/neon_theme.dart';
+import '../core/utils/app_logger.dart';
 
 /// ROOT AUTH GATE - The Single Source of Truth for App Access
 /// ============================================================================
@@ -208,11 +208,11 @@ class _ProfileIncompleteApp extends StatelessWidget {
       title: 'Mix & Mingle',
       debugShowCheckedModeBanner: false,
       theme: NeonTheme.darkTheme,
-      home: HomePageElectric(), // Skip onboarding, go to home (not const)
+      home: const HomePageElectric(), // Skip onboarding, go to home (not const)
       onGenerateRoute: (settings) {
         debugPrint('ðŸš§ [ProfileIncomplete] Route: ${settings.name}');
         // All routes lead to home since onboarding is disabled
-        return MaterialPageRoute(builder: (_) => HomePageElectric());
+        return MaterialPageRoute(builder: (_) => const HomePageElectric());
       },
     );
   }

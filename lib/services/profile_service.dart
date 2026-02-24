@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import '../shared/models/user_profile.dart';
 import '../core/utils/cache_service.dart';
 
@@ -60,15 +62,94 @@ class ProfileService {
   // Create or update user profile
   Future<void> updateUserProfile(UserProfile profile) async {
     try {
-      await _firestore.collection('users').doc(profile.id).set(
-            profile.toMap(),
+      // Defensive guard: recover empty id from live auth session
+      String resolvedId = profile.id;
+      if (resolvedId.isEmpty) {
+        final currentUser = _auth.currentUser;
+        if (currentUser == null) {
+          throw Exception('Cannot update profile: no authenticated user and profile id is empty');
+        }
+        resolvedId = currentUser.uid;
+        debugPrint('⚠️ [ProfileService] profile.id was empty — using auth UID: $resolvedId');
+      }
+
+      // Primary write — existing users collection (backward compatible)
+      await _firestore.collection('users').doc(resolvedId).set(
+            profile.toMap()..['id'] = resolvedId,
             SetOptions(merge: true),
           );
 
+      // Dual-write to split collections (non-blocking, best-effort)
+      unawaited(_firestore
+          .collection('profiles_public')
+          .doc(resolvedId)
+          .set(profile.toPublicMap(), SetOptions(merge: true))
+          .catchError((e) => debugPrint('⚠️ [ProfileService] profiles_public sync failed: $e')));
+
+      unawaited(_firestore
+          .collection('profiles_private')
+          .doc(resolvedId)
+          .set(profile.toPrivateMap(), SetOptions(merge: true))
+          .catchError((e) => debugPrint('⚠️ [ProfileService] profiles_private sync failed: $e')));
+
       // Invalidate cache after update
-      AppCaches.userProfiles.remove(profile.id);
+      AppCaches.userProfiles.remove(resolvedId);
     } catch (e) {
       throw Exception('Failed to update user profile: $e');
+    }
+  }
+
+  // ─── Split-collection read/write methods ────────────────────
+
+  /// Read public profile for any user (uses profiles_public collection).
+  Future<UserProfile?> getPublicProfile(String userId) async {
+    try {
+      final doc = await _firestore.collection('profiles_public').doc(userId).get();
+      if (!doc.exists) {
+        // Fall back to users collection for profiles not yet migrated
+        return getUserProfile(userId);
+      }
+      // Reconstruct with minimal safe fields; full model requires private data too
+      final data = doc.data()!..['id'] = userId;
+      // Merge with a stub for required private fields so fromMap doesn't crash
+      data['email'] ??= '';
+      return UserProfile.fromMap(data);
+    } catch (e) {
+      throw Exception('Failed to get public profile: $e');
+    }
+  }
+
+  /// Stream public profile for any user.
+  Stream<UserProfile?> streamPublicProfile(String userId) {
+    return _firestore.collection('profiles_public').doc(userId).snapshots().map((doc) {
+      if (!doc.exists) return null;
+      final data = doc.data()!..['id'] = userId;
+      data['email'] ??= '';
+      try {
+        return UserProfile.fromMap(data);
+      } catch (_) {
+        return null;
+      }
+    });
+  }
+
+  /// Update only the private settings for the owner.
+  /// Enforces that only the currently authenticated user can update their own private data.
+  Future<void> updatePrivateSettings(String userId, Map<String, dynamic> settings) async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) {
+      throw Exception('Cannot update private settings: no authenticated user');
+    }
+    if (currentUser.uid != userId) {
+      throw Exception('Cannot update private settings: userId does not match authenticated user');
+    }
+    try {
+      await _firestore.collection('profiles_private').doc(userId).set(
+            settings..['updatedAt'] = FieldValue.serverTimestamp(),
+            SetOptions(merge: true),
+          );
+    } catch (e) {
+      throw Exception('Failed to update private settings: $e');
     }
   }
 

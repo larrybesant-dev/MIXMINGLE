@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/room.dart';
+import '../../shared/models/room.dart';
 import '../../core/utils/app_logger.dart';
-import 'room_page.dart';
 import 'room_access_gate.dart';
 import '../../core/design_system/design_constants.dart';
+import 'live/live_room_screen.dart';
 
 /// Wrapper that enforces room access gating
 /// Checks auth â†’ profile â†’ room permissions before rendering RoomPage
@@ -42,8 +43,19 @@ class RoomAccessWrapper extends ConsumerWidget {
         ),
       ),
       data: (hasAccess) {
-        // Access granted - render the room
-        return RoomPage(room: room);
+        // Build display name from FirebaseAuth (already authenticated at this point)
+        final fbUser = fb_auth.FirebaseAuth.instance.currentUser;
+        final displayName =
+            fbUser?.displayName?.trim().isNotEmpty == true
+                ? fbUser!.displayName!
+                : fbUser?.email?.split('@').first ?? userId;
+        final avatarUrl = fbUser?.photoURL;
+
+        return LiveRoomScreen(
+          roomId:      room.id,
+          displayName: displayName,
+          avatarUrl:   avatarUrl,
+        );
       },
       error: (error, stackTrace) {
         // Access denied - show appropriate error message

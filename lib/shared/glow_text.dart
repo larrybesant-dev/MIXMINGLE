@@ -1,4 +1,4 @@
-import 'design/design_colors.dart';
+import '../core/theme/colors.dart';
 import 'package:flutter/material.dart';
 
 class GlowText extends StatelessWidget {

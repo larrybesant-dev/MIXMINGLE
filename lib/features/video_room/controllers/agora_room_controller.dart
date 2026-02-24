@@ -1,4 +1,4 @@
-﻿/// Agora Room Controller
+/// Agora Room Controller
 ///
 /// High-level orchestration of:
 /// - Join flow state machine (JoinFlowController)
@@ -13,9 +13,13 @@ library;
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import './join_flow_controller.dart';
-import '../models/participant.dart';
-import '../services/agora_service.dart';
-import '../services/room_firestore_service.dart';
+import '../../../shared/models/participant.dart';
+import '../../../services/agora_service.dart';
+import '../../../services/room_firestore_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../shared/providers/agora_provider.dart';
+
+
 
 /// Exception thrown when room operations fail
 class RoomControllerException implements Exception {
@@ -28,297 +32,192 @@ class RoomControllerException implements Exception {
   String toString() => 'RoomControllerException: $message';
 }
 
-/// Main controller for video room
-class AgoraRoomController extends ChangeNotifier {
-  /// Services
-  final AgoraService _agora;
-  final RoomFirestoreService _firestore;
-  final JoinFlowController _joinFlow;
 
-  /// Room state (can be injected after creation)
-  late String _roomId;
-  late String _userId;
-  late String _userName;
+/// Immutable state for the Agora room
+class AgoraRoomState {
+  final List<Participant> participants;
+  final double energy;
+  final bool isInRoom;
+  final bool isMicMuted;
+  final bool isVideoMuted;
+  final String hostId;
 
-  /// Participants in room
-  List<Participant> _participants = [];
-  List<Participant> get participants => _participants;
+  const AgoraRoomState({
+    this.participants = const [],
+    this.energy = 0.0,
+    this.isInRoom = false,
+    this.isMicMuted = false,
+    this.isVideoMuted = false,
+    this.hostId = '',
+  });
 
-  /// Room energy (0.0-10.0, from presence + speaking + activity)
-  double _energy = 0.0;
-  double get energy => _energy;
+  AgoraRoomState copyWith({
+    List<Participant>? participants,
+    double? energy,
+    bool? isInRoom,
+    bool? isMicMuted,
+    bool? isVideoMuted,
+    String? hostId,
+  }) {
+    return AgoraRoomState(
+      participants: participants ?? this.participants,
+      energy: energy ?? this.energy,
+      isInRoom: isInRoom ?? this.isInRoom,
+      isMicMuted: isMicMuted ?? this.isMicMuted,
+      isVideoMuted: isVideoMuted ?? this.isVideoMuted,
+      hostId: hostId ?? this.hostId,
+    );
+  }
+}
 
-  /// Whether user is in the room
-  bool _isInRoom = false;
-  bool get isInRoom => _isInRoom;
+/// Riverpod provider for RoomFirestoreService singleton
+final roomFirestoreServiceProvider = Provider<RoomFirestoreService>((ref) {
+  return RoomFirestoreService();
+});
 
-  /// Microphone muted state
-  bool _micMuted = false;
-  bool get isMicMuted => _micMuted;
-
-  /// Video muted state
-  bool _videoMuted = false;
-  bool get isVideoMuted => _videoMuted;
-
-  /// Listeners management
+/// Riverpod notifier managing Agora room state
+class AgoraRoomNotifier extends Notifier<AgoraRoomState> {
+  late final AgoraService _agora;
+  late final RoomFirestoreService _firestore;
+  String _roomId = '';
+  String _userId = '';
+  String _userName = '';
   StreamSubscription? _participantsSubscription;
 
-  AgoraRoomController({
-    required AgoraService agora,
-    required RoomFirestoreService firestore,
-    required JoinFlowController joinFlow,
-    String roomId = '',
-    String userId = '',
-    String userName = '',
-  })  : _agora = agora,
-        _firestore = firestore,
-        _joinFlow = joinFlow,
-        _roomId = roomId,
-        _userId = userId,
-        _userName = userName;
+  @override
+  AgoraRoomState build() {
+    _agora = ref.watch(agoraServiceProvider);
+    _firestore = ref.read(roomFirestoreServiceProvider);
+    ref.onDispose(_cleanup);
+    return const AgoraRoomState();
+  }
 
-  /// Set room context (roomId, userId, userName)
-  /// Must be called before joinRoom()
+  void _cleanup() {
+    _participantsSubscription?.cancel();
+    _leaveRoomSilent();
+  }
+
+  /// Set room context — must be called before joinRoom()
   void setRoomContext({
     required String roomId,
     required String userId,
     required String userName,
+    String hostId = '',
   }) {
     _roomId = roomId;
     _userId = userId;
     _userName = userName;
-
-    // Clean up old listeners if any
+    state = state.copyWith(hostId: hostId);
     _participantsSubscription?.cancel();
-
-    // Initialize listeners for this room
     _initializeListeners();
   }
 
-  /// Initialize Firestore listeners for presence updates
   void _initializeListeners() {
-    if (_roomId.isEmpty) {
-      if (kDebugMode) print('[RoomController] Room context not set; skipping listeners');
-      return;
-    }
-
+    if (_roomId.isEmpty) return;
     _participantsSubscription = _firestore.participantsStream(_roomId).listen(
       (participants) {
-        _participants = participants;
-        _calculateEnergy();
-        notifyListeners();
-
+        final energy = _calculateEnergy(participants);
+        state = state.copyWith(participants: participants, energy: energy);
         if (kDebugMode) {
-          print('[RoomController] Participants: ${participants.length}, Energy: ${_energy.toStringAsFixed(1)}');
+          print('[RoomNotifier] Participants: ${participants.length}, Energy: ${energy.toStringAsFixed(1)}');
         }
       },
       onError: (e) {
-        if (kDebugMode) print('[RoomController] Participant stream error: $e');
+        if (kDebugMode) print('[RoomNotifier] Participant stream error: $e');
       },
     );
   }
 
-  /// Join room with ceremonial flow + Agora + Firestore sync
-  ///
-  /// Steps:
-  /// 1. Start ceremonial join flow (150+400+400ms)
-  /// 2. Initialize Agora SDK (if needed)
-  /// 3. Join Agora channel with token
-  /// 4. Add user to Firestore room presence
-  /// 5. Return to UI
-  Future<void> joinRoom({
-    required String agoraToken,
-  }) async {
-    if (_isInRoom) return;
+  double _calculateEnergy(List<Participant> participants) {
+    if (participants.isEmpty) return 0.0;
+    final speakingCount = participants.where((p) => p.isSpeaking).length;
+    final totalCount = participants.length;
+    return ((speakingCount / totalCount) * 5.0 + (totalCount * 0.5)).clamp(0.0, 10.0);
+  }
 
+  String getEnergyLabel() {
+    final e = state.energy;
+    if (e < 2) return 'Calm';
+    if (e < 5) return 'Active';
+    return 'Buzzing';
+  }
+
+  Future<void> joinRoom({required String agoraToken}) async {
+    if (state.isInRoom) return;
     try {
-      // STEP 1: Start ceremonial join flow
-      await _joinFlow.startJoinFlow();
-
-      // STEP 2-3: Initialize & join Agora (happens during joining phase)
-      if (!_agora.isInitialized) {
-        await _agora.initialize();
-      }
-      await _agora.joinChannel(
-        token: agoraToken,
-        channelId: _roomId,
-        uid: _userId,
-      );
-
-      // STEP 4: Add self to Firestore presence
-      final selfParticipant = Participant(
-        uid: _userId,
-        name: _userName,
-        isSpeaking: false,
-        isPresent: true,
-      );
+      await ref.read(joinFlowProvider.notifier).startJoinFlow();
+      if (!_agora.isInitialized) await _agora.initialize();
+      await _agora.joinChannel(token: agoraToken, channelId: _roomId, uid: _userId);
+      final selfParticipant = Participant(uid: _userId, name: _userName, isSpeaking: false, isPresent: true);
       await _firestore.updateParticipant(_roomId, selfParticipant);
-
-      // STEP 5: Update state
-      _isInRoom = true;
-      notifyListeners();
-
-      if (kDebugMode) {
-        print('[RoomController] Joined room: $_roomId as $_userName');
-      }
+      state = state.copyWith(isInRoom: true);
+      if (kDebugMode) print('[RoomNotifier] Joined room: $_roomId as $_userName');
     } catch (e) {
-      _joinFlow.setError(e.toString());
-      if (kDebugMode) print('[RoomController] Join failed: $e');
+      ref.read(joinFlowProvider.notifier).setError(e.toString());
+      if (kDebugMode) print('[RoomNotifier] Join failed: $e');
       throw RoomControllerException('Failed to join room', e);
     }
   }
 
-  /// Leave room gracefully
-  ///
-  /// Steps:
-  /// 1. Leave Agora channel
-  /// 2. Remove from Firestore presence
-  /// 3. Update local state
   Future<void> leaveRoom() async {
-    if (!_isInRoom) return;
-
+    if (!state.isInRoom) return;
     try {
-      // STEP 1: Leave Agora
       await _agora.leaveChannel();
-
-      // STEP 2: Remove from Firestore
       await _firestore.removeParticipant(_roomId, _userId);
-
-      // STEP 3: Update state
-      _isInRoom = false;
-      _joinFlow.reset();
-      notifyListeners();
-
-      if (kDebugMode) {
-        print('[RoomController] Left room: $_roomId');
-      }
+      state = state.copyWith(isInRoom: false);
+      ref.read(joinFlowProvider.notifier).reset();
+      if (kDebugMode) print('[RoomNotifier] Left room: $_roomId');
     } catch (e) {
-      if (kDebugMode) print('[RoomController] Leave failed: $e');
-      // Don't throw; attempt cleanup even on error
+      if (kDebugMode) print('[RoomNotifier] Leave failed: $e');
     }
   }
 
-  /// Toggle microphone
   Future<void> toggleMicrophone() async {
     try {
-      _micMuted = !_micMuted;
-      await _agora.setMicrophoneMuted(_micMuted);
-
-      // Update Firestore if in room
-      if (_isInRoom) {
-        final self = _participants.firstWhere(
-          (p) => p.uid == _userId,
-          orElse: () => Participant(uid: _userId, name: _userName),
-        );
-        await _firestore.updateParticipant(
-          _roomId,
-          self.copyWith(),  // Just update presence timestamp
-        );
-      }
-
-      notifyListeners();
-
-      if (kDebugMode) {
-        print('[RoomController] Mic: ${_micMuted ? 'MUTED' : 'ACTIVE'}');
-      }
+      final newMicMuted = !state.isMicMuted;
+      await _agora.setMicrophoneMuted(newMicMuted);
+      state = state.copyWith(isMicMuted: newMicMuted);
+      if (kDebugMode) print('[RoomNotifier] Mic: ${newMicMuted ? "MUTED" : "ACTIVE"}');
     } catch (e) {
-      if (kDebugMode) print('[RoomController] Mic toggle failed: $e');
-      _micMuted = !_micMuted; // Revert on error
+      if (kDebugMode) print('[RoomNotifier] Mic toggle failed: $e');
       throw RoomControllerException('Failed to toggle microphone', e);
     }
   }
 
-  /// Toggle camera video
   Future<void> toggleVideo() async {
     try {
-      _videoMuted = !_videoMuted;
-      await _agora.setVideoCameraMuted(_videoMuted);
-
-      // Update Firestore if in room
-      if (_isInRoom) {
-        final self = _participants.firstWhere(
-          (p) => p.uid == _userId,
-          orElse: () => Participant(uid: _userId, name: _userName),
-        );
-        await _firestore.updateParticipant(
-          _roomId,
-          self.copyWith(),
-        );
-      }
-
-      notifyListeners();
-
-      if (kDebugMode) {
-        print('[RoomController] Video: ${_videoMuted ? 'DISABLED' : 'ACTIVE'}');
-      }
+      final newVideoMuted = !state.isVideoMuted;
+      await _agora.setVideoCameraMuted(newVideoMuted);
+      state = state.copyWith(isVideoMuted: newVideoMuted);
+      if (kDebugMode) print('[RoomNotifier] Video: ${newVideoMuted ? "DISABLED" : "ACTIVE"}');
     } catch (e) {
-      if (kDebugMode) print('[RoomController] Video toggle failed: $e');
-      _videoMuted = !_videoMuted; // Revert on error
+      if (kDebugMode) print('[RoomNotifier] Video toggle failed: $e');
       throw RoomControllerException('Failed to toggle video', e);
     }
   }
 
-  /// Update speaking state
-  /// Called when Agora detects user is speaking
   Future<void> setSpeaking(bool speaking) async {
     try {
-      final self = _participants.firstWhere(
+      final self = state.participants.firstWhere(
         (p) => p.uid == _userId,
         orElse: () => Participant(uid: _userId, name: _userName, isSpeaking: speaking),
       );
-
       if (self.isSpeaking != speaking) {
-        final updated = self.copyWith(isSpeaking: speaking);
-        await _firestore.updateParticipant(_roomId, updated);
+        await _firestore.updateParticipant(_roomId, self.copyWith(isSpeaking: speaking));
       }
     } catch (e) {
-      if (kDebugMode) print('[RoomController] Set speaking failed: $e');
-      // Don't throw; speaking state is secondary
+      if (kDebugMode) print('[RoomNotifier] Set speaking failed: $e');
     }
   }
 
-  /// Calculate room energy from presence + speaking + activity
-  ///
-  /// Formula:
-  /// energy = (speaking_count / total_count) * 5 + (total_count * 0.5)
-  /// Ranges: 0.0 (empty) to 10.0 (full room, all speaking)
-  void _calculateEnergy() {
-    if (_participants.isEmpty) {
-      _energy = 0.0;
-      return;
-    }
-
-    final speakingCount = _participants.where((p) => p.isSpeaking).length;
-    final totalCount = _participants.length;
-
-    // Speaking contribution + presence contribution
-    _energy = (speakingCount / totalCount) * 5.0 + (totalCount * 0.5);
-
-    // Constrain to 0-10
-    _energy = _energy.clamp(0.0, 10.0);
-  }
-
-  /// Get human-readable energy label
-  String getEnergyLabel() {
-    if (_energy < 2) return 'Calm';
-    if (_energy < 5) return 'Active';
-    return 'Buzzing';
-  }
-
-  /// Cleanup on disposal
-  @override
-  void dispose() {
-    _participantsSubscription?.cancel();
-    _leaveRoomSilent();
-    super.dispose();
-  }
-
-  /// Leave room without throwing exceptions
   Future<void> _leaveRoomSilent() async {
-    try {
-      await leaveRoom();
-    } catch (e) {
-      if (kDebugMode) print('[RoomController] Cleanup error: $e');
+    try { await leaveRoom(); } catch (e) {
+      if (kDebugMode) print('[RoomNotifier] Cleanup error: $e');
     }
   }
 }
+
+/// Provider for Agora room state
+final agoraRoomProvider = NotifierProvider<AgoraRoomNotifier, AgoraRoomState>(
+  AgoraRoomNotifier.new,
+);

@@ -1,4 +1,4 @@
-/// Friend Card Widget - Design System Compliant
+﻿/// Friend Card Widget - Design System Compliant
 ///
 /// Displays a friend with:
 /// - Avatar + online indicator
@@ -14,8 +14,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design_system/design_constants.dart';
-import '../../providers/friends_presence_provider.dart';
-import '../../utils/multi_window_room_manager.dart';
+import '../../shared/providers/friends_presence_provider.dart';
+import '../../core/platform/multi_window_room_manager.dart';
 
 /// Friend card showing online status and room info
 ///

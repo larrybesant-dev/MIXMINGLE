@@ -1,4 +1,4 @@
-﻿/// Coin Controller
+/// Coin Controller
 ///
 /// Riverpod state management for coin balance and transactions.
 /// Provides providers for membership tier, coin balance, and purchase operations.
@@ -192,7 +192,7 @@ class PurchaseNotifier extends Notifier<PurchaseState> {
       final result = await revenueCat.restorePurchases();
 
       if (result.success) {
-        state = PurchaseState(
+        state = const PurchaseState(
           isSuccess: true,
           successMessage: 'Purchases restored successfully! âœ“',
         );

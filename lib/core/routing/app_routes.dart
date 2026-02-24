@@ -13,7 +13,7 @@ import '../../features/auth/forgot_password_page.dart';
 import '../../features/home/home_page_electric.dart';
 
 // Rooms
-import '../../features/rooms/screens/rooms_list_page.dart';
+import '../../features/room/screens/rooms_list_page.dart';
 
 // Chat
 import '../../features/chat/screens/chats_list_page.dart';

@@ -7,9 +7,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'dart:io';
 import '../utils/app_logger.dart';
 import '../utils/firestore_utils.dart';
-import '../../shared/auth_guard.dart';
 import '../../shared/models/room.dart';
-import '../../features/room/screens/voice_room_page.dart';
+import '../../features/room/room_access_wrapper.dart';
 
 /// Phase 15: Push Notifications Service
 /// Handles FCM tokens, notification sending, and local notifications
@@ -470,7 +469,10 @@ class PushNotificationService {
       final room = Room.fromFirestore(roomDoc);
       _navigatorKey?.currentState?.push(
         MaterialPageRoute(
-          builder: (context) => AuthGuard(child: VoiceRoomPage(room: room)),
+          builder: (context) => RoomAccessWrapper(
+            room: room,
+            userId: FirebaseAuth.instance.currentUser?.uid ?? '',
+          ),
         ),
       );
     } catch (e, stack) {

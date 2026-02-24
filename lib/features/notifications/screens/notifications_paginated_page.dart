@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixmingle/core/pagination/pagination_controller.dart';
 import 'package:mixmingle/shared/models/notification.dart';
 import 'package:mixmingle/shared/widgets/paginated_list_view.dart';
-import 'package:mixmingle/providers/providers.dart';
+import 'package:mixmingle/shared/providers/providers.dart';
 
 /// Paginated notifications page with real-time updates
 class NotificationsPaginatedPage extends ConsumerStatefulWidget {

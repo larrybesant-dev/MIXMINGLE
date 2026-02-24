@@ -8,7 +8,7 @@ import '../../../core/design_system/design_constants.dart';
 import '../../../shared/widgets/club_background.dart';
 import '../../../shared/widgets/neon_components.dart';
 import '../../../shared/widgets/presence_indicator.dart';
-import '../../../providers/social_graph_providers.dart';
+import '../../../shared/providers/social_graph_providers.dart';
 
 /// Followers List - Users who follow this user
 class FollowersListPage extends ConsumerWidget {
@@ -161,7 +161,7 @@ class FollowersListPage extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.people,
                         size: 14,
                         color: DesignColors.gold,
@@ -169,7 +169,7 @@ class FollowersListPage extends ConsumerWidget {
                       const SizedBox(width: 4),
                       Text(
                         '${follower.followersCount ?? 0} followers',
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: DesignColors.gold,
                           fontSize: 12,
                         ),
@@ -181,7 +181,7 @@ class FollowersListPage extends ConsumerWidget {
             ),
 
             // Follow button
-            Icon(
+            const Icon(
               Icons.arrow_forward_ios,
               color: DesignColors.accent,
               size: 20,

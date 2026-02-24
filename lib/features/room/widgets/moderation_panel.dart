@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/agora_participant.dart';
 import 'package:mixmingle/shared/models/room_role.dart';
@@ -403,24 +403,24 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with SingleTi
             ),
           ),
         const PopupMenuDivider(),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'kick',
           child: Row(
             children: [
-              const Icon(Icons.exit_to_app, size: 18, color: Colors.orange),
-              const SizedBox(width: 12),
-              const Text('Kick', style: TextStyle(color: Colors.orange)),
+              Icon(Icons.exit_to_app, size: 18, color: Colors.orange),
+              SizedBox(width: 12),
+              Text('Kick', style: TextStyle(color: Colors.orange)),
             ],
           ),
         ),
         if (widget.currentUserRole == RoomRole.owner)
-          PopupMenuItem(
+          const PopupMenuItem(
             value: 'ban',
             child: Row(
               children: [
-                const Icon(Icons.block, size: 18, color: Colors.red),
-                const SizedBox(width: 12),
-                const Text('Ban', style: TextStyle(color: Colors.red)),
+                Icon(Icons.block, size: 18, color: Colors.red),
+                SizedBox(width: 12),
+                Text('Ban', style: TextStyle(color: Colors.red)),
               ],
             ),
           ),

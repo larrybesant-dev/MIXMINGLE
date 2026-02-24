@@ -1,4 +1,4 @@
-// ignore_for_file: deprecated_member_use
+﻿// ignore_for_file: deprecated_member_use
 /// Top Bar Widget - Navigation bar with animated participant count and theme toggle
 ///
 /// Features:
@@ -22,11 +22,11 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/app_models.dart';
-import '../../providers/room_provider.dart';
-import '../../providers/ui_provider.dart';
-import '../../providers/notification_provider.dart';
-import '../constants/ui_constants.dart';
+import '../../shared/providers/app_models.dart';
+import '../../shared/providers/room_provider.dart';
+import '../../shared/providers/ui_provider.dart';
+import '../../shared/providers/notification_provider.dart';
+import '../../core/constants/ui_constants.dart';
 import '../../core/design_system/design_constants.dart';
 
 class TopBarWidget extends ConsumerStatefulWidget {

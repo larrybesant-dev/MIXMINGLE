@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/user.dart';
+import '../shared/models/user.dart';
 import '../shared/models/room.dart';
-import '../models/message.dart';
-import '../models/notification.dart' as notif;
-import '../models/tip.dart';
-import '../models/media_item.dart';
-import '../models/privacy_settings.dart';
+import '../shared/models/message.dart';
+import '../shared/models/notification.dart' as notif;
+import '../shared/models/tip.dart';
+import '../shared/models/media_item.dart';
+import '../shared/models/privacy_settings.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

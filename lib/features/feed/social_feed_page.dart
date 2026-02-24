@@ -1,8 +1,8 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import '../../core/design_system/design_constants.dart';
-import '../../models/post.dart';
+import '../../shared/models/post.dart';
 import '../../services/social_feed_service.dart';
 import 'create_post_dialog.dart';
 

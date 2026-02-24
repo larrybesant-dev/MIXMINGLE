@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/features/voice_room/services/room_moderation_service.dart';
+import 'package:mixmingle/features/room/services/room_moderation_service.dart';
 
 /// Room Moderation Widget
 ///
@@ -84,15 +84,15 @@ class _RoomModerationWidgetState extends ConsumerState<RoomModerationWidget> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
+                const Row(
                   children: [
                     Icon(
                       Icons.security,
-                      color: const Color(0xFFFF4C4C),
+                      color: Color(0xFFFF4C4C),
                       size: 24,
                     ),
-                    const SizedBox(width: 8),
-                    const Text(
+                    SizedBox(width: 8),
+                    Text(
                       'Moderation Tools',
                       style: TextStyle(
                         color: Colors.white,
@@ -245,7 +245,7 @@ class _RoomModerationWidgetState extends ConsumerState<RoomModerationWidget> {
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                child: Text(
+                child: const Text(
                   'Apply Action',
                   style: TextStyle(
                     color: Colors.white,

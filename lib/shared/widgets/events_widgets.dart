@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:mixmingle/shared/models/event.dart';
 import 'package:mixmingle/shared/models/user_profile.dart';
-import 'package:mixmingle/providers/events_providers.dart';
-import 'package:mixmingle/providers/auth_providers.dart';
+import 'package:mixmingle/shared/providers/events_providers.dart';
+import 'package:mixmingle/shared/providers/auth_providers.dart';
 
 /// Event card widget showing event info with friends attending
 class EventCard extends ConsumerWidget {

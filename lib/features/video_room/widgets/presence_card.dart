@@ -1,4 +1,4 @@
-﻿/// CANONICAL EXAMPLE: Presence Card Widget
+/// CANONICAL EXAMPLE: Presence Card Widget
 ///
 /// This file demonstrates the CORRECT way to implement a card that shows
 /// a participant in a Video Room. It enforces:
@@ -148,15 +148,15 @@ class _PresenceCardState extends State<PresenceCard>
       onTap: widget.onTap,
       child: Container(
         // âœ… Spacing: use DesignSpacing
-        padding: EdgeInsets.all(DesignSpacing.lg), // 16px
-        margin: EdgeInsets.only(bottom: DesignSpacing.md), // 12px gap between cards
+        padding: const EdgeInsets.all(DesignSpacing.lg), // 16px
+        margin: const EdgeInsets.only(bottom: DesignSpacing.md), // 12px gap between cards
 
         // âœ… Design: custom borders, shadows, no Material Card
         decoration: BoxDecoration(
           border: DesignBorders.cardDefault,
           borderRadius: BorderRadius.circular(DesignSpacing.cardBorderRadius),
           color: DesignColors.accent,
-          boxShadow: [DesignShadows.subtle],
+          boxShadow: const [DesignShadows.subtle],
         ),
 
         child: Column(
@@ -185,14 +185,14 @@ class _PresenceCardState extends State<PresenceCard>
                             fit: BoxFit.cover,
                           ),
                         )
-                      : Icon(
+                      : const Icon(
                           Icons.person,
                           color: DesignColors.accent,
                         ),
                 ),
 
                 // Spacer
-                SizedBox(width: DesignSpacing.lg), // 16px gap
+                const SizedBox(width: DesignSpacing.lg), // 16px gap
 
                 // âœ… Name (typography: subheading)
                 Expanded(
@@ -207,9 +207,9 @@ class _PresenceCardState extends State<PresenceCard>
 
                       // Speaking indicator
                       if (widget.isSpeaking) ...[
-                        SizedBox(height: DesignSpacing.xs), // 4px
+                        const SizedBox(height: DesignSpacing.xs), // 4px
                         Container(
-                          padding: EdgeInsets.symmetric(
+                          padding: const EdgeInsets.symmetric(
                             horizontal: DesignSpacing.sm,
                             vertical: DesignSpacing.xs,
                           ),
@@ -231,7 +231,7 @@ class _PresenceCardState extends State<PresenceCard>
 
                 // Mute button (if not speaking)
                 if (!widget.isSpeaking)
-                  Icon(
+                  const Icon(
                     Icons.mic_off,
                     color: DesignColors.accent,
                     size: 20,
@@ -241,7 +241,7 @@ class _PresenceCardState extends State<PresenceCard>
 
             // Bottom row: Joined time
             Padding(
-              padding: EdgeInsets.only(top: DesignSpacing.md),
+              padding: const EdgeInsets.only(top: DesignSpacing.md),
               child: Text(
                 _formatJoinTime(),
                 style: DesignTypography.caption,
@@ -282,7 +282,7 @@ class RoomParticipantsList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.builder(
-      padding: EdgeInsets.all(DesignSpacing.lg),
+      padding: const EdgeInsets.all(DesignSpacing.lg),
       itemCount: participants.length,
       itemBuilder: (context, index) {
         final participant = participants[index];
@@ -298,7 +298,7 @@ class RoomParticipantsList extends StatelessWidget {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text('Tapped ${participant['name']}'),
-                duration: Duration(milliseconds: 500),
+                duration: const Duration(milliseconds: 500),
               ),
             );
           },
@@ -331,19 +331,19 @@ class _PresenceCardTestScreenState extends State<PresenceCardTestScreen> {
         'name': 'Emma',
         'avatarUrl': null,
         'isSpeaking': true,
-        'joinedAt': DateTime.now().subtract(Duration(minutes: 5)),
+        'joinedAt': DateTime.now().subtract(const Duration(minutes: 5)),
       },
       {
         'name': 'James',
         'avatarUrl': null,
         'isSpeaking': false,
-        'joinedAt': DateTime.now().subtract(Duration(minutes: 2)),
+        'joinedAt': DateTime.now().subtract(const Duration(minutes: 2)),
       },
       {
         'name': 'Sarah',
         'avatarUrl': null,
         'isSpeaking': false,
-        'joinedAt': DateTime.now().subtract(Duration(seconds: 30)),
+        'joinedAt': DateTime.now().subtract(const Duration(seconds: 30)),
       },
     ];
   }
@@ -351,7 +351,7 @@ class _PresenceCardTestScreenState extends State<PresenceCardTestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Presence Cards Test')),
+      appBar: AppBar(title: const Text('Presence Cards Test')),
       body: Column(
         children: [
           // Show current participants
@@ -361,7 +361,7 @@ class _PresenceCardTestScreenState extends State<PresenceCardTestScreen> {
 
           // Button to toggle speaking state
           Padding(
-            padding: EdgeInsets.all(DesignSpacing.lg),
+            padding: const EdgeInsets.all(DesignSpacing.lg),
             child: GestureDetector(
               onTap: () {
                 setState(() {
@@ -370,7 +370,7 @@ class _PresenceCardTestScreenState extends State<PresenceCardTestScreen> {
                 });
               },
               child: Container(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: DesignSpacing.lg,
                   vertical: DesignSpacing.md,
                 ),
@@ -380,7 +380,7 @@ class _PresenceCardTestScreenState extends State<PresenceCardTestScreen> {
                     DesignSpacing.buttonBorderRadius,
                   ),
                 ),
-                child: Text(
+                child: const Text(
                   'Toggle Speaking',
                   style: DesignTypography.button,
                 ),

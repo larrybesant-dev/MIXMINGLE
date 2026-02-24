@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/features/voice_room/services/advanced_mic_service.dart';
+import 'package:mixmingle/features/room/services/advanced_mic_service.dart';
 
 /// Advanced Microphone Control Widget
 ///
@@ -47,11 +47,11 @@ class _AdvancedMicControlWidgetState extends ConsumerState<AdvancedMicControlWid
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
+                const Row(
                   children: [
-                    Icon(Icons.mic, color: const Color(0xFFFF4C4C), size: 24),
-                    const SizedBox(width: 8),
-                    const Text(
+                    Icon(Icons.mic, color: Color(0xFFFF4C4C), size: 24),
+                    SizedBox(width: 8),
+                    Text(
                       'Microphone Control',
                       style: TextStyle(
                         color: Colors.white,

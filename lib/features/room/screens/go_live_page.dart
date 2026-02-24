@@ -1,11 +1,11 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/providers/providers.dart';
-import 'package:mixmingle/providers/room_providers.dart' as room_providers;
-import '../../shared/club_background.dart';
-import '../../shared/glow_text.dart';
-import '../../shared/neon_button.dart';
-import '../../shared/loading_widgets.dart';
+import 'package:mixmingle/shared/providers/providers.dart';
+import 'package:mixmingle/shared/providers/room_providers.dart' as room_providers;
+import '../../../shared/club_background.dart';
+import '../../../shared/glow_text.dart';
+import '../../../shared/neon_button.dart';
+import '../../../shared/loading_widgets.dart';
 
 class CreateRoomPage extends ConsumerStatefulWidget {
   const CreateRoomPage({super.key});

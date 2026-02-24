@@ -2,8 +2,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:mixmingle/shared/models/room.dart';
-import 'package:mixmingle/providers/room_providers.dart';
-import 'package:mixmingle/providers/video_media_providers.dart';
+import 'package:mixmingle/shared/providers/room_providers.dart';
+import 'package:mixmingle/shared/providers/video_media_providers.dart';
 
 class VoiceRoomControls extends ConsumerWidget {
   final Room room;

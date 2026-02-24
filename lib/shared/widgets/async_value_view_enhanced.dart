@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/core/errors/app_error.dart';
 import 'package:mixmingle/core/providers/connectivity_provider.dart';
 import 'package:mixmingle/services/analytics_tracking.dart';
-import 'package:mixmingle/providers/providers.dart';
+import 'package:mixmingle/shared/providers/providers.dart';
 import 'loading_widgets.dart';
 
 /// Enhanced AsyncValue view with skeleton loaders, retry intelligence, and built-in P2F analytics

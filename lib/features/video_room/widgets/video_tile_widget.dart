@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
-import '../../../controllers/video_window_controller.dart';
-import '../../../models/video_tile_model.dart';
+import 'package:flutter/material.dart';
+import '../controllers/video_window_controller.dart';
+import '../../../shared/models/video_tile_model.dart';
 import '../../../core/design_system/design_constants.dart';
 
 class VideoTileWidget extends StatefulWidget {
@@ -65,11 +65,11 @@ class _VideoTileWidgetState extends State<VideoTileWidget> {
                   : DesignColors.divider,
               width: tile.state == VideoTileState.pinned ? 3 : 1,
             ),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
                 color: DesignColors.shadowColor,
                 blurRadius: 8,
-                offset: const Offset(0, 4),
+                offset: Offset(0, 4),
               ),
             ],
           ),

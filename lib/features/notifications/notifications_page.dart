@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/providers.dart';
-import '../../models/notification.dart' as model;
+import '../../shared/providers/providers.dart';
+import '../../shared/models/notification.dart' as model;
 import '../../features/error/error_page.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';

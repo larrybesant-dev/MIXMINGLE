@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../providers/room_providers.dart';
+import '../../../shared/providers/room_providers.dart';
 import '../../../shared/models/room.dart';
 
 class RaisedHandsPanel extends ConsumerWidget {

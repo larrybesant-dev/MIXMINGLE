@@ -1,4 +1,4 @@
-library;
+﻿library;
 
 import 'package:flutter/material.dart';
 /// Chat Box Widget - Enhanced with message animations and smooth picker transitions
@@ -20,10 +20,10 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/chat_provider.dart';
-import '../../providers/ui_provider.dart';
-import '../../providers/auth_providers.dart';
-import '../constants/ui_constants.dart';
+import '../../shared/providers/chat_provider.dart';
+import '../../shared/providers/ui_provider.dart';
+import '../../shared/providers/auth_providers.dart';
+import '../../core/constants/ui_constants.dart';
 import '../models/chat_message.dart';
 import '../../core/design_system/design_constants.dart';
 

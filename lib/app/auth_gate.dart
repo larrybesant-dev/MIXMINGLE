@@ -1,10 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'features/auth/screens/neon_login_page.dart';
-import 'features/create_profile_page.dart';
-import 'providers/all_providers.dart';
+import '../features/auth/screens/neon_login_page.dart';
+import '../features/profile/screens/create_profile_page.dart';
+import '../shared/providers/all_providers.dart';
 
 // Auth wrapper for protected pages
 class AuthGate extends ConsumerWidget {

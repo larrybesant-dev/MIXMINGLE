@@ -1,8 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/providers.dart';
-import '../../models/user.dart';
-import '../../models/direct_message.dart';
+import '../../shared/providers/providers.dart';
+import '../../shared/models/user.dart';
+import '../../shared/models/direct_message.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../shared/neon_button.dart';
@@ -192,10 +192,10 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                         color: Color(0xFFFF4C4C),
                       ),
                       const SizedBox(height: 16),
-                      GlowText(
+                      const GlowText(
                         text: 'Failed to load messages',
                         fontSize: 18,
-                        color: const Color(0xFFFF4C4C),
+                        color: Color(0xFFFF4C4C),
                       ),
                       const SizedBox(height: 16),
                       NeonButton(
@@ -716,9 +716,9 @@ class MessageSearchResultTile extends StatelessWidget {
         leading: Container(
           width: 40,
           height: 40,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               colors: [Color(0xFFFF4C4C), Color(0xFFFFD700)],
             ),
           ),

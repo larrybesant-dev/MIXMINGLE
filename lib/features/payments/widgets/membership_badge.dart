@@ -1,4 +1,4 @@
-﻿/// Membership Badge Widget
+/// Membership Badge Widget
 ///
 /// Displays membership tier as a badge with neon styling.
 /// Used in profile headers, room UI, and chat displays.
@@ -361,7 +361,7 @@ class UpgradeBadge extends StatelessWidget {
             ),
           ],
         ),
-        child: Row(
+        child: const Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
@@ -369,7 +369,7 @@ class UpgradeBadge extends StatelessWidget {
               color: DesignColors.gold,
               size: 14,
             ),
-            const SizedBox(width: 4),
+            SizedBox(width: 4),
             Text(
               'Upgrade',
               style: TextStyle(

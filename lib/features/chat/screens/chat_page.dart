@@ -6,7 +6,7 @@ import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/services/chat_service.dart';
 import 'package:mixmingle/shared/models/chat_message.dart';
 import 'package:mixmingle/shared/widgets/typing_indicator_widget.dart';
-import 'package:mixmingle/providers/all_providers.dart';
+import 'package:mixmingle/shared/providers/all_providers.dart';
 
 class ChatPage extends ConsumerStatefulWidget {
   final String? chatId;

@@ -1,4 +1,4 @@
-﻿/// DESIGN SYSTEM - ANIMATION UTILITIES
+/// DESIGN SYSTEM - ANIMATION UTILITIES
 ///
 /// Reusable animation builders that enforce DESIGN_BIBLE.md timings
 /// Reference: DESIGN_BIBLE.md Section C
@@ -277,7 +277,7 @@ class _NotificationAnimationState extends State<NotificationAnimation>
         );
       },
       child: Container(
-        padding: EdgeInsets.all(DesignSpacing.lg),
+        padding: const EdgeInsets.all(DesignSpacing.lg),
         decoration: BoxDecoration(
           color: widget.type.backgroundColor,
           borderRadius: BorderRadius.circular(DesignSpacing.cardBorderRadius),
@@ -393,7 +393,7 @@ class _RoomEnergyCardAnimationState extends State<RoomEnergyCardAnimation>
     super.initState();
     _energyController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 800),
     );
 
     _energyPulse = Tween<double>(begin: 1.0, end: 1.1).animate(
@@ -430,13 +430,13 @@ class _RoomEnergyCardAnimationState extends State<RoomEnergyCardAnimation>
         animation: _energyPulse,
         builder: (context, child) {
           return Container(
-            padding: EdgeInsets.all(DesignSpacing.cardPadding),
+            padding: const EdgeInsets.all(DesignSpacing.cardPadding),
             decoration: BoxDecoration(
               border: DesignBorders.cardDefault,
               borderRadius:
                   BorderRadius.circular(DesignSpacing.cardBorderRadius),
               color: DesignColors.accent,
-              boxShadow: [DesignShadows.subtle],
+              boxShadow: const [DesignShadows.subtle],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -445,7 +445,7 @@ class _RoomEnergyCardAnimationState extends State<RoomEnergyCardAnimation>
                   widget.roomName,
                   style: DesignTypography.heading,
                 ),
-                SizedBox(height: DesignSpacing.md),
+                const SizedBox(height: DesignSpacing.md),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -456,7 +456,7 @@ class _RoomEnergyCardAnimationState extends State<RoomEnergyCardAnimation>
                     Transform.scale(
                       scale: _energyPulse.value,
                       child: Container(
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: DesignSpacing.md,
                           vertical: DesignSpacing.sm,
                         ),

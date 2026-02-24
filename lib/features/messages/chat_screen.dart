@@ -2,10 +2,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
-import '../../providers/providers.dart';
-import '../../models/user.dart';
-import '../../models/direct_message.dart';
-import '../../models/message.dart' show MessageStatus;
+import '../../shared/providers/providers.dart';
+import '../../shared/models/user.dart';
+import '../../shared/models/direct_message.dart';
+import '../../shared/models/message.dart' show MessageStatus;
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../shared/neon_button.dart';
@@ -342,11 +342,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             color: Colors.white.withValues(alpha: 0.3),
           ),
           const SizedBox(height: 16),
-          GlowText(
+          const GlowText(
             text: 'Start a conversation!',
             fontSize: 18,
             color: Colors.white70,
-            glowColor: const Color(0xFFFF4C4C),
+            glowColor: Color(0xFFFF4C4C),
           ),
           const SizedBox(height: 8),
           Text(
@@ -820,7 +820,7 @@ class MessageBubble extends ConsumerWidget {
                     ScaffoldMessenger.of(dialogContext).showSnackBar(
                       SnackBar(
                         content: Text('Failed to edit message: $e'),
-                        backgroundColor: Color(0xFFFF4C4C),
+                        backgroundColor: const Color(0xFFFF4C4C),
                       ),
                     );
                   }
@@ -877,7 +877,7 @@ class MessageBubble extends ConsumerWidget {
                   ScaffoldMessenger.of(dialogContext).showSnackBar(
                     SnackBar(
                       content: Text('Failed to delete message: $e'),
-                      backgroundColor: Color(0xFFFF4C4C),
+                      backgroundColor: const Color(0xFFFF4C4C),
                     ),
                   );
                 }

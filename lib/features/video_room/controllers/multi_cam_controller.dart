@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'video_window_controller.dart';
-import '../models/room_video_state_model.dart';
-import '../models/video_tile_model.dart';
-import '../models/window_state_model.dart';
+import '../../../shared/models/room_video_state_model.dart';
+import '../../../shared/models/video_tile_model.dart';
+import '../../../shared/models/window_state_model.dart';
 
 class MultiCamController {
   final RoomVideoStateModel roomState;

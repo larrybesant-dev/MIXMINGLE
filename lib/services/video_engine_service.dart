@@ -1,5 +1,5 @@
-﻿import 'package:flutter/foundation.dart';
-import '../models/remote_user.dart';
+import 'package:flutter/foundation.dart';
+import '../shared/models/remote_user.dart';
 import 'video_engine_interface.dart';
 import 'agora_web_engine.dart';
 import 'agora_mobile_engine.dart';

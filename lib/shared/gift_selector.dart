@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/providers.dart';
+import '../../shared/providers/providers.dart';
 
 // Removed unused imports
 class GiftSelector extends ConsumerStatefulWidget {
@@ -189,8 +189,8 @@ class _GiftSelectorState extends ConsumerState<GiftSelector> {
                         ),
                         Text(
                           '${gift['amount']}',
-                          style: TextStyle(
-                            color: const Color(0xFFFFD700),
+                          style: const TextStyle(
+                            color: Color(0xFFFFD700),
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),

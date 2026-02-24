@@ -1,6 +1,6 @@
 // lib/services/relationship_service.dart
 
-import '../models/relationship_model.dart';
+import '../shared/models/relationship_model.dart';
 
 class RelationshipService {
   final List<RelationshipModel> _relationships = [];

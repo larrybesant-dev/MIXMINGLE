@@ -8,7 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/design_system/design_constants.dart';
 import '../../../shared/widgets/club_background.dart';
 import '../../../shared/widgets/neon_components.dart';
-import '../../../providers/auth_providers.dart';
+import '../../../shared/providers/auth_providers.dart';
 import '../../../shared/models/discovery_filters.dart';
 
 /// User Discovery - Find people to connect with
@@ -83,7 +83,7 @@ final user = ref.read(currentUserProvider).value;
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: NeonText(
+          title: const NeonText(
             'DISCOVER',
             fontSize: 24,
             fontWeight: FontWeight.w900,
@@ -212,7 +212,7 @@ final user = ref.read(currentUserProvider).value;
                       ),
                     ),
                     if (isVerified)
-                      Icon(
+                      const Icon(
                         Icons.verified,
                         color: DesignColors.gold,
                         size: 16,

@@ -1,4 +1,4 @@
-﻿/// Neon Coin Package Card Widget
+/// Neon Coin Package Card Widget
 ///
 /// Displays coin package for purchase with neon styling.
 /// Features gold glow effects and bonus coin indicators.
@@ -213,14 +213,14 @@ class _NeonCoinPackageCardState extends State<NeonCoinPackageCard>
                         horizontal: 8,
                         vertical: 4,
                       ),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
                             DesignColors.gold,
-                            const Color(0xFFFF7A3C),
+                            Color(0xFFFF7A3C),
                           ],
                         ),
-                        borderRadius: const BorderRadius.only(
+                        borderRadius: BorderRadius.only(
                           topRight: Radius.circular(14),
                           bottomLeft: Radius.circular(8),
                         ),
@@ -244,7 +244,7 @@ class _NeonCoinPackageCardState extends State<NeonCoinPackageCard>
                     left: 8,
                     child: Container(
                       padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: DesignColors.gold,
                         shape: BoxShape.circle,
                       ),
@@ -309,7 +309,7 @@ class _CoinIconState extends State<_CoinIcon>
       builder: (context, child) {
         // Subtle 3D rotation effect
         final rotationValue = _rotateAnimation.value;
-        final perspective = 0.002;
+        const perspective = 0.002;
         final rotateY = widget.isSelected
             ? math.sin(rotationValue * 2 * math.pi) * 0.1
             : 0.0;
@@ -324,10 +324,10 @@ class _CoinIconState extends State<_CoinIcon>
             height: widget.size,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: LinearGradient(
+              gradient: const LinearGradient(
                 colors: [
                   DesignColors.gold,
-                  const Color(0xFFCD9B00),
+                  Color(0xFFCD9B00),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -412,7 +412,7 @@ class CompactCoinPackageCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.monetization_on,
               color: DesignColors.gold,
               size: 28,
@@ -420,7 +420,7 @@ class CompactCoinPackageCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               totalCoins.toString(),
-              style: TextStyle(
+              style: const TextStyle(
                 color: DesignColors.gold,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
@@ -472,7 +472,7 @@ class CoinBalanceDisplay extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
+              const Icon(
                 Icons.monetization_on,
                 color: DesignColors.gold,
                 size: 16,
@@ -480,7 +480,7 @@ class CoinBalanceDisplay extends StatelessWidget {
               const SizedBox(width: 4),
               Text(
                 _formatBalance(balance),
-                style: TextStyle(
+                style: const TextStyle(
                   color: DesignColors.gold,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -528,7 +528,7 @@ class CoinBalanceDisplay extends StatelessWidget {
                 color: DesignColors.gold.withAlpha(51),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.monetization_on,
                 color: DesignColors.gold,
                 size: 24,
@@ -541,7 +541,7 @@ class CoinBalanceDisplay extends StatelessWidget {
               children: [
                 Text(
                   _formatBalance(balance),
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: DesignColors.gold,
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -564,7 +564,7 @@ class CoinBalanceDisplay extends StatelessWidget {
                   color: DesignColors.gold.withAlpha(51),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.add,
                   color: DesignColors.gold,
                   size: 16,

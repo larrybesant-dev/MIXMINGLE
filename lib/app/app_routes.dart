@@ -1,62 +1,63 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'auth_gate.dart';
-import 'core/guards/profile_guard.dart';
-import 'features/home/screens/home_page_electric.dart';
-import 'features/auth/screens/neon_login_page.dart';
-import 'features/auth/screens/neon_signup_page.dart';
-import 'features/auth/screens/neon_splash_page.dart';
-import 'features/auth/forgot_password_page.dart';
-import 'features/profile/screens/profile_page.dart';
-import 'features/profile/screens/edit_profile_page.dart';
-import 'features/profile/screens/user_profile_page.dart';
-import 'features/matching/screens/matches_list_page.dart';
-import 'features/chat/screens/chat_list_page.dart';
-import 'features/chat/screens/chat_page.dart';
-import 'features/group_chat/screens/group_chat_room_page.dart';
-import 'features/settings/settings_page.dart';
-import 'features/settings/privacy_settings_page.dart';
-import 'features/settings/camera_permissions_page.dart';
-import 'features/settings/account_settings_page.dart';
-import 'features/settings/notification_settings_page.dart';
-import 'features/settings/blocked_users_page.dart';
-import 'features/legal/privacy_policy_page.dart';
-import 'features/legal/terms_of_service_page.dart';
-import 'features/reporting/moderation_page.dart';
-import 'features/notifications/screens/notifications_page.dart';
-import 'features/notifications/notification_center_page.dart';
-import 'features/events/screens/create_event_page.dart';
-import 'features/events/screens/events_list_page.dart';
-import 'features/events/screens/event_details_page.dart';
-import 'features/events/screens/event_chat_page.dart';
+import '../core/guards/profile_guard.dart';
+import '../features/home/home_page_electric.dart';
+import '../features/auth/screens/neon_login_page.dart';
+import '../features/auth/screens/neon_signup_page.dart';
+import '../features/auth/screens/neon_splash_page.dart';
+import '../features/auth/forgot_password_page.dart';
+import '../features/profile/screens/profile_page.dart';
+import '../features/profile/screens/edit_profile_page.dart';
+import '../features/profile/screens/user_profile_page.dart';
+import '../features/matching/screens/matches_list_page.dart';
+import '../features/chat/screens/chat_list_page.dart';
+import '../features/chat/screens/chat_page.dart';
+import '../features/group_chat/screens/group_chat_room_page.dart';
+import '../features/settings/settings_page.dart';
+import '../features/settings/privacy_settings_page.dart';
+import '../features/settings/camera_permissions_page.dart';
+import '../features/settings/account_settings_page.dart';
+import '../features/settings/notification_settings_page.dart';
+import '../features/settings/blocked_users_page.dart';
+import '../features/legal/privacy_policy_page.dart';
+import '../features/legal/terms_of_service_page.dart';
+import '../features/reporting/moderation_page.dart';
+import '../features/notifications/screens/notifications_page.dart';
+import '../features/notifications/notification_center_page.dart';
+import '../features/events/screens/create_event_page.dart';
+import '../features/events/screens/events_list_page.dart';
+import '../features/events/screens/event_details_page.dart';
+import '../features/events/screens/event_chat_page.dart';
 // Speed Dating imports
-// TEMP DISABLED: import 'features/speed_dating/screens/speed_dating_lobby_page.dart';
+// TEMP DISABLED: import '../features/speed_dating/screens/speed_dating_lobby_page.dart';
 // Social Feed imports
-import 'features/feed/social_feed_page.dart';
-import 'features/room/screens/room_page.dart';
-import 'features/room/screens/room_by_id_page.dart';
-import 'features/discover/room_discovery_page.dart';
-import 'features/discover/room_discovery_page_complete.dart';
-import 'features/rooms/create_room_page_complete.dart';
-import 'features/go_live/go_live_page.dart';
-import 'features/payment/coin_purchase_page.dart';
-import 'features/payments/screens/wallet_page.dart';
-import 'features/withdrawal/withdrawal_page.dart';
-import 'features/withdrawal/withdrawal_history_page.dart';
-import 'features/messages/messages_page.dart';
-import 'features/leaderboards/leaderboards_page.dart';
-import 'features/achievements/achievements_page.dart';
-import 'features/admin/admin_dashboard_page.dart';
-import 'features/discover_users/discover_users_page.dart';
-import 'features/match_preferences_page.dart';
-import 'features/landing/landing_page.dart';
-import 'features/create_profile_page.dart';
-// TEMP DISABLED: import 'features/onboarding/screens/onboarding_page.dart';
-import 'features/error/error_page.dart';
-import 'screens/test_video_engine_screen.dart';
-import 'screens/video_chat_page.dart';
-import 'shared/models/room.dart';
-import 'features/debug/health_dashboard.dart';
+import '../features/feed/social_feed_page.dart';
+import '../features/room/screens/room_by_id_page.dart';
+import '../features/room/room_access_wrapper.dart';
+import '../features/discover/room_discovery_page.dart';
+import '../features/discover/room_discovery_page_complete.dart';
+import '../features/room/screens/create_room_page_complete.dart';
+import '../features/room/screens/go_live_page.dart';
+import '../features/payments/screens/coin_purchase_page.dart';
+import '../features/payments/screens/wallet_page.dart';
+import '../features/withdrawal/withdrawal_page.dart';
+import '../features/withdrawal/withdrawal_history_page.dart';
+import '../features/messages/messages_page.dart';
+import '../features/leaderboards/leaderboards_page.dart';
+import '../features/achievements/achievements_page.dart';
+import '../features/admin/admin_dashboard_page.dart';
+import '../features/discover/screens/discover_users_page.dart';
+import '../features/matching/screens/match_preferences_page.dart';
+import '../features/landing/landing_page.dart';
+import '../features/profile/screens/create_profile_page.dart';
+import '../features/onboarding_flow.dart';
+import '../features/error/error_page.dart';
+import '../features/debug/screens/test_video_engine_screen.dart';
+import '../features/video_room/screens/video_chat_page.dart';
+import '../shared/models/room.dart';
+import '../features/debug/health_dashboard.dart';
 
 /// Slide transition directions
 enum SlideDirection {
@@ -207,10 +208,17 @@ class AppRoutes {
     return null;
   }
 
-  /// Extract query parameters from route settings
+  /// Extract query parameters from route settings.
+  /// Supports both `Map<String, dynamic>` and a plain String (treated as roomId).
   static Map<String, dynamic> extractQueryParams(RouteSettings settings) {
     if (settings.arguments is Map<String, dynamic>) {
       return settings.arguments as Map<String, dynamic>;
+    }
+    // Many call-sites pass: Navigator.pushNamed(context, '/room', arguments: room.id)
+    // Treat a bare String as the roomId so /room navigation always works.
+    if (settings.arguments is String) {
+      final id = settings.arguments as String;
+      if (id.isNotEmpty) return {'roomId': id};
     }
     return {};
   }
@@ -360,13 +368,8 @@ class AppRoutes {
         );
 
       case onboarding:
-        // TEMP DISABLED: Onboarding bypassed
         return _createSlideRoute(
-          page: const Scaffold(
-            body: Center(
-              child: Text('Onboarding temporarily disabled'),
-            ),
-          ),
+          page: const OnboardingFlow(),
           settings: settings,
           direction: SlideDirection.up,
         );
@@ -385,7 +388,7 @@ class AppRoutes {
         final userId = queryParams['userId'] as String?;
         if (userId == null) {
           return _createFadeRoute(
-            page: ErrorPage(errorMessage: 'User ID is required'),
+            page: const ErrorPage(errorMessage: 'User ID is required'),
             settings: settings,
           );
         }
@@ -438,7 +441,7 @@ class AppRoutes {
       // ========== Chat Routes ==========
       case chats:
         return _createSlideRoute(
-          page: AuthGate(
+          page: const AuthGate(
             child: ProfileGuard(child: ChatListPage()),
           ),
           settings: settings,
@@ -451,7 +454,7 @@ class AppRoutes {
 
         if (chatId == null && userId == null) {
           return _createFadeRoute(
-            page: ErrorPage(errorMessage: 'Chat ID or User ID is required'),
+            page: const ErrorPage(errorMessage: 'Chat ID or User ID is required'),
             settings: settings,
           );
         }
@@ -474,7 +477,7 @@ class AppRoutes {
 
         if (roomId == null) {
           return _createFadeRoute(
-            page: ErrorPage(errorMessage: 'Room ID is required'),
+            page: const ErrorPage(errorMessage: 'Room ID is required'),
             settings: settings,
           );
         }
@@ -543,7 +546,7 @@ class AppRoutes {
 
         if (eventId == null) {
           return _createFadeRoute(
-            page: ErrorPage(errorMessage: 'Event ID is required'),
+            page: const ErrorPage(errorMessage: 'Event ID is required'),
             settings: settings,
           );
         }
@@ -573,7 +576,7 @@ class AppRoutes {
 
         if (eventId == null) {
           return _createFadeRoute(
-            page: ErrorPage(errorMessage: 'Event ID is required'),
+            page: const ErrorPage(errorMessage: 'Event ID is required'),
             settings: settings,
           );
         }
@@ -599,7 +602,7 @@ class AppRoutes {
         // âœ… SECURITY FIX: Ensure at least one of roomId or room is provided
         if (roomId == null && room == null) {
           return _createFadeRoute(
-            page: ErrorPage(errorMessage: 'Room ID or Room object is required'),
+            page: const ErrorPage(errorMessage: 'Room ID or Room object is required'),
             settings: settings,
           );
         }
@@ -609,8 +612,11 @@ class AppRoutes {
           page: AuthGate(
             child: ProfileGuard(
               child: room != null
-                  ? RoomPage(room: room)
-                  : (roomId != null ? RoomByIdPage(roomId: roomId) : ErrorPage(errorMessage: 'Room ID required')),
+                  ? RoomAccessWrapper(
+                      room:   room,
+                      userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
+                    )
+                  : (roomId != null ? RoomByIdPage(roomId: roomId) : const ErrorPage(errorMessage: 'Room ID required')),
             ),
           ),
           settings: settings,
@@ -789,7 +795,7 @@ class AppRoutes {
 
       case withdrawalHistory:
         return _createSlideRoute(
-          page: AuthGate(
+          page: const AuthGate(
             child: ProfileGuard(child: WithdrawalHistoryPage()),
           ),
           settings: settings,

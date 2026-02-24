@@ -1,4 +1,4 @@
-﻿import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class EmailVerificationService {
@@ -7,7 +7,7 @@ class EmailVerificationService {
 
   /// Send email verification to current user
   Future<void> sendEmailVerification() async {
-    User? user = _auth.currentUser;
+    final User? user = _auth.currentUser;
     if (user != null && !user.emailVerified) {
       await user.sendEmailVerification();
     }
@@ -15,7 +15,7 @@ class EmailVerificationService {
 
   /// Check if current user's email is verified
   bool isEmailVerified() {
-    User? user = _auth.currentUser;
+    final User? user = _auth.currentUser;
     return user?.emailVerified ?? false;
   }
 
@@ -32,7 +32,7 @@ class EmailVerificationService {
 
   /// Update user verification status in Firestore
   Future<void> updateVerificationStatusInFirestore() async {
-    User? user = _auth.currentUser;
+    final User? user = _auth.currentUser;
     if (user != null) {
       await _firestore.collection('users').doc(user.uid).update({
         'emailVerified': user.emailVerified,

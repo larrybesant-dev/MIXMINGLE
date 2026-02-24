@@ -1,7 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../core/design_system/design_constants.dart';
 import '../../services/social_feed_service.dart';
-import '../../models/post.dart';
+import '../../shared/models/post.dart';
 
 /// Dialog for creating a new post
 class CreatePostDialog extends StatefulWidget {

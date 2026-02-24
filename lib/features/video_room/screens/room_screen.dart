@@ -1,4 +1,4 @@
-﻿/// Room Screen
+/// Room Screen
 ///
 /// Main video room UI displaying:
 /// - Join flow phase text
@@ -23,15 +23,15 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../../../core/design_system/design_constants.dart';
-import '../../../controllers/agora_room_controller.dart';
-import '../../../controllers/join_flow_controller.dart';
-import '../../../models/participant.dart';
+import '../../../../core/design_system/design_constants.dart' hide JoinPhase;
+import '../controllers/agora_room_controller.dart';
+import '../controllers/join_flow_controller.dart';
+import '../../../shared/models/participant.dart';
 import '../widgets/participant_card_widget.dart';
 
-class RoomScreen extends StatefulWidget {
+class RoomScreen extends ConsumerStatefulWidget {
   /// Room ID for Agora channel
   final String roomId;
 
@@ -53,12 +53,10 @@ class RoomScreen extends StatefulWidget {
   });
 
   @override
-  State<RoomScreen> createState() => _RoomScreenState();
+  ConsumerState<RoomScreen> createState() => _RoomScreenState();
 }
 
-class _RoomScreenState extends State<RoomScreen> with TickerProviderStateMixin {
-  late AgoraRoomController _roomController;
-
+class _RoomScreenState extends ConsumerState<RoomScreen> with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
@@ -66,20 +64,15 @@ class _RoomScreenState extends State<RoomScreen> with TickerProviderStateMixin {
   }
 
   Future<void> _initializeRoom() async {
-    _roomController =
-        context.read<AgoraRoomController>();
-
-    // Inject room context
+    final notifier = ref.read(agoraRoomProvider.notifier);
     final currentUser = FirebaseAuth.instance.currentUser;
-    _roomController.setRoomContext(
+    notifier.setRoomContext(
       roomId: widget.roomId,
       userId: currentUser?.uid ?? 'anonymous',
       userName: currentUser?.displayName ?? currentUser?.email?.split('@').first ?? 'Guest',
     );
-
-    // Start join flow
     try {
-      await _roomController.joinRoom(agoraToken: widget.agoraToken);
+      await notifier.joinRoom(agoraToken: widget.agoraToken);
     } catch (e) {
       if (!mounted) return;
       _showErrorDialog('Failed to join room: $e');
@@ -90,7 +83,7 @@ class _RoomScreenState extends State<RoomScreen> with TickerProviderStateMixin {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
+        title: const Text(
           'Error',
           style: DesignTypography.heading,
         ),
@@ -115,9 +108,8 @@ class _RoomScreenState extends State<RoomScreen> with TickerProviderStateMixin {
 
   Future<void> _handleLeaveRoom() async {
     try {
-      await _roomController.leaveRoom();
+      await ref.read(agoraRoomProvider.notifier).leaveRoom();
       if (!mounted) return;
-
       widget.onLeaveRoom?.call();
       Navigator.pop(context);
     } catch (e) {
@@ -127,13 +119,8 @@ class _RoomScreenState extends State<RoomScreen> with TickerProviderStateMixin {
   }
 
   @override
-  void dispose() {
-    // Don't dispose the controller here - it's managed by Provider
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final roomState = ref.watch(agoraRoomProvider);
     return Scaffold(
       // âœ… Use dark background
       backgroundColor: DesignColors.surfaceDefault,
@@ -147,7 +134,7 @@ class _RoomScreenState extends State<RoomScreen> with TickerProviderStateMixin {
           style: DesignTypography.heading,
         ),
         leading: IconButton(
-          icon: Icon(
+          icon: const Icon(
             Icons.arrow_back,
             color: DesignColors.textPrimary,
           ),
@@ -156,208 +143,101 @@ class _RoomScreenState extends State<RoomScreen> with TickerProviderStateMixin {
         actions: [
           // Room energy indicator top-right
           Padding(
-            padding: EdgeInsets.all(DesignSpacing.md),
-            child: Consumer<AgoraRoomController>(
-              builder: (context, controller, child) {
-                final energyLabel =
-                    RoomEnergyThresholds.getEnergyLabel(controller.energy);
-                final energyColor =
-                    RoomEnergyThresholds.getEnergyColor(controller.energy);
-
-                return Align(
-                  alignment: Alignment.center,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: DesignSpacing.md,
-                      vertical: DesignSpacing.sm,
-                    ),
-                    decoration: BoxDecoration(
-                      // âœ… Use energy color
-                      color: energyColor.withValues(alpha: 0.1),
-                      border: Border.all(color: energyColor, width: 1),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      energyLabel,
-                      style: DesignTypography.caption.copyWith(
-                        color: energyColor,
-                      ),
-                    ),
+            padding: const EdgeInsets.all(DesignSpacing.md),
+            child: Align(
+              alignment: Alignment.center,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: DesignSpacing.md,
+                  vertical: DesignSpacing.sm,
+                ),
+                decoration: BoxDecoration(
+                  color: RoomEnergyThresholds.getEnergyColor(roomState.energy).withValues(alpha: 0.1),
+                  border: Border.all(color: RoomEnergyThresholds.getEnergyColor(roomState.energy), width: 1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  RoomEnergyThresholds.getEnergyLabel(roomState.energy),
+                  style: DesignTypography.caption.copyWith(
+                    color: RoomEnergyThresholds.getEnergyColor(roomState.energy),
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ),
         ],
       ),
 
-      body: Consumer<AgoraRoomController>(
-        builder: (context, roomController, child) {
-          // Show join flow phase while connecting
-          if (!roomController.isInRoom) {
-            return _buildJoinFlowOverlay(roomController);
-          }
-
-          // Show participants grid
-          return _buildRoomContent(roomController);
-        },
-      ),
+      body: roomState.isInRoom
+          ? _buildRoomContent(roomState)
+          : _buildJoinFlowOverlay(roomState),
 
       // Bottom control bar
-      bottomNavigationBar: Consumer<AgoraRoomController>(
-        builder: (context, roomController, child) {
-          if (!roomController.isInRoom) {
-            return SizedBox.shrink();
-          }
-
-          return Container(
-            // âœ… Use DesignSpacing and DesignColors
-            padding: EdgeInsets.all(DesignSpacing.lg),
-            decoration: BoxDecoration(
-              color: DesignColors.surfaceDefault,
-              border: Border(
-                top: BorderSide(
-                  color: DesignColors.surfaceLight,
-                  width: 1,
-                ),
+      bottomNavigationBar: roomState.isInRoom
+          ? Container(
+              padding: const EdgeInsets.all(DesignSpacing.lg),
+              decoration: const BoxDecoration(
+                color: DesignColors.surfaceDefault,
+                border: Border(top: BorderSide(color: DesignColors.surfaceLight, width: 1)),
               ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                // Microphone toggle
-                FloatingActionButton.small(
-                  // Red when muted, dark when active
-                  backgroundColor: roomController.isMicMuted
-                      ? DesignColors.error
-                      : DesignColors.surfaceLight,
-                  onPressed: roomController.toggleMicrophone,
-                  child: Icon(
-                    roomController.isMicMuted ? Icons.mic_off : Icons.mic,
-                    color: DesignColors.white,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  FloatingActionButton.small(
+                    backgroundColor: roomState.isMicMuted ? DesignColors.error : DesignColors.surfaceLight,
+                    onPressed: () => ref.read(agoraRoomProvider.notifier).toggleMicrophone(),
+                    child: Icon(roomState.isMicMuted ? Icons.mic_off : Icons.mic, color: DesignColors.white),
                   ),
-                ),
-
-                // Video toggle
-                FloatingActionButton.small(
-                  backgroundColor: roomController.isVideoMuted
-                      ? DesignColors.error
-                      : DesignColors.surfaceLight,
-                  onPressed: roomController.toggleVideo,
-                  child: Icon(
-                    roomController.isVideoMuted
-                        ? Icons.videocam_off
-                        : Icons.videocam,
-                    color: DesignColors.white,
+                  FloatingActionButton.small(
+                    backgroundColor: roomState.isVideoMuted ? DesignColors.error : DesignColors.surfaceLight,
+                    onPressed: () => ref.read(agoraRoomProvider.notifier).toggleVideo(),
+                    child: Icon(roomState.isVideoMuted ? Icons.videocam_off : Icons.videocam, color: DesignColors.white),
                   ),
-                ),
-
-                // Leave room
-                FloatingActionButton.small(
-                  backgroundColor: Color(0xFFEF5350), // Red for leave
-                  onPressed: _handleLeaveRoom,
-                  child: Icon(
-                    Icons.phone_disabled,
-                    color: DesignColors.white,
+                  FloatingActionButton.small(
+                    backgroundColor: const Color(0xFFEF5350),
+                    onPressed: _handleLeaveRoom,
+                    child: const Icon(Icons.phone_disabled, color: DesignColors.white),
                   ),
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+                ],
+              ),
+            )
+          : const SizedBox.shrink(),
     );
   }
-
   /// Build join flow overlay while room is connecting
-  Widget _buildJoinFlowOverlay(AgoraRoomController roomController) {
+  Widget _buildJoinFlowOverlay(AgoraRoomState roomState) {
+    final joinFlow = ref.watch(joinFlowProvider);
+    final phase = joinFlow.phase;
+    final displayText = phase.displayText;
     return Center(
-      child: Consumer<JoinFlowController>(
-        builder: (context, joinFlow, child) {
-          final phase = joinFlow.phase;
-          final displayText = phase.displayText;
-
-          return Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Animated dot indicator
-              SizedBox(
-                width: 60,
-                height: 60,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: List.generate(3, (i) {
-                    return ScaleTransition(
-                      scale: TweenSequence<double>([
-                        TweenSequenceItem(
-                          tween: Tween(begin: 1.0, end: 1.5),
-                          weight: 50,
-                        ),
-                        TweenSequenceItem(
-                          tween: Tween(begin: 1.5, end: 1.0),
-                          weight: 50,
-                        ),
-                      ]).animate(
-                        CurvedAnimation(
-                          parent: AnimationController(
-                            vsync: this,
-                            duration: Duration(
-                              milliseconds: 600 + (i * 200),
-                            ),
-                          ),
-                          curve: Curves.easeInOut,
-                        ),
-                      ),
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          // âœ… Use DesignColors.accent
-                          color: DesignColors.accent.withValues(alpha: 0.6),
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-              ),
-
-              SizedBox(height: DesignSpacing.xl),
-
-              // Phase text (âœ… DesignTypography.heading)
-              Text(
-                displayText,
-                style: DesignTypography.heading,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const CircularProgressIndicator(
+            valueColor: AlwaysStoppedAnimation<Color>(DesignColors.accent),
+          ),
+          const SizedBox(height: DesignSpacing.xl),
+          Text(displayText, style: DesignTypography.heading, textAlign: TextAlign.center),
+          const SizedBox(height: DesignSpacing.md),
+          if (phase == JoinPhase.error)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.lg),
+              child: Text(
+                joinFlow.errorMessage ?? 'Unknown error',
+                style: DesignTypography.caption.copyWith(color: const Color(0xFFEF5350)),
                 textAlign: TextAlign.center,
               ),
-
-              SizedBox(height: DesignSpacing.md),
-
-              // Error message if applicable
-            if (phase.name == 'error')
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: DesignSpacing.lg),
-                  child: Text(
-                    joinFlow.errorMessage ?? 'Unknown error',
-                    style: DesignTypography.caption.copyWith(
-                      color: Color(0xFFEF5350),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-            ],
-          );
-        },
+            ),
+        ],
       ),
     );
   }
-
   /// Build main room content with participant cards
-  Widget _buildRoomContent(AgoraRoomController roomController) {
-    final participants = roomController.participants;
+  Widget _buildRoomContent(AgoraRoomState roomState) {
+    final participants = roomState.participants;
 
     if (participants.isEmpty) {
-      return Center(
+      return const Center(
         child: Text(
           'Waiting for participants...',
           style: DesignTypography.body,
@@ -366,9 +246,9 @@ class _RoomScreenState extends State<RoomScreen> with TickerProviderStateMixin {
     }
 
     return Padding(
-      padding: EdgeInsets.all(DesignSpacing.lg),
+      padding: const EdgeInsets.all(DesignSpacing.lg),
       child: GridView.builder(
-        gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
           maxCrossAxisExtent: 300,
           mainAxisSpacing: DesignSpacing.lg,
           crossAxisSpacing: DesignSpacing.lg,

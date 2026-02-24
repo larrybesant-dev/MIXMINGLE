@@ -1,4 +1,4 @@
-﻿/// Room Discovery Screen
+/// Room Discovery Screen
 ///
 /// Lists all available rooms with:
 /// - Room name
@@ -23,7 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../../core/design_system/design_constants.dart';
 import '../widgets/room_card_widget.dart';
-import '../../video_room/screens/room_screen.dart';
+import '../screens/room_by_id_page.dart';
 
 // Simple Room model for discovery (minimal structure)
 class Room {
@@ -93,27 +93,14 @@ class _RoomDiscoveryScreenState extends State<RoomDiscoveryScreen> {
   }
 
   Future<void> _handleJoinRoom(Room room) async {
-    // TODO: Get Agora token from backend
-    // For now, use placeholder token
-    const agoraToken =
-        'your_token_from_backend'; // Replace with actual token fetch
-
     if (!mounted) return;
 
     // Navigate to room screen
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => RoomScreen(
+        builder: (context) => RoomByIdPage(
           roomId: room.id,
-          roomName: room.name,
-          agoraToken: agoraToken,
-          onLeaveRoom: () {
-            // Refresh room list after leaving
-            setState(() {
-              _initializeRoomsStream();
-            });
-          },
         ),
       ),
     );
@@ -130,14 +117,14 @@ class _RoomDiscoveryScreenState extends State<RoomDiscoveryScreen> {
         backgroundColor: DesignColors.surfaceDefault,
         elevation: 0,
         centerTitle: true,
-        title: Text(
+        title: const Text(
           'Discover Rooms',
           style: DesignTypography.heading,
         ),
         actions: [
           // Create new room button
           Padding(
-            padding: EdgeInsets.all(DesignSpacing.md),
+            padding: const EdgeInsets.all(DesignSpacing.md),
             child: TextButton.icon(
               onPressed: _handleCreateRoom,
               label: Text(
@@ -147,7 +134,7 @@ class _RoomDiscoveryScreenState extends State<RoomDiscoveryScreen> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              icon: Icon(
+              icon: const Icon(
                 Icons.add,
                 color: DesignColors.accent,
               ),
@@ -161,7 +148,7 @@ class _RoomDiscoveryScreenState extends State<RoomDiscoveryScreen> {
         builder: (context, snapshot) {
           // Loading state
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(
+            return const Center(
               child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation(DesignColors.accent),
               ),
@@ -174,17 +161,17 @@ class _RoomDiscoveryScreenState extends State<RoomDiscoveryScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.error_outline,
                     color: DesignColors.accent,
                     size: 48,
                   ),
-                  SizedBox(height: DesignSpacing.lg),
-                  Text(
+                  const SizedBox(height: DesignSpacing.lg),
+                  const Text(
                     'Failed to load rooms',
                     style: DesignTypography.body,
                   ),
-                  SizedBox(height: DesignSpacing.md),
+                  const SizedBox(height: DesignSpacing.md),
                   TextButton(
                     onPressed: () {
                       setState(() {
@@ -211,24 +198,24 @@ class _RoomDiscoveryScreenState extends State<RoomDiscoveryScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.meeting_room_outlined,
                     color: DesignColors.accent,
                     size: 48,
                   ),
-                  SizedBox(height: DesignSpacing.lg),
+                  const SizedBox(height: DesignSpacing.lg),
                   Text(
                     'No rooms yet',
                     style: DesignTypography.body.copyWith(
                       color: DesignColors.accent,
                     ),
                   ),
-                  SizedBox(height: DesignSpacing.md),
+                  const SizedBox(height: DesignSpacing.md),
                   ElevatedButton(
                     onPressed: _handleCreateRoom,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: DesignColors.accent,
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: DesignSpacing.lg,
                         vertical: DesignSpacing.md,
                       ),
@@ -248,9 +235,9 @@ class _RoomDiscoveryScreenState extends State<RoomDiscoveryScreen> {
 
           // List of rooms
           return Padding(
-            padding: EdgeInsets.all(DesignSpacing.lg),
+            padding: const EdgeInsets.all(DesignSpacing.lg),
             child: GridView.builder(
-              gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 350,
                 mainAxisSpacing: DesignSpacing.lg,
                 crossAxisSpacing: DesignSpacing.lg,
@@ -280,11 +267,11 @@ class _RoomDiscoveryScreenState extends State<RoomDiscoveryScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(
+        title: const Text(
           'Create New Room',
           style: DesignTypography.heading,
         ),
-        content: Text(
+        content: const Text(
           'Room creation feature coming soon.',
           style: DesignTypography.body,
         ),

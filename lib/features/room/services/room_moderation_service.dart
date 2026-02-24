@@ -300,4 +300,104 @@ final roomModerationServiceProvider = Provider<RoomModerationService>((ref) {
   return RoomModerationService(repository, firestore);
 });
 
+// ---------------------------------------------------------------------------
+// Types required by voice_room_moderation_widget.dart
+// ---------------------------------------------------------------------------
+
+/// Moderation action enum
+enum ModerationAction {
+  warn,
+  mute,
+  kick,
+  ban,
+  unban,
+}
+
+/// Moderation log model (lightweight, Firestore-backed)
+class ModerationLog {
+  final String id;
+  final String roomId;
+  final String moderatorId;
+  final String targetUserId;
+  final ModerationAction action;
+  final String reason;
+  final DateTime timestamp;
+  final Duration? duration;
+
+  ModerationLog({
+    required this.id,
+    required this.roomId,
+    required this.moderatorId,
+    required this.targetUserId,
+    required this.action,
+    required this.reason,
+    required this.timestamp,
+    this.duration,
+  });
+
+  factory ModerationLog.fromFirestore(DocumentSnapshot doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    return ModerationLog(
+      id: doc.id,
+      roomId: data['roomId'] ?? '',
+      moderatorId: data['moderatorId'] ?? '',
+      targetUserId: data['targetUserId'] ?? '',
+      action: ModerationAction.values[data['action'] ?? 0],
+      reason: data['reason'] ?? '',
+      timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      duration: data['duration'] != null
+          ? Duration(seconds: data['duration'] as int)
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toFirestore() => {
+        'roomId': roomId,
+        'moderatorId': moderatorId,
+        'targetUserId': targetUserId,
+        'action': action.index,
+        'reason': reason,
+        'timestamp': Timestamp.fromDate(timestamp),
+        if (duration != null) 'duration': duration!.inSeconds,
+      };
+}
+
+/// Stream of moderation logs for a room
+final moderationLogsProvider =
+    StreamProvider.family<List<ModerationLog>, String>((ref, roomId) {
+  final firestore = FirebaseFirestore.instance;
+  return firestore
+      .collection('rooms')
+      .doc(roomId)
+      .collection('moderation_logs')
+      .orderBy('timestamp', descending: true)
+      .limit(50)
+      .snapshots()
+      .map((s) => s.docs.map(ModerationLog.fromFirestore).toList());
+});
+
+/// Stream of muted user IDs for a room
+final mutedUsersProvider =
+    StreamProvider.family<List<String>, String>((ref, roomId) {
+  final firestore = FirebaseFirestore.instance;
+  return firestore
+      .collection('rooms')
+      .doc(roomId)
+      .collection('muted_users')
+      .snapshots()
+      .map((s) => s.docs.map((d) => d.id).toList());
+});
+
+/// Stream of banned user IDs for a room
+final bannedUsersProvider =
+    StreamProvider.family<List<String>, String>((ref, roomId) {
+  final firestore = FirebaseFirestore.instance;
+  return firestore
+      .collection('rooms')
+      .doc(roomId)
+      .collection('banned_users')
+      .snapshots()
+      .map((s) => s.docs.map((d) => d.id).toList());
+});
+
 

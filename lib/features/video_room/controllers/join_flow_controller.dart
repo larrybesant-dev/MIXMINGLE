@@ -1,13 +1,13 @@
-﻿library;
+library;
 
-import 'package:flutter/material.dart';
-import '../core/design_system/design_constants.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/design_system/design_constants.dart';
 
 /// Join Flow Controller
 ///
 /// Manages the ceremonial join experience:
-/// 1. Entering (150ms) - "Entering roomâ€¦"
-/// 2. Connecting (400-1000ms) - "Connecting audio & videoâ€¦"
+/// 1. Entering (150ms) - "Entering room…"
+/// 2. Connecting (400-1000ms) - "Connecting audio & video…"
 /// 3. Live (400ms) - "You're live" notification
 ///
 /// Total minimum: 950ms (intentional delay for ceremonial feel)
@@ -16,8 +16,8 @@ import '../core/design_system/design_constants.dart';
 /// Phases of the join flow
 enum JoinPhase {
   idle,         // Not attempting to join
-  entering,     // Stage 1: "Entering roomâ€¦" (150ms)
-  connecting,   // Stage 2: "Connecting audio & videoâ€¦" (400-1000ms)
+  entering,     // Stage 1: "Entering room…" (150ms)
+  connecting,   // Stage 2: "Connecting audio & video…" (400-1000ms)
   live,         // Stage 3: "You're live" appears (400ms)
   error,        // Join failed
 }
@@ -29,9 +29,9 @@ extension JoinPhaseText on JoinPhase {
       case JoinPhase.idle:
         return 'Ready to join';
       case JoinPhase.entering:
-        return 'Entering roomâ€¦';
+        return 'Entering room…';
       case JoinPhase.connecting:
-        return 'Connecting audio & videoâ€¦';
+        return 'Connecting audio & video…';
       case JoinPhase.live:
         return 'You\'re live';
       case JoinPhase.error:
@@ -54,87 +54,66 @@ extension JoinPhaseText on JoinPhase {
   }
 }
 
-/// Controller managing join flow state machine
-///
-/// Usage:
-/// ```dart
-/// final controller = JoinFlowController();
-/// await controller.startJoinFlow(); // Runs all 3 phases with timing
-/// ```
-class JoinFlowController extends ChangeNotifier {
-  /// Current phase
-  JoinPhase _phase = JoinPhase.idle;
-  JoinPhase get phase => _phase;
+/// Immutable state for join flow
+class JoinFlowState {
+  final JoinPhase phase;
+  final String? errorMessage;
+  final bool isJoining;
 
-  /// Error message (if phase == error)
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
+  const JoinFlowState({
+    this.phase = JoinPhase.idle,
+    this.errorMessage,
+    this.isJoining = false,
+  });
 
-  /// Whether join is currently in progress
-  bool _isJoining = false;
-  bool get isJoining => _isJoining;
+  JoinFlowState copyWith({
+    JoinPhase? phase,
+    String? errorMessage,
+    bool? isJoining,
+    bool clearError = false,
+  }) {
+    return JoinFlowState(
+      phase: phase ?? this.phase,
+      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
+      isJoining: isJoining ?? this.isJoining,
+    );
+  }
+}
 
-  /// Start the join flow with ceremonial timing
-  ///
-  /// Runs: entering (150ms) â†’ connecting (400-1000ms) â†’ live (400ms)
-  /// Total minimum: 950ms
+/// Riverpod notifier managing join flow state machine
+class JoinFlowNotifier extends Notifier<JoinFlowState> {
+  @override
+  JoinFlowState build() => const JoinFlowState();
+
   Future<void> startJoinFlow({
-    /// How long to wait during connecting phase
-    /// Default: 400ms minimum, can be longer if SDK needs time
     Duration connectingDelay = const Duration(milliseconds: 400),
   }) async {
-    if (_isJoining) return; // Prevent multiple simultaneous joins
-
-    _isJoining = true;
-    _errorMessage = null;
-
+    if (state.isJoining) return;
+    state = state.copyWith(isJoining: true, clearError: true);
     try {
-      // STAGE 1: Entering room (150ms)
-      _setPhase(JoinPhase.entering);
+      state = state.copyWith(phase: JoinPhase.entering);
       await Future.delayed(DesignAnimations.joinStage1Duration);
-
-      // STAGE 2: Connecting to Agora/Firestore (400-1000ms)
-      _setPhase(JoinPhase.connecting);
+      state = state.copyWith(phase: JoinPhase.connecting);
       await Future.delayed(connectingDelay);
-
-      // STAGE 3: Live notification (400ms fade-in)
-      _setPhase(JoinPhase.live);
+      state = state.copyWith(phase: JoinPhase.live);
       await Future.delayed(DesignAnimations.joinStage3Duration);
-
-      // Join complete
-      _isJoining = false;
-      notifyListeners();
+      state = state.copyWith(isJoining: false);
     } catch (e) {
-      _setError('Join failed: $e');
-      _isJoining = false;
+      state = JoinFlowState(phase: JoinPhase.error, errorMessage: 'Join failed: $e', isJoining: false);
       rethrow;
     }
   }
 
-  /// Set error state with message
   void setError(String message) {
-    _setError(message);
-    _isJoining = false;
+    state = JoinFlowState(phase: JoinPhase.error, errorMessage: message, isJoining: false);
   }
 
-  /// Reset to idle state
   void reset() {
-    _phase = JoinPhase.idle;
-    _errorMessage = null;
-    _isJoining = false;
-    notifyListeners();
-  }
-
-  /// Private helper to set phase and notify
-  void _setPhase(JoinPhase newPhase) {
-    _phase = newPhase;
-    notifyListeners();
-  }
-
-  /// Private helper to set error state
-  void _setError(String message) {
-    _phase = JoinPhase.error;
-    _errorMessage = message;
-    notifyListeners();
+    state = const JoinFlowState();
   }
 }
+
+/// Provider for join flow state
+final joinFlowProvider = NotifierProvider<JoinFlowNotifier, JoinFlowState>(
+  JoinFlowNotifier.new,
+);

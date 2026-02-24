@@ -8,7 +8,7 @@ import 'package:mixmingle/shared/models/room.dart';
 import 'package:mixmingle/shared/models/message.dart' as room_message;
 import 'package:mixmingle/shared/widgets/glow_text.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
-import 'package:mixmingle/providers/all_providers.dart';
+import 'package:mixmingle/shared/providers/all_providers.dart';
 import 'package:mixmingle/services/agora_video_service.dart';
 import 'package:mixmingle/services/messaging_service.dart';
 import 'package:mixmingle/services/room_manager_service.dart';

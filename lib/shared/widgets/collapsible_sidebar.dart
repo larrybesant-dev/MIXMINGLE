@@ -5,7 +5,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design_system/design_constants.dart';
-import '../constants/ui_constants.dart';
+import '../../core/constants/ui_constants.dart';
 
 /// Reusable collapsible sidebar widget with smooth animations
 class CollapsibleSidebar extends ConsumerStatefulWidget {

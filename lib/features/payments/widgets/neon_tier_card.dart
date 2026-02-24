@@ -1,4 +1,4 @@
-﻿/// Neon Tier Card Widget
+/// Neon Tier Card Widget
 ///
 /// Displays membership tier card with neon VIP Lounge aesthetic.
 /// Features animated glow effects and gold trim for premium tiers.
@@ -308,9 +308,9 @@ class _NeonTierCardState extends State<NeonTierCard>
                         horizontal: 10,
                         vertical: 4,
                       ),
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.green,
-                        borderRadius: const BorderRadius.only(
+                        borderRadius: BorderRadius.only(
                           bottomLeft: Radius.circular(8),
                           bottomRight: Radius.circular(8),
                         ),
@@ -342,10 +342,10 @@ class _BestValueBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
+        gradient: const LinearGradient(
           colors: [
             DesignColors.gold,
-            const Color(0xFFFF7A3C),
+            Color(0xFFFF7A3C),
           ],
         ),
         borderRadius: BorderRadius.circular(10),

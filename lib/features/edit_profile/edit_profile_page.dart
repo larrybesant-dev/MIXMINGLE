@@ -2,8 +2,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
-import '../../providers/providers.dart';
-import '../../models/user.dart';
+import '../../shared/providers/providers.dart';
+import '../../shared/models/user.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../shared/neon_button.dart';
@@ -419,11 +419,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
           actions: [
             TextButton(
               onPressed: _isLoading ? null : _saveProfile,
-              child: GlowText(
+              child: const GlowText(
                 text: 'Save',
                 fontSize: 16,
-                color: const Color(0xFFFF4C4C),
-                glowColor: const Color(0xFFFF4C4C),
+                color: Color(0xFFFF4C4C),
+                glowColor: Color(0xFFFF4C4C),
               ),
             ),
           ],

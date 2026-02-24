@@ -1,4 +1,4 @@
-﻿/// Safety AI Service
+/// Safety AI Service
 ///
 /// AI-powered content moderation and safety features including
 /// toxicity detection, harassment prevention, spam filtering,
@@ -595,7 +595,7 @@ class SafetyAIService {
     // Simple heuristic for demo
     final lowerContent = content.toLowerCase();
     double toxicity = 0;
-    double profanity = 0;
+    const double profanity = 0;
     double insult = 0;
     double threat = 0;
     final issues = <String>[];
@@ -627,8 +627,8 @@ class SafetyAIService {
 
     double harassment = 0;
     double targeting = targetId != null ? 0.3 : 0;
-    double repetition = 0;
-    double intimidation = 0;
+    const double repetition = 0;
+    const double intimidation = 0;
     final patterns = <String>[];
 
     // Simplified pattern detection
@@ -653,7 +653,7 @@ class SafetyAIService {
     await Future.delayed(const Duration(milliseconds: 50));
 
     double spam = 0;
-    double automation = 0;
+    const double automation = 0;
     double repetition = 0;
     double promotion = 0;
     final indicators = <String>[];

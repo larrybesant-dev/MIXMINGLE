@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../theme/colors_v2.dart';
 import '../theme/spacing.dart';
 import '../theme/typography_v2.dart';
@@ -45,9 +45,9 @@ class SectionHeader extends StatelessWidget {
             margin: EdgeInsets.only(top: subtitle != null ? Spacing.xs : Spacing.xs),
             height: 3,
             width: accentWidth,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               gradient: ElectricColors.neonPulse,
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
                   color: Color(0x5524E8FF),
                   blurRadius: 12,

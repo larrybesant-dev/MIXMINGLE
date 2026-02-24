@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../theme/colors_v2.dart';
 import '../theme/typography_v2.dart';
 import '../theme/spacing.dart';
@@ -198,10 +198,10 @@ _ButtonStyles _styleForVariant(
         gradient: null,
         foreground: ElectricColors.onSurfacePrimary,
         shadows: [
-          BoxShadow(
+          const BoxShadow(
             color: ElectricColors.glassShadow,
             blurRadius: 12,
-            offset: const Offset(0, 6),
+            offset: Offset(0, 6),
           ),
         ],
         border: Border.all(

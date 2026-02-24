@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/design_system/design_constants.dart';
 
 class LeaveRoomScreen extends StatefulWidget {
@@ -69,8 +69,8 @@ class _LeaveRoomScreenState extends State<LeaveRoomScreen>
         body: SafeArea(
           child: Center(
             child: Container(
-              margin: EdgeInsets.all(DesignSpacing.xl),
-              padding: EdgeInsets.all(DesignSpacing.xl),
+              margin: const EdgeInsets.all(DesignSpacing.xl),
+              padding: const EdgeInsets.all(DesignSpacing.xl),
               decoration: BoxDecoration(
                 color: DesignColors.surface,
                 borderRadius: BorderRadius.circular(24),
@@ -89,23 +89,23 @@ class _LeaveRoomScreenState extends State<LeaveRoomScreen>
                   Row(
                     children: [
                       Container(
-                        padding: EdgeInsets.all(DesignSpacing.md),
+                        padding: const EdgeInsets.all(DesignSpacing.md),
                         decoration: BoxDecoration(
                           color: DesignColors.error.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.exit_to_app,
                           color: DesignColors.error,
                           size: 24,
                         ),
                       ),
-                      SizedBox(width: DesignSpacing.lg),
+                      const SizedBox(width: DesignSpacing.lg),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
+                            const Text(
                               'Leave Room',
                               style: DesignTypography.heading,
                             ),
@@ -119,17 +119,17 @@ class _LeaveRoomScreenState extends State<LeaveRoomScreen>
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.close, color: DesignColors.textSecondary),
+                        icon: const Icon(Icons.close, color: DesignColors.textSecondary),
                         onPressed: widget.onCancel,
                       ),
                     ],
                   ),
 
-                  SizedBox(height: DesignSpacing.xl),
+                  const SizedBox(height: DesignSpacing.xl),
 
                   // Room stats
                   Container(
-                    padding: EdgeInsets.all(DesignSpacing.lg),
+                    padding: const EdgeInsets.all(DesignSpacing.lg),
                     decoration: BoxDecoration(
                       color: DesignColors.background,
                       borderRadius: BorderRadius.circular(16),
@@ -156,11 +156,11 @@ class _LeaveRoomScreenState extends State<LeaveRoomScreen>
                     ),
                   ),
 
-                  SizedBox(height: DesignSpacing.xl),
+                  const SizedBox(height: DesignSpacing.xl),
 
                   // Warning message
                   Container(
-                    padding: EdgeInsets.all(DesignSpacing.lg),
+                    padding: const EdgeInsets.all(DesignSpacing.lg),
                     decoration: BoxDecoration(
                       color: DesignColors.warning.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -170,12 +170,12 @@ class _LeaveRoomScreenState extends State<LeaveRoomScreen>
                     ),
                     child: Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.warning_amber_rounded,
                           color: DesignColors.warning,
                           size: 20,
                         ),
-                        SizedBox(width: DesignSpacing.md),
+                        const SizedBox(width: DesignSpacing.md),
                         Expanded(
                           child: Text(
                             'You will disconnect from the video call and lose access to the room.',
@@ -189,7 +189,7 @@ class _LeaveRoomScreenState extends State<LeaveRoomScreen>
                     ),
                   ),
 
-                  SizedBox(height: DesignSpacing.xl),
+                  const SizedBox(height: DesignSpacing.xl),
 
                   // Action buttons
                   Row(
@@ -198,8 +198,8 @@ class _LeaveRoomScreenState extends State<LeaveRoomScreen>
                         child: OutlinedButton(
                           onPressed: widget.onCancel,
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: DesignColors.textSecondary),
-                            padding: EdgeInsets.symmetric(vertical: 16),
+                            side: const BorderSide(color: DesignColors.textSecondary),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -212,19 +212,19 @@ class _LeaveRoomScreenState extends State<LeaveRoomScreen>
                           ),
                         ),
                       ),
-                      SizedBox(width: DesignSpacing.lg),
+                      const SizedBox(width: DesignSpacing.lg),
                       Expanded(
                         child: ElevatedButton(
                           onPressed: widget.onLeave,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: DesignColors.error,
                             foregroundColor: DesignColors.white,
-                            padding: EdgeInsets.symmetric(vertical: 16),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
                           ),
-                          child: Text(
+                          child: const Text(
                             'Leave Room',
                             style: DesignTypography.button,
                           ),
@@ -249,7 +249,7 @@ class _LeaveRoomScreenState extends State<LeaveRoomScreen>
     return Column(
       children: [
         Icon(icon, color: DesignColors.textSecondary, size: 20),
-        SizedBox(height: DesignSpacing.sm),
+        const SizedBox(height: DesignSpacing.sm),
         Text(
           value,
           style: DesignTypography.body.copyWith(

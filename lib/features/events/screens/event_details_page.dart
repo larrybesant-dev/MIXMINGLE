@@ -2,15 +2,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../../providers/events_providers.dart';
-import '../../../providers/auth_providers.dart';
-import '../../../providers/user_providers.dart';
+import '../../../shared/providers/events_providers.dart';
+import '../../../shared/providers/auth_providers.dart';
+import '../../../shared/providers/user_providers.dart';
 import '../../../shared/widgets/events_widgets.dart';
 import '../../../shared/widgets/club_background.dart';
 import '../../../shared/widgets/social_graph_widgets.dart';
-import '../../../shared/auth_guard.dart';
 import '../../../shared/models/room.dart';
-import '../../room/screens/voice_room_page.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import '../../room/room_access_wrapper.dart';
 
 class EventDetailsPage extends ConsumerWidget {
   final String eventId;
@@ -253,7 +253,10 @@ class EventDetailsPage extends ConsumerWidget {
                                   if (context.mounted) {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(
-                                        builder: (context) => AuthGuard(child: VoiceRoomPage(room: room)),
+                                        builder: (context) => RoomAccessWrapper(
+                                          room: room,
+                                          userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
+                                        ),
                                       ),
                                     );
                                   }

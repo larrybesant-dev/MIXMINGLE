@@ -1,8 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
-import '../../../providers/event_chat_providers.dart';
-import '../../../providers/auth_providers.dart';
+import '../../../shared/providers/event_chat_providers.dart';
+import '../../../shared/providers/auth_providers.dart';
 import '../../../shared/widgets/club_background.dart';
 import '../../../shared/models/chat_message.dart';
 

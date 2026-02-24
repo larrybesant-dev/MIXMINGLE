@@ -7,7 +7,7 @@ import '../models/group_chat_participant.dart';
 import '../providers/group_chat_providers.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/shared/widgets/skeleton_loaders.dart';
-import 'package:mixmingle/providers/user_providers.dart';
+import 'package:mixmingle/shared/providers/user_providers.dart';
 
 class GroupChatRoomPage extends ConsumerStatefulWidget {
   final String roomId;
@@ -135,12 +135,12 @@ class _GroupChatRoomPageState extends ConsumerState<GroupChatRoomPage> {
                                 child: AsyncValueViewEnhanced<List<GroupChatMessage>>(
                                   value: messagesAsync,
                                   maxRetries: 3,
-                                  skeleton: Column(
+                                  skeleton: const Column(
                                     children: [
                                       SkeletonBubble(isUserMessage: false),
-                                      const SizedBox(height: 8),
+                                      SizedBox(height: 8),
                                       SkeletonBubble(isUserMessage: true),
-                                      const SizedBox(height: 8),
+                                      SizedBox(height: 8),
                                       SkeletonBubble(isUserMessage: false),
                                     ],
                                   ),

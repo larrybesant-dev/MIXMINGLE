@@ -1,16 +1,16 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../providers/providers.dart';
-import '../../models/user.dart';
-import '../../models/privacy_settings.dart';
-// TEMP DISABLED: import '../../models/speed_dating.dart';
+import '../../shared/providers/providers.dart';
+import '../../shared/models/user.dart';
+import '../../shared/models/privacy_settings.dart';
+// TEMP DISABLED: import '../../shared/models/speed_dating.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../shared/neon_button.dart';
-import '../../shared/auth_guard.dart';
-import '../../shared/stubs/dev_stubs.dart';
-import '../room/screens/voice_room_page.dart';
+import '../../core/stubs/dev_stubs.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import '../room/room_access_wrapper.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -146,12 +146,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
   Widget _buildCoverPhoto(User user) {
     return Container(
       height: 200,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            const Color(0x80FF4C4C),
-            const Color(0x99FFD700),
-            const Color(0x804C4CFF),
+            Color(0x80FF4C4C),
+            Color(0x99FFD700),
+            Color(0x804C4CFF),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -186,9 +186,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                   color: const Color(0xFFFF4C4C),
                   width: 4,
                 ),
-                boxShadow: [
+                boxShadow: const [
                   BoxShadow(
-                    color: const Color(0x80FF4C4C),
+                    color: Color(0x80FF4C4C),
                     blurRadius: 20,
                     spreadRadius: 2,
                   ),
@@ -338,8 +338,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
         if (activities.isEmpty) {
           return ListView(
             padding: const EdgeInsets.all(16),
-            children: [
-              const Center(
+            children: const [
+              Center(
                 child: Padding(
                   padding: EdgeInsets.all(32.0),
                   child: Text(
@@ -665,28 +665,28 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
             children: [
               Center(
                 child: Padding(
-                  padding: EdgeInsets.all(32.0),
+                  padding: const EdgeInsets.all(32.0),
                   child: Column(
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.favorite_border,
                         size: 64,
                         color: Color(0xFFFF4C4C),
                       ),
-                      SizedBox(height: 16),
-                      GlowText(
+                      const SizedBox(height: 16),
+                      const GlowText(
                         text: 'No Speed Dating Matches Yet',
                         fontSize: 20,
                         color: Color(0xFFFFD700),
                         glowColor: Color(0xFFFF4C4C),
                       ),
-                      SizedBox(height: 8),
-                      Text(
+                      const SizedBox(height: 8),
+                      const Text(
                         'Try speed dating to find your perfect match!\n\nTap the heart icon in the top bar to start.',
                         style: TextStyle(color: Colors.white70, fontSize: 16),
                         textAlign: TextAlign.center,
                       ),
-                      SizedBox(height: 24),
+                      const SizedBox(height: 24),
                       Semantics(
                         label: 'Start Speed Dating',
                         button: true,
@@ -695,7 +695,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                           onPressed: () {
                             Navigator.of(context).pushNamed('/speed-dating-lobby');
                           },
-                          child: Text('Start Speed Dating'),
+                          child: const Text('Start Speed Dating'),
                         ),
                       ),
                     ],
@@ -730,7 +730,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
               color: Color(0xFFFF4C4C),
             ),
             const SizedBox(height: 16),
-            GlowText(
+            const GlowText(
               text: 'Failed to load matches',
               fontSize: 18,
               color: Color(0xFFFF4C4C),
@@ -804,12 +804,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                 children: [
                   Row(
                     children: [
-                      GlowText(
+                      const GlowText(
                         text: 'Speed Dating Match',
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: const Color(0xFFFFD700),
-                        glowColor: const Color(0xFFFF4C4C),
+                        color: Color(0xFFFFD700),
+                        glowColor: Color(0xFFFF4C4C),
                       ),
                       const SizedBox(width: 8),
                       Container(
@@ -865,8 +865,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
         if (rooms.isEmpty) {
           return ListView(
             padding: const EdgeInsets.all(16),
-            children: [
-              const Center(
+            children: const [
+              Center(
                 child: Padding(
                   padding: EdgeInsets.all(32.0),
                   child: Text(
@@ -892,9 +892,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                 leading: Container(
                   width: 50,
                   height: 50,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
+                    gradient: LinearGradient(
                       colors: [Color(0xFFFF4C4C), Color(0xFFFFD700)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -954,7 +954,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                           key: Key('join-room-${room.id}'),
                           onPressed: () => Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (context) => AuthGuard(child: VoiceRoomPage(room: room)),
+                              builder: (context) => RoomAccessWrapper(
+                                room: room,
+                                userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
+                              ),
                             ),
                           ),
                           child: const Text('Join'),
@@ -963,7 +966,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                     : const Icon(Icons.history, color: Colors.white70),
                 onTap: () => Navigator.of(context).push(
                   MaterialPageRoute(
-                    builder: (context) => AuthGuard(child: VoiceRoomPage(room: room)),
+                    builder: (context) => RoomAccessWrapper(
+                      room: room,
+                      userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
+                    ),
                   ),
                 ),
               ),

@@ -1,5 +1,5 @@
-﻿import '../models/room_video_state_model.dart';
-import '../controllers/publisher_controller.dart';
+import '../../../shared/models/room_video_state_model.dart';
+import 'publisher_controller.dart';
 
 class PerformanceSafeguards {
   static const int maxPublishers = 12;

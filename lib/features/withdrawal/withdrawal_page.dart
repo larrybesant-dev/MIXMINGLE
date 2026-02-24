@@ -1,8 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:mixmingle/providers/auth_providers.dart';
+import 'package:mixmingle/services/monetization_service.dart';
 
 class WithdrawalPage extends ConsumerStatefulWidget {
   const WithdrawalPage({super.key});
@@ -17,8 +15,8 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
   final _emailController = TextEditingController();
   bool _isLoading = false;
 
-  // ðŸ”¥ Reactive auth getter using Riverpod authStateProvider
-  User? get currentUser => ref.watch(authStateProvider).value;
+  final _monetizationService = MonetizationService();
+
 
   Future<void> _submitWithdrawal() async {
     if (!_formKey.currentState!.validate()) return;
@@ -26,18 +24,10 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
     setState(() => _isLoading = true);
 
     try {
-      final user = currentUser;
-      if (user == null) throw Exception('Not authenticated');
-
-      final amount = int.parse(_amountController.text);
-
-      await FirebaseFirestore.instance.collection('withdrawals').add({
-        'userId': user.uid,
-        'amount': amount,
-        'email': _emailController.text,
-        'status': 'pending',
-        'createdAt': FieldValue.serverTimestamp(),
-      });
+      await _monetizationService.submitWithdrawal(
+        amount: int.parse(_amountController.text),
+        email: _emailController.text,
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

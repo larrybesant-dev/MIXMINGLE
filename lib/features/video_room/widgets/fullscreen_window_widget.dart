@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'video_tile_widget.dart';
-import '../../../controllers/video_window_controller.dart';
+import '../controllers/video_window_controller.dart';
 import '../../../core/design_system/design_constants.dart';
 
 class FullscreenWindowWidget extends StatelessWidget {

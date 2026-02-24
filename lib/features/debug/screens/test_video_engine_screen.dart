@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
-import '../services/video_engine_service.dart';
-import '../models/remote_user.dart';
+import 'package:flutter/material.dart';
+import '../../../services/video_engine_service.dart';
+import '../../../shared/models/remote_user.dart';
 
 class TestVideoEngineScreen extends StatefulWidget {
   const TestVideoEngineScreen({super.key});

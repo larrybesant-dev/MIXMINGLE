@@ -4,8 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/models/event.dart';
 import '../../../core/services/ab_testing_service.dart';
-import '../../../providers/events_controller.dart';
-import '../../../providers/gamification_payment_providers.dart';
+import '../../../shared/providers/events_controller.dart';
+import '../../../shared/providers/gamification_payment_providers.dart';
 import 'event_card_horizontal.dart';
 import 'event_card_vertical.dart';
 

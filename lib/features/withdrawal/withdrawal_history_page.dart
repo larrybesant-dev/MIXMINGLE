@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mixmingle/providers/auth_providers.dart';
+import 'package:mixmingle/shared/providers/auth_providers.dart';
 
 class WithdrawalHistoryPage extends ConsumerWidget {
   const WithdrawalHistoryPage({super.key});

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/design_system/design_constants.dart';
 
 class MediaControlsWidget extends StatefulWidget {
@@ -55,12 +55,12 @@ class _MediaControlsWidgetState extends State<MediaControlsWidget>
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.all(DesignSpacing.lg),
-      margin: EdgeInsets.all(DesignSpacing.lg),
+      padding: const EdgeInsets.all(DesignSpacing.lg),
+      margin: const EdgeInsets.all(DesignSpacing.lg),
       decoration: BoxDecoration(
         color: DesignColors.surface.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
+        boxShadow: const [
           BoxShadow(
             color: DesignColors.shadowColor,
             blurRadius: 20,
@@ -84,7 +84,7 @@ class _MediaControlsWidgetState extends State<MediaControlsWidget>
             tooltip: widget.isMicEnabled ? 'Mute microphone' : 'Unmute microphone',
           ),
 
-          SizedBox(width: DesignSpacing.md),
+          const SizedBox(width: DesignSpacing.md),
 
           // Camera control
           _buildControlButton(
@@ -96,7 +96,7 @@ class _MediaControlsWidgetState extends State<MediaControlsWidget>
             tooltip: widget.isCameraEnabled ? 'Turn off camera' : 'Turn on camera',
           ),
 
-          SizedBox(width: DesignSpacing.md),
+          const SizedBox(width: DesignSpacing.md),
 
           // Screen share control
           _buildControlButton(
@@ -108,7 +108,7 @@ class _MediaControlsWidgetState extends State<MediaControlsWidget>
             tooltip: widget.isScreenSharing ? 'Stop sharing' : 'Share screen',
           ),
 
-          SizedBox(width: DesignSpacing.md),
+          const SizedBox(width: DesignSpacing.md),
 
           // More options
           Container(
@@ -122,7 +122,7 @@ class _MediaControlsWidgetState extends State<MediaControlsWidget>
               ),
             ),
             child: IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.more_vert,
                 color: DesignColors.textPrimary,
                 size: 20,

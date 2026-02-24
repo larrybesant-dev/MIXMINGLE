@@ -1,12 +1,13 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:mixmingle/services/room_discovery_service.dart';
 import 'package:mixmingle/shared/models/moderation.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/glow_text.dart';
-import 'package:mixmingle/providers/all_providers.dart';
+import 'package:mixmingle/shared/providers/all_providers.dart';
 import 'package:mixmingle/shared/models/room.dart';
-import '../room/screens/room_page.dart';
+import '../room/room_access_wrapper.dart';
 
 class RoomDiscoveryPage extends ConsumerStatefulWidget {
   const RoomDiscoveryPage({super.key});
@@ -563,7 +564,10 @@ class _RoomDiscoveryPageState extends ConsumerState<RoomDiscoveryPage> with Sing
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => RoomPage(room: room),
+        builder: (context) => RoomAccessWrapper(
+          room:   room,
+          userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
+        ),
       ),
     );
   }

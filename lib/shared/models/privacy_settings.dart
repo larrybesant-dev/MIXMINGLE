@@ -1,5 +1,3 @@
-import '../typography/design_typography.dart';
-
 enum PrivacyLevel {
   public,
   friendsOnly,

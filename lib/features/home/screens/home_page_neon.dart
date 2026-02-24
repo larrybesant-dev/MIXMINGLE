@@ -2,8 +2,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
-import 'package:mixmingle/app_routes.dart';
-import 'package:mixmingle/providers/profile_completion_providers.dart';
+import 'package:mixmingle/app/app_routes.dart';
+import 'package:mixmingle/shared/providers/profile_completion_providers.dart';
 import 'package:mixmingle/core/theme/neon_widgets.dart';
 import 'package:mixmingle/core/theme/colors.dart';
 
@@ -369,7 +369,7 @@ class HomePageNeon extends ConsumerWidget {
   Widget _buildBottomAction(BuildContext context) {
     return Column(
       children: [
-        NeonDivider(color: ClubColors.secondary, glow: true),
+        const NeonDivider(color: ClubColors.secondary, glow: true),
         const SizedBox(height: 16),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,

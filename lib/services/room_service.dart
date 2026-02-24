@@ -119,6 +119,11 @@ class RoomService {
     // Add creatorId for Firestore security rules
     final roomData = room.toMap();
     roomData['creatorId'] = hostId;
+    // Ensure LiveRoom schema fields are initialized on creation
+    roomData['videoChannelLive']  = false;  // set to true by controller when first user enters
+    roomData['participantCount']  = 0;
+    roomData['maxBroadcasters']   ??= 4;
+    roomData['maxActiveMics']     ??= 4;
 
     await _firestore.collection('rooms').doc(roomId).set(roomData);
     return room;

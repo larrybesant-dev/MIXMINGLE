@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
@@ -21,7 +21,7 @@ class ErrorTrackingService {
 
     try {
       // Skip Crashlytics on web (not supported)
-      final isWeb = kIsWeb;
+      const isWeb = kIsWeb;
 
       if (!isWeb) {
         // Enable Crashlytics collection (only on mobile/desktop)

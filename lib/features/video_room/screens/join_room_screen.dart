@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/design_system/design_constants.dart';
 
 class JoinRoomScreen extends StatefulWidget {
@@ -73,7 +73,7 @@ class _JoinRoomScreenState extends State<JoinRoomScreen>
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.close, color: DesignColors.white),
+          icon: const Icon(Icons.close, color: DesignColors.white),
           onPressed: widget.onCancel,
         ),
         title: Text(
@@ -85,7 +85,7 @@ class _JoinRoomScreenState extends State<JoinRoomScreen>
       ),
       body: SafeArea(
         child: Padding(
-          padding: EdgeInsets.all(DesignSpacing.xl),
+          padding: const EdgeInsets.all(DesignSpacing.xl),
           child: Column(
             children: [
               Expanded(
@@ -121,7 +121,7 @@ class _JoinRoomScreenState extends State<JoinRoomScreen>
                                   ),
                                 ],
                               ),
-                              child: Icon(
+                              child: const Icon(
                                 Icons.video_call,
                                 size: 60,
                                 color: DesignColors.white,
@@ -131,7 +131,7 @@ class _JoinRoomScreenState extends State<JoinRoomScreen>
                         },
                       ),
 
-                      SizedBox(height: DesignSpacing.xl),
+                      const SizedBox(height: DesignSpacing.xl),
 
                       // Room name
                       Text(
@@ -143,7 +143,7 @@ class _JoinRoomScreenState extends State<JoinRoomScreen>
                         textAlign: TextAlign.center,
                       ),
 
-                      SizedBox(height: DesignSpacing.md),
+                      const SizedBox(height: DesignSpacing.md),
 
                       // Room ID
                       Text(
@@ -153,11 +153,11 @@ class _JoinRoomScreenState extends State<JoinRoomScreen>
                         ),
                       ),
 
-                      SizedBox(height: DesignSpacing.xl),
+                      const SizedBox(height: DesignSpacing.xl),
 
                       // Join instructions
                       Container(
-                        padding: EdgeInsets.all(DesignSpacing.lg),
+                        padding: const EdgeInsets.all(DesignSpacing.lg),
                         decoration: BoxDecoration(
                           color: DesignColors.surface.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(16),
@@ -167,12 +167,12 @@ class _JoinRoomScreenState extends State<JoinRoomScreen>
                         ),
                         child: Column(
                           children: [
-                            Icon(
+                            const Icon(
                               Icons.info_outline,
                               color: DesignColors.accent,
                               size: 24,
                             ),
-                            SizedBox(height: DesignSpacing.md),
+                            const SizedBox(height: DesignSpacing.md),
                             Text(
                               'Getting ready to join...',
                               style: DesignTypography.body.copyWith(
@@ -180,7 +180,7 @@ class _JoinRoomScreenState extends State<JoinRoomScreen>
                               ),
                               textAlign: TextAlign.center,
                             ),
-                            SizedBox(height: DesignSpacing.sm),
+                            const SizedBox(height: DesignSpacing.sm),
                             Text(
                               'Please ensure your camera and microphone are ready',
                               style: DesignTypography.caption.copyWith(
@@ -200,7 +200,7 @@ class _JoinRoomScreenState extends State<JoinRoomScreen>
               Container(
                 width: double.infinity,
                 height: 56,
-                margin: EdgeInsets.only(bottom: DesignSpacing.lg),
+                margin: const EdgeInsets.only(bottom: DesignSpacing.lg),
                 child: ElevatedButton(
                   onPressed: widget.onJoin,
                   style: ElevatedButton.styleFrom(
@@ -212,7 +212,7 @@ class _JoinRoomScreenState extends State<JoinRoomScreen>
                     elevation: 8,
                     shadowColor: DesignColors.accent.withValues(alpha: 0.3),
                   ),
-                  child: Text(
+                  child: const Text(
                     'Join Room',
                     style: DesignTypography.button,
                   ),

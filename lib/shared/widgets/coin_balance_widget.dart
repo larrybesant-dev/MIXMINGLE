@@ -1,5 +1,5 @@
-﻿import 'package:flutter/material.dart';
-import 'package:mixmingle/features/payment/coin_purchase_page.dart';
+import 'package:flutter/material.dart';
+import 'package:mixmingle/features/payments/screens/coin_purchase_page.dart';
 import 'package:mixmingle/core/theme/colors.dart';
 
 /// Reusable widget for displaying coin balance and buy button
@@ -38,7 +38,7 @@ class CoinBalanceWidget extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.monetization_on,
               color: ClubColors.goldenYellow,
               size: 20,
@@ -53,7 +53,7 @@ class CoinBalanceWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 4),
-            Icon(
+            const Icon(
               Icons.add_circle_outline,
               color: ClubColors.mingleBlue,
               size: 18,

@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // PRODUCTION-READY ERROR HANDLING SYSTEM
 // ============================================================================
 // Comprehensive error handling with beautiful UI feedback
@@ -86,7 +86,7 @@ class AppError {
 
   /// Parse Firestore errors
   factory AppError.fromFirestore(FirebaseException e, {VoidCallback? onRetry}) {
-    String title = 'Database Error';
+    const String title = 'Database Error';
     String message;
     bool isRetryable = false;
 

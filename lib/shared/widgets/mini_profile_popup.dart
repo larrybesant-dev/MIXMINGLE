@@ -21,7 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design_system/design_constants.dart';
 import '../../shared/models/user_profile.dart';
-import '../../providers/user_providers.dart';
+import '../../shared/providers/user_providers.dart';
 
 class MiniProfilePopup extends ConsumerWidget {
   final String userId;

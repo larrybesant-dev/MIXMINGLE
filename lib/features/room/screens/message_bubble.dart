@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/message.dart';
-import 'package:mixmingle/providers/user_display_name_provider.dart';
+import 'package:mixmingle/shared/providers/user_display_name_provider.dart';
 
 class MessageBubble extends ConsumerWidget {
   final Message message;

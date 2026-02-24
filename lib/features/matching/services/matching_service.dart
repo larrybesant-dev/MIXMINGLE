@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/questionnaire_answers.dart';
 import '../models/match_score.dart';
 import '../models/matching_profile.dart';
@@ -424,17 +424,17 @@ class MatchingService {
     QuestionnaireAnswers user2,
     List<String> challenges,
   ) {
-    double smokingScore = MatchingScoringUtils.enumSimilarity(
+    final double smokingScore = MatchingScoringUtils.enumSimilarity(
       user1.smokingPreference,
       user2.smokingPreference,
     );
 
-    double drinkingScore = MatchingScoringUtils.enumSimilarity(
+    final double drinkingScore = MatchingScoringUtils.enumSimilarity(
       user1.drinkingPreference,
       user2.drinkingPreference,
     );
 
-    double cannabisScore = MatchingScoringUtils.enumSimilarity(
+    final double cannabisScore = MatchingScoringUtils.enumSimilarity(
       user1.cannabisPreference,
       user2.cannabisPreference,
     );
@@ -588,12 +588,12 @@ class MatchingService {
     QuestionnaireAnswers user2,
     List<String> challenges,
   ) {
-    double petsScore = MatchingScoringUtils.enumSimilarity(
+    final double petsScore = MatchingScoringUtils.enumSimilarity(
       user1.petsPreference,
       user2.petsPreference,
     );
 
-    double kidsScore = MatchingScoringUtils.enumSimilarity(
+    final double kidsScore = MatchingScoringUtils.enumSimilarity(
       user1.kidsPreference,
       user2.kidsPreference,
     );

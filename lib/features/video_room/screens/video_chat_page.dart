@@ -1,16 +1,16 @@
-﻿// Video Chat Main Page - Responsive layout with video grid, sidebars, and chat
+// Video Chat Main Page - Responsive layout with video grid, sidebars, and chat
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../shared/widgets/chat_box_widget.dart';
-import '../shared/widgets/top_bar_widget.dart';
-import '../shared/widgets/notification_widget.dart';
-import '../shared/widgets/friends_sidebar_widget.dart';
-import '../shared/widgets/groups_sidebar_widget.dart';
-import '../shared/widgets/video_grid_widget.dart';
-import '../../core/design_system/design_constants.dart';
-import '../providers/ui_provider.dart';
-import '../providers/notification_provider.dart';
+import '../../../shared/widgets/chat_box_widget.dart';
+import '../../../shared/widgets/top_bar_widget.dart';
+import '../../../shared/widgets/notification_widget.dart';
+import '../../../shared/widgets/friends_sidebar_widget.dart';
+import '../../../shared/widgets/groups_sidebar_widget.dart';
+import '../../../shared/widgets/video_grid_widget.dart';
+import '../../../core/design_system/design_constants.dart';
+import '../../../shared/providers/ui_provider.dart';
+import '../../../shared/providers/notification_provider.dart';
 
 /// Main video chat page
 class VideoChatPage extends ConsumerWidget {
@@ -63,7 +63,7 @@ class VideoChatPage extends ConsumerWidget {
                       ),
                       // Chat Box
                       Container(
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           border: Border(
                             top: BorderSide(
                               color: DesignColors.accent,

@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/providers.dart';
-import '../../models/user.dart';
+import '../../shared/providers/providers.dart';
+import '../../shared/models/user.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../shared/neon_button.dart';
@@ -88,7 +88,7 @@ class UserProfilePage extends ConsumerWidget {
                   valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF4C4C)),
                 ),
               ),
-              error: (error, stack) => Center(
+              error: (error, stack) => const Center(
                 child: GlowText(
                   text: 'Error loading profile',
                   fontSize: 18,
@@ -102,7 +102,7 @@ class UserProfilePage extends ConsumerWidget {
               valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF4C4C)),
             ),
           ),
-          error: (error, stack) => Center(
+          error: (error, stack) => const Center(
             child: GlowText(
               text: 'Error loading user',
               fontSize: 18,

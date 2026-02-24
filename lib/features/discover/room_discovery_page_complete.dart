@@ -1,13 +1,13 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../providers/room_providers.dart';
+import '../../../shared/providers/room_providers.dart';
 import '../../../shared/models/room.dart';
-import '../../../app_routes.dart';
+import '../../../app/app_routes.dart';
 import '../../../shared/club_background.dart';
 import '../../../shared/glow_text.dart';
 import '../../../shared/neon_button.dart';
-import '../../../shared/auth_guard.dart';
-import '../room/screens/voice_room_page.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
+import '../room/room_access_wrapper.dart';
 
 /// Complete Room Discovery Page with search, filters, and live updates
 class RoomDiscoveryPageComplete extends ConsumerStatefulWidget {
@@ -285,7 +285,10 @@ class _RoomDiscoveryPageCompleteState extends ConsumerState<RoomDiscoveryPageCom
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => AuthGuard(child: VoiceRoomPage(room: room)),
+            builder: (context) => RoomAccessWrapper(
+            room: room,
+            userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
+          ),
           ),
         );
       },
@@ -327,8 +330,8 @@ class _RoomDiscoveryPageCompleteState extends ConsumerState<RoomDiscoveryPageCom
                       color: Colors.red,
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Row(
-                      children: const [
+                    child: const Row(
+                      children: [
                         Icon(Icons.fiber_manual_record, size: 8, color: Colors.white),
                         SizedBox(width: 4),
                         Text(

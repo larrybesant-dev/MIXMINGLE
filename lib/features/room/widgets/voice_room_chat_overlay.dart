@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/chat_message.dart';
 import 'package:mixmingle/features/room/providers/room_subcollection_providers.dart';
@@ -111,9 +111,9 @@ class _VoiceRoomChatOverlayState extends ConsumerState<VoiceRoomChatOverlay> wit
           child: Column(
             children: [
               // Header
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: const Text(
+              const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
                   'Chat',
                   style: TextStyle(
                     color: Colors.white,

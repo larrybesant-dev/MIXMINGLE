@@ -9,7 +9,7 @@ import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/design_system/design_constants.dart';
 import '../../../shared/widgets/club_background.dart';
 import '../../../shared/widgets/neon_components.dart';
-import '../../../providers/auth_providers.dart';
+import '../../../shared/providers/auth_providers.dart';
 
 /// Chats List - All conversations
 class ChatsListPage extends ConsumerWidget {
@@ -29,7 +29,7 @@ class ChatsListPage extends ConsumerWidget {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: NeonText(
+          title: const NeonText(
             'MESSAGES',
             fontSize: 24,
             fontWeight: FontWeight.w900,

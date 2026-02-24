@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../models/agora_participant.dart';
 
 /// Stage Layout â€” Spotlight + Thumbnails

@@ -1,4 +1,4 @@
-﻿/// Room Card Widget
+/// Room Card Widget
 ///
 /// Displays a room in room discovery with:
 /// - Room name
@@ -33,14 +33,19 @@ class RoomCardWidget extends StatefulWidget {
   /// Room energy level (0.0-10.0)
   final double energy;
 
+
   /// Callback when card is tapped
   final VoidCallback onTap;
+
+  /// Whether the room is currently live (shows pulsing LIVE badge)
+  final bool isLive;
 
   const RoomCardWidget({
     required this.roomName,
     required this.participantCount,
     required this.energy,
     required this.onTap,
+    this.isLive = true,
     super.key,
   });
 
@@ -49,7 +54,7 @@ class RoomCardWidget extends StatefulWidget {
 }
 
 class _RoomCardWidgetState extends State<RoomCardWidget>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _hoverController;
   late AnimationController _energyPulseController;
   bool _hovering = false;
@@ -70,7 +75,7 @@ class _RoomCardWidgetState extends State<RoomCardWidget>
     // Energy pulse animation
     _energyPulseController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 800),
     )..repeat(reverse: true);
   }
 
@@ -107,7 +112,7 @@ class _RoomCardWidgetState extends State<RoomCardWidget>
           ),
           child: Container(
             // âœ… Use DesignSpacing
-            padding: EdgeInsets.all(DesignSpacing.lg),
+            padding: const EdgeInsets.all(DesignSpacing.lg),
 
             // âœ… Use DesignBorders, DesignShadows, DesignColors
             decoration: BoxDecoration(
@@ -126,6 +131,62 @@ class _RoomCardWidgetState extends State<RoomCardWidget>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
+                // LIVE badge (pulsing, shown when isLive == true)
+                if (widget.isLive)
+                  AnimatedBuilder(
+                    animation: _energyPulseController,
+                    builder: (context, child) {
+                      final glowAlpha = 0.3 +
+                          (_energyPulseController.value * 0.5);
+                      return Container(
+                        margin: const EdgeInsets.only(bottom: 10),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFCC2200)
+                              .withValues(alpha: 0.18),
+                          border: Border.all(
+                            color: const Color(0xFFFF3B1A)
+                                .withValues(alpha: glowAlpha),
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFFF3B1A)
+                                  .withValues(alpha: glowAlpha * 0.5),
+                              blurRadius: 8,
+                              spreadRadius: 0,
+                            ),
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFFF5533),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            const Text(
+                              'LIVE',
+                              style: TextStyle(
+                                color: Color(0xFFFF5533),
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 1.0,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+
                 // Room name (âœ… DesignTypography.heading)
                 Text(
                   widget.roomName,
@@ -133,7 +194,7 @@ class _RoomCardWidgetState extends State<RoomCardWidget>
                   overflow: TextOverflow.ellipsis,
                 ),
 
-                SizedBox(height: DesignSpacing.lg),
+                const SizedBox(height: DesignSpacing.lg),
 
                 // Footer: participant count + energy indicator
                 Row(
@@ -156,7 +217,7 @@ class _RoomCardWidgetState extends State<RoomCardWidget>
                         return Transform.scale(
                           scale: scale,
                           child: Container(
-                            padding: EdgeInsets.symmetric(
+                            padding: const EdgeInsets.symmetric(
                               horizontal: DesignSpacing.md,
                               vertical: DesignSpacing.sm,
                             ),

@@ -2,7 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
-import 'package:mixmingle/providers/providers.dart';
+import 'package:mixmingle/shared/providers/providers.dart';
 
 class LeaderboardsPage extends ConsumerStatefulWidget {
   const LeaderboardsPage({super.key});

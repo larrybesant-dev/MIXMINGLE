@@ -2,8 +2,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:mixmingle/shared/models/event.dart';
-import 'package:mixmingle/providers/events_controller.dart' hide eventProvider;
-import 'package:mixmingle/providers/event_dating_providers.dart'
+import 'package:mixmingle/shared/providers/events_controller.dart' hide eventProvider;
+import 'package:mixmingle/shared/providers/event_dating_providers.dart'
     hide eventsServiceProvider, attendingEventsProvider;
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
@@ -99,7 +99,7 @@ class _EventsPageState extends ConsumerState<EventsPage> with SingleTickerProvid
     return AsyncValueViewEnhanced<List<Event>>(
       value: eventsAsync,
       maxRetries: 3,
-      skeleton: SkeletonGrid(itemCount: 4, crossAxisCount: 2),
+      skeleton: const SkeletonGrid(itemCount: 4, crossAxisCount: 2),
       screenName: 'EventsPage',
       providerName: 'allEventsProvider',
       onRetry: () => ref.invalidate(allEventsProvider),
@@ -142,7 +142,7 @@ class _EventsPageState extends ConsumerState<EventsPage> with SingleTickerProvid
     return AsyncValueViewEnhanced(
       value: eventsAsync,
       maxRetries: 3,
-      skeleton: SkeletonList(itemCount: 4),
+      skeleton: const SkeletonList(itemCount: 4),
       screenName: 'EventsPage',
       providerName: 'myEventsProvider',
       onRetry: () => ref.invalidate(myEventsProvider),
@@ -189,7 +189,7 @@ class _EventsPageState extends ConsumerState<EventsPage> with SingleTickerProvid
     return AsyncValueViewEnhanced(
       value: eventsAsync,
       maxRetries: 3,
-      skeleton: SkeletonList(itemCount: 4),
+      skeleton: const SkeletonList(itemCount: 4),
       screenName: 'EventsPage',
       providerName: 'attendingEventsProvider',
       onRetry: () => ref.invalidate(attendingEventsProvider),

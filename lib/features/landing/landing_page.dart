@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixmingle/core/components/electric_button.dart';
@@ -849,10 +849,10 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                                       radius: 36,
                                       backgroundImage: _safeImageProvider(dj['avatarUrl']),
                                     )
-                                  : CircleAvatar(
+                                  : const CircleAvatar(
                                       radius: 36,
                                       backgroundColor: ElectricColors.surfaceMuted,
-                                      child: const Icon(Icons.person, size: 32, color: ElectricColors.onSurfacePrimary),
+                                      child: Icon(Icons.person, size: 32, color: ElectricColors.onSurfacePrimary),
                                     ),
                               const SizedBox(height: Spacing.sm),
                               Text(dj['name']!, style: textTheme.titleSmall, maxLines: 1, overflow: TextOverflow.ellipsis),

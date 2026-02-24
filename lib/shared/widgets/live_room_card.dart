@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/core/theme/colors.dart';
-import 'package:mixmingle/providers/user_providers.dart';
+import 'package:mixmingle/shared/providers/user_providers.dart';
 import '../models/room.dart';
 import 'glow_text.dart';
 

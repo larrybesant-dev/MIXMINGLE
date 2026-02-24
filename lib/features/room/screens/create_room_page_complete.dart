@@ -1,13 +1,13 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/room_providers.dart';
-import '../../providers/auth_providers.dart';
-import '../../shared/models/room.dart';
-import '../../shared/club_background.dart';
-import '../../shared/glow_text.dart';
-import '../../shared/neon_button.dart';
-import '../../shared/auth_guard.dart';
-import '../room/screens/voice_room_page.dart';
+import '../../../shared/providers/room_providers.dart';
+import '../../../shared/providers/auth_providers.dart';
+import '../../../shared/models/room.dart';
+import '../../../shared/club_background.dart';
+import '../../../shared/glow_text.dart';
+import '../../../shared/neon_button.dart';
+import 'package:firebase_auth/firebase_auth.dart' as fb_auth_room;
+import '../room_access_wrapper.dart';
 
 /// Complete Create Room Page
 class CreateRoomPageComplete extends ConsumerStatefulWidget {
@@ -62,7 +62,10 @@ class _CreateRoomPageCompleteState extends ConsumerState<CreateRoomPageComplete>
         // Navigate to the newly created room
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => AuthGuard(child: VoiceRoomPage(room: room)),
+            builder: (context) => RoomAccessWrapper(
+            room: room,
+            userId: fb_auth_room.FirebaseAuth.instance.currentUser?.uid ?? '',
+          ),
           ),
         );
       }

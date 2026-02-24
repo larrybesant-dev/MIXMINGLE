@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/design_system/design_constants.dart';
 
 class RoomHeader extends StatelessWidget {
@@ -70,7 +70,7 @@ class RoomHeader extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
 
-                    SizedBox(height: DesignSpacing.xs),
+                    const SizedBox(height: DesignSpacing.xs),
 
                     // Room details
                     Row(
@@ -85,7 +85,7 @@ class RoomHeader extends StatelessWidget {
 
                         // Separator
                         Container(
-                          margin: EdgeInsets.symmetric(horizontal: DesignSpacing.sm),
+                          margin: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm),
                           width: 4,
                           height: 4,
                           decoration: BoxDecoration(
@@ -96,12 +96,12 @@ class RoomHeader extends StatelessWidget {
 
                         // Host indicator
                         if (isHost) ...[
-                          Icon(
+                          const Icon(
                             Icons.star,
                             size: 14,
                             color: DesignColors.gold,
                           ),
-                          SizedBox(width: DesignSpacing.xs),
+                          const SizedBox(width: DesignSpacing.xs),
                           Text(
                             'Host',
                             style: DesignTypography.caption.copyWith(
@@ -130,7 +130,7 @@ class RoomHeader extends StatelessWidget {
                   // Invite button
                   if (onInvite != null)
                     IconButton(
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.person_add,
                         color: DesignColors.accent,
                         size: 20,
@@ -142,7 +142,7 @@ class RoomHeader extends StatelessWidget {
                   // Settings button
                   if (onSettings != null)
                     IconButton(
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.settings,
                         color: DesignColors.textSecondary,
                         size: 20,
@@ -153,18 +153,18 @@ class RoomHeader extends StatelessWidget {
 
                   // Leave button
                   Container(
-                    margin: EdgeInsets.only(left: DesignSpacing.sm),
+                    margin: const EdgeInsets.only(left: DesignSpacing.sm),
                     child: ElevatedButton.icon(
                       onPressed: onLeave,
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.exit_to_app,
                         size: 16,
                       ),
-                      label: Text('Leave'),
+                      label: const Text('Leave'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: DesignColors.error,
                         foregroundColor: DesignColors.white,
-                        padding: EdgeInsets.symmetric(
+                        padding: const EdgeInsets.symmetric(
                           horizontal: DesignSpacing.md,
                           vertical: DesignSpacing.sm,
                         ),
@@ -179,14 +179,14 @@ class RoomHeader extends StatelessWidget {
             ],
           ),
 
-          SizedBox(height: DesignSpacing.md),
+          const SizedBox(height: DesignSpacing.md),
 
           // Bottom row with participant count and status
           Row(
             children: [
               // Participant count
               Container(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: DesignSpacing.md,
                   vertical: DesignSpacing.xs,
                 ),
@@ -200,12 +200,12 @@ class RoomHeader extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.people,
                       size: 16,
                       color: DesignColors.accent,
                     ),
-                    SizedBox(width: DesignSpacing.xs),
+                    const SizedBox(width: DesignSpacing.xs),
                     Text(
                       '$participantCount ${participantCount == 1 ? 'person' : 'people'}',
                       style: DesignTypography.caption.copyWith(
@@ -222,7 +222,7 @@ class RoomHeader extends StatelessWidget {
 
               // Room status
               Container(
-                padding: EdgeInsets.symmetric(
+                padding: const EdgeInsets.symmetric(
                   horizontal: DesignSpacing.md,
                   vertical: DesignSpacing.xs,
                 ),
@@ -239,12 +239,12 @@ class RoomHeader extends StatelessWidget {
                     Container(
                       width: 8,
                       height: 8,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: DesignColors.success,
                         shape: BoxShape.circle,
                       ),
                     ),
-                    SizedBox(width: DesignSpacing.xs),
+                    const SizedBox(width: DesignSpacing.xs),
                     Text(
                       'Live',
                       style: DesignTypography.caption.copyWith(

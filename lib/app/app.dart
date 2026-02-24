@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_routes.dart';
-import 'core/theme/neon_theme.dart';
+import '../core/theme/neon_theme.dart';
 
 class MixMingleApp extends StatelessWidget {
   const MixMingleApp({super.key});

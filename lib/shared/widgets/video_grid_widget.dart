@@ -22,10 +22,10 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/app_models.dart';
-import '../../providers/room_provider.dart';
-import '../../providers/ui_provider.dart';
-import '../constants/ui_constants.dart';
+import '../../shared/providers/app_models.dart';
+import '../../shared/providers/room_provider.dart';
+import '../../shared/providers/ui_provider.dart';
+import '../../core/constants/ui_constants.dart';
 import '../../core/design_system/design_constants.dart';
 import 'mini_profile_popup.dart';
 

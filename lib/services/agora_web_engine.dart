@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:async';
-import '../models/remote_user.dart';
+import '../shared/models/remote_user.dart';
 import 'video_engine_interface.dart';
 import 'package:flutter/foundation.dart';
 

@@ -1,7 +1,7 @@
-﻿// lib/widgets/remote_video_tile.dart
+// lib/widgets/remote_video_tile.dart
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:mixmingle/models/participant_model.dart';
+import 'package:mixmingle/shared/models/participant_model.dart';
 
 class RemoteVideoTile extends StatelessWidget {
   final ParticipantModel participant;

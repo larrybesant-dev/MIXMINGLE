@@ -1,9 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/responsive/responsive_utils.dart';
 import '../core/theme/enhanced_theme.dart';
 import '../core/animations/app_animations.dart';
-import '../app_routes.dart';
+import '../app/app_routes.dart';
 import '../shared/widgets/club_background.dart';
 import '../shared/widgets/glow_text.dart';
 
@@ -35,32 +35,32 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> with SingleTick
   late AnimationController _animationController;
 
   final List<OnboardingPageData> _pages = [
-    OnboardingPageData(
+    const OnboardingPageData(
       title: 'Welcome to Mix & Mingle',
       subtitle: 'Connect with amazing people through video chat',
       icon: Icons.waving_hand,
-      color: const Color(0xFF8F00FF),
+      color: Color(0xFF8F00FF),
       description: 'Join live conversations, make new friends, and discover exciting communities.',
     ),
-    OnboardingPageData(
+    const OnboardingPageData(
       title: 'Safe & Fun Environment',
       subtitle: 'Your safety is our priority',
       icon: Icons.security,
-      color: const Color(0xFF00E6FF),
+      color: Color(0xFF00E6FF),
       description: 'We use advanced moderation and community guidelines to keep everyone safe.',
     ),
-    OnboardingPageData(
+    const OnboardingPageData(
       title: 'Real-time Video Chat',
       subtitle: 'Experience seamless video conversations',
       icon: Icons.videocam,
-      color: const Color(0xFFFF006B),
+      color: Color(0xFFFF006B),
       description: 'High-quality video calls with friends and communities around the world.',
     ),
-    OnboardingPageData(
+    const OnboardingPageData(
       title: 'Discover & Connect',
       subtitle: 'Find your perfect match',
       icon: Icons.favorite,
-      color: const Color(0xFFFFB800),
+      color: Color(0xFFFFB800),
       description: 'Browse rooms, join conversations, and meet people with similar interests.',
     ),
   ];

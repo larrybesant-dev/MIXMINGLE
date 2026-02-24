@@ -22,7 +22,7 @@ class CameraState {
   final bool isSpotlighted;
   final DateTime startedAt;
 
-  // Paltalk-style metadata
+  // Broadcaster metadata
   final String userName;
   final String? userPhotoUrl;
   final bool isVIP;

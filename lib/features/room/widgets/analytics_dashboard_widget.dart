@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/features/voice_room/services/analytics_service.dart';
+import 'package:mixmingle/features/room/services/room_analytics_service.dart';
 
 /// Analytics & Statistics Dashboard Widget
 ///
@@ -44,11 +44,11 @@ class AnalyticsDashboardWidget extends ConsumerWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
+                const Row(
                   children: [
-                    Icon(Icons.analytics, color: const Color(0xFFFF4C4C), size: 24),
-                    const SizedBox(width: 8),
-                    const Text(
+                    Icon(Icons.analytics, color: Color(0xFFFF4C4C), size: 24),
+                    SizedBox(width: 8),
+                    Text(
                       'Analytics',
                       style: TextStyle(
                         color: Colors.white,

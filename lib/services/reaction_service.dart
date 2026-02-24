@@ -1,7 +1,7 @@
 // lib/services/reaction_service.dart
 
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/reaction_model.dart';
+import '../shared/models/reaction_model.dart';
 
 class ReactionService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

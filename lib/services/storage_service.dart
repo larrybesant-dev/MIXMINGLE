@@ -1,14 +1,22 @@
 ﻿import 'dart:io' show File;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 
 class StorageService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
   Future<String?> uploadImage(XFile image, String userId) async {
     try {
-      final ref = _storage.ref().child('users/$userId/images/${DateTime.now().millisecondsSinceEpoch}.jpg');
+      // Defensive guard: recover empty userId from live auth session
+      String resolvedId = userId;
+      if (resolvedId.isEmpty) {
+        resolvedId = FirebaseAuth.instance.currentUser?.uid ?? '';
+        debugPrint('⚠️ [StorageService] uploadImage called with empty userId — resolved to: $resolvedId');
+        if (resolvedId.isEmpty) throw Exception('Cannot upload image: userId is empty and user is not authenticated');
+      }
+      final ref = _storage.ref().child('users/$resolvedId/images/${DateTime.now().millisecondsSinceEpoch}.jpg');
 
       if (kIsWeb) {
         // For web, use bytes instead of file path
@@ -70,7 +78,13 @@ class StorageService {
   // Upload avatar with specific path
   Future<String?> uploadAvatar(XFile image, String userId) async {
     try {
-      final ref = _storage.ref().child('users/$userId/avatar.jpg');
+      String resolvedId = userId;
+      if (resolvedId.isEmpty) {
+        resolvedId = FirebaseAuth.instance.currentUser?.uid ?? '';
+        debugPrint('⚠️ [StorageService] uploadAvatar called with empty userId — resolved to: $resolvedId');
+        if (resolvedId.isEmpty) throw Exception('Cannot upload avatar: user not authenticated');
+      }
+      final ref = _storage.ref().child('users/$resolvedId/avatar.jpg');
 
       if (kIsWeb) {
         final bytes = await image.readAsBytes();
@@ -88,7 +102,13 @@ class StorageService {
   // Upload cover photo
   Future<String?> uploadCoverPhoto(XFile image, String userId) async {
     try {
-      final ref = _storage.ref().child('users/$userId/cover.jpg');
+      String resolvedId = userId;
+      if (resolvedId.isEmpty) {
+        resolvedId = FirebaseAuth.instance.currentUser?.uid ?? '';
+        debugPrint('⚠️ [StorageService] uploadCoverPhoto called with empty userId — resolved to: $resolvedId');
+        if (resolvedId.isEmpty) throw Exception('Cannot upload cover photo: user not authenticated');
+      }
+      final ref = _storage.ref().child('users/$resolvedId/cover.jpg');
 
       if (kIsWeb) {
         final bytes = await image.readAsBytes();
@@ -106,8 +126,14 @@ class StorageService {
   // Upload gallery photo
   Future<String?> uploadGalleryPhoto(XFile image, String userId) async {
     try {
+      String resolvedId = userId;
+      if (resolvedId.isEmpty) {
+        resolvedId = FirebaseAuth.instance.currentUser?.uid ?? '';
+        debugPrint('⚠️ [StorageService] uploadGalleryPhoto called with empty userId — resolved to: $resolvedId');
+        if (resolvedId.isEmpty) throw Exception('Cannot upload gallery photo: user not authenticated');
+      }
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final ref = _storage.ref().child('users/$userId/gallery/$timestamp.jpg');
+      final ref = _storage.ref().child('users/$resolvedId/gallery/$timestamp.jpg');
 
       if (kIsWeb) {
         final bytes = await image.readAsBytes();

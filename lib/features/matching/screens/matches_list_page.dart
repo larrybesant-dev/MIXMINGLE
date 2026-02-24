@@ -2,8 +2,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/core/responsive/responsive_utils.dart';
 import 'package:mixmingle/core/animations/app_animations.dart';
-import 'package:mixmingle/providers/all_providers.dart';
-import 'package:mixmingle/app_routes.dart';
+import 'package:mixmingle/shared/providers/all_providers.dart';
+import 'package:mixmingle/app/app_routes.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/shared/widgets/skeleton_loaders.dart';
@@ -73,7 +73,7 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
     return AsyncValueViewEnhanced(
       value: matchesAsync,
       maxRetries: 3,
-      skeleton: SkeletonGrid(itemCount: 6, crossAxisCount: 2),
+      skeleton: const SkeletonGrid(itemCount: 6, crossAxisCount: 2),
       screenName: 'MatchesPage',
       providerName: 'userMatchesProvider',
       onRetry: () => ref.invalidate(userMatchesProvider),
@@ -121,7 +121,7 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
     return AsyncValueViewEnhanced(
       value: likesAsync,
       maxRetries: 3,
-      skeleton: SkeletonList(itemCount: 5, showAvatar: true),
+      skeleton: const SkeletonList(itemCount: 5, showAvatar: true),
       screenName: 'MatchesPage',
       providerName: 'pendingMatchRequestsProvider',
       onRetry: () => ref.invalidate(pendingMatchRequestsProvider),

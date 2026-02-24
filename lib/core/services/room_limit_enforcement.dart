@@ -1,4 +1,4 @@
-﻿import '../../services/room_limit_manager.dart';
+import '../../services/room_limit_manager.dart';
 import '../feature_flags.dart';
 import '../utils/app_logger.dart';
 
@@ -140,7 +140,7 @@ class RoomLimitEnforcement {
   static Future<RoomCapacityInfo> getRoomCapacityInfo(String roomId) async {
     try {
       final count = await _limitManager.getPublisherCount(roomId);
-      final limit = FeatureFlags.maxConcurrentAgoraConnections;
+      const limit = FeatureFlags.maxConcurrentAgoraConnections;
       final available = await _limitManager.getAvailableSlots(roomId);
       final publishers = await _limitManager.getActivePublishers(roomId);
 

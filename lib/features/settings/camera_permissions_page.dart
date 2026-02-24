@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -103,7 +103,7 @@ class _MyPermissionsTab extends ConsumerWidget {
         }
 
         if (snapshot.hasError) {
-          return Center(
+          return const Center(
             child: Text(
               'Error loading permissions',
               style: TextStyle(color: Colors.red),
@@ -114,10 +114,10 @@ class _MyPermissionsTab extends ConsumerWidget {
         final permissions = snapshot.data ?? [];
 
         if (permissions.isEmpty) {
-          return Center(
+          return const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
+              children: [
                 Icon(
                   Icons.videocam_off,
                   size: 64,
@@ -196,9 +196,9 @@ class _MyPermissionCardState extends ConsumerState<_MyPermissionCard> {
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            CircleAvatar(
-              backgroundColor: const Color(0xFF4CAF50),
-              child: const Icon(Icons.videocam, color: Colors.white),
+            const CircleAvatar(
+              backgroundColor: Color(0xFF4CAF50),
+              child: Icon(Icons.videocam, color: Colors.white),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -214,9 +214,9 @@ class _MyPermissionCardState extends ConsumerState<_MyPermissionCard> {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
+                  const Text(
                     'You can view their camera',
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.white70,
                       fontSize: 13,
                     ),
@@ -225,7 +225,7 @@ class _MyPermissionCardState extends ConsumerState<_MyPermissionCard> {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.timer,
                           size: 14,
                           color: Colors.orange,
@@ -244,9 +244,9 @@ class _MyPermissionCardState extends ConsumerState<_MyPermissionCard> {
                 ],
               ),
             ),
-            Icon(
+            const Icon(
               Icons.check_circle,
-              color: const Color(0xFF4CAF50),
+              color: Color(0xFF4CAF50),
               size: 24,
             ),
           ],

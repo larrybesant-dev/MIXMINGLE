@@ -156,7 +156,7 @@ class PresenceService {
             return;
           }
 
-          final presence = UserPresence.fromMap(doc.data()!);
+          final presence = UserPresence.fromMap(userId, doc.data()!);
           if (!controller.isClosed) {
             controller.add(presence);
           }
@@ -240,7 +240,7 @@ class PresenceService {
         return snapshot.docs
             .map((doc) {
               try {
-                return UserPresence.fromMap(doc.data());
+                return UserPresence.fromMap(doc.id, doc.data());
               } catch (e) {
                 debugPrint('âš ï¸ Failed to parse presence for doc ${doc.id}: $e');
                 return null;

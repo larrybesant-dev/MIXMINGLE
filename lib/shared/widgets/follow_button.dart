@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/profile_controller.dart';
+import '../../shared/providers/profile_controller.dart';
 
 class FollowButton extends ConsumerStatefulWidget {
   final String currentUserId;

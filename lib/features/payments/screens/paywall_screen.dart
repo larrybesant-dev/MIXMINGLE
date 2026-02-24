@@ -1,4 +1,4 @@
-﻿/// Paywall Screen
+/// Paywall Screen
 ///
 /// Premium membership selection screen with Neon Club + VIP Lounge aesthetic.
 /// Features animated spotlight, gold trim, and neon glow effects.
@@ -186,7 +186,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                 width: 1,
               ),
             ),
-            child: Row(
+            child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
@@ -194,7 +194,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
                   color: DesignColors.gold,
                   size: 16,
                 ),
-                const SizedBox(width: 6),
+                SizedBox(width: 6),
                 Text(
                   'VIP LOUNGE',
                   style: TextStyle(
@@ -218,10 +218,10 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     return Column(
       children: [
         ShaderMask(
-          shaderCallback: (bounds) => LinearGradient(
+          shaderCallback: (bounds) => const LinearGradient(
             colors: [
               DesignColors.gold,
-              const Color(0xFFFF7A3C),
+              Color(0xFFFF7A3C),
               DesignColors.gold,
             ],
           ).createShader(bounds),
@@ -371,7 +371,7 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
+            const SizedBox(
               width: 48,
               height: 48,
               child: CircularProgressIndicator(
@@ -420,9 +420,9 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     if (mounted) {
       if (success) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Purchases restored successfully!'),
-            backgroundColor: const Color(0xFF00FF88),
+          const SnackBar(
+            content: Text('Purchases restored successfully!'),
+            backgroundColor: Color(0xFF00FF88),
           ),
         );
       } else {
@@ -461,11 +461,11 @@ class _PaywallBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
             DesignColors.background,
-            const Color(0xFF0D1520),
+            Color(0xFF0D1520),
             DesignColors.background,
           ],
           begin: Alignment.topCenter,

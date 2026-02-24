@@ -1,4 +1,4 @@
-﻿import '../models/publisher_state_model.dart';
+import '../../../shared/models/publisher_state_model.dart';
 
 class PublisherController {
   PublisherStateModel publisherState;

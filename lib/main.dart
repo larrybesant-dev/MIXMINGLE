@@ -6,8 +6,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart' as riverpod;
-import 'firebase_options.dart';
-import 'auth_gate_root.dart';
+import 'core/config/firebase_options.dart';
+import 'app/auth_gate_root.dart';
 import 'features/landing/landing_page.dart';
 import 'features/auth/screens/neon_login_page.dart';
 import 'features/auth/screens/neon_signup_page.dart';
@@ -20,6 +20,7 @@ import 'core/performance/performance_service.dart';
 import 'services/notification_service.dart';
 import 'services/agora_service.dart';
 import 'services/room_firestore_service.dart';
+import 'app/app_routes.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -194,9 +195,8 @@ class _AlwaysLandingApp extends StatelessWidget {
             // After login, go to the auth-protected app
             return MaterialPageRoute(builder: (_) => const RootAuthGate());
           default:
-            // Unknown routes go back to landing
-            debugPrint('🛑 [AlwaysLanding] Unknown route: ${settings.name}');
-            return MaterialPageRoute(builder: (_) => const LandingPage());
+            // Delegate all authenticated-app routes to the full AppRoutes table
+            return AppRoutes.generateRoute(settings);
         }
       },
     );

@@ -1,4 +1,4 @@
-﻿/// Coin Store Screen
+/// Coin Store Screen
 ///
 /// Coin purchase screen with neon styling and animated effects.
 /// Features coin rain animation on successful purchase.
@@ -154,10 +154,10 @@ class _CoinStoreScreenState extends ConsumerState<CoinStoreScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         ShaderMask(
-          shaderCallback: (bounds) => LinearGradient(
+          shaderCallback: (bounds) => const LinearGradient(
             colors: [
               DesignColors.gold,
-              const Color(0xFFFF7A3C),
+              Color(0xFFFF7A3C),
             ],
           ).createShader(bounds),
           child: const Text(
@@ -201,9 +201,9 @@ class _CoinStoreScreenState extends ConsumerState<CoinStoreScreen>
       ),
       child: Row(
         children: [
-          Icon(
+          const Icon(
             Icons.star,
-            color: const Color(0xFF9D4EDD),
+            color: Color(0xFF9D4EDD),
             size: 18,
           ),
           const SizedBox(width: 10),
@@ -255,10 +255,10 @@ class _CoinStoreScreenState extends ConsumerState<CoinStoreScreen>
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: BoxDecoration(
           gradient: canPurchase
-              ? LinearGradient(
+              ? const LinearGradient(
                   colors: [
                     DesignColors.gold,
-                    const Color(0xFFFF7A3C),
+                    Color(0xFFFF7A3C),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -323,7 +323,7 @@ class _CoinStoreScreenState extends ConsumerState<CoinStoreScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            SizedBox(
+            const SizedBox(
               width: 48,
               height: 48,
               child: CircularProgressIndicator(
@@ -399,11 +399,11 @@ class _CoinStoreBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [
             DesignColors.background,
-            const Color(0xFF0D1520),
+            Color(0xFF0D1520),
             DesignColors.background,
           ],
           begin: Alignment.topCenter,
@@ -635,7 +635,7 @@ class _TransactionHistorySheet extends ConsumerWidget {
             padding: const EdgeInsets.all(20),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.history,
                   color: DesignColors.gold,
                   size: 24,
@@ -661,7 +661,7 @@ class _TransactionHistorySheet extends ConsumerWidget {
           // Transactions list
           Expanded(
             child: historyAsync.when(
-              loading: () => Center(
+              loading: () => const Center(
                 child: CircularProgressIndicator(
                   valueColor: AlwaysStoppedAnimation<Color>(DesignColors.gold),
                 ),

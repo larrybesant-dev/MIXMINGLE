@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/providers/providers.dart';
+import 'package:mixmingle/shared/providers/providers.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 
 /// Authentication guard widget that checks if user is logged in
@@ -57,8 +57,8 @@ class AuthGuard extends ConsumerWidget {
   }
 
   Widget _buildLoadingWidget() {
-    return ClubBackground(
-      child: const Scaffold(
+    return const ClubBackground(
+      child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Center(
           child: Column(

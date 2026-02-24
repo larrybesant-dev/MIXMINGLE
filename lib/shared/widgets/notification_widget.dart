@@ -1,11 +1,11 @@
-
+﻿
 // Enhanced Notification Widget - Display app notifications with actions and animations
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/app_models.dart';
+import '../../shared/providers/app_models.dart';
 import '../../core/design_system/design_constants.dart';
-import '../../providers/notification_provider.dart';
+import '../../shared/providers/notification_provider.dart';
 
 class NotificationWidget extends ConsumerStatefulWidget {
   final AppNotification notification;

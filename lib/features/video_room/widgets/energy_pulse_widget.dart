@@ -1,4 +1,4 @@
-﻿/// Energy Pulse Widget
+/// Energy Pulse Widget
 ///
 /// Reusable widget to visualize room energy level with animated pulse.
 ///
@@ -65,7 +65,7 @@ class _EnergyPulseWidgetState extends State<EnergyPulseWidget>
     // Scale animation for intensity (slower, continuous)
     _scaleController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
   }
 

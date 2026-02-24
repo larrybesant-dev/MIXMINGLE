@@ -1,9 +1,9 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/room_video_state_model.dart';
-import '../models/participant.dart';
-import '../models/user_presence.dart';
-import '../models/publisher_state_model.dart';
+import '../shared/models/room_video_state_model.dart';
+import '../shared/models/participant.dart';
+import '../shared/models/user_presence.dart';
+import '../shared/models/publisher_state_model.dart';
 
 typedef ParticipantsCallback = void Function(List<Participant>);
 typedef VideoStateCallback = void Function(RoomVideoStateModel);

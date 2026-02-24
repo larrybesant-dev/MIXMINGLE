@@ -4,8 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:mixmingle/shared/models/event.dart';
-import 'package:mixmingle/providers/events_controller.dart';
-import 'package:mixmingle/providers/providers.dart';
+import 'package:mixmingle/shared/providers/events_controller.dart';
+import 'package:mixmingle/shared/providers/providers.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/validation.dart';
 

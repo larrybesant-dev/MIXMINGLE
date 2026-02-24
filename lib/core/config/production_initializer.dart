@@ -3,8 +3,8 @@ import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'environment_config.dart';
-import '../core/utils/app_logger.dart';
-import '../services/error_tracking_service.dart';
+import '../utils/app_logger.dart';
+import '../../services/error_tracking_service.dart';
 
 /// Production initialization for MixMingle app
 class ProductionInitializer {

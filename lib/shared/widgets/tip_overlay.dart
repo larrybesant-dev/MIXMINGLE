@@ -1,4 +1,4 @@
-/// Tip Overlay Widget
+﻿/// Tip Overlay Widget
 ///
 /// Floating action button for quick tipping in video/voice rooms.
 /// Provides a one-tap way to send gifts to the room host or participants.
@@ -7,7 +7,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design_system/design_constants.dart';
-import '../../../providers/providers.dart';
+import '../../../shared/providers/providers.dart';
 import '../../../shared/widgets/gift_selector.dart';
 
 /// Floating tip overlay button for rooms

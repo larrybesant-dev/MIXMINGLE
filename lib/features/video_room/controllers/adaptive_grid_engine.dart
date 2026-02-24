@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
-import '../controllers/video_window_controller.dart';
-import '../models/window_state_model.dart';
+import 'package:flutter/material.dart';
+import 'video_window_controller.dart';
+import '../../../shared/models/window_state_model.dart';
 
 class AdaptiveGridEngine {
   static const double minTileWidth = 200;
@@ -25,7 +25,7 @@ class AdaptiveGridEngine {
 
       // Calculate aspect ratio score (prefer closer to 16:9)
       final aspectRatio = tileWidth / tileHeight;
-      final targetRatio = 16 / 9;
+      const targetRatio = 16 / 9;
       final ratioScore = (aspectRatio - targetRatio).abs();
 
       // Calculate wasted space score

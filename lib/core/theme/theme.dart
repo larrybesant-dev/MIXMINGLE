@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'colors.dart';
 import 'text_styles.dart';
@@ -141,11 +141,11 @@ final ThemeData mixMingleTheme = ThemeData.dark().copyWith(
         width: 2,
       ),
     ),
-    labelStyle: TextStyle(
+    labelStyle: const TextStyle(
       color: ClubColors.textSecondary,
       fontSize: 14,
     ),
-    hintStyle: TextStyle(
+    hintStyle: const TextStyle(
       color: ClubColors.textHint,
       fontSize: 14,
     ),
@@ -167,11 +167,11 @@ final ThemeData mixMingleTheme = ThemeData.dark().copyWith(
   ),
 
   // Bottom sheet theme
-  bottomSheetTheme: BottomSheetThemeData(
+  bottomSheetTheme: const BottomSheetThemeData(
     backgroundColor: ClubColors.cardBackground,
     modalBackgroundColor: ClubColors.cardBackground,
     elevation: 16,
-    shape: const RoundedRectangleBorder(
+    shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
     ),
   ),

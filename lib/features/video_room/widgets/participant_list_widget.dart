@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../../core/design_system/design_constants.dart';
-import '../../../models/participant.dart';
+import '../../../shared/models/participant.dart';
 
 class ParticipantListWidget extends StatelessWidget {
   final List<Participant> participants;
@@ -25,7 +25,7 @@ class ParticipantListWidget extends StatelessWidget {
     }
 
     return Container(
-      padding: EdgeInsets.all(DesignSpacing.md),
+      padding: const EdgeInsets.all(DesignSpacing.md),
       decoration: BoxDecoration(
         color: DesignColors.surface.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(16),
@@ -36,12 +36,12 @@ class ParticipantListWidget extends StatelessWidget {
           // Header
           Row(
             children: [
-              Icon(
+              const Icon(
                 Icons.people,
                 color: DesignColors.accent,
                 size: 20,
               ),
-              SizedBox(width: DesignSpacing.sm),
+              const SizedBox(width: DesignSpacing.sm),
               Text(
                 'Participants (${participants.length})',
                 style: DesignTypography.body.copyWith(
@@ -52,12 +52,12 @@ class ParticipantListWidget extends StatelessWidget {
             ],
           ),
 
-          SizedBox(height: DesignSpacing.md),
+          const SizedBox(height: DesignSpacing.md),
 
           // Participant list
           ListView.builder(
             shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
+            physics: const NeverScrollableScrollPhysics(),
             itemCount: participants.length,
             itemBuilder: (context, index) {
               final participant = participants[index];
@@ -71,26 +71,26 @@ class ParticipantListWidget extends StatelessWidget {
 
   Widget _buildEmptyState() {
     return Container(
-      padding: EdgeInsets.all(DesignSpacing.xl),
+      padding: const EdgeInsets.all(DesignSpacing.xl),
       decoration: BoxDecoration(
         color: DesignColors.surface.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
         children: [
-          Icon(
+          const Icon(
             Icons.people_outline,
             color: DesignColors.textSecondary,
             size: 48,
           ),
-          SizedBox(height: DesignSpacing.md),
+          const SizedBox(height: DesignSpacing.md),
           Text(
             'No participants yet',
             style: DesignTypography.body.copyWith(
               color: DesignColors.textSecondary,
             ),
           ),
-          SizedBox(height: DesignSpacing.sm),
+          const SizedBox(height: DesignSpacing.sm),
           Text(
             'Share the room link to invite others',
             style: DesignTypography.caption.copyWith(
@@ -110,8 +110,8 @@ class ParticipantListWidget extends StatelessWidget {
     final isSpeaking = participant.isSpeaking;
 
     return Container(
-      margin: EdgeInsets.only(bottom: DesignSpacing.sm),
-      padding: EdgeInsets.all(DesignSpacing.md),
+      margin: const EdgeInsets.only(bottom: DesignSpacing.sm),
+      padding: const EdgeInsets.all(DesignSpacing.md),
       decoration: BoxDecoration(
         color: isSpeaking
             ? DesignColors.accent.withValues(alpha: 0.1)
@@ -133,7 +133,7 @@ class ParticipantListWidget extends StatelessWidget {
             Container(
               width: 40,
               height: 40,
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
                     DesignColors.accent,
@@ -157,7 +157,7 @@ class ParticipantListWidget extends StatelessWidget {
               ),
             ),
 
-            SizedBox(width: DesignSpacing.md),
+            const SizedBox(width: DesignSpacing.md),
 
             // Participant info
             Expanded(
@@ -177,8 +177,8 @@ class ParticipantListWidget extends StatelessWidget {
 
                       // Host indicator
                       if (isHost) ...[
-                        SizedBox(width: DesignSpacing.xs),
-                        Icon(
+                        const SizedBox(width: DesignSpacing.xs),
+                        const Icon(
                           Icons.star,
                           size: 14,
                           color: DesignColors.gold,
@@ -187,7 +187,7 @@ class ParticipantListWidget extends StatelessWidget {
 
                       // Speaking indicator
                       if (isSpeaking) ...[
-                        SizedBox(width: DesignSpacing.xs),
+                        const SizedBox(width: DesignSpacing.xs),
                         Container(
                           width: 8,
                           height: 8,
@@ -219,7 +219,7 @@ class ParticipantListWidget extends StatelessWidget {
                             : DesignColors.textSecondary,
                       ),
 
-                      SizedBox(width: DesignSpacing.sm),
+                      const SizedBox(width: DesignSpacing.sm),
 
                       // Video status
                       Icon(
@@ -231,11 +231,11 @@ class ParticipantListWidget extends StatelessWidget {
                       ),
 
                       // Connection quality (placeholder)
-                      SizedBox(width: DesignSpacing.sm),
+                      const SizedBox(width: DesignSpacing.sm),
                       Container(
                         width: 8,
                         height: 8,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           color: DesignColors.success, // Could be dynamic based on connection
                           shape: BoxShape.circle,
                         ),
@@ -248,14 +248,14 @@ class ParticipantListWidget extends StatelessWidget {
 
             // Action menu
             IconButton(
-              icon: Icon(
+              icon: const Icon(
                 Icons.more_vert,
                 color: DesignColors.textSecondary,
                 size: 20,
               ),
               onPressed: () => _showParticipantMenu(participant),
               padding: EdgeInsets.zero,
-              constraints: BoxConstraints(minWidth: 32, minHeight: 32),
+              constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
             ),
           ],
         ),

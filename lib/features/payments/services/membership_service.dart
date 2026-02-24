@@ -1,4 +1,4 @@
-﻿/// Membership Service
+/// Membership Service
 ///
 /// Handles Firestore integration for membership and coin data.
 /// Syncs RevenueCat entitlements with Firestore user documents.

@@ -1,4 +1,4 @@
-﻿/// Friend Presence Monitoring Service
+/// Friend Presence Monitoring Service
 ///
 /// Tracks friend presence changes and triggers notifications
 /// Throttles updates to 10-15 seconds per design
@@ -8,7 +8,7 @@ library;
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/user_presence.dart';
+import '../shared/models/user_presence.dart';
 import '../core/utils/app_logger.dart';
 import 'fcm_notification_service.dart';
 

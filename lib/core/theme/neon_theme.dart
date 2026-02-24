@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class NeonTheme {
   static const Color primary = Colors.blueAccent;
@@ -12,12 +12,12 @@ class NeonTheme {
       brightness: Brightness.dark,
       primaryColor: primary,
       scaffoldBackgroundColor: background,
-      colorScheme: ColorScheme.dark(
+      colorScheme: const ColorScheme.dark(
         primary: primary,
         secondary: accent,
-        surface: const Color(0xFF1a1a1a),
+        surface: Color(0xFF1a1a1a),
       ),
-      appBarTheme: AppBarTheme(
+      appBarTheme: const AppBarTheme(
         backgroundColor: background,
         elevation: 0,
         centerTitle: true,

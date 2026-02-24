@@ -1,4 +1,4 @@
-﻿/// Internationalization (i18n) Service
+/// Internationalization (i18n) Service
 ///
 /// Handles language detection, locale management, dynamic translation loading,
 /// and localized content formatting for global users.
@@ -159,7 +159,7 @@ class I18nService extends ChangeNotifier {
 
   // Current state
   String _currentLocale = 'en';
-  Map<String, Map<String, dynamic>> _translations = {};
+  final Map<String, Map<String, dynamic>> _translations = {};
   bool _isInitialized = false;
 
   // Streams

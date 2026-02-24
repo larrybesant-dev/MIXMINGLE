@@ -1,7 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../providers/events_providers.dart';
-import '../../../providers/auth_providers.dart';
+import '../../../shared/providers/events_providers.dart';
+import '../../../shared/providers/auth_providers.dart';
 import '../../../shared/widgets/events_widgets.dart';
 import '../../../shared/widgets/club_background.dart';
 

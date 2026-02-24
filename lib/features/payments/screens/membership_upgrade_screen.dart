@@ -10,6 +10,7 @@ import '../models/membership_tier.dart';
 import '../services/revenuecat_service.dart';
 import '../services/membership_service.dart';
 import '../../../core/theme/neon_colors.dart';
+import '../../../core/design_system/design_constants.dart';
 import '../../../shared/widgets/neon_components.dart';
 import '../../../shared/widgets/club_background.dart';
 
@@ -54,11 +55,11 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
     final currentTier = MembershipService.instance.currentTier;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: DesignColors.background,
       body: Stack(
         children: [
           // Background
-          ClubBackground(child: const SizedBox.expand()),
+          const ClubBackground(child: SizedBox.expand()),
 
           // Content
           SafeArea(
@@ -151,7 +152,7 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
   }
 
   Widget _buildTitle() {
-    return NeonText(
+    return const NeonText(
       'Unlock Premium Features',
       fontSize: 32,
       fontWeight: FontWeight.bold,
@@ -204,7 +205,7 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
     return GestureDetector(
       onTap: isCurrent ? null : onTap,
       child: NeonGlowCard(
-        glowColor: isSelected ? tier.primaryColor : NeonColors.neonBlue.withAlpha(51),
+        glowColor: isSelected ? tier.primaryColor : DesignColors.accent.withValues(alpha: 0.2),
         borderRadius: 20,
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -240,7 +241,7 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
                     children: [
                       Text(
                         tier.displayName,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
@@ -419,7 +420,7 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
 
   Widget _buildLoadingOverlay() {
     return Container(
-      color: Colors.black.withAlpha(179),
+      color: DesignColors.background.withValues(alpha: 0.88),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -428,7 +429,7 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
               valueColor: AlwaysStoppedAnimation(_selectedTier.primaryColor),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'Processing purchase...',
               style: TextStyle(
                 color: Colors.white,

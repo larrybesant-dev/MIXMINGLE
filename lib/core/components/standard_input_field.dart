@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../theme/colors_v2.dart';
 import '../theme/typography_v2.dart';
 import '../theme/spacing.dart';
@@ -70,7 +70,7 @@ class StandardInputField extends StatelessWidget {
 
     final baseBorder = OutlineInputBorder(
       borderRadius: BorderRadius.circular(12),
-      borderSide: BorderSide(color: ElectricColors.glassBorder, width: 1),
+      borderSide: const BorderSide(color: ElectricColors.glassBorder, width: 1),
     );
 
     return TextField(
@@ -106,15 +106,15 @@ class StandardInputField extends StatelessWidget {
         enabledBorder: baseBorder,
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: ElectricColors.electricCyan, width: 1.6),
+          borderSide: const BorderSide(color: ElectricColors.electricCyan, width: 1.6),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: ElectricColors.error, width: 1.4),
+          borderSide: const BorderSide(color: ElectricColors.error, width: 1.4),
         ),
         focusedErrorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: ElectricColors.error, width: 1.6),
+          borderSide: const BorderSide(color: ElectricColors.error, width: 1.6),
         ),
       ),
     );

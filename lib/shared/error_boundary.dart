@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/utils/app_logger.dart';
 import '../core/providers/connectivity_provider.dart';
@@ -187,7 +187,7 @@ class ErrorHandler {
     }
 
     // Show user-friendly error message
-    String message = _getErrorMessage(error);
+    final String message = _getErrorMessage(error);
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -8,7 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design_system/design_constants.dart';
 import '../../shared/widgets/club_background.dart';
 import '../../shared/widgets/neon_components.dart';
-import '../../providers/all_providers.dart';
+import '../../shared/providers/all_providers.dart';
+import '../events/screens/events_page.dart';
 
 /// Home Page with Electric theme - main post-onboarding landing
 class HomePageElectric extends ConsumerStatefulWidget {
@@ -38,6 +39,11 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       label: 'Rooms',
     ),
     NavigationDestination(
+      icon: Icon(Icons.event_outlined),
+      selectedIcon: Icon(Icons.event),
+      label: 'Events',
+    ),
+    NavigationDestination(
       icon: Icon(Icons.chat_bubble_outline),
       selectedIcon: Icon(Icons.chat_bubble),
       label: 'Chats',
@@ -55,7 +61,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: NeonText(
+          title: const NeonText(
             'MIX & MINGLE',
             fontSize: 24,
             fontWeight: FontWeight.w900,
@@ -69,7 +75,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
             IconButton(
               icon: const Icon(Icons.notifications_outlined),
               onPressed: () {
-                // TODO: Navigate to notifications
+                Navigator.pushNamed(context, '/notifications');
               },
             ),
             // Settings icon
@@ -104,8 +110,10 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       case 2:
         return _buildRoomsTab();
       case 3:
-        return _buildChatsTab();
+        return _buildEventsTab();
       case 4:
+        return _buildChatsTab();
+      case 5:
         return _buildProfileTab();
       default:
         return _buildHomeTab();
@@ -220,10 +228,10 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           child: NeonGlowCard(
             glowColor: DesignColors.gold,
             onTap: () {
-              debugPrint('ðŸ”˜ Speed Dating button pressed');
-              Navigator.pushNamed(context, '/speed-dating/lobby');
+              debugPrint('📘 Speed Dating button pressed');
+              Navigator.pushNamed(context, '/discover-rooms');
             },
-            child: Column(
+            child: const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
@@ -231,8 +239,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                   size: 40,
                   color: DesignColors.gold,
                 ),
-                const SizedBox(height: 8),
-                const Text(
+                SizedBox(height: 8),
+                Text(
                   'Speed Dating',
                   style: TextStyle(
                     color: DesignColors.white,
@@ -252,7 +260,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
               debugPrint('ðŸ”˜ Rooms button pressed');
               setState(() => _selectedIndex = 2);
             },
-            child: Column(
+            child: const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
@@ -260,8 +268,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                   size: 40,
                   color: DesignColors.accent,
                 ),
-                const SizedBox(height: 8),
-                const Text(
+                SizedBox(height: 8),
+                Text(
                   'Join Room',
                   style: TextStyle(
                     color: DesignColors.white,
@@ -371,13 +379,13 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
         child: Column(mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
+            const Icon(
               Icons.speed,
               size: 80,
               color: DesignColors.gold,
             ),
             const SizedBox(height: 20),
-            NeonText(
+            const NeonText(
               'SPEED DATING',
               fontSize: 32,
               fontWeight: FontWeight.w900,
@@ -394,7 +402,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
             NeonButton(
               label: 'START SPEED DATING',
               onPressed: () {
-                Navigator.pushNamed(context, '/speed-dating/lobby');
+                Navigator.pushNamed(context, '/discover-rooms');
               },
               glowColor: DesignColors.gold,
               height: 54,
@@ -419,13 +427,26 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           NeonButton(
             label: 'BROWSE ROOMS',
             onPressed: () {
-              Navigator.pushNamed(context, '/rooms');
+              Navigator.pushNamed(context, '/browse-rooms');
             },
             glowColor: DesignColors.accent,
+          ),
+          const SizedBox(height: 12),
+          NeonButton(
+            label: 'CREATE ROOM',
+            onPressed: () {
+              Navigator.pushNamed(context, '/create-room');
+            },
+            glowColor: DesignColors.secondary,
           ),
         ],
       ),
     );
+  }
+
+  /// Events Tab
+  Widget _buildEventsTab() {
+    return const EventsPage();
   }
 
   /// Chats Tab
