@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -44,7 +44,9 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
     final isTypingNow = _messageController.text.trim().isNotEmpty;
     if (_isTyping != isTypingNow) {
       setState(() => _isTyping = isTypingNow);
-      ref.read(chatActionsProvider).updateTypingStatus(widget.chatRoom.id, isTypingNow);
+      ref
+          .read(chatActionsProvider)
+          .updateTypingStatus(widget.chatRoom.id, isTypingNow);
     }
   }
 
@@ -56,7 +58,9 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
     setState(() => _isTyping = false);
 
     try {
-      await ref.read(chatActionsProvider).sendMessage(widget.chatRoom.id, content);
+      await ref
+          .read(chatActionsProvider)
+          .sendMessage(widget.chatRoom.id, content);
       _scrollToBottom();
     } catch (e) {
       if (mounted) {
@@ -82,7 +86,8 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
   @override
   Widget build(BuildContext context) {
     final currentUserId = ref.watch(currentUserProfileProvider).value?.id ?? '';
-    final otherUserId = widget.chatRoom.participants.firstWhere((id) => id != currentUserId);
+    final otherUserId =
+        widget.chatRoom.participants.firstWhere((id) => id != currentUserId);
     final otherUserAsync = ref.watch(userProfileProvider(otherUserId));
     final messagesAsync = ref.watch(messagesProvider(widget.chatRoom.id));
     final typingAsync = ref.watch(typingStatusProvider(widget.chatRoom.id));
@@ -94,7 +99,8 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
             children: [
               CircleAvatar(
                 radius: 16,
-                backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                backgroundColor:
+                    Theme.of(context).primaryColor.withValues(alpha: 0.1),
                 child: user?.photos.isNotEmpty == true
                     ? ClipOval(
                         child: Image.network(
@@ -102,10 +108,13 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
                           width: 32,
                           height: 32,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 16),
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(Icons.person, size: 16),
                         ),
                       )
-                    : Text(user?.displayName?.isNotEmpty == true ? user!.displayName![0].toUpperCase() : '?'),
+                    : Text(user?.displayName?.isNotEmpty == true
+                        ? user!.displayName![0].toUpperCase()
+                        : '?'),
               ),
               const SizedBox(width: 8),
               Text(user?.displayName ?? 'Unknown User'),
@@ -149,7 +158,8 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.chat_bubble_outline, size: 64, color: Colors.grey),
+                          Icon(Icons.chat_bubble_outline,
+                              size: 64, color: Colors.grey),
                           SizedBox(height: 16),
                           Text(
                             'No messages yet',
@@ -170,14 +180,20 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
                       itemBuilder: (context, index) {
                         final message = messages[index];
                         final isCurrentUser = message.senderId == currentUserId;
-                        final showTimestamp =
-                            index == 0 || messages[index - 1].timestamp.difference(message.timestamp).inMinutes > 5;
+                        final showTimestamp = index == 0 ||
+                            messages[index - 1]
+                                    .timestamp
+                                    .difference(message.timestamp)
+                                    .inMinutes >
+                                5;
 
                         return MessageBubble(
                           message: message,
                           isCurrentUser: isCurrentUser,
                           showTimestamp: showTimestamp,
-                          onDelete: isCurrentUser ? () => _showDeleteDialog(message) : null,
+                          onDelete: isCurrentUser
+                              ? () => _showDeleteDialog(message)
+                              : null,
                         );
                       },
                     ),
@@ -192,7 +208,8 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
           typingAsync.when(
             data: (isTyping) => isTyping
                 ? Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     alignment: Alignment.centerLeft,
                     child: Text(
                       'Typing...',
@@ -228,7 +245,8 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
                     decoration: const InputDecoration(
                       hintText: 'Type a message...',
                       border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      contentPadding:
+                          EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     ),
                     maxLines: null,
                     textInputAction: TextInputAction.send,
@@ -238,7 +256,9 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
                 const SizedBox(width: 8),
                 IconButton(
                   icon: const Icon(Icons.send),
-                  onPressed: _messageController.text.trim().isEmpty ? null : _sendMessage,
+                  onPressed: _messageController.text.trim().isEmpty
+                      ? null
+                      : _sendMessage,
                   color: Theme.of(context).primaryColor,
                 ),
               ],
@@ -333,7 +353,8 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
           final storageRef = FirebaseStorage.instance
               .ref()
               .child('chat_images')
-              .child('${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg');
+              .child(
+                  '${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg');
 
           await storageRef.putFile(File(image.path));
           final downloadUrl = await storageRef.getDownloadURL();
@@ -368,7 +389,8 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
           final storageRef = FirebaseStorage.instance
               .ref()
               .child('chat_files')
-              .child('${user.uid}_${DateTime.now().millisecondsSinceEpoch}_${result.files.single.name}');
+              .child(
+                  '${user.uid}_${DateTime.now().millisecondsSinceEpoch}_${result.files.single.name}');
 
           await storageRef.putFile(file);
           final downloadUrl = await storageRef.getDownloadURL();
@@ -402,7 +424,8 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
           final storageRef = FirebaseStorage.instance
               .ref()
               .child('chat_photos')
-              .child('${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg');
+              .child(
+                  '${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg');
 
           await storageRef.putFile(File(photo.path));
           final downloadUrl = await storageRef.getDownloadURL();
@@ -426,7 +449,8 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
   }
 
   void _showBlockUserDialog() {
-    final otherUserId = widget.chatRoom.participants.firstWhere((id) => id != FirebaseAuth.instance.currentUser?.uid);
+    final otherUserId = widget.chatRoom.participants
+        .firstWhere((id) => id != FirebaseAuth.instance.currentUser?.uid);
 
     showDialog(
       context: context,
@@ -478,7 +502,8 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
   }
 
   void _showReportUserDialog() {
-    final otherUserId = widget.chatRoom.participants.firstWhere((id) => id != FirebaseAuth.instance.currentUser?.uid);
+    final otherUserId = widget.chatRoom.participants
+        .firstWhere((id) => id != FirebaseAuth.instance.currentUser?.uid);
 
     ReportType selectedType = ReportType.spam;
     final reasonController = TextEditingController();
@@ -541,7 +566,8 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
                   return;
                 }
                 Navigator.pop(context);
-                await _reportUser(otherUserId, selectedType, reasonController.text.trim());
+                await _reportUser(
+                    otherUserId, selectedType, reasonController.text.trim());
               },
               style: TextButton.styleFrom(foregroundColor: Colors.orange),
               child: const Text('Report'),
@@ -552,7 +578,8 @@ class _ChatRoomPageState extends ConsumerState<ChatRoomPage> {
     );
   }
 
-  Future<void> _reportUser(String reportedUserId, ReportType type, String description) async {
+  Future<void> _reportUser(
+      String reportedUserId, ReportType type, String description) async {
     final currentUserId = FirebaseAuth.instance.currentUser?.uid;
     if (currentUserId == null) return;
 
@@ -619,7 +646,8 @@ class MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Column(
-        crossAxisAlignment: isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        crossAxisAlignment:
+            isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
         children: [
           if (showTimestamp)
             Padding(
@@ -635,7 +663,8 @@ class MessageBubble extends StatelessWidget {
               ),
             ),
           Row(
-            mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+            mainAxisAlignment:
+                isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               if (!isCurrentUser) ...[
@@ -647,12 +676,16 @@ class MessageBubble extends StatelessWidget {
               ],
               Flexible(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isCurrentUser ? Theme.of(context).primaryColor : Theme.of(context).cardColor,
+                    color: isCurrentUser
+                        ? Theme.of(context).primaryColor
+                        : Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Theme.of(context).dividerColor.withValues(alpha: 0.2),
+                      color:
+                          Theme.of(context).dividerColor.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Column(
@@ -668,7 +701,8 @@ class MessageBubble extends StatelessWidget {
                               width: 200,
                               height: 200,
                               fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+                              errorBuilder: (context, error, stackTrace) =>
+                                  const Icon(Icons.broken_image),
                             ),
                           ),
                         ),

@@ -1,4 +1,4 @@
-﻿// App Models and Data Classes for Video Chat Features
+// App Models and Data Classes for Video Chat Features
 
 /// Friend user model
 class Friend {
@@ -204,7 +204,8 @@ class AppNotification {
   final String id;
   final String title;
   final String message;
-  final String type; // 'message', 'friend_request', 'group_invite', 'system_alert', 'video_call'
+  final String
+      type; // 'message', 'friend_request', 'group_invite', 'system_alert', 'video_call'
   final String? icon;
   final DateTime timestamp;
   final bool isRead;
@@ -213,7 +214,8 @@ class AppNotification {
   final String? senderId;
   final String? senderName;
   final String? senderAvatar;
-  final Map<String, dynamic>? metadata; // For storing additional data (roomId, groupId, etc)
+  final Map<String, dynamic>?
+      metadata; // For storing additional data (roomId, groupId, etc)
   final List<NotificationAction>? actions; // Action buttons
   final String? largeIcon;
   final String? imageUrl;
@@ -283,7 +285,8 @@ class AppNotification {
   }
 
   /// Create notification from FCM payload
-  factory AppNotification.fromFCMPayload(Map<String, dynamic> payload, {required String id}) {
+  factory AppNotification.fromFCMPayload(Map<String, dynamic> payload,
+      {required String id}) {
     return AppNotification(
       id: id,
       title: payload['title'] ?? 'Notification',
@@ -292,12 +295,16 @@ class AppNotification {
       senderId: payload['senderId'],
       senderName: payload['senderName'],
       senderAvatar: payload['senderAvatar'],
-      metadata: payload['metadata'] != null ? Map<String, dynamic>.from(payload['metadata'] as Map) : null,
+      metadata: payload['metadata'] != null
+          ? Map<String, dynamic>.from(payload['metadata'] as Map)
+          : null,
       timestamp: DateTime.now(),
       isRead: false,
       imageUrl: payload['imageUrl'],
       sound: payload['sound'],
-      priority: payload['priority'] != null ? int.tryParse(payload['priority'].toString()) : null,
+      priority: payload['priority'] != null
+          ? int.tryParse(payload['priority'].toString())
+          : null,
       tag: payload['tag'],
     );
   }
@@ -323,13 +330,14 @@ class AppNotification {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is AppNotification && other.id == id && other.message == message && other.type == type && other.isRead == isRead;
+    return other is AppNotification &&
+        other.id == id &&
+        other.message == message &&
+        other.type == type &&
+        other.isRead == isRead;
   }
 
   @override
-  int get hashCode => id.hashCode ^ type.hashCode ^ message.hashCode ^ isRead.hashCode;
+  int get hashCode =>
+      id.hashCode ^ type.hashCode ^ message.hashCode ^ isRead.hashCode;
 }
-
-
-
-

@@ -180,9 +180,12 @@ class RoomDiscoveryService {
           .where((doc) {
             final data = doc.data();
             final title = (data['title'] as String?)?.toLowerCase() ?? '';
-            final tags = List<String>.from(data['tags'] ?? []).map((tag) => tag.toLowerCase()).toList();
+            final tags = List<String>.from(data['tags'] ?? [])
+                .map((tag) => tag.toLowerCase())
+                .toList();
 
-            return title.contains(lowerKeyword) || tags.any((tag) => tag.contains(lowerKeyword));
+            return title.contains(lowerKeyword) ||
+                tags.any((tag) => tag.contains(lowerKeyword));
           })
           .take(limit)
           .toList();
@@ -214,7 +217,8 @@ class RoomDiscoveryService {
       }
 
       // Sort by count and return top tags
-      final sortedTags = tagCounts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+      final sortedTags = tagCounts.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
 
       return sortedTags.take(limit).map((e) => e.key).toList();
     } catch (e) {

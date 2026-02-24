@@ -266,8 +266,7 @@ void main() {
       });
 
       test('retrieving non-existent message returns empty', () async {
-        final retrieved =
-            mockFirestore.getMockData('messages', 'non-existent');
+        final retrieved = mockFirestore.getMockData('messages', 'non-existent');
 
         expect(retrieved, isEmpty);
       });
@@ -331,8 +330,7 @@ void main() {
         mockFirestore.setMockData('messages', 'msg-1', messageData);
 
         final retrieved = mockFirestore.getMockData('messages', 'msg-1');
-        final messageTime =
-            DateTime.parse(retrieved['timestamp'].toString());
+        final messageTime = DateTime.parse(retrieved['timestamp'].toString());
 
         expect(messageTime.year, equals(now.year));
         expect(messageTime.month, equals(now.month));

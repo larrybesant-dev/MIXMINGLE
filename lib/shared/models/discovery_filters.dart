@@ -1,6 +1,5 @@
 library;
 
-
 class DiscoveryFilters {
   final int minAge;
   final int maxAge;

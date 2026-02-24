@@ -2,7 +2,8 @@
 // Project: mix-and-mingle-v2
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kIsWeb, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
@@ -54,7 +55,8 @@ class DefaultFirebaseOptions {
   //  4. Run: flutterfire configure   (regenerates this file with the real iOS appId)
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4',
-    appId: '1:980846719834:web:a8981485ee574b25077963', // ← WRONG: replace with iOS appId
+    appId:
+        '1:980846719834:web:a8981485ee574b25077963', // ← WRONG: replace with iOS appId
     messagingSenderId: '980846719834',
     projectId: 'mix-and-mingle-v2',
     authDomain: 'mix-and-mingle-v2.firebaseapp.com',

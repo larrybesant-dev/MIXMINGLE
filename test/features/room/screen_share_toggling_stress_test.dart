@@ -7,7 +7,8 @@ import '../../helpers/token_expiry_harness.dart';
 void main() {
   group('Screen Share Toggling Stress', () {
     testWidgets('50 rapid screen-share toggles', (tester) async {
-      final harness = TogglingStressHarness(screenShareToggles: 50, logger: print);
+      final harness =
+          TogglingStressHarness(screenShareToggles: 50, logger: print);
       await harness.run(
         toggleMic: () async {},
         toggleCam: () async {},
@@ -19,8 +20,12 @@ void main() {
     });
 
     testWidgets('Screen-share toggles during reconnect loops', (tester) async {
-      final networkHarness = NetworkDegradationHarness(simulateDisconnect: true, reconnectLoops: 3, logger: print);
-      final harness = TogglingStressHarness(screenShareToggles: 20, networkHarness: networkHarness, logger: print);
+      final networkHarness = NetworkDegradationHarness(
+          simulateDisconnect: true, reconnectLoops: 3, logger: print);
+      final harness = TogglingStressHarness(
+          screenShareToggles: 20,
+          networkHarness: networkHarness,
+          logger: print);
       await harness.run(
         toggleMic: () async {},
         toggleCam: () async {},
@@ -32,8 +37,10 @@ void main() {
     });
 
     testWidgets('Screen-share toggles during token expiry', (tester) async {
-      final tokenHarness = TokenExpiryHarness(forceExpiry: true, duringSession: true, logger: print);
-      final harness = TogglingStressHarness(screenShareToggles: 20, tokenHarness: tokenHarness, logger: print);
+      final tokenHarness = TokenExpiryHarness(
+          forceExpiry: true, duringSession: true, logger: print);
+      final harness = TogglingStressHarness(
+          screenShareToggles: 20, tokenHarness: tokenHarness, logger: print);
       await harness.run(
         toggleMic: () async {},
         toggleCam: () async {},
@@ -44,9 +51,17 @@ void main() {
       expect(find.byType(Widget), findsOneWidget);
     });
 
-    testWidgets('Screen-share toggles during network degradation', (tester) async {
-      final networkHarness = NetworkDegradationHarness(packetLossRate: 0.2, minLatencyMs: 100, maxLatencyMs: 1000, logger: print);
-      final harness = TogglingStressHarness(screenShareToggles: 20, networkHarness: networkHarness, logger: print);
+    testWidgets('Screen-share toggles during network degradation',
+        (tester) async {
+      final networkHarness = NetworkDegradationHarness(
+          packetLossRate: 0.2,
+          minLatencyMs: 100,
+          maxLatencyMs: 1000,
+          logger: print);
+      final harness = TogglingStressHarness(
+          screenShareToggles: 20,
+          networkHarness: networkHarness,
+          logger: print);
       await harness.run(
         toggleMic: () async {},
         toggleCam: () async {},

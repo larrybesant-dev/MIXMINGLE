@@ -61,7 +61,9 @@ class MatchingExample extends ConsumerWidget {
               max: 100,
               divisions: 10,
               onChanged: (value) {
-                ref.read(matchFilterProvider.notifier).updateFilter(currentFilter.copyWith(minScore: value));
+                ref
+                    .read(matchFilterProvider.notifier)
+                    .updateFilter(currentFilter.copyWith(minScore: value));
               },
             ),
             Text('Max Distance: ${currentFilter.maxDistance.toInt()} miles'),
@@ -71,7 +73,9 @@ class MatchingExample extends ConsumerWidget {
               max: 100,
               divisions: 19,
               onChanged: (value) {
-                ref.read(matchFilterProvider.notifier).updateFilter(currentFilter.copyWith(maxDistance: value));
+                ref
+                    .read(matchFilterProvider.notifier)
+                    .updateFilter(currentFilter.copyWith(maxDistance: value));
               },
             ),
           ],
@@ -109,8 +113,12 @@ class _MatchCard extends ConsumerWidget {
                 children: [
                   CircleAvatar(
                     radius: 30,
-                    backgroundImage: match.userPhotoUrl != null ? NetworkImage(match.userPhotoUrl!) : null,
-                    child: match.userPhotoUrl == null ? Text(match.userName[0]) : null,
+                    backgroundImage: match.userPhotoUrl != null
+                        ? NetworkImage(match.userPhotoUrl!)
+                        : null,
+                    child: match.userPhotoUrl == null
+                        ? Text(match.userName[0])
+                        : null,
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -149,7 +157,8 @@ class _MatchCard extends ConsumerWidget {
                     padding: const EdgeInsets.only(bottom: 4),
                     child: Row(
                       children: [
-                        const Icon(Icons.check_circle, size: 16, color: Colors.green),
+                        const Icon(Icons.check_circle,
+                            size: 16, color: Colors.green),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(

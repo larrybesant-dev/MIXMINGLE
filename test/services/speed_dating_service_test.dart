@@ -47,7 +47,8 @@ void main() {
       mockFirestore.addDocument('speedDatingRounds', 'round1', round);
 
       // Act
-      final roundData = mockFirestore.getDocument('speedDatingRounds', 'round1');
+      final roundData =
+          mockFirestore.getDocument('speedDatingRounds', 'round1');
       (roundData?['participants'] as List).add('user5');
       mockFirestore.updateDocument('speedDatingRounds', 'round1', roundData!);
 
@@ -85,7 +86,8 @@ void main() {
       mockFirestore.addDocument('speedDatingRounds', 'round1', round);
 
       // Act
-      final roundData = mockFirestore.getDocument('speedDatingRounds', 'round1');
+      final roundData =
+          mockFirestore.getDocument('speedDatingRounds', 'round1');
       roundData?['currentRound'] = (roundData['currentRound'] as int) + 1;
       mockFirestore.updateDocument('speedDatingRounds', 'round1', roundData!);
 
@@ -103,7 +105,8 @@ void main() {
       mockFirestore.addDocument('speedDatingRounds', 'round1', round);
 
       // Act
-      final roundData = mockFirestore.getDocument('speedDatingRounds', 'round1');
+      final roundData =
+          mockFirestore.getDocument('speedDatingRounds', 'round1');
       final shouldEnd = roundData?['currentRound'] >= roundData?['totalRounds'];
       if (shouldEnd) {
         roundData?['isActive'] = false;
@@ -155,9 +158,11 @@ void main() {
       // Act
       final results = mockFirestore.getCollection('speedDatingResults');
       final user1Result = results.firstWhere((r) => r['userId'] == 'user1');
-      final user2Result = results.firstWhere((r) => r['userId'] == 'user2' && r['matchedUserId'] == 'user1');
+      final user2Result = results.firstWhere(
+          (r) => r['userId'] == 'user2' && r['matchedUserId'] == 'user1');
 
-      final isMutual = user1Result['userLiked'] == true && user2Result['userLiked'] == true;
+      final isMutual =
+          user1Result['userLiked'] == true && user2Result['userLiked'] == true;
 
       // Assert
       expect(isMutual, true);

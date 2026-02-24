@@ -20,8 +20,7 @@ void main() {
         final mockFirestore = MockFirebaseFirestore();
 
         // Step 1: User logs in
-        final loginResult =
-            await mockAuth.signInWithEmailAndPassword(
+        final loginResult = await mockAuth.signInWithEmailAndPassword(
           email: 'user@example.com',
           password: 'password123',
         );
@@ -42,8 +41,7 @@ void main() {
         // Step 3: Verify user joined room
         final roomData = mockFirestore.getMockData('rooms', 'room-123');
         expect(
-          (roomData['participants'] as List)
-              .contains(loginResult.user!.uid),
+          (roomData['participants'] as List).contains(loginResult.user!.uid),
           isTrue,
         );
       });
@@ -54,8 +52,7 @@ void main() {
         final mockFirestore = MockFirebaseFirestore();
 
         // Step 1: Login
-        final loginResult =
-            await mockAuth.signInWithEmailAndPassword(
+        final loginResult = await mockAuth.signInWithEmailAndPassword(
           email: 'user@example.com',
           password: 'password123',
         );
@@ -84,8 +81,7 @@ void main() {
         );
 
         // Step 4: Verify message exists
-        final messageData =
-            mockFirestore.getMockData('messages', 'msg-1');
+        final messageData = mockFirestore.getMockData('messages', 'msg-1');
 
         expect(messageData['content'], equals('Hello everyone!'));
         expect(messageData.isNotEmpty, isTrue);
@@ -97,8 +93,7 @@ void main() {
         final mockFirestore = MockFirebaseFirestore();
 
         // Step 1: Login and join room
-        final loginResult =
-            await mockAuth.signInWithEmailAndPassword(
+        final loginResult = await mockAuth.signInWithEmailAndPassword(
           email: 'user@example.com',
           password: 'password123',
         );
@@ -112,25 +107,23 @@ void main() {
 
         // Verify user in room
         expect(
-          (mockFirestore.getMockData('rooms', 'room-123')[
-                  'participants'] as List)
+          (mockFirestore.getMockData('rooms', 'room-123')['participants']
+                  as List)
               .contains(loginResult.user!.uid),
           isTrue,
         );
 
         // Step 2: User leaves room
-        var participants =
-            List<String>.from(room['participants'] as List);
-        participants
-            .remove(loginResult.user!.uid);
+        var participants = List<String>.from(room['participants'] as List);
+        participants.remove(loginResult.user!.uid);
 
         room = {...room, 'participants': participants};
         mockFirestore.setMockData('rooms', 'room-123', room);
 
         // Step 3: Verify user left room
         expect(
-          (mockFirestore.getMockData('rooms', 'room-123')[
-                  'participants'] as List)
+          (mockFirestore.getMockData('rooms', 'room-123')['participants']
+                  as List)
               .contains(loginResult.user!.uid),
           isFalse,
         );
@@ -143,8 +136,7 @@ void main() {
     });
 
     group('Friend Request and Acceptance Flow', () {
-      test('user can add friend and messaging is enabled',
-          () async {
+      test('user can add friend and messaging is enabled', () async {
         // Setup
         final mockFirestore = MockFirebaseFirestore();
         const userId1 = 'user-1';
@@ -167,8 +159,7 @@ void main() {
 
         // Verify request created
         expect(
-          mockFirestore.getMockData('friendRequests', 'req-1')
-              ['status'],
+          mockFirestore.getMockData('friendRequests', 'req-1')['status'],
           equals('pending'),
         );
 
@@ -191,20 +182,22 @@ void main() {
           name: 'User 1',
         );
 
-        mockFirestore.setMockData('users/$userId1/friends', userId2,
-            user1Friend);
-        mockFirestore.setMockData('users/$userId2/friends', userId1,
-            user2Friend);
+        mockFirestore.setMockData(
+            'users/$userId1/friends', userId2, user1Friend);
+        mockFirestore.setMockData(
+            'users/$userId2/friends', userId1, user2Friend);
 
         // Step 4: Verify both are friends
         expect(
-          mockFirestore.getMockData('users/$userId1/friends', userId2)
+          mockFirestore
+              .getMockData('users/$userId1/friends', userId2)
               .isNotEmpty,
           isTrue,
         );
 
         expect(
-          mockFirestore.getMockData('users/$userId2/friends', userId1)
+          mockFirestore
+              .getMockData('users/$userId2/friends', userId1)
               .isNotEmpty,
           isTrue,
         );
@@ -229,8 +222,7 @@ void main() {
         expect(message['content'], isNotEmpty);
       });
 
-      test('can remove friend and conversation is archived',
-          () async {
+      test('can remove friend and conversation is archived', () async {
         // Setup
         final mockFirestore = MockFirebaseFirestore();
         const userId1 = 'user-1';
@@ -242,11 +234,11 @@ void main() {
           name: 'User 2',
         );
 
-        mockFirestore.setMockData('users/$userId1/friends', userId2,
-            friend);
+        mockFirestore.setMockData('users/$userId1/friends', userId2, friend);
 
         expect(
-          mockFirestore.getMockData('users/$userId1/friends', userId2)
+          mockFirestore
+              .getMockData('users/$userId1/friends', userId2)
               .isNotEmpty,
           isTrue,
         );
@@ -256,8 +248,7 @@ void main() {
 
         // Step 3: Verify friend removed
         expect(
-          mockFirestore.getMockData('users/$userId1/friends', userId2)
-              .isEmpty,
+          mockFirestore.getMockData('users/$userId1/friends', userId2).isEmpty,
           isTrue,
         );
 
@@ -287,8 +278,7 @@ void main() {
 
         // Verify archived
         expect(
-          mockFirestore.getMockData('conversations', 'conv-1')[
-              'isArchived'],
+          mockFirestore.getMockData('conversations', 'conv-1')['isArchived'],
           isTrue,
         );
       });
@@ -324,8 +314,7 @@ void main() {
 
         // Verify user is member
         expect(
-          (mockFirestore.getMockData('groups', groupId)['members']
-                  as List)
+          (mockFirestore.getMockData('groups', groupId)['members'] as List)
               .contains(userId),
           isTrue,
         );
@@ -375,8 +364,7 @@ void main() {
         mockFirestore.setMockData('groups', groupId, group);
 
         expect(
-          (mockFirestore.getMockData('groups', groupId)['members']
-                  as List)
+          (mockFirestore.getMockData('groups', groupId)['members'] as List)
               .contains(userId),
           isTrue,
         );
@@ -394,15 +382,13 @@ void main() {
 
         // Step 3: Verify user left
         expect(
-          (mockFirestore.getMockData('groups', groupId)['members']
-                  as List)
+          (mockFirestore.getMockData('groups', groupId)['members'] as List)
               .contains(userId),
           isFalse,
         );
       });
 
-      test('multiple users can send messages in group',
-          () async {
+      test('multiple users can send messages in group', () async {
         // Setup
         final mockFirestore = MockFirebaseFirestore();
         const groupId = 'group-1';
@@ -436,14 +422,14 @@ void main() {
 
         // Step 3: Verify both messages exist
         expect(
-          mockFirestore.getMockData('groups/$groupId/messages', 'msg-1')[
-              'content'],
+          mockFirestore.getMockData(
+              'groups/$groupId/messages', 'msg-1')['content'],
           equals('First message'),
         );
 
         expect(
-          mockFirestore.getMockData('groups/$groupId/messages', 'msg-2')[
-              'content'],
+          mockFirestore.getMockData(
+              'groups/$groupId/messages', 'msg-2')['content'],
           equals('Second message'),
         );
       });
@@ -464,8 +450,7 @@ void main() {
         }
       });
 
-      test('handles user leaving room during session',
-          () async {
+      test('handles user leaving room during session', () async {
         // Setup
         final mockFirestore = MockFirebaseFirestore();
         const userId = 'user-1';
@@ -479,15 +464,14 @@ void main() {
 
         // User is in room
         expect(
-          (mockFirestore.getMockData('rooms', 'room-123')[
-                  'participants'] as List)
+          (mockFirestore.getMockData('rooms', 'room-123')['participants']
+                  as List)
               .contains(userId),
           isTrue,
         );
 
         // User leaves (unexpected disconnect)
-        var participants =
-            List<String>.from(room['participants'] as List);
+        var participants = List<String>.from(room['participants'] as List);
         participants.remove(userId);
 
         room = {...room, 'participants': participants};
@@ -495,15 +479,14 @@ void main() {
 
         // System cleans up properly
         expect(
-          (mockFirestore.getMockData('rooms', 'room-123')[
-                  'participants'] as List)
+          (mockFirestore.getMockData('rooms', 'room-123')['participants']
+                  as List)
               .contains(userId),
           isFalse,
         );
       });
 
-      test('handles message send failure with retry',
-          () async {
+      test('handles message send failure with retry', () async {
         // Setup
         final mockFirestore = MockFirebaseFirestore();
         var failureCount = 0;
@@ -531,15 +514,13 @@ void main() {
     });
 
     group('Session Persistence', () {
-      test('session persists across multiple operations',
-          () async {
+      test('session persists across multiple operations', () async {
         // Setup
         final mockAuth = MockFirebaseAuth();
         final mockFirestore = MockFirebaseFirestore();
 
         // Step 1: Login
-        final loginResult =
-            await mockAuth.signInWithEmailAndPassword(
+        final loginResult = await mockAuth.signInWithEmailAndPassword(
           email: 'user@example.com',
           password: 'password123',
         );
@@ -562,8 +543,7 @@ void main() {
 
         // Step 4: Verify all operations succeeded
         for (int i = 0; i < 5; i++) {
-          final message =
-              mockFirestore.getMockData('messages', 'msg-$i');
+          final message = mockFirestore.getMockData('messages', 'msg-$i');
           expect(message.isNotEmpty, isTrue);
         }
       });

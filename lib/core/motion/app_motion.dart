@@ -16,29 +16,31 @@ class AppMotion {
   AppMotion._();
 
   // ── Durations ──────────────────────────────────────────────────
-  static const Duration fast   = Duration(milliseconds: 150);
+  static const Duration fast = Duration(milliseconds: 150);
   static const Duration normal = Duration(milliseconds: 250);
-  static const Duration slow   = Duration(milliseconds: 400);
-  static const Duration xSlow  = Duration(milliseconds: 600);
-  static const Duration glow   = Duration(milliseconds: 1800);
+  static const Duration slow = Duration(milliseconds: 400);
+  static const Duration xSlow = Duration(milliseconds: 600);
+  static const Duration glow = Duration(milliseconds: 1800);
 
   // Aliases kept for backward-compatibility with existing code that
   // references NeonAnimations.quickDuration / normalDuration etc.
-  static const Duration quickDuration    = fast;
-  static const Duration normalDuration   = normal;
-  static const Duration slowDuration     = slow;
+  static const Duration quickDuration = fast;
+  static const Duration normalDuration = normal;
+  static const Duration slowDuration = slow;
   static const Duration verySlowDuration = xSlow;
-  static const Duration glowDuration     = glow;
+  static const Duration glowDuration = glow;
 
   // ── Curves ────────────────────────────────────────────────────
   /// Use for element entrances.
-  static const Curve entrance  = Curves.easeOutCubic;
+  static const Curve entrance = Curves.easeOutCubic;
+
   /// Use for page / room transitions.
   static const Curve transition = Curves.easeInOutCubic;
+
   /// Use for oscillating glow / pulse loops.
-  static const Curve pulse     = Curves.easeInOut;
-  static const Curve snap      = Curves.decelerate;
-  static const Curve spring    = Curves.elasticOut;
+  static const Curve pulse = Curves.easeInOut;
+  static const Curve snap = Curves.decelerate;
+  static const Curve spring = Curves.elasticOut;
 
   // ── Fade ──────────────────────────────────────────────────────
   /// Fades [child] in from transparent.

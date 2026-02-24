@@ -81,7 +81,8 @@ class _MediaControlsWidgetState extends State<MediaControlsWidget>
             activeColor: DesignColors.accent,
             inactiveColor: DesignColors.error,
             onPressed: () => widget.onMicToggle?.call(!widget.isMicEnabled),
-            tooltip: widget.isMicEnabled ? 'Mute microphone' : 'Unmute microphone',
+            tooltip:
+                widget.isMicEnabled ? 'Mute microphone' : 'Unmute microphone',
           ),
 
           const SizedBox(width: DesignSpacing.md),
@@ -92,19 +93,24 @@ class _MediaControlsWidgetState extends State<MediaControlsWidget>
             isActive: widget.isCameraEnabled,
             activeColor: DesignColors.accent,
             inactiveColor: DesignColors.error,
-            onPressed: () => widget.onCameraToggle?.call(!widget.isCameraEnabled),
-            tooltip: widget.isCameraEnabled ? 'Turn off camera' : 'Turn on camera',
+            onPressed: () =>
+                widget.onCameraToggle?.call(!widget.isCameraEnabled),
+            tooltip:
+                widget.isCameraEnabled ? 'Turn off camera' : 'Turn on camera',
           ),
 
           const SizedBox(width: DesignSpacing.md),
 
           // Screen share control
           _buildControlButton(
-            icon: widget.isScreenSharing ? Icons.stop_screen_share : Icons.screen_share,
+            icon: widget.isScreenSharing
+                ? Icons.stop_screen_share
+                : Icons.screen_share,
             isActive: widget.isScreenSharing,
             activeColor: DesignColors.gold,
             inactiveColor: DesignColors.textSecondary,
-            onPressed: () => widget.onScreenShareToggle?.call(!widget.isScreenSharing),
+            onPressed: () =>
+                widget.onScreenShareToggle?.call(!widget.isScreenSharing),
             tooltip: widget.isScreenSharing ? 'Stop sharing' : 'Share screen',
           ),
 

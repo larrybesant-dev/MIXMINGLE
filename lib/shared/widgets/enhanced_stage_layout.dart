@@ -37,7 +37,8 @@ class EnhancedStageLayout extends StatefulWidget {
   State<EnhancedStageLayout> createState() => _EnhancedStageLayoutState();
 }
 
-class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTickerProviderStateMixin {
+class _EnhancedStageLayoutState extends State<EnhancedStageLayout>
+    with SingleTickerProviderStateMixin {
   late AnimationController _transitionController;
   late Animation<double> _spotlightFadeAnimation;
   late Animation<double> _spotlightScaleAnimation;
@@ -55,7 +56,8 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
     );
 
     _spotlightScaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
-      CurvedAnimation(parent: _transitionController, curve: Curves.easeOutCubic),
+      CurvedAnimation(
+          parent: _transitionController, curve: Curves.easeOutCubic),
     );
 
     _transitionController.forward();
@@ -79,7 +81,9 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
 
   @override
   Widget build(BuildContext context) {
-    final speaker = widget.speakerId != null ? widget.allParticipants[widget.speakerId] : null;
+    final speaker = widget.speakerId != null
+        ? widget.allParticipants[widget.speakerId]
+        : null;
 
     final listeners = widget.allParticipants.entries
         .where((entry) => entry.key != widget.speakerId)
@@ -97,7 +101,9 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
               flex: 65,
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: speaker != null ? _buildSpotlight(speaker) : _buildEmptySpotlight(),
+                child: speaker != null
+                    ? _buildSpotlight(speaker)
+                    : _buildEmptySpotlight(),
               ),
             ),
 
@@ -149,7 +155,9 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
             decoration: BoxDecoration(
               color: Colors.black,
               border: Border.all(
-                color: speaker.isSpeaking ? Colors.greenAccent : Colors.amber.shade700,
+                color: speaker.isSpeaking
+                    ? Colors.greenAccent
+                    : Colors.amber.shade700,
                 width: 3,
               ),
               borderRadius: BorderRadius.circular(16),
@@ -187,7 +195,9 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
                     color: Colors.grey[900],
                     child: Center(
                       child: Text(
-                        speaker.displayName.isNotEmpty ? speaker.displayName[0].toUpperCase() : '?',
+                        speaker.displayName.isNotEmpty
+                            ? speaker.displayName[0].toUpperCase()
+                            : '?',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 64,
@@ -240,7 +250,9 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
                           height: 8,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: speaker.isSpeaking ? Colors.greenAccent : Colors.grey,
+                            color: speaker.isSpeaking
+                                ? Colors.greenAccent
+                                : Colors.grey,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -292,7 +304,8 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
                                 size: 14,
                               ),
                             ),
-                          if (!speaker.hasAudio && !speaker.hasVideo) const SizedBox(width: 8),
+                          if (!speaker.hasAudio && !speaker.hasVideo)
+                            const SizedBox(width: 8),
                           if (!speaker.hasVideo)
                             Container(
                               padding: const EdgeInsets.all(6),
@@ -434,7 +447,9 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
         decoration: BoxDecoration(
           color: Colors.grey[900],
           border: Border.all(
-            color: participant.isSpeaking ? Colors.greenAccent : Colors.grey[800] ?? Colors.grey,
+            color: participant.isSpeaking
+                ? Colors.greenAccent
+                : Colors.grey[800] ?? Colors.grey,
             width: participant.isSpeaking ? 2 : 1,
           ),
           borderRadius: BorderRadius.circular(12),
@@ -474,7 +489,9 @@ class _EnhancedStageLayoutState extends State<EnhancedStageLayout> with SingleTi
                   color: Colors.grey[800],
                   child: Center(
                     child: Text(
-                      participant.displayName.isNotEmpty ? participant.displayName[0].toUpperCase() : '?',
+                      participant.displayName.isNotEmpty
+                          ? participant.displayName[0].toUpperCase()
+                          : '?',
                       style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 24,

@@ -30,7 +30,9 @@ class Activity {
         orElse: () => ActivityType.other,
       ),
       description: map['description'] ?? '',
-      timestamp: map['timestamp'] != null ? DateTime.parse(map['timestamp']) : DateTime.now(),
+      timestamp: map['timestamp'] != null
+          ? DateTime.parse(map['timestamp'])
+          : DateTime.now(),
       metadata: map['metadata'],
     );
   }

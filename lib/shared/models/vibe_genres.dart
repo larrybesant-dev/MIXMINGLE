@@ -18,14 +18,14 @@ class VibeTags {
 
   /// Neon accent color per vibe.
   static const Map<String, Color> colorMap = {
-    'Chill':      Color(0xFF00CFFF),  // cyan
-    'Hype':       Color(0xFFFF2D55),  // electric pink
-    'Deep Talk':  Color(0xFF8A2BE2),  // violet
-    'Romantic':   Color(0xFFFF6B6B),  // coral
-    'Creative':   Color(0xFFFFD700),  // gold
-    'Chaotic':    Color(0xFFFF8C00),  // orange
-    'Focused':    Color(0xFF00FF87),  // neon green
-    'Playful':    Color(0xFFFF69B4),  // hot pink
+    'Chill': Color(0xFF00CFFF), // cyan
+    'Hype': Color(0xFFFF2D55), // electric pink
+    'Deep Talk': Color(0xFF8A2BE2), // violet
+    'Romantic': Color(0xFFFF6B6B), // coral
+    'Creative': Color(0xFFFFD700), // gold
+    'Chaotic': Color(0xFFFF8C00), // orange
+    'Focused': Color(0xFF00FF87), // neon green
+    'Playful': Color(0xFFFF69B4), // hot pink
   };
 
   static Color colorFor(String? tag) =>
@@ -33,14 +33,14 @@ class VibeTags {
 
   /// Short emoji label shown alongside the tag chip.
   static const Map<String, String> emojiMap = {
-    'Chill':      '😌',
-    'Hype':       '🔥',
-    'Deep Talk':  '🧠',
-    'Romantic':   '💞',
-    'Creative':   '🎨',
-    'Chaotic':    '🌀',
-    'Focused':    '🎯',
-    'Playful':    '🎉',
+    'Chill': '😌',
+    'Hype': '🔥',
+    'Deep Talk': '🧠',
+    'Romantic': '💞',
+    'Creative': '🎨',
+    'Chaotic': '🌀',
+    'Focused': '🎯',
+    'Playful': '🎉',
   };
 
   static String emojiFor(String? tag) => emojiMap[tag] ?? '✨';

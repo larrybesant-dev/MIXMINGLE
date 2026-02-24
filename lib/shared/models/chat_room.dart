@@ -22,7 +22,9 @@ class ChatRoom {
       id: map['id'] as String? ?? '',
       participants: List<String>.from(map['participants'] ?? []),
       lastMessage: map['lastMessage'] as String? ?? '',
-      lastMessageTime: map['lastMessageTime'] != null ? (map['lastMessageTime'] as Timestamp).toDate() : DateTime.now(),
+      lastMessageTime: map['lastMessageTime'] != null
+          ? (map['lastMessageTime'] as Timestamp).toDate()
+          : DateTime.now(),
       unreadCounts: Map<String, int>.from(map['unreadCounts'] ?? {}),
       isTyping: map['isTyping'] as bool? ?? false,
     );
@@ -90,4 +92,3 @@ class ChatRoom {
     return 'ChatRoom(id: $id, participants: $participants, lastMessage: $lastMessage, lastMessageTime: $lastMessageTime, unreadCounts: $unreadCounts, isTyping: $isTyping)';
   }
 }
-

@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GroupChatRoom {
   final String id;
@@ -19,7 +19,8 @@ class GroupChatRoom {
     this.createdAt,
   });
 
-  factory GroupChatRoom.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
+  factory GroupChatRoom.fromDocument(
+      DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? <String, dynamic>{};
     return GroupChatRoom(
       id: doc.id,
@@ -39,9 +40,9 @@ class GroupChatRoom {
       'isLive': isLive,
       'agoraChannelId': agoraChannelId,
       'activeCount': activeCount,
-      'createdAt': createdAt != null ? Timestamp.fromDate(createdAt!) : FieldValue.serverTimestamp(),
+      'createdAt': createdAt != null
+          ? Timestamp.fromDate(createdAt!)
+          : FieldValue.serverTimestamp(),
     };
   }
 }
-
-

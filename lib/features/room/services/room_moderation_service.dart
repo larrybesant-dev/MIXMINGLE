@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/room_role.dart';
 import 'package:mixmingle/shared/models/room_event.dart';
@@ -69,10 +69,16 @@ class RoomModerationService {
     );
 
     // Add system message
-    final participantDoc =
-        await _firestore.collection('rooms').doc(roomId).collection('participants').doc(targetUserId).get();
+    final participantDoc = await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(targetUserId)
+        .get();
 
-    final targetName = participantDoc.exists ? (participantDoc.data()?['displayName'] as String? ?? 'User') : 'User';
+    final targetName = participantDoc.exists
+        ? (participantDoc.data()?['displayName'] as String? ?? 'User')
+        : 'User';
 
     await _repository.sendMessage(
       roomId: roomId,
@@ -98,10 +104,16 @@ class RoomModerationService {
     }
 
     // Get target name before removal
-    final participantDoc =
-        await _firestore.collection('rooms').doc(roomId).collection('participants').doc(targetUserId).get();
+    final participantDoc = await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(targetUserId)
+        .get();
 
-    final targetName = participantDoc.exists ? (participantDoc.data()?['displayName'] as String? ?? 'User') : 'User';
+    final targetName = participantDoc.exists
+        ? (participantDoc.data()?['displayName'] as String? ?? 'User')
+        : 'User';
 
     // Update participant role to banned (keeps record)
     await _repository.updateParticipant(
@@ -221,10 +233,16 @@ class RoomModerationService {
     }
 
     // Get current role
-    final participantDoc =
-        await _firestore.collection('rooms').doc(roomId).collection('participants').doc(targetUserId).get();
+    final participantDoc = await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(targetUserId)
+        .get();
 
-    final oldRole = participantDoc.exists ? (participantDoc.data()?['role'] as String? ?? 'member') : 'member';
+    final oldRole = participantDoc.exists
+        ? (participantDoc.data()?['role'] as String? ?? 'member')
+        : 'member';
 
     // Update participant role
     await _repository.updateParticipant(
@@ -263,8 +281,12 @@ class RoomModerationService {
     required String roomId,
     required String userId,
   }) async {
-    final participantDoc =
-        await _firestore.collection('rooms').doc(roomId).collection('participants').doc(userId).get();
+    final participantDoc = await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(userId)
+        .get();
 
     if (!participantDoc.exists) return false;
 
@@ -399,5 +421,3 @@ final bannedUsersProvider =
       .snapshots()
       .map((s) => s.docs.map((d) => d.id).toList());
 });
-
-

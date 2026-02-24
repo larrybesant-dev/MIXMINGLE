@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/room.dart';
 import '../providers/room_providers.dart';
@@ -122,7 +122,9 @@ class _CreateRoomExampleState extends ConsumerState<CreateRoomExample> {
             const SizedBox(height: 24),
             ElevatedButton(
               onPressed: createState.isLoading ? null : _createRoom,
-              child: createState.isLoading ? const CircularProgressIndicator() : const Text('Create Room'),
+              child: createState.isLoading
+                  ? const CircularProgressIndicator()
+                  : const Text('Create Room'),
             ),
             if (createState.hasError)
               Padding(

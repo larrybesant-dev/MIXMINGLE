@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:developer' as developer;
 
 /// Production-safe logging utilities
@@ -56,5 +56,3 @@ class DebugLog {
   /// Whether logging is enabled (depends on debug mode)
   static bool get isEnabled => kDebugMode;
 }
-
-

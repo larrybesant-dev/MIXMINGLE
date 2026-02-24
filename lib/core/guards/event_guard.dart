@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
 import 'package:mixmingle/core/stubs/dev_stubs.dart';
@@ -35,7 +35,8 @@ class EventGuard extends ConsumerWidget {
           }
 
           // Check if event is in the future or currently active
-          if (event.startTime.isBefore(DateTime.now().subtract(const Duration(hours: 2)))) {
+          if (event.startTime
+              .isBefore(DateTime.now().subtract(const Duration(hours: 2)))) {
             return _buildErrorState(
               context,
               'Event has ended',
@@ -98,7 +99,8 @@ class EventGuard extends ConsumerWidget {
                       const SizedBox(height: 32),
                       ElevatedButton.icon(
                         onPressed: () {
-                          Navigator.of(context).pushReplacementNamed(AppRoutes.events);
+                          Navigator.of(context)
+                              .pushReplacementNamed(AppRoutes.events);
                         },
                         icon: const Icon(Icons.event),
                         label: const Text('Browse Events'),
@@ -106,7 +108,8 @@ class EventGuard extends ConsumerWidget {
                       const SizedBox(height: 16),
                       TextButton(
                         onPressed: () {
-                          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+                          Navigator.of(context)
+                              .pushReplacementNamed(AppRoutes.home);
                         },
                         child: const Text('Back to Home'),
                       ),

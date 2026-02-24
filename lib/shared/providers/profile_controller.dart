@@ -19,13 +19,15 @@ final currentUserProfileProvider = StreamProvider<UserProfile?>((ref) {
 });
 
 // User profile by ID provider - REAL-TIME STREAM
-final userProfileProvider = StreamProvider.family<UserProfile?, String>((ref, userId) {
+final userProfileProvider =
+    StreamProvider.family<UserProfile?, String>((ref, userId) {
   final profileService = ref.watch(profileServiceProvider);
   return profileService.streamUserProfile(userId);
 });
 
 // Following status provider - REAL-TIME STREAM
-final isFollowingProvider = StreamProvider.family<bool, Map<String, String>>((ref, params) {
+final isFollowingProvider =
+    StreamProvider.family<bool, Map<String, String>>((ref, params) {
   final profileService = ref.watch(profileServiceProvider);
   final followerId = params['followerId']!;
   final followingId = params['followingId']!;
@@ -33,13 +35,16 @@ final isFollowingProvider = StreamProvider.family<bool, Map<String, String>>((re
 });
 
 // User rooms provider - REAL-TIME STREAM (returns room IDs)
-final userRoomIdsProvider = StreamProvider.family<List<String>, String>((ref, userId) {
+final userRoomIdsProvider =
+    StreamProvider.family<List<String>, String>((ref, userId) {
   final profileService = ref.watch(profileServiceProvider);
   return profileService.streamUserRooms(userId);
 });
 
 // Nearby users provider
-final nearbyUsersProvider = FutureProvider.family<List<UserProfile>, Map<String, dynamic>>((ref, params) async {
+final nearbyUsersProvider =
+    FutureProvider.family<List<UserProfile>, Map<String, dynamic>>(
+        (ref, params) async {
   final profileService = ref.watch(profileServiceProvider);
   final latitude = params['latitude'] as double;
   final longitude = params['longitude'] as double;
@@ -48,13 +53,16 @@ final nearbyUsersProvider = FutureProvider.family<List<UserProfile>, Map<String,
 });
 
 // Search users by interests provider
-final searchUsersByInterestsProvider = FutureProvider.family<List<UserProfile>, List<String>>((ref, interests) async {
+final searchUsersByInterestsProvider =
+    FutureProvider.family<List<UserProfile>, List<String>>(
+        (ref, interests) async {
   final profileService = ref.watch(profileServiceProvider);
   return profileService.searchUsersByInterests(interests);
 });
 
 // Search users by query provider
-final searchUsersProvider = FutureProvider.family<List<UserProfile>, String>((ref, query) async {
+final searchUsersProvider =
+    FutureProvider.family<List<UserProfile>, String>((ref, query) async {
   final profileService = ref.watch(profileServiceProvider);
   return profileService.searchUsers(query);
 });
@@ -81,7 +89,8 @@ class ProfileController {
       final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
       if (firebaseUser != null && (profile.displayName ?? '').isNotEmpty) {
         await firebaseUser.updateDisplayName(profile.displayName);
-        debugPrint('✅ [ProfileController] Firebase Auth displayName synced: ${profile.displayName}');
+        debugPrint(
+            '✅ [ProfileController] Firebase Auth displayName synced: ${profile.displayName}');
       }
     } catch (e) {
       debugPrint('Failed to update profile: $e');
@@ -89,7 +98,8 @@ class ProfileController {
     }
   }
 
-  Future<void> createInitialProfile(String userId, String email, String displayName) async {
+  Future<void> createInitialProfile(
+      String userId, String email, String displayName) async {
     try {
       await _profileService.createInitialProfile(userId, email, displayName);
     } catch (e) {

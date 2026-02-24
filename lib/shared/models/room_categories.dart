@@ -1,4 +1,4 @@
-﻿/// Room Categories Helper
+/// Room Categories Helper
 /// Centralized room category constants and utilities
 library;
 
@@ -93,5 +93,3 @@ class RoomCategories {
     return all.contains(category.toLowerCase());
   }
 }
-
-

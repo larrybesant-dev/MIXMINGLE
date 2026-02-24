@@ -7,7 +7,8 @@ void main() {
     // Integration tests validate navigation and core functionality.
     // Widget tests skipped here to avoid test environment complexity.
 
-    testWidgets('HomePageElectric is properly constructed', (WidgetTester tester) async {
+    testWidgets('HomePageElectric is properly constructed',
+        (WidgetTester tester) async {
       // Simplified test to ensure widget type exists
       expect(HomePageElectric, isNotNull);
     });

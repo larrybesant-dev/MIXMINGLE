@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
@@ -17,7 +17,8 @@ class MatchException implements Exception {
 /// Comprehensive match service with validation, error handling, and retry logic
 class MatchService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+  final FirebaseFunctions _functions =
+      FirebaseFunctions.instanceFor(region: 'us-central1');
 
   // Rate limiting
   static const int _maxLikesPerDay = 100;
@@ -78,7 +79,8 @@ class MatchService {
   }
 
   /// Like user with retry logic
-  Future<void> _likeUserWithRetry(String likerId, String likedUserId, {int attempt = 0}) async {
+  Future<void> _likeUserWithRetry(String likerId, String likedUserId,
+      {int attempt = 0}) async {
     try {
       final likeData = {
         'likerId': likerId,
@@ -142,7 +144,8 @@ class MatchService {
       final data = result.data as Map;
       final allowed = data['allowed'] == true;
       if (!allowed) {
-        final retryAfterSeconds = (data['retryAfterSeconds'] as num?)?.toInt() ?? 0;
+        final retryAfterSeconds =
+            (data['retryAfterSeconds'] as num?)?.toInt() ?? 0;
         throw MatchException(
           'Rate limit exceeded. Try again in ${retryAfterSeconds}s',
           code: 'rate-limited',
@@ -150,14 +153,16 @@ class MatchService {
       }
     } on FirebaseFunctionsException catch (e) {
       if (e.code == 'resource-exhausted') {
-        final retryAfterSeconds = (e.details?['retryAfterSeconds'] as num?)?.toInt() ?? 0;
+        final retryAfterSeconds =
+            (e.details?['retryAfterSeconds'] as num?)?.toInt() ?? 0;
         throw MatchException(
           'Rate limit exceeded. Try again in ${retryAfterSeconds}s',
           code: 'rate-limited',
         );
       }
       // Non-rate-limit errors bubble up as general failures
-      throw MatchException('Rate limit check failed: ${e.message}', code: 'rate-check-failed');
+      throw MatchException('Rate limit check failed: ${e.message}',
+          code: 'rate-check-failed');
     } catch (e) {
       // If function unavailable, proceed without blocking to avoid hard dependency
       debugPrint('Rate limit function unavailable: $e');
@@ -180,7 +185,8 @@ class MatchService {
   }
 
   /// Unlike user with retry logic
-  Future<void> _unlikeUserWithRetry(String likerId, String likedUserId, {int attempt = 0}) async {
+  Future<void> _unlikeUserWithRetry(String likerId, String likedUserId,
+      {int attempt = 0}) async {
     try {
       final likeQuery = await _firestore
           .collection('likes')
@@ -262,7 +268,8 @@ class MatchService {
       debugPrint('âœ… Match created: $matchId with chat: $chatId');
     } catch (e) {
       debugPrint('âŒ Failed to create match: $e');
-      throw MatchException('Failed to create match: $e', code: 'match-creation-failed');
+      throw MatchException('Failed to create match: $e',
+          code: 'match-creation-failed');
     }
   }
 
@@ -355,7 +362,9 @@ class MatchService {
           .orderBy('timestamp', descending: true)
           .get();
 
-      return likesQuery.docs.map((doc) => doc['likedUserId'] as String).toList();
+      return likesQuery.docs
+          .map((doc) => doc['likedUserId'] as String)
+          .toList();
     } catch (e) {
       debugPrint('âŒ Failed to get user likes: $e');
       return [];
@@ -419,7 +428,8 @@ class MatchService {
       final matchedUsers = await getUserMatches(userId);
       final excludedUsers = {...likedUsers, ...matchedUsers, userId};
 
-      var query = _firestore.collection('users').where('uid', isNotEqualTo: userId);
+      var query =
+          _firestore.collection('users').where('uid', isNotEqualTo: userId);
 
       // Apply filters
       if (gender != null && gender.isNotEmpty) {
@@ -430,7 +440,8 @@ class MatchService {
         query = query.where('interests', arrayContainsAny: interests);
       }
 
-      final snapshot = await query.limit(limit * 2).get(); // Get extra to filter out
+      final snapshot =
+          await query.limit(limit * 2).get(); // Get extra to filter out
 
       // Filter excluded users and apply age filter
       final filteredDocs = snapshot.docs
@@ -479,7 +490,8 @@ class MatchService {
       return doc.id;
     } catch (e) {
       debugPrint('âŒ Failed to create chat: $e');
-      throw MatchException('Failed to create chat: $e', code: 'chat-creation-failed');
+      throw MatchException('Failed to create chat: $e',
+          code: 'chat-creation-failed');
     }
   }
 
@@ -549,12 +561,15 @@ class MatchService {
       final user1Data = user1Doc.data() as Map<String, dynamic>;
       final user2Data = user2Doc.data() as Map<String, dynamic>;
 
-      final user1Interests = (user1Data['interests'] as List?)?.cast<String>() ?? [];
-      final user2Interests = (user2Data['interests'] as List?)?.cast<String>() ?? [];
+      final user1Interests =
+          (user1Data['interests'] as List?)?.cast<String>() ?? [];
+      final user2Interests =
+          (user2Data['interests'] as List?)?.cast<String>() ?? [];
 
       if (user1Interests.isEmpty || user2Interests.isEmpty) return 0.5;
 
-      final sharedInterests = user1Interests.where((i) => user2Interests.contains(i)).length;
+      final sharedInterests =
+          user1Interests.where((i) => user2Interests.contains(i)).length;
       final totalInterests = {...user1Interests, ...user2Interests}.length;
 
       return totalInterests > 0 ? sharedInterests / totalInterests : 0.5;
@@ -578,7 +593,10 @@ class MatchService {
 
   /// Record like for rate limiting
   void _recordLike(String userId) {
-    _likeTimestamps[userId] = [...(_likeTimestamps[userId] ?? []), DateTime.now()];
+    _likeTimestamps[userId] = [
+      ...(_likeTimestamps[userId] ?? []),
+      DateTime.now()
+    ];
   }
 
   /// Send like notification via Cloud Function
@@ -594,7 +612,8 @@ class MatchService {
   }
 
   /// Send match notifications to both users
-  Future<void> _sendMatchNotifications(String user1Id, String user2Id, String matchId) async {
+  Future<void> _sendMatchNotifications(
+      String user1Id, String user2Id, String matchId) async {
     try {
       await _functions.httpsCallable('sendMatchNotifications').call({
         'user1Id': user1Id,

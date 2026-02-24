@@ -24,10 +24,12 @@ class RoomRecordingWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<RoomRecordingWidget> createState() => _RoomRecordingWidgetState();
+  ConsumerState<RoomRecordingWidget> createState() =>
+      _RoomRecordingWidgetState();
 }
 
-class _RoomRecordingWidgetState extends ConsumerState<RoomRecordingWidget> with TickerProviderStateMixin {
+class _RoomRecordingWidgetState extends ConsumerState<RoomRecordingWidget>
+    with TickerProviderStateMixin {
   late AnimationController _timerAnimationController;
   bool _isPublic = false;
 
@@ -70,7 +72,9 @@ class _RoomRecordingWidgetState extends ConsumerState<RoomRecordingWidget> with 
             children: [
               Icon(
                 Icons.fiber_manual_record,
-                color: recordingState != null ? const Color(0xFFFF4C4C) : Colors.grey,
+                color: recordingState != null
+                    ? const Color(0xFFFF4C4C)
+                    : Colors.grey,
                 size: 24,
               ),
               const SizedBox(width: 12),
@@ -104,17 +108,21 @@ class _RoomRecordingWidgetState extends ConsumerState<RoomRecordingWidget> with 
                         width: 12,
                         height: 12,
                         decoration: BoxDecoration(
-                          color:
-                              recordingState.state == RecordingState.paused ? Colors.yellow : const Color(0xFFFF4C4C),
+                          color: recordingState.state == RecordingState.paused
+                              ? Colors.yellow
+                              : const Color(0xFFFF4C4C),
                           borderRadius: BorderRadius.circular(6),
                         ),
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        recordingState.state == RecordingState.paused ? 'PAUSED' : 'RECORDING',
+                        recordingState.state == RecordingState.paused
+                            ? 'PAUSED'
+                            : 'RECORDING',
                         style: TextStyle(
-                          color:
-                              recordingState.state == RecordingState.paused ? Colors.yellow : const Color(0xFFFF4C4C),
+                          color: recordingState.state == RecordingState.paused
+                              ? Colors.yellow
+                              : const Color(0xFFFF4C4C),
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.5,
@@ -181,16 +189,21 @@ class _RoomRecordingWidgetState extends ConsumerState<RoomRecordingWidget> with 
                     onPressed: () async {
                       if (recordingState.state == RecordingState.recording) {
                         await recordingNotifier.pauseRecording();
-                      } else if (recordingState.state == RecordingState.paused) {
+                      } else if (recordingState.state ==
+                          RecordingState.paused) {
                         await recordingNotifier.resumeRecording();
                       }
                     },
                     icon: Icon(
-                      recordingState.state == RecordingState.paused ? Icons.play_arrow : Icons.pause,
+                      recordingState.state == RecordingState.paused
+                          ? Icons.play_arrow
+                          : Icons.pause,
                       size: 18,
                     ),
                     label: Text(
-                      recordingState.state == RecordingState.paused ? 'Resume' : 'Pause',
+                      recordingState.state == RecordingState.paused
+                          ? 'Resume'
+                          : 'Pause',
                       style: const TextStyle(fontWeight: FontWeight.w600),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -277,7 +290,9 @@ class _RoomRecordingWidgetState extends ConsumerState<RoomRecordingWidget> with 
               height: 56,
               child: ElevatedButton.icon(
                 onPressed: () async {
-                  await ref.read(roomRecordingServiceProvider.notifier).startRecording(
+                  await ref
+                      .read(roomRecordingServiceProvider.notifier)
+                      .startRecording(
                         roomId: widget.roomId,
                         userId: widget.userId,
                       );

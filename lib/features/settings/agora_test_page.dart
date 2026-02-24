@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import '../../shared/providers/all_providers.dart';
@@ -22,7 +22,8 @@ class _AgoraTestPageState extends ConsumerState<AgoraTestPage> {
   @override
   void initState() {
     super.initState();
-    _channelController.text = 'test_channel_${DateTime.now().millisecondsSinceEpoch}';
+    _channelController.text =
+        'test_channel_${DateTime.now().millisecondsSinceEpoch}';
   }
 
   @override
@@ -107,7 +108,9 @@ class _AgoraTestPageState extends ConsumerState<AgoraTestPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Agora Video Test'), backgroundColor: const Color(0xFF1E1E2F)),
+      appBar: AppBar(
+          title: const Text('Agora Video Test'),
+          backgroundColor: const Color(0xFF1E1E2F)),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -117,23 +120,29 @@ class _AgoraTestPageState extends ConsumerState<AgoraTestPage> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: _isJoined ? Colors.green.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.1),
+                color: _isJoined
+                    ? Colors.green.withValues(alpha: 0.1)
+                    : Colors.blue.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: _isJoined ? Colors.green : Colors.blue, width: 1),
+                border: Border.all(
+                    color: _isJoined ? Colors.green : Colors.blue, width: 1),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Status: ${_isJoined ? 'Connected' : 'Disconnected'}',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: _isJoined ? Colors.green : Colors.blue),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _isJoined ? Colors.green : Colors.blue),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Agora App ID: ${AppConstants.agoraAppId}',
                     style: const TextStyle(fontSize: 12, color: Colors.white70),
                   ),
-                  Text(_statusMessage, style: const TextStyle(color: Colors.white)),
+                  Text(_statusMessage,
+                      style: const TextStyle(color: Colors.white)),
                 ],
               ),
             ),
@@ -173,12 +182,17 @@ class _AgoraTestPageState extends ConsumerState<AgoraTestPage> {
                         }
                       } catch (e) {
                         if (mounted) {
-                          messenger.showSnackBar(SnackBar(content: Text('Failed to toggle mic: $e')));
+                          messenger.showSnackBar(SnackBar(
+                              content: Text('Failed to toggle mic: $e')));
                         }
                       }
                     },
-                    icon: Icon(ref.watch(agoraVideoServiceProvider).isMicMuted ? Icons.mic_off : Icons.mic),
-                    label: Text(ref.watch(agoraVideoServiceProvider).isMicMuted ? 'Unmute' : 'Mute'),
+                    icon: Icon(ref.watch(agoraVideoServiceProvider).isMicMuted
+                        ? Icons.mic_off
+                        : Icons.mic),
+                    label: Text(ref.watch(agoraVideoServiceProvider).isMicMuted
+                        ? 'Unmute'
+                        : 'Mute'),
                   ),
                   const SizedBox(width: 16),
                   ElevatedButton.icon(
@@ -191,12 +205,18 @@ class _AgoraTestPageState extends ConsumerState<AgoraTestPage> {
                         }
                       } catch (e) {
                         if (mounted) {
-                          messenger.showSnackBar(SnackBar(content: Text('Failed to toggle camera: $e')));
+                          messenger.showSnackBar(SnackBar(
+                              content: Text('Failed to toggle camera: $e')));
                         }
                       }
                     },
-                    icon: Icon(ref.watch(agoraVideoServiceProvider).isVideoMuted ? Icons.videocam_off : Icons.videocam),
-                    label: Text(ref.watch(agoraVideoServiceProvider).isVideoMuted ? 'Camera On' : 'Camera Off'),
+                    icon: Icon(ref.watch(agoraVideoServiceProvider).isVideoMuted
+                        ? Icons.videocam_off
+                        : Icons.videocam),
+                    label: Text(
+                        ref.watch(agoraVideoServiceProvider).isVideoMuted
+                            ? 'Camera On'
+                            : 'Camera Off'),
                   ),
                 ],
               ),
@@ -235,14 +255,17 @@ class _AgoraTestPageState extends ConsumerState<AgoraTestPage> {
                   backgroundColor: Colors.orange,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                 ),
-                child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Leave Channel'),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('Leave Channel'),
               ),
             ],
 
             const SizedBox(height: 24),
 
             // Instructions
-            const Text('Testing Instructions:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Text('Testing Instructions:',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
             const SizedBox(height: 8),
             const Text(
               '1. Make sure you have valid Agora credentials in constants.dart\n'
@@ -262,14 +285,16 @@ class _AgoraTestPageState extends ConsumerState<AgoraTestPage> {
               decoration: BoxDecoration(
                 color: Colors.yellow.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.yellow.withValues(alpha: 0.3), width: 1),
+                border: Border.all(
+                    color: Colors.yellow.withValues(alpha: 0.3), width: 1),
               ),
               child: const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     'Troubleshooting:',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Colors.yellow),
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold, color: Colors.yellow),
                   ),
                   SizedBox(height: 8),
                   Text(

@@ -39,14 +39,18 @@ class AuthGate extends ConsumerWidget {
           // if (user.emailVerified) {
           // Check if user has completed profile
           return FutureBuilder<DocumentSnapshot>(
-            future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+            future: FirebaseFirestore.instance
+                .collection('users')
+                .doc(user.uid)
+                .get(),
             builder: (context, profileSnapshot) {
               if (profileSnapshot.connectionState == ConnectionState.waiting) {
                 return const Center(child: CircularProgressIndicator());
               }
 
               if (profileSnapshot.hasData && profileSnapshot.data!.exists) {
-                final profileData = profileSnapshot.data!.data() as Map<String, dynamic>?;
+                final profileData =
+                    profileSnapshot.data!.data() as Map<String, dynamic>?;
                 // Check if profile has required fields (displayName at minimum)
                 if (profileData != null && profileData['displayName'] != null) {
                   return child; // Profile complete, show protected content

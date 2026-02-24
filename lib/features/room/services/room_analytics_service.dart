@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Room statistics model
@@ -51,7 +51,8 @@ class RoomStatistics {
       'peakConcurrentUsers': peakConcurrentUsers,
       'averageSessionDurationSeconds': averageSessionDuration.inSeconds,
       'createdAt': Timestamp.fromDate(createdAt),
-      'lastActivityAt': lastActivityAt != null ? Timestamp.fromDate(lastActivityAt!) : null,
+      'lastActivityAt':
+          lastActivityAt != null ? Timestamp.fromDate(lastActivityAt!) : null,
       'totalMessagesCount': totalMessagesCount,
       'totalRecordingsCount': totalRecordingsCount,
       'averageUserRating': averageUserRating,
@@ -89,8 +90,10 @@ class UserEngagement {
     return UserEngagement(
       userId: doc.id,
       userName: data['userName'] ?? 'Unknown',
-      firstJoinedAt: (data['firstJoinedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      lastActivityAt: (data['lastActivityAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      firstJoinedAt:
+          (data['firstJoinedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastActivityAt:
+          (data['lastActivityAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       totalSessions: data['totalSessions'] ?? 0,
       totalTimeInRoom: Duration(
         seconds: data['totalTimeInRoomSeconds'] ?? 0,
@@ -163,7 +166,8 @@ class AnalyticsService {
   /// Get room statistics
   Future<RoomStatistics?> getRoomStatistics(String roomId) async {
     try {
-      final doc = await _firestore.collection('room_statistics').doc(roomId).get();
+      final doc =
+          await _firestore.collection('room_statistics').doc(roomId).get();
       if (!doc.exists) return null;
       return RoomStatistics.fromFirestore(doc);
     } catch (e) {
@@ -177,7 +181,12 @@ class AnalyticsService {
     String userId,
   ) async {
     try {
-      final doc = await _firestore.collection('rooms').doc(roomId).collection('user_engagement').doc(userId).get();
+      final doc = await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('user_engagement')
+          .doc(userId)
+          .get();
       if (!doc.exists) return null;
       return UserEngagement.fromFirestore(doc);
     } catch (e) {
@@ -187,7 +196,11 @@ class AnalyticsService {
 
   /// Get room statistics stream
   Stream<RoomStatistics?> getRoomStatisticsStream(String roomId) {
-    return _firestore.collection('room_statistics').doc(roomId).snapshots().map((snapshot) {
+    return _firestore
+        .collection('room_statistics')
+        .doc(roomId)
+        .snapshots()
+        .map((snapshot) {
       if (!snapshot.exists) return null;
       return RoomStatistics.fromFirestore(snapshot);
     });
@@ -203,7 +216,9 @@ class AnalyticsService {
         .limit(10)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => UserEngagement.fromFirestore(doc)).toList();
+      return snapshot.docs
+          .map((doc) => UserEngagement.fromFirestore(doc))
+          .toList();
     });
   }
 
@@ -235,21 +250,22 @@ final analyticsServiceProvider = Provider<AnalyticsService>((ref) {
 });
 
 /// Provider for room statistics
-final roomStatisticsProvider = StreamProvider.family<RoomStatistics?, String>((ref, roomId) {
+final roomStatisticsProvider =
+    StreamProvider.family<RoomStatistics?, String>((ref, roomId) {
   final service = ref.watch(analyticsServiceProvider);
   return service.getRoomStatisticsStream(roomId);
 });
 
 /// Provider for top users
-final topUsersInRoomProvider = StreamProvider.family<List<UserEngagement>, String>((ref, roomId) {
+final topUsersInRoomProvider =
+    StreamProvider.family<List<UserEngagement>, String>((ref, roomId) {
   final service = ref.watch(analyticsServiceProvider);
   return service.getTopUsersInRoomStream(roomId);
 });
 
 /// Provider for recent activity
-final recentActivityProvider = StreamProvider.family<List<Map<String, dynamic>>, String>((ref, roomId) {
+final recentActivityProvider =
+    StreamProvider.family<List<Map<String, dynamic>>, String>((ref, roomId) {
   final service = ref.watch(analyticsServiceProvider);
   return service.getRecentActivityStream(roomId);
 });
-
-

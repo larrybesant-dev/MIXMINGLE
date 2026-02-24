@@ -15,7 +15,8 @@ class TermsAcceptanceDialog extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<TermsAcceptanceDialog> createState() => _TermsAcceptanceDialogState();
+  ConsumerState<TermsAcceptanceDialog> createState() =>
+      _TermsAcceptanceDialogState();
 }
 
 class _TermsAcceptanceDialogState extends ConsumerState<TermsAcceptanceDialog> {
@@ -93,21 +94,24 @@ class _TermsAcceptanceDialogState extends ConsumerState<TermsAcceptanceDialog> {
                     _buildCheckboxRow(
                       label: 'I accept the Terms of Service',
                       value: _acceptedTerms,
-                      onChanged: (value) => setState(() => _acceptedTerms = value ?? false),
+                      onChanged: (value) =>
+                          setState(() => _acceptedTerms = value ?? false),
                     ),
 
                     // Privacy acceptance section
                     _buildCheckboxRow(
                       label: 'I accept the Privacy Policy',
                       value: _acceptedPrivacy,
-                      onChanged: (value) => setState(() => _acceptedPrivacy = value ?? false),
+                      onChanged: (value) =>
+                          setState(() => _acceptedPrivacy = value ?? false),
                     ),
 
                     const SizedBox(height: 20),
 
                     // Read documents button
                     TextButton(
-                      onPressed: () => _showDocumentsDialog(context, termsService),
+                      onPressed: () =>
+                          _showDocumentsDialog(context, termsService),
                       child: const Text('Read full documents'),
                     ),
 
@@ -130,18 +134,20 @@ class _TermsAcceptanceDialogState extends ConsumerState<TermsAcceptanceDialog> {
                           child: const Text('Decline'),
                         ),
                         ElevatedButton(
-                          onPressed: (_acceptedTerms && _acceptedPrivacy && !_loading)
-                              ? () {
-                                  setState(() => _loading = true);
-                                  AppLogger.info('User accepted terms');
-                                  widget.onAccepted();
-                                }
-                              : null,
+                          onPressed:
+                              (_acceptedTerms && _acceptedPrivacy && !_loading)
+                                  ? () {
+                                      setState(() => _loading = true);
+                                      AppLogger.info('User accepted terms');
+                                      widget.onAccepted();
+                                    }
+                                  : null,
                           child: _loading
                               ? const SizedBox(
                                   width: 20,
                                   height: 20,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child:
+                                      CircularProgressIndicator(strokeWidth: 2),
                                 )
                               : const Text('Accept'),
                         ),

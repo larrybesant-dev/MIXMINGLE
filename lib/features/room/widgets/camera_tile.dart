@@ -307,9 +307,7 @@ class _TileContent extends StatelessWidget {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
-                            color: isHost
-                                ? DesignColors.gold
-                                : Colors.white,
+                            color: isHost ? DesignColors.gold : Colors.white,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -383,7 +381,8 @@ class _TileContent extends StatelessWidget {
     switch (cameraState.status) {
       case CameraStatus.active:
         return Container(
-          width: 6, height: 6,
+          width: 6,
+          height: 6,
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(3),
@@ -391,7 +390,8 @@ class _TileContent extends StatelessWidget {
         );
       case CameraStatus.loading:
         return const SizedBox(
-          width: 8, height: 8,
+          width: 8,
+          height: 8,
           child: CircularProgressIndicator(
             strokeWidth: 1.5,
             valueColor: AlwaysStoppedAnimation(Colors.white),
@@ -404,7 +404,8 @@ class _TileContent extends StatelessWidget {
             size: 9, color: Colors.white);
       case CameraStatus.inactive:
         return Container(
-          width: 6, height: 6,
+          width: 6,
+          height: 6,
           decoration: BoxDecoration(
             color: Colors.white54,
             borderRadius: BorderRadius.circular(3),
@@ -415,11 +416,16 @@ class _TileContent extends StatelessWidget {
 
   String _getStatusText() {
     switch (cameraState.status) {
-      case CameraStatus.active:  return 'LIVE';
-      case CameraStatus.loading: return 'LOADING';
-      case CameraStatus.frozen:  return 'FROZEN';
-      case CameraStatus.error:   return 'ERROR';
-      case CameraStatus.inactive: return 'OFF';
+      case CameraStatus.active:
+        return 'LIVE';
+      case CameraStatus.loading:
+        return 'LOADING';
+      case CameraStatus.frozen:
+        return 'FROZEN';
+      case CameraStatus.error:
+        return 'ERROR';
+      case CameraStatus.inactive:
+        return 'OFF';
     }
   }
 }

@@ -19,10 +19,12 @@ class AdvancedMicControlWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<AdvancedMicControlWidget> createState() => _AdvancedMicControlWidgetState();
+  ConsumerState<AdvancedMicControlWidget> createState() =>
+      _AdvancedMicControlWidgetState();
 }
 
-class _AdvancedMicControlWidgetState extends ConsumerState<AdvancedMicControlWidget> {
+class _AdvancedMicControlWidgetState
+    extends ConsumerState<AdvancedMicControlWidget> {
   @override
   Widget build(BuildContext context) {
     final micState = ref.watch(advancedMicServiceProvider);
@@ -208,12 +210,16 @@ class _AdvancedMicControlWidgetState extends ConsumerState<AdvancedMicControlWid
               },
               borderRadius: BorderRadius.circular(8),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSelected ? const Color(0xFFFF4C4C) : Colors.grey[700],
+                  color:
+                      isSelected ? const Color(0xFFFF4C4C) : Colors.grey[700],
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isSelected ? const Color(0xFFFF4C4C) : Colors.transparent,
+                    color: isSelected
+                        ? const Color(0xFFFF4C4C)
+                        : Colors.transparent,
                     width: 2,
                   ),
                 ),

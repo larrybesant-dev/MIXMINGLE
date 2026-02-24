@@ -1,12 +1,14 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Mix & Mingle Brand Colors
 /// Nightclub/social vibe with vibrant energy
 class ClubColors {
   // Primary Brand Colors
   static const Color primary = Color(0xFFFF4C4C); // Vibrant Red (Main brand)
-  static const Color primaryDark = Color(0xFFCC0000); // Darker red for interactions
-  static const Color primaryLight = Color(0xFFFF7A7A); // Lighter red for accents
+  static const Color primaryDark =
+      Color(0xFFCC0000); // Darker red for interactions
+  static const Color primaryLight =
+      Color(0xFFFF7A7A); // Lighter red for accents
 
   static const Color secondary = Color(0xFF24E8FF); // Electric Blue (Mingle)
   static const Color secondaryDark = Color(0xFF00B8D4);

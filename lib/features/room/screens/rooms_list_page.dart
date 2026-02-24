@@ -16,25 +16,31 @@ import '../providers/rooms_provider.dart';
 // ─── Vibe identity ───────────────────────────────────────────────────────────
 const _kVibeAll = 'All';
 const _kVibes = [
-  _kVibeAll, 'Chill', 'Hype', 'Deep Talk', 'Late Night', 'Study', 'Party',
+  _kVibeAll,
+  'Chill',
+  'Hype',
+  'Deep Talk',
+  'Late Night',
+  'Study',
+  'Party',
 ];
 
 const _kVibeColors = <String, Color>{
-  'Chill':      Color(0xFF4A90FF),
-  'Hype':       Color(0xFFFF4D8B),
-  'Deep Talk':  Color(0xFF8B5CF6),
+  'Chill': Color(0xFF4A90FF),
+  'Hype': Color(0xFFFF4D8B),
+  'Deep Talk': Color(0xFF8B5CF6),
   'Late Night': Color(0xFF6366F1),
-  'Study':      Color(0xFF00E5CC),
-  'Party':      Color(0xFFFFAB00),
+  'Study': Color(0xFF00E5CC),
+  'Party': Color(0xFFFFAB00),
 };
 
 const _kVibeIcons = <String, IconData>{
-  'Chill':      Icons.waves_outlined,
-  'Hype':       Icons.bolt,
-  'Deep Talk':  Icons.forum_outlined,
+  'Chill': Icons.waves_outlined,
+  'Hype': Icons.bolt,
+  'Deep Talk': Icons.forum_outlined,
   'Late Night': Icons.nightlight_outlined,
-  'Study':      Icons.menu_book_outlined,
-  'Party':      Icons.celebration_outlined,
+  'Study': Icons.menu_book_outlined,
+  'Party': Icons.celebration_outlined,
 };
 
 Color _vibeColor(String? vibe) => _kVibeColors[vibe] ?? DesignColors.accent;
@@ -76,7 +82,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
         : all
             .where((r) =>
                 (r.vibeTag?.toLowerCase() == _selectedVibe.toLowerCase()) ||
-                r.tags.any((t) => t.toLowerCase() == _selectedVibe.toLowerCase()))
+                r.tags
+                    .any((t) => t.toLowerCase() == _selectedVibe.toLowerCase()))
             .toList();
     rooms.sort((a, b) {
       final aScore = (a.viewerCount * 0.4) +
@@ -108,15 +115,15 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
   @override
   Widget build(BuildContext context) {
     final roomsState = ref.watch(roomsProvider);
-    final allRooms   = roomsState.rooms;
+    final allRooms = roomsState.rooms;
     // Derive uid reactively from profile so friends pill updates on login/logout
-    final profile      = ref.watch(currentUserProfileProvider).asData?.value;
-    final uid          = profile?.id;
+    final profile = ref.watch(currentUserProfileProvider).asData?.value;
+    final uid = profile?.id;
     final followingIds = uid != null
         ? ref.watch(followingIdsProvider(uid)).asData?.value ?? <String>[]
         : <String>[];
-    final filtered     = _filtered(allRooms, userVibe: profile?.topVibe);
-    final hot          = _heatingUp(allRooms);
+    final filtered = _filtered(allRooms, userVibe: profile?.topVibe);
+    final hot = _heatingUp(allRooms);
 
     return ClubBackground(
       child: Scaffold(
@@ -137,7 +144,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
                     AnimatedBuilder(
                       animation: _pulseController,
                       builder: (_, __) => Container(
-                        width: 8, height: 8,
+                        width: 8,
+                        height: 8,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: Colors.redAccent,
@@ -169,7 +177,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
                           padding: const EdgeInsets.fromLTRB(16, 4, 16, 100),
                           sliver: SliverList(
                             delegate: SliverChildBuilderDelegate(
-                              (ctx, i) => _buildRoomCard(filtered[i], followingIds),
+                              (ctx, i) =>
+                                  _buildRoomCard(filtered[i], followingIds),
                               childCount: filtered.length,
                             ),
                           ),
@@ -193,20 +202,25 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
       automaticallyImplyLeading: false,
       title: Row(children: [
         Container(
-          width: 10, height: 10,
+          width: 10,
+          height: 10,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: DesignColors.accent,
             boxShadow: [
-              BoxShadow(color: DesignColors.accent.withValues(alpha: 0.7), blurRadius: 10),
+              BoxShadow(
+                  color: DesignColors.accent.withValues(alpha: 0.7),
+                  blurRadius: 10),
             ],
           ),
         ),
         const SizedBox(width: 10),
         const Text('LIVE ROOMS',
             style: TextStyle(
-              color: DesignColors.white, fontSize: 20,
-              fontWeight: FontWeight.w900, letterSpacing: 2,
+              color: DesignColors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2,
               shadows: DesignColors.primaryGlow,
             )),
       ]),
@@ -233,18 +247,19 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
           padding: const EdgeInsets.symmetric(horizontal: 16),
           itemCount: _kVibes.length,
           itemBuilder: (_, i) {
-            final vibe     = _kVibes[i];
-            final isAll    = vibe == _kVibeAll;
+            final vibe = _kVibes[i];
+            final isAll = vibe == _kVibeAll;
             final selected = _selectedVibe == vibe;
-            final color    = isAll ? DesignColors.accent : _vibeColor(vibe);
-            final icon     = isAll ? Icons.apps_outlined : _vibeIcon(vibe);
+            final color = isAll ? DesignColors.accent : _vibeColor(vibe);
+            final icon = isAll ? Icons.apps_outlined : _vibeIcon(vibe);
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: GestureDetector(
                 onTap: () => setState(() => _selectedVibe = vibe),
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
                     gradient: selected
                         ? LinearGradient(
@@ -260,18 +275,23 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
                       width: selected ? 1.5 : 1,
                     ),
                     boxShadow: selected
-                        ? [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 10)]
+                        ? [
+                            BoxShadow(
+                                color: color.withValues(alpha: 0.4),
+                                blurRadius: 10)
+                          ]
                         : null,
                   ),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(icon, size: 13,
-                        color: selected ? Colors.white : color),
+                    Icon(icon,
+                        size: 13, color: selected ? Colors.white : color),
                     const SizedBox(width: 5),
                     Text(vibe,
                         style: TextStyle(
                           color: selected ? Colors.white : color,
                           fontSize: 12,
-                          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                          fontWeight:
+                              selected ? FontWeight.w700 : FontWeight.w500,
                         )),
                   ]),
                 ),
@@ -295,13 +315,17 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
           const SizedBox(width: 8),
           const Text('HEATING UP',
               style: TextStyle(
-                color: DesignColors.white, fontSize: 12,
-                fontWeight: FontWeight.w800, letterSpacing: 1.5,
+                color: DesignColors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1.5,
                 shadows: DesignColors.secondaryGlow,
               )),
           const SizedBox(width: 8),
-          Expanded(child: Container(height: 1,
-              color: DesignColors.secondary.withValues(alpha: 0.3))),
+          Expanded(
+              child: Container(
+                  height: 1,
+                  color: DesignColors.secondary.withValues(alpha: 0.3))),
         ]),
       ),
       SizedBox(
@@ -327,22 +351,31 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
           width: 180,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [color.withValues(alpha: 0.18), DesignColors.surfaceDefault],
-              begin: Alignment.topLeft, end: Alignment.bottomRight,
+              colors: [
+                color.withValues(alpha: 0.18),
+                DesignColors.surfaceDefault
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: color.withValues(alpha: 0.45)),
-            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 10)],
+            boxShadow: [
+              BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 10)
+            ],
           ),
           child: Padding(
             padding: const EdgeInsets.all(12),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(children: [
                 Expanded(
                   child: Text(room.title,
-                      maxLines: 1, overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: DesignColors.white, fontSize: 13,
+                        color: DesignColors.white,
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
                       )),
                 ),
@@ -354,15 +387,21 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
               _energyBar(room, color),
               const SizedBox(height: 8),
               Row(children: [
-                const Icon(Icons.people_outline, size: 12, color: DesignColors.textGray),
+                const Icon(Icons.people_outline,
+                    size: 12, color: DesignColors.textGray),
                 const SizedBox(width: 4),
                 Text('${room.viewerCount}',
-                    style: const TextStyle(color: DesignColors.textGray, fontSize: 11)),
-                if (room.camCount > 0) ...[const SizedBox(width: 8),
-                  const Icon(Icons.videocam_outlined, size: 12, color: DesignColors.textGray),
+                    style: const TextStyle(
+                        color: DesignColors.textGray, fontSize: 11)),
+                if (room.camCount > 0) ...[
+                  const SizedBox(width: 8),
+                  const Icon(Icons.videocam_outlined,
+                      size: 12, color: DesignColors.textGray),
                   const SizedBox(width: 4),
                   Text('${room.camCount}',
-                      style: const TextStyle(color: DesignColors.textGray, fontSize: 11))],
+                      style: const TextStyle(
+                          color: DesignColors.textGray, fontSize: 11))
+                ],
               ]),
             ]),
           ),
@@ -382,8 +421,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
         padding: const EdgeInsets.symmetric(horizontal: 16),
         children: [
           _categoryChip('All', null),
-          ...RoomCategories.all.map((c) =>
-              _categoryChip(RoomCategories.getDisplayName(c), c)),
+          ...RoomCategories.all
+              .map((c) => _categoryChip(RoomCategories.getDisplayName(c), c)),
         ],
       ),
     );
@@ -427,8 +466,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
   //  MAIN ROOM CARD
   // ══════════════════════════════════════════════════════════
   Widget _buildRoomCard(Room room, List<String> followingIds) {
-    final color       = _vibeColor(room.vibeTag);
-    final isHot       = room.viewerCount >= 5;
+    final color = _vibeColor(room.vibeTag);
+    final isHot = room.viewerCount >= 5;
     final friendCount = _friendsInRoom(room, followingIds);
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -440,36 +479,48 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
             color: DesignColors.surfaceLight,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: color.withValues(alpha: 0.35)),
-            boxShadow: [BoxShadow(color: color.withValues(alpha: 0.12), blurRadius: 12)],
+            boxShadow: [
+              BoxShadow(color: color.withValues(alpha: 0.12), blurRadius: 12)
+            ],
           ),
           child: Padding(
             padding: const EdgeInsets.all(14),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
                 _roomThumbnail(room, color),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Row(children: [
-                      Expanded(
-                        child: Text(room.title,
-                            maxLines: 2, overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: DesignColors.white, fontSize: 15,
-                              fontWeight: FontWeight.w700, height: 1.2,
-                            )),
-                      ),
-                      if (room.isLive) ...[const SizedBox(width: 6), _liveBadge()],
-                    ]),
-                    const SizedBox(height: 4),
-                    if (room.description.isNotEmpty)
-                      Text(room.description,
-                          maxLines: 1, overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                              color: DesignColors.textGray, fontSize: 12)),
-                    const SizedBox(height: 8),
-                    _buildStatsRow(room, color),
-                  ]),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(children: [
+                          Expanded(
+                            child: Text(room.title,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: DesignColors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  height: 1.2,
+                                )),
+                          ),
+                          if (room.isLive) ...[
+                            const SizedBox(width: 6),
+                            _liveBadge()
+                          ],
+                        ]),
+                        const SizedBox(height: 4),
+                        if (room.description.isNotEmpty)
+                          Text(room.description,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  color: DesignColors.textGray, fontSize: 12)),
+                        const SizedBox(height: 8),
+                        _buildStatsRow(room, color),
+                      ]),
                 ),
                 const Padding(
                   padding: EdgeInsets.only(left: 6, top: 2),
@@ -479,11 +530,16 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
               ]),
               const SizedBox(height: 10),
               Row(children: [
-                if (room.vibeTag != null) ...[_miniVibeChip(room.vibeTag!, color),
-                  const SizedBox(width: 6)],
+                if (room.vibeTag != null) ...[
+                  _miniVibeChip(room.vibeTag!, color),
+                  const SizedBox(width: 6)
+                ],
                 _categoryTag(room.category),
                 if (isHot) ...[const SizedBox(width: 6), _hotTag()],
-                if (friendCount > 0) ...[const SizedBox(width: 6), _friendsPill(friendCount)],
+                if (friendCount > 0) ...[
+                  const SizedBox(width: 6),
+                  _friendsPill(friendCount)
+                ],
                 const Spacer(),
                 SizedBox(width: 80, child: _energyBar(room, color)),
               ]),
@@ -502,7 +558,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
             ? color.withValues(alpha: 0.3 + 0.2 * _pulseController.value)
             : color.withValues(alpha: 0.1);
         return Container(
-          width: 72, height: 72,
+          width: 72,
+          height: 72,
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
@@ -514,10 +571,9 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
             child: room.thumbnailUrl != null
                 ? Image.network(room.thumbnailUrl!, fit: BoxFit.cover)
                 : Stack(alignment: Alignment.center, children: [
-                    Icon(_vibeIcon(room.vibeTag), size: 30,
-                        color: color.withValues(alpha: 0.5)),
-                    if (room.isLive)
-                      Positioned(bottom: 6, child: _liveBadge()),
+                    Icon(_vibeIcon(room.vibeTag),
+                        size: 30, color: color.withValues(alpha: 0.5)),
+                    if (room.isLive) Positioned(bottom: 6, child: _liveBadge()),
                   ]),
           ),
         );
@@ -530,10 +586,12 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
       Icon(Icons.people_outline, size: 13, color: color),
       const SizedBox(width: 4),
       Text('${room.viewerCount}',
-          style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+          style: TextStyle(
+              color: color, fontSize: 12, fontWeight: FontWeight.w600)),
       const SizedBox(width: 10),
-      if (room.camCount > 0) ...[const Icon(Icons.videocam_outlined, size: 13,
-            color: DesignColors.textGray),
+      if (room.camCount > 0) ...[
+        const Icon(Icons.videocam_outlined,
+            size: 13, color: DesignColors.textGray),
         const SizedBox(width: 4),
         Text('${room.camCount} 📷',
             style: const TextStyle(color: DesignColors.textGray, fontSize: 11)),
@@ -555,16 +613,20 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
         decoration: BoxDecoration(
           color: Colors.redAccent,
           borderRadius: BorderRadius.circular(5),
-          boxShadow: [BoxShadow(
-            color: Colors.redAccent.withValues(
-                alpha: 0.6 * _pulseController.value),
-            blurRadius: 6,
-          )],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.redAccent
+                  .withValues(alpha: 0.6 * _pulseController.value),
+              blurRadius: 6,
+            )
+          ],
         ),
         child: const Text('LIVE',
             style: TextStyle(
-              color: Colors.white, fontSize: 9,
-              fontWeight: FontWeight.w800, letterSpacing: 0.5,
+              color: Colors.white,
+              fontSize: 9,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.5,
             )),
       ),
     );
@@ -581,77 +643,88 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(_vibeIcon(vibe), size: 10, color: color),
         const SizedBox(width: 4),
-        Text(vibe, style: TextStyle(
-            color: color, fontSize: 10, fontWeight: FontWeight.w700)),
+        Text(vibe,
+            style: TextStyle(
+                color: color, fontSize: 10, fontWeight: FontWeight.w700)),
       ]),
     );
   }
 
   Widget _categoryTag(String cat) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-    decoration: BoxDecoration(
-      color: DesignColors.surfaceAlt,
-      borderRadius: BorderRadius.circular(6),
-    ),
-    child: Text(RoomCategories.getDisplayName(cat),
-        style: const TextStyle(color: DesignColors.textGray, fontSize: 10)),
-  );
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: DesignColors.surfaceAlt,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Text(RoomCategories.getDisplayName(cat),
+            style: const TextStyle(color: DesignColors.textGray, fontSize: 10)),
+      );
 
   Widget _friendsPill(int count) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-    decoration: BoxDecoration(
-      color: const Color(0xFF00E5CC).withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(8),
-      border: Border.all(color: const Color(0xFF00E5CC).withValues(alpha: 0.45)),
-    ),
-    child: Row(mainAxisSize: MainAxisSize.min, children: [
-      const Icon(Icons.people_outline, size: 10, color: Color(0xFF00E5CC)),
-      const SizedBox(width: 4),
-      Text('$count friend${count > 1 ? 's' : ''} here',
-          style: const TextStyle(
-            color: Color(0xFF00E5CC), fontSize: 10, fontWeight: FontWeight.w700)),
-    ]),
-  );
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: const Color(0xFF00E5CC).withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+              color: const Color(0xFF00E5CC).withValues(alpha: 0.45)),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          const Icon(Icons.people_outline, size: 10, color: Color(0xFF00E5CC)),
+          const SizedBox(width: 4),
+          Text('$count friend${count > 1 ? 's' : ''} here',
+              style: const TextStyle(
+                  color: Color(0xFF00E5CC),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700)),
+        ]),
+      );
 
   Widget _hotTag() => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-    decoration: BoxDecoration(
-      color: DesignColors.secondary.withValues(alpha: 0.15),
-      borderRadius: BorderRadius.circular(6),
-      border: Border.all(color: DesignColors.secondary.withValues(alpha: 0.4)),
-    ),
-    child: const Text('🔥 Hot',
-        style: TextStyle(
-          color: DesignColors.secondary, fontSize: 10,
-          fontWeight: FontWeight.w700,
-        )),
-  );
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          color: DesignColors.secondary.withValues(alpha: 0.15),
+          borderRadius: BorderRadius.circular(6),
+          border:
+              Border.all(color: DesignColors.secondary.withValues(alpha: 0.4)),
+        ),
+        child: const Text('🔥 Hot',
+            style: TextStyle(
+              color: DesignColors.secondary,
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+            )),
+      );
 
   Widget _energyBar(Room room, Color color) {
     final ratio =
         (room.viewerCount / math.max(room.maxUsers, 1)).clamp(0.0, 1.0);
-    final label =
-        ratio < 0.15 ? 'Quiet' : ratio < 0.5 ? 'Active' : 'Buzzing';
-    return Column(crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min, children: [
-      Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-        const Text('Energy',
-            style: TextStyle(color: DesignColors.textGray, fontSize: 9)),
-        Text(label,
-            style: TextStyle(
-                color: color, fontSize: 9, fontWeight: FontWeight.w600)),
-      ]),
-      const SizedBox(height: 3),
-      ClipRRect(
-        borderRadius: BorderRadius.circular(4),
-        child: LinearProgressIndicator(
-          value: ratio,
-          minHeight: 4,
-          backgroundColor: color.withValues(alpha: 0.15),
-          valueColor: AlwaysStoppedAnimation<Color>(color),
-        ),
-      ),
-    ]);
+    final label = ratio < 0.15
+        ? 'Quiet'
+        : ratio < 0.5
+            ? 'Active'
+            : 'Buzzing';
+    return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+            const Text('Energy',
+                style: TextStyle(color: DesignColors.textGray, fontSize: 9)),
+            Text(label,
+                style: TextStyle(
+                    color: color, fontSize: 9, fontWeight: FontWeight.w600)),
+          ]),
+          const SizedBox(height: 3),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 4,
+              backgroundColor: color.withValues(alpha: 0.15),
+              valueColor: AlwaysStoppedAnimation<Color>(color),
+            ),
+          ),
+        ]);
   }
 
   // ══════════════════════════════════════════════════════════
@@ -662,7 +735,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
     return Center(
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         Container(
-          width: 96, height: 96,
+          width: 96,
+          height: 96,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: color.withValues(alpha: 0.08),
@@ -675,7 +749,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
             _selectedVibe == _kVibeAll
                 ? Icons.video_call_outlined
                 : _vibeIcon(_selectedVibe),
-            size: 42, color: color.withValues(alpha: 0.6),
+            size: 42,
+            color: color.withValues(alpha: 0.6),
           ),
         ),
         const SizedBox(height: 20),
@@ -684,7 +759,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
               ? 'No rooms live yet'
               : 'No $_selectedVibe rooms right now',
           style: const TextStyle(
-            color: DesignColors.white, fontSize: 18,
+            color: DesignColors.white,
+            fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -704,7 +780,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [color, color.withValues(alpha: 0.5)],
-                begin: Alignment.centerLeft, end: Alignment.centerRight,
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
               ),
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
@@ -713,7 +790,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
             ),
             child: const Text('Create a Room',
                 style: TextStyle(
-                  color: Colors.white, fontSize: 14,
+                  color: Colors.white,
+                  fontSize: 14,
                   fontWeight: FontWeight.w700,
                 )),
           ),
@@ -727,7 +805,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
   // ══════════════════════════════════════════════════════════
   Widget _buildCreateFab() {
     final vibeAccent = ref.watch(vibeAccentProvider);
-    final vibeGlow   = ref.watch(vibeGlowProvider);
+    final vibeGlow = ref.watch(vibeGlowProvider);
     return GestureDetector(
       onTap: _showCreateRoomDialog,
       child: Container(
@@ -735,7 +813,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [vibeAccent, vibeAccent.withValues(alpha: 0.6)],
-            begin: Alignment.centerLeft, end: Alignment.centerRight,
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
           ),
           borderRadius: BorderRadius.circular(30),
           boxShadow: vibeGlow, // first real vibeGlowProvider consumer
@@ -745,7 +824,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
           SizedBox(width: 6),
           Text('Create Room',
               style: TextStyle(
-                color: Colors.white, fontSize: 13,
+                color: Colors.white,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
               )),
         ]),
@@ -791,8 +871,8 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
                   const SizedBox(height: 20),
                   _dialogField(nameController, 'Room Name', Icons.title),
                   const SizedBox(height: 14),
-                  _dialogField(descController,
-                      'Vibe description (optional)', Icons.notes,
+                  _dialogField(descController, 'Vibe description (optional)',
+                      Icons.notes,
                       maxLines: 2),
                   const SizedBox(height: 16),
                   const Text('Set the vibe',
@@ -804,9 +884,10 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
                       )),
                   const SizedBox(height: 8),
                   Wrap(
-                    spacing: 8, runSpacing: 8,
+                    spacing: 8,
+                    runSpacing: 8,
                     children: _kVibes.skip(1).map((v) {
-                      final color  = _vibeColor(v);
+                      final color = _vibeColor(v);
                       final picked = selectedVibe == v;
                       return GestureDetector(
                         onTap: () => setDialogState(
@@ -827,8 +908,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
                               width: picked ? 1.5 : 1,
                             ),
                           ),
-                          child: Row(mainAxisSize: MainAxisSize.min,
-                              children: [
+                          child: Row(mainAxisSize: MainAxisSize.min, children: [
                             Icon(_vibeIcon(v), size: 12, color: color),
                             const SizedBox(width: 5),
                             Text(v,
@@ -868,8 +948,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
                           padding: EdgeInsets.symmetric(horizontal: 12),
                           child: Text('Pick a category',
                               style: TextStyle(
-                                  color: DesignColors.textGray,
-                                  fontSize: 13)),
+                                  color: DesignColors.textGray, fontSize: 13)),
                         ),
                         items: RoomCategories.all
                             .map((c) => DropdownMenuItem<String>(
@@ -897,8 +976,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
                       child: TextButton(
                         onPressed: () => Navigator.pop(ctx),
                         child: const Text('Cancel',
-                            style:
-                                TextStyle(color: DesignColors.textGray)),
+                            style: TextStyle(color: DesignColors.textGray)),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -908,16 +986,15 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
                         onTap: () async {
                           if (nameController.text.trim().isEmpty) return;
                           final navigator = Navigator.of(ctx);
-                          final roomId = await ref
-                              .read(roomsProvider.notifier)
-                              .createRoom(
-                                name: nameController.text.trim(),
-                                description:
-                                    descController.text.trim().isEmpty
-                                        ? null
-                                        : descController.text.trim(),
-                                category: selectedCategory,
-                              );
+                          final roomId =
+                              await ref.read(roomsProvider.notifier).createRoom(
+                                    name: nameController.text.trim(),
+                                    description:
+                                        descController.text.trim().isEmpty
+                                            ? null
+                                            : descController.text.trim(),
+                                    category: selectedCategory,
+                                  );
                           if (mounted && roomId != null) {
                             navigator.pop();
                             // ignore: use_build_context_synchronously
@@ -926,21 +1003,19 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
                           }
                         },
                         child: Container(
-                          padding:
-                              const EdgeInsets.symmetric(vertical: 13),
+                          padding: const EdgeInsets.symmetric(vertical: 13),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF4A90FF),
-                                Color(0xFF8B5CF6)
-                              ],
+                              colors: [Color(0xFF4A90FF), Color(0xFF8B5CF6)],
                             ),
                             borderRadius: BorderRadius.circular(12),
-                            boxShadow: [BoxShadow(
-                              color: DesignColors.accent
-                                  .withValues(alpha: 0.3),
-                              blurRadius: 10,
-                            )],
+                            boxShadow: [
+                              BoxShadow(
+                                color:
+                                    DesignColors.accent.withValues(alpha: 0.3),
+                                blurRadius: 10,
+                              )
+                            ],
                           ),
                           child: const Center(
                             child: Text('Go Live 🚀',

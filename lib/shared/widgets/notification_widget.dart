@@ -1,4 +1,3 @@
-﻿
 // Enhanced Notification Widget - Display app notifications with actions and animations
 
 import 'package:flutter/material.dart';
@@ -44,7 +43,8 @@ class _NotificationWidgetState extends ConsumerState<NotificationWidget>
     _slideAnimation = Tween<Offset>(
       begin: const Offset(1.0, 0.0),
       end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
+    ).animate(
+        CurvedAnimation(parent: _animationController, curve: Curves.easeOut));
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
@@ -74,7 +74,9 @@ class _NotificationWidgetState extends ConsumerState<NotificationWidget>
       if (mounted) {
         setState(() => _isDismissed = true);
         widget.onDismissed?.call();
-        ref.read(notificationsProvider.notifier).removeNotification(widget.notification.id);
+        ref
+            .read(notificationsProvider.notifier)
+            .removeNotification(widget.notification.id);
       }
     });
   }
@@ -103,7 +105,8 @@ class _NotificationWidgetState extends ConsumerState<NotificationWidget>
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: DesignColors.accent.withValues(alpha: _isHovered ? 0.4 : 0.3),
+                      color: DesignColors.accent
+                          .withValues(alpha: _isHovered ? 0.4 : 0.3),
                       blurRadius: 16,
                       offset: const Offset(0, 4),
                     ),
@@ -541,8 +544,3 @@ extension NotificationHelperX on WidgetRef {
     read(notificationsProvider.notifier).addNotification(notification);
   }
 }
-
-
-
-
-

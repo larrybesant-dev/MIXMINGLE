@@ -1,4 +1,4 @@
-﻿// lib/features/profile/screens/following_list_page.dart
+// lib/features/profile/screens/following_list_page.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -9,11 +9,14 @@ class FollowingListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final uid = userId.isNotEmpty ? userId : FirebaseAuth.instance.currentUser?.uid ?? '';
+    final uid = userId.isNotEmpty
+        ? userId
+        : FirebaseAuth.instance.currentUser?.uid ?? '';
     return Scaffold(
       appBar: AppBar(title: const Text('Following')),
       body: StreamBuilder<DocumentSnapshot>(
-        stream: FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
+        stream:
+            FirebaseFirestore.instance.collection('users').doc(uid).snapshots(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -31,15 +34,21 @@ class FollowingListPage extends StatelessWidget {
             itemBuilder: (context, index) {
               final followedId = following[index];
               return FutureBuilder<DocumentSnapshot>(
-                future: FirebaseFirestore.instance.collection('users').doc(followedId).get(),
+                future: FirebaseFirestore.instance
+                    .collection('users')
+                    .doc(followedId)
+                    .get(),
                 builder: (context, userSnap) {
-                  if (!userSnap.hasData) return const ListTile(title: Text('Loading...'));
+                  if (!userSnap.hasData)
+                    return const ListTile(title: Text('Loading...'));
                   final user = userSnap.data!.data() as Map<String, dynamic>?;
-                  final name = user?['displayName'] ?? user?['username'] ?? followedId;
+                  final name =
+                      user?['displayName'] ?? user?['username'] ?? followedId;
                   final avatar = user?['photoURL'] as String?;
                   return ListTile(
                     leading: CircleAvatar(
-                      backgroundImage: avatar != null ? NetworkImage(avatar) : null,
+                      backgroundImage:
+                          avatar != null ? NetworkImage(avatar) : null,
                       child: avatar == null ? const Icon(Icons.person) : null,
                     ),
                     title: Text(name.toString()),

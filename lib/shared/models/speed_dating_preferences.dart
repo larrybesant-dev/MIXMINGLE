@@ -1,8 +1,6 @@
-
 /// Speed Dating Preferences Model
 /// Comprehensive matching preferences for video speed dating
 library;
-
 
 class SpeedDatingPreferences {
   final int minAge;
@@ -174,5 +172,3 @@ class PreferenceOptions {
     'Other',
   ];
 }
-
-

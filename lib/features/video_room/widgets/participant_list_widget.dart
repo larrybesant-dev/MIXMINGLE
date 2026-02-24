@@ -196,7 +196,8 @@ class ParticipantListWidget extends StatelessWidget {
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: DesignColors.success.withValues(alpha: 0.5),
+                                color:
+                                    DesignColors.success.withValues(alpha: 0.5),
                                 blurRadius: 4,
                                 spreadRadius: 2,
                               ),
@@ -236,7 +237,8 @@ class ParticipantListWidget extends StatelessWidget {
                         width: 8,
                         height: 8,
                         decoration: const BoxDecoration(
-                          color: DesignColors.success, // Could be dynamic based on connection
+                          color: DesignColors
+                              .success, // Could be dynamic based on connection
                           shape: BoxShape.circle,
                         ),
                       ),

@@ -54,15 +54,15 @@ class MaintenanceScheduleEntry {
   });
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'cycle': cycle.name,
-    'scheduledFor': scheduledFor.toIso8601String(),
-    'startedAt': startedAt?.toIso8601String(),
-    'completedAt': completedAt?.toIso8601String(),
-    'status': status.name,
-    'tasks': tasks.map((t) => t.name).toList(),
-    'results': results,
-  };
+        'id': id,
+        'cycle': cycle.name,
+        'scheduledFor': scheduledFor.toIso8601String(),
+        'startedAt': startedAt?.toIso8601String(),
+        'completedAt': completedAt?.toIso8601String(),
+        'status': status.name,
+        'tasks': tasks.map((t) => t.name).toList(),
+        'results': results,
+      };
 
   MaintenanceScheduleEntry copyWith({
     String? id,
@@ -128,15 +128,15 @@ class MonthlyMaintenanceReport {
   });
 
   Map<String, dynamic> toMap() => {
-    'periodStart': periodStart.toIso8601String(),
-    'periodEnd': periodEnd.toIso8601String(),
-    'roomsArchived': roomsArchived,
-    'assetsCleanedUp': assetsCleanedUp,
-    'keysRotated': keysRotated,
-    'totalDurationMs': totalDuration.inMilliseconds,
-    'allTasksSuccessful': allTasksSuccessful,
-    'errors': errors,
-  };
+        'periodStart': periodStart.toIso8601String(),
+        'periodEnd': periodEnd.toIso8601String(),
+        'roomsArchived': roomsArchived,
+        'assetsCleanedUp': assetsCleanedUp,
+        'keysRotated': keysRotated,
+        'totalDurationMs': totalDuration.inMilliseconds,
+        'allTasksSuccessful': allTasksSuccessful,
+        'errors': errors,
+      };
 }
 
 /// Quarterly maintenance report
@@ -162,15 +162,15 @@ class QuarterlyMaintenanceReport {
   });
 
   Map<String, dynamic> toMap() => {
-    'quarter': quarter,
-    'year': year,
-    'totalDocumentsBackedUp': totalDocumentsBackedUp,
-    'dataIntegrityIssues': dataIntegrityIssues,
-    'collectionsOptimized': collectionsOptimized,
-    'totalDurationMs': totalDuration.inMilliseconds,
-    'allTasksSuccessful': allTasksSuccessful,
-    'details': details,
-  };
+        'quarter': quarter,
+        'year': year,
+        'totalDocumentsBackedUp': totalDocumentsBackedUp,
+        'dataIntegrityIssues': dataIntegrityIssues,
+        'collectionsOptimized': collectionsOptimized,
+        'totalDurationMs': totalDuration.inMilliseconds,
+        'allTasksSuccessful': allTasksSuccessful,
+        'details': details,
+      };
 }
 
 /// Annual maintenance report
@@ -196,21 +196,22 @@ class AnnualMaintenanceReport {
   });
 
   Map<String, dynamic> toMap() => {
-    'year': year,
-    'totalRoomsArchived': totalRoomsArchived,
-    'totalAssetsCleanedUp': totalAssetsCleanedUp,
-    'totalBackupsPerformed': totalBackupsPerformed,
-    'totalKeysRotated': totalKeysRotated,
-    'totalMaintenanceTimeMs': totalMaintenanceTime.inMilliseconds,
-    'systemHealthScore': systemHealthScore,
-    'recommendations': recommendations,
-  };
+        'year': year,
+        'totalRoomsArchived': totalRoomsArchived,
+        'totalAssetsCleanedUp': totalAssetsCleanedUp,
+        'totalBackupsPerformed': totalBackupsPerformed,
+        'totalKeysRotated': totalKeysRotated,
+        'totalMaintenanceTimeMs': totalMaintenanceTime.inMilliseconds,
+        'systemHealthScore': systemHealthScore,
+        'recommendations': recommendations,
+      };
 }
 
 /// Maintenance scheduler service
 class MaintenanceScheduler {
   static MaintenanceScheduler? _instance;
-  static MaintenanceScheduler get instance => _instance ??= MaintenanceScheduler._();
+  static MaintenanceScheduler get instance =>
+      _instance ??= MaintenanceScheduler._();
 
   MaintenanceScheduler._();
 
@@ -224,8 +225,10 @@ class MaintenanceScheduler {
   Timer? _schedulerTimer;
 
   // Stream controllers
-  final _scheduleController = StreamController<MaintenanceScheduleEntry>.broadcast();
-  Stream<MaintenanceScheduleEntry> get scheduleStream => _scheduleController.stream;
+  final _scheduleController =
+      StreamController<MaintenanceScheduleEntry>.broadcast();
+  Stream<MaintenanceScheduleEntry> get scheduleStream =>
+      _scheduleController.stream;
 
   // Collections
   CollectionReference<Map<String, dynamic>> get _schedulesCollection =>
@@ -271,25 +274,31 @@ class MaintenanceScheduler {
     if (now.day == _config.monthlyDayOfMonth) {
       final lastMonthly = await _getLastMaintenance(MaintenanceCycle.monthly);
       if (lastMonthly == null || lastMonthly.month != now.month) {
-        debugPrint('â° [MaintenanceScheduler] Running scheduled monthly maintenance');
+        debugPrint(
+            'â° [MaintenanceScheduler] Running scheduled monthly maintenance');
         await runMonthlyMaintenance();
       }
     }
 
     // Check quarterly
     if (_isQuarterlyDue(now)) {
-      final lastQuarterly = await _getLastMaintenance(MaintenanceCycle.quarterly);
-      if (lastQuarterly == null || _getQuarter(lastQuarterly) != _getQuarter(now)) {
-        debugPrint('â° [MaintenanceScheduler] Running scheduled quarterly maintenance');
+      final lastQuarterly =
+          await _getLastMaintenance(MaintenanceCycle.quarterly);
+      if (lastQuarterly == null ||
+          _getQuarter(lastQuarterly) != _getQuarter(now)) {
+        debugPrint(
+            'â° [MaintenanceScheduler] Running scheduled quarterly maintenance');
         await runQuarterlyMaintenance();
       }
     }
 
     // Check annual
-    if (now.month == _config.annualMonth && now.day == _config.annualDayOfMonth) {
+    if (now.month == _config.annualMonth &&
+        now.day == _config.annualDayOfMonth) {
       final lastAnnual = await _getLastMaintenance(MaintenanceCycle.annual);
       if (lastAnnual == null || lastAnnual.year != now.year) {
-        debugPrint('â° [MaintenanceScheduler] Running scheduled annual maintenance');
+        debugPrint(
+            'â° [MaintenanceScheduler] Running scheduled annual maintenance');
         await runAnnualMaintenance();
       }
     }
@@ -297,7 +306,8 @@ class MaintenanceScheduler {
 
   bool _isQuarterlyDue(DateTime date) {
     final quarterMonths = [1, 4, 7, 10];
-    return quarterMonths.contains(date.month) && date.day == _config.monthlyDayOfMonth;
+    return quarterMonths.contains(date.month) &&
+        date.day == _config.monthlyDayOfMonth;
   }
 
   int _getQuarter(DateTime date) => ((date.month - 1) ~/ 3) + 1;
@@ -386,7 +396,8 @@ class MaintenanceScheduler {
       // Save completed schedule entry
       final completedEntry = scheduleEntry.copyWith(
         completedAt: DateTime.now(),
-        status: allSuccessful ? ScheduleStatus.completed : ScheduleStatus.failed,
+        status:
+            allSuccessful ? ScheduleStatus.completed : ScheduleStatus.failed,
         results: results,
       );
       await _saveScheduleEntry(completedEntry);
@@ -396,7 +407,8 @@ class MaintenanceScheduler {
       await _saveReport('monthly', report.toMap());
 
       // Track analytics
-      AnalyticsService.instance.logEvent(name: 'monthly_maintenance', parameters: {
+      AnalyticsService.instance
+          .logEvent(name: 'monthly_maintenance', parameters: {
         'rooms_archived': roomsArchived,
         'assets_cleaned': assetsCleanedUp,
         'keys_rotated': keysRotated,
@@ -479,7 +491,8 @@ class MaintenanceScheduler {
       details['monthly'] = monthlyReport.toMap();
 
       // Simulate collection optimization
-      collectionsOptimized = 5; // Would call Firestore optimization in production
+      collectionsOptimized =
+          5; // Would call Firestore optimization in production
       details['collectionsOptimized'] = collectionsOptimized;
 
       final duration = DateTime.now().difference(startTime);
@@ -499,7 +512,8 @@ class MaintenanceScheduler {
       // Save completed schedule entry
       final completedEntry = scheduleEntry.copyWith(
         completedAt: DateTime.now(),
-        status: allSuccessful ? ScheduleStatus.completed : ScheduleStatus.failed,
+        status:
+            allSuccessful ? ScheduleStatus.completed : ScheduleStatus.failed,
         results: details,
       );
       await _saveScheduleEntry(completedEntry);
@@ -509,7 +523,8 @@ class MaintenanceScheduler {
       await _saveReport('quarterly', report.toMap());
 
       // Track analytics
-      AnalyticsService.instance.logEvent(name: 'quarterly_maintenance', parameters: {
+      AnalyticsService.instance
+          .logEvent(name: 'quarterly_maintenance', parameters: {
         'quarter': quarter,
         'documents_backed_up': documentsBackedUp,
         'integrity_issues': integrityIssues,
@@ -579,7 +594,8 @@ class MaintenanceScheduler {
 
       // Get annual statistics from logs
       final yearStart = DateTime(year, 1, 1);
-      final logs = await _firestore.collection('maintenance_logs')
+      final logs = await _firestore
+          .collection('maintenance_logs')
           .where('timestamp', isGreaterThanOrEqualTo: yearStart)
           .get();
 
@@ -632,7 +648,8 @@ class MaintenanceScheduler {
       await _saveReport('annual', report.toMap());
 
       // Track analytics
-      AnalyticsService.instance.logEvent(name: 'annual_maintenance', parameters: {
+      AnalyticsService.instance
+          .logEvent(name: 'annual_maintenance', parameters: {
         'year': year,
         'rooms_archived': totalRoomsArchived,
         'health_score': healthScore,
@@ -688,15 +705,18 @@ class MaintenanceScheduler {
     final recommendations = <String, dynamic>{};
 
     if (roomsArchived > 10000) {
-      recommendations['archival'] = 'Consider shorter archival threshold to reduce storage costs';
+      recommendations['archival'] =
+          'Consider shorter archival threshold to reduce storage costs';
     }
 
     if (assetsCleanedUp > 5000) {
-      recommendations['assets'] = 'High volume of unused assets - consider proactive cleanup triggers';
+      recommendations['assets'] =
+          'High volume of unused assets - consider proactive cleanup triggers';
     }
 
     if (healthScore < 80) {
-      recommendations['health'] = 'System health below optimal - investigate data integrity issues';
+      recommendations['health'] =
+          'System health below optimal - investigate data integrity issues';
     }
 
     recommendations['general'] = [
@@ -736,13 +756,20 @@ class MaintenanceScheduler {
       final data = doc.data();
       return MaintenanceScheduleEntry(
         id: data['id'] as String,
-        cycle: MaintenanceCycle.values.firstWhere((c) => c.name == data['cycle']),
+        cycle:
+            MaintenanceCycle.values.firstWhere((c) => c.name == data['cycle']),
         scheduledFor: DateTime.parse(data['scheduledFor'] as String),
-        startedAt: data['startedAt'] != null ? DateTime.parse(data['startedAt'] as String) : null,
-        completedAt: data['completedAt'] != null ? DateTime.parse(data['completedAt'] as String) : null,
-        status: ScheduleStatus.values.firstWhere((s) => s.name == data['status']),
+        startedAt: data['startedAt'] != null
+            ? DateTime.parse(data['startedAt'] as String)
+            : null,
+        completedAt: data['completedAt'] != null
+            ? DateTime.parse(data['completedAt'] as String)
+            : null,
+        status:
+            ScheduleStatus.values.firstWhere((s) => s.name == data['status']),
         tasks: (data['tasks'] as List<dynamic>)
-            .map((t) => MaintenanceTaskType.values.firstWhere((tt) => tt.name == t))
+            .map((t) =>
+                MaintenanceTaskType.values.firstWhere((tt) => tt.name == t))
             .toList(),
         results: (data['results'] as Map<String, dynamic>?) ?? {},
       );
@@ -767,13 +794,20 @@ class MaintenanceScheduler {
       final data = doc.data();
       return MaintenanceScheduleEntry(
         id: data['id'] as String,
-        cycle: MaintenanceCycle.values.firstWhere((c) => c.name == data['cycle']),
+        cycle:
+            MaintenanceCycle.values.firstWhere((c) => c.name == data['cycle']),
         scheduledFor: DateTime.parse(data['scheduledFor'] as String),
-        startedAt: data['startedAt'] != null ? DateTime.parse(data['startedAt'] as String) : null,
-        completedAt: data['completedAt'] != null ? DateTime.parse(data['completedAt'] as String) : null,
-        status: ScheduleStatus.values.firstWhere((s) => s.name == data['status']),
+        startedAt: data['startedAt'] != null
+            ? DateTime.parse(data['startedAt'] as String)
+            : null,
+        completedAt: data['completedAt'] != null
+            ? DateTime.parse(data['completedAt'] as String)
+            : null,
+        status:
+            ScheduleStatus.values.firstWhere((s) => s.name == data['status']),
         tasks: (data['tasks'] as List<dynamic>)
-            .map((t) => MaintenanceTaskType.values.firstWhere((tt) => tt.name == t))
+            .map((t) =>
+                MaintenanceTaskType.values.firstWhere((tt) => tt.name == t))
             .toList(),
         results: (data['results'] as Map<String, dynamic>?) ?? {},
       );

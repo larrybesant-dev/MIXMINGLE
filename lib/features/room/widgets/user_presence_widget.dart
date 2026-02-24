@@ -30,8 +30,12 @@ class UserPresenceIndicator extends ConsumerWidget {
           children: [
             CircleAvatar(
               radius: size / 2,
-              backgroundImage: presence.avatarUrl.isNotEmpty ? NetworkImage(presence.avatarUrl) : null,
-              child: presence.avatarUrl.isEmpty ? Text(presence.displayName[0].toUpperCase()) : null,
+              backgroundImage: presence.avatarUrl.isNotEmpty
+                  ? NetworkImage(presence.avatarUrl)
+                  : null,
+              child: presence.avatarUrl.isEmpty
+                  ? Text(presence.displayName[0].toUpperCase())
+                  : null,
             ),
             Positioned(
               bottom: 0,
@@ -113,7 +117,8 @@ class TypingIndicator extends StatefulWidget {
   State<TypingIndicator> createState() => _TypingIndicatorState();
 }
 
-class _TypingIndicatorState extends State<TypingIndicator> with TickerProviderStateMixin {
+class _TypingIndicatorState extends State<TypingIndicator>
+    with TickerProviderStateMixin {
   late List<AnimationController> _animationControllers;
 
   @override
@@ -283,7 +288,9 @@ class RoomPresencePanelWidget extends ConsumerWidget {
                           children: [
                             CircleAvatar(
                               radius: 14,
-                              backgroundImage: presence.avatarUrl.isNotEmpty ? NetworkImage(presence.avatarUrl) : null,
+                              backgroundImage: presence.avatarUrl.isNotEmpty
+                                  ? NetworkImage(presence.avatarUrl)
+                                  : null,
                               child: presence.avatarUrl.isEmpty
                                   ? Text(
                                       presence.displayName[0].toUpperCase(),

@@ -1,4 +1,4 @@
-﻿/// Friends Sidebar Widget - Enhanced with collapsible behavior, animations, and hover effects
+/// Friends Sidebar Widget - Enhanced with collapsible behavior, animations, and hover effects
 ///
 /// Features:
 /// - Smooth collapse/expand animation (300ms)
@@ -407,7 +407,9 @@ class _AnimatedFriendTileState extends ConsumerState<_AnimatedFriendTile>
               ),
               color: widget.isSelected
                   ? DesignColors.accent.withValues(alpha: 0.1)
-                  : (_isHovered ? DesignColors.surfaceLight : DesignColors.cardBackground),
+                  : (_isHovered
+                      ? DesignColors.surfaceLight
+                      : DesignColors.cardBackground),
               boxShadow: _isHovered || widget.isSelected
                   ? AppShadows.elevation2
                   : null,
@@ -476,8 +478,7 @@ class _AnimatedFriendTileState extends ConsumerState<_AnimatedFriendTile>
             widget.friend.name,
             style: AppTextStyles.body1.copyWith(
               color: darkMode ? DesignColors.accent : DesignColors.accent,
-              fontWeight:
-                  widget.isSelected ? FontWeight.bold : FontWeight.w500,
+              fontWeight: widget.isSelected ? FontWeight.bold : FontWeight.w500,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -606,7 +607,8 @@ class _PulsingOnlineIndicatorState extends State<_PulsingOnlineIndicator>
               width: 14 * _animation.value,
               height: 14 * _animation.value,
               decoration: BoxDecoration(
-                color: DesignColors.success.withValues(alpha: 0.3 / _animation.value),
+                color: DesignColors.success
+                    .withValues(alpha: 0.3 / _animation.value),
                 shape: BoxShape.circle,
               ),
             ),

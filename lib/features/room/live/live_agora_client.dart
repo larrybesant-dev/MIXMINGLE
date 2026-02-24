@@ -69,15 +69,16 @@ class LiveAgoraClient {
 
   // ── State ─────────────────────────────────────────────────────────────────
   RtcEngine? _engine;
-  bool    _initialized      = false;
-  bool    _inChannel        = false;
+  bool _initialized = false;
+  bool _inChannel = false;
   String? _channelId;
-  int?    _localUid;
-  bool    _publishingVideo  = false;
-  bool    _publishingAudio  = false;
+  int? _localUid;
+  bool _publishingVideo = false;
+  bool _publishingAudio = false;
 
   /// Uids currently in the video channel (not necessarily subscribed).
-  final Set<int> _channelUids    = {};
+  final Set<int> _channelUids = {};
+
   /// Uids we are actively receiving video from.
   final Set<int> _subscribedUids = {};
 
@@ -88,15 +89,16 @@ class LiveAgoraClient {
 
   // ── Public getters ────────────────────────────────────────────────────────
 
-  Stream<VideoEngineEvent> get events        => _events.stream;
-  bool       get isInitialized  => _initialized;
-  bool       get isInChannel    => _inChannel;
-  int?       get localUid       => _localUid;
-  String?    get channelId      => _channelId;
-  Set<int>   get channelUids    => Set.unmodifiable(_channelUids);
-  Set<int>   get subscribedUids => Set.unmodifiable(_subscribedUids);
+  Stream<VideoEngineEvent> get events => _events.stream;
+  bool get isInitialized => _initialized;
+  bool get isInChannel => _inChannel;
+  int? get localUid => _localUid;
+  String? get channelId => _channelId;
+  Set<int> get channelUids => Set.unmodifiable(_channelUids);
+  Set<int> get subscribedUids => Set.unmodifiable(_subscribedUids);
+
   /// Exposes the underlying engine for video rendering widgets.
-  RtcEngine? get engine         => kIsWeb ? null : _engine;
+  RtcEngine? get engine => kIsWeb ? null : _engine;
 
   // ── Initialize ────────────────────────────────────────────────────────────
 
@@ -118,8 +120,8 @@ class LiveAgoraClient {
       await _engine!.setVideoEncoderConfiguration(
         VideoEncoderConfiguration(
           dimensions: _dimensions(),
-          frameRate:  15,
-          bitrate:    _bitrate(),
+          frameRate: 15,
+          bitrate: _bitrate(),
           orientationMode: OrientationMode.orientationModeAdaptive,
           degradationPreference: DegradationPreference.maintainFramerate,
         ),
@@ -148,7 +150,7 @@ class LiveAgoraClient {
   Future<void> joinChannel({
     required String channelId,
     required String userId,
-    required bool   isBroadcaster,
+    required bool isBroadcaster,
   }) async {
     if (!_initialized) throw StateError('Call initialize() first.');
     if (_inChannel) return;
@@ -175,16 +177,16 @@ class LiveAgoraClient {
     await _engine!.enableLocalAudio(false);
 
     await _engine!.joinChannel(
-      token:     token,
+      token: token,
       channelId: channelId,
-      uid:       0, // 0 = server-assigned uid
-      options:   ChannelMediaOptions(
-        channelProfile:       ChannelProfileType.channelProfileLiveBroadcasting,
-        clientRoleType:       role,
-        publishCameraTrack:    false,
+      uid: 0, // 0 = server-assigned uid
+      options: ChannelMediaOptions(
+        channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+        clientRoleType: role,
+        publishCameraTrack: false,
         publishMicrophoneTrack: false,
-        autoSubscribeVideo:   false, // ← never auto-subscribe
-        autoSubscribeAudio:   false, // ← never auto-subscribe
+        autoSubscribeVideo: false, // ← never auto-subscribe
+        autoSubscribeAudio: false, // ← never auto-subscribe
         enableAudioRecordingOrPlayout: true,
       ),
     );
@@ -215,8 +217,8 @@ class LiveAgoraClient {
   Future<void> setVisibleUids(List<int> visibleUids) async {
     if (!_inChannel || kIsWeb) return;
 
-    final target       = visibleUids.take(_maxTileSubscriptions).toSet();
-    final toSubscribe   = target.difference(_subscribedUids);
+    final target = visibleUids.take(_maxTileSubscriptions).toSet();
+    final toSubscribe = target.difference(_subscribedUids);
     final toUnsubscribe = _subscribedUids.difference(target);
 
     for (final uid in toUnsubscribe) {
@@ -341,15 +343,16 @@ class LiveAgoraClient {
     _engine!.registerEventHandler(
       RtcEngineEventHandler(
         onJoinChannelSuccess: (RtcConnection conn, int elapsed) {
-          _localUid  = conn.localUid;
+          _localUid = conn.localUid;
           _inChannel = true;
-          debugPrint('[VIDEO_ENGINE] Joined channel ${conn.channelId} uid=$_localUid');
+          debugPrint(
+              '[VIDEO_ENGINE] Joined channel ${conn.channelId} uid=$_localUid');
           _emit(EngineJoinedEvent(_localUid!));
         },
         onLeaveChannel: (RtcConnection conn, RtcStats stats) {
           debugPrint('[VIDEO_ENGINE] Left channel');
-          _inChannel       = false;
-          _localUid        = null;
+          _inChannel = false;
+          _localUid = null;
           _channelUids.clear();
           _subscribedUids.clear();
           _publishingVideo = false;
@@ -432,9 +435,9 @@ class LiveAgoraClient {
     switch (roomType) {
       case RoomType.broadcast:
       case RoomType.concert:
-        return const VideoDimensions(width: 640, height: 360);  // 360p
+        return const VideoDimensions(width: 640, height: 360); // 360p
       default:
-        return const VideoDimensions(width: 320, height: 240);  // 240p (group)
+        return const VideoDimensions(width: 320, height: 240); // 240p (group)
     }
   }
 
@@ -442,9 +445,9 @@ class LiveAgoraClient {
     switch (roomType) {
       case RoomType.broadcast:
       case RoomType.concert:
-        return 600;   // kbps — 360p
+        return 600; // kbps — 360p
       default:
-        return 300;   // kbps — 240p, cost-optimised for group rooms
+        return 300; // kbps — 240p, cost-optimised for group rooms
     }
   }
 }

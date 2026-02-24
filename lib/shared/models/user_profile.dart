@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// The active mode displayed at top of profile.
@@ -23,19 +22,23 @@ class UserProfile {
   final String? gender;
   final String? pronouns;
   final String? bio;
-  final List<String>? lookingFor; // friends, dating, networking, activity partners
+  final List<String>?
+      lookingFor; // friends, dating, networking, activity partners
   final String? relationshipType; // casual, serious, long-term
   final int? minAgePreference;
   final int? maxAgePreference;
   final List<String>? preferredGenders;
-  final Map<String, String>? personalityPrompts; // "My ideal day...", "A green flag..."
+  final Map<String, String>?
+      personalityPrompts; // "My ideal day...", "A green flag..."
   final List<String>? musicTastes;
-  final Map<String, bool>? lifestylePrompts; // smoking, drinking, fitness, pets, kids
+  final Map<String, bool>?
+      lifestylePrompts; // smoking, drinking, fitness, pets, kids
   final bool? isPhotoVerified;
   final bool? isPhoneVerified;
   final bool? isEmailVerified;
   final bool? isIdVerified;
-  final Map<String, String>? socialLinks; // Instagram, TikTok, Snapchat, X/Twitter
+  final Map<String, String>?
+      socialLinks; // Instagram, TikTok, Snapchat, X/Twitter
   final bool? verifiedOnlyMode;
   final bool? privateMode;
   final int followersCount;
@@ -66,17 +69,17 @@ class UserProfile {
 
   // ── Layer 4: Creator Monetization (18+) ─────────────────────
   final bool isCreatorEnabled;
-  final bool is18PlusVerified;       // age-verified gate, required for adult content
-  final bool isAdultContentEnabled;  // explicit content flag, 18+ only
-  final double? subscriptionPrice;   // monthly USD
+  final bool is18PlusVerified; // age-verified gate, required for adult content
+  final bool isAdultContentEnabled; // explicit content flag, 18+ only
+  final double? subscriptionPrice; // monthly USD
   final int subscriberCount;
   final String? creatorHeadline;
   final bool hasPaidRooms;
   final bool hasContentVault;
-  final double totalEarnings;        // private – only shown to owner
+  final double totalEarnings; // private – only shown to owner
 
   // ── Layer 5: Safety / Control ────────────────────────────────
-  final String dmRestriction;        // 'everyone' | 'followers' | 'nobody'
+  final String dmRestriction; // 'everyone' | 'followers' | 'nobody'
   final bool hideDistance;
   final bool hideFollowers;
   final bool restrictRoomInvites;
@@ -230,7 +233,8 @@ class UserProfile {
     final birthMonth = birthday!.month;
     final birthDay = birthday!.day;
     int age = now.year - birthYear;
-    if (now.month < birthMonth || (now.month == birthMonth && now.day < birthDay)) {
+    if (now.month < birthMonth ||
+        (now.month == birthMonth && now.day < birthDay)) {
       age--;
     }
     return age;
@@ -247,9 +251,7 @@ class UserProfile {
   /// The vibe the user has joined most. Falls back to [vibeTag] if no history.
   String? get topVibe {
     if (vibeHistory.isEmpty) return vibeTag;
-    return vibeHistory.entries
-        .reduce((a, b) => a.value >= b.value ? a : b)
-        .key;
+    return vibeHistory.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
   }
 
   /// How many times the user has joined their top vibe.
@@ -257,7 +259,8 @@ class UserProfile {
 
   /// Energy score (0–100) computed from activity metrics.
   int get energyScore {
-    final raw = (roomsHostedCount * 3) + (eventsAttended * 2) + totalRoomsJoined;
+    final raw =
+        (roomsHostedCount * 3) + (eventsAttended * 2) + totalRoomsJoined;
     return raw.clamp(0, 100);
   }
 
@@ -272,10 +275,14 @@ class UserProfile {
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     ProfileMode parseMode(String? v) {
       switch (v) {
-        case 'dating': return ProfileMode.dating;
-        case 'creator': return ProfileMode.creator;
-        case 'eventHost': return ProfileMode.eventHost;
-        default: return ProfileMode.social;
+        case 'dating':
+          return ProfileMode.dating;
+        case 'creator':
+          return ProfileMode.creator;
+        case 'eventHost':
+          return ProfileMode.eventHost;
+        default:
+          return ProfileMode.social;
       }
     }
 
@@ -291,7 +298,9 @@ class UserProfile {
       location: map['location'] as String?,
       latitude: map['latitude'] as double?,
       longitude: map['longitude'] as double?,
-      birthday: map['birthday'] != null ? (map['birthday'] as Timestamp).toDate() : null,
+      birthday: map['birthday'] != null
+          ? (map['birthday'] as Timestamp).toDate()
+          : null,
       gender: map['gender'] as String?,
       pronouns: map['pronouns'] as String?,
       bio: map['bio'] as String?,
@@ -299,15 +308,19 @@ class UserProfile {
       relationshipType: map['relationshipType'] as String?,
       minAgePreference: map['minAgePreference'] as int?,
       maxAgePreference: map['maxAgePreference'] as int?,
-      preferredGenders: (map['preferredGenders'] as List<dynamic>?)?.cast<String>(),
-      personalityPrompts: (map['personalityPrompts'] as Map<String, dynamic>?)?.cast<String, String>(),
+      preferredGenders:
+          (map['preferredGenders'] as List<dynamic>?)?.cast<String>(),
+      personalityPrompts: (map['personalityPrompts'] as Map<String, dynamic>?)
+          ?.cast<String, String>(),
       musicTastes: (map['musicTastes'] as List<dynamic>?)?.cast<String>(),
-      lifestylePrompts: (map['lifestylePrompts'] as Map<String, dynamic>?)?.cast<String, bool>(),
+      lifestylePrompts: (map['lifestylePrompts'] as Map<String, dynamic>?)
+          ?.cast<String, bool>(),
       isPhotoVerified: map['isPhotoVerified'] as bool?,
       isPhoneVerified: map['isPhoneVerified'] as bool?,
       isEmailVerified: map['isEmailVerified'] as bool?,
       isIdVerified: map['isIdVerified'] as bool?,
-      socialLinks: (map['socialLinks'] as Map<String, dynamic>?)?.cast<String, String>(),
+      socialLinks:
+          (map['socialLinks'] as Map<String, dynamic>?)?.cast<String, String>(),
       verifiedOnlyMode: map['verifiedOnlyMode'] as bool?,
       privateMode: map['privateMode'] as bool?,
       followersCount: map['followersCount'] as int? ?? 0,
@@ -362,10 +375,12 @@ class UserProfile {
       vibeHistory: (map['vibeHistory'] as Map<String, dynamic>?)
               ?.map((k, v) => MapEntry(k, (v as num).toInt())) ??
           const {},
-      computedTags: (map['computedTags'] as List<dynamic>?)?.cast<String>() ?? const [],
+      computedTags:
+          (map['computedTags'] as List<dynamic>?)?.cast<String>() ?? const [],
       // Profile music
       favoriteTrackId: map['favoriteTrackId'] as String?,
-      favoriteTrackSource: _parseTrackSource(map['favoriteTrackSource'] as String?),
+      favoriteTrackSource:
+          _parseTrackSource(map['favoriteTrackSource'] as String?),
       favoriteTrackPreviewUrl: map['favoriteTrackPreviewUrl'] as String?,
       favoriteTrackTitle: map['favoriteTrackTitle'] as String?,
       favoriteTrackArtist: map['favoriteTrackArtist'] as String?,
@@ -374,12 +389,18 @@ class UserProfile {
 
   static TrackSource? _parseTrackSource(String? raw) {
     switch (raw) {
-      case 'spotify':    return TrackSource.spotify;
-      case 'appleMusic': return TrackSource.appleMusic;
-      case 'soundcloud': return TrackSource.soundcloud;
-      case 'internal':   return TrackSource.internal;
-      case 'other':      return TrackSource.other;
-      default:           return null;
+      case 'spotify':
+        return TrackSource.spotify;
+      case 'appleMusic':
+        return TrackSource.appleMusic;
+      case 'soundcloud':
+        return TrackSource.soundcloud;
+      case 'internal':
+        return TrackSource.internal;
+      case 'other':
+        return TrackSource.other;
+      default:
+        return null;
     }
   }
 
@@ -393,7 +414,7 @@ class UserProfile {
       'coverPhotoUrl': coverPhotoUrl,
       'galleryPhotos': galleryPhotos,
       'interests': interests,
-      'location': location,           // city-level only, no lat/lng
+      'location': location, // city-level only, no lat/lng
       'gender': gender,
       'pronouns': pronouns,
       'bio': bio,
@@ -433,7 +454,9 @@ class UserProfile {
       'vipTier': vipTier,
       'isVip': isVip,
       'isBoosted': isBoosted,
-      'boostExpiresAt': boostExpiresAt != null ? Timestamp.fromDate(boostExpiresAt!) : null,      // Intelligence layer
+      'boostExpiresAt': boostExpiresAt != null
+          ? Timestamp.fromDate(boostExpiresAt!)
+          : null, // Intelligence layer
       'vibeHistory': vibeHistory,
       'computedTags': computedTags,
       // Profile music (public – shared on profile view)
@@ -546,7 +569,8 @@ class UserProfile {
       'vipTier': vipTier,
       'isVip': isVip,
       'isBoosted': isBoosted,
-      'boostExpiresAt': boostExpiresAt != null ? Timestamp.fromDate(boostExpiresAt!) : null,
+      'boostExpiresAt':
+          boostExpiresAt != null ? Timestamp.fromDate(boostExpiresAt!) : null,
       // Intelligence layer
       'vibeHistory': vibeHistory,
       'computedTags': computedTags,
@@ -650,7 +674,8 @@ class UserProfile {
       totalRoomsJoined: totalRoomsJoined ?? this.totalRoomsJoined,
       isCreatorEnabled: isCreatorEnabled ?? this.isCreatorEnabled,
       is18PlusVerified: is18PlusVerified ?? this.is18PlusVerified,
-      isAdultContentEnabled: isAdultContentEnabled ?? this.isAdultContentEnabled,
+      isAdultContentEnabled:
+          isAdultContentEnabled ?? this.isAdultContentEnabled,
       subscriptionPrice: subscriptionPrice ?? this.subscriptionPrice,
       subscriberCount: subscriberCount ?? this.subscriberCount,
       creatorHeadline: creatorHeadline ?? this.creatorHeadline,
@@ -678,10 +703,10 @@ class UserProfile {
       // Profile music
       favoriteTrackId: favoriteTrackId ?? this.favoriteTrackId,
       favoriteTrackSource: favoriteTrackSource ?? this.favoriteTrackSource,
-      favoriteTrackPreviewUrl: favoriteTrackPreviewUrl ?? this.favoriteTrackPreviewUrl,
+      favoriteTrackPreviewUrl:
+          favoriteTrackPreviewUrl ?? this.favoriteTrackPreviewUrl,
       favoriteTrackTitle: favoriteTrackTitle ?? this.favoriteTrackTitle,
       favoriteTrackArtist: favoriteTrackArtist ?? this.favoriteTrackArtist,
     );
   }
 }
-

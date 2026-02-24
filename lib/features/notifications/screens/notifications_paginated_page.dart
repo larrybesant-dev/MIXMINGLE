@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart' hide Notification;
+import 'package:flutter/material.dart' hide Notification;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixmingle/core/pagination/pagination_controller.dart';
@@ -11,10 +11,12 @@ class NotificationsPaginatedPage extends ConsumerStatefulWidget {
   const NotificationsPaginatedPage({super.key});
 
   @override
-  ConsumerState<NotificationsPaginatedPage> createState() => _NotificationsPaginatedPageState();
+  ConsumerState<NotificationsPaginatedPage> createState() =>
+      _NotificationsPaginatedPageState();
 }
 
-class _NotificationsPaginatedPageState extends ConsumerState<NotificationsPaginatedPage> {
+class _NotificationsPaginatedPageState
+    extends ConsumerState<NotificationsPaginatedPage> {
   late PaginationController<Notification> _controller;
   String? _currentUserId;
 
@@ -146,7 +148,8 @@ class _NotificationTile extends StatelessWidget {
         title: Text(
           notification.title,
           style: TextStyle(
-            fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
+            fontWeight:
+                notification.isRead ? FontWeight.normal : FontWeight.bold,
             color: Colors.white,
           ),
         ),

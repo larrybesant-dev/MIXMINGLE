@@ -1,4 +1,4 @@
-﻿// lib/services/token_service.dart
+// lib/services/token_service.dart
 import 'package:cloud_functions/cloud_functions.dart';
 
 class TokenService {
@@ -8,7 +8,9 @@ class TokenService {
 
   // Lazy-loaded to ensure Firebase is initialized
   FirebaseFunctions? _functionsInstance;
-  FirebaseFunctions get _functions => _functionsInstance ?? FirebaseFunctions.instanceFor(region: 'us-central1');
+  FirebaseFunctions get _functions =>
+      _functionsInstance ??
+      FirebaseFunctions.instanceFor(region: 'us-central1');
 
   // Generate Agora token for video chat
   Future<String> generateAgoraToken({
@@ -17,7 +19,8 @@ class TokenService {
     required bool isBroadcaster,
   }) async {
     try {
-      final HttpsCallable callable = _functions.httpsCallable('generateAgoraToken');
+      final HttpsCallable callable =
+          _functions.httpsCallable('generateAgoraToken');
       final result = await callable.call(<String, dynamic>{
         'roomId': channelName,
         'userId': userId,
@@ -60,5 +63,3 @@ class TokenService {
     );
   }
 }
-
-

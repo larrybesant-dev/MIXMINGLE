@@ -5,7 +5,8 @@ import '../../helpers/network_degradation_harness.dart';
 void main() {
   group('Screen Share Network Chaos', () {
     testWidgets('Screen share resumes after latency spikes', (tester) async {
-      final harness = NetworkDegradationHarness(minLatencyMs: 300, maxLatencyMs: 1500, logger: print);
+      final harness = NetworkDegradationHarness(
+          minLatencyMs: 300, maxLatencyMs: 1500, logger: print);
       await harness.runWithConditions(() async {
         // Simulate screen share start
         // ...existing code to start screen share...
@@ -17,7 +18,8 @@ void main() {
     });
 
     testWidgets('No stuck overlays after packet loss', (tester) async {
-      final harness = NetworkDegradationHarness(packetLossRate: 0.3, logger: print);
+      final harness =
+          NetworkDegradationHarness(packetLossRate: 0.3, logger: print);
       await harness.runWithConditions(() async {
         // Simulate packet loss during screen share
         // ...existing code...
@@ -26,8 +28,10 @@ void main() {
       });
     });
 
-    testWidgets('No orphaned video elements after disconnect/reconnect', (tester) async {
-      final harness = NetworkDegradationHarness(simulateDisconnect: true, reconnectLoops: 2, logger: print);
+    testWidgets('No orphaned video elements after disconnect/reconnect',
+        (tester) async {
+      final harness = NetworkDegradationHarness(
+          simulateDisconnect: true, reconnectLoops: 2, logger: print);
       await harness.runWithConditions(() async {
         // Simulate disconnect/reconnect during screen share
         // ...existing code...

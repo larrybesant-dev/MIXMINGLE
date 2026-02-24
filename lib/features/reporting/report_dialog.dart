@@ -48,14 +48,17 @@ class _ReportDialogState extends State<ReportDialog> {
         type: widget.type,
         reportedId: widget.reportedId,
         reason: _selectedReason!,
-        additionalInfo: _additionalInfoController.text.trim().isEmpty ? null : _additionalInfoController.text.trim(),
+        additionalInfo: _additionalInfoController.text.trim().isEmpty
+            ? null
+            : _additionalInfoController.text.trim(),
       );
 
       if (mounted) {
         Navigator.of(context).pop(true); // Return success
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Report submitted. Thank you for helping keep our community safe.'),
+            content: Text(
+                'Report submitted. Thank you for helping keep our community safe.'),
             duration: Duration(seconds: 4),
           ),
         );
@@ -81,11 +84,15 @@ class _ReportDialogState extends State<ReportDialog> {
     switch (widget.type) {
       case ReportType.user:
         title = 'Report User';
-        subtitle = widget.reportedName != null ? 'Report ${widget.reportedName}' : 'Report this user';
+        subtitle = widget.reportedName != null
+            ? 'Report ${widget.reportedName}'
+            : 'Report this user';
         break;
       case ReportType.event:
         title = 'Report Event';
-        subtitle = widget.reportedName != null ? 'Report "${widget.reportedName}"' : 'Report this event';
+        subtitle = widget.reportedName != null
+            ? 'Report "${widget.reportedName}"'
+            : 'Report this event';
         break;
       case ReportType.message:
         title = 'Report Message';
@@ -138,7 +145,9 @@ class _ReportDialogState extends State<ReportDialog> {
                           Icons.close,
                           color: theme.colorScheme.onErrorContainer,
                         ),
-                        onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                        onPressed: _isSubmitting
+                            ? null
+                            : () => Navigator.of(context).pop(),
                       ),
                     ],
                   ),
@@ -146,7 +155,8 @@ class _ReportDialogState extends State<ReportDialog> {
                   Text(
                     subtitle,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onErrorContainer.withValues(alpha: 0.8),
+                      color: theme.colorScheme.onErrorContainer
+                          .withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -170,7 +180,8 @@ class _ReportDialogState extends State<ReportDialog> {
                     Text(
                       'Your report is anonymous. Our team will review it.',
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                        color:
+                            theme.colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -197,7 +208,8 @@ class _ReportDialogState extends State<ReportDialog> {
                         subtitle: Text(
                           ReportingService.getReasonDescription(reason),
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface
+                                .withValues(alpha: 0.6),
                           ),
                         ),
                         contentPadding: EdgeInsets.zero,
@@ -220,7 +232,8 @@ class _ReportDialogState extends State<ReportDialog> {
                       maxLines: 4,
                       maxLength: 500,
                       decoration: InputDecoration(
-                        hintText: 'Provide any additional context that might help our review...',
+                        hintText:
+                            'Provide any additional context that might help our review...',
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -235,7 +248,8 @@ class _ReportDialogState extends State<ReportDialog> {
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                color: theme.colorScheme.surfaceContainerHighest
+                    .withValues(alpha: 0.3),
                 borderRadius: const BorderRadius.vertical(
                   bottom: Radius.circular(28),
                 ),
@@ -244,7 +258,9 @@ class _ReportDialogState extends State<ReportDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: _isSubmitting ? null : () => Navigator.of(context).pop(),
+                    onPressed: _isSubmitting
+                        ? null
+                        : () => Navigator.of(context).pop(),
                     child: const Text('Cancel'),
                   ),
                   const SizedBox(width: 12),
@@ -257,7 +273,8 @@ class _ReportDialogState extends State<ReportDialog> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.send),
-                    label: Text(_isSubmitting ? 'Submitting...' : 'Submit Report'),
+                    label:
+                        Text(_isSubmitting ? 'Submitting...' : 'Submit Report'),
                   ),
                 ],
               ),

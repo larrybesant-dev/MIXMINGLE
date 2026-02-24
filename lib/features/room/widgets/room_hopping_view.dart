@@ -156,9 +156,7 @@ class _HopDots extends StatelessWidget {
           width: isActive ? 18 : 6,
           height: 6,
           decoration: BoxDecoration(
-            color: isActive
-                ? vt.primary
-                : vt.primary.withValues(alpha: 0.35),
+            color: isActive ? vt.primary : vt.primary.withValues(alpha: 0.35),
             borderRadius: BorderRadius.circular(3),
             boxShadow: isActive
                 ? [

@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum RoomPrivacy { public, private }
 
@@ -184,7 +184,8 @@ class Room {
       isHidden: json['isHidden'] ?? false,
       slowModeSeconds: json['slowModeSeconds'] ?? 0,
       // Legacy fields
-      participantIds: List<String>.from(json['participantIds'] ?? json['participants'] ?? []),
+      participantIds: List<String>.from(
+          json['participantIds'] ?? json['participants'] ?? []),
       hostName: json['hostName'],
       thumbnailUrl: json['thumbnailUrl'],
       roomType: json['roomType'] != null
@@ -345,10 +346,12 @@ class Room {
     map['id'] = id;
     // Convert Timestamps to ISO8601 strings for JSON compatibility
     if (map['createdAt'] is Timestamp) {
-      map['createdAt'] = (map['createdAt'] as Timestamp).toDate().toIso8601String();
+      map['createdAt'] =
+          (map['createdAt'] as Timestamp).toDate().toIso8601String();
     }
     if (map['updatedAt'] is Timestamp) {
-      map['updatedAt'] = (map['updatedAt'] as Timestamp).toDate().toIso8601String();
+      map['updatedAt'] =
+          (map['updatedAt'] as Timestamp).toDate().toIso8601String();
     }
     return map;
   }
@@ -470,10 +473,9 @@ class Room {
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is Room && runtimeType == other.runtimeType && id == other.id;
+      identical(this, other) ||
+      other is Room && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;
 }
-
-

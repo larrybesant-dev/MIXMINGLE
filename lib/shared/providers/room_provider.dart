@@ -1,4 +1,4 @@
-﻿// Room & Video Participant Provider - Manages active video rooms and participants
+// Room & Video Participant Provider - Manages active video rooms and participants
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_models.dart';
@@ -119,7 +119,8 @@ class ParticipantsNotifier extends Notifier<List<VideoParticipant>> {
 }
 
 /// Participants provider
-final participantsProvider = NotifierProvider<ParticipantsNotifier, List<VideoParticipant>>(
+final participantsProvider =
+    NotifierProvider<ParticipantsNotifier, List<VideoParticipant>>(
   () => ParticipantsNotifier(),
 );
 
@@ -151,7 +152,3 @@ final screenShareParticipantProvider = Provider<VideoParticipant?>((ref) {
     return null;
   }
 });
-
-
-
-

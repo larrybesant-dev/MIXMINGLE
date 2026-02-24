@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'dart:async';
 import 'package:mixmingle/shared/widgets/club_background.dart';
@@ -25,7 +25,8 @@ class _SplashPageState extends State<SplashPage> {
     // Minimum splash delay (show branding)
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted && !_hasNavigated) {
-        debugPrint('â° Minimum delay passed - checking if auth already resolved');
+        debugPrint(
+            'â° Minimum delay passed - checking if auth already resolved');
         setState(() {
           _hasMinimumDelayPassed = true;
         });
@@ -36,9 +37,11 @@ class _SplashPageState extends State<SplashPage> {
     });
 
     // Listen to Firebase auth state changes directly (no providers)
-    _authSubscription = firebase_auth.FirebaseAuth.instance.authStateChanges().listen((user) {
+    _authSubscription =
+        firebase_auth.FirebaseAuth.instance.authStateChanges().listen((user) {
       if (mounted && !_hasNavigated && _hasMinimumDelayPassed) {
-        debugPrint('ðŸ”” Auth state changed: ${user != null ? "user present" : "no user"}');
+        debugPrint(
+            'ðŸ”” Auth state changed: ${user != null ? "user present" : "no user"}');
         _tryNavigate();
       }
     });

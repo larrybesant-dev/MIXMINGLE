@@ -45,7 +45,8 @@ class PresenceCard extends StatefulWidget {
   /// Whether to show arrival animation (slide in from bottom)
   final bool showArrivalAnimation;
 
-  const PresenceCard({super.key,
+  const PresenceCard({
+    super.key,
     required this.participantName,
     this.avatarUrl,
     required this.isSpeaking,
@@ -149,7 +150,8 @@ class _PresenceCardState extends State<PresenceCard>
       child: Container(
         // âœ… Spacing: use DesignSpacing
         padding: const EdgeInsets.all(DesignSpacing.lg), // 16px
-        margin: const EdgeInsets.only(bottom: DesignSpacing.md), // 12px gap between cards
+        margin: const EdgeInsets.only(
+            bottom: DesignSpacing.md), // 12px gap between cards
 
         // âœ… Design: custom borders, shadows, no Material Card
         decoration: BoxDecoration(
@@ -316,8 +318,7 @@ class PresenceCardTestScreen extends StatefulWidget {
   const PresenceCardTestScreen({super.key});
 
   @override
-  State<PresenceCardTestScreen> createState() =>
-      _PresenceCardTestScreenState();
+  State<PresenceCardTestScreen> createState() => _PresenceCardTestScreenState();
 }
 
 class _PresenceCardTestScreenState extends State<PresenceCardTestScreen> {

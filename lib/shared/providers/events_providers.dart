@@ -1,4 +1,3 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/events/events_service.dart';
 import '../models/event.dart';
@@ -15,14 +14,15 @@ final upcomingEventsProvider = StreamProvider<List<Event>>((ref) {
 });
 
 // Event details provider by ID
-final eventDetailsProvider = StreamProvider.family<Event?, String>((ref, eventId) {
+final eventDetailsProvider =
+    StreamProvider.family<Event?, String>((ref, eventId) {
   final service = ref.watch(eventsServiceProvider);
   return service.watchEvent(eventId);
 });
 
 // Event attendees provider (all attendees or filtered by status)
-final eventAttendeesProvider =
-    StreamProvider.family<List<UserProfile>, ({String eventId, String? status})>((ref, params) {
+final eventAttendeesProvider = StreamProvider.family<List<UserProfile>,
+    ({String eventId, String? status})>((ref, params) {
   final service = ref.watch(eventsServiceProvider);
   return service.watchEventAttendees(params.eventId, status: params.status);
 });
@@ -46,37 +46,45 @@ final recommendedEventsProvider = StreamProvider<List<Event>>((ref) {
 });
 
 // User event RSVPs provider
-final userEventRsvpsProvider = StreamProvider.family<List<Event>, String>((ref, userId) {
+final userEventRsvpsProvider =
+    StreamProvider.family<List<Event>, String>((ref, userId) {
   final service = ref.watch(eventsServiceProvider);
   return service.watchUserEventRsvps(userId);
 });
 
 // User's RSVP status for specific event
-final userRsvpStatusProvider = StreamProvider.family<String?, ({String userId, String eventId})>((ref, params) {
+final userRsvpStatusProvider =
+    StreamProvider.family<String?, ({String userId, String eventId})>(
+        (ref, params) {
   final service = ref.watch(eventsServiceProvider);
   return service.watchUserRsvpStatus(params.userId, params.eventId);
 });
 
 // Friends attending specific event
 final friendsAttendingEventProvider =
-    StreamProvider.family<List<UserProfile>, ({String userId, String eventId})>((ref, params) {
+    StreamProvider.family<List<UserProfile>, ({String userId, String eventId})>(
+        (ref, params) {
   final service = ref.watch(eventsServiceProvider);
   return service.watchFriendsAttendingEvent(params.userId, params.eventId);
 });
 
 // RSVP action provider
-final rsvpActionProvider = FutureProvider.family<void, ({String eventId, String status})>((ref, params) async {
+final rsvpActionProvider =
+    FutureProvider.family<void, ({String eventId, String status})>(
+        (ref, params) async {
   final service = ref.watch(eventsServiceProvider);
   await service.rsvpToEvent(params.eventId, params.status);
 
   // Invalidate related providers to trigger refresh
   ref.invalidate(eventDetailsProvider(params.eventId));
-  ref.invalidate(eventAttendeesProvider((eventId: params.eventId, status: null)));
+  ref.invalidate(
+      eventAttendeesProvider((eventId: params.eventId, status: null)));
   ref.invalidate(userEventRsvpsProvider);
 });
 
 // Remove RSVP action provider
-final removeRsvpActionProvider = FutureProvider.family<void, String>((ref, eventId) async {
+final removeRsvpActionProvider =
+    FutureProvider.family<void, String>((ref, eventId) async {
   final service = ref.watch(eventsServiceProvider);
   await service.removeRsvp(eventId);
 
@@ -85,5 +93,3 @@ final removeRsvpActionProvider = FutureProvider.family<void, String>((ref, event
   ref.invalidate(eventAttendeesProvider((eventId: eventId, status: null)));
   ref.invalidate(userEventRsvpsProvider);
 });
-
-

@@ -69,8 +69,7 @@ class SocialFeedService {
     try {
       // Get user's friends list
       final userDoc = await _usersCollection.doc(userId).get();
-      final friendIds =
-          List<String>.from(userDoc.data()?['friends'] ?? []);
+      final friendIds = List<String>.from(userDoc.data()?['friends'] ?? []);
 
       // Include own posts
       final allUserIds = [userId, ...friendIds];
@@ -178,10 +177,8 @@ class SocialFeedService {
       final userDoc = await _usersCollection.doc(userId).get();
       final userData = userDoc.data() ?? {};
 
-      final commentRef = await _postsCollection
-          .doc(postId)
-          .collection('comments')
-          .add({
+      final commentRef =
+          await _postsCollection.doc(postId).collection('comments').add({
         'userId': userId,
         'userName': userData['displayName'] ?? 'User',
         'userAvatar': userData['avatarUrl'] ?? userData['photoUrl'] ?? '',

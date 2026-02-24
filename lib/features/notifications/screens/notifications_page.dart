@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../shared/providers/providers.dart';
 import '../../../shared/models/notification.dart' as app_notification;
@@ -49,7 +49,8 @@ class NotificationsPage extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final notification = notifications[index];
                   return Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    margin:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: ListTile(
                       leading: CircleAvatar(
                         child: Icon(_getNotificationIcon(notification.type)),
@@ -58,7 +59,8 @@ class NotificationsPage extends ConsumerWidget {
                       subtitle: Text(notification.message),
                       trailing: Text(
                         _formatTimestamp(notification.timestamp),
-                        style: const TextStyle(fontSize: 12, color: Colors.grey),
+                        style:
+                            const TextStyle(fontSize: 12, color: Colors.grey),
                       ),
                       onTap: () =>
                           _handleNotificationTap(context, notification),

@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/room_role.dart';
 
 /// Provider for voice room chat messages - manages local state for each room
@@ -48,8 +48,7 @@ class VoiceRoomChatNotifier extends StateNotifier<List<VoiceRoomChatMessage>> {
 
 /// Provider for room roles/participants - returns empty map for each room
 /// In voice_room_page.dart, participants are managed with local state
-final roomRolesProvider = Provider.autoDispose.family<Map<String, RoomParticipant>, String>((ref, roomId) {
+final roomRolesProvider = Provider.autoDispose
+    .family<Map<String, RoomParticipant>, String>((ref, roomId) {
   return {};
 });
-
-

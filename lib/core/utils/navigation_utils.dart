@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'app_logger.dart';
 
 /// Safe navigation utilities with mounted checks
@@ -50,7 +50,8 @@ class SafeNavigation {
     Object? arguments,
   }) async {
     if (!context.mounted) {
-      AppLogger.warning('Attempted to pushReplacement $routeName with unmounted context');
+      AppLogger.warning(
+          'Attempted to pushReplacement $routeName with unmounted context');
       return null;
     }
 
@@ -75,7 +76,8 @@ class SafeNavigation {
     Object? arguments,
   }) async {
     if (!context.mounted) {
-      AppLogger.warning('Attempted to pushNamedAndRemoveUntil $routeName with unmounted context');
+      AppLogger.warning(
+          'Attempted to pushNamedAndRemoveUntil $routeName with unmounted context');
       return null;
     }
 
@@ -145,8 +147,10 @@ extension SafeNavigatorExtension on BuildContext {
       SafeNavigation.safePushNamed<T>(this, routeName, arguments: arguments);
 
   /// Safely push replacement named route
-  Future<T?> safePushReplacementNamed<T, TO>(String routeName, {TO? result, Object? arguments}) =>
-      SafeNavigation.safePushReplacementNamed<T, TO>(this, routeName, result: result, arguments: arguments);
+  Future<T?> safePushReplacementNamed<T, TO>(String routeName,
+          {TO? result, Object? arguments}) =>
+      SafeNavigation.safePushReplacementNamed<T, TO>(this, routeName,
+          result: result, arguments: arguments);
 
   /// Check if can pop safely
   bool get canSafePop => SafeNavigation.canPop(this);

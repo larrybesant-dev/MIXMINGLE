@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../utils/app_logger.dart';
 import '../utils/firestore_utils.dart';
@@ -30,7 +30,11 @@ class ReportBlockService {
 
       // Add to blocked list
       await SafeFirestore.safeSet(
-        ref: _firestore.collection('users').doc(currentUserId).collection('blocked').doc(blockedUserId),
+        ref: _firestore
+            .collection('users')
+            .doc(currentUserId)
+            .collection('blocked')
+            .doc(blockedUserId),
         data: {
           'blockedAt': FieldValue.serverTimestamp(),
           'blockedUserId': blockedUserId,
@@ -58,7 +62,11 @@ class ReportBlockService {
       AppLogger.info('Unblocking user: $blockedUserId');
 
       await SafeFirestore.safeDelete(
-        ref: _firestore.collection('users').doc(currentUserId).collection('blocked').doc(blockedUserId),
+        ref: _firestore
+            .collection('users')
+            .doc(currentUserId)
+            .collection('blocked')
+            .doc(blockedUserId),
       );
 
       AppLogger.info('User unblocked successfully: $blockedUserId');
@@ -75,7 +83,11 @@ class ReportBlockService {
 
     try {
       final doc = await SafeFirestore.safeGet(
-        ref: _firestore.collection('users').doc(currentUserId).collection('blocked').doc(userId),
+        ref: _firestore
+            .collection('users')
+            .doc(currentUserId)
+            .collection('blocked')
+            .doc(userId),
       );
 
       return doc?.exists ?? false;
@@ -92,7 +104,11 @@ class ReportBlockService {
 
     try {
       final doc = await SafeFirestore.safeGet(
-        ref: _firestore.collection('users').doc(userId).collection('blocked').doc(currentUserId),
+        ref: _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('blocked')
+            .doc(currentUserId),
       );
 
       return doc?.exists ?? false;
@@ -109,7 +125,10 @@ class ReportBlockService {
 
     try {
       final snapshot = await SafeFirestore.safeQuery(
-        query: _firestore.collection('users').doc(currentUserId).collection('blocked'),
+        query: _firestore
+            .collection('users')
+            .doc(currentUserId)
+            .collection('blocked'),
       );
 
       if (snapshot == null) return [];
@@ -129,22 +148,38 @@ class ReportBlockService {
     try {
       // Remove from current user's following
       await SafeFirestore.safeDelete(
-        ref: _firestore.collection('users').doc(currentUserId).collection('following').doc(blockedUserId),
+        ref: _firestore
+            .collection('users')
+            .doc(currentUserId)
+            .collection('following')
+            .doc(blockedUserId),
       );
 
       // Remove from blocked user's followers
       await SafeFirestore.safeDelete(
-        ref: _firestore.collection('users').doc(blockedUserId).collection('followers').doc(currentUserId),
+        ref: _firestore
+            .collection('users')
+            .doc(blockedUserId)
+            .collection('followers')
+            .doc(currentUserId),
       );
 
       // Remove from blocked user's following
       await SafeFirestore.safeDelete(
-        ref: _firestore.collection('users').doc(blockedUserId).collection('following').doc(currentUserId),
+        ref: _firestore
+            .collection('users')
+            .doc(blockedUserId)
+            .collection('following')
+            .doc(currentUserId),
       );
 
       // Remove from current user's followers
       await SafeFirestore.safeDelete(
-        ref: _firestore.collection('users').doc(currentUserId).collection('followers').doc(blockedUserId),
+        ref: _firestore
+            .collection('users')
+            .doc(currentUserId)
+            .collection('followers')
+            .doc(blockedUserId),
       );
     } catch (e, stack) {
       AppLogger.error('Error removing follow relationships', e, stack);
@@ -317,5 +352,3 @@ class ReportBlockService {
     }
   }
 }
-
-

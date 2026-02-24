@@ -1,4 +1,4 @@
-﻿/// Chats List Page
+/// Chats List Page
 /// View all conversations
 library;
 
@@ -91,10 +91,9 @@ class ChatsListPage extends ConsumerWidget {
     String currentUserId,
   ) {
     // Get other participant info
-    final participantIds =
-        List<String>.from(chatData['participantIds'] ?? []);
-    final otherUserId =
-        participantIds.firstWhere((id) => id != currentUserId, orElse: () => '');
+    final participantIds = List<String>.from(chatData['participantIds'] ?? []);
+    final otherUserId = participantIds.firstWhere((id) => id != currentUserId,
+        orElse: () => '');
 
     final participantNames =
         Map<String, String>.from(chatData['participantNames'] ?? {});
@@ -107,7 +106,8 @@ class ChatsListPage extends ConsumerWidget {
     final lastMessage = chatData['lastMessage'] as String?;
     final lastMessageTimestamp =
         (chatData['lastMessageTimestamp'] as Timestamp?)?.toDate();
-    final unreadCount = (chatData['unreadCount'] as Map<String, dynamic>?)?[currentUserId] ?? 0;
+    final unreadCount =
+        (chatData['unreadCount'] as Map<String, dynamic>?)?[currentUserId] ?? 0;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -127,9 +127,11 @@ class ChatsListPage extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
-                  backgroundImage:
-                      otherUserPhoto != null ? NetworkImage(otherUserPhoto) : null,
+                  backgroundColor: DesignColors.accent
+                      .withValues(alpha: 255, red: 255, green: 255, blue: 255),
+                  backgroundImage: otherUserPhoto != null
+                      ? NetworkImage(otherUserPhoto)
+                      : null,
                   child: otherUserPhoto == null
                       ? Text(
                           otherUserName[0].toUpperCase(),
@@ -142,31 +144,31 @@ class ChatsListPage extends ConsumerWidget {
                       : null,
                 ),
                 if (unreadCount > 0)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 20,
-                      minHeight: 20,
-                    ),
-                    child: Center(
-                      child: Text(
-                        unreadCount > 9 ? '9+' : unreadCount.toString(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 20,
+                        minHeight: 20,
+                      ),
+                      child: Center(
+                        child: Text(
+                          unreadCount > 9 ? '9+' : unreadCount.toString(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
             const SizedBox(width: 12),
@@ -176,44 +178,46 @@ class ChatsListPage extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      otherUserName,
-                      style: TextStyle(
-                        color: DesignColors.white,
-                        fontSize: 16,
-                        fontWeight: unreadCount > 0
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                    if (lastMessageTimestamp != null)
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
                       Text(
-                        timeago.format(lastMessageTimestamp),
+                        otherUserName,
                         style: TextStyle(
-                          color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
-                          fontSize: 12,
+                          color: DesignColors.white,
+                          fontSize: 16,
+                          fontWeight: unreadCount > 0
+                              ? FontWeight.bold
+                              : FontWeight.normal,
                         ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  lastMessage ?? 'No messages yet',
-                  style: TextStyle(
-                    color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
-                    fontSize: 14,
-                    fontWeight:
-                        unreadCount > 0 ? FontWeight.w600 : FontWeight.normal,
+                      if (lastMessageTimestamp != null)
+                        Text(
+                          timeago.format(lastMessageTimestamp),
+                          style: TextStyle(
+                            color: DesignColors.white.withValues(
+                                alpha: 255, red: 255, green: 255, blue: 255),
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    lastMessage ?? 'No messages yet',
+                    style: TextStyle(
+                      color: DesignColors.white.withValues(
+                          alpha: 255, red: 255, green: 255, blue: 255),
+                      fontSize: 14,
+                      fontWeight:
+                          unreadCount > 0 ? FontWeight.w600 : FontWeight.normal,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
             ),
-          ),
           ],
         ),
       ),
@@ -228,13 +232,15 @@ class ChatsListPage extends ConsumerWidget {
           Icon(
             Icons.chat_bubble_outline,
             size: 80,
-            color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+            color: DesignColors.white
+                .withValues(alpha: 255, red: 255, green: 255, blue: 255),
           ),
           const SizedBox(height: 16),
           Text(
             'No messages yet',
             style: TextStyle(
-              color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+              color: DesignColors.white
+                  .withValues(alpha: 255, red: 255, green: 255, blue: 255),
               fontSize: 18,
             ),
           ),

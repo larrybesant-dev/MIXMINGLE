@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// User presence status enum
@@ -100,13 +100,17 @@ class UserPresenceService {
 
   /// Set user typing status
   Future<void> setTypingStatus(String userId, bool isTyping) async {
-    await _firestore.collection('user_presence').doc(userId).set({'isTyping': isTyping}, SetOptions(merge: true));
+    await _firestore
+        .collection('user_presence')
+        .doc(userId)
+        .set({'isTyping': isTyping}, SetOptions(merge: true));
   }
 
   /// Get user presence
   Future<UserPresence?> getUserPresence(String userId) async {
     try {
-      final doc = await _firestore.collection('user_presence').doc(userId).get();
+      final doc =
+          await _firestore.collection('user_presence').doc(userId).get();
       if (!doc.exists) return null;
       return UserPresence.fromFirestore(doc);
     } catch (e) {
@@ -116,8 +120,14 @@ class UserPresenceService {
 
   /// Get room presence (all users in a room)
   Stream<List<UserPresence>> getRoomPresenceStream(String roomId) {
-    return _firestore.collection('user_presence').where('roomId', isEqualTo: roomId).snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) => UserPresence.fromFirestore(doc)).toList();
+    return _firestore
+        .collection('user_presence')
+        .where('roomId', isEqualTo: roomId)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => UserPresence.fromFirestore(doc))
+          .toList();
     });
   }
 
@@ -129,7 +139,9 @@ class UserPresenceService {
         .where('status', isEqualTo: PresenceStatus.online.index)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => UserPresence.fromFirestore(doc)).toList();
+      return snapshot.docs
+          .map((doc) => UserPresence.fromFirestore(doc))
+          .toList();
     });
   }
 
@@ -141,7 +153,9 @@ class UserPresenceService {
         .where('isTyping', isEqualTo: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => UserPresence.fromFirestore(doc)).toList();
+      return snapshot.docs
+          .map((doc) => UserPresence.fromFirestore(doc))
+          .toList();
     });
   }
 
@@ -161,21 +175,22 @@ final userPresenceServiceProvider = Provider<UserPresenceService>((ref) {
 });
 
 /// Provider for room presence
-final roomPresenceProvider = StreamProvider.family<List<UserPresence>, String>((ref, roomId) {
+final roomPresenceProvider =
+    StreamProvider.family<List<UserPresence>, String>((ref, roomId) {
   final service = ref.watch(userPresenceServiceProvider);
   return service.getRoomPresenceStream(roomId);
 });
 
 /// Provider for online users in room
-final onlineUsersInRoomProvider = StreamProvider.family<List<UserPresence>, String>((ref, roomId) {
+final onlineUsersInRoomProvider =
+    StreamProvider.family<List<UserPresence>, String>((ref, roomId) {
   final service = ref.watch(userPresenceServiceProvider);
   return service.getOnlineUsersStream(roomId);
 });
 
 /// Provider for typing users in room
-final typingUsersProvider = StreamProvider.family<List<UserPresence>, String>((ref, roomId) {
+final typingUsersProvider =
+    StreamProvider.family<List<UserPresence>, String>((ref, roomId) {
   final service = ref.watch(userPresenceServiceProvider);
   return service.getTypingUsersStream(roomId);
 });
-
-

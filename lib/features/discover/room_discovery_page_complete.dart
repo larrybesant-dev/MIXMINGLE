@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/providers/room_providers.dart';
 import '../../../shared/models/room.dart';
@@ -14,10 +14,12 @@ class RoomDiscoveryPageComplete extends ConsumerStatefulWidget {
   const RoomDiscoveryPageComplete({super.key});
 
   @override
-  ConsumerState<RoomDiscoveryPageComplete> createState() => _RoomDiscoveryPageCompleteState();
+  ConsumerState<RoomDiscoveryPageComplete> createState() =>
+      _RoomDiscoveryPageCompleteState();
 }
 
-class _RoomDiscoveryPageCompleteState extends ConsumerState<RoomDiscoveryPageComplete> {
+class _RoomDiscoveryPageCompleteState
+    extends ConsumerState<RoomDiscoveryPageComplete> {
   final TextEditingController _searchController = TextEditingController();
   String _selectedCategory = 'All';
   final List<String> _categories = [
@@ -40,7 +42,8 @@ class _RoomDiscoveryPageCompleteState extends ConsumerState<RoomDiscoveryPageCom
 
   @override
   Widget build(BuildContext context) {
-    final liveRoomsAsync = ref.watch(liveRoomsStreamProvider(_selectedCategory == 'All' ? null : _selectedCategory));
+    final liveRoomsAsync = ref.watch(liveRoomsStreamProvider(
+        _selectedCategory == 'All' ? null : _selectedCategory));
 
     return ClubBackground(
       child: Scaffold(
@@ -58,8 +61,8 @@ class _RoomDiscoveryPageCompleteState extends ConsumerState<RoomDiscoveryPageCom
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh, color: Colors.white),
-              onPressed: () =>
-                  ref.refresh(liveRoomsStreamProvider(_selectedCategory == 'All' ? null : _selectedCategory)),
+              onPressed: () => ref.refresh(liveRoomsStreamProvider(
+                  _selectedCategory == 'All' ? null : _selectedCategory)),
             ),
           ],
         ),
@@ -89,14 +92,16 @@ class _RoomDiscoveryPageCompleteState extends ConsumerState<RoomDiscoveryPageCom
                           hintStyle: TextStyle(color: Colors.white70),
                           prefixIcon: Icon(Icons.search, color: Colors.white70),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 16),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   NeonButton(
-                    onPressed: () => Navigator.of(context).pushNamed(AppRoutes.createRoom),
+                    onPressed: () =>
+                        Navigator.of(context).pushNamed(AppRoutes.createRoom),
                     padding: const EdgeInsets.all(12),
                     child: const Icon(Icons.add, size: 24),
                   ),
@@ -156,7 +161,8 @@ class _RoomDiscoveryPageCompleteState extends ConsumerState<RoomDiscoveryPageCom
                           ),
                           const SizedBox(height: 24),
                           NeonButton(
-                            onPressed: () => Navigator.of(context).pushNamed(AppRoutes.createRoom),
+                            onPressed: () => Navigator.of(context)
+                                .pushNamed(AppRoutes.createRoom),
                             child: const Text('Create Room'),
                           ),
                         ],
@@ -189,8 +195,10 @@ class _RoomDiscoveryPageCompleteState extends ConsumerState<RoomDiscoveryPageCom
 
                   return RefreshIndicator(
                     onRefresh: () async {
-                      await Future.value(
-                          ref.refresh(liveRoomsStreamProvider(_selectedCategory == 'All' ? null : _selectedCategory)));
+                      await Future.value(ref.refresh(liveRoomsStreamProvider(
+                          _selectedCategory == 'All'
+                              ? null
+                              : _selectedCategory)));
                     },
                     child: ListView.builder(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -203,29 +211,37 @@ class _RoomDiscoveryPageCompleteState extends ConsumerState<RoomDiscoveryPageCom
                 },
                 loading: () => const Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF4C4C)),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Color(0xFFFF4C4C)),
                   ),
                 ),
                 error: (error, stack) => Center(
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, size: 60, color: Colors.red),
+                      const Icon(Icons.error_outline,
+                          size: 60, color: Colors.red),
                       const SizedBox(height: 16),
                       Text(
                         'Error loading rooms',
-                        style: TextStyle(fontSize: 18, color: Colors.white.withValues(alpha: 0.7)),
+                        style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white.withValues(alpha: 0.7)),
                       ),
                       const SizedBox(height: 8),
                       Text(
                         error.toString(),
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 14, color: Colors.white.withValues(alpha: 0.5)),
+                        style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withValues(alpha: 0.5)),
                       ),
                       const SizedBox(height: 24),
                       NeonButton(
-                        onPressed: () =>
-                            ref.refresh(liveRoomsStreamProvider(_selectedCategory == 'All' ? null : _selectedCategory)),
+                        onPressed: () => ref.refresh(liveRoomsStreamProvider(
+                            _selectedCategory == 'All'
+                                ? null
+                                : _selectedCategory)),
                         child: const Text('Retry'),
                       ),
                     ],
@@ -255,7 +271,9 @@ class _RoomDiscoveryPageCompleteState extends ConsumerState<RoomDiscoveryPageCom
           color: isSelected ? null : Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFFFF4C4C) : Colors.white.withValues(alpha: 0.2),
+            color: isSelected
+                ? const Color(0xFFFF4C4C)
+                : Colors.white.withValues(alpha: 0.2),
             width: 1.5,
           ),
           boxShadow: isSelected
@@ -286,9 +304,9 @@ class _RoomDiscoveryPageCompleteState extends ConsumerState<RoomDiscoveryPageCom
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (context) => RoomAccessWrapper(
-            room: room,
-            userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
-          ),
+              room: room,
+              userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
+            ),
           ),
         );
       },
@@ -325,14 +343,16 @@ class _RoomDiscoveryPageCompleteState extends ConsumerState<RoomDiscoveryPageCom
                 children: [
                   // Live indicator
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.red,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: const Row(
                       children: [
-                        Icon(Icons.fiber_manual_record, size: 8, color: Colors.white),
+                        Icon(Icons.fiber_manual_record,
+                            size: 8, color: Colors.white),
                         SizedBox(width: 4),
                         Text(
                           'LIVE',
@@ -348,11 +368,14 @@ class _RoomDiscoveryPageCompleteState extends ConsumerState<RoomDiscoveryPageCom
                   const SizedBox(width: 8),
                   // Category badge
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: const Color(0xFFFFD700).withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: const Color(0xFFFFD700).withValues(alpha: 0.5)),
+                      border: Border.all(
+                          color:
+                              const Color(0xFFFFD700).withValues(alpha: 0.5)),
                     ),
                     child: Text(
                       room.category,

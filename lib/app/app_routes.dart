@@ -346,7 +346,8 @@ class AppRoutes {
         );
 
       case error:
-        final message = queryParams['message'] as String? ?? 'An error occurred';
+        final message =
+            queryParams['message'] as String? ?? 'An error occurred';
         return _createFadeRoute(
           page: ErrorPage(errorMessage: message),
           settings: settings,
@@ -453,7 +454,8 @@ class AppRoutes {
 
         if (chatId == null && userId == null) {
           return _createFadeRoute(
-            page: const ErrorPage(errorMessage: 'Chat ID or User ID is required'),
+            page:
+                const ErrorPage(errorMessage: 'Chat ID or User ID is required'),
             settings: settings,
           );
         }
@@ -601,7 +603,8 @@ class AppRoutes {
         // âœ… SECURITY FIX: Ensure at least one of roomId or room is provided
         if (roomId == null && room == null) {
           return _createFadeRoute(
-            page: const ErrorPage(errorMessage: 'Room ID or Room object is required'),
+            page: const ErrorPage(
+                errorMessage: 'Room ID or Room object is required'),
             settings: settings,
           );
         }
@@ -612,10 +615,13 @@ class AppRoutes {
             child: ProfileGuard(
               child: room != null
                   ? RoomAccessWrapper(
-                      room:   room,
-                      userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
+                      room: room,
+                      userId:
+                          fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
                     )
-                  : (roomId != null ? RoomByIdPage(roomId: roomId) : const ErrorPage(errorMessage: 'Room ID required')),
+                  : (roomId != null
+                      ? RoomByIdPage(roomId: roomId)
+                      : const ErrorPage(errorMessage: 'Room ID required')),
             ),
           ),
           settings: settings,

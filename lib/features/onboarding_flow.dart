@@ -8,7 +8,8 @@ import '../shared/widgets/club_background.dart';
 import '../shared/widgets/glow_text.dart';
 
 /// Onboarding page provider using NotifierProvider instead of deprecated StateProvider
-final onboardingPageProvider = NotifierProvider<OnboardingPageNotifier, int>(() {
+final onboardingPageProvider =
+    NotifierProvider<OnboardingPageNotifier, int>(() {
   return OnboardingPageNotifier();
 });
 
@@ -30,7 +31,8 @@ class OnboardingFlow extends ConsumerStatefulWidget {
   ConsumerState<OnboardingFlow> createState() => _OnboardingFlowState();
 }
 
-class _OnboardingFlowState extends ConsumerState<OnboardingFlow> with SingleTickerProviderStateMixin {
+class _OnboardingFlowState extends ConsumerState<OnboardingFlow>
+    with SingleTickerProviderStateMixin {
   final PageController _pageController = PageController();
   late AnimationController _animationController;
 
@@ -40,28 +42,32 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> with SingleTick
       subtitle: 'Connect with amazing people through video chat',
       icon: Icons.waving_hand,
       color: Color(0xFF8F00FF),
-      description: 'Join live conversations, make new friends, and discover exciting communities.',
+      description:
+          'Join live conversations, make new friends, and discover exciting communities.',
     ),
     const OnboardingPageData(
       title: 'Safe & Fun Environment',
       subtitle: 'Your safety is our priority',
       icon: Icons.security,
       color: Color(0xFF00E6FF),
-      description: 'We use advanced moderation and community guidelines to keep everyone safe.',
+      description:
+          'We use advanced moderation and community guidelines to keep everyone safe.',
     ),
     const OnboardingPageData(
       title: 'Real-time Video Chat',
       subtitle: 'Experience seamless video conversations',
       icon: Icons.videocam,
       color: Color(0xFFFF006B),
-      description: 'High-quality video calls with friends and communities around the world.',
+      description:
+          'High-quality video calls with friends and communities around the world.',
     ),
     const OnboardingPageData(
       title: 'Discover & Connect',
       subtitle: 'Find your perfect match',
       icon: Icons.favorite,
       color: Color(0xFFFFB800),
-      description: 'Browse rooms, join conversations, and meet people with similar interests.',
+      description:
+          'Browse rooms, join conversations, and meet people with similar interests.',
     ),
   ];
 
@@ -282,7 +288,10 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> with SingleTick
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: Responsive.responsiveFontSize(context, 18),
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.8),
                     ),
                   ),
 
@@ -298,7 +307,10 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> with SingleTick
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: Responsive.responsiveFontSize(context, 16),
-                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.7),
                         height: 1.5,
                       ),
                     ),

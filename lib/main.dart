@@ -22,6 +22,7 @@ import 'services/notifications/notification_service.dart';
 import 'services/agora/agora_service.dart';
 import 'services/room/room_firestore_service.dart';
 import 'app/app_routes.dart';
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -53,7 +54,8 @@ void main() {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, color: Color(0xFFFF6B35), size: 64),
+                  const Icon(Icons.error_outline,
+                      color: Color(0xFFFF6B35), size: 64),
                   const SizedBox(height: 24),
                   const Text(
                     'Something went wrong',
@@ -64,7 +66,8 @@ void main() {
                     '${details.exception}'.length > 100
                         ? '${details.exception}'.substring(0, 100)
                         : '${details.exception}',
-                    style: const TextStyle(color: Color(0xFF888888), fontSize: 12),
+                    style:
+                        const TextStyle(color: Color(0xFF888888), fontSize: 12),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -77,7 +80,8 @@ void main() {
       try {
         // Initialize Firebase ONCE - block on this
         debugPrint('ðŸ”¥ Initializing Firebase...');
-        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+        await Firebase.initializeApp(
+            options: DefaultFirebaseOptions.currentPlatform);
         debugPrint('âœ… Firebase initialized successfully');
         AppLogger.info('Firebase initialized successfully');
 
@@ -104,7 +108,8 @@ void main() {
 
         // Set up FCM background message handler
         debugPrint('ðŸ“± Setting up FCM...');
-        FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+        FirebaseMessaging.onBackgroundMessage(
+            _firebaseMessagingBackgroundHandler);
         debugPrint('âœ… FCM background handler registered');
 
         // Initialize local notifications (don't block app startup if it fails)
@@ -112,9 +117,11 @@ void main() {
         NotificationService().initialize().then((_) {
           debugPrint('âœ… Notifications initialized successfully');
         }).catchError((e) {
-          debugPrint('âš ï¸  Notification initialization non-fatal failure: $e');
+          debugPrint(
+              'âš ï¸  Notification initialization non-fatal failure: $e');
           AppLogger.warning('Notifications unavailable: $e');
-          CrashlyticsService.instance.recordError(e, reason: 'notification_init_failure');
+          CrashlyticsService.instance
+              .recordError(e, reason: 'notification_init_failure');
         });
 
         // Initialize FCM notifications (don't block app startup if it fails)
@@ -124,13 +131,15 @@ void main() {
         debugPrint('ðŸ¥ Running project health checks...');
         final healthChecker = ProjectHealthChecker();
         await healthChecker.runAllChecks();
-        final healthStatus = healthChecker.isHealthy ? 'âœ… HEALTHY' : 'âš ï¸  ISSUES DETECTED';
+        final healthStatus =
+            healthChecker.isHealthy ? 'âœ… HEALTHY' : 'âš ï¸  ISSUES DETECTED';
         debugPrint('Health check status: $healthStatus');
         AppLogger.info('Health check completed: $healthStatus');
       } catch (e, stackTrace) {
         debugPrint('âŒ Initialization error: $e');
         AppLogger.error('Initialization failed: $e');
-        CrashlyticsService.instance.recordError(e, stackTrace: stackTrace, reason: 'app_init_failure');
+        CrashlyticsService.instance
+            .recordError(e, stackTrace: stackTrace, reason: 'app_init_failure');
         // App will still start even if services fail, but user may experience missing features
       }
 
@@ -198,7 +207,8 @@ class _AlwaysLandingApp extends riverpod.ConsumerWidget {
           case '/signup':
             return MaterialPageRoute(builder: (_) => const NeonSignupPage());
           case '/forgot-password':
-            return MaterialPageRoute(builder: (_) => const ForgotPasswordPage());
+            return MaterialPageRoute(
+                builder: (_) => const ForgotPasswordPage());
           case '/app':
             // After login, go to the auth-protected app
             return MaterialPageRoute(builder: (_) => const RootAuthGate());

@@ -48,7 +48,7 @@ class _NeonVisualizerState extends State<NeonVisualizer>
     super.initState();
     _controllers = List.generate(widget.barCount, (i) {
       final speed = widget.mode == NeonVisualizerMode.room
-          ? 200 + _rng.nextInt(300)  // 200–500ms reactive
+          ? 200 + _rng.nextInt(300) // 200–500ms reactive
           : 600 + _rng.nextInt(600); // 600–1200ms aesthetic
       return AnimationController(
         vsync: this,
@@ -59,7 +59,7 @@ class _NeonVisualizerState extends State<NeonVisualizer>
     _animations = List.generate(widget.barCount, (i) {
       return Tween<double>(
         begin: 0.15 + _rng.nextDouble() * 0.2,
-        end:   0.55 + _rng.nextDouble() * 0.45,
+        end: 0.55 + _rng.nextDouble() * 0.45,
       ).animate(CurvedAnimation(
         parent: _controllers[i],
         curve: Curves.easeInOut,
@@ -103,7 +103,8 @@ class _NeonVisualizerState extends State<NeonVisualizer>
 
   @override
   Widget build(BuildContext context) {
-    final barWidth = (widget.width - (widget.barCount - 1) * 3) / widget.barCount;
+    final barWidth =
+        (widget.width - (widget.barCount - 1) * 3) / widget.barCount;
 
     return SizedBox(
       width: widget.width,
@@ -184,7 +185,8 @@ class _NeonVisualizerRingState extends State<NeonVisualizerRing>
   @override
   void initState() {
     super.initState();
-    _heights = List.generate(widget.barCount, (_) => 0.3 + _rng.nextDouble() * 0.7);
+    _heights =
+        List.generate(widget.barCount, (_) => 0.3 + _rng.nextDouble() * 0.7);
     _controller = AnimationController(
       vsync: this,
       duration: widget.mode == NeonVisualizerMode.room

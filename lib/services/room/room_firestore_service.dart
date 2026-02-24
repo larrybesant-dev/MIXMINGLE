@@ -44,13 +44,13 @@ class RoomFirestoreService {
           .orderBy('joinedAt', descending: false)
           .snapshots()
           .map((snapshot) {
-            if (kDebugMode) {
-              print('[Room Presence] Update: ${snapshot.docs.length} members');
-            }
-            return snapshot.docs
-                .map((doc) => Participant.fromFirestore(doc.id, doc.data()))
-                .toList();
-          });
+        if (kDebugMode) {
+          print('[Room Presence] Update: ${snapshot.docs.length} members');
+        }
+        return snapshot.docs
+            .map((doc) => Participant.fromFirestore(doc.id, doc.data()))
+            .toList();
+      });
     } catch (e) {
       if (kDebugMode) print('[Room Presence] Stream error: $e');
       throw RoomFirestoreException(
@@ -159,14 +159,12 @@ class RoomFirestoreService {
       for (final roomDoc in rooms.docs) {
         await removeParticipant(roomDoc.id, uid);
       }
-      if (kDebugMode) print('[Room Presence] Cleaned up user from ${rooms.docs.length} rooms: $uid');
+      if (kDebugMode)
+        print(
+            '[Room Presence] Cleaned up user from ${rooms.docs.length} rooms: $uid');
     } catch (e) {
       if (kDebugMode) print('[Room Presence] Cleanup failed: $e');
       // Best-effort cleanup
     }
   }
 }
-
-
-
-

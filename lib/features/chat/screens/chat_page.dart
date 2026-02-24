@@ -83,7 +83,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             Expanded(
               child: StreamBuilder<List<ChatMessage>?>(
                 stream: _cs.messagesStream(effectiveChatId),
-                builder: (BuildContext context, AsyncSnapshot<List<ChatMessage>?> snap) {
+                builder: (BuildContext context,
+                    AsyncSnapshot<List<ChatMessage>?> snap) {
                   if (!snap.hasData) {
                     return const Center(child: CircularProgressIndicator());
                   }
@@ -98,16 +99,21 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       final isCurrentUser = senderId == currentUser?.uid;
 
                       return Align(
-                        alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
+                        alignment: isCurrentUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
                         child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
                           padding: const EdgeInsets.all(12),
                           constraints: BoxConstraints(
                             maxWidth: MediaQuery.of(context).size.width * 0.7,
                           ),
                           decoration: BoxDecoration(
                             color: isCurrentUser
-                                ? Theme.of(context).primaryColor.withValues(alpha: 0.8)
+                                ? Theme.of(context)
+                                    .primaryColor
+                                    .withValues(alpha: 0.8)
                                 : Colors.grey[800],
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -194,7 +200,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
             fileName: file.name,
             chatId: widget.chatId ?? '',
             senderId: currentUser.uid,
-            senderName: currentUser.displayName ?? currentUser.email ?? 'Anonymous',
+            senderName:
+                currentUser.displayName ?? currentUser.email ?? 'Anonymous',
           );
 
           // Send file message

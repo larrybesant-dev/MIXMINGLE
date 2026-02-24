@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -79,7 +79,9 @@ class EnhancedGift {
       secondaryColor: Color(map['secondaryColor'] ?? Colors.red.toARGB32()),
       isPremium: map['isPremium'] ?? false,
       isLimited: map['isLimited'] ?? false,
-      availableUntil: map['availableUntil'] != null ? (map['availableUntil'] as Timestamp).toDate() : null,
+      availableUntil: map['availableUntil'] != null
+          ? (map['availableUntil'] as Timestamp).toDate()
+          : null,
       maxDailyUses: map['maxDailyUses'],
     );
   }
@@ -98,7 +100,8 @@ class EnhancedGift {
       'secondaryColor': secondaryColor.toARGB32(),
       'isPremium': isPremium,
       'isLimited': isLimited,
-      'availableUntil': availableUntil != null ? Timestamp.fromDate(availableUntil!) : null,
+      'availableUntil':
+          availableUntil != null ? Timestamp.fromDate(availableUntil!) : null,
       'maxDailyUses': maxDailyUses,
     };
   }
@@ -163,7 +166,8 @@ class GiftTransaction {
 /// Enhanced gift service
 class EnhancedGiftService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+  final FirebaseFunctions _functions =
+      FirebaseFunctions.instanceFor(region: 'us-central1');
 
   /// Get all available gifts
   Future<List<EnhancedGift>> getAvailableGifts() async {
@@ -182,7 +186,10 @@ class EnhancedGiftService {
   /// Get gifts by category
   Future<List<EnhancedGift>> getGiftsByCategory(GiftCategory category) async {
     try {
-      final gifts = await _firestore.collection('enhanced_gifts').where('category', isEqualTo: category.name).get();
+      final gifts = await _firestore
+          .collection('enhanced_gifts')
+          .where('category', isEqualTo: category.name)
+          .get();
 
       return gifts.docs
           .map((doc) => EnhancedGift.fromMap({'id': doc.id, ...doc.data()}))
@@ -232,7 +239,8 @@ class EnhancedGiftService {
   }
 
   /// Get user's received gifts
-  Future<List<GiftTransaction>> getReceivedGifts(String userId, {int limit = 50}) async {
+  Future<List<GiftTransaction>> getReceivedGifts(String userId,
+      {int limit = 50}) async {
     try {
       final gifts = await _firestore
           .collection('gift_transactions')
@@ -241,7 +249,9 @@ class EnhancedGiftService {
           .limit(limit)
           .get();
 
-      return gifts.docs.map((doc) => GiftTransaction.fromMap(doc.data())).toList();
+      return gifts.docs
+          .map((doc) => GiftTransaction.fromMap(doc.data()))
+          .toList();
     } catch (e) {
       debugPrint('Error getting received gifts: $e');
       return [];
@@ -249,7 +259,8 @@ class EnhancedGiftService {
   }
 
   /// Get user's sent gifts
-  Future<List<GiftTransaction>> getSentGifts(String userId, {int limit = 50}) async {
+  Future<List<GiftTransaction>> getSentGifts(String userId,
+      {int limit = 50}) async {
     try {
       final gifts = await _firestore
           .collection('gift_transactions')
@@ -258,7 +269,9 @@ class EnhancedGiftService {
           .limit(limit)
           .get();
 
-      return gifts.docs.map((doc) => GiftTransaction.fromMap(doc.data())).toList();
+      return gifts.docs
+          .map((doc) => GiftTransaction.fromMap(doc.data()))
+          .toList();
     } catch (e) {
       debugPrint('Error getting sent gifts: $e');
       return [];
@@ -266,7 +279,8 @@ class EnhancedGiftService {
   }
 
   /// Get gift leaderboard (most gifted users)
-  Future<List<Map<String, dynamic>>> getGiftLeaderboard({int limit = 10}) async {
+  Future<List<Map<String, dynamic>>> getGiftLeaderboard(
+      {int limit = 10}) async {
     try {
       // This would typically use a Firebase Function to aggregate data
       final result = await _functions.httpsCallable('getGiftLeaderboard').call({
@@ -288,24 +302,33 @@ class EnhancedGiftService {
 
       final totalSent = sentGifts.length;
       final totalReceived = receivedGifts.length;
-      final totalCoinsSent = sentGifts.fold<int>(0, (total, gift) => total + gift.coinAmount);
-      final totalCoinsReceived = receivedGifts.fold<int>(0, (total, gift) => total + gift.coinAmount);
+      final totalCoinsSent =
+          sentGifts.fold<int>(0, (total, gift) => total + gift.coinAmount);
+      final totalCoinsReceived =
+          receivedGifts.fold<int>(0, (total, gift) => total + gift.coinAmount);
 
       // Most popular sent gift
       final sentGiftCounts = <String, int>{};
       for (final gift in sentGifts) {
-        sentGiftCounts[gift.giftName] = (sentGiftCounts[gift.giftName] ?? 0) + 1;
+        sentGiftCounts[gift.giftName] =
+            (sentGiftCounts[gift.giftName] ?? 0) + 1;
       }
-      final mostSentGift =
-          sentGiftCounts.isNotEmpty ? sentGiftCounts.entries.reduce((a, b) => a.value > b.value ? a : b).key : null;
+      final mostSentGift = sentGiftCounts.isNotEmpty
+          ? sentGiftCounts.entries
+              .reduce((a, b) => a.value > b.value ? a : b)
+              .key
+          : null;
 
       // Most popular received gift
       final receivedGiftCounts = <String, int>{};
       for (final gift in receivedGifts) {
-        receivedGiftCounts[gift.giftName] = (receivedGiftCounts[gift.giftName] ?? 0) + 1;
+        receivedGiftCounts[gift.giftName] =
+            (receivedGiftCounts[gift.giftName] ?? 0) + 1;
       }
       final mostReceivedGift = receivedGiftCounts.isNotEmpty
-          ? receivedGiftCounts.entries.reduce((a, b) => a.value > b.value ? a : b).key
+          ? receivedGiftCounts.entries
+              .reduce((a, b) => a.value > b.value ? a : b)
+              .key
           : null;
 
       return {
@@ -363,18 +386,24 @@ class EnhancedGiftService {
           .where('isCustom', isEqualTo: true)
           .get();
 
-      return gifts.docs.map((doc) => EnhancedGift.fromMap({'id': doc.id, ...doc.data()})).toList();
+      return gifts.docs
+          .map((doc) => EnhancedGift.fromMap({'id': doc.id, ...doc.data()}))
+          .toList();
     } catch (e) {
       debugPrint('Error getting user custom gifts: $e');
       return [];
     }
   }
 
-  Future<void> _checkDailyUsageLimit(String userId, String giftId, int maxUses) async {
+  Future<void> _checkDailyUsageLimit(
+      String userId, String giftId, int maxUses) async {
     final today = DateTime.now();
     final todayString = '${today.year}-${today.month}-${today.day}';
 
-    final usageDoc = await _firestore.collection('gift_daily_usage').doc('${userId}_${giftId}_$todayString').get();
+    final usageDoc = await _firestore
+        .collection('gift_daily_usage')
+        .doc('${userId}_${giftId}_$todayString')
+        .get();
 
     final currentUses = usageDoc.data()?['count'] ?? 0;
     if (currentUses >= maxUses) {
@@ -398,7 +427,8 @@ class GiftAnimation extends StatefulWidget {
   State<GiftAnimation> createState() => _GiftAnimationState();
 }
 
-class _GiftAnimationState extends State<GiftAnimation> with TickerProviderStateMixin {
+class _GiftAnimationState extends State<GiftAnimation>
+    with TickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -468,7 +498,8 @@ class _GiftAnimationState extends State<GiftAnimation> with TickerProviderStateM
                 if (widget.gift.isPremium)
                   Container(
                     margin: const EdgeInsets.only(top: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.amber,
                       borderRadius: BorderRadius.circular(12),
@@ -501,32 +532,39 @@ final availableGiftsProvider = FutureProvider<List<EnhancedGift>>((ref) async {
   return service.getAvailableGifts();
 });
 
-final giftsByCategoryProvider = FutureProvider.family<List<EnhancedGift>, GiftCategory>((ref, category) async {
+final giftsByCategoryProvider =
+    FutureProvider.family<List<EnhancedGift>, GiftCategory>(
+        (ref, category) async {
   final service = ref.watch(enhancedGiftServiceProvider);
   return service.getGiftsByCategory(category);
 });
 
-final receivedGiftsProvider = FutureProvider.family<List<GiftTransaction>, String>((ref, userId) async {
+final receivedGiftsProvider =
+    FutureProvider.family<List<GiftTransaction>, String>((ref, userId) async {
   final service = ref.watch(enhancedGiftServiceProvider);
   return service.getReceivedGifts(userId);
 });
 
-final sentGiftsProvider = FutureProvider.family<List<GiftTransaction>, String>((ref, userId) async {
+final sentGiftsProvider =
+    FutureProvider.family<List<GiftTransaction>, String>((ref, userId) async {
   final service = ref.watch(enhancedGiftServiceProvider);
   return service.getSentGifts(userId);
 });
 
-final giftLeaderboardProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final giftLeaderboardProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final service = ref.watch(enhancedGiftServiceProvider);
   return service.getGiftLeaderboard();
 });
 
-final userGiftStatsProvider = FutureProvider.family<Map<String, dynamic>, String>((ref, userId) async {
+final userGiftStatsProvider =
+    FutureProvider.family<Map<String, dynamic>, String>((ref, userId) async {
   final service = ref.watch(enhancedGiftServiceProvider);
   return service.getGiftStats(userId);
 });
 
-final userCustomGiftsProvider = FutureProvider.family<List<EnhancedGift>, String>((ref, userId) async {
+final userCustomGiftsProvider =
+    FutureProvider.family<List<EnhancedGift>, String>((ref, userId) async {
   final service = ref.watch(enhancedGiftServiceProvider);
   return service.getUserCustomGifts(userId);
 });

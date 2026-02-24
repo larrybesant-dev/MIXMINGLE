@@ -33,7 +33,9 @@ class ReactionBus {
   static void removeListener(void Function(String) cb) => _listeners.remove(cb);
 
   static void emit(String emoji) {
-    for (final cb in List.of(_listeners)) { cb(emoji); }
+    for (final cb in List.of(_listeners)) {
+      cb(emoji);
+    }
   }
 }
 

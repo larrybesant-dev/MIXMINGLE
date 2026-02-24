@@ -1,4 +1,4 @@
-﻿/// Coin Package Model
+/// Coin Package Model
 ///
 /// Defines coin packages for purchase via RevenueCat consumables.
 library;
@@ -260,7 +260,8 @@ class CoinTransaction {
       type == CoinTransactionType.other;
 
   /// Get display color for the transaction
-  Color get displayColor => isCredit ? NeonColors.successGreen : NeonColors.errorRed;
+  Color get displayColor =>
+      isCredit ? NeonColors.successGreen : NeonColors.errorRed;
 
   /// Get display icon
   IconData get displayIcon {

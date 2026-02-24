@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/neon_colors.dart';
@@ -70,7 +70,8 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
         'uid': userCredential.user!.uid,
         'email': _emailController.text.trim(),
         'username': _usernameController.text.trim(),
-        'displayName': _usernameController.text.trim(), // Add displayName for auth gate
+        'displayName':
+            _usernameController.text.trim(), // Add displayName for auth gate
         'createdAt': FieldValue.serverTimestamp(),
         'profileImageUrl': '',
         'bio': '',
@@ -222,8 +223,9 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
 
                               // Sign up button
                               NeonButton(
-                                label:
-                                    _isLoading ? 'CREATING ACCOUNT...' : 'SIGN UP',
+                                label: _isLoading
+                                    ? 'CREATING ACCOUNT...'
+                                    : 'SIGN UP',
                                 onPressed: _handleSignup,
                                 glowColor: NeonColors.neonBlue,
                                 isLoading: _isLoading,
@@ -477,7 +479,8 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
           height: 24,
           child: Checkbox(
             value: _agreeToTerms,
-            onChanged: (value) => setState(() => _agreeToTerms = value ?? false),
+            onChanged: (value) =>
+                setState(() => _agreeToTerms = value ?? false),
             fillColor: WidgetStateProperty.resolveWith<Color>(
               (states) {
                 if (states.contains(WidgetState.selected)) {

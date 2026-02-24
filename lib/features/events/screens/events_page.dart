@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:mixmingle/shared/models/event.dart';
-import 'package:mixmingle/shared/providers/events_controller.dart' hide eventProvider;
+import 'package:mixmingle/shared/providers/events_controller.dart'
+    hide eventProvider;
 import 'package:mixmingle/shared/providers/event_dating_providers.dart'
     hide eventsServiceProvider, attendingEventsProvider;
 import 'package:mixmingle/shared/widgets/club_background.dart';
@@ -18,7 +19,8 @@ class EventsPage extends ConsumerStatefulWidget {
   ConsumerState<EventsPage> createState() => _EventsPageState();
 }
 
-class _EventsPageState extends ConsumerState<EventsPage> with SingleTickerProviderStateMixin {
+class _EventsPageState extends ConsumerState<EventsPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -281,7 +283,8 @@ class EventCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final now = DateTime.now();
     final isPast = event.endTime.isBefore(now);
-    final isOngoing = event.startTime.isBefore(now) && event.endTime.isAfter(now);
+    final isOngoing =
+        event.startTime.isBefore(now) && event.endTime.isAfter(now);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
@@ -319,7 +322,11 @@ class EventCard extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyMedium?.color?.withValues(alpha: 0.7),
+                  color: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.color
+                      ?.withValues(alpha: 0.7),
                 ),
               ),
               const SizedBox(height: 12),
@@ -350,7 +357,8 @@ class EventCard extends StatelessWidget {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: _getStatusColor(isPast, isOngoing),
                       borderRadius: BorderRadius.circular(12),
@@ -403,7 +411,15 @@ class EventSearchDialog extends ConsumerStatefulWidget {
 
 class _EventSearchDialogState extends ConsumerState<EventSearchDialog> {
   final _searchController = TextEditingController();
-  final List<String> _categories = ['Social', 'Networking', 'Sports', 'Music', 'Food', 'Art', 'Technology'];
+  final List<String> _categories = [
+    'Social',
+    'Networking',
+    'Sports',
+    'Music',
+    'Food',
+    'Art',
+    'Technology'
+  ];
   String? _selectedCategory;
 
   @override

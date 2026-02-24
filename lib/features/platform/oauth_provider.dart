@@ -249,9 +249,11 @@ class OAuthProvider {
   final Map<String, AuthorizationRequest> _pendingRequests = {};
 
   // Stream controllers
-  final _connectionController = StreamController<OAuthConnectionResult>.broadcast();
+  final _connectionController =
+      StreamController<OAuthConnectionResult>.broadcast();
 
-  Stream<OAuthConnectionResult> get connectionStream => _connectionController.stream;
+  Stream<OAuthConnectionResult> get connectionStream =>
+      _connectionController.stream;
 
   // Collections
   CollectionReference<Map<String, dynamic>> get _providersCollection =>
@@ -286,7 +288,8 @@ class OAuthProvider {
         type: type,
         clientId: clientId,
         clientSecret: clientSecret,
-        authorizationEndpoint: authorizationEndpoint ?? endpoints['authorization']!,
+        authorizationEndpoint:
+            authorizationEndpoint ?? endpoints['authorization']!,
         tokenEndpoint: tokenEndpoint ?? endpoints['token']!,
         userInfoEndpoint: userInfoEndpoint ?? endpoints['userInfo'],
         scopes: scopes ?? _getDefaultScopes(type),
@@ -361,11 +364,7 @@ class OAuthProvider {
       };
 
   List<String> _getDefaultScopes(OAuthProviderType type) => switch (type) {
-        OAuthProviderType.google => [
-            'openid',
-            'email',
-            'profile'
-          ],
+        OAuthProviderType.google => ['openid', 'email', 'profile'],
         OAuthProviderType.apple => ['name', 'email'],
         OAuthProviderType.facebook => ['email', 'public_profile'],
         OAuthProviderType.twitter => [
@@ -513,9 +512,11 @@ class OAuthProvider {
 
       // Fetch user info
       OAuthUserInfo? userInfo;
-      final providerDoc = await _providersCollection.doc(request.providerId).get();
+      final providerDoc =
+          await _providersCollection.doc(request.providerId).get();
       if (providerDoc.exists) {
-        final userInfoEndpoint = providerDoc.data()?['userInfoEndpoint'] as String?;
+        final userInfoEndpoint =
+            providerDoc.data()?['userInfoEndpoint'] as String?;
         if (userInfoEndpoint != null && userInfoEndpoint.isNotEmpty) {
           userInfo = await _fetchUserInfo(
             userInfoEndpoint,
@@ -676,9 +677,8 @@ class OAuthProvider {
 
   /// Get user's OAuth connections
   Future<List<Map<String, dynamic>>> getUserConnections(String userId) async {
-    final snapshot = await _connectionsCollection
-        .where('userId', isEqualTo: userId)
-        .get();
+    final snapshot =
+        await _connectionsCollection.where('userId', isEqualTo: userId).get();
 
     return snapshot.docs.map((doc) => doc.data()).toList();
   }

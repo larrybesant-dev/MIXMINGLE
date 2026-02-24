@@ -383,7 +383,9 @@ class AppVibeChip extends StatelessWidget {
         height: AppSizes.chipHeight,
         padding: AppSpacing.chipPadding,
         decoration: BoxDecoration(
-          color: selected ? color.withValues(alpha: 0.25) : color.withValues(alpha: 0.12),
+          color: selected
+              ? color.withValues(alpha: 0.25)
+              : color.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(AppSizes.chipBorderRadius),
           border: Border.all(
             color: color.withValues(alpha: selected ? 0.8 : 0.45),
@@ -444,7 +446,12 @@ class AppCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(radius),
           border: Border.all(color: glow.withValues(alpha: 0.2), width: 1),
           boxShadow: elevation
-              ? [BoxShadow(color: glow.withValues(alpha: 0.12), blurRadius: 16, offset: const Offset(0, 4))]
+              ? [
+                  BoxShadow(
+                      color: glow.withValues(alpha: 0.12),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4))
+                ]
               : null,
         ),
         child: child,
@@ -489,13 +496,15 @@ class AppPrimaryButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: AppSpacing.spaceLG),
           elevation: 0,
         ).copyWith(
-          overlayColor: WidgetStateProperty.all(DesignColors.white.withValues(alpha: 0.12)),
+          overlayColor: WidgetStateProperty.all(
+              DesignColors.white.withValues(alpha: 0.12)),
         ),
         child: loading
             ? const SizedBox(
                 width: 20,
                 height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                child: CircularProgressIndicator(
+                    strokeWidth: 2, color: Colors.white),
               )
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -539,7 +548,9 @@ class AppAvatar extends StatelessWidget {
       duration: const Duration(milliseconds: 200),
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        border: Border.all(color: glow, width: speaking ? AppSizes.speakingGlowWidth : ringWidth),
+        border: Border.all(
+            color: glow,
+            width: speaking ? AppSizes.speakingGlowWidth : ringWidth),
         boxShadow: [
           BoxShadow(
             color: glow.withValues(alpha: speaking ? 0.7 : 0.4),
@@ -551,9 +562,12 @@ class AppAvatar extends StatelessWidget {
       child: CircleAvatar(
         radius: radius,
         backgroundColor: DesignColors.surfaceLight,
-        backgroundImage: imageUrl != null && imageUrl!.isNotEmpty ? NetworkImage(imageUrl!) : null,
+        backgroundImage: imageUrl != null && imageUrl!.isNotEmpty
+            ? NetworkImage(imageUrl!)
+            : null,
         child: imageUrl == null || imageUrl!.isEmpty
-            ? Icon(fallbackIcon, size: radius * 0.65, color: DesignColors.textGray)
+            ? Icon(fallbackIcon,
+                size: radius * 0.65, color: DesignColors.textGray)
             : null,
       ),
     );

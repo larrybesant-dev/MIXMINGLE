@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/providers/events_providers.dart';
 import '../../../shared/providers/auth_providers.dart';
@@ -12,7 +12,8 @@ class EventsPage extends ConsumerStatefulWidget {
   ConsumerState<EventsPage> createState() => _EventsPageState();
 }
 
-class _EventsPageState extends ConsumerState<EventsPage> with SingleTickerProviderStateMixin {
+class _EventsPageState extends ConsumerState<EventsPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -225,7 +226,8 @@ class _RecommendedEventsTab extends ConsumerWidget {
             context,
             icon: Icons.lightbulb_outline,
             title: 'No recommendations yet',
-            subtitle: 'Update your interests to get personalized event suggestions',
+            subtitle:
+                'Update your interests to get personalized event suggestions',
             actionLabel: 'Update Profile',
             onAction: () => Navigator.of(context).pushNamed('/edit-profile'),
           );
@@ -331,7 +333,8 @@ Widget _buildEmptyState(
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFFFD700),
                 foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               ),
               child: Text(actionLabel),
             ),

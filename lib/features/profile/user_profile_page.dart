@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/providers/providers.dart';
 import '../../shared/models/user.dart';
@@ -350,7 +350,8 @@ class UserProfilePage extends ConsumerWidget {
             runSpacing: 8,
             children: user.interests.map((interest) {
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFF4C4C).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),

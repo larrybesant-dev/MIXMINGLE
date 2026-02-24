@@ -41,7 +41,8 @@ class LayerSafety extends StatelessWidget {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(Icons.shield_outlined, 'Safety', const Color(0xFFFF4D4D)),
+          _sectionHeader(
+              Icons.shield_outlined, 'Safety', const Color(0xFFFF4D4D)),
           const SizedBox(height: 12),
           Row(
             children: [
@@ -72,7 +73,8 @@ class LayerSafety extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionHeader(Icons.shield_outlined, 'Safety & Control', const Color(0xFF00E5CC)),
+        _sectionHeader(
+            Icons.shield_outlined, 'Safety & Control', const Color(0xFF00E5CC)),
         const SizedBox(height: 12),
 
         // Status pills grid
@@ -88,22 +90,30 @@ class LayerSafety extends StatelessWidget {
             _statusPill(
               Icons.location_off_outlined,
               p.hideDistance ? 'Distance Hidden' : 'Distance Visible',
-              p.hideDistance ? const Color(0xFF00C853) : const Color(0xFF6B7280),
+              p.hideDistance
+                  ? const Color(0xFF00C853)
+                  : const Color(0xFF6B7280),
             ),
             _statusPill(
               Icons.visibility_off_outlined,
               p.hideFollowers ? 'Followers Hidden' : 'Followers Visible',
-              p.hideFollowers ? const Color(0xFF00C853) : const Color(0xFF6B7280),
+              p.hideFollowers
+                  ? const Color(0xFF00C853)
+                  : const Color(0xFF6B7280),
             ),
             _statusPill(
               Icons.do_not_disturb_outlined,
               p.restrictRoomInvites ? 'Invites Restricted' : 'Invites Open',
-              p.restrictRoomInvites ? const Color(0xFFFFAB00) : const Color(0xFF6B7280),
+              p.restrictRoomInvites
+                  ? const Color(0xFFFFAB00)
+                  : const Color(0xFF6B7280),
             ),
             _statusPill(
               Icons.lock_outlined,
               p.twoFactorEnabled ? '2FA Enabled' : '2FA Off',
-              p.twoFactorEnabled ? const Color(0xFF00C853) : const Color(0xFFFF4D4D),
+              p.twoFactorEnabled
+                  ? const Color(0xFF00C853)
+                  : const Color(0xFFFF4D4D),
             ),
           ],
         ),
@@ -111,20 +121,31 @@ class LayerSafety extends StatelessWidget {
         const SizedBox(height: 14),
 
         // Controls list
-        _controlTile(Icons.chat_outlined, 'DM Restriction', _dmLabel(p.dmRestriction), onEditDmRestriction),
-        _controlTile(Icons.my_location_outlined, 'Hide Distance', null, onToggleHideDistance, toggle: p.hideDistance),
-        _controlTile(Icons.people_outline, 'Hide Follower Count', null, onToggleHideFollowers, toggle: p.hideFollowers),
-        _controlTile(Icons.notifications_off_outlined, 'Restrict Room Invites', null, onToggleRestrictInvites, toggle: p.restrictRoomInvites),
-        _controlTile(Icons.block_outlined, 'Blocked Users', 'Manage list', onBlockList),
+        _controlTile(Icons.chat_outlined, 'DM Restriction',
+            _dmLabel(p.dmRestriction), onEditDmRestriction),
+        _controlTile(Icons.my_location_outlined, 'Hide Distance', null,
+            onToggleHideDistance,
+            toggle: p.hideDistance),
+        _controlTile(Icons.people_outline, 'Hide Follower Count', null,
+            onToggleHideFollowers,
+            toggle: p.hideFollowers),
+        _controlTile(Icons.notifications_off_outlined, 'Restrict Room Invites',
+            null, onToggleRestrictInvites,
+            toggle: p.restrictRoomInvites),
+        _controlTile(
+            Icons.block_outlined, 'Blocked Users', 'Manage list', onBlockList),
         _controlTile(
           Icons.lock_outlined,
           'Two-Factor Authentication',
           p.twoFactorEnabled ? 'Enabled' : 'Set up now',
           onSetup2FA,
-          valueColor: p.twoFactorEnabled ? const Color(0xFF00C853) : const Color(0xFFFF4D4D),
+          valueColor: p.twoFactorEnabled
+              ? const Color(0xFF00C853)
+              : const Color(0xFFFF4D4D),
         ),
         if (p.isCreatorEnabled)
-          _controlTile(Icons.content_paste_outlined, 'Content Moderation', 'Review flagged content', onContentModeration),
+          _controlTile(Icons.content_paste_outlined, 'Content Moderation',
+              'Review flagged content', onContentModeration),
       ],
     );
   }
@@ -153,19 +174,26 @@ class LayerSafety extends StatelessWidget {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(label,
-                      style: const TextStyle(color: Colors.white, fontSize: 14)),
+                      style:
+                          const TextStyle(color: Colors.white, fontSize: 14)),
                 ),
                 if (toggle != null) ...[
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                     decoration: BoxDecoration(
-                      color: (toggle ? const Color(0xFF00C853) : const Color(0xFF6B7280)).withValues(alpha: 0.15),
+                      color: (toggle
+                              ? const Color(0xFF00C853)
+                              : const Color(0xFF6B7280))
+                          .withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       toggle ? 'ON' : 'OFF',
                       style: TextStyle(
-                        color: toggle ? const Color(0xFF00C853) : const Color(0xFF6B7280),
+                        color: toggle
+                            ? const Color(0xFF00C853)
+                            : const Color(0xFF6B7280),
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
                       ),
@@ -182,7 +210,8 @@ class LayerSafety extends StatelessWidget {
                   ),
                 ],
                 const SizedBox(width: 6),
-                const Icon(Icons.arrow_forward_ios, size: 12, color: Color(0xFF374151)),
+                const Icon(Icons.arrow_forward_ios,
+                    size: 12, color: Color(0xFF374151)),
               ],
             ),
           ),
@@ -202,12 +231,15 @@ class LayerSafety extends StatelessWidget {
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, size: 12, color: color),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+        Text(label,
+            style: TextStyle(
+                color: color, fontSize: 11, fontWeight: FontWeight.w600)),
       ]),
     );
   }
 
-  Widget _safetyButton(IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _safetyButton(
+      IconData icon, String label, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -220,7 +252,9 @@ class LayerSafety extends StatelessWidget {
         child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(width: 8),
-          Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w700)),
+          Text(label,
+              style: TextStyle(
+                  color: color, fontSize: 13, fontWeight: FontWeight.w700)),
         ]),
       ),
     );
@@ -230,28 +264,40 @@ class LayerSafety extends StatelessWidget {
     return Row(children: [
       Icon(icon, size: 16, color: color),
       const SizedBox(width: 7),
-      Text(title, style: TextStyle(
-        color: color, fontSize: 13, fontWeight: FontWeight.w700,
-        shadows: [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 10)],
-      )),
+      Text(title,
+          style: TextStyle(
+            color: color,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            shadows: [
+              Shadow(color: color.withValues(alpha: 0.5), blurRadius: 10)
+            ],
+          )),
       const SizedBox(width: 8),
-      Expanded(child: Container(height: 1, color: color.withValues(alpha: 0.2))),
+      Expanded(
+          child: Container(height: 1, color: color.withValues(alpha: 0.2))),
     ]);
   }
 
   String _dmLabel(String v) {
     switch (v) {
-      case 'followers': return 'Followers Only';
-      case 'nobody': return 'Nobody';
-      default: return 'Everyone';
+      case 'followers':
+        return 'Followers Only';
+      case 'nobody':
+        return 'Nobody';
+      default:
+        return 'Everyone';
     }
   }
 
   Color _dmColor(String v) {
     switch (v) {
-      case 'followers': return const Color(0xFFFFAB00);
-      case 'nobody': return const Color(0xFFFF4D4D);
-      default: return const Color(0xFF00C853);
+      case 'followers':
+        return const Color(0xFFFFAB00);
+      case 'nobody':
+        return const Color(0xFFFF4D4D);
+      default:
+        return const Color(0xFF00C853);
     }
   }
 }

@@ -37,7 +37,11 @@ class EventsService {
 
   /// Watch single event by ID (real-time stream)
   Stream<Event?> watchEvent(String eventId) {
-    return _firestore.collection('events').doc(eventId).snapshots().map((snapshot) {
+    return _firestore
+        .collection('events')
+        .doc(eventId)
+        .snapshots()
+        .map((snapshot) {
       if (!snapshot.exists) return null;
       final data = snapshot.data()!;
       data['id'] = snapshot.id;
@@ -57,7 +61,11 @@ class EventsService {
     final batch = _firestore.batch();
 
     // Add RSVP to event subcollection
-    final eventRsvpRef = _firestore.collection('events').doc(eventId).collection('attendees').doc(user.uid);
+    final eventRsvpRef = _firestore
+        .collection('events')
+        .doc(eventId)
+        .collection('attendees')
+        .doc(user.uid);
     batch.set(eventRsvpRef, {
       'userId': user.uid,
       'status': status,
@@ -65,7 +73,11 @@ class EventsService {
     });
 
     // Add RSVP to user subcollection
-    final userRsvpRef = _firestore.collection('users').doc(user.uid).collection('event_rsvps').doc(eventId);
+    final userRsvpRef = _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('event_rsvps')
+        .doc(eventId);
     batch.set(userRsvpRef, {
       'eventId': eventId,
       'status': status,
@@ -93,7 +105,12 @@ class EventsService {
     if (user == null) throw Exception('User not authenticated');
 
     // Get current RSVP status to decrement correct counter
-    final rsvpDoc = await _firestore.collection('events').doc(eventId).collection('attendees').doc(user.uid).get();
+    final rsvpDoc = await _firestore
+        .collection('events')
+        .doc(eventId)
+        .collection('attendees')
+        .doc(user.uid)
+        .get();
 
     if (!rsvpDoc.exists) return;
 
@@ -102,11 +119,19 @@ class EventsService {
     final batch = _firestore.batch();
 
     // Remove from event subcollection
-    final eventRsvpRef = _firestore.collection('events').doc(eventId).collection('attendees').doc(user.uid);
+    final eventRsvpRef = _firestore
+        .collection('events')
+        .doc(eventId)
+        .collection('attendees')
+        .doc(user.uid);
     batch.delete(eventRsvpRef);
 
     // Remove from user subcollection
-    final userRsvpRef = _firestore.collection('users').doc(user.uid).collection('event_rsvps').doc(eventId);
+    final userRsvpRef = _firestore
+        .collection('users')
+        .doc(user.uid)
+        .collection('event_rsvps')
+        .doc(eventId);
     batch.delete(userRsvpRef);
 
     // Update event counters
@@ -125,10 +150,14 @@ class EventsService {
   }
 
   /// Watch event attendees by status (real-time stream)
-  Stream<List<UserProfile>> watchEventAttendees(String eventId, {String? status}) {
+  Stream<List<UserProfile>> watchEventAttendees(String eventId,
+      {String? status}) {
     try {
-      var query =
-          _firestore.collection('events').doc(eventId).collection('attendees').orderBy('updatedAt', descending: true);
+      var query = _firestore
+          .collection('events')
+          .doc(eventId)
+          .collection('attendees')
+          .orderBy('updatedAt', descending: true);
 
       if (status != null) {
         query = query.where('status', isEqualTo: status);
@@ -141,7 +170,8 @@ class EventsService {
         final profiles = <UserProfile>[];
         for (final userId in userIds) {
           try {
-            final userDoc = await _firestore.collection('users').doc(userId).get();
+            final userDoc =
+                await _firestore.collection('users').doc(userId).get();
             if (userDoc.exists) {
               final data = userDoc.data()!;
               data['id'] = userDoc.id;
@@ -186,7 +216,8 @@ class EventsService {
             final eventId = rsvpDoc.id;
             if (eventsSet.containsKey(eventId)) continue;
 
-            final eventDoc = await _firestore.collection('events').doc(eventId).get();
+            final eventDoc =
+                await _firestore.collection('events').doc(eventId).get();
             if (eventDoc.exists) {
               final eventData = eventDoc.data()!;
               eventData['id'] = eventDoc.id;
@@ -213,11 +244,16 @@ class EventsService {
 
   /// Watch recommended events based on user's interests and social graph (real-time stream)
   Stream<List<Event>> watchRecommendedEvents(String userId) {
-    return _firestore.collection('users').doc(userId).snapshots().asyncMap((userSnapshot) async {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .asyncMap((userSnapshot) async {
       if (!userSnapshot.exists) return <Event>[];
 
       final userData = userSnapshot.data()!;
-      final userInterests = (userData['interests'] as List<dynamic>?)?.cast<String>() ?? [];
+      final userInterests =
+          (userData['interests'] as List<dynamic>?)?.cast<String>() ?? [];
 
       final now = Timestamp.now();
 
@@ -236,7 +272,11 @@ class EventsService {
           return Event.fromMap(data);
         }).toList();
 
-        final userRsvps = await _firestore.collection('users').doc(userId).collection('event_rsvps').get();
+        final userRsvps = await _firestore
+            .collection('users')
+            .doc(userId)
+            .collection('event_rsvps')
+            .get();
         final rsvpedEventIds = userRsvps.docs.map((doc) => doc.id).toSet();
 
         final recommendedEvents = events.where((event) {
@@ -244,7 +284,8 @@ class EventsService {
           if (event.hostId == userId) return false;
 
           final eventCategory = event.category.toLowerCase();
-          final matchesInterest = userInterests.any((interest) => eventCategory.contains(interest.toLowerCase()));
+          final matchesInterest = userInterests.any(
+              (interest) => eventCategory.contains(interest.toLowerCase()));
 
           return matchesInterest || event.attendeesCount > 10;
         }).toList();
@@ -288,7 +329,12 @@ class EventsService {
   /// Get user's RSVP status for an event
   Future<String?> getUserRsvpStatus(String userId, String eventId) async {
     try {
-      final doc = await _firestore.collection('events').doc(eventId).collection('attendees').doc(userId).get();
+      final doc = await _firestore
+          .collection('events')
+          .doc(eventId)
+          .collection('attendees')
+          .doc(userId)
+          .get();
       if (!doc.exists) return null;
       return doc.data()?['status'] as String?;
     } catch (e) {
@@ -298,7 +344,13 @@ class EventsService {
 
   /// Stream user's RSVP status for an event
   Stream<String?> watchUserRsvpStatus(String userId, String eventId) {
-    return _firestore.collection('events').doc(eventId).collection('attendees').doc(userId).snapshots().map((snapshot) {
+    return _firestore
+        .collection('events')
+        .doc(eventId)
+        .collection('attendees')
+        .doc(userId)
+        .snapshots()
+        .map((snapshot) {
       if (!snapshot.exists) return null;
       return snapshot.data()?['status'] as String?;
     });
@@ -319,7 +371,8 @@ class EventsService {
       final events = <Event>[];
       for (final eventId in eventIds) {
         try {
-          final eventDoc = await _firestore.collection('events').doc(eventId).get();
+          final eventDoc =
+              await _firestore.collection('events').doc(eventId).get();
           if (eventDoc.exists) {
             final data = eventDoc.data()!;
             data['id'] = eventDoc.id;
@@ -334,9 +387,14 @@ class EventsService {
   }
 
   /// Get friends attending an event
-  Future<List<UserProfile>> getFriendsAttendingEvent(String userId, String eventId) async {
+  Future<List<UserProfile>> getFriendsAttendingEvent(
+      String userId, String eventId) async {
     try {
-      final followingSnapshot = await _firestore.collection('users').doc(userId).collection('following').get();
+      final followingSnapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('following')
+          .get();
       final followingIds = followingSnapshot.docs.map((doc) => doc.id).toSet();
 
       final attendeesSnapshot = await _firestore
@@ -350,7 +408,8 @@ class EventsService {
       for (final attendeeDoc in attendeesSnapshot.docs) {
         if (followingIds.contains(attendeeDoc.id)) {
           try {
-            final userDoc = await _firestore.collection('users').doc(attendeeDoc.id).get();
+            final userDoc =
+                await _firestore.collection('users').doc(attendeeDoc.id).get();
             if (userDoc.exists) {
               final data = userDoc.data()!;
               data['id'] = userDoc.id;
@@ -368,7 +427,8 @@ class EventsService {
   }
 
   /// Stream friends attending an event
-  Stream<List<UserProfile>> watchFriendsAttendingEvent(String userId, String eventId) {
+  Stream<List<UserProfile>> watchFriendsAttendingEvent(
+      String userId, String eventId) {
     return _firestore
         .collection('users')
         .doc(userId)
@@ -389,7 +449,8 @@ class EventsService {
       for (final attendeeDoc in attendeesSnapshot.docs) {
         if (followingIds.contains(attendeeDoc.id)) {
           try {
-            final userDoc = await _firestore.collection('users').doc(attendeeDoc.id).get();
+            final userDoc =
+                await _firestore.collection('users').doc(attendeeDoc.id).get();
             if (userDoc.exists) {
               final data = userDoc.data()!;
               data['id'] = userDoc.id;

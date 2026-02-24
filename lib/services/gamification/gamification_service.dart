@@ -16,12 +16,14 @@ class GamificationService {
 
   Future<List<Achievement>> getUserAchievements(String userId) async {
     try {
-      final doc = await _firestore.collection('user_achievements').doc(userId).get();
+      final doc =
+          await _firestore.collection('user_achievements').doc(userId).get();
       if (!doc.exists) return [];
 
       final data = doc.data() as Map<String, dynamic>;
-      final achievements =
-          (data['achievements'] as List? ?? []).map((a) => Achievement.fromMap(a as Map<String, dynamic>)).toList();
+      final achievements = (data['achievements'] as List? ?? [])
+          .map((a) => Achievement.fromMap(a as Map<String, dynamic>))
+          .toList();
       return achievements;
     } catch (e) {
       debugPrint('Error getting user achievements: $e');
@@ -38,7 +40,8 @@ class GamificationService {
     });
   }
 
-  Future<void> trackProgress(String userId, String achievementId, int progress) async {
+  Future<void> trackProgress(
+      String userId, String achievementId, int progress) async {
     try {
       final docRef = _firestore.collection('user_achievements').doc(userId);
       final doc = await docRef.get();
@@ -48,8 +51,9 @@ class GamificationService {
       }
 
       final data = doc.data() as Map<String, dynamic>;
-      final achievements =
-          (data['achievements'] as List).map((a) => Achievement.fromMap(a as Map<String, dynamic>)).toList();
+      final achievements = (data['achievements'] as List)
+          .map((a) => Achievement.fromMap(a as Map<String, dynamic>))
+          .toList();
 
       final index = achievements.indexWhere((a) => a.id == achievementId);
       if (index == -1) return;
@@ -73,7 +77,8 @@ class GamificationService {
       if (unlocked) {
         // Award XP and coins
         await addXP(userId, achievement.xpReward);
-        await addCoins(userId, achievement.coinReward, 'Achievement: ${achievement.title}');
+        await addCoins(userId, achievement.coinReward,
+            'Achievement: ${achievement.title}');
 
         // Log activity
         await logActivity(
@@ -101,7 +106,10 @@ class GamificationService {
           xpToNextLevel: 100,
           lastUpdated: DateTime.now(),
         );
-        await _firestore.collection('user_levels').doc(userId).set(newLevel.toMap());
+        await _firestore
+            .collection('user_levels')
+            .doc(userId)
+            .set(newLevel.toMap());
         return newLevel;
       }
       return UserLevel.fromMap(doc.data() as Map<String, dynamic>);
@@ -184,7 +192,10 @@ class GamificationService {
           totalDaysActive: 0,
           rewardsEarned: {},
         );
-        await _firestore.collection('user_streaks').doc(userId).set(newStreak.toMap());
+        await _firestore
+            .collection('user_streaks')
+            .doc(userId)
+            .set(newStreak.toMap());
         return newStreak;
       }
       return UserStreak.fromMap(doc.data() as Map<String, dynamic>);
@@ -209,7 +220,10 @@ class GamificationService {
 
       final now = DateTime.now();
       final lastActive = streak.lastActiveDate;
-      final daysDiff = now.difference(DateTime(lastActive.year, lastActive.month, lastActive.day)).inDays;
+      final daysDiff = now
+          .difference(
+              DateTime(lastActive.year, lastActive.month, lastActive.day))
+          .inDays;
 
       int newStreak;
       if (daysDiff == 1) {
@@ -236,13 +250,17 @@ class GamificationService {
 
       final updatedStreak = streak.copyWith(
         currentStreak: newStreak,
-        longestStreak: newStreak > streak.longestStreak ? newStreak : streak.longestStreak,
+        longestStreak:
+            newStreak > streak.longestStreak ? newStreak : streak.longestStreak,
         lastActiveDate: now,
         totalDaysActive: streak.totalDaysActive + 1,
         rewardsEarned: newRewards,
       );
 
-      await _firestore.collection('user_streaks').doc(userId).set(updatedStreak.toMap());
+      await _firestore
+          .collection('user_streaks')
+          .doc(userId)
+          .set(updatedStreak.toMap());
 
       // Award streak reward
       await addCoins(userId, reward, 'Daily streak bonus (Day $newStreak)');
@@ -297,18 +315,24 @@ class GamificationService {
     }
   }
 
-  Future<List<Activity>> getActivityFeed(String userId, {int limit = 20}) async {
+  Future<List<Activity>> getActivityFeed(String userId,
+      {int limit = 20}) async {
     try {
       // Get user's friends
-      final friendsDoc = await _firestore.collection('friends').doc(userId).get();
-      final friendIds = friendsDoc.exists ? List<String>.from(friendsDoc.data()?['friendIds'] ?? []) : [];
+      final friendsDoc =
+          await _firestore.collection('friends').doc(userId).get();
+      final friendIds = friendsDoc.exists
+          ? List<String>.from(friendsDoc.data()?['friendIds'] ?? [])
+          : [];
 
       // Include user's own ID
       friendIds.add(userId);
 
       final snapshot = await _firestore
           .collection('activities')
-          .where('userId', whereIn: friendIds.isEmpty ? ['none'] : friendIds.take(10).toList())
+          .where('userId',
+              whereIn:
+                  friendIds.isEmpty ? ['none'] : friendIds.take(10).toList())
           .orderBy('timestamp', descending: true)
           .limit(limit)
           .get();
@@ -360,7 +384,8 @@ class GamificationService {
   /// Check and update daily streak
   Future<void> checkDailyStreak(String userId) async {
     try {
-      final streakDoc = await _firestore.collection('user_streaks').doc(userId).get();
+      final streakDoc =
+          await _firestore.collection('user_streaks').doc(userId).get();
 
       if (!streakDoc.exists) {
         // Initialize streak
@@ -387,7 +412,8 @@ class GamificationService {
 
           await _firestore.collection('user_streaks').doc(userId).update({
             'currentStreak': newStreak,
-            'longestStreak': newStreak > longestStreak ? newStreak : longestStreak,
+            'longestStreak':
+                newStreak > longestStreak ? newStreak : longestStreak,
             'lastLoginDate': FieldValue.serverTimestamp(),
           });
         } else if (daysDiff > 1) {
@@ -410,7 +436,8 @@ class GamificationService {
   }
 
   /// Get leaderboard
-  Future<List<Map<String, dynamic>>> getLeaderboard(String type, int limit) async {
+  Future<List<Map<String, dynamic>>> getLeaderboard(
+      String type, int limit) async {
     try {
       String orderField;
       switch (type) {
@@ -427,7 +454,10 @@ class GamificationService {
           orderField = 'xp';
       }
 
-      final query = _firestore.collection('user_levels').orderBy(orderField, descending: true).limit(limit);
+      final query = _firestore
+          .collection('user_levels')
+          .orderBy(orderField, descending: true)
+          .limit(limit);
 
       final snapshot = await query.get();
       return snapshot.docs.map((doc) => doc.data()).toList();

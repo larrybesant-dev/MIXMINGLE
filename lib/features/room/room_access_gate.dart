@@ -1,7 +1,8 @@
-﻿import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/app_logger.dart';
+
 /// Room access states
 enum RoomAccessState {
   loading,
@@ -44,10 +45,8 @@ Future<bool> canAccessRoom({
     }
 
     // Check profile completion
-    final profileDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .get();
+    final profileDoc =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
 
     if (!profileDoc.exists) {
       throw RoomAccessDeniedException(
@@ -100,10 +99,8 @@ Future<RoomAccessState> getRoomAccessState({
     }
 
     // Check profile
-    final profileDoc = await FirebaseFirestore.instance
-        .collection('users')
-        .doc(userId)
-        .get();
+    final profileDoc =
+        await FirebaseFirestore.instance.collection('users').doc(userId).get();
 
     if (!profileDoc.exists) {
       return RoomAccessState.profileIncomplete;
@@ -126,9 +123,9 @@ Future<RoomAccessState> getRoomAccessState({
 }
 
 /// Riverpod provider for room access state
-final roomAccessStateProvider = FutureProvider.family<
-    RoomAccessState,
-    ({String roomId, String userId})>((ref, params) async {
+final roomAccessStateProvider =
+    FutureProvider.family<RoomAccessState, ({String roomId, String userId})>(
+        (ref, params) async {
   return getRoomAccessState(
     roomId: params.roomId,
     userId: params.userId,
@@ -136,16 +133,11 @@ final roomAccessStateProvider = FutureProvider.family<
 });
 
 /// Riverpod provider to check room access (throws on denial)
-final roomAccessCheckProvider = FutureProvider.family<
-    bool,
-    ({String roomId, String userId})>((ref, params) async {
+final roomAccessCheckProvider =
+    FutureProvider.family<bool, ({String roomId, String userId})>(
+        (ref, params) async {
   return canAccessRoom(
     roomId: params.roomId,
     userId: params.userId,
   );
 });
-
-
-
-
-

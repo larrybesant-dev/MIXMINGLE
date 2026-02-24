@@ -11,7 +11,8 @@ class AppConstants {
   // NEVER commit actual credentials to the repository
   // Copy .env.example to .env and add your credentials
   static String get agoraAppId => dotenv.get('AGORA_APP_ID', fallback: '');
-  static String get agoraAppCertificate => dotenv.get('AGORA_APP_CERTIFICATE', fallback: '');
+  static String get agoraAppCertificate =>
+      dotenv.get('AGORA_APP_CERTIFICATE', fallback: '');
 
   // Firebase collections
   static const String usersCollection = 'users';

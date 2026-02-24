@@ -7,7 +7,8 @@ class PublisherController {
 
   // Start publishing
   Future<void> startPublishing() async {
-    publisherState = publisherState.copyWith(status: PublisherStatus.publishing);
+    publisherState =
+        publisherState.copyWith(status: PublisherStatus.publishing);
     // Integrate with Agora SDK here
     // e.g., await agoraEngine.startPublishing();
   }
@@ -84,5 +85,3 @@ class PublisherController {
   bool get isPaused => publisherState.status == PublisherStatus.paused;
   bool get hasError => publisherState.status == PublisherStatus.error;
 }
-
-

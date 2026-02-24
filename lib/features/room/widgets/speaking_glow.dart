@@ -54,8 +54,7 @@ class _SpeakingGlowState extends State<SpeakingGlow>
   @override
   void initState() {
     super.initState();
-    _ctrl = AnimationController(vsync: this)
-      ..duration = _pulseDuration();
+    _ctrl = AnimationController(vsync: this)..duration = _pulseDuration();
     _updateAnim();
   }
 
@@ -72,7 +71,8 @@ class _SpeakingGlowState extends State<SpeakingGlow>
   Duration _pulseDuration() {
     final vt = VibeTheme.of(vibeTag: widget.vibeTag, energy: 60);
     return Duration(
-      milliseconds: (vt.pulseDuration.inMilliseconds * 0.5).round().clamp(200, 800),
+      milliseconds:
+          (vt.pulseDuration.inMilliseconds * 0.5).round().clamp(200, 800),
     );
   }
 

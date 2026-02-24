@@ -1,4 +1,3 @@
-﻿
 // Groups Provider - Manages video groups/rooms with participants and state
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_models.dart';
@@ -88,9 +87,8 @@ class GroupsNotifier extends Notifier<List<VideoGroup>> {
     state = state.map((group) {
       if (group.id == groupId) {
         return group.copyWith(
-          participantIds: group.participantIds
-              .where((id) => id != userId)
-              .toList(),
+          participantIds:
+              group.participantIds.where((id) => id != userId).toList(),
         );
       }
       return group;
@@ -137,7 +135,9 @@ final currentUserIdProvider = Provider<String>((ref) => '1');
 final userJoinedGroupsProvider = Provider<List<VideoGroup>>((ref) {
   final groups = ref.watch(groupsProvider);
   final userId = ref.watch(currentUserIdProvider);
-  return groups.where((group) => group.participantIds.contains(userId)).toList();
+  return groups
+      .where((group) => group.participantIds.contains(userId))
+      .toList();
 });
 
 /// Active groups (with participants)
@@ -166,7 +166,8 @@ class GroupSearchQueryNotifier extends Notifier<String> {
   void setQuery(String query) => state = query;
 }
 
-final groupSearchQueryProvider = NotifierProvider<GroupSearchQueryNotifier, String>(
+final groupSearchQueryProvider =
+    NotifierProvider<GroupSearchQueryNotifier, String>(
   () => GroupSearchQueryNotifier(),
 );
 
@@ -182,7 +183,3 @@ final filteredGroupsProvider = FutureProvider<List<VideoGroup>>((ref) {
         .toList(),
   );
 });
-
-
-
-

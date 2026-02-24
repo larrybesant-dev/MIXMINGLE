@@ -8,13 +8,15 @@ import '../utils/app_logger.dart';
 /// Singleton to track network connectivity status
 /// Simple, lightweight, no provider dependencies
 class ConnectivityNotifier {
-  static final ConnectivityNotifier _instance = ConnectivityNotifier._internal();
+  static final ConnectivityNotifier _instance =
+      ConnectivityNotifier._internal();
   factory ConnectivityNotifier() => _instance;
   ConnectivityNotifier._internal() {
     _startMonitoring();
   }
 
-  final ValueNotifier<ConnectivityState> _state = ValueNotifier(ConnectivityState.online());
+  final ValueNotifier<ConnectivityState> _state =
+      ValueNotifier(ConnectivityState.online());
   Timer? _monitorTimer;
   bool _lastKnownStatus = true;
 

@@ -15,8 +15,8 @@ class MultiCamController {
   void _initializeControllers() {
     windowControllers.clear();
     for (var tile in roomState.videoTiles) {
-      final windowState = roomState.windowStates
-          .firstWhere((ws) => ws.videoTileId == tile.id);
+      final windowState =
+          roomState.windowStates.firstWhere((ws) => ws.videoTileId == tile.id);
       windowControllers.add(VideoWindowController(
         videoTile: tile,
         windowState: windowState,
@@ -47,7 +47,11 @@ class MultiCamController {
     final count = windowControllers.length;
     if (count == 0) return;
 
-    final cols = (count <= 4) ? 2 : (count <= 9) ? 3 : 4;
+    final cols = (count <= 4)
+        ? 2
+        : (count <= 9)
+            ? 3
+            : 4;
     final rows = (count / cols).ceil();
 
     final tileWidth = containerSize.width / cols;
@@ -112,7 +116,8 @@ class MultiCamController {
   // Update room state
   RoomVideoStateModel getUpdatedRoomState() {
     final updatedTiles = windowControllers.map((wc) => wc.videoTile).toList();
-    final updatedWindows = windowControllers.map((wc) => wc.windowState).toList();
+    final updatedWindows =
+        windowControllers.map((wc) => wc.windowState).toList();
 
     return roomState.copyWith(
       videoTiles: updatedTiles,

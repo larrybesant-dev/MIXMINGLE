@@ -95,7 +95,8 @@ void main() {
       }
     });
 
-    testWidgets('should filter events by category', (WidgetTester tester) async {
+    testWidgets('should filter events by category',
+        (WidgetTester tester) async {
       // Arrange
       app.main();
       await tester.pumpAndSettle();

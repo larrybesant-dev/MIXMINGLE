@@ -52,7 +52,11 @@ class EventChatService {
       'replyToId': replyToId,
     };
 
-    await _firestore.collection('events').doc(eventId).collection('chat').add(messageData);
+    await _firestore
+        .collection('events')
+        .doc(eventId)
+        .collection('chat')
+        .add(messageData);
   }
 
   /// Delete a message (only sender can delete)
@@ -60,7 +64,12 @@ class EventChatService {
     final userId = _auth.currentUser?.uid;
     if (userId == null) throw Exception('User not authenticated');
 
-    final messageDoc = await _firestore.collection('events').doc(eventId).collection('chat').doc(messageId).get();
+    final messageDoc = await _firestore
+        .collection('events')
+        .doc(eventId)
+        .collection('chat')
+        .doc(messageId)
+        .get();
 
     if (messageDoc.exists && messageDoc.data()?['senderId'] == userId) {
       await messageDoc.reference.delete();
@@ -71,9 +80,12 @@ class EventChatService {
 
   /// Get message count for an event
   Future<int> getMessageCount(String eventId) async {
-    final snapshot = await _firestore.collection('events').doc(eventId).collection('chat').count().get();
+    final snapshot = await _firestore
+        .collection('events')
+        .doc(eventId)
+        .collection('chat')
+        .count()
+        .get();
     return snapshot.count ?? 0;
   }
 }
-
-

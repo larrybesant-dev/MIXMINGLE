@@ -21,7 +21,7 @@ class LandingMusicService {
 
   final MusicSettingsService _settings;
 
-  final _stingPlayer   = AudioPlayer();
+  final _stingPlayer = AudioPlayer();
   final _ambientPlayer = AudioPlayer();
 
   static const double _ambientVolume = 0.18;

@@ -4,9 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   setUpAll(() async {
-    print('test_config.dart: Forcing integration tests to run on Chrome for web-only dependencies.');
+    print(
+        'test_config.dart: Forcing integration tests to run on Chrome for web-only dependencies.');
     if (!Platform.environment.containsKey('FLUTTER_TEST_PLATFORM')) {
-      print('WARNING: Integration tests must be run with --platform=chrome for web-only code.');
+      print(
+          'WARNING: Integration tests must be run with --platform=chrome for web-only code.');
     }
   });
 }

@@ -30,7 +30,8 @@ class RemoteVideoTile extends StatelessWidget {
               ),
             ),
             Positioned(
-              bottom: 8, left: 8,
+              bottom: 8,
+              left: 8,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 color: Colors.black45,

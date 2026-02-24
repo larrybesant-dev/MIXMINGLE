@@ -1,4 +1,4 @@
-﻿/// Event types for room activity tracking
+/// Event types for room activity tracking
 enum RoomEventType {
   userJoined,
   userLeft,
@@ -20,7 +20,8 @@ class RoomEvent {
   final String actorId; // User who triggered the event
   final String? targetId; // User affected by the event (if applicable)
   final DateTime createdAt;
-  final Map<String, dynamic>? metadata; // Additional context (reason, old/new values, etc.)
+  final Map<String, dynamic>?
+      metadata; // Additional context (reason, old/new values, etc.)
 
   const RoomEvent({
     required this.id,
@@ -185,7 +186,8 @@ class RoomEvent {
   /// Get a human-readable description of this event
   String getDescription({required Map<String, String> userNames}) {
     final actorName = userNames[actorId] ?? 'Unknown';
-    final targetName = targetId != null ? (userNames[targetId!] ?? 'Unknown') : null;
+    final targetName =
+        targetId != null ? (userNames[targetId!] ?? 'Unknown') : null;
 
     switch (type) {
       case RoomEventType.userJoined:
@@ -237,5 +239,3 @@ class RoomEvent {
     );
   }
 }
-
-

@@ -67,7 +67,9 @@ void main() {
           ),
         ];
 
-        final sorted = groups..sort((a, b) => (b['memberCount'] as int).compareTo(a['memberCount'] as int));
+        final sorted = groups
+          ..sort((a, b) =>
+              (b['memberCount'] as int).compareTo(a['memberCount'] as int));
 
         expect((sorted[0]['memberCount'] as int), equals(50));
         expect((sorted[1]['memberCount'] as int), equals(20));
@@ -146,8 +148,7 @@ void main() {
         final firstJoin = mockFirestore.getMockData('groups', 'group-1');
 
         // Try joining again
-        final memberCountBefore =
-            (firstJoin['members'] as List).length;
+        final memberCountBefore = (firstJoin['members'] as List).length;
 
         members = List<String>.from(firstJoin['members'] as List);
         if (!members.contains(userId)) {
@@ -386,8 +387,8 @@ void main() {
         }
 
         final flutterGroups = groups
-            .where((g) =>
-                g['name'].toString().toLowerCase().contains('flutter'))
+            .where(
+                (g) => g['name'].toString().toLowerCase().contains('flutter'))
             .toList();
 
         expect(flutterGroups.length, equals(2));
@@ -404,9 +405,8 @@ void main() {
           mockFirestore.setMockData('groups', group['id'], group);
         }
 
-        final unreadGroups = groups
-            .where((g) => ((g['unreadCount'] as int?) ?? 0) > 0)
-            .toList();
+        final unreadGroups =
+            groups.where((g) => ((g['unreadCount'] as int?) ?? 0) > 0).toList();
 
         expect(unreadGroups.length, equals(2));
       });
@@ -475,9 +475,7 @@ void main() {
 
         expect(retrieved['description'], isNotNull);
         expect(
-          retrieved['description']
-              .toString()
-              .isNotEmpty,
+          retrieved['description'].toString().isNotEmpty,
           isTrue,
         );
       });

@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
@@ -8,7 +8,8 @@ class PhotoUploadService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final ImagePicker _picker = ImagePicker();
-  final ImageOptimizationService _optimizationService = ImageOptimizationService();
+  final ImageOptimizationService _optimizationService =
+      ImageOptimizationService();
 
   Future<XFile?> pickImageFromGallery() async {
     try {
@@ -43,8 +44,10 @@ class PhotoUploadService {
     if (userId == null) throw Exception('User not authenticated');
 
     try {
-      final String extension = imageFile.path.substring(imageFile.path.lastIndexOf('.'));
-      final String fileName = '${DateTime.now().millisecondsSinceEpoch}$extension';
+      final String extension =
+          imageFile.path.substring(imageFile.path.lastIndexOf('.'));
+      final String fileName =
+          '${DateTime.now().millisecondsSinceEpoch}$extension';
       final String path = 'profile_photos/$userId/$fileName';
 
       // Optimize and upload with thumbnails
@@ -85,8 +88,10 @@ class PhotoUploadService {
     if (userId == null) throw Exception('User not authenticated');
 
     try {
-      final String extension = imageFile.path.substring(imageFile.path.lastIndexOf('.'));
-      final String fileName = '${DateTime.now().millisecondsSinceEpoch}$extension';
+      final String extension =
+          imageFile.path.substring(imageFile.path.lastIndexOf('.'));
+      final String fileName =
+          '${DateTime.now().millisecondsSinceEpoch}$extension';
       final String path = 'event_photos/$eventId/$fileName';
 
       // Optimize and upload with thumbnails
@@ -110,5 +115,3 @@ class PhotoUploadService {
     }
   }
 }
-
-

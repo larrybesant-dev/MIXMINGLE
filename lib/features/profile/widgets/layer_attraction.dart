@@ -32,12 +32,21 @@ class LayerAttraction extends StatelessWidget {
           runSpacing: 6,
           children: [
             _presenceBadge(p.presenceStatus),
-            if (p.isPhotoVerified ?? false) _badge(Icons.camera_alt_outlined, 'Photo Verified', const Color(0xFF00C853)),
-            if (p.isIdVerified ?? false) _badge(Icons.verified_user_outlined, 'ID Verified', const Color(0xFFFFD700)),
-            if (p.isPremium) _badge(Icons.workspace_premium_outlined, 'Premium', const Color(0xFFFFAB00)),
-            if (p.isCreatorBadge) _badge(Icons.star_outline_rounded, 'Creator', const Color(0xFFFF6B35)),
+            if (p.isPhotoVerified ?? false)
+              _badge(Icons.camera_alt_outlined, 'Photo Verified',
+                  const Color(0xFF00C853)),
+            if (p.isIdVerified ?? false)
+              _badge(Icons.verified_user_outlined, 'ID Verified',
+                  const Color(0xFFFFD700)),
+            if (p.isPremium)
+              _badge(Icons.workspace_premium_outlined, 'Premium',
+                  const Color(0xFFFFAB00)),
+            if (p.isCreatorBadge)
+              _badge(Icons.star_outline_rounded, 'Creator',
+                  const Color(0xFFFF6B35)),
             if (p.isAdultContentEnabled && p.is18PlusVerified)
-              _badge(Icons.eighteen_up_rating_outlined, '18+', const Color(0xFFFF1744)),
+              _badge(Icons.eighteen_up_rating_outlined, '18+',
+                  const Color(0xFFFF1744)),
           ],
         ),
         const SizedBox(height: 14),
@@ -71,7 +80,10 @@ class LayerAttraction extends StatelessWidget {
         if (p.gender != null || p.pronouns != null) ...[
           const SizedBox(height: 4),
           Text(
-            [if (p.gender != null) p.gender!, if (p.pronouns != null) p.pronouns!].join('  •  '),
+            [
+              if (p.gender != null) p.gender!,
+              if (p.pronouns != null) p.pronouns!
+            ].join('  •  '),
             style: const TextStyle(color: Color(0xFF8892A4), fontSize: 13),
           ),
         ],
@@ -79,9 +91,11 @@ class LayerAttraction extends StatelessWidget {
         if (p.location != null && p.location!.isNotEmpty) ...[
           const SizedBox(height: 6),
           Row(children: [
-            const Icon(Icons.location_on_outlined, size: 14, color: Color(0xFF4A90FF)),
+            const Icon(Icons.location_on_outlined,
+                size: 14, color: Color(0xFF4A90FF)),
             const SizedBox(width: 4),
-            Text(p.location!, style: const TextStyle(color: Color(0xFF4A90FF), fontSize: 13)),
+            Text(p.location!,
+                style: const TextStyle(color: Color(0xFF4A90FF), fontSize: 13)),
           ]),
         ],
 
@@ -114,7 +128,8 @@ class LayerAttraction extends StatelessWidget {
         // Bio
         if (p.bio != null && p.bio!.isNotEmpty) ...[
           const SizedBox(height: 16),
-          _sectionHeader(Icons.person_outline, 'About', const Color(0xFF4A90FF)),
+          _sectionHeader(
+              Icons.person_outline, 'About', const Color(0xFF4A90FF)),
           const SizedBox(height: 8),
           Container(
             width: double.infinity,
@@ -126,7 +141,8 @@ class LayerAttraction extends StatelessWidget {
             ),
             child: Text(
               p.bio!,
-              style: const TextStyle(color: Color(0xFFD1D5DB), fontSize: 14, height: 1.6),
+              style: const TextStyle(
+                  color: Color(0xFFD1D5DB), fontSize: 14, height: 1.6),
             ),
           ),
         ],
@@ -134,17 +150,21 @@ class LayerAttraction extends StatelessWidget {
         // Interests
         if (p.interests != null && p.interests!.isNotEmpty) ...[
           const SizedBox(height: 16),
-          _sectionHeader(Icons.local_fire_department_outlined, 'Interests', const Color(0xFFFF6B35)),
+          _sectionHeader(Icons.local_fire_department_outlined, 'Interests',
+              const Color(0xFFFF6B35)),
           const SizedBox(height: 8),
           _chipWrap(p.interests!, const Color(0xFFFF6B35)),
         ],
 
         // Personality prompts
-        if (p.personalityPrompts != null && p.personalityPrompts!.isNotEmpty) ...[
+        if (p.personalityPrompts != null &&
+            p.personalityPrompts!.isNotEmpty) ...[
           const SizedBox(height: 16),
-          _sectionHeader(Icons.auto_awesome_outlined, 'Vibe Check', const Color(0xFF9B59B6)),
+          _sectionHeader(Icons.auto_awesome_outlined, 'Vibe Check',
+              const Color(0xFF9B59B6)),
           const SizedBox(height: 8),
-          ...p.personalityPrompts!.entries.map((e) => _promptCard(e.key, e.value)),
+          ...p.personalityPrompts!.entries
+              .map((e) => _promptCard(e.key, e.value)),
         ],
       ],
     );
@@ -155,13 +175,21 @@ class LayerAttraction extends StatelessWidget {
     String label;
     switch (status) {
       case 'in_room':
-        c = const Color(0xFFFFAB00); label = '● In Room'; break;
+        c = const Color(0xFFFFAB00);
+        label = '● In Room';
+        break;
       case 'in_event':
-        c = const Color(0xFF00E5CC); label = '● At Event'; break;
+        c = const Color(0xFF00E5CC);
+        label = '● At Event';
+        break;
       case 'online':
-        c = const Color(0xFF00C853); label = '● Online'; break;
+        c = const Color(0xFF00C853);
+        label = '● Online';
+        break;
       default:
-        c = const Color(0xFF6B7280); label = '○ Offline'; break;
+        c = const Color(0xFF6B7280);
+        label = '○ Offline';
+        break;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -170,7 +198,9 @@ class LayerAttraction extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: c.withValues(alpha: 0.5)),
       ),
-      child: Text(label, style: TextStyle(color: c, fontSize: 12, fontWeight: FontWeight.w600)),
+      child: Text(label,
+          style:
+              TextStyle(color: c, fontSize: 12, fontWeight: FontWeight.w600)),
     );
   }
 
@@ -185,12 +215,15 @@ class LayerAttraction extends StatelessWidget {
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, size: 12, color: color),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+        Text(label,
+            style: TextStyle(
+                color: color, fontSize: 11, fontWeight: FontWeight.w600)),
       ]),
     );
   }
 
-  Widget _actionButton(String label, IconData icon, Color color, VoidCallback onTap) {
+  Widget _actionButton(
+      String label, IconData icon, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -205,7 +238,9 @@ class LayerAttraction extends StatelessWidget {
           children: [
             Icon(icon, size: 15, color: color),
             const SizedBox(width: 6),
-            Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w700, fontSize: 13)),
+            Text(label,
+                style: TextStyle(
+                    color: color, fontWeight: FontWeight.w700, fontSize: 13)),
           ],
         ),
       ),
@@ -216,14 +251,18 @@ class LayerAttraction extends StatelessWidget {
     return Row(children: [
       Icon(icon, size: 16, color: color),
       const SizedBox(width: 7),
-      Text(title, style: TextStyle(
-        color: color,
-        fontSize: 13,
-        fontWeight: FontWeight.w700,
-        shadows: [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 10)],
-      )),
+      Text(title,
+          style: TextStyle(
+            color: color,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            shadows: [
+              Shadow(color: color.withValues(alpha: 0.5), blurRadius: 10)
+            ],
+          )),
       const SizedBox(width: 8),
-      Expanded(child: Container(height: 1, color: color.withValues(alpha: 0.2))),
+      Expanded(
+          child: Container(height: 1, color: color.withValues(alpha: 0.2))),
     ]);
   }
 
@@ -231,15 +270,22 @@ class LayerAttraction extends StatelessWidget {
     return Wrap(
       spacing: 8,
       runSpacing: 8,
-      children: items.map((item) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.35)),
-        ),
-        child: Text(item, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w500)),
-      )).toList(),
+      children: items
+          .map((item) => Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: color.withValues(alpha: 0.35)),
+                ),
+                child: Text(item,
+                    style: TextStyle(
+                        color: color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500)),
+              ))
+          .toList(),
     );
   }
 
@@ -250,16 +296,24 @@ class LayerAttraction extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF111827),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFF9B59B6).withValues(alpha: 0.3)),
+        border:
+            Border.all(color: const Color(0xFF9B59B6).withValues(alpha: 0.3)),
       ),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
         Row(children: [
           const Icon(Icons.auto_awesome, size: 12, color: Color(0xFF9B59B6)),
           const SizedBox(width: 6),
-          Expanded(child: Text(q, style: const TextStyle(color: Color(0xFF9B59B6), fontSize: 12, fontWeight: FontWeight.w600))),
+          Expanded(
+              child: Text(q,
+                  style: const TextStyle(
+                      color: Color(0xFF9B59B6),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600))),
         ]),
         const SizedBox(height: 7),
-        Text(a, style: const TextStyle(color: Colors.white, fontSize: 14, height: 1.5)),
+        Text(a,
+            style: const TextStyle(
+                color: Colors.white, fontSize: 14, height: 1.5)),
       ]),
     );
   }

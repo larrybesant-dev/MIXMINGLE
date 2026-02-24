@@ -61,7 +61,6 @@ class CameraState {
   }
 
   @override
-  String toString() => 'CameraState(uid: $uid, userName: $userName, quality: ${quality.name}, status: ${status.name})';
+  String toString() =>
+      'CameraState(uid: $uid, userName: $userName, quality: ${quality.name}, status: ${status.name})';
 }
-
-

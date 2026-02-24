@@ -27,7 +27,8 @@ class ModerationPanel extends ConsumerStatefulWidget {
   ConsumerState<ModerationPanel> createState() => _ModerationPanelState();
 }
 
-class _ModerationPanelState extends ConsumerState<ModerationPanel> with SingleTickerProviderStateMixin {
+class _ModerationPanelState extends ConsumerState<ModerationPanel>
+    with SingleTickerProviderStateMixin {
   late AnimationController _slideController;
   late Animation<Offset> _slideAnimation;
   String _searchQuery = '';
@@ -67,8 +68,10 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with SingleTi
 
     // Filter by search query
     if (_searchQuery.isNotEmpty) {
-      participants =
-          participants.where((p) => p.displayName.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+      participants = participants
+          .where((p) =>
+              p.displayName.toLowerCase().contains(_searchQuery.toLowerCase()))
+          .toList();
     }
 
     // Filter by muted status
@@ -180,7 +183,8 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with SingleTi
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide.none,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );
@@ -242,7 +246,8 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with SingleTi
   Widget _buildParticipantItem(AgoraParticipant participant) {
     final isHost = participant.userId == widget.room.hostId;
     final isCurrentUser = participant.userId == widget.currentUserId;
-    final canModerate = widget.currentUserRole.canRemoveParticipants && !isCurrentUser;
+    final canModerate =
+        widget.currentUserRole.canRemoveParticipants && !isCurrentUser;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -259,7 +264,9 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with SingleTi
               radius: 20,
               backgroundColor: isHost ? Colors.amber[700] : Colors.grey[800],
               child: Text(
-                participant.displayName.isNotEmpty ? participant.displayName[0].toUpperCase() : '?',
+                participant.displayName.isNotEmpty
+                    ? participant.displayName[0].toUpperCase()
+                    : '?',
                 style: TextStyle(
                   color: isHost ? Colors.black : Colors.white,
                   fontWeight: FontWeight.w600,
@@ -429,7 +436,8 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with SingleTi
     );
   }
 
-  Future<void> _handleModerationAction(String action, AgoraParticipant participant) async {
+  Future<void> _handleModerationAction(
+      String action, AgoraParticipant participant) async {
     final moderationService = ref.read(moderationServiceProvider);
 
     try {
@@ -440,7 +448,8 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with SingleTi
             participantId: participant.userId,
             mute: participant.hasAudio,
           );
-          _showSnackBar('${participant.displayName} ${participant.hasAudio ? 'muted' : 'unmuted'}');
+          _showSnackBar(
+              '${participant.displayName} ${participant.hasAudio ? 'muted' : 'unmuted'}');
           break;
 
         case 'video':
@@ -449,7 +458,8 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with SingleTi
             participantId: participant.userId,
             disable: participant.hasVideo,
           );
-          _showSnackBar('${participant.displayName}\'s video ${participant.hasVideo ? 'stopped' : 'started'}');
+          _showSnackBar(
+              '${participant.displayName}\'s video ${participant.hasVideo ? 'stopped' : 'started'}');
           break;
 
         case 'promote':
@@ -514,7 +524,8 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with SingleTi
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text('Cancel', style: TextStyle(color: Colors.grey[400])),
+                child:
+                    Text('Cancel', style: TextStyle(color: Colors.grey[400])),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),

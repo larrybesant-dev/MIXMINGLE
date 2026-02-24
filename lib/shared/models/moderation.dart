@@ -106,7 +106,9 @@ class UserReport {
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       status: map['status'] ?? 'pending',
       reviewedBy: map['reviewedBy'],
-      reviewedAt: map['reviewedAt'] != null ? (map['reviewedAt'] as Timestamp).toDate() : null,
+      reviewedAt: map['reviewedAt'] != null
+          ? (map['reviewedAt'] as Timestamp).toDate()
+          : null,
     );
   }
 

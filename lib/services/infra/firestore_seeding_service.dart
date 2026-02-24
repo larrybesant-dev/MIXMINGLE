@@ -21,21 +21,20 @@ class FirestoreSeedingService {
       debugPrint('[SEEDING] Calling seedFirestore for user ${user.uid}');
       AppLogger.info('ðŸŒ± Initializing Firestore collections...');
 
-      final response = await _functions
-          .httpsCallable('seedFirestore')
-          .call()
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              throw Exception('Seeding timeout');
-            },
-          );
+      final response =
+          await _functions.httpsCallable('seedFirestore').call().timeout(
+        const Duration(seconds: 10),
+        onTimeout: () {
+          throw Exception('Seeding timeout');
+        },
+      );
 
       final data = response.data as Map<dynamic, dynamic>?;
 
       if (data?['success'] == true) {
         debugPrint('[SEEDING] âœ… Collections initialized');
-        AppLogger.info('âœ… Firestore collections ready: messages, notifications, tips');
+        AppLogger.info(
+            'âœ… Firestore collections ready: messages, notifications, tips');
         return true;
       } else {
         debugPrint('[SEEDING] âŒ Seeding returned false');

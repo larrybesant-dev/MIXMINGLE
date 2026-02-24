@@ -38,10 +38,12 @@ class AsyncValueViewEnhanced<T> extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<AsyncValueViewEnhanced<T>> createState() => _AsyncValueViewEnhancedState<T>();
+  ConsumerState<AsyncValueViewEnhanced<T>> createState() =>
+      _AsyncValueViewEnhancedState<T>();
 }
 
-class _AsyncValueViewEnhancedState<T> extends ConsumerState<AsyncValueViewEnhanced<T>> {
+class _AsyncValueViewEnhancedState<T>
+    extends ConsumerState<AsyncValueViewEnhanced<T>> {
   int _retryCount = 0;
   DateTime? _lastRetryTime;
   bool _isRetrying = false;
@@ -52,7 +54,9 @@ class _AsyncValueViewEnhancedState<T> extends ConsumerState<AsyncValueViewEnhanc
     super.initState();
 
     // Initialize skeleton tracker if both screenName and skeleton are present
-    if (widget.trackAnalytics && widget.screenName != null && widget.skeleton != null) {
+    if (widget.trackAnalytics &&
+        widget.screenName != null &&
+        widget.skeleton != null) {
       final analytics = ref.read(analyticsServiceProvider);
       _skeletonTracker = SkeletonTracker(
         analytics: analytics,
@@ -71,7 +75,9 @@ class _AsyncValueViewEnhancedState<T> extends ConsumerState<AsyncValueViewEnhanc
       _lastRetryTime = null;
 
       // Track successful load with analytics
-      if (widget.trackAnalytics && widget.screenName != null && widget.providerName != null) {
+      if (widget.trackAnalytics &&
+          widget.screenName != null &&
+          widget.providerName != null) {
         final analytics = ref.read(analyticsServiceProvider);
         analytics.trackAsyncValueLoad(
           widget.providerName!,
@@ -87,7 +93,9 @@ class _AsyncValueViewEnhancedState<T> extends ConsumerState<AsyncValueViewEnhanc
   Future<void> _handleRetry() async {
     if (widget.maxRetries != null && _retryCount >= widget.maxRetries!) {
       // Track max retries reached
-      if (widget.trackAnalytics && widget.screenName != null && widget.providerName != null) {
+      if (widget.trackAnalytics &&
+          widget.screenName != null &&
+          widget.providerName != null) {
         final analytics = ref.read(analyticsServiceProvider);
         analytics.trackErrorUnderLoad(
           screenName: widget.screenName!,
@@ -98,7 +106,8 @@ class _AsyncValueViewEnhancedState<T> extends ConsumerState<AsyncValueViewEnhanc
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Maximum retry attempts reached. Please try again later.'),
+          content:
+              Text('Maximum retry attempts reached. Please try again later.'),
           duration: Duration(seconds: 3),
         ),
       );
@@ -108,7 +117,8 @@ class _AsyncValueViewEnhancedState<T> extends ConsumerState<AsyncValueViewEnhanc
     // Exponential backoff if enabled
     if (widget.enableBackoff && _lastRetryTime != null) {
       final elapsed = DateTime.now().difference(_lastRetryTime!);
-      final backoffDuration = widget.backoffDuration ?? Duration(seconds: 1 << _retryCount.clamp(0, 3));
+      final backoffDuration = widget.backoffDuration ??
+          Duration(seconds: 1 << _retryCount.clamp(0, 3));
 
       if (elapsed < backoffDuration) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -130,9 +140,12 @@ class _AsyncValueViewEnhancedState<T> extends ConsumerState<AsyncValueViewEnhanc
     });
 
     // Track retry attempt with analytics
-    if (widget.trackAnalytics && widget.screenName != null && widget.providerName != null) {
+    if (widget.trackAnalytics &&
+        widget.screenName != null &&
+        widget.providerName != null) {
       final analytics = ref.read(analyticsServiceProvider);
-      final backoffMs = widget.backoffDuration?.inMilliseconds ?? (1000 << (_retryCount - 1).clamp(0, 3));
+      final backoffMs = widget.backoffDuration?.inMilliseconds ??
+          (1000 << (_retryCount - 1).clamp(0, 3));
 
       analytics.trackRetryAttempt(
         screenName: widget.screenName!,
@@ -168,7 +181,9 @@ class _AsyncValueViewEnhancedState<T> extends ConsumerState<AsyncValueViewEnhanc
         final appErr = AppError.from(err);
 
         // Track error with analytics
-        if (widget.trackAnalytics && widget.screenName != null && widget.providerName != null) {
+        if (widget.trackAnalytics &&
+            widget.screenName != null &&
+            widget.providerName != null) {
           final analytics = ref.read(analyticsServiceProvider);
 
           analytics.trackAsyncValueLoad(
@@ -309,5 +324,3 @@ class AsyncValueView<T> extends ConsumerWidget {
     );
   }
 }
-
-

@@ -47,35 +47,49 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// Room type identifiers stored in Firestore.
 class RoomType {
   const RoomType._();
+
   /// Group conversation — 4 cams, 4 mics.
-  static const social    = 'social';
+  static const social = 'social';
+
   /// Single streamer to many viewers — 1 cam, 1 mic.
   static const broadcast = 'broadcast';
+
   /// Performer room — 1 cam, 1 mic.
-  static const concert   = 'concert';
+  static const concert = 'concert';
+
   /// Audio-only — 0 cams, 4 mics.
-  static const voice     = 'voice';
+  static const voice = 'voice';
 }
 
 /// Max simultaneous active mics for a given room type.
 int maxMicsForRoomType(String type) {
   switch (type) {
-    case RoomType.social:    return 4;
-    case RoomType.broadcast: return 1;
-    case RoomType.concert:   return 1;
-    case RoomType.voice:     return 4;
-    default:                 return 2;
+    case RoomType.social:
+      return 4;
+    case RoomType.broadcast:
+      return 1;
+    case RoomType.concert:
+      return 1;
+    case RoomType.voice:
+      return 4;
+    default:
+      return 2;
   }
 }
 
 /// Max simultaneous camera broadcasters for a given room type.
 int maxBroadcastersForRoomType(String type) {
   switch (type) {
-    case RoomType.social:    return 4;
-    case RoomType.broadcast: return 1;
-    case RoomType.concert:   return 1;
-    case RoomType.voice:     return 0;
-    default:                 return 2;
+    case RoomType.social:
+      return 4;
+    case RoomType.broadcast:
+      return 1;
+    case RoomType.concert:
+      return 1;
+    case RoomType.voice:
+      return 0;
+    default:
+      return 2;
   }
 }
 
@@ -83,53 +97,54 @@ int maxBroadcastersForRoomType(String type) {
 
 class ParticipantRole {
   const ParticipantRole._();
-  static const host        = 'host';
+  static const host = 'host';
   static const broadcaster = 'broadcaster';
-  static const audience    = 'audience';
+  static const audience = 'audience';
 }
 
 // ── Firestore field-name constants ─────────────────────────────────────────
 
 class RoomFields {
   const RoomFields._();
-  static const id               = 'id';
-  static const name             = 'name';
-  static const type             = 'type';
-  static const ownerId          = 'ownerId';
-  static const maxBroadcasters  = 'maxBroadcasters';
-  static const maxActiveMics    = 'maxActiveMics';
-  static const isActive         = 'isActive';
+  static const id = 'id';
+  static const name = 'name';
+  static const type = 'type';
+  static const ownerId = 'ownerId';
+  static const maxBroadcasters = 'maxBroadcasters';
+  static const maxActiveMics = 'maxActiveMics';
+  static const isActive = 'isActive';
   static const videoChannelLive = 'videoChannelLive';
   static const participantCount = 'participantCount';
-  static const createdAt        = 'createdAt';
-  static const updatedAt        = 'updatedAt';
+  static const createdAt = 'createdAt';
+  static const updatedAt = 'updatedAt';
 }
 
 class ParticipantFields {
   const ParticipantFields._();
-  static const userId              = 'userId';
-  static const displayName         = 'displayName';
-  static const avatarUrl           = 'avatarUrl';
-  static const role                = 'role';
-  static const isOnCam             = 'isOnCam';
-  static const isMicActive         = 'isMicActive';
-  static const isStreaming         = 'isStreaming';
-  static const isForegrounded      = 'isForegrounded';
-  static const gridPosition        = 'gridPosition';
-  static const agoraUid            = 'agoraUid';
-  static const joinedAt            = 'joinedAt';
-  static const lastHeartbeat       = 'lastHeartbeat';
+  static const userId = 'userId';
+  static const displayName = 'displayName';
+  static const avatarUrl = 'avatarUrl';
+  static const role = 'role';
+  static const isOnCam = 'isOnCam';
+  static const isMicActive = 'isMicActive';
+  static const isStreaming = 'isStreaming';
+  static const isForegrounded = 'isForegrounded';
+  static const gridPosition = 'gridPosition';
+  static const agoraUid = 'agoraUid';
+  static const joinedAt = 'joinedAt';
+  static const lastHeartbeat = 'lastHeartbeat';
+
   /// true when an audience member has requested a cam slot.
-  static const camRequestPending   = 'camRequestPending';
+  static const camRequestPending = 'camRequestPending';
 }
 
 class PresenceFields {
   const PresenceFields._();
-  static const userId         = 'userId';
-  static const status         = 'status';
-  static const currentRoomId  = 'currentRoomId';
+  static const userId = 'userId';
+  static const status = 'status';
+  static const currentRoomId = 'currentRoomId';
   static const isForegrounded = 'isForegrounded';
-  static const lastSeen       = 'lastSeen';
+  static const lastSeen = 'lastSeen';
 }
 
 // ── Model: RoomMeta ─────────────────────────────────────────────────────────
@@ -162,46 +177,48 @@ class RoomMeta {
     final d = doc.data() as Map<String, dynamic>;
     final t = (d[RoomFields.type] as String?) ?? RoomType.social;
     return RoomMeta(
-      id:               doc.id,
-      name:             (d[RoomFields.name]             as String?) ?? '',
-      type:             t,
-      ownerId:          (d[RoomFields.ownerId]          as String?) ?? '',
-      maxBroadcasters:  (d[RoomFields.maxBroadcasters]  as int?)    ?? maxBroadcastersForRoomType(t),
-      maxActiveMics:    (d[RoomFields.maxActiveMics]    as int?)    ?? maxMicsForRoomType(t),
-      isActive:         (d[RoomFields.isActive]         as bool?)   ?? true,
-      videoChannelLive: (d[RoomFields.videoChannelLive] as bool?)   ?? false,
-      participantCount: (d[RoomFields.participantCount] as int?)    ?? 0,
+      id: doc.id,
+      name: (d[RoomFields.name] as String?) ?? '',
+      type: t,
+      ownerId: (d[RoomFields.ownerId] as String?) ?? '',
+      maxBroadcasters: (d[RoomFields.maxBroadcasters] as int?) ??
+          maxBroadcastersForRoomType(t),
+      maxActiveMics:
+          (d[RoomFields.maxActiveMics] as int?) ?? maxMicsForRoomType(t),
+      isActive: (d[RoomFields.isActive] as bool?) ?? true,
+      videoChannelLive: (d[RoomFields.videoChannelLive] as bool?) ?? false,
+      participantCount: (d[RoomFields.participantCount] as int?) ?? 0,
     );
   }
 
   Map<String, dynamic> toFirestore() => {
-    RoomFields.id:               id,
-    RoomFields.name:             name,
-    RoomFields.type:             type,
-    RoomFields.ownerId:          ownerId,
-    RoomFields.maxBroadcasters:  maxBroadcasters,
-    RoomFields.maxActiveMics:    maxActiveMics,
-    RoomFields.isActive:         isActive,
-    RoomFields.videoChannelLive: videoChannelLive,
-    RoomFields.participantCount: participantCount,
-    RoomFields.updatedAt:        FieldValue.serverTimestamp(),
-  };
+        RoomFields.id: id,
+        RoomFields.name: name,
+        RoomFields.type: type,
+        RoomFields.ownerId: ownerId,
+        RoomFields.maxBroadcasters: maxBroadcasters,
+        RoomFields.maxActiveMics: maxActiveMics,
+        RoomFields.isActive: isActive,
+        RoomFields.videoChannelLive: videoChannelLive,
+        RoomFields.participantCount: participantCount,
+        RoomFields.updatedAt: FieldValue.serverTimestamp(),
+      };
 
   RoomMeta copyWith({
     bool? videoChannelLive,
-    int?  participantCount,
+    int? participantCount,
     bool? isActive,
   }) =>
       RoomMeta(
-        id:               id,
-        name:             name,
-        type:             type,
-        ownerId:          ownerId,
-        maxBroadcasters:  maxBroadcasters,
-        maxActiveMics:    maxActiveMics,
-        isActive:         isActive          ?? this.isActive,
-        videoChannelLive: videoChannelLive  ?? this.videoChannelLive,
-        participantCount: participantCount  ?? this.participantCount,
+        id: id,
+        name: name,
+        type: type,
+        ownerId: ownerId,
+        maxBroadcasters: maxBroadcasters,
+        maxActiveMics: maxActiveMics,
+        isActive: isActive ?? this.isActive,
+        videoChannelLive: videoChannelLive ?? this.videoChannelLive,
+        participantCount: participantCount ?? this.participantCount,
       );
 }
 
@@ -213,13 +230,13 @@ class RoomParticipant {
   final String displayName;
   final String? avatarUrl;
   final String role;
-  final bool isOnCam;             // logical state — user toggled cam on
-  final bool isMicActive;         // logical state — user toggled mic on
-  final bool isStreaming;         // video engine is actively publishing this stream
+  final bool isOnCam; // logical state — user toggled cam on
+  final bool isMicActive; // logical state — user toggled mic on
+  final bool isStreaming; // video engine is actively publishing this stream
   final bool isForegrounded;
-  final int gridPosition;         // -1 = audience row
-  final int? agoraUid;            // video engine integer uid
-  final bool camRequestPending;   // audience member requested a cam slot
+  final int gridPosition; // -1 = audience row
+  final int? agoraUid; // video engine integer uid
+  final bool camRequestPending; // audience member requested a cam slot
   final DateTime joinedAt;
   final DateTime lastHeartbeat;
 
@@ -242,62 +259,64 @@ class RoomParticipant {
   factory RoomParticipant.fromFirestore(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
     return RoomParticipant(
-      userId:         (d[ParticipantFields.userId]        as String?) ?? doc.id,
-      displayName:    (d[ParticipantFields.displayName]   as String?) ?? 'Guest',
-      avatarUrl:       d[ParticipantFields.avatarUrl]     as String?,
-      role:           (d[ParticipantFields.role]          as String?) ?? ParticipantRole.audience,
-      isOnCam:        (d[ParticipantFields.isOnCam]       as bool?)   ?? false,
-      isMicActive:    (d[ParticipantFields.isMicActive]   as bool?)   ?? false,
-      isStreaming:    (d[ParticipantFields.isStreaming]    as bool?)   ?? false,
-      isForegrounded: (d[ParticipantFields.isForegrounded] as bool?)  ?? false,
-      gridPosition:      (d[ParticipantFields.gridPosition]      as int?)  ?? -1,
-      agoraUid:           d[ParticipantFields.agoraUid]           as int?,
-      camRequestPending: (d[ParticipantFields.camRequestPending]  as bool?) ?? false,
-      joinedAt:          _toDateTime(d[ParticipantFields.joinedAt])          ?? DateTime.now(),
-      lastHeartbeat:     _toDateTime(d[ParticipantFields.lastHeartbeat])     ?? DateTime.now(),
+      userId: (d[ParticipantFields.userId] as String?) ?? doc.id,
+      displayName: (d[ParticipantFields.displayName] as String?) ?? 'Guest',
+      avatarUrl: d[ParticipantFields.avatarUrl] as String?,
+      role: (d[ParticipantFields.role] as String?) ?? ParticipantRole.audience,
+      isOnCam: (d[ParticipantFields.isOnCam] as bool?) ?? false,
+      isMicActive: (d[ParticipantFields.isMicActive] as bool?) ?? false,
+      isStreaming: (d[ParticipantFields.isStreaming] as bool?) ?? false,
+      isForegrounded: (d[ParticipantFields.isForegrounded] as bool?) ?? false,
+      gridPosition: (d[ParticipantFields.gridPosition] as int?) ?? -1,
+      agoraUid: d[ParticipantFields.agoraUid] as int?,
+      camRequestPending:
+          (d[ParticipantFields.camRequestPending] as bool?) ?? false,
+      joinedAt: _toDateTime(d[ParticipantFields.joinedAt]) ?? DateTime.now(),
+      lastHeartbeat:
+          _toDateTime(d[ParticipantFields.lastHeartbeat]) ?? DateTime.now(),
     );
   }
 
   Map<String, dynamic> toFirestore() => {
-    ParticipantFields.userId:         userId,
-    ParticipantFields.displayName:    displayName,
-    ParticipantFields.avatarUrl:      avatarUrl,
-    ParticipantFields.role:           role,
-    ParticipantFields.isOnCam:           isOnCam,
-    ParticipantFields.isMicActive:       isMicActive,
-    ParticipantFields.isStreaming:       isStreaming,
-    ParticipantFields.isForegrounded:    isForegrounded,
-    ParticipantFields.gridPosition:      gridPosition,
-    ParticipantFields.agoraUid:          agoraUid,
-    ParticipantFields.camRequestPending: camRequestPending,
-    ParticipantFields.joinedAt:          FieldValue.serverTimestamp(),
-    ParticipantFields.lastHeartbeat:     FieldValue.serverTimestamp(),
-  };
+        ParticipantFields.userId: userId,
+        ParticipantFields.displayName: displayName,
+        ParticipantFields.avatarUrl: avatarUrl,
+        ParticipantFields.role: role,
+        ParticipantFields.isOnCam: isOnCam,
+        ParticipantFields.isMicActive: isMicActive,
+        ParticipantFields.isStreaming: isStreaming,
+        ParticipantFields.isForegrounded: isForegrounded,
+        ParticipantFields.gridPosition: gridPosition,
+        ParticipantFields.agoraUid: agoraUid,
+        ParticipantFields.camRequestPending: camRequestPending,
+        ParticipantFields.joinedAt: FieldValue.serverTimestamp(),
+        ParticipantFields.lastHeartbeat: FieldValue.serverTimestamp(),
+      };
 
   RoomParticipant copyWith({
-    bool?   isOnCam,
-    bool?   isMicActive,
-    bool?   isStreaming,
-    bool?   isForegrounded,
-    int?    gridPosition,
-    int?    agoraUid,
+    bool? isOnCam,
+    bool? isMicActive,
+    bool? isStreaming,
+    bool? isForegrounded,
+    int? gridPosition,
+    int? agoraUid,
     String? role,
-    bool?   camRequestPending,
+    bool? camRequestPending,
   }) =>
       RoomParticipant(
-        userId:            userId,
-        displayName:       displayName,
-        avatarUrl:         avatarUrl,
-        role:              role              ?? this.role,
-        isOnCam:           isOnCam           ?? this.isOnCam,
-        isMicActive:       isMicActive       ?? this.isMicActive,
-        isStreaming:       isStreaming        ?? this.isStreaming,
-        isForegrounded:    isForegrounded     ?? this.isForegrounded,
-        gridPosition:      gridPosition       ?? this.gridPosition,
-        agoraUid:          agoraUid           ?? this.agoraUid,
-        camRequestPending: camRequestPending  ?? this.camRequestPending,
-        joinedAt:          joinedAt,
-        lastHeartbeat:     lastHeartbeat,
+        userId: userId,
+        displayName: displayName,
+        avatarUrl: avatarUrl,
+        role: role ?? this.role,
+        isOnCam: isOnCam ?? this.isOnCam,
+        isMicActive: isMicActive ?? this.isMicActive,
+        isStreaming: isStreaming ?? this.isStreaming,
+        isForegrounded: isForegrounded ?? this.isForegrounded,
+        gridPosition: gridPosition ?? this.gridPosition,
+        agoraUid: agoraUid ?? this.agoraUid,
+        camRequestPending: camRequestPending ?? this.camRequestPending,
+        joinedAt: joinedAt,
+        lastHeartbeat: lastHeartbeat,
       );
 
   bool get isGridVisible => gridPosition >= 0;

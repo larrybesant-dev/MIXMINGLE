@@ -1,4 +1,4 @@
-﻿// TEMP DEV STUBS â€” REMOVE LATER
+// TEMP DEV STUBS â€” REMOVE LATER
 // These stubs are temporary placeholders to unblock development
 // They should be replaced with proper implementations when features are re-enabled
 
@@ -15,7 +15,8 @@ final presenceServiceProvider = Provider((ref) => null);
 final activeSpeedDatingSessionProvider = Provider<dynamic>((ref) => null);
 
 /// Speed dating matches provider - returns empty list wrapped in AsyncValue
-final speedDatingMatchesProvider = StreamProvider<List<SpeedDatingMatch>>((ref) {
+final speedDatingMatchesProvider =
+    StreamProvider<List<SpeedDatingMatch>>((ref) {
   return Stream.value(const []);
 });
 
@@ -36,5 +37,3 @@ class SpeedDatingMatch {
 
 /// Stub for SpeedDatingResult model
 class SpeedDatingResult {}
-
-

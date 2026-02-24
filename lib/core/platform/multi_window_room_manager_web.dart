@@ -129,7 +129,9 @@ class MultiWindowRoomManager {
 
   static String _getBaseUrl(String href) {
     final uri = Uri.parse(href);
-    final portSuffix = (uri.port != 0 && uri.port != 80 && uri.port != 443) ? ':${uri.port}' : '';
+    final portSuffix = (uri.port != 0 && uri.port != 80 && uri.port != 443)
+        ? ':${uri.port}'
+        : '';
     return '${uri.scheme}://${uri.host}$portSuffix';
   }
 }

@@ -43,9 +43,9 @@ class AudioManager {
 
   // ── SFX ──────────────────────────────────────────────────────
 
-  Future<void> playJoinRoom()    async => sfx?.playJoinRoom();
-  Future<void> playNewSpeaker()  async => sfx?.playNewSpeaker();
-  Future<void> playReaction()    async => sfx?.playReaction();
+  Future<void> playJoinRoom() async => sfx?.playJoinRoom();
+  Future<void> playNewSpeaker() async => sfx?.playNewSpeaker();
+  Future<void> playReaction() async => sfx?.playReaction();
 
   // ── Global ───────────────────────────────────────────────────
 
@@ -71,7 +71,7 @@ final audioManagerProvider = Provider<AudioManager?>((ref) {
     data: (settings) => AudioManager(
       landing: ref.watch(landingMusicProvider),
       profile: ref.watch(profileMusicProvider.notifier),
-      sfx:     ref.watch(soundEffectsProvider),
+      sfx: ref.watch(soundEffectsProvider),
       settings: settings,
     ),
   );

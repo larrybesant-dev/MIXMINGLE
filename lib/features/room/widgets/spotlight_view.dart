@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/camera_state.dart';
 
@@ -20,7 +20,8 @@ class SpotlightView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final otherCameras = availableCameras.where((cam) => cam.uid != cameraState.uid).toList();
+    final otherCameras =
+        availableCameras.where((cam) => cam.uid != cameraState.uid).toList();
 
     return PopScope(
       canPop: false,
@@ -163,7 +164,8 @@ class SpotlightView extends ConsumerWidget {
                         margin: const EdgeInsets.symmetric(horizontal: 4),
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.grey[700]!, width: 1),
+                          border:
+                              Border.all(color: Colors.grey[700]!, width: 1),
                           color: Colors.black87,
                         ),
                         child: Stack(

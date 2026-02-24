@@ -5,17 +5,18 @@ class ReactionModel {
   final String type;
   final DateTime timestamp;
 
-  ReactionModel({required this.userId, required this.type, required this.timestamp});
+  ReactionModel(
+      {required this.userId, required this.type, required this.timestamp});
 
   factory ReactionModel.fromMap(Map<String, dynamic> map) => ReactionModel(
-    userId: map['userId'],
-    type: map['type'],
-    timestamp: DateTime.parse(map['timestamp']),
-  );
+        userId: map['userId'],
+        type: map['type'],
+        timestamp: DateTime.parse(map['timestamp']),
+      );
 
   Map<String, dynamic> toMap() => {
-    'userId': userId,
-    'type': type,
-    'timestamp': timestamp.toIso8601String(),
-  };
+        'userId': userId,
+        'type': type,
+        'timestamp': timestamp.toIso8601String(),
+      };
 }

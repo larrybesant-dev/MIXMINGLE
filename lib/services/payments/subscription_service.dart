@@ -16,7 +16,8 @@ class SubscriptionService {
         final existingQuery = await _firestore
             .collection('subscriptions')
             .where('userId', isEqualTo: userId)
-            .where('status', isEqualTo: SubscriptionStatus.active.toString().split('.').last)
+            .where('status',
+                isEqualTo: SubscriptionStatus.active.toString().split('.').last)
             .limit(1)
             .get();
 
@@ -62,7 +63,8 @@ class SubscriptionService {
     final snapshot = await _firestore
         .collection('subscriptions')
         .where('userId', isEqualTo: userId)
-        .where('status', isEqualTo: SubscriptionStatus.active.toString().split('.').last)
+        .where('status',
+            isEqualTo: SubscriptionStatus.active.toString().split('.').last)
         .orderBy('startDate', descending: true)
         .limit(1)
         .get();
@@ -80,7 +82,8 @@ class SubscriptionService {
     return _firestore
         .collection('subscriptions')
         .where('userId', isEqualTo: userId)
-        .where('status', isEqualTo: SubscriptionStatus.active.toString().split('.').last)
+        .where('status',
+            isEqualTo: SubscriptionStatus.active.toString().split('.').last)
         .orderBy('startDate', descending: true)
         .limit(1)
         .snapshots()
@@ -103,17 +106,20 @@ class SubscriptionService {
   }
 
   /// Renew a subscription
-  Future<void> renewSubscription(String subscriptionId, Duration duration) async {
+  Future<void> renewSubscription(
+      String subscriptionId, Duration duration) async {
     try {
       await _firestore.runTransaction((transaction) async {
-        final docRef = _firestore.collection('subscriptions').doc(subscriptionId);
+        final docRef =
+            _firestore.collection('subscriptions').doc(subscriptionId);
         final doc = await transaction.get(docRef);
 
         if (!doc.exists) {
           throw Exception('Subscription not found');
         }
 
-        final subscription = UserSubscription.fromMap({...doc.data()!, 'id': doc.id});
+        final subscription =
+            UserSubscription.fromMap({...doc.data()!, 'id': doc.id});
         final newEndDate = subscription.endDate.add(duration);
 
         transaction.update(docRef, {
@@ -185,5 +191,3 @@ class SubscriptionService {
     ];
   }
 }
-
-

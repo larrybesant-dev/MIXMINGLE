@@ -1,10 +1,11 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 /// Throttles expensive operations to maintain 60 FPS
 /// Prevents frame drops from excessive state updates
 class RenderFrameThrottler {
-  static final RenderFrameThrottler _instance = RenderFrameThrottler._internal();
+  static final RenderFrameThrottler _instance =
+      RenderFrameThrottler._internal();
   factory RenderFrameThrottler() => _instance;
   RenderFrameThrottler._internal();
 
@@ -19,7 +20,8 @@ class RenderFrameThrottler {
 
     if (_processing) {
       if (kDebugMode) {
-        debugPrint('[RenderFrameThrottler] Queueing ${label ?? "callback"}. Queue size: ${_pendingCallbacks.length}');
+        debugPrint(
+            '[RenderFrameThrottler] Queueing ${label ?? "callback"}. Queue size: ${_pendingCallbacks.length}');
       }
       return;
     }

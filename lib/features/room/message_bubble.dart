@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../shared/models/chat_message.dart';
 
 class MessageBubble extends StatelessWidget {
@@ -18,18 +18,24 @@ class MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Row(
-        mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           Flexible(
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isCurrentUser ? const Color(0xFFFF69B4) : Colors.grey[200],
+                color:
+                    isCurrentUser ? const Color(0xFFFF69B4) : Colors.grey[200],
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(16),
                   topRight: const Radius.circular(16),
-                  bottomLeft: isCurrentUser ? const Radius.circular(16) : const Radius.circular(4),
-                  bottomRight: isCurrentUser ? const Radius.circular(4) : const Radius.circular(16),
+                  bottomLeft: isCurrentUser
+                      ? const Radius.circular(16)
+                      : const Radius.circular(4),
+                  bottomRight: isCurrentUser
+                      ? const Radius.circular(4)
+                      : const Radius.circular(16),
                 ),
               ),
               child: Column(

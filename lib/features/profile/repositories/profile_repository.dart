@@ -83,9 +83,7 @@ class ProfileRepository implements IProfileRepository {
         .where('displayName', isLessThan: '${query}z')
         .limit(limit)
         .get();
-    return snapshot.docs
-        .map((d) => UserProfile.fromMap(d.data()))
-        .toList();
+    return snapshot.docs.map((d) => UserProfile.fromMap(d.data())).toList();
   }
 
   // ------------------------------------------------------------------

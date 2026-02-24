@@ -9,7 +9,8 @@ import 'neon_button.dart';
 /// Global error boundary widget that catches and handles unhandled errors
 class ErrorBoundary extends StatefulWidget {
   final Widget child;
-  final Widget Function(BuildContext context, FlutterErrorDetails error)? errorBuilder;
+  final Widget Function(BuildContext context, FlutterErrorDetails error)?
+      errorBuilder;
   final VoidCallback? onError;
 
   const ErrorBoundary({
@@ -74,7 +75,8 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
         }
 
         // Look for patterns like: package:name/file.dart:123:45
-        final packageMatch = RegExp(r'package:.+\.dart:\d+:\d+').firstMatch(line);
+        final packageMatch =
+            RegExp(r'package:.+\.dart:\d+:\d+').firstMatch(line);
         if (packageMatch != null) {
           return packageMatch.group(0)!;
         }
@@ -86,7 +88,8 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
   @override
   Widget build(BuildContext context) {
     if (_errorDetails != null) {
-      return widget.errorBuilder?.call(context, _errorDetails!) ?? _buildDefaultErrorWidget(context);
+      return widget.errorBuilder?.call(context, _errorDetails!) ??
+          _buildDefaultErrorWidget(context);
     }
 
     return widget.child;
@@ -120,7 +123,8 @@ class _ErrorBoundaryState extends State<ErrorBoundary> {
                   ),
                   const SizedBox(height: 16),
                   const GlowText(
-                    text: 'The app encountered an unexpected error.\nDon\'t worry - your data is safe!',
+                    text:
+                        'The app encountered an unexpected error.\nDon\'t worry - your data is safe!',
                     fontSize: 16,
                     color: Colors.white70,
                     textAlign: TextAlign.center,
@@ -178,7 +182,8 @@ final errorHandlerProvider = Provider<ErrorHandler>((ref) {
 });
 
 class ErrorHandler {
-  void handleError(BuildContext context, Object error, [StackTrace? stackTrace]) {
+  void handleError(BuildContext context, Object error,
+      [StackTrace? stackTrace]) {
     AppLogger.error('Error handled by ErrorHandler', error, stackTrace);
 
     // Check if network error
@@ -207,7 +212,8 @@ class ErrorHandler {
   String _getErrorMessage(Object error) {
     if (error is Exception) {
       // Handle specific exception types
-      if (error.toString().contains('network') || error.toString().contains('connection')) {
+      if (error.toString().contains('network') ||
+          error.toString().contains('connection')) {
         return 'Network error. Please check your connection.';
       }
       if (error.toString().contains('permission')) {

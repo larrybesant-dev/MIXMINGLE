@@ -26,7 +26,8 @@ void main() {
         expect(true, true);
       });
 
-      test('Total recordings count - should count completed recordings', () async {
+      test('Total recordings count - should count completed recordings',
+          () async {
         // Act & Assert
         expect(true, true);
       });
@@ -43,7 +44,8 @@ void main() {
         expect(true, true);
       });
 
-      test('Generate hourly histogram - should show visitor distribution', () async {
+      test('Generate hourly histogram - should show visitor distribution',
+          () async {
         // Act & Assert
         expect(true, true);
       });
@@ -69,7 +71,8 @@ void main() {
         expect(true, true);
       });
 
-      test('User engagement includes: sessions, time, messages, recordings', () async {
+      test('User engagement includes: sessions, time, messages, recordings',
+          () async {
         // Act & Assert
         expect(true, true);
       });
@@ -126,7 +129,8 @@ void main() {
         expect(true, true);
       });
 
-      test('Update peak concurrent users when participant count changes', () async {
+      test('Update peak concurrent users when participant count changes',
+          () async {
         // Act & Assert
         expect(true, true);
       });
@@ -138,7 +142,9 @@ void main() {
         expect(true, true);
       });
 
-      test('Subscribe to top users ranking - should update on engagement change', () async {
+      test(
+          'Subscribe to top users ranking - should update on engagement change',
+          () async {
         // Act & Assert
         expect(true, true);
       });

@@ -1,4 +1,4 @@
-﻿/// Mini Profile Popup Widget
+/// Mini Profile Popup Widget
 ///
 /// Displays a compact profile card on mouse hover over participant tiles.
 /// Shows user avatar, name, bio snippet, online status, and quick action buttons.
@@ -137,11 +137,11 @@ class MiniProfilePopup extends ConsumerWidget {
                 child: CircleAvatar(
                   radius: 32,
                   backgroundColor: DesignColors.surfaceDefault,
-                  backgroundImage: avatarUrl.isNotEmpty
-                      ? NetworkImage(avatarUrl)
-                      : null,
+                  backgroundImage:
+                      avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
                   child: avatarUrl.isEmpty
-                      ? const Icon(Icons.person, size: 32, color: Colors.white70)
+                      ? const Icon(Icons.person,
+                          size: 32, color: Colors.white70)
                       : null,
                 ),
               ),

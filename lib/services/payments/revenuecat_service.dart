@@ -1,4 +1,4 @@
-﻿/// RevenueCat Service - Stub for compilation
+/// RevenueCat Service - Stub for compilation
 /// TODO: Implement full RevenueCat integration
 library;
 
@@ -52,25 +52,29 @@ class RevenueCatService {
   Future<PurchaseResult> purchaseMembership(MembershipTier tier) async {
     // DEV STUB - monetization disabled
     // TODO: Implement RevenueCat purchase flow when ready
-    return const PurchaseResult(success: false, errorMessage: 'RevenueCat not yet configured');
+    return const PurchaseResult(
+        success: false, errorMessage: 'RevenueCat not yet configured');
   }
 
   /// Purchase a subscription by product ID
   Future<PurchaseResult> purchaseSubscription(String productId) async {
     // DEV STUB
-    return const PurchaseResult(success: false, errorMessage: 'RevenueCat not yet configured');
+    return const PurchaseResult(
+        success: false, errorMessage: 'RevenueCat not yet configured');
   }
 
   /// Purchase a coin package
   Future<PurchaseResult> purchaseCoins(CoinPackage package) async {
     // DEV STUB
-    return const PurchaseResult(success: false, errorMessage: 'RevenueCat not yet configured');
+    return const PurchaseResult(
+        success: false, errorMessage: 'RevenueCat not yet configured');
   }
 
   /// Restore purchases
   Future<PurchaseResult> restorePurchases() async {
     // TODO: Implement restore purchases via RevenueCat
-    return const PurchaseResult(success: false, errorMessage: 'RevenueCat not yet configured');
+    return const PurchaseResult(
+        success: false, errorMessage: 'RevenueCat not yet configured');
   }
 
   /// Get current entitlements

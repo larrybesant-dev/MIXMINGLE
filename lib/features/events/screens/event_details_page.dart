@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -84,11 +84,14 @@ class EventDetailsPage extends ConsumerWidget {
                             ),
                             if (event.isOnline)
                               Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 6),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFFFD700).withValues(alpha: 0.2),
+                                  color: const Color(0xFFFFD700)
+                                      .withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: const Color(0xFFFFD700)),
+                                  border: Border.all(
+                                      color: const Color(0xFFFFD700)),
                                 ),
                                 child: const Text(
                                   'ONLINE',
@@ -112,11 +115,14 @@ class EventDetailsPage extends ConsumerWidget {
                               children: [
                                 CircleAvatar(
                                   radius: 20,
-                                  backgroundImage: host.photoUrl != null ? NetworkImage(host.photoUrl!) : null,
+                                  backgroundImage: host.photoUrl != null
+                                      ? NetworkImage(host.photoUrl!)
+                                      : null,
                                   child: host.photoUrl == null
                                       ? Text(
                                           host.displayName?.isNotEmpty == true
-                                              ? host.displayName![0].toUpperCase()
+                                              ? host.displayName![0]
+                                                  .toUpperCase()
                                               : '?',
                                           style: const TextStyle(fontSize: 16),
                                         )
@@ -134,7 +140,9 @@ class EventDetailsPage extends ConsumerWidget {
                                       ),
                                     ),
                                     Text(
-                                      host.displayName ?? host.nickname ?? 'Unknown',
+                                      host.displayName ??
+                                          host.nickname ??
+                                          'Unknown',
                                       style: const TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
@@ -156,7 +164,8 @@ class EventDetailsPage extends ConsumerWidget {
                         _InfoRow(
                           icon: Icons.access_time,
                           label: 'Date & Time',
-                          value: '${DateFormat('EEEE, MMMM d, y').format(event.startTime)}\n'
+                          value:
+                              '${DateFormat('EEEE, MMMM d, y').format(event.startTime)}\n'
                               '${DateFormat('h:mm a').format(event.startTime)} - '
                               '${DateFormat('h:mm a').format(event.endTime)}',
                         ),
@@ -165,7 +174,9 @@ class EventDetailsPage extends ConsumerWidget {
 
                         // Location
                         _InfoRow(
-                          icon: event.isOnline ? Icons.videocam : Icons.location_on,
+                          icon: event.isOnline
+                              ? Icons.videocam
+                              : Icons.location_on,
                           label: 'Location',
                           value: event.location,
                         ),
@@ -223,12 +234,14 @@ class EventDetailsPage extends ConsumerWidget {
                         ],
 
                         // Friends attending banner
-                        if (currentUser != null) FriendsAttendingBanner(eventId: eventId),
+                        if (currentUser != null)
+                          FriendsAttendingBanner(eventId: eventId),
 
                         const SizedBox(height: 16),
 
                         // RSVP buttons
-                        if (currentUser != null) EventRsvpButtons(eventId: eventId),
+                        if (currentUser != null)
+                          EventRsvpButtons(eventId: eventId),
 
                         const SizedBox(height: 24),
 
@@ -239,12 +252,17 @@ class EventDetailsPage extends ConsumerWidget {
                             child: ElevatedButton.icon(
                               onPressed: () async {
                                 try {
-                                  final roomDoc =
-                                      await FirebaseFirestore.instance.collection('rooms').doc(event.roomId).get();
+                                  final roomDoc = await FirebaseFirestore
+                                      .instance
+                                      .collection('rooms')
+                                      .doc(event.roomId)
+                                      .get();
                                   if (!roomDoc.exists) {
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Room not found')),
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        const SnackBar(
+                                            content: Text('Room not found')),
                                       );
                                     }
                                     return;
@@ -255,7 +273,9 @@ class EventDetailsPage extends ConsumerWidget {
                                       MaterialPageRoute(
                                         builder: (context) => RoomAccessWrapper(
                                           room: room,
-                                          userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
+                                          userId: fb_auth.FirebaseAuth.instance
+                                                  .currentUser?.uid ??
+                                              '',
                                         ),
                                       ),
                                     );
@@ -263,7 +283,9 @@ class EventDetailsPage extends ConsumerWidget {
                                 } catch (e) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text('Error joining room: $e')),
+                                      SnackBar(
+                                          content:
+                                              Text('Error joining room: $e')),
                                     );
                                   }
                                 }
@@ -273,7 +295,8 @@ class EventDetailsPage extends ConsumerWidget {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: const Color(0xFFFFD700),
                                 foregroundColor: Colors.black,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -302,8 +325,10 @@ class EventDetailsPage extends ConsumerWidget {
                               label: const Text('Chat with Attendees'),
                               style: OutlinedButton.styleFrom(
                                 foregroundColor: const Color(0xFFFFD700),
-                                side: const BorderSide(color: Color(0xFFFFD700)),
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                side:
+                                    const BorderSide(color: Color(0xFFFFD700)),
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -345,7 +370,8 @@ class EventDetailsPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 8),
                 TextButton(
-                  onPressed: () => ref.invalidate(eventDetailsProvider(eventId)),
+                  onPressed: () =>
+                      ref.invalidate(eventDetailsProvider(eventId)),
                   child: const Text('Retry'),
                 ),
               ],
@@ -449,7 +475,8 @@ class _AttendeesList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final attendeesAsync = ref.watch(eventAttendeesProvider((eventId: eventId, status: 'going')));
+    final attendeesAsync =
+        ref.watch(eventAttendeesProvider((eventId: eventId, status: 'going')));
 
     return attendeesAsync.when(
       data: (attendees) {
@@ -476,10 +503,14 @@ class _AttendeesList extends ConsumerWidget {
                 children: [
                   CircleAvatar(
                     radius: 24,
-                    backgroundImage: attendee.photoUrl != null ? NetworkImage(attendee.photoUrl!) : null,
+                    backgroundImage: attendee.photoUrl != null
+                        ? NetworkImage(attendee.photoUrl!)
+                        : null,
                     child: attendee.photoUrl == null
                         ? Text(
-                            attendee.displayName?.isNotEmpty == true ? attendee.displayName![0].toUpperCase() : '?',
+                            attendee.displayName?.isNotEmpty == true
+                                ? attendee.displayName![0].toUpperCase()
+                                : '?',
                             style: const TextStyle(fontSize: 18),
                           )
                         : null,
@@ -498,7 +529,8 @@ class _AttendeesList extends ConsumerWidget {
               subtitle: attendee.bio != null && attendee.bio!.isNotEmpty
                   ? Text(
                       attendee.bio!,
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                      style:
+                          TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     )

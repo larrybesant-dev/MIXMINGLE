@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/design_system/design_constants.dart';
@@ -21,7 +21,8 @@ class ProfilePage extends ConsumerStatefulWidget {
   ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderStateMixin {
+class _ProfilePageState extends ConsumerState<ProfilePage>
+    with TickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -57,7 +58,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
             }
 
             return privacySettingsAsync.when(
-              data: (privacySettings) => _buildProfileContent(user, privacySettings),
+              data: (privacySettings) =>
+                  _buildProfileContent(user, privacySettings),
               loading: () => _buildProfileContent(user, null),
               error: (error, stack) => _buildProfileContent(user, null),
             );
@@ -98,7 +100,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
               child: IconButton(
                 key: const Key('profile-edit-btn'),
                 icon: const Icon(Icons.edit, color: Colors.white),
-                onPressed: () => Navigator.of(context).pushNamed('/edit-profile'),
+                onPressed: () =>
+                    Navigator.of(context).pushNamed('/edit-profile'),
               ),
             ),
             Semantics(
@@ -200,7 +203,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                 key: ValueKey(user.avatarUrl),
                 radius: AppSizes.avatarHeroRadius,
                 backgroundImage: user.avatarUrl.isNotEmpty
-                    ? NetworkImage('${user.avatarUrl}?t=${DateTime.now().millisecondsSinceEpoch}')
+                    ? NetworkImage(
+                        '${user.avatarUrl}?t=${DateTime.now().millisecondsSinceEpoch}')
                     : null,
                 backgroundColor: DesignColors.accent.withValues(alpha: 0.3),
                 child: user.avatarUrl.isEmpty
@@ -235,7 +239,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     GlowText(
-                      text: _isFieldVisible('displayName', privacySettings) ? (user.displayName ?? "") : user.username,
+                      text: _isFieldVisible('displayName', privacySettings)
+                          ? (user.displayName ?? "")
+                          : user.username,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: DesignColors.gold,
@@ -243,7 +249,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                     ),
                     const SizedBox(height: AppSpacing.spaceXS),
                     Text(
-                      _isFieldVisible('displayName', privacySettings) ? '@${user.username}' : 'Private Profile',
+                      _isFieldVisible('displayName', privacySettings)
+                          ? '@${user.username}'
+                          : 'Private Profile',
                       style: AppTypography.bodySm,
                     ),
                   ],
@@ -356,7 +364,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
             final activity = activities[index];
             final type = activity['type'] as String? ?? 'unknown';
             final timestamp = activity['timestamp'] as Timestamp?;
-            final description = activity['description'] as String? ?? 'Activity';
+            final description =
+                activity['description'] as String? ?? 'Activity';
 
             return Card(
               color: Colors.white.withValues(alpha: 0.1),
@@ -368,7 +377,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                 ),
                 title: Text(
                   description,
-                  style: AppTypography.bodySm.copyWith(color: DesignColors.white),
+                  style:
+                      AppTypography.bodySm.copyWith(color: DesignColors.white),
                 ),
                 subtitle: timestamp != null
                     ? Text(
@@ -440,9 +450,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        _buildAboutSection('Bio', user.bio, _isFieldVisible('bio', privacySettings)),
+        _buildAboutSection(
+            'Bio', user.bio, _isFieldVisible('bio', privacySettings)),
         const SizedBox(height: 16),
-        _buildAboutSection('Location', user.location, _isFieldVisible('location', privacySettings)),
+        _buildAboutSection('Location', user.location,
+            _isFieldVisible('location', privacySettings)),
         const SizedBox(height: 16),
         _buildInterestsSection(user, privacySettings),
         const SizedBox(height: 16),
@@ -491,7 +503,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
   }
 
   Widget _buildInterestsSection(User user, PrivacySettings? privacySettings) {
-    if (!_isFieldVisible('interests', privacySettings) || user.interests.isEmpty) {
+    if (!_isFieldVisible('interests', privacySettings) ||
+        user.interests.isEmpty) {
       return Container();
     }
 
@@ -520,7 +533,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
             runSpacing: 8,
             children: user.interests
                 .map((interest) => Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: const Color(0x33FFFF4C),
                         borderRadius: BorderRadius.circular(20),
@@ -545,7 +559,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
   }
 
   Widget _buildSocialLinksSection(User user, PrivacySettings? privacySettings) {
-    if (!_isFieldVisible('socialLinks', privacySettings) || user.socialLinks.isEmpty) {
+    if (!_isFieldVisible('socialLinks', privacySettings) ||
+        user.socialLinks.isEmpty) {
       return Container();
     }
 
@@ -618,8 +633,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildStatColumn('Rooms Created', user.liveSessionsHosted.toString()),
-              _buildStatColumn('Tips Received', '\$${user.totalTipsReceived.toStringAsFixed(2)}'),
+              _buildStatColumn(
+                  'Rooms Created', user.liveSessionsHosted.toString()),
+              _buildStatColumn('Tips Received',
+                  '\$${user.totalTipsReceived.toStringAsFixed(2)}'),
             ],
           ),
         ],
@@ -689,7 +706,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                         child: NeonButton(
                           key: const Key('start-speed-dating-btn'),
                           onPressed: () {
-                            Navigator.of(context).pushNamed('/speed-dating-lobby');
+                            Navigator.of(context)
+                                .pushNamed('/speed-dating-lobby');
                           },
                           child: const Text('Start Speed Dating'),
                         ),
@@ -809,7 +827,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                       ),
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 2),
                         decoration: BoxDecoration(
                           color: const Color(0xFF4CAF50).withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
@@ -904,7 +923,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                 ),
                 title: Text(
                   room.title,
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold),
                 ),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -932,11 +952,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                           ),
                         ),
                         const SizedBox(width: 12),
-                        const Icon(Icons.people, size: 16, color: Colors.white70),
+                        const Icon(Icons.people,
+                            size: 16, color: Colors.white70),
                         const SizedBox(width: 4),
                         Text(
                           '${room.participantIds.length}',
-                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          style: const TextStyle(
+                              color: Colors.white70, fontSize: 12),
                         ),
                       ],
                     ),
@@ -952,7 +974,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                             MaterialPageRoute(
                               builder: (context) => RoomAccessWrapper(
                                 room: room,
-                                userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
+                                userId: fb_auth.FirebaseAuth.instance
+                                        .currentUser?.uid ??
+                                    '',
                               ),
                             ),
                           ),
@@ -964,7 +988,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
                   MaterialPageRoute(
                     builder: (context) => RoomAccessWrapper(
                       room: room,
-                      userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
+                      userId:
+                          fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
                     ),
                   ),
                 ),
@@ -1024,7 +1049,8 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => tabBar.preferredSize.height;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+      BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
       color: const Color(0xFF1A1A2E),
       child: tabBar,

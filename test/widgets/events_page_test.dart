@@ -7,7 +7,8 @@ void main() {
     // Integration tests validate events listing and discovery functionality.
     // Widget tests skipped here to avoid test environment complexity.
 
-    testWidgets('EventsPage is properly constructed', (WidgetTester tester) async {
+    testWidgets('EventsPage is properly constructed',
+        (WidgetTester tester) async {
       // Simplified test to ensure widget type exists
       expect(EventsPage, isNotNull);
     });

@@ -10,10 +10,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Keys used in SharedPreferences.
 class _Keys {
-  static const landingMusic    = 'pref_landing_music_enabled';
-  static const profileMusic    = 'pref_profile_music_enabled';
-  static const microSounds     = 'pref_micro_sounds_enabled';
-  static const globalMute      = 'pref_global_mute';
+  static const landingMusic = 'pref_landing_music_enabled';
+  static const profileMusic = 'pref_profile_music_enabled';
+  static const microSounds = 'pref_micro_sounds_enabled';
+  static const globalMute = 'pref_global_mute';
 }
 
 class MusicSettingsService {
@@ -48,8 +48,7 @@ class MusicSettingsService {
       _prefs.setBool(_Keys.microSounds, value);
 
   // ── Global mute ───────────────────────────────────────────────
-  bool get globalMute =>
-      _prefs.getBool(_Keys.globalMute) ?? false;
+  bool get globalMute => _prefs.getBool(_Keys.globalMute) ?? false;
 
   Future<void> setGlobalMute(bool value) =>
       _prefs.setBool(_Keys.globalMute, value);
@@ -58,9 +57,12 @@ class MusicSettingsService {
   bool canPlay(AudioFeature feature) {
     if (globalMute) return false;
     switch (feature) {
-      case AudioFeature.landing:  return landingMusicEnabled;
-      case AudioFeature.profile:  return profileMusicEnabled;
-      case AudioFeature.sfx:      return microSoundsEnabled;
+      case AudioFeature.landing:
+        return landingMusicEnabled;
+      case AudioFeature.profile:
+        return profileMusicEnabled;
+      case AudioFeature.sfx:
+        return microSoundsEnabled;
     }
   }
 }

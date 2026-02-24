@@ -6,7 +6,8 @@ import 'package:mix_and_mingle/shared/models/message.dart';
 import 'package:mix_and_mingle/features/messages/chat_screen.dart';
 
 void main() {
-  testWidgets('MessageBubble displays reactions correctly', (WidgetTester tester) async {
+  testWidgets('MessageBubble displays reactions correctly',
+      (WidgetTester tester) async {
     // Create a test message with reactions
     final testMessage = DirectMessage(
       id: 'test-message-id',
@@ -54,7 +55,8 @@ void main() {
     expect(find.text('1'), findsOneWidget); // For ❤️
   });
 
-  testWidgets('MessageBubble long press shows reaction option', (WidgetTester tester) async {
+  testWidgets('MessageBubble long press shows reaction option',
+      (WidgetTester tester) async {
     final testMessage = DirectMessage(
       id: 'test-message-id',
       conversationId: 'test-conversation-id',

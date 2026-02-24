@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'auth_providers.dart';
 
 final profileCompletionProvider = Provider<bool>((ref) {
@@ -19,5 +19,3 @@ final needsOnboardingProvider = Provider<bool>((ref) {
   // Remove this override to re-enable the onboarding gate.
   return false;
 });
-
-

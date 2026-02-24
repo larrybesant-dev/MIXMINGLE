@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/providers/room_providers.dart';
 import '../../../shared/models/room.dart';
@@ -18,7 +18,9 @@ class RaisedHandsPanel extends ConsumerWidget {
   });
 
   bool _canModerate(Room r) =>
-      r.hostId == currentUserId || r.moderators.contains(currentUserId) || r.admins.contains(currentUserId);
+      r.hostId == currentUserId ||
+      r.moderators.contains(currentUserId) ||
+      r.admins.contains(currentUserId);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,7 +39,9 @@ class RaisedHandsPanel extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Raised Hands', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  const Text('Raised Hands',
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   ...hands.map((uid) => _handTile(uid, canModerate)),
                 ],
@@ -45,10 +49,12 @@ class RaisedHandsPanel extends ConsumerWidget {
             );
           },
           loading: () => _panel(
-            child: const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
+            child: const Center(
+                child: CircularProgressIndicator(color: Colors.redAccent)),
           ),
           error: (e, _) => _panel(
-            child: Text('Error loading raised hands: $e', style: const TextStyle(color: Colors.white70)),
+            child: Text('Error loading raised hands: $e',
+                style: const TextStyle(color: Colors.white70)),
           ),
         );
       },
@@ -68,12 +74,14 @@ class RaisedHandsPanel extends ConsumerWidget {
                 spacing: 6,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.check, color: Colors.greenAccent, size: 18),
+                    icon: const Icon(Icons.check,
+                        color: Colors.greenAccent, size: 18),
                     onPressed: () => onApprove(uid),
                     tooltip: 'Approve (promote to speaker)',
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, color: Colors.redAccent, size: 18),
+                    icon: const Icon(Icons.close,
+                        color: Colors.redAccent, size: 18),
                     onPressed: () => onDecline(uid),
                     tooltip: 'Decline',
                   ),
@@ -91,7 +99,8 @@ class RaisedHandsPanel extends ConsumerWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E2F).withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFF4C4C).withValues(alpha: 0.3)),
+        border:
+            Border.all(color: const Color(0xFFFF4C4C).withValues(alpha: 0.3)),
       ),
       child: child,
     );

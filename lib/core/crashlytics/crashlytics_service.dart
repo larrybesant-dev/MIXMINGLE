@@ -1,4 +1,4 @@
-﻿/// Crashlytics Service
+/// Crashlytics Service
 ///
 /// Centralized crash reporting using Firebase Crashlytics.
 /// Provides methods for logging errors, setting user identifiers,
@@ -14,7 +14,8 @@ import 'package:flutter/foundation.dart';
 /// Singleton service for crash reporting
 class CrashlyticsService {
   static CrashlyticsService? _instance;
-  static CrashlyticsService get instance => _instance ??= CrashlyticsService._();
+  static CrashlyticsService get instance =>
+      _instance ??= CrashlyticsService._();
 
   CrashlyticsService._();
 
@@ -22,7 +23,8 @@ class CrashlyticsService {
   bool get _isSupported => !kIsWeb;
 
   /// Only access Crashlytics instance on supported platforms
-  FirebaseCrashlytics? get _crashlytics => _isSupported ? FirebaseCrashlytics.instance : null;
+  FirebaseCrashlytics? get _crashlytics =>
+      _isSupported ? FirebaseCrashlytics.instance : null;
 
   // ============================================================
   // INITIALIZATION

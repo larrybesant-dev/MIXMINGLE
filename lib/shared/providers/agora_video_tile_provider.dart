@@ -1,4 +1,3 @@
-﻿
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Video tile state for Agora
@@ -7,7 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Uses Set internally for O(1) deduplication and atomic operations
 class VideoTileState {
   final int? localUid; // Local user's UID
-  final Set<int> remoteVideoUids; // Remote users publishing video (using Set for dedup)
+  final Set<int>
+      remoteVideoUids; // Remote users publishing video (using Set for dedup)
 
   const VideoTileState({
     this.localUid,
@@ -42,7 +42,8 @@ class VideoTileState {
   int get videoCount => allVideoUids.length;
 
   @override
-  String toString() => 'VideoTileState(local=$localUid, remote=${remoteVideoUids.length})';
+  String toString() =>
+      'VideoTileState(local=$localUid, remote=${remoteVideoUids.length})';
 }
 
 /// Notifier for managing video tile state
@@ -96,7 +97,8 @@ class VideoTileNotifier extends Notifier<VideoTileState> {
 }
 
 /// Provider for video tile state
-final videoTileProvider = NotifierProvider<VideoTileNotifier, VideoTileState>(() {
+final videoTileProvider =
+    NotifierProvider<VideoTileNotifier, VideoTileState>(() {
   return VideoTileNotifier();
 });
 
@@ -105,6 +107,3 @@ final hasVideoProvider = Provider.family<bool, int>((ref, uid) {
   final videoState = ref.watch(videoTileProvider);
   return videoState.hasVideo(uid);
 });
-
-
-

@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SpeedDatingResult {
@@ -34,7 +33,8 @@ class SpeedDatingResult {
       timestamp: map['timestamp'] != null
           ? (map['timestamp'] is Timestamp
               ? (map['timestamp'] as Timestamp).toDate()
-              : DateTime.tryParse(map['timestamp'].toString()) ?? DateTime.now())
+              : DateTime.tryParse(map['timestamp'].toString()) ??
+                  DateTime.now())
           : DateTime.now(),
     );
   }
@@ -110,4 +110,3 @@ class SpeedDatingResult {
     return 'SpeedDatingResult(id: $id, roundId: $roundId, userId: $userId, matchedUserId: $matchedUserId, isMutual: $isMutual, timestamp: $timestamp)';
   }
 }
-

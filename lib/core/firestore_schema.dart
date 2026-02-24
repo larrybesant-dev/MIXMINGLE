@@ -1,4 +1,4 @@
-﻿/// Firestore Collection Schema Documentation
+/// Firestore Collection Schema Documentation
 ///
 /// This document defines the schema expectations for the Mixmingle app.
 /// All writes are validated by firestore.rules and must conform to these schemas.
@@ -121,7 +121,3 @@
 /// - read: boolean
 
 library;
-
-
-
-

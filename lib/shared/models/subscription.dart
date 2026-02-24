@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Subscription tiers available in the app
@@ -94,9 +93,11 @@ class UserSubscription {
     this.renewedAt,
   });
 
-  bool get isActive => status == SubscriptionStatus.active && endDate.isAfter(DateTime.now());
+  bool get isActive =>
+      status == SubscriptionStatus.active && endDate.isAfter(DateTime.now());
 
-  int get daysRemaining => endDate.difference(DateTime.now()).inDays.clamp(0, 999);
+  int get daysRemaining =>
+      endDate.difference(DateTime.now()).inDays.clamp(0, 999);
 
   Map<String, dynamic> toMap() {
     return {
@@ -164,5 +165,3 @@ class UserSubscription {
     );
   }
 }
-
-

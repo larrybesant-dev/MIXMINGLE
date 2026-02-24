@@ -137,9 +137,8 @@ class PaymentsRepository implements IPaymentsRepository {
     String? afterTransactionId,
   }) async {
     _assertUid(uid);
-    Query<Map<String, dynamic>> query = _txns(uid)
-        .orderBy('timestamp', descending: true)
-        .limit(limit);
+    Query<Map<String, dynamic>> query =
+        _txns(uid).orderBy('timestamp', descending: true).limit(limit);
 
     if (afterTransactionId != null) {
       final pivot = await _txns(uid).doc(afterTransactionId).get();

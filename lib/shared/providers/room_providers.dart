@@ -18,47 +18,58 @@ import 'agora_participant_provider.dart';
 import 'auth_providers.dart';
 
 final roomServiceProvider = Provider<RoomService>((ref) => RoomService());
-final roomManagerServiceProvider = Provider<RoomManagerService>((ref) => RoomManagerService());
-final roomDiscoveryServiceProvider = Provider<RoomDiscoveryService>((ref) => RoomDiscoveryService());
+final roomManagerServiceProvider =
+    Provider<RoomManagerService>((ref) => RoomManagerService());
+final roomDiscoveryServiceProvider =
+    Provider<RoomDiscoveryService>((ref) => RoomDiscoveryService());
 
 final roomStreamProvider = StreamProvider.family<Room?, String>((ref, roomId) {
   final stream = ref.watch(roomManagerServiceProvider).getRoomStream(roomId);
   return stream.map((snapshot) => null);
 });
 
-final liveRoomsStreamProvider = StreamProvider.family<List<Room>, String?>((ref, category) {
-  return ref.watch(roomManagerServiceProvider).getLiveRoomsStream().map((snapshot) => []);
+final liveRoomsStreamProvider =
+    StreamProvider.family<List<Room>, String?>((ref, category) {
+  return ref
+      .watch(roomManagerServiceProvider)
+      .getLiveRoomsStream()
+      .map((snapshot) => []);
 });
 
-final raisedHandsProvider = StreamProvider.family<List<String>, String>((ref, roomId) {
+final raisedHandsProvider =
+    StreamProvider.family<List<String>, String>((ref, roomId) {
   return ref.watch(roomStreamProvider(roomId)).maybeWhen(
         data: (room) => Stream.value(room?.raisedHands ?? const []),
         orElse: () => const Stream<List<String>>.empty(),
       );
 });
 
-final moderatorsProvider = StreamProvider.family<List<String>, String>((ref, roomId) {
+final moderatorsProvider =
+    StreamProvider.family<List<String>, String>((ref, roomId) {
   return ref.watch(roomStreamProvider(roomId)).maybeWhen(
         data: (room) => Stream.value(room?.moderators ?? const []),
         orElse: () => const Stream<List<String>>.empty(),
       );
 });
 
-final speakersProvider = StreamProvider.family<List<String>, String>((ref, roomId) {
+final speakersProvider =
+    StreamProvider.family<List<String>, String>((ref, roomId) {
   return ref.watch(roomStreamProvider(roomId)).maybeWhen(
         data: (room) => Stream.value(room?.speakers ?? const []),
         orElse: () => const Stream<List<String>>.empty(),
       );
 });
 
-final mutedUsersProvider = StreamProvider.family<List<String>, String>((ref, roomId) {
+final mutedUsersProvider =
+    StreamProvider.family<List<String>, String>((ref, roomId) {
   return ref.watch(roomStreamProvider(roomId)).maybeWhen(
         data: (room) => Stream.value(room?.mutedUsers ?? const []),
         orElse: () => const Stream<List<String>>.empty(),
       );
 });
 
-final kickedUsersProvider = StreamProvider.family<List<String>, String>((ref, roomId) {
+final kickedUsersProvider =
+    StreamProvider.family<List<String>, String>((ref, roomId) {
   return ref.watch(roomStreamProvider(roomId)).maybeWhen(
         data: (room) => Stream.value(room?.kickedUsers ?? const []),
         orElse: () => const Stream<List<String>>.empty(),
@@ -67,9 +78,11 @@ final kickedUsersProvider = StreamProvider.family<List<String>, String>((ref, ro
 
 // ðŸ”¥ PHASE 3.1b: Enriched participants provider
 // Merges Agora real-time state (audio/video/speaking) with Firestore metadata (roles/timestamps)
-final enrichedParticipantsProvider = StreamProvider.family<List<EnrichedParticipant>, String>((ref, roomId) {
+final enrichedParticipantsProvider =
+    StreamProvider.family<List<EnrichedParticipant>, String>((ref, roomId) {
   final agoraParticipants = ref.watch(agoraParticipantsProvider);
-  final firestoreParticipantsAsync = ref.watch(roomParticipantsFirestoreProvider(roomId));
+  final firestoreParticipantsAsync =
+      ref.watch(roomParticipantsFirestoreProvider(roomId));
   final roomAsync = ref.watch(roomProvider(roomId));
 
   return firestoreParticipantsAsync.when(
@@ -104,8 +117,10 @@ final enrichedParticipantsProvider = StreamProvider.family<List<EnrichedParticip
           isSpeaking: agoraParticipant.isSpeaking,
           connectionQuality: fsParticipant.connectionQuality,
           isHost: room != null && fsParticipant.userId == room.hostId,
-          isModerator: room != null && room.moderators.contains(fsParticipant.userId),
-          hasRaisedHand: room != null && room.raisedHands.contains(fsParticipant.userId),
+          isModerator:
+              room != null && room.moderators.contains(fsParticipant.userId),
+          hasRaisedHand:
+              room != null && room.raisedHands.contains(fsParticipant.userId),
         ));
       }
 
@@ -168,7 +183,8 @@ class EnrichedParticipant {
 
 final roomsProvider = FutureProvider.autoDispose<List<Room>>((ref) async {
   try {
-    final snapshot = await FirebaseFirestore.instance.collection('rooms').limit(50).get();
+    final snapshot =
+        await FirebaseFirestore.instance.collection('rooms').limit(50).get();
 
     final rooms = snapshot.docs
         .map((doc) {
@@ -191,8 +207,12 @@ final roomsProvider = FutureProvider.autoDispose<List<Room>>((ref) async {
   }
 });
 
-final paginatedRoomsProvider = StreamProvider.autoDispose.family<List<Room>, DocumentSnapshot?>((ref, startAfter) {
-  var query = FirebaseFirestore.instance.collection('rooms').orderBy('createdAt', descending: true).limit(20);
+final paginatedRoomsProvider = StreamProvider.autoDispose
+    .family<List<Room>, DocumentSnapshot?>((ref, startAfter) {
+  var query = FirebaseFirestore.instance
+      .collection('rooms')
+      .orderBy('createdAt', descending: true)
+      .limit(20);
   if (startAfter != null) {
     query = query.startAfterDocument(startAfter);
   }
@@ -249,7 +269,8 @@ final activeRoomsProvider = FutureProvider.autoDispose<List<Room>>((ref) async {
   }
 });
 
-final userRoomsProvider = FutureProvider.autoDispose.family<List<Room>, String>((ref, userId) async {
+final userRoomsProvider =
+    FutureProvider.autoDispose.family<List<Room>, String>((ref, userId) async {
   try {
     final allRooms = await ref.watch(roomsProvider.future);
     return allRooms.where((room) => room.hostId == userId).toList();
@@ -259,7 +280,8 @@ final userRoomsProvider = FutureProvider.autoDispose.family<List<Room>, String>(
   }
 });
 
-final roomParticipantsProvider = StreamProvider.family<List<User>, String>((ref, roomId) async* {
+final roomParticipantsProvider =
+    StreamProvider.family<List<User>, String>((ref, roomId) async* {
   final room = await ref.watch(roomProvider(roomId).future);
   if (room == null) {
     yield [];
@@ -283,7 +305,8 @@ final roomCategoriesProvider = Provider<List<String>>((ref) {
   ];
 });
 
-final roomControllerProvider = NotifierProvider<RoomController, AsyncValue<Room?>>(() {
+final roomControllerProvider =
+    NotifierProvider<RoomController, AsyncValue<Room?>>(() {
   return RoomController();
 });
 
@@ -474,7 +497,8 @@ class RoomController extends Notifier<AsyncValue<Room?>> {
   }
 }
 
-final roomSearchControllerProvider = NotifierProvider<RoomSearchController, AsyncValue<List<Room>>>(() {
+final roomSearchControllerProvider =
+    NotifierProvider<RoomSearchController, AsyncValue<List<Room>>>(() {
   return RoomSearchController();
 });
 
@@ -519,18 +543,27 @@ class RoomSearchController extends Notifier<AsyncValue<List<Room>>> {
 
       if (_searchQuery.isNotEmpty) {
         filteredRooms = filteredRooms.where((room) {
-          return (room.name ?? room.title).toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              room.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              room.tags.any((tag) => tag.toLowerCase().contains(_searchQuery.toLowerCase()));
+          return (room.name ?? room.title)
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase()) ||
+              room.description
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase()) ||
+              room.tags.any((tag) =>
+                  tag.toLowerCase().contains(_searchQuery.toLowerCase()));
         }).toList();
       }
 
       if (_categoryFilter != null) {
-        filteredRooms = filteredRooms.where((room) => room.category == _categoryFilter).toList();
+        filteredRooms = filteredRooms
+            .where((room) => room.category == _categoryFilter)
+            .toList();
       }
 
       if (_typeFilter != null) {
-        filteredRooms = filteredRooms.where((room) => room.roomType == _typeFilter).toList();
+        filteredRooms = filteredRooms
+            .where((room) => room.roomType == _typeFilter)
+            .toList();
       }
 
       state = AsyncValue.data(filteredRooms);

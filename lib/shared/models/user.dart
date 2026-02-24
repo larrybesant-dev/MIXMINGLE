@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class User {
@@ -165,4 +164,3 @@ class User {
     return User.fromMap(data);
   }
 }
-

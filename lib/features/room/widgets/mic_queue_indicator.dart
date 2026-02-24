@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/providers/mic_providers.dart';
 
@@ -51,7 +51,8 @@ class MicQueueIndicator extends ConsumerWidget {
                     'ðŸŽ¤ Mics: $count/$maxMics',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
-                      color: isAtCapacity ? Colors.orange[700] : Colors.blue[700],
+                      color:
+                          isAtCapacity ? Colors.orange[700] : Colors.blue[700],
                       fontSize: 12,
                     ),
                   ),

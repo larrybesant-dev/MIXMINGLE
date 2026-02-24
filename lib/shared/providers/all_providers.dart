@@ -1,4 +1,3 @@
-
 /// Comprehensive provider exports for Mix & Mingle
 ///
 /// This file consolidates all Riverpod providers and controllers
@@ -51,8 +50,13 @@ export 'match_providers.dart' hide matchStatisticsProvider;
 // EVENTS PROVIDERS
 // ============================================================================
 
-export 'event_dating_providers.dart' hide eventsServiceProvider, EventsController, eventProvider;
-export 'events_controller.dart' hide eventsServiceProvider, attendingEventsProvider, eventsControllerProvider;
+export 'event_dating_providers.dart'
+    hide eventsServiceProvider, EventsController, eventProvider;
+export 'events_controller.dart'
+    hide
+        eventsServiceProvider,
+        attendingEventsProvider,
+        eventsControllerProvider;
 
 // ============================================================================
 // MEDIA & MODERATION PROVIDERS

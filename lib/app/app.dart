@@ -1,4 +1,4 @@
-﻿// Removed invalid imports
+// Removed invalid imports
 // import 'dart:js_util' as js_util;
 // import 'package:mixmingle/helpers/helpers.dart';
 import 'package:flutter/material.dart';
@@ -39,9 +39,9 @@ class MixMingleApp extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () =>
                           Navigator.of(ctx).pushNamedAndRemoveUntil(
-                            AppRoutes.splash,
-                            (route) => false,
-                          ),
+                        AppRoutes.splash,
+                        (route) => false,
+                      ),
                       child: const Text('Go to Home'),
                     ),
                   ],

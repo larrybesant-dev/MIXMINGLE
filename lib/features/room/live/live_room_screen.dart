@@ -31,8 +31,8 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
     this.avatarUrl,
   });
 
-  final String  roomId;
-  final String  displayName;
+  final String roomId;
+  final String displayName;
   final String? avatarUrl;
 
   @override
@@ -41,17 +41,17 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
 
 class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     with WidgetsBindingObserver {
-  late final LiveRoomArgs   _args;
+  late final LiveRoomArgs _args;
   final _chatController = TextEditingController();
-  final _chatScroll     = ScrollController();
+  final _chatScroll = ScrollController();
 
   @override
   void initState() {
     super.initState();
     _args = LiveRoomArgs(
-      roomId:      widget.roomId,
+      roomId: widget.roomId,
       displayName: widget.displayName,
-      avatarUrl:   widget.avatarUrl,
+      avatarUrl: widget.avatarUrl,
     );
     WidgetsBinding.instance.addObserver(this);
     // Defer enterRoom so the provider is fully mounted
@@ -89,7 +89,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   // ── Leave handling ────────────────────────────────────────────────────────
 
   Future<bool> _onWillPop() async {
-    final ctrl  = ref.read(liveRoomControllerProvider.notifier);
+    final ctrl = ref.read(liveRoomControllerProvider.notifier);
     final state = ref.read(liveRoomControllerProvider);
     if (!state.isLeft && !state.isLeaving) {
       await ctrl.leaveRoom();
@@ -210,7 +210,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
   Widget _buildBody(LiveRoomState s) {
     if (s.isJoining) return _buildLoadingView(s.statusMessage ?? 'Loading…');
-    if (s.hasError)  return _buildErrorView(s.error ?? 'Unknown error');
+    if (s.hasError) return _buildErrorView(s.error ?? 'Unknown error');
 
     return Column(
       children: [
@@ -271,12 +271,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       final user = ref.read(currentUserProvider).value;
       if (user == null) return;
       await ref.read(messagingServiceProvider).sendRoomMessage(
-        senderId:        user.id,
-        senderName:      user.displayName ?? user.username,
-        senderAvatarUrl: user.avatarUrl,
-        roomId:          widget.roomId,
-        content:         emoji,
-      );
+            senderId: user.id,
+            senderName: user.displayName ?? user.username,
+            senderAvatarUrl: user.avatarUrl,
+            roomId: widget.roomId,
+            content: emoji,
+          );
     } catch (e) {
       debugPrint('[ROOM_SCREEN] reaction error: $e');
     }
@@ -289,12 +289,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       final user = ref.read(currentUserProvider).value;
       if (user == null) return;
       await ref.read(messagingServiceProvider).sendRoomMessage(
-        senderId:        user.id,
-        senderName:      user.displayName ?? user.username,
-        senderAvatarUrl: user.avatarUrl,
-        roomId:          widget.roomId,
-        content:         text,
-      );
+            senderId: user.id,
+            senderName: user.displayName ?? user.username,
+            senderAvatarUrl: user.avatarUrl,
+            roomId: widget.roomId,
+            content: text,
+          );
     } catch (e) {
       debugPrint('[ROOM_SCREEN] send error: $e');
     }
@@ -317,7 +317,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, color: Color(0xFFFF4C4C), size: 48),
+              const Icon(Icons.error_outline,
+                  color: Color(0xFFFF4C4C), size: 48),
               const SizedBox(height: 12),
               Text(
                 error,
@@ -364,7 +365,7 @@ class _AudienceRow extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               itemCount: participants.length.clamp(0, 12),
               itemBuilder: (ctx, i) {
-                final p       = participants[i];
+                final p = participants[i];
                 final pending = p.camRequestPending;
                 return Padding(
                   padding: const EdgeInsets.only(right: 4),
@@ -418,14 +419,14 @@ class _AudienceRow extends StatelessWidget {
 
 class _ControlBar extends ConsumerWidget {
   const _ControlBar({required this.args, required this.state});
-  final LiveRoomArgs  args;
+  final LiveRoomArgs args;
   final LiveRoomState state;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ctrl           = ref.read(liveRoomControllerProvider.notifier);
+    final ctrl = ref.read(liveRoomControllerProvider.notifier);
     // Detect whether the local user has a pending cam request
-    final myParticipant  = state.participants
+    final myParticipant = state.participants
         .where((p) => p.userId == state.localUserId)
         .firstOrNull;
     final isRequestPending = myParticipant?.camRequestPending ?? false;
@@ -535,11 +536,11 @@ class _ControlButton extends StatelessWidget {
     this.activeColor,
   });
 
-  final IconData    icon;
-  final String      label;
-  final bool        active;
+  final IconData icon;
+  final String label;
+  final bool active;
   final VoidCallback onTap;
-  final Color?      activeColor;
+  final Color? activeColor;
 
   @override
   Widget build(BuildContext context) {
@@ -556,17 +557,14 @@ class _ControlButton extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: active
-                  ? color.withAlpha(30)
-                  : const Color(0xFF1E0E3A),
+              color: active ? color.withAlpha(30) : const Color(0xFF1E0E3A),
               shape: BoxShape.circle,
               border: Border.all(color: color.withAlpha(120)),
             ),
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(height: 4),
-          Text(label,
-              style: TextStyle(color: color, fontSize: 10)),
+          Text(label, style: TextStyle(color: color, fontSize: 10)),
         ],
       ),
     );
@@ -578,7 +576,7 @@ class _ControlButton extends StatelessWidget {
 class _ChatArea extends ConsumerWidget {
   const _ChatArea({required this.scrollController, required this.roomId});
   final ScrollController scrollController;
-  final String           roomId;
+  final String roomId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -586,7 +584,8 @@ class _ChatArea extends ConsumerWidget {
 
     return messagesAsync.when(
       loading: () => const Center(
-        child: CircularProgressIndicator(color: Color(0xFF5A3A7E), strokeWidth: 2),
+        child:
+            CircularProgressIndicator(color: Color(0xFF5A3A7E), strokeWidth: 2),
       ),
       error: (e, _) => const Center(
         child: Text(
@@ -751,8 +750,8 @@ class _PendingRequestRow extends StatelessWidget {
     required this.onDeny,
   });
   final RoomParticipant participant;
-  final VoidCallback    onApprove;
-  final VoidCallback    onDeny;
+  final VoidCallback onApprove;
+  final VoidCallback onDeny;
 
   @override
   Widget build(BuildContext context) {
@@ -827,7 +826,7 @@ class _PendingRequestRow extends StatelessWidget {
 class _ChatInputBar extends StatelessWidget {
   const _ChatInputBar({required this.controller, required this.onSend});
   final TextEditingController controller;
-  final VoidCallback           onSend;
+  final VoidCallback onSend;
 
   @override
   Widget build(BuildContext context) {

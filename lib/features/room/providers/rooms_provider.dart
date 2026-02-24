@@ -1,4 +1,4 @@
-﻿/// Rooms Provider - State management for rooms list
+/// Rooms Provider - State management for rooms list
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -48,6 +48,5 @@ class RoomsNotifier extends Notifier<RoomsState> {
 }
 
 /// Rooms provider
-final roomsProvider = NotifierProvider<RoomsNotifier, RoomsState>(RoomsNotifier.new);
-
-
+final roomsProvider =
+    NotifierProvider<RoomsNotifier, RoomsState>(RoomsNotifier.new);

@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Chat message model for Module C
@@ -90,7 +90,11 @@ class EnhancedChatService {
     required String userAvatarUrl,
     required String content,
   }) async {
-    final docRef = await _firestore.collection('rooms').doc(roomId).collection('chat_messages').add({
+    final docRef = await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('chat_messages')
+        .add({
       'userId': userId,
       'userName': userName,
       'userAvatarUrl': userAvatarUrl,
@@ -125,12 +129,22 @@ class EnhancedChatService {
 
   /// Delete a message
   Future<void> deleteMessage(String roomId, String messageId) async {
-    await _firestore.collection('rooms').doc(roomId).collection('chat_messages').doc(messageId).delete();
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('chat_messages')
+        .doc(messageId)
+        .delete();
   }
 
   /// Add a reaction to a message
-  Future<void> addReaction(String roomId, String messageId, String emoji) async {
-    final messageRef = _firestore.collection('rooms').doc(roomId).collection('chat_messages').doc(messageId);
+  Future<void> addReaction(
+      String roomId, String messageId, String emoji) async {
+    final messageRef = _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('chat_messages')
+        .doc(messageId);
 
     final doc = await messageRef.get();
     final reactions = List<String>.from(doc['reactions'] ?? []);
@@ -142,8 +156,13 @@ class EnhancedChatService {
   }
 
   /// Remove a reaction from a message
-  Future<void> removeReaction(String roomId, String messageId, String emoji) async {
-    final messageRef = _firestore.collection('rooms').doc(roomId).collection('chat_messages').doc(messageId);
+  Future<void> removeReaction(
+      String roomId, String messageId, String emoji) async {
+    final messageRef = _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('chat_messages')
+        .doc(messageId);
 
     final doc = await messageRef.get();
     final reactions = List<String>.from(doc['reactions'] ?? []);
@@ -162,7 +181,9 @@ class EnhancedChatService {
         .limit(100)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => ChatMessage.fromFirestore(doc)).toList();
+      return snapshot.docs
+          .map((doc) => ChatMessage.fromFirestore(doc))
+          .toList();
     });
   }
 
@@ -176,7 +197,9 @@ class EnhancedChatService {
         .orderBy('timestamp', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => ChatMessage.fromFirestore(doc)).toList();
+      return snapshot.docs
+          .map((doc) => ChatMessage.fromFirestore(doc))
+          .toList();
     });
   }
 }
@@ -187,15 +210,15 @@ final enhancedChatServiceProvider = Provider<EnhancedChatService>((ref) {
 });
 
 /// Provider for chat messages in a specific room
-final chatMessagesProvider = StreamProvider.family<List<ChatMessage>, String>((ref, roomId) {
+final chatMessagesProvider =
+    StreamProvider.family<List<ChatMessage>, String>((ref, roomId) {
   final chatService = ref.watch(enhancedChatServiceProvider);
   return chatService.getMessagesStream(roomId);
 });
 
 /// Provider for pinned chat messages in a specific room
-final pinnedChatMessagesProvider = StreamProvider.family<List<ChatMessage>, String>((ref, roomId) {
+final pinnedChatMessagesProvider =
+    StreamProvider.family<List<ChatMessage>, String>((ref, roomId) {
   final chatService = ref.watch(enhancedChatServiceProvider);
   return chatService.getPinnedMessagesStream(roomId);
 });
-
-

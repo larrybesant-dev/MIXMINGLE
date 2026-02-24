@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../core/services/report_block_service.dart';
 import '../../core/utils/app_logger.dart';
 
@@ -61,7 +61,9 @@ class ReportBlockSheet {
               ),
               title: Text(isBlocked ? 'Unblock User' : 'Block User'),
               subtitle: Text(
-                isBlocked ? 'Allow this user to contact you' : 'Prevent this user from contacting you',
+                isBlocked
+                    ? 'Allow this user to contact you'
+                    : 'Prevent this user from contacting you',
               ),
               onTap: () {
                 Navigator.pop(context);
@@ -136,7 +138,8 @@ class ReportBlockSheet {
                   itemCount: ReportBlockService.reportReasons.length,
                   itemBuilder: (context, index) {
                     final reason = ReportBlockService.reportReasons[index];
-                    final description = ReportBlockService.reportReasonDescriptions[reason];
+                    final description =
+                        ReportBlockService.reportReasonDescriptions[reason];
 
                     return ListTile(
                       leading: const Icon(Icons.report_outlined),
@@ -406,7 +409,8 @@ class ReportBlockSheet {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Unblock User'),
-        content: Text('Unblock $displayName? They will be able to contact you again.'),
+        content: Text(
+            'Unblock $displayName? They will be able to contact you again.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

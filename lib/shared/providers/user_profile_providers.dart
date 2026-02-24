@@ -4,5 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/user/user_profile_service.dart';
 import '../models/user_profile_model.dart';
 
-final userProfileServiceProvider = Provider<UserProfileService>((ref) => UserProfileService());
-final userProfileProvider = Provider.family<UserProfileModel?, String>((ref, userId) => ref.read(userProfileServiceProvider).getProfile(userId));
+final userProfileServiceProvider =
+    Provider<UserProfileService>((ref) => UserProfileService());
+final userProfileProvider = Provider.family<UserProfileModel?, String>(
+    (ref, userId) => ref.read(userProfileServiceProvider).getProfile(userId));

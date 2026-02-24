@@ -17,16 +17,19 @@ final agoraVideoServiceProvider = Provider<AgoraVideoService>((ref) {
   return service;
 });
 
-final storageServiceProvider = Provider<StorageService>((ref) => StorageService());
+final storageServiceProvider =
+    Provider<StorageService>((ref) => StorageService());
 
-final moderationServiceProvider = Provider<ModerationService>((ref) => ModerationService());
+final moderationServiceProvider =
+    Provider<ModerationService>((ref) => ModerationService());
 
 /// ============================================================================
 /// VIDEO/AGORA PROVIDERS
 /// ============================================================================
 
 /// Video connection state provider
-final videoConnectionStateProvider = NotifierProvider<VideoConnectionStateNotifier, VideoConnectionState>(() {
+final videoConnectionStateProvider =
+    NotifierProvider<VideoConnectionStateNotifier, VideoConnectionState>(() {
   return VideoConnectionStateNotifier();
 });
 
@@ -66,7 +69,8 @@ class VideoConnectionStateNotifier extends Notifier<VideoConnectionState> {
 }
 
 /// Video controller for Agora operations
-final videoControllerProvider = NotifierProvider<VideoController, AsyncValue<void>>(() {
+final videoControllerProvider =
+    NotifierProvider<VideoController, AsyncValue<void>>(() {
   return VideoController();
 });
 
@@ -84,7 +88,8 @@ class VideoController extends Notifier<AsyncValue<void>> {
   /// Do not call initialize() here - it could create duplicate engines.
 
   /// Join a channel
-  Future<void> joinChannel(String channelName, {String? token, int? uid}) async {
+  Future<void> joinChannel(String channelName,
+      {String? token, int? uid}) async {
     state = const AsyncValue.loading();
     try {
       ref.read(videoConnectionStateProvider.notifier).setConnecting();
@@ -155,7 +160,8 @@ class VideoController extends Notifier<AsyncValue<void>> {
 }
 
 /// Local audio enabled state
-final localAudioEnabledProvider = NotifierProvider<LocalAudioEnabledNotifier, bool>(() {
+final localAudioEnabledProvider =
+    NotifierProvider<LocalAudioEnabledNotifier, bool>(() {
   return LocalAudioEnabledNotifier();
 });
 
@@ -175,7 +181,8 @@ class LocalAudioEnabledNotifier extends Notifier<bool> {
 }
 
 /// Local video enabled state
-final localVideoEnabledProvider = NotifierProvider<LocalVideoEnabledNotifier, bool>(() {
+final localVideoEnabledProvider =
+    NotifierProvider<LocalVideoEnabledNotifier, bool>(() {
   return LocalVideoEnabledNotifier();
 });
 
@@ -195,7 +202,8 @@ class LocalVideoEnabledNotifier extends Notifier<bool> {
 }
 
 /// Remote users provider
-final remoteUsersProvider = NotifierProvider<RemoteUsersNotifier, List<int>>(() {
+final remoteUsersProvider =
+    NotifierProvider<RemoteUsersNotifier, List<int>>(() {
   return RemoteUsersNotifier();
 });
 
@@ -223,7 +231,8 @@ class RemoteUsersNotifier extends Notifier<List<int>> {
 /// ============================================================================
 
 /// Storage controller for file uploads
-final storageControllerProvider = NotifierProvider<StorageController, AsyncValue<String?>>(() {
+final storageControllerProvider =
+    NotifierProvider<StorageController, AsyncValue<String?>>(() {
   return StorageController();
 });
 
@@ -291,13 +300,15 @@ class StorageController extends Notifier<AsyncValue<String?>> {
 }
 
 /// User media gallery provider
-final userMediaProvider = StreamProvider.family<List<MediaItem>, String>((ref, userId) async* {
+final userMediaProvider =
+    StreamProvider.family<List<MediaItem>, String>((ref, userId) async* {
   // Query media collection where userId = userId
   yield [];
 });
 
 /// Upload progress provider
-final uploadProgressProvider = NotifierProvider<UploadProgressNotifier, double>(() {
+final uploadProgressProvider =
+    NotifierProvider<UploadProgressNotifier, double>(() {
   return UploadProgressNotifier();
 });
 
@@ -350,13 +361,15 @@ final blockedUsersProvider = StreamProvider<List<Block>>((ref) async* {
 });
 
 /// Check if user is blocked provider
-final isUserBlockedProvider = StreamProvider.family<bool, String>((ref, userId) async* {
+final isUserBlockedProvider =
+    StreamProvider.family<bool, String>((ref, userId) async* {
   final blockedUsers = ref.watch(blockedUsersProvider).value ?? [];
   yield blockedUsers.any((block) => block.blockedUserId == userId);
 });
 
 /// Moderation controller
-final moderationControllerProvider = NotifierProvider<ModerationController, AsyncValue<void>>(() {
+final moderationControllerProvider =
+    NotifierProvider<ModerationController, AsyncValue<void>>(() {
   return ModerationController();
 });
 
@@ -405,10 +418,12 @@ class ModerationController extends Notifier<AsyncValue<void>> {
   }
 
   /// Block a user
-  Future<void> blockUser(String blockerId, String blockedUserId, {String? reason}) async {
+  Future<void> blockUser(String blockerId, String blockedUserId,
+      {String? reason}) async {
     state = const AsyncValue.loading();
     try {
-      await _moderationService.blockUser(blockerId, blockedUserId, reason: reason);
+      await _moderationService.blockUser(blockerId, blockedUserId,
+          reason: reason);
       state = const AsyncValue.data(null);
     } catch (e, stackTrace) {
       state = AsyncValue.error(e, stackTrace);
@@ -448,7 +463,8 @@ class ModerationController extends Notifier<AsyncValue<void>> {
   }
 
   /// Ban user (admin only)
-  Future<void> banUser(String moderatorId, String userId, String reason, Duration duration) async {
+  Future<void> banUser(String moderatorId, String userId, String reason,
+      Duration duration) async {
     state = const AsyncValue.loading();
     try {
       await _moderationService.banUser(moderatorId, userId, reason, duration);
@@ -471,7 +487,8 @@ class ModerationController extends Notifier<AsyncValue<void>> {
 }
 
 /// Content filter settings provider
-final contentFilterSettingsProvider = NotifierProvider<ContentFilterSettingsNotifier, Map<String, bool>>(() {
+final contentFilterSettingsProvider =
+    NotifierProvider<ContentFilterSettingsNotifier, Map<String, bool>>(() {
   return ContentFilterSettingsNotifier();
 });
 
@@ -490,5 +507,3 @@ class ContentFilterSettingsNotifier extends Notifier<Map<String, bool>> {
     state = {...state, key: value};
   }
 }
-
-

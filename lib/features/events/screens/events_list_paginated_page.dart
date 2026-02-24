@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixmingle/core/pagination/pagination_controller.dart';
@@ -10,10 +10,12 @@ class EventsListPaginatedPage extends ConsumerStatefulWidget {
   const EventsListPaginatedPage({super.key});
 
   @override
-  ConsumerState<EventsListPaginatedPage> createState() => _EventsListPaginatedPageState();
+  ConsumerState<EventsListPaginatedPage> createState() =>
+      _EventsListPaginatedPageState();
 }
 
-class _EventsListPaginatedPageState extends ConsumerState<EventsListPaginatedPage> {
+class _EventsListPaginatedPageState
+    extends ConsumerState<EventsListPaginatedPage> {
   late PaginationController<Event> _controller;
 
   @override
@@ -113,7 +115,8 @@ class _EventCard extends StatelessWidget {
               // Event date/time
               Row(
                 children: [
-                  const Icon(Icons.access_time, size: 16, color: Colors.white70),
+                  const Icon(Icons.access_time,
+                      size: 16, color: Colors.white70),
                   const SizedBox(width: 8),
                   Text(
                     _formatDateTime(event.startTime),
@@ -123,22 +126,23 @@ class _EventCard extends StatelessWidget {
               ),
 
               ...[
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  const Icon(Icons.location_on, size: 16, color: Colors.white70),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      event.location,
-                      style: const TextStyle(color: Colors.white70),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Icon(Icons.location_on,
+                        size: 16, color: Colors.white70),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        event.location,
+                        style: const TextStyle(color: Colors.white70),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
 
               // Participants count
               if (event.attendees.isNotEmpty) ...[

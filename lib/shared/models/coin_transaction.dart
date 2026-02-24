@@ -1,6 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-enum TransactionType { purchase, gift, tip, withdrawal, reward, refund, penalty }
+enum TransactionType {
+  purchase,
+  gift,
+  tip,
+  withdrawal,
+  reward,
+  refund,
+  penalty
+}
 
 class CoinTransaction {
   final String id;

@@ -44,7 +44,11 @@ final typingStatusProvider = StreamProvider.family<bool, String>(
 /// Presence provider - streams online status for a user
 final presenceProvider = StreamProvider.family<Map<String, dynamic>, String>(
   (ref, userId) {
-    return FirebaseFirestore.instance.collection('users').doc(userId).snapshots().map((snapshot) {
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .map((snapshot) {
       if (!snapshot.exists) {
         return {
           'isOnline': false,
@@ -55,14 +59,17 @@ final presenceProvider = StreamProvider.family<Map<String, dynamic>, String>(
       final data = snapshot.data()!;
       return {
         'isOnline': data['isOnline'] ?? false,
-        'lastSeen': data['lastSeen'] != null ? (data['lastSeen'] as Timestamp).toDate() : null,
+        'lastSeen': data['lastSeen'] != null
+            ? (data['lastSeen'] as Timestamp).toDate()
+            : null,
       };
     });
   },
 );
 
 /// Chat settings provider
-final chatSettingsProvider = FutureProvider.family<Map<String, dynamic>, String>(
+final chatSettingsProvider =
+    FutureProvider.family<Map<String, dynamic>, String>(
   (ref, roomId) async {
     final service = ref.watch(chatServiceProvider);
     return service.getChatSettings(roomId);
@@ -76,5 +83,3 @@ final messageCountProvider = FutureProvider.family<int, String>(
     return service.getMessageCount(roomId);
   },
 );
-
-

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import '../../shared/providers/all_providers.dart';
@@ -54,7 +54,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     } catch (e) {
       debugPrint('Failed to initialize Agora: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to join video: ${e.toString()}')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to join video: ${e.toString()}')));
       }
     }
   }
@@ -79,13 +80,17 @@ class _RoomPageState extends ConsumerState<RoomPage> {
 
     try {
       await ref.read(
-        sendRoomMessageProvider({'content': _messageController.text.trim(), 'roomId': widget.room.id}).future,
+        sendRoomMessageProvider({
+          'content': _messageController.text.trim(),
+          'roomId': widget.room.id
+        }).future,
       );
       _messageController.clear();
       _scrollToBottom();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to send message: ${e.toString()}')));
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to send message: ${e.toString()}')));
       }
     }
   }
@@ -147,7 +152,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                     border: Border.all(
                         color: DesignColors.accent.withValues(alpha: 0.5),
                         width: 2),
-                    borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
+                    borderRadius:
+                        BorderRadius.circular(AppSizes.cardBorderRadius),
                     boxShadow: [
                       BoxShadow(
                           color: DesignColors.accent.withValues(alpha: 0.3),
@@ -156,76 +162,99 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius - 2),
-                child: _isAgoraInitialized && ref.read(agoraVideoServiceProvider).engine != null
-                    ? Stack(
-                        children: [
-                          // Remote video (full screen background)
-                          if (ref.read(agoraVideoServiceProvider).remoteUsers.isNotEmpty)
-                            AgoraVideoView(
-                              controller: VideoViewController.remote(
-                                rtcEngine: ref.read(agoraVideoServiceProvider).engine!,
-                                canvas: VideoCanvas(uid: ref.read(agoraVideoServiceProvider).remoteUsers.first),
-                                connection: RtcConnection(channelId: widget.room.id),
-                              ),
-                            ),
-                          // Local video (small overlay)
-                          Positioned(
-                            top: AppSpacing.spaceSM + 2,
-                            right: AppSpacing.spaceSM + 2,
-                            width: 100,
-                            height: 133,
-                            child: Container(
-                              decoration: BoxDecoration(
-                                border: Border.all(color: DesignColors.white, width: 2),
-                                borderRadius: BorderRadius.circular(AppSpacing.spaceSM),
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: AgoraVideoView(
-                                  controller: VideoViewController(
-                                    rtcEngine: ref.read(agoraVideoServiceProvider).engine!,
+                    borderRadius:
+                        BorderRadius.circular(AppSizes.cardBorderRadius - 2),
+                    child: _isAgoraInitialized &&
+                            ref.read(agoraVideoServiceProvider).engine != null
+                        ? Stack(
+                            children: [
+                              // Remote video (full screen background)
+                              if (ref
+                                  .read(agoraVideoServiceProvider)
+                                  .remoteUsers
+                                  .isNotEmpty)
+                                AgoraVideoView(
+                                  controller: VideoViewController.remote(
+                                    rtcEngine: ref
+                                        .read(agoraVideoServiceProvider)
+                                        .engine!,
                                     canvas: VideoCanvas(
-                                      uid: ref.read(agoraVideoServiceProvider).localUid ?? 0,
-                                      renderMode: RenderModeType.renderModeHidden,
+                                        uid: ref
+                                            .read(agoraVideoServiceProvider)
+                                            .remoteUsers
+                                            .first),
+                                    connection: RtcConnection(
+                                        channelId: widget.room.id),
+                                  ),
+                                ),
+                              // Local video (small overlay)
+                              Positioned(
+                                top: AppSpacing.spaceSM + 2,
+                                right: AppSpacing.spaceSM + 2,
+                                width: 100,
+                                height: 133,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    border: Border.all(
+                                        color: DesignColors.white, width: 2),
+                                    borderRadius: BorderRadius.circular(
+                                        AppSpacing.spaceSM),
+                                  ),
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: AgoraVideoView(
+                                      controller: VideoViewController(
+                                        rtcEngine: ref
+                                            .read(agoraVideoServiceProvider)
+                                            .engine!,
+                                        canvas: VideoCanvas(
+                                          uid: ref
+                                                  .read(
+                                                      agoraVideoServiceProvider)
+                                                  .localUid ??
+                                              0,
+                                          renderMode:
+                                              RenderModeType.renderModeHidden,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                 ),
                               ),
-                            ),
-                          ),
-                        ],
-                      )
-                    : Container(
-                        color: DesignColors.surfaceDefault,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              CircularProgressIndicator(
-                                  color: DesignColors.accent),
-                              const SizedBox(height: AppSpacing.spaceLG),
-                              GlowText(
-                                  text: 'Initializing video...',
-                                  fontSize: 16,
-                                  glowColor: DesignColors.accent),
                             ],
-                          ),
-                        )), // closes loading Container / Center
-              ),  // ClipRRect
-            ),  // Container(decoration)
-          ),  // AspectRatio
-        ),  // Padding
+                          )
+                        : Container(
+                            color: DesignColors.surfaceDefault,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  CircularProgressIndicator(
+                                      color: DesignColors.accent),
+                                  const SizedBox(height: AppSpacing.spaceLG),
+                                  GlowText(
+                                      text: 'Initializing video...',
+                                      fontSize: 16,
+                                      glowColor: DesignColors.accent),
+                                ],
+                              ),
+                            )), // closes loading Container / Center
+                  ), // ClipRRect
+                ), // Container(decoration)
+              ), // AspectRatio
+            ), // Padding
             // Messages area
             Expanded(
               child: Container(
-                margin: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.spaceLG),
+                margin:
+                    const EdgeInsets.symmetric(horizontal: AppSpacing.spaceLG),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
+                  borderRadius:
+                      BorderRadius.circular(AppSizes.cardBorderRadius),
                   border: Border.all(
-                      color: DesignColors.accent.withValues(alpha: 0.3), width: 1),
+                      color: DesignColors.accent.withValues(alpha: 0.3),
+                      width: 1),
                 ),
                 child: messagesAsync.when(
                   data: (messages) {
@@ -235,12 +264,16 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                       padding: const EdgeInsets.all(AppSpacing.spaceLG),
                       itemCount: messages.length,
                       itemBuilder: (context, index) {
-                        return MessageBubble(message: messages[index], currentUserId: currentUser.value?.id ?? '');
+                        return MessageBubble(
+                            message: messages[index],
+                            currentUserId: currentUser.value?.id ?? '');
                       },
                     );
                   },
                   loading: () => const Center(
-                    child: CircularProgressIndicator(valueColor: AlwaysStoppedAnimation<Color>(DesignColors.accent)),
+                    child: CircularProgressIndicator(
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(DesignColors.accent)),
                   ),
                   error: (error, stack) => Center(
                     child: GlowText(
@@ -256,14 +289,18 @@ class _RoomPageState extends ConsumerState<RoomPage> {
             if (_isAgoraInitialized) ...[
               Container(
                 height: AppSizes.controlBarHeight,
-                margin: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.spaceLG),
+                margin:
+                    const EdgeInsets.symmetric(horizontal: AppSpacing.spaceLG),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     _buildVideoControlButton(
-                      icon: ref.watch(agoraVideoServiceProvider).isMicMuted ? Icons.mic_off : Icons.mic,
-                      label: ref.watch(agoraVideoServiceProvider).isMicMuted ? 'Unmute' : 'Mute',
+                      icon: ref.watch(agoraVideoServiceProvider).isMicMuted
+                          ? Icons.mic_off
+                          : Icons.mic,
+                      label: ref.watch(agoraVideoServiceProvider).isMicMuted
+                          ? 'Unmute'
+                          : 'Mute',
                       onPressed: () async {
                         final messenger = ScaffoldMessenger.of(context);
                         try {
@@ -273,25 +310,34 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                           }
                         } catch (e) {
                           if (mounted) {
-                            messenger.showSnackBar(SnackBar(content: Text('Failed to toggle microphone: $e')));
+                            messenger.showSnackBar(SnackBar(
+                                content:
+                                    Text('Failed to toggle microphone: $e')));
                           }
                         }
                       },
                     ),
                     const SizedBox(width: AppSpacing.spaceLG),
                     _buildVideoControlButton(
-                      icon: ref.watch(agoraVideoServiceProvider).isVideoMuted ? Icons.videocam_off : Icons.videocam,
-                      label: ref.watch(agoraVideoServiceProvider).isVideoMuted ? 'Camera On' : 'Camera Off',
+                      icon: ref.watch(agoraVideoServiceProvider).isVideoMuted
+                          ? Icons.videocam_off
+                          : Icons.videocam,
+                      label: ref.watch(agoraVideoServiceProvider).isVideoMuted
+                          ? 'Camera On'
+                          : 'Camera Off',
                       onPressed: () async {
                         final messenger = ScaffoldMessenger.of(context);
                         try {
-                          await ref.read(agoraVideoServiceProvider).toggleVideo();
+                          await ref
+                              .read(agoraVideoServiceProvider)
+                              .toggleVideo();
                           if (mounted) {
                             setState(() {});
                           }
                         } catch (e) {
                           if (mounted) {
-                            messenger.showSnackBar(SnackBar(content: Text('Failed to toggle camera: $e')));
+                            messenger.showSnackBar(SnackBar(
+                                content: Text('Failed to toggle camera: $e')));
                           }
                         }
                       },
@@ -309,7 +355,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                 borderRadius:
                     BorderRadius.circular(AppSizes.buttonBorderRadius + 10),
                 border: Border.all(
-                    color: DesignColors.accent.withValues(alpha: 0.3), width: 1),
+                    color: DesignColors.accent.withValues(alpha: 0.3),
+                    width: 1),
                 boxShadow: [
                   BoxShadow(
                       color: DesignColors.accent.withValues(alpha: 0.2),
@@ -339,7 +386,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                     child: NeonButton(
                       onPressed: _sendMessage,
                       padding: const EdgeInsets.all(AppSpacing.spaceMD),
-                      child: const Icon(Icons.send, size: AppSizes.iconStandard),
+                      child:
+                          const Icon(Icons.send, size: AppSizes.iconStandard),
                     ),
                   ),
                 ],
@@ -397,7 +445,10 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     );
   }
 
-  Widget _buildVideoControlButton({required IconData icon, required String label, required VoidCallback onPressed}) {
+  Widget _buildVideoControlButton(
+      {required IconData icon,
+      required String label,
+      required VoidCallback onPressed}) {
     return Container(
       width: 88,
       height: AppSizes.controlBarHeight - 12,
@@ -417,8 +468,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
             const SizedBox(height: AppSpacing.spaceXS),
             Text(
               label,
-              style: AppTypography.captionSm.copyWith(
-                  color: DesignColors.textGray),
+              style: AppTypography.captionSm
+                  .copyWith(color: DesignColors.textGray),
               textAlign: TextAlign.center,
             ),
           ],

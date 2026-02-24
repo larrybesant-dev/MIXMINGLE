@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../shared/models/user_profile.dart';
@@ -22,7 +22,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   int _selectedIndex = 0;
 
   late final List<Widget> _pages = [
-    HomeDashboard(onNavigateToTab: (index) => setState(() => _selectedIndex = index)),
+    HomeDashboard(
+        onNavigateToTab: (index) => setState(() => _selectedIndex = index)),
     const EventsPage(),
     const ChatListPage(),
     const ProfilePage(),
@@ -82,7 +83,8 @@ class HomeDashboard extends ConsumerWidget {
               onPressed: () {
                 // TODO: Navigate to notifications page
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Notifications not implemented yet')),
+                  const SnackBar(
+                      content: Text('Notifications not implemented yet')),
                 );
               },
             ),
@@ -96,7 +98,9 @@ class HomeDashboard extends ConsumerWidget {
           children: [
             // Welcome Section
             currentUserAsync.when(
-              data: (user) => user != null ? _buildWelcomeSection(user) : const Text('Welcome to Mix & Mingle!'),
+              data: (user) => user != null
+                  ? _buildWelcomeSection(user)
+                  : const Text('Welcome to Mix & Mingle!'),
               loading: () => const CircularProgressIndicator(),
               error: (error, stack) => Text('Error loading profile: $error'),
             ),
@@ -265,7 +269,9 @@ class HomeDashboard extends ConsumerWidget {
     );
   }
 
-  Widget _buildQuickActionButton(BuildContext context, String label, IconData icon, VoidCallback onTap, {Key? key}) {
+  Widget _buildQuickActionButton(
+      BuildContext context, String label, IconData icon, VoidCallback onTap,
+      {Key? key}) {
     return Semantics(
       label: label,
       button: true,
@@ -347,7 +353,8 @@ class HomeDashboard extends ConsumerWidget {
             button: true,
             child: ElevatedButton(
               key: const Key('startSpeedDating'),
-              onPressed: () => Navigator.pushNamed(context, '/speed-dating-lobby'),
+              onPressed: () =>
+                  Navigator.pushNamed(context, '/speed-dating-lobby'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: Colors.pink,
@@ -427,7 +434,8 @@ class ChatRoomCardSmall extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUserId = ref.watch(currentUserProfileProvider).value?.id ?? '';
-    final otherUserId = chatRoom.participants.firstWhere((id) => id != currentUserId);
+    final otherUserId =
+        chatRoom.participants.firstWhere((id) => id != currentUserId);
     final otherUserAsync = ref.watch(userProfileProvider(otherUserId));
 
     return Card(
@@ -435,8 +443,9 @@ class ChatRoomCardSmall extends ConsumerWidget {
       child: ListTile(
         leading: CircleAvatar(
           child: otherUserAsync.when(
-            data: (user) =>
-                user?.displayName?.isNotEmpty == true ? Text(user!.displayName![0].toUpperCase()) : const Text('?'),
+            data: (user) => user?.displayName?.isNotEmpty == true
+                ? Text(user!.displayName![0].toUpperCase())
+                : const Text('?'),
             loading: () => const CircularProgressIndicator(),
             error: (error, stack) => const Icon(Icons.error),
           ),
@@ -447,11 +456,14 @@ class ChatRoomCardSmall extends ConsumerWidget {
           error: (error, stack) => const Text('Error'),
         ),
         subtitle: Text(
-          chatRoom.lastMessage.isEmpty ? 'No messages yet' : chatRoom.lastMessage,
+          chatRoom.lastMessage.isEmpty
+              ? 'No messages yet'
+              : chatRoom.lastMessage,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
-        trailing: chatRoom.unreadCounts[currentUserId] != null && chatRoom.unreadCounts[currentUserId]! > 0
+        trailing: chatRoom.unreadCounts[currentUserId] != null &&
+                chatRoom.unreadCounts[currentUserId]! > 0
             ? Container(
                 padding: const EdgeInsets.all(6),
                 decoration: const BoxDecoration(

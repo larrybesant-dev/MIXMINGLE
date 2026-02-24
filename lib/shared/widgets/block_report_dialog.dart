@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/report.dart';
 import 'package:mixmingle/shared/providers/providers.dart';
@@ -100,7 +100,9 @@ class _BlockReportDialogState extends ConsumerState<BlockReportDialog> {
 
             // Report Button
             ElevatedButton.icon(
-              onPressed: _selectedReportType == null || _isReporting ? null : _handleReport,
+              onPressed: _selectedReportType == null || _isReporting
+                  ? null
+                  : _handleReport,
               icon: const Icon(Icons.flag),
               label: Text(_isReporting ? 'Reporting...' : 'Submit Report'),
               style: ElevatedButton.styleFrom(

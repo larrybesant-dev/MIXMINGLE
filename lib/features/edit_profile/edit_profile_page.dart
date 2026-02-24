@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -67,11 +67,14 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       // Check if username is being changed and if it's already taken
       if (newUsername != currentUser.username) {
         final firestoreService = ref.read(firestoreServiceProvider);
-        final usernameTaken = await firestoreService.isUsernameTaken(newUsername);
+        final usernameTaken =
+            await firestoreService.isUsernameTaken(newUsername);
         if (usernameTaken) {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Username is already taken. Please choose a different one.')),
+              const SnackBar(
+                  content: Text(
+                      'Username is already taken. Please choose a different one.')),
             );
           }
           setState(() => _isLoading = false);
@@ -179,7 +182,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         if (currentUser == null) throw Exception('User not found');
 
         final storageService = ref.read(storageServiceProvider);
-        final imageUrl = await storageService.uploadImage(image, currentUser.id);
+        final imageUrl =
+            await storageService.uploadImage(image, currentUser.id);
 
         if (imageUrl != null) {
           final updatedUser = User(
@@ -283,7 +287,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         if (currentUser == null) throw Exception('User not found');
 
         final storageService = ref.read(storageServiceProvider);
-        final imageUrl = await storageService.uploadImage(image, currentUser.id);
+        final imageUrl =
+            await storageService.uploadImage(image, currentUser.id);
 
         if (imageUrl != null) {
           setState(() {
@@ -465,7 +470,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       key: ValueKey(user.avatarUrl),
                       radius: 60,
                       backgroundImage: user.avatarUrl.isNotEmpty
-                          ? NetworkImage('${user.avatarUrl}?t=${DateTime.now().millisecondsSinceEpoch}')
+                          ? NetworkImage(
+                              '${user.avatarUrl}?t=${DateTime.now().millisecondsSinceEpoch}')
                           : null,
                       backgroundColor: const Color(0xFFFF4C4C),
                       child: user.avatarUrl.isEmpty
@@ -527,7 +533,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       if (value == null || value.trim().isEmpty) {
                         return 'Email cannot be empty';
                       }
-                      final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+                      final emailRegex =
+                          RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
                       if (!emailRegex.hasMatch(value.trim())) {
                         return 'Please enter a valid email address';
                       }
@@ -542,7 +549,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     decoration: const InputDecoration(
                       labelText: 'Bio (optional)',
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.description, color: Color(0xFFFFD700)),
+                      prefixIcon:
+                          Icon(Icons.description, color: Color(0xFFFFD700)),
                       hintText: 'Tell us about yourself...',
                     ),
                     style: const TextStyle(color: Colors.white),
@@ -629,7 +637,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                               controller: PageController(viewportFraction: 0.8),
                               itemBuilder: (context, index) {
                                 return Container(
-                                  margin: const EdgeInsets.symmetric(horizontal: 8),
+                                  margin:
+                                      const EdgeInsets.symmetric(horizontal: 8),
                                   decoration: BoxDecoration(
                                     borderRadius: BorderRadius.circular(12),
                                     image: DecorationImage(
@@ -638,7 +647,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.3),
+                                        color:
+                                            Colors.black.withValues(alpha: 0.3),
                                         blurRadius: 8,
                                         offset: const Offset(0, 4),
                                       ),
@@ -671,10 +681,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                                         left: 8,
                                         right: 8,
                                         child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 8, vertical: 4),
                                           decoration: BoxDecoration(
                                             color: Colors.black54,
-                                            borderRadius: BorderRadius.circular(16),
+                                            borderRadius:
+                                                BorderRadius.circular(16),
                                           ),
                                           child: Text(
                                             '${index + 1} / ${_mediaUrls.length}',
@@ -719,8 +731,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _buildStat('Rooms Created', user.liveSessionsHosted.toString()),
-                            _buildStat('Tips Received', '\$${user.totalTipsReceived.toStringAsFixed(2)}'),
+                            _buildStat('Rooms Created',
+                                user.liveSessionsHosted.toString()),
+                            _buildStat('Tips Received',
+                                '\$${user.totalTipsReceived.toStringAsFixed(2)}'),
                           ],
                         ),
                       ],

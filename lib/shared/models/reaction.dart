@@ -120,5 +120,3 @@ extension ReactionTypeExtension on ReactionType {
     }
   }
 }
-
-

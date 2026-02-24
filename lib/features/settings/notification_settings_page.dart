@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../shared/providers/all_providers.dart';
@@ -94,7 +94,8 @@ class NotificationSettings {
 }
 
 /// Notification settings provider
-final notificationSettingsProvider = StreamProvider<NotificationSettings>((ref) {
+final notificationSettingsProvider =
+    StreamProvider<NotificationSettings>((ref) {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) return Stream.value(const NotificationSettings());
 
@@ -114,10 +115,12 @@ class NotificationSettingsPage extends ConsumerStatefulWidget {
   const NotificationSettingsPage({super.key});
 
   @override
-  ConsumerState<NotificationSettingsPage> createState() => _NotificationSettingsPageState();
+  ConsumerState<NotificationSettingsPage> createState() =>
+      _NotificationSettingsPageState();
 }
 
-class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsPage> {
+class _NotificationSettingsPageState
+    extends ConsumerState<NotificationSettingsPage> {
   Future<void> _updateSetting(String key, bool value) async {
     try {
       final currentUser = ref.read(currentUserProvider).value;
@@ -159,14 +162,16 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                     title: const Text('Push Notifications'),
                     subtitle: const Text('Receive push notifications'),
                     value: settings.pushNotifications,
-                    onChanged: (value) => _updateSetting('pushNotifications', value),
+                    onChanged: (value) =>
+                        _updateSetting('pushNotifications', value),
                   ),
                   const Divider(height: 1),
                   SwitchListTile(
                     title: const Text('Email Notifications'),
                     subtitle: const Text('Receive email updates'),
                     value: settings.emailNotifications,
-                    onChanged: (value) => _updateSetting('emailNotifications', value),
+                    onChanged: (value) =>
+                        _updateSetting('emailNotifications', value),
                   ),
                 ],
               ),
@@ -186,49 +191,56 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                     title: const Text('Messages'),
                     subtitle: const Text('New messages and chats'),
                     value: settings.messageNotifications,
-                    onChanged: (value) => _updateSetting('messageNotifications', value),
+                    onChanged: (value) =>
+                        _updateSetting('messageNotifications', value),
                   ),
                   const Divider(height: 1),
                   SwitchListTile(
                     title: const Text('Matches'),
                     subtitle: const Text('New matches and connections'),
                     value: settings.matchNotifications,
-                    onChanged: (value) => _updateSetting('matchNotifications', value),
+                    onChanged: (value) =>
+                        _updateSetting('matchNotifications', value),
                   ),
                   const Divider(height: 1),
                   SwitchListTile(
                     title: const Text('Events'),
                     subtitle: const Text('Event invitations and updates'),
                     value: settings.eventNotifications,
-                    onChanged: (value) => _updateSetting('eventNotifications', value),
+                    onChanged: (value) =>
+                        _updateSetting('eventNotifications', value),
                   ),
                   const Divider(height: 1),
                   SwitchListTile(
                     title: const Text('Rooms'),
                     subtitle: const Text('Room invitations and activity'),
                     value: settings.roomNotifications,
-                    onChanged: (value) => _updateSetting('roomNotifications', value),
+                    onChanged: (value) =>
+                        _updateSetting('roomNotifications', value),
                   ),
                   const Divider(height: 1),
                   SwitchListTile(
                     title: const Text('Follows'),
                     subtitle: const Text('New followers'),
                     value: settings.followNotifications,
-                    onChanged: (value) => _updateSetting('followNotifications', value),
+                    onChanged: (value) =>
+                        _updateSetting('followNotifications', value),
                   ),
                   const Divider(height: 1),
                   SwitchListTile(
                     title: const Text('Likes'),
                     subtitle: const Text('Profile likes'),
                     value: settings.likeNotifications,
-                    onChanged: (value) => _updateSetting('likeNotifications', value),
+                    onChanged: (value) =>
+                        _updateSetting('likeNotifications', value),
                   ),
                   const Divider(height: 1),
                   SwitchListTile(
                     title: const Text('Comments'),
                     subtitle: const Text('Comments on your posts'),
                     value: settings.commentNotifications,
-                    onChanged: (value) => _updateSetting('commentNotifications', value),
+                    onChanged: (value) =>
+                        _updateSetting('commentNotifications', value),
                   ),
                 ],
               ),
@@ -255,7 +267,8 @@ class _NotificationSettingsPageState extends ConsumerState<NotificationSettingsP
                     title: const Text('Vibration'),
                     subtitle: const Text('Vibrate for notifications'),
                     value: settings.vibrationEnabled,
-                    onChanged: (value) => _updateSetting('vibrationEnabled', value),
+                    onChanged: (value) =>
+                        _updateSetting('vibrationEnabled', value),
                   ),
                 ],
               ),

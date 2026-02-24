@@ -18,7 +18,7 @@ import 'live_room_schema.dart';
 // ── Decision result ────────────────────────────────────────────────────────
 
 class MicDecision {
-  final bool   allowed;
+  final bool allowed;
   final String? reason;
 
   const MicDecision._(this.allowed, this.reason);
@@ -47,7 +47,7 @@ class LiveRoomAudioManager {
   final Set<String> _activeMicUsers = {};
 
   int get activeMicCount => _activeMicUsers.length;
-  bool get hasCapacity   => _activeMicUsers.length < maxActiveMics;
+  bool get hasCapacity => _activeMicUsers.length < maxActiveMics;
 
   Set<String> get activeMicUsers => Set.unmodifiable(_activeMicUsers);
 
@@ -91,7 +91,7 @@ class LiveRoomAudioManager {
 
   // ── Mutation helpers ─────────────────────────────────────────────────────
 
-  void markMicActive(String userId)   => _activeMicUsers.add(userId);
+  void markMicActive(String userId) => _activeMicUsers.add(userId);
   void markMicInactive(String userId) => _activeMicUsers.remove(userId);
-  void clear()                        => _activeMicUsers.clear();
+  void clear() => _activeMicUsers.clear();
 }

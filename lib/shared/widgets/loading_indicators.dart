@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/text_styles.dart';
 import '../../core/animations/custom_animations.dart';
@@ -63,9 +63,7 @@ class LoadingOverlay extends StatelessWidget {
               ),
               SizedBox(height: 32),
             ],
-
             const BrandedLoadingIndicator(size: 50),
-
             if (message != null) ...[
               const SizedBox(height: 24),
               Text(

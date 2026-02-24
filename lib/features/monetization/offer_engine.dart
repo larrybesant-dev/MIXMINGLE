@@ -45,19 +45,19 @@ class PersonalizedOffer {
   bool get isActive => status == OfferStatus.active && !isExpired;
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'userId': userId,
-    'type': type.name,
-    'title': title,
-    'description': description,
-    'originalPrice': originalPrice,
-    'discountedPrice': discountedPrice,
-    'discountPercent': discountPercent,
-    'expiresAt': expiresAt.toIso8601String(),
-    'productId': productId,
-    'metadata': metadata,
-    'status': status.name,
-  };
+        'id': id,
+        'userId': userId,
+        'type': type.name,
+        'title': title,
+        'description': description,
+        'originalPrice': originalPrice,
+        'discountedPrice': discountedPrice,
+        'discountPercent': discountPercent,
+        'expiresAt': expiresAt.toIso8601String(),
+        'productId': productId,
+        'metadata': metadata,
+        'status': status.name,
+      };
 
   factory PersonalizedOffer.fromMap(Map<String, dynamic> map) {
     return PersonalizedOffer(
@@ -170,16 +170,16 @@ class CreatorSupportBundle {
   });
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'creatorId': creatorId,
-    'name': name,
-    'description': description,
-    'items': items,
-    'price': price,
-    'creatorShare': creatorShare,
-    'isLimitedTime': isLimitedTime,
-    'expiresAt': expiresAt?.toIso8601String(),
-  };
+        'id': id,
+        'creatorId': creatorId,
+        'name': name,
+        'description': description,
+        'items': items,
+        'price': price,
+        'creatorShare': creatorShare,
+        'isLimitedTime': isLimitedTime,
+        'expiresAt': expiresAt?.toIso8601String(),
+      };
 
   factory CreatorSupportBundle.fromMap(Map<String, dynamic> map) {
     return CreatorSupportBundle(
@@ -325,9 +325,8 @@ class OfferEngine {
       price: price,
       creatorShare: price * creatorSharePercent,
       isLimitedTime: limitedTime,
-      expiresAt: limitedTime && duration != null
-          ? DateTime.now().add(duration)
-          : null,
+      expiresAt:
+          limitedTime && duration != null ? DateTime.now().add(duration) : null,
     );
 
     await docRef.set(bundle.toMap());
@@ -369,7 +368,8 @@ class OfferEngine {
         userId: userId,
         type: OfferType.eventBased,
         title: '$eventName Special!',
-        description: 'Thank you for joining $eventName! Enjoy this exclusive discount.',
+        description:
+            'Thank you for joining $eventName! Enjoy this exclusive discount.',
         originalPrice: 9.99,
         discountedPrice: 9.99 * (1 - discountPercent),
         discountPercent: discountPercent * 100,
@@ -451,9 +451,8 @@ class OfferEngine {
 
   /// Get creator's support bundles
   Future<List<CreatorSupportBundle>> getCreatorBundles(String creatorId) async {
-    final snapshot = await _bundlesCollection
-        .where('creatorId', isEqualTo: creatorId)
-        .get();
+    final snapshot =
+        await _bundlesCollection.where('creatorId', isEqualTo: creatorId).get();
 
     return snapshot.docs
         .map((doc) => CreatorSupportBundle.fromMap(doc.data()))
@@ -547,7 +546,8 @@ class OfferEngine {
         .toList();
   }
 
-  Future<List<PersonalizedOffer>> _generatePersonalizedOffers(String userId) async {
+  Future<List<PersonalizedOffer>> _generatePersonalizedOffers(
+      String userId) async {
     final offers = <PersonalizedOffer>[];
 
     // Get user data
@@ -568,7 +568,8 @@ class OfferEngine {
         userId: userId,
         type: OfferType.firstPurchase,
         title: 'Welcome! Get 50% Off',
-        description: 'Make your first purchase and get 50% off any coin package!',
+        description:
+            'Make your first purchase and get 50% off any coin package!',
         originalPrice: 4.99,
         discountedPrice: 2.49,
         discountPercent: 50,
@@ -595,7 +596,8 @@ class OfferEngine {
 
     // Re-engagement offer if no recent purchase
     if (lastPurchaseDate != null) {
-      final daysSinceLastPurchase = DateTime.now().difference(lastPurchaseDate).inDays;
+      final daysSinceLastPurchase =
+          DateTime.now().difference(lastPurchaseDate).inDays;
       if (daysSinceLastPurchase > 30) {
         offers.add(PersonalizedOffer(
           id: '${userId}_reactivation',
@@ -654,7 +656,8 @@ class OfferEngine {
     }
 
     // Check engagement decline
-    final engagementScore = (userData['engagementScore'] as num?)?.toDouble() ?? 0.5;
+    final engagementScore =
+        (userData['engagementScore'] as num?)?.toDouble() ?? 0.5;
     if (engagementScore < 0.3) {
       riskScore += 0.3;
       riskFactors.add('low_engagement');
@@ -673,7 +676,8 @@ class OfferEngine {
           ? (userData['lastPurchaseDate'] as Timestamp).toDate()
           : null;
       if (lastPurchase != null) {
-        final daysSincePurchase = DateTime.now().difference(lastPurchase).inDays;
+        final daysSincePurchase =
+            DateTime.now().difference(lastPurchase).inDays;
         if (daysSincePurchase > 60) {
           riskScore += 0.2;
           riskFactors.add('no_recent_purchase');
@@ -723,7 +727,8 @@ class OfferEngine {
       case ChurnRiskLevel.critical:
         discount = 0.50;
         title = 'Special Offer Just For You!';
-        description = 'We noticed you haven\'t been around. Here\'s 50% off to welcome you back!';
+        description =
+            'We noticed you haven\'t been around. Here\'s 50% off to welcome you back!';
         duration = const Duration(days: 3);
         break;
       case ChurnRiskLevel.high:
@@ -765,5 +770,3 @@ class OfferEngine {
     _offerController.close();
   }
 }
-
-

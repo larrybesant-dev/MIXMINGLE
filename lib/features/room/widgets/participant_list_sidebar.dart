@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/models/room.dart';
 import '../providers/room_subcollection_providers.dart';
@@ -34,20 +34,23 @@ class ParticipantListSidebar extends ConsumerWidget {
   });
 
   bool _isHost(Room r, String uid) => r.hostId == uid;
-  bool _isModerator(Room r, String uid) => r.moderators.contains(uid) || r.admins.contains(uid);
+  bool _isModerator(Room r, String uid) =>
+      r.moderators.contains(uid) || r.admins.contains(uid);
   bool _isSpeaker(Room r, String uid) => r.speakers.contains(uid);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch both room data and participants subcollection
-    final participantsAsync = ref.watch(roomParticipantsFirestoreProvider(room.id));
+    final participantsAsync =
+        ref.watch(roomParticipantsFirestoreProvider(room.id));
 
     return participantsAsync.when(
       data: (participants) {
         if (participants.isEmpty) {
           return _buildContainer(
             child: const Center(
-              child: Text('No participants yet', style: TextStyle(color: Colors.white70)),
+              child: Text('No participants yet',
+                  style: TextStyle(color: Colors.white70)),
             ),
           );
         }
@@ -92,7 +95,9 @@ class ParticipantListSidebar extends ConsumerWidget {
                   ),
                 ),
                 title: Text(
-                  participant.displayName.isNotEmpty ? participant.displayName : uid,
+                  participant.displayName.isNotEmpty
+                      ? participant.displayName
+                      : uid,
                   style: TextStyle(
                     color: isRemoved ? Colors.grey.shade400 : Colors.white,
                     fontSize: 14,
@@ -103,18 +108,23 @@ class ParticipantListSidebar extends ConsumerWidget {
                 subtitle: Row(
                   children: [
                     if (isRemoved) ...[
-                      const Icon(Icons.block, size: 12, color: Colors.redAccent),
+                      const Icon(Icons.block,
+                          size: 12, color: Colors.redAccent),
                       const SizedBox(width: 4),
                     ],
                     if (isMutedByHost && !isRemoved) ...[
-                      const Icon(Icons.mic_off, size: 12, color: Colors.orangeAccent),
+                      const Icon(Icons.mic_off,
+                          size: 12, color: Colors.orangeAccent),
                       const SizedBox(width: 4),
                     ],
                     if (participant.isOnCam && !isRemoved) ...[
-                      const Icon(Icons.videocam, size: 12, color: Colors.greenAccent),
+                      const Icon(Icons.videocam,
+                          size: 12, color: Colors.greenAccent),
                       const SizedBox(width: 4),
                     ],
-                    if (!participant.isMuted && !isMutedByHost && !isRemoved) ...[
+                    if (!participant.isMuted &&
+                        !isMutedByHost &&
+                        !isRemoved) ...[
                       const Icon(Icons.mic, size: 12, color: Colors.blueAccent),
                       const SizedBox(width: 4),
                     ],
@@ -130,7 +140,8 @@ class ParticipantListSidebar extends ConsumerWidget {
                                         ? 'Speaker'
                                         : 'Listener',
                         style: TextStyle(
-                          color: isRemoved ? Colors.grey.shade600 : Colors.white70,
+                          color:
+                              isRemoved ? Colors.grey.shade600 : Colors.white70,
                           fontSize: 12,
                         ),
                         overflow: TextOverflow.ellipsis,
@@ -138,18 +149,21 @@ class ParticipantListSidebar extends ConsumerWidget {
                     ),
                   ],
                 ),
-                trailing: _buildMenu(context, room, uid, isCurrent, isHost, isMod, isSpeaker),
+                trailing: _buildMenu(
+                    context, room, uid, isCurrent, isHost, isMod, isSpeaker),
               );
             },
           ),
         );
       },
       loading: () => _buildContainer(
-        child: const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
+        child: const Center(
+            child: CircularProgressIndicator(color: Colors.redAccent)),
       ),
       error: (e, _) => _buildContainer(
         child: Center(
-          child: Text('Error loading participants: $e', style: const TextStyle(color: Colors.white70)),
+          child: Text('Error loading participants: $e',
+              style: const TextStyle(color: Colors.white70)),
         ),
       ),
     );
@@ -161,14 +175,15 @@ class ParticipantListSidebar extends ConsumerWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1E1E2F).withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFF4C4C).withValues(alpha: 0.3)),
+        border:
+            Border.all(color: const Color(0xFFFF4C4C).withValues(alpha: 0.3)),
       ),
       child: child,
     );
   }
 
-  Widget? _buildMenu(
-      BuildContext context, Room room, String uid, bool isCurrent, bool isHost, bool isMod, bool isSpeaker) {
+  Widget? _buildMenu(BuildContext context, Room room, String uid,
+      bool isCurrent, bool isHost, bool isMod, bool isSpeaker) {
     final currentIsHost = _isHost(room, currentUserId);
     final currentIsMod = _isModerator(room, currentUserId);
     if (!currentIsHost && !currentIsMod) return null;
@@ -217,24 +232,32 @@ class ParticipantListSidebar extends ConsumerWidget {
       itemBuilder: (context) {
         final items = <PopupMenuEntry<String>>[];
         if (!isSpeaker) {
-          items.add(const PopupMenuItem(value: 'promote', child: Text('Promote to Speaker')));
+          items.add(const PopupMenuItem(
+              value: 'promote', child: Text('Promote to Speaker')));
         } else {
-          items.add(const PopupMenuItem(value: 'demote', child: Text('Demote to Listener')));
+          items.add(const PopupMenuItem(
+              value: 'demote', child: Text('Demote to Listener')));
         }
         if (!isMod) {
-          items.add(const PopupMenuItem(value: 'make_mod', child: Text('Make Moderator')));
+          items.add(const PopupMenuItem(
+              value: 'make_mod', child: Text('Make Moderator')));
         } else {
-          items.add(const PopupMenuItem(value: 'remove_mod', child: Text('Remove Moderator')));
+          items.add(const PopupMenuItem(
+              value: 'remove_mod', child: Text('Remove Moderator')));
         }
         items.add(const PopupMenuDivider());
         // Sprint 2: Smarter mute/unmute based on room.mutedUsers
         if (isMutedByHost) {
-          items.add(const PopupMenuItem(value: 'unmute', child: Text('ðŸ”Š Unmute Audio')));
+          items.add(const PopupMenuItem(
+              value: 'unmute', child: Text('ðŸ”Š Unmute Audio')));
         } else {
-          items.add(const PopupMenuItem(value: 'mute', child: Text('ðŸ”‡ Mute Audio')));
+          items.add(const PopupMenuItem(
+              value: 'mute', child: Text('ðŸ”‡ Mute Audio')));
         }
-        items.add(const PopupMenuItem(value: 'disable_video', child: Text('Disable Video')));
-        items.add(const PopupMenuItem(value: 'enable_video', child: Text('Enable Video')));
+        items.add(const PopupMenuItem(
+            value: 'disable_video', child: Text('Disable Video')));
+        items.add(const PopupMenuItem(
+            value: 'enable_video', child: Text('Enable Video')));
         items.add(const PopupMenuDivider());
         if (isRemoved) {
           items.add(const PopupMenuItem(
@@ -243,7 +266,8 @@ class ParticipantListSidebar extends ConsumerWidget {
             child: Text('âŒ Removed', style: TextStyle(color: Colors.grey)),
           ));
         } else {
-          items.add(const PopupMenuItem(value: 'kick', child: Text('âŒ Remove from Room')));
+          items.add(const PopupMenuItem(
+              value: 'kick', child: Text('âŒ Remove from Room')));
         }
         return items;
       },

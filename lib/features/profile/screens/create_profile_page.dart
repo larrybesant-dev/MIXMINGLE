@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
@@ -29,15 +29,20 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
   final _zipController = TextEditingController();
 
   // ZIP lookup state
-  String? _zipResolvedCity;   // "Chicago, IL"
+  String? _zipResolvedCity; // "Chicago, IL"
   bool _zipLooking = false;
   String? _zipError;
 
   Future<void> _lookupZip(String zip) async {
     if (zip.length != 5) return;
-    setState(() { _zipLooking = true; _zipError = null; _zipResolvedCity = null; });
+    setState(() {
+      _zipLooking = true;
+      _zipError = null;
+      _zipResolvedCity = null;
+    });
     try {
-      final res = await http.get(Uri.parse('https://api.zippopotam.us/us/$zip'));
+      final res =
+          await http.get(Uri.parse('https://api.zippopotam.us/us/$zip'));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
         final places = data['places'] as List<dynamic>;
@@ -45,16 +50,25 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
           final city = places[0]['place name'] as String;
           final state = places[0]['state abbreviation'] as String;
           final resolved = '$city, $state';
-          setState(() { _zipResolvedCity = resolved; _zipError = null; });
+          setState(() {
+            _zipResolvedCity = resolved;
+            _zipError = null;
+          });
           _locationController.text = resolved;
         }
       } else {
-        setState(() { _zipError = 'ZIP code not found'; });
+        setState(() {
+          _zipError = 'ZIP code not found';
+        });
       }
     } catch (_) {
-      setState(() { _zipError = 'Could not look up ZIP code'; });
+      setState(() {
+        _zipError = 'Could not look up ZIP code';
+      });
     } finally {
-      setState(() { _zipLooking = false; });
+      setState(() {
+        _zipLooking = false;
+      });
     }
   }
 
@@ -137,7 +151,8 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
           if (mounted) {
             setState(() => _isUploadingImage = false);
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Not authenticated — please sign in again.')),
+              const SnackBar(
+                  content: Text('Not authenticated — please sign in again.')),
             );
           }
           return;
@@ -154,7 +169,8 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
           });
           if (url == null) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Photo upload failed — please try again.')),
+              const SnackBar(
+                  content: Text('Photo upload failed — please try again.')),
             );
           }
         }
@@ -197,7 +213,8 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
       if (mounted) {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Session expired — please sign in again.')),
+          const SnackBar(
+              content: Text('Session expired — please sign in again.')),
         );
       }
       return;
@@ -215,13 +232,19 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
       displayName: _usernameController.text.trim(),
       photoUrl: _profileImageUrl,
       interests: _selectedInterests,
-      location: _locationController.text.trim().isNotEmpty ? _locationController.text.trim() : null,
-      bio: _bioController.text.trim().isNotEmpty ? _bioController.text.trim() : null,
+      location: _locationController.text.trim().isNotEmpty
+          ? _locationController.text.trim()
+          : null,
+      bio: _bioController.text.trim().isNotEmpty
+          ? _bioController.text.trim()
+          : null,
       birthday: birthday,
       gender: _selectedGender,
       // Sprint 1 vibe fields
       vibeTag: _selectedVibeTag,
-      musicGenres: _selectedMusicGenres.isNotEmpty ? List.unmodifiable(_selectedMusicGenres) : null,
+      musicGenres: _selectedMusicGenres.isNotEmpty
+          ? List.unmodifiable(_selectedMusicGenres)
+          : null,
       countryCode: _selectedCountryCode,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
@@ -289,7 +312,10 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
                           decoration: BoxDecoration(
                             color: index <= _currentStep
                                 ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+                                : Theme.of(context)
+                                    .colorScheme
+                                    .onSurface
+                                    .withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(2),
                           ),
                         ),
@@ -320,14 +346,19 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
                             child: const Text('Back'),
                           ),
                         ),
-                      if (_currentStep > 0) SizedBox(width: Responsive.responsiveSpacing(context, 16)),
+                      if (_currentStep > 0)
+                        SizedBox(
+                            width: Responsive.responsiveSpacing(context, 16)),
                       Expanded(
                         flex: 2,
                         child: ElevatedButton(
-                          onPressed: (_isLoading || _isUploadingImage) ? null : _nextStep,
+                          onPressed: (_isLoading || _isUploadingImage)
+                              ? null
+                              : _nextStep,
                           style: ElevatedButton.styleFrom(
                             padding: EdgeInsets.symmetric(
-                              vertical: Responsive.responsiveSpacing(context, 16),
+                              vertical:
+                                  Responsive.responsiveSpacing(context, 16),
                             ),
                           ),
                           child: (_isLoading && _currentStep == _totalSteps - 1)
@@ -339,7 +370,9 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
                                     color: Colors.white,
                                   ),
                                 )
-                              : Text(_currentStep < _totalSteps - 1 ? 'Next' : 'Create Profile'),
+                              : Text(_currentStep < _totalSteps - 1
+                                  ? 'Next'
+                                  : 'Create Profile'),
                         ),
                       ),
                     ],
@@ -383,7 +416,8 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
           'Let\'s start with the essentials',
           style: TextStyle(
             fontSize: Responsive.responsiveFontSize(context, 16),
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         SizedBox(height: Responsive.responsiveSpacing(context, 32)),
@@ -536,7 +570,8 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
           'Select at least one interest',
           style: TextStyle(
             fontSize: Responsive.responsiveFontSize(context, 16),
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         SizedBox(height: Responsive.responsiveSpacing(context, 24)),
@@ -595,7 +630,8 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
           'Pick your energy and favourite music',
           style: TextStyle(
             fontSize: Responsive.responsiveFontSize(context, 16),
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         SizedBox(height: Responsive.responsiveSpacing(context, 24)),
@@ -613,12 +649,16 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
             final color = VibeTags.colorFor(tag);
             final isSelected = _selectedVibeTag == tag;
             return GestureDetector(
-              onTap: () => setState(() => _selectedVibeTag = isSelected ? null : tag),
+              onTap: () =>
+                  setState(() => _selectedVibeTag = isSelected ? null : tag),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: isSelected ? color.withValues(alpha: 0.25) : Colors.transparent,
+                  color: isSelected
+                      ? color.withValues(alpha: 0.25)
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
                     color: isSelected ? color : color.withValues(alpha: 0.45),
@@ -629,7 +669,8 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
                   '${VibeTags.emojiFor(tag)} $tag',
                   style: TextStyle(
                     color: isSelected ? color : color.withValues(alpha: 0.75),
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.w700 : FontWeight.normal,
                     fontSize: 13,
                   ),
                 ),
@@ -707,7 +748,8 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
           'Add a great photo of yourself',
           style: TextStyle(
             fontSize: Responsive.responsiveFontSize(context, 16),
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         SizedBox(height: Responsive.responsiveSpacing(context, 32)),
@@ -752,8 +794,7 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
                         )
                       : null,
                 ),
-                if (_isUploadingImage)
-                  const CircularProgressIndicator(),
+                if (_isUploadingImage) const CircularProgressIndicator(),
               ],
             ),
           ),
@@ -778,7 +819,8 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
               color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
+                color:
+                    Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
               ),
             ),
             child: Row(

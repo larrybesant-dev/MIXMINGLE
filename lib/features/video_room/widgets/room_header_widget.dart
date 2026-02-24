@@ -85,11 +85,13 @@ class RoomHeader extends StatelessWidget {
 
                         // Separator
                         Container(
-                          margin: const EdgeInsets.symmetric(horizontal: DesignSpacing.sm),
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: DesignSpacing.sm),
                           width: 4,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: DesignColors.textSecondary.withValues(alpha: 0.5),
+                            color: DesignColors.textSecondary
+                                .withValues(alpha: 0.5),
                             shape: BoxShape.circle,
                           ),
                         ),

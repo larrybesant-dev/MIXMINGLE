@@ -13,8 +13,7 @@ final trendingRoomsProvider =
   return service.getTrendingRooms();
 });
 
-final activeRoomsProvider =
-    FutureProvider<List<DocumentSnapshot>>((ref) async {
+final activeRoomsProvider = FutureProvider<List<DocumentSnapshot>>((ref) async {
   final service = ref.read(roomDiscoveryServiceProvider);
   return service.getRoomsByCategory('active');
 });

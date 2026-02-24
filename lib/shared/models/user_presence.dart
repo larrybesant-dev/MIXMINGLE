@@ -9,10 +9,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// User presence state enum
 enum PresenceState {
-  online,      // Active in a room
-  idle,        // App open but inactive
-  away,        // Away for > 5 min
-  offline,     // Not connected
+  online, // Active in a room
+  idle, // App open but inactive
+  away, // Away for > 5 min
+  offline, // Not connected
 }
 
 /// Legacy presence status enum (kept for UI backward compatibility)
@@ -165,8 +165,7 @@ class UserPresence {
       state: presenceStateFromString(data['state'] ?? 'offline'),
       roomId: data['roomId'],
       roomName: data['roomName'],
-      lastUpdate:
-          timestamp?.toDate() ?? DateTime.now(),
+      lastUpdate: timestamp?.toDate() ?? DateTime.now(),
       platform: data['platform'] ?? 'web',
       isPublishing: data['isPublishing'] ?? false,
       isMuted: data['isMuted'] ?? false,
@@ -197,7 +196,8 @@ class UserPresence {
   bool get isOnline => state == PresenceState.online;
 
   /// Whether user is idle or away
-  bool get isInactive => state == PresenceState.idle || state == PresenceState.away;
+  bool get isInactive =>
+      state == PresenceState.idle || state == PresenceState.away;
 
   /// Whether user is completely offline
   bool get isOffline => state == PresenceState.offline;
@@ -227,6 +227,3 @@ class UserPresence {
   String toString() =>
       'UserPresence($userId, state=$state, room=$roomId, publishing=$isPublishing, muted=$isMuted, video=$isVideoEnabled, lastUpdate=$lastUpdate)';
 }
-
-
-

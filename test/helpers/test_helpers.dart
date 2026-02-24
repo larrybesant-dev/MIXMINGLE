@@ -11,7 +11,8 @@ Future<void> setupFirebaseTest() async {
 }
 
 /// Create a testable widget with MaterialApp wrapper
-Widget createTestableWidget(Widget child, {NavigatorObserver? navigatorObserver}) {
+Widget createTestableWidget(Widget child,
+    {NavigatorObserver? navigatorObserver}) {
   return MaterialApp(
     home: child,
     navigatorObservers: navigatorObserver != null ? [navigatorObserver] : [],
@@ -45,7 +46,8 @@ Future<void> tapByKey(WidgetTester tester, Key key) async {
 }
 
 /// Enter text in field
-Future<void> enterText(WidgetTester tester, String text, {Key? key, Type? type}) async {
+Future<void> enterText(WidgetTester tester, String text,
+    {Key? key, Type? type}) async {
   if (key != null) {
     await tester.enterText(find.byKey(key), text);
   } else if (type != null) {
@@ -129,7 +131,8 @@ class TestData {
       'description': 'Test event description',
       'hostId': hostId ?? 'host_123',
       'startTime': Timestamp.fromDate(DateTime.now().add(Duration(days: 1))),
-      'endTime': Timestamp.fromDate(DateTime.now().add(Duration(days: 1, hours: 2))),
+      'endTime':
+          Timestamp.fromDate(DateTime.now().add(Duration(days: 1, hours: 2))),
       'latitude': 37.7749,
       'longitude': -122.4194,
       'maxCapacity': 50,

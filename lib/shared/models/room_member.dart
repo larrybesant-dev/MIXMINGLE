@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Room member presence model - represents a user's presence in a room
@@ -67,7 +66,6 @@ class RoomMember {
   }
 
   @override
-  String toString() => 'RoomMember(userId: $userId, displayName: $displayName, online: $online)';
+  String toString() =>
+      'RoomMember(userId: $userId, displayName: $displayName, online: $online)';
 }
-
-

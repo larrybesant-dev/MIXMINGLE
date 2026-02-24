@@ -13,17 +13,18 @@ class ChatMessageModel {
     this.isTyping = false,
   });
 
-  factory ChatMessageModel.fromMap(Map<String, dynamic> map) => ChatMessageModel(
-    userId: map['userId'],
-    message: map['message'],
-    timestamp: DateTime.parse(map['timestamp']),
-    isTyping: map['isTyping'] ?? false,
-  );
+  factory ChatMessageModel.fromMap(Map<String, dynamic> map) =>
+      ChatMessageModel(
+        userId: map['userId'],
+        message: map['message'],
+        timestamp: DateTime.parse(map['timestamp']),
+        isTyping: map['isTyping'] ?? false,
+      );
 
   Map<String, dynamic> toMap() => {
-    'userId': userId,
-    'message': message,
-    'timestamp': timestamp.toIso8601String(),
-    'isTyping': isTyping,
-  };
+        'userId': userId,
+        'message': message,
+        'timestamp': timestamp.toIso8601String(),
+        'isTyping': isTyping,
+      };
 }

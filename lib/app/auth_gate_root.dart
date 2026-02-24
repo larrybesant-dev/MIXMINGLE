@@ -97,7 +97,8 @@ class _UnauthenticatedApp extends StatelessWidget {
             );
           default:
             // Block all other routes - send back to landing
-            debugPrint('â›” [Unauthenticated] Blocked access to: ${settings.name}');
+            debugPrint(
+                'â›” [Unauthenticated] Blocked access to: ${settings.name}');
             return MaterialPageRoute(builder: (_) => const LandingPage());
         }
       },
@@ -138,14 +139,17 @@ class _AuthenticatedAppGate extends ConsumerWidget {
       // Profile loaded
       data: (user) {
         // Check if profile is complete - either displayName OR username must exist
-        debugPrint('ðŸ“„ [AuthenticatedGate] User data: ${user != null ? "exists" : "null"}');
+        debugPrint(
+            'ðŸ“„ [AuthenticatedGate] User data: ${user != null ? "exists" : "null"}');
         if (user != null) {
-          debugPrint('ðŸ”‘ [AuthenticatedGate] User fields: displayName="${user.displayName}", username="${user.username}", email="${user.email}"');
+          debugPrint(
+              'ðŸ”‘ [AuthenticatedGate] User fields: displayName="${user.displayName}", username="${user.username}", email="${user.email}"');
         }
 
         final displayName = user?.displayName ?? '';
         final username = user?.username ?? '';
-        debugPrint('ðŸ‘¤ [AuthenticatedGate] displayName="$displayName", username="$username"');
+        debugPrint(
+            'ðŸ‘¤ [AuthenticatedGate] displayName="$displayName", username="$username"');
 
         if (displayName.isNotEmpty || username.isNotEmpty) {
           debugPrint('âœ… [AuthenticatedGate] Profile complete. Showing app.');
@@ -158,7 +162,8 @@ class _AuthenticatedAppGate extends ConsumerWidget {
           return const MixMingleApp();
         }
 
-        debugPrint('ðŸš§ [AuthenticatedGate] Profile incomplete. Forcing completion.');
+        debugPrint(
+            'ðŸš§ [AuthenticatedGate] Profile incomplete. Forcing completion.');
         return _ProfileIncompleteApp(userId: userId);
       },
     );
@@ -182,7 +187,8 @@ class _AuthenticatedAppGate extends ConsumerWidget {
 
         AppLogger.info('Post-auth initialization complete');
       } catch (e) {
-        debugPrint('âš ï¸ [Init] Optional service init failed (non-fatal): $e');
+        debugPrint(
+            'âš ï¸ [Init] Optional service init failed (non-fatal): $e');
         AppLogger.warning('Optional service initialization failed: $e');
         // App continues - these services are not critical for rendering
       }
@@ -201,7 +207,8 @@ class _ProfileIncompleteApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('🧩 [ProfileIncomplete] Routing to CreateProfilePage for $userId');
+    debugPrint(
+        '🧩 [ProfileIncomplete] Routing to CreateProfilePage for $userId');
 
     return MaterialApp(
       title: 'Mix & Mingle',

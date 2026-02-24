@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
 import 'package:mixmingle/app/app_routes.dart';
@@ -65,7 +65,9 @@ class _UserDiscoveryPageState extends ConsumerState<UserDiscoveryPage> {
           ),
         ),
       ),
-      body: _searchQuery.isEmpty ? _buildEmptyState(context) : _buildSearchResults(context, currentUser?.id),
+      body: _searchQuery.isEmpty
+          ? _buildEmptyState(context)
+          : _buildSearchResults(context, currentUser?.id),
     );
   }
 
@@ -160,10 +162,15 @@ class _UserDiscoveryPageState extends ConsumerState<UserDiscoveryPage> {
                       // Avatar
                       CircleAvatar(
                         radius: 30,
-                        backgroundImage: user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
+                        backgroundImage: user.photoUrl != null
+                            ? NetworkImage(user.photoUrl!)
+                            : null,
                         child: user.photoUrl == null
                             ? Text(
-                                user.displayName?.substring(0, 1).toUpperCase() ?? '?',
+                                user.displayName
+                                        ?.substring(0, 1)
+                                        .toUpperCase() ??
+                                    '?',
                                 style: const TextStyle(fontSize: 24),
                               )
                             : null,
@@ -176,7 +183,10 @@ class _UserDiscoveryPageState extends ConsumerState<UserDiscoveryPage> {
                           children: [
                             Text(
                               user.displayName ?? 'Unknown',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(
                                     fontWeight: FontWeight.bold,
                                   ),
                             ),
@@ -184,7 +194,10 @@ class _UserDiscoveryPageState extends ConsumerState<UserDiscoveryPage> {
                               const SizedBox(height: 2),
                               Text(
                                 '@${user.nickname}',
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
                                       color: Colors.grey.shade600,
                                     ),
                               ),
@@ -201,32 +214,43 @@ class _UserDiscoveryPageState extends ConsumerState<UserDiscoveryPage> {
                                   const SizedBox(width: 4),
                                   Text(
                                     user.location!,
-                                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
                                           color: Colors.grey.shade600,
                                         ),
                                   ),
                                 ],
                               ),
                             ],
-                            if (user.interests != null && user.interests!.isNotEmpty) ...[
+                            if (user.interests != null &&
+                                user.interests!.isNotEmpty) ...[
                               const SizedBox(height: 6),
                               Wrap(
                                 spacing: 4,
                                 runSpacing: 4,
-                                children: user.interests!.take(3).map((interest) {
+                                children:
+                                    user.interests!.take(3).map((interest) {
                                   return Container(
                                     padding: const EdgeInsets.symmetric(
                                       horizontal: 8,
                                       vertical: 2,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                                      color: Theme.of(context)
+                                          .primaryColor
+                                          .withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Text(
                                       interest,
-                                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                            color: Theme.of(context).primaryColor,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color:
+                                                Theme.of(context).primaryColor,
                                             fontSize: 11,
                                           ),
                                     ),

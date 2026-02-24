@@ -27,7 +27,8 @@ class MessagingService {
     String? thumbnailUrl,
     Map<String, dynamic>? metadata,
   }) async {
-    final conversationId = DirectMessage.createConversationId(senderId, receiverId);
+    final conversationId =
+        DirectMessage.createConversationId(senderId, receiverId);
 
     final message = DirectMessage(
       id: '', // Will be set by Firestore
@@ -47,10 +48,12 @@ class MessagingService {
     await _firestore.collection('direct_messages').add(message.toMap());
 
     // Update conversation metadata
-    await _updateConversationMetadata(conversationId, senderId, receiverId, content, DateTime.now());
+    await _updateConversationMetadata(
+        conversationId, senderId, receiverId, content, DateTime.now());
 
     // Send push notification to receiver
-    await _sendMessageNotification(conversationId, senderId, receiverId, content);
+    await _sendMessageNotification(
+        conversationId, senderId, receiverId, content);
 
     // Track analytics
     _analytics.trackEngagement('direct_message_sent', parameters: {
@@ -130,10 +133,12 @@ class MessagingService {
 
       for (final doc in snapshot.docs) {
         final data = doc.data();
-        final otherUserId = (data['participants'] as List<dynamic>).firstWhere((id) => id != userId);
+        final otherUserId = (data['participants'] as List<dynamic>)
+            .firstWhere((id) => id != userId);
 
         // Get other user's details
-        final userDoc = await _firestore.collection('users').doc(otherUserId).get();
+        final userDoc =
+            await _firestore.collection('users').doc(otherUserId).get();
         if (userDoc.exists) {
           final userData = userDoc.data()!;
           userData['id'] = userDoc.id;
@@ -191,8 +196,10 @@ class MessagingService {
 
   /// Get unread message count for a user
   Future<int> getTotalUnreadCount(String userId) async {
-    final conversations =
-        await _firestore.collection('conversations').where('participants', arrayContains: userId).get();
+    final conversations = await _firestore
+        .collection('conversations')
+        .where('participants', arrayContains: userId)
+        .get();
 
     int totalUnread = 0;
     for (final doc in conversations.docs) {
@@ -205,7 +212,8 @@ class MessagingService {
 
   /// Delete a message (only sender can delete)
   Future<void> deleteMessage(String messageId, String userId) async {
-    final doc = await _firestore.collection('direct_messages').doc(messageId).get();
+    final doc =
+        await _firestore.collection('direct_messages').doc(messageId).get();
 
     if (!doc.exists) {
       throw Exception('Message not found');
@@ -226,8 +234,10 @@ class MessagingService {
   }
 
   /// Edit a message (only sender can edit, within 15 minutes)
-  Future<void> editMessage(String messageId, String userId, String newContent) async {
-    final doc = await _firestore.collection('direct_messages').doc(messageId).get();
+  Future<void> editMessage(
+      String messageId, String userId, String newContent) async {
+    final doc =
+        await _firestore.collection('direct_messages').doc(messageId).get();
 
     if (!doc.exists) {
       throw Exception('Message not found');
@@ -270,7 +280,8 @@ class MessagingService {
     String lastMessage,
     DateTime timestamp,
   ) async {
-    final conversationRef = _firestore.collection('conversations').doc(conversationId);
+    final conversationRef =
+        _firestore.collection('conversations').doc(conversationId);
 
     final conversationDoc = await conversationRef.get();
 
@@ -287,7 +298,8 @@ class MessagingService {
     } else {
       // Update existing conversation
       final data = conversationDoc.data()!;
-      final currentUnreadForReceiver = (data['unreadCount_$receiverId'] ?? 0) as int;
+      final currentUnreadForReceiver =
+          (data['unreadCount_$receiverId'] ?? 0) as int;
 
       await conversationRef.update({
         'lastMessage': lastMessage,
@@ -305,16 +317,18 @@ class MessagingService {
   /// Check if a conversation exists between two users
   Future<bool> conversationExists(String userId1, String userId2) async {
     final conversationId = getConversationId(userId1, userId2);
-    final doc = await _firestore.collection('conversations').doc(conversationId).get();
+    final doc =
+        await _firestore.collection('conversations').doc(conversationId).get();
     return doc.exists;
   }
 
   /// Send push notification for new message
-  Future<void> _sendMessageNotification(
-      String conversationId, String senderId, String receiverId, String content) async {
+  Future<void> _sendMessageNotification(String conversationId, String senderId,
+      String receiverId, String content) async {
     try {
       // Get sender's details for notification
-      final senderDoc = await _firestore.collection('users').doc(senderId).get();
+      final senderDoc =
+          await _firestore.collection('users').doc(senderId).get();
       if (!senderDoc.exists) return;
 
       final senderData = senderDoc.data()!;
@@ -322,7 +336,8 @@ class MessagingService {
       final sender = User.fromMap(senderData);
 
       // Get receiver's FCM token
-      final receiverDoc = await _firestore.collection('users').doc(receiverId).get();
+      final receiverDoc =
+          await _firestore.collection('users').doc(receiverId).get();
       if (!receiverDoc.exists) return;
 
       final receiverData = receiverDoc.data()!;
@@ -351,8 +366,10 @@ class MessagingService {
     int limit = 50,
   }) async {
     // Get all conversations for the user
-    final conversationsSnapshot =
-        await _firestore.collection('conversations').where('participants', arrayContains: userId).get();
+    final conversationsSnapshot = await _firestore
+        .collection('conversations')
+        .where('participants', arrayContains: userId)
+        .get();
 
     final results = <Map<String, dynamic>>[];
     final queryLower = query.toLowerCase();
@@ -364,7 +381,8 @@ class MessagingService {
       final otherUserId = participants.firstWhere((id) => id != userId);
 
       // Get user details
-      final userDoc = await _firestore.collection('users').doc(otherUserId).get();
+      final userDoc =
+          await _firestore.collection('users').doc(otherUserId).get();
       if (!userDoc.exists) continue;
 
       final userData = userDoc.data()!;
@@ -383,16 +401,19 @@ class MessagingService {
 
       // Apply date filters
       if (startDate != null) {
-        messagesQuery = messagesQuery.where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate));
+        messagesQuery = messagesQuery.where('timestamp',
+            isGreaterThanOrEqualTo: Timestamp.fromDate(startDate));
       }
       if (endDate != null) {
         messagesQuery = messagesQuery.where('timestamp',
-            isLessThanOrEqualTo: Timestamp.fromDate(endDate.add(const Duration(days: 1))));
+            isLessThanOrEqualTo:
+                Timestamp.fromDate(endDate.add(const Duration(days: 1))));
       }
 
       // Apply message type filter
       if (messageType != null) {
-        messagesQuery = messagesQuery.where('type', isEqualTo: messageType.name);
+        messagesQuery =
+            messagesQuery.where('type', isEqualTo: messageType.name);
       }
 
       final messagesSnapshot = await messagesQuery.get();
@@ -409,7 +430,8 @@ class MessagingService {
             'conversationId': conversationId,
             'otherUser': otherUser,
             'lastMessage': conversationData['lastMessage'],
-            'lastMessageTime': (conversationData['lastMessageTime'] as Timestamp).toDate(),
+            'lastMessageTime':
+                (conversationData['lastMessageTime'] as Timestamp).toDate(),
             'unreadCount': conversationData['unreadCount_$userId'] ?? 0,
           },
         });
@@ -427,8 +449,10 @@ class MessagingService {
   }
 
   /// Add a reaction to a message
-  Future<void> addReaction(String messageId, String emoji, String userId) async {
-    final doc = await _firestore.collection('direct_messages').doc(messageId).get();
+  Future<void> addReaction(
+      String messageId, String emoji, String userId) async {
+    final doc =
+        await _firestore.collection('direct_messages').doc(messageId).get();
 
     if (!doc.exists) {
       throw Exception('Message not found');
@@ -450,8 +474,10 @@ class MessagingService {
   }
 
   /// Remove a reaction from a message
-  Future<void> removeReaction(String messageId, String emoji, String userId) async {
-    final doc = await _firestore.collection('direct_messages').doc(messageId).get();
+  Future<void> removeReaction(
+      String messageId, String emoji, String userId) async {
+    final doc =
+        await _firestore.collection('direct_messages').doc(messageId).get();
 
     if (!doc.exists) {
       throw Exception('Message not found');
@@ -474,7 +500,8 @@ class MessagingService {
 
   /// Mark a message as delivered (when received by recipient's device)
   Future<void> markMessageAsDelivered(String messageId, String userId) async {
-    final doc = await _firestore.collection('direct_messages').doc(messageId).get();
+    final doc =
+        await _firestore.collection('direct_messages').doc(messageId).get();
 
     if (!doc.exists) {
       throw Exception('Message not found');
@@ -498,7 +525,8 @@ class MessagingService {
 
   /// Mark a message as read (when viewed by recipient)
   Future<void> markMessageAsRead(String messageId, String userId) async {
-    final doc = await _firestore.collection('direct_messages').doc(messageId).get();
+    final doc =
+        await _firestore.collection('direct_messages').doc(messageId).get();
 
     if (!doc.exists) {
       throw Exception('Message not found');
@@ -522,7 +550,8 @@ class MessagingService {
   }
 
   /// Mark all messages in a conversation as read for a user
-  Future<void> markConversationAsRead(String userId1, String userId2, String currentUserId) async {
+  Future<void> markConversationAsRead(
+      String userId1, String userId2, String currentUserId) async {
     final conversationId = DirectMessage.createConversationId(userId1, userId2);
 
     final query = _firestore
@@ -588,7 +617,11 @@ extension RoomMessaging on MessagingService {
     );
 
     // Add message to Firestore (using subcollection)
-    await _firestore.collection('rooms').doc(roomId).collection('messages').add(message.toMap());
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('messages')
+        .add(message.toMap());
 
     // Track analytics
     _analytics.trackEngagement('room_message_sent', parameters: {
@@ -612,8 +645,13 @@ extension RoomMessaging on MessagingService {
   }
 
   /// Delete a room message
-  Future<void> deleteRoomMessage(String roomId, String messageId, String senderId) async {
-    final docRef = _firestore.collection('rooms').doc(roomId).collection('messages').doc(messageId);
+  Future<void> deleteRoomMessage(
+      String roomId, String messageId, String senderId) async {
+    final docRef = _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('messages')
+        .doc(messageId);
     final doc = await docRef.get();
 
     if (doc.exists) {
@@ -632,8 +670,13 @@ extension RoomMessaging on MessagingService {
   }
 
   /// Edit a room message
-  Future<void> editRoomMessage(String roomId, String messageId, String senderId, String newContent) async {
-    final docRef = _firestore.collection('rooms').doc(roomId).collection('messages').doc(messageId);
+  Future<void> editRoomMessage(String roomId, String messageId, String senderId,
+      String newContent) async {
+    final docRef = _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('messages')
+        .doc(messageId);
     final doc = await docRef.get();
 
     if (doc.exists) {
@@ -657,10 +700,17 @@ extension RoomMessaging on MessagingService {
 
   /// Get typing users in a room
   Stream<List<String>> getTypingUsers(String roomId) {
-    return _firestore.collection('room_typing').doc(roomId).snapshots().map((doc) {
+    return _firestore
+        .collection('room_typing')
+        .doc(roomId)
+        .snapshots()
+        .map((doc) {
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
-        return (data['typingUsers'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [];
+        return (data['typingUsers'] as List<dynamic>?)
+                ?.map((e) => e.toString())
+                .toList() ??
+            [];
       }
       return [];
     });

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/providers/connectivity_provider.dart';
 import 'empty_states.dart';
@@ -66,7 +66,8 @@ class OnlineOnly extends ConsumerWidget {
                 () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('This action requires an internet connection'),
+                      content:
+                          Text('This action requires an internet connection'),
                       backgroundColor: Color(0xFFFF4C4C),
                     ),
                   );

@@ -47,7 +47,8 @@ void main() {
       }
     });
 
-    testWidgets('should view user profile before matching', (WidgetTester tester) async {
+    testWidgets('should view user profile before matching',
+        (WidgetTester tester) async {
       // Arrange
       app.main();
       await tester.pumpAndSettle();
@@ -70,7 +71,8 @@ void main() {
       }
     });
 
-    testWidgets('should filter matches by preferences', (WidgetTester tester) async {
+    testWidgets('should filter matches by preferences',
+        (WidgetTester tester) async {
       // Arrange
       app.main();
       await tester.pumpAndSettle();

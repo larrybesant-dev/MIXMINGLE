@@ -30,14 +30,16 @@ class HealthCheckResult {
   @override
   String toString() {
     final status = isHealthy ? 'âœ…' : 'âŒ';
-    final time = responseTime != null ? ' (${responseTime!.inMilliseconds}ms)' : '';
+    final time =
+        responseTime != null ? ' (${responseTime!.inMilliseconds}ms)' : '';
     return '$status $service$time${errorMessage != null ? ': $errorMessage' : ''}';
   }
 }
 
 /// Runtime health check manager
 class ProjectHealthChecker {
-  static final ProjectHealthChecker _instance = ProjectHealthChecker._internal();
+  static final ProjectHealthChecker _instance =
+      ProjectHealthChecker._internal();
 
   factory ProjectHealthChecker() {
     return _instance;
@@ -112,8 +114,11 @@ class ProjectHealthChecker {
     } catch (e) {
       final err = e.toString();
       // permission-denied = Firestore is reachable, rules are enforcing auth (correct)
-      if (err.contains('permission-denied') || err.contains('PERMISSION_DENIED')) {
-        _addResult('Firestore Database', true,
+      if (err.contains('permission-denied') ||
+          err.contains('PERMISSION_DENIED')) {
+        _addResult(
+            'Firestore Database',
+            true,
             'Security rules active (unauthenticated access blocked — OK)',
             stopwatch.elapsed);
       } else {
@@ -147,7 +152,8 @@ class ProjectHealthChecker {
       // - all_providers.dart exports
       _addResult('Provider Registration', true, null, stopwatch.elapsed);
     } catch (e) {
-      _addResult('Provider Registration', false, e.toString(), stopwatch.elapsed);
+      _addResult(
+          'Provider Registration', false, e.toString(), stopwatch.elapsed);
     }
   }
 
@@ -175,7 +181,8 @@ class ProjectHealthChecker {
           // Permission-denied errors are expected for restricted collections
           if (errorString.contains('permission-denied') ||
               errorString.contains('permission_denied')) {
-            debugPrint('âš ï¸ [HealthCheck] $collection: permission-denied (expected for restricted collections)');
+            debugPrint(
+                'âš ï¸ [HealthCheck] $collection: permission-denied (expected for restricted collections)');
             warnings.add(collection);
             results[collection] = true; // Don't fail for permission errors
           } else {
@@ -208,12 +215,15 @@ class ProjectHealthChecker {
       _addResult('Firestore Collections', true, message, stopwatch.elapsed);
     } catch (e) {
       // Log error but don't fail the health check - app should continue
-      debugPrint('âš ï¸ [HealthCheck] Firestore collection check failed (non-fatal): $e');
-      _addResult('Firestore Collections', true, 'Check skipped: $e', stopwatch.elapsed);
+      debugPrint(
+          'âš ï¸ [HealthCheck] Firestore collection check failed (non-fatal): $e');
+      _addResult('Firestore Collections', true, 'Check skipped: $e',
+          stopwatch.elapsed);
     }
   }
 
-  void _addResult(String service, bool isHealthy, String? errorMessage, Duration responseTime) {
+  void _addResult(String service, bool isHealthy, String? errorMessage,
+      Duration responseTime) {
     _results.add(
       HealthCheckResult(
         service: service,
@@ -226,15 +236,18 @@ class ProjectHealthChecker {
   }
 
   void _printHealthReport() {
-    debugPrint('\nâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
+    debugPrint(
+        '\nâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
     debugPrint('ðŸ¥ PROJECT HEALTH CHECK REPORT\n');
     debugPrint('DateTime: ${DateTime.now()}');
-    debugPrint('Overall Status: ${isHealthy ? 'âœ… HEALTHY' : 'âš ï¸ ISSUES DETECTED'}\n');
+    debugPrint(
+        'Overall Status: ${isHealthy ? 'âœ… HEALTHY' : 'âš ï¸ ISSUES DETECTED'}\n');
     debugPrint('Services Checked:');
     for (final result in _results) {
       debugPrint('  ${result.toString()}');
     }
-    debugPrint('\nâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
+    debugPrint(
+        '\nâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
   }
 }
 

@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import '../../core/utils/app_logger.dart';
 import 'video_room_state.dart';
@@ -77,7 +77,8 @@ class VideoRoomNotifier extends Notifier<VideoRoomState> {
   }) async {
     // Prevent joining if not initialized
     if (!state.isInitialized) {
-      throw Exception('Video system not initialized. Call initializeVideo() first.');
+      throw Exception(
+          'Video system not initialized. Call initializeVideo() first.');
     }
 
     // Prevent re-joining
@@ -171,7 +172,8 @@ class VideoRoomNotifier extends Notifier<VideoRoomState> {
     try {
       await _lifecycle.setVideoMuted(!state.cameraEnabled);
       state = state.copyWith(cameraEnabled: !state.cameraEnabled);
-      AppLogger.info(state.cameraEnabled ? 'ðŸ“¹ Camera on' : 'ðŸ“¹ Camera off');
+      AppLogger.info(
+          state.cameraEnabled ? 'ðŸ“¹ Camera on' : 'ðŸ“¹ Camera off');
     } catch (e) {
       AppLogger.error('âŒ Camera control failed: $e');
       rethrow;
@@ -206,10 +208,8 @@ class VideoRoomNotifier extends Notifier<VideoRoomState> {
 
 /// Provider for video room controller
 /// RIVERPOD V3: Using family modifier for room ID parameter
-final videoRoomProvider = NotifierProvider.family<
-    VideoRoomNotifier,
-    VideoRoomState,
-    ({String appId, String roomId, String userId})>(
+final videoRoomProvider = NotifierProvider.family<VideoRoomNotifier,
+    VideoRoomState, ({String appId, String roomId, String userId})>(
   (params) => VideoRoomNotifier(
     appId: params.appId,
     roomId: params.roomId,
@@ -219,8 +219,7 @@ final videoRoomProvider = NotifierProvider.family<
 
 /// Convenience provider selector for video room state
 /// Usage: ref.watch(videoRoomStateSelector(roomId))
-final videoRoomStateSelector = Provider.family<
-    VideoRoomState,
+final videoRoomStateSelector = Provider.family<VideoRoomState,
     ({String appId, String roomId, String userId})>((ref, params) {
   return ref.watch(videoRoomProvider(params));
 });

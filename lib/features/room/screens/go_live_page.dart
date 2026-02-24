@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/providers/providers.dart';
-import 'package:mixmingle/shared/providers/room_providers.dart' as room_providers;
+import 'package:mixmingle/shared/providers/room_providers.dart'
+    as room_providers;
 import '../../../shared/club_background.dart';
 import '../../../shared/glow_text.dart';
 import '../../../shared/neon_button.dart';
@@ -121,7 +122,8 @@ class _CreateRoomPageState extends ConsumerState<CreateRoomPage> {
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 16),
                     ),
                   ),
                 ),
@@ -154,7 +156,8 @@ class _CreateRoomPageState extends ConsumerState<CreateRoomPage> {
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 16),
                     ),
                     maxLines: 3,
                   ),
@@ -172,7 +175,8 @@ class _CreateRoomPageState extends ConsumerState<CreateRoomPage> {
                   child: SwitchListTile(
                     title: const Text(
                       'Private Room',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w500),
                     ),
                     subtitle: const Text(
                       'Only invited users can join',
@@ -181,7 +185,8 @@ class _CreateRoomPageState extends ConsumerState<CreateRoomPage> {
                     value: _isPrivate,
                     onChanged: (value) => setState(() => _isPrivate = value),
                     activeThumbColor: const Color(0xFFFF4C4C),
-                    activeTrackColor: const Color(0xFFFF4C4C).withValues(alpha: 0.3),
+                    activeTrackColor:
+                        const Color(0xFFFF4C4C).withValues(alpha: 0.3),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -197,7 +202,8 @@ class _CreateRoomPageState extends ConsumerState<CreateRoomPage> {
                   child: SwitchListTile(
                     title: const Text(
                       'Show DJ Prefix',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                          color: Colors.white, fontWeight: FontWeight.w500),
                     ),
                     subtitle: const Text(
                       'Display "DJ" before your name',
@@ -206,7 +212,8 @@ class _CreateRoomPageState extends ConsumerState<CreateRoomPage> {
                     value: _showDJPrefix,
                     onChanged: (value) => setState(() => _showDJPrefix = value),
                     activeThumbColor: const Color(0xFFFF4C4C),
-                    activeTrackColor: const Color(0xFFFF4C4C).withValues(alpha: 0.3),
+                    activeTrackColor:
+                        const Color(0xFFFF4C4C).withValues(alpha: 0.3),
                   ),
                 ),
                 const SizedBox(height: 32),

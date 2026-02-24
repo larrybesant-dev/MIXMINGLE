@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Room chat message model - represents a single message in a room
@@ -22,7 +21,8 @@ class RoomMessage {
   });
 
   /// Create from Firestore document snapshot
-  factory RoomMessage.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
+  factory RoomMessage.fromFirestore(
+      DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? {};
     return RoomMessage(
       id: doc.id,
@@ -48,5 +48,3 @@ class RoomMessage {
   @override
   String toString() => 'RoomMessage(id: $id, senderId: $senderId, text: $text)';
 }
-
-

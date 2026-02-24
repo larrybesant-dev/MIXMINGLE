@@ -14,7 +14,12 @@ class MicService {
 
     try {
       final now = DateTime.now();
-      await _firestore.collection('rooms').doc(roomId).collection('micQueue').doc(userId).set({
+      await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('micQueue')
+          .doc(userId)
+          .set({
         'userId': userId,
         'status': 'pending',
         'requestedAt': now,
@@ -38,7 +43,12 @@ class MicService {
     if (userId == null) throw Exception('Not authenticated');
 
     try {
-      await _firestore.collection('rooms').doc(roomId).collection('micQueue').doc(userId).delete();
+      await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('micQueue')
+          .doc(userId)
+          .delete();
 
       debugPrint('âœ… Mic request cancelled');
     } catch (e) {
@@ -50,7 +60,12 @@ class MicService {
   /// Approve user's mic (moderator only)
   Future<void> approveMic(String roomId, String userId) async {
     try {
-      await _firestore.collection('rooms').doc(roomId).collection('micQueue').doc(userId).update({
+      await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('micQueue')
+          .doc(userId)
+          .update({
         'status': 'approved',
         'approvedAt': FieldValue.serverTimestamp(),
       });
@@ -65,7 +80,12 @@ class MicService {
   /// Revoke user's mic
   Future<void> revokeMic(String roomId, String userId) async {
     try {
-      await _firestore.collection('rooms').doc(roomId).collection('micQueue').doc(userId).delete();
+      await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('micQueue')
+          .doc(userId)
+          .delete();
 
       debugPrint('âœ… Mic revoked for user: $userId');
     } catch (e) {
@@ -80,7 +100,12 @@ class MicService {
     if (userId == null) throw Exception('Not authenticated');
 
     try {
-      await _firestore.collection('rooms').doc(roomId).collection('micQueue').doc(userId).update({'isMuted': mute});
+      await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('micQueue')
+          .doc(userId)
+          .update({'isMuted': mute});
 
       debugPrint('âœ… Mute toggled: $mute');
     } catch (e) {
@@ -138,7 +163,12 @@ class MicService {
     if (userId == null) throw Exception('Not authenticated');
 
     try {
-      await _firestore.collection('rooms').doc(roomId).collection('micQueue').doc(userId).update({
+      await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('micQueue')
+          .doc(userId)
+          .update({
         'noiseSuppression': {
           'enabled': settings.enabled,
           'threshold': settings.threshold,
@@ -155,19 +185,30 @@ class MicService {
 
   /// Stream mic queue
   Stream<List<MicState>> streamMicQueue(String roomId) {
-    return _firestore.collection('rooms').doc(roomId).collection('micQueue').snapshots().asyncMap((snapshot) async {
+    return _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('micQueue')
+        .snapshots()
+        .asyncMap((snapshot) async {
       final mics = <MicState>[];
 
       for (var doc in snapshot.docs) {
         try {
-          final participantDoc =
-              await _firestore.collection('rooms').doc(roomId).collection('participants').doc(doc.id).get();
+          final participantDoc = await _firestore
+              .collection('rooms')
+              .doc(roomId)
+              .collection('participants')
+              .doc(doc.id)
+              .get();
 
           if (participantDoc.exists) {
             final data = participantDoc.data()!;
             final status = (doc['status'] == 'approved' && !doc['isMuted'])
                 ? MicStatus.active
-                : (doc['status'] == 'approved' ? MicStatus.muted : MicStatus.inactive);
+                : (doc['status'] == 'approved'
+                    ? MicStatus.muted
+                    : MicStatus.inactive);
 
             mics.add(MicState(
               uid: doc.id,

@@ -35,7 +35,10 @@ class AgoraPlatformService {
 
     _engine = native.createAgoraRtcEngine();
     await _engine!.initialize(
-      native.RtcEngineContext(appId: appId, channelProfile: native.ChannelProfileType.channelProfileLiveBroadcasting),
+      native.RtcEngineContext(
+          appId: appId,
+          channelProfile:
+              native.ChannelProfileType.channelProfileLiveBroadcasting),
     );
 
     // Enable video and audio
@@ -50,7 +53,8 @@ class AgoraPlatformService {
     required String uid,
   }) async {
     _consoleLog('ðŸŒ joinChannel called - kIsWeb: $kIsWeb');
-    debugPrint('[DEBUG] AgoraPlatformService.joinChannel() called with kIsWeb=$kIsWeb');
+    debugPrint(
+        '[DEBUG] AgoraPlatformService.joinChannel() called with kIsWeb=$kIsWeb');
     AppLogger.info('ðŸŒ joinChannel called - kIsWeb: $kIsWeb');
 
     if (kIsWeb) {
@@ -58,11 +62,14 @@ class AgoraPlatformService {
       // AGORA WEB DISABLED: Allow web to join room WITHOUT voice/video
       // ========================================================================
       if (AGORA_WEB_DISABLED) {
-        debugPrint('[AGORA_WEB] ðŸŸ¡ Agora Web is DISABLED - Allowing room join without video/audio');
-        AppLogger.warning('ðŸŸ¡ Agora Web DISABLED: Joining room without voice/video');
+        debugPrint(
+            '[AGORA_WEB] ðŸŸ¡ Agora Web is DISABLED - Allowing room join without video/audio');
+        AppLogger.warning(
+            'ðŸŸ¡ Agora Web DISABLED: Joining room without voice/video');
         debugPrint('[AGORA_WEB]    Channel: $channelName');
         debugPrint('[AGORA_WEB]    UID: $uid');
-        debugPrint('[AGORA_WEB]    Web users can: Chat âœ…, Presence âœ…, UI âœ…, Voice/Video âŒ');
+        debugPrint(
+            '[AGORA_WEB]    Web users can: Chat âœ…, Presence âœ…, UI âœ…, Voice/Video âŒ');
         return true; // Pretend join succeeded - room UI will render
       }
 
@@ -88,7 +95,8 @@ class AgoraPlatformService {
       // === STEP 2: JOIN CHANNEL ===
       // The production bridge handles permissions automatically during join
       _consoleLog('âœ… WEB PATH: Calling AgoraWebBridgeV3.joinChannel()');
-      debugPrint('[DEBUG] Calling AgoraWebBridgeV3.joinChannel() with $channelName...');
+      debugPrint(
+          '[DEBUG] Calling AgoraWebBridgeV3.joinChannel() with $channelName...');
       AppLogger.info('ðŸ”— Joining Agora channel: $channelName');
 
       final result = await AgoraWebBridgeV3.joinChannel(
@@ -126,7 +134,8 @@ class AgoraPlatformService {
       uid: int.tryParse(uid) ?? 0,
       options: const native.ChannelMediaOptions(
         clientRoleType: native.ClientRoleType.clientRoleBroadcaster,
-        channelProfile: native.ChannelProfileType.channelProfileLiveBroadcasting,
+        channelProfile:
+            native.ChannelProfileType.channelProfileLiveBroadcasting,
       ),
     );
     AppLogger.info('Agora native joinChannel successful');
@@ -137,7 +146,8 @@ class AgoraPlatformService {
   static Future<bool> leaveChannel() async {
     if (kIsWeb) {
       if (AGORA_WEB_DISABLED) {
-        debugPrint('[AGORA_WEB] ðŸŸ¡ Agora Web disabled - leaveChannel is no-op');
+        debugPrint(
+            '[AGORA_WEB] ðŸŸ¡ Agora Web disabled - leaveChannel is no-op');
         return true; // No-op since join was skipped
       }
       return AgoraWebBridgeV3.leaveChannel();
@@ -151,7 +161,8 @@ class AgoraPlatformService {
   static Future<void> setMicMuted(bool muted) async {
     if (kIsWeb) {
       if (AGORA_WEB_DISABLED) {
-        debugPrint('[AGORA_WEB] ðŸŸ¡ Agora Web disabled - setMicMuted is no-op');
+        debugPrint(
+            '[AGORA_WEB] ðŸŸ¡ Agora Web disabled - setMicMuted is no-op');
         return; // No-op since Agora is disabled
       }
       await AgoraWebBridgeV3.setMicMuted(muted);
@@ -165,7 +176,8 @@ class AgoraPlatformService {
   static Future<void> setVideoMuted(bool muted) async {
     if (kIsWeb) {
       if (AGORA_WEB_DISABLED) {
-        debugPrint('[AGORA_WEB] ðŸŸ¡ Agora Web disabled - setVideoMuted is no-op');
+        debugPrint(
+            '[AGORA_WEB] ðŸŸ¡ Agora Web disabled - setVideoMuted is no-op');
         return; // No-op since Agora is disabled
       }
       await AgoraWebBridgeV3.setVideoMuted(muted);
@@ -180,7 +192,8 @@ class AgoraPlatformService {
   static Future<bool> initializeWeb(String appId) async {
     if (!kIsWeb) return false;
     if (AGORA_WEB_DISABLED) {
-      debugPrint('[AGORA_WEB] ðŸŸ¡ Agora Web disabled - initializeWeb is no-op');
+      debugPrint(
+          '[AGORA_WEB] ðŸŸ¡ Agora Web disabled - initializeWeb is no-op');
       return true; // Return success to allow room join without video
     }
     // Web initialization happens in joinChannel

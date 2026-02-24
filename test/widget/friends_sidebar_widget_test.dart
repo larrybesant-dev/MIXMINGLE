@@ -62,8 +62,7 @@ class _MockFriendsSidebarWidgetState extends State<MockFriendsSidebarWidget>
         _filteredFriends = widget.friends;
       } else {
         _filteredFriends = widget.friends
-            .where((f) =>
-                f['name'].toString().toLowerCase().contains(query))
+            .where((f) => f['name'].toString().toLowerCase().contains(query))
             .toList();
       }
     });
@@ -152,8 +151,8 @@ class _MockFriendsSidebarWidgetState extends State<MockFriendsSidebarWidget>
               controller: _searchController,
               decoration: InputDecoration(
                 hintText: 'Search...',
-                prefixIcon: Icon(Icons.search,
-                    size: 18, color: DesignColors.accent),
+                prefixIcon:
+                    Icon(Icons.search, size: 18, color: DesignColors.accent),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(20),
                   borderSide: BorderSide(color: DesignColors.accent[700]!),
@@ -178,12 +177,9 @@ class _MockFriendsSidebarWidgetState extends State<MockFriendsSidebarWidget>
                     itemCount: _filteredFriends.length,
                     itemBuilder: (context, index) {
                       final friend = _filteredFriends[index];
-                      final isFavorite =
-                          _favoriteIds.contains(friend['id']);
-                      final isSelected =
-                          _selectedFriendId == friend['id'];
-                      final isOnline =
-                          friend['isOnline'] as bool? ?? false;
+                      final isFavorite = _favoriteIds.contains(friend['id']);
+                      final isSelected = _selectedFriendId == friend['id'];
+                      final isOnline = friend['isOnline'] as bool? ?? false;
 
                       return Container(
                         key: Key('friend-tile-${friend['id']}'),
@@ -215,8 +211,7 @@ class _MockFriendsSidebarWidgetState extends State<MockFriendsSidebarWidget>
                                   height: 8,
                                   decoration: BoxDecoration(
                                     color: DesignColors.accent,
-                                    borderRadius:
-                                        BorderRadius.circular(4),
+                                    borderRadius: BorderRadius.circular(4),
                                   ),
                                 ),
                             ],
@@ -242,8 +237,7 @@ class _MockFriendsSidebarWidgetState extends State<MockFriendsSidebarWidget>
                             children: [
                               // Favorite button
                               IconButton(
-                                key: Key(
-                                    'favorite-btn-${friend['id']}'),
+                                key: Key('favorite-btn-${friend['id']}'),
                                 icon: Icon(
                                   isFavorite
                                       ? Icons.favorite
@@ -253,26 +247,19 @@ class _MockFriendsSidebarWidgetState extends State<MockFriendsSidebarWidget>
                                 color: isFavorite
                                     ? DesignColors.accent
                                     : DesignColors.accent,
-                                onPressed: () =>
-                                    _toggleFavorite(friend['id']),
+                                onPressed: () => _toggleFavorite(friend['id']),
                               ),
                               // Unread badge
-                              if ((friend['unreadMessages']
-                                      as int? ??
-                                  0) >
-                                  0)
+                              if ((friend['unreadMessages'] as int? ?? 0) > 0)
                                 Container(
-                                  key: Key(
-                                      'unread-badge-${friend['id']}'),
-                                  padding:
-                                      const EdgeInsets.symmetric(
+                                  key: Key('unread-badge-${friend['id']}'),
+                                  padding: const EdgeInsets.symmetric(
                                     horizontal: 6,
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
                                     color: DesignColors.accent,
-                                    borderRadius:
-                                        BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Text(
                                     '${friend['unreadMessages']}',
@@ -353,8 +340,7 @@ void main() {
       expect(find.text('Alice'), findsOneWidget);
     });
 
-    testWidgets('shows online status indicator',
-        (WidgetTester tester) async {
+    testWidgets('shows online status indicator', (WidgetTester tester) async {
       final friends = [
         MockUserData.friend(id: 'f1', name: 'Alice', isOnline: true),
       ];
@@ -391,8 +377,7 @@ void main() {
       expect(find.text('Offline'), findsOneWidget);
     });
 
-    testWidgets('search filters friends by name',
-        (WidgetTester tester) async {
+    testWidgets('search filters friends by name', (WidgetTester tester) async {
       final friends = [
         MockUserData.friend(id: 'f1', name: 'Alice'),
         MockUserData.friend(id: 'f2', name: 'Bob'),
@@ -408,8 +393,7 @@ void main() {
         ),
       );
 
-      final searchField =
-          find.byKey(const Key('search-friends-field'));
+      final searchField = find.byKey(const Key('search-friends-field'));
       await tester.enterText(searchField, 'Alice');
       await tester.pumpAndSettle();
 
@@ -583,8 +567,7 @@ void main() {
         ),
       );
 
-      final searchField =
-          find.byKey(const Key('search-friends-field'));
+      final searchField = find.byKey(const Key('search-friends-field'));
       await tester.enterText(searchField, 'Alice');
       await tester.pumpAndSettle();
 

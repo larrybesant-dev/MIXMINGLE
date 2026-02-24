@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -72,7 +72,10 @@ class AccountDeletionService {
   /// Deletes all events created by the user
   Future<void> _deleteUserEvents(String userId) async {
     try {
-      final eventsQuery = await _firestore.collection('events').where('createdBy', isEqualTo: userId).get();
+      final eventsQuery = await _firestore
+          .collection('events')
+          .where('createdBy', isEqualTo: userId)
+          .get();
 
       final batch = _firestore.batch();
       for (var doc in eventsQuery.docs) {
@@ -88,7 +91,10 @@ class AccountDeletionService {
   /// Removes user from participant lists of events they joined
   Future<void> _removeUserFromJoinedEvents(String userId) async {
     try {
-      final eventsQuery = await _firestore.collection('events').where('participants', arrayContains: userId).get();
+      final eventsQuery = await _firestore
+          .collection('events')
+          .where('participants', arrayContains: userId)
+          .get();
 
       final batch = _firestore.batch();
       for (var doc in eventsQuery.docs) {
@@ -108,7 +114,10 @@ class AccountDeletionService {
   Future<void> _deleteUserMessages(String userId) async {
     try {
       // Delete from direct messages
-      final messagesQuery = await _firestore.collection('messages').where('senderId', isEqualTo: userId).get();
+      final messagesQuery = await _firestore
+          .collection('messages')
+          .where('senderId', isEqualTo: userId)
+          .get();
 
       final batch = _firestore.batch();
       for (var doc in messagesQuery.docs) {
@@ -118,15 +127,18 @@ class AccountDeletionService {
       debugPrint('User messages deleted: ${messagesQuery.docs.length}');
 
       // Also delete conversation documents where user is participant
-      final conversationsQuery =
-          await _firestore.collection('conversations').where('participants', arrayContains: userId).get();
+      final conversationsQuery = await _firestore
+          .collection('conversations')
+          .where('participants', arrayContains: userId)
+          .get();
 
       final batch2 = _firestore.batch();
       for (var doc in conversationsQuery.docs) {
         batch2.delete(doc.reference);
       }
       await batch2.commit();
-      debugPrint('User conversations deleted: ${conversationsQuery.docs.length}');
+      debugPrint(
+          'User conversations deleted: ${conversationsQuery.docs.length}');
     } catch (e) {
       debugPrint('Error deleting user messages: $e');
     }
@@ -136,11 +148,16 @@ class AccountDeletionService {
   Future<void> _deleteUserReports(String userId) async {
     try {
       // Reports submitted by user
-      final submittedReportsQuery = await _firestore.collection('reports').where('reporterId', isEqualTo: userId).get();
+      final submittedReportsQuery = await _firestore
+          .collection('reports')
+          .where('reporterId', isEqualTo: userId)
+          .get();
 
       // Reports against user
-      final receivedReportsQuery =
-          await _firestore.collection('reports').where('reportedUserId', isEqualTo: userId).get();
+      final receivedReportsQuery = await _firestore
+          .collection('reports')
+          .where('reportedUserId', isEqualTo: userId)
+          .get();
 
       final batch = _firestore.batch();
       for (var doc in submittedReportsQuery.docs) {
@@ -150,7 +167,8 @@ class AccountDeletionService {
         batch.delete(doc.reference);
       }
       await batch.commit();
-      debugPrint('User reports deleted: ${submittedReportsQuery.docs.length + receivedReportsQuery.docs.length}');
+      debugPrint(
+          'User reports deleted: ${submittedReportsQuery.docs.length + receivedReportsQuery.docs.length}');
     } catch (e) {
       debugPrint('Error deleting user reports: $e');
     }
@@ -160,10 +178,16 @@ class AccountDeletionService {
   Future<void> _deleteUserBlocks(String userId) async {
     try {
       // Blocks created by user
-      final blockedByUserQuery = await _firestore.collection('blocks').where('blockerId', isEqualTo: userId).get();
+      final blockedByUserQuery = await _firestore
+          .collection('blocks')
+          .where('blockerId', isEqualTo: userId)
+          .get();
 
       // Blocks against user
-      final blockedUserQuery = await _firestore.collection('blocks').where('blockedUserId', isEqualTo: userId).get();
+      final blockedUserQuery = await _firestore
+          .collection('blocks')
+          .where('blockedUserId', isEqualTo: userId)
+          .get();
 
       final batch = _firestore.batch();
       for (var doc in blockedByUserQuery.docs) {
@@ -173,7 +197,8 @@ class AccountDeletionService {
         batch.delete(doc.reference);
       }
       await batch.commit();
-      debugPrint('User blocks deleted: ${blockedByUserQuery.docs.length + blockedUserQuery.docs.length}');
+      debugPrint(
+          'User blocks deleted: ${blockedByUserQuery.docs.length + blockedUserQuery.docs.length}');
     } catch (e) {
       debugPrint('Error deleting user blocks: $e');
     }
@@ -183,10 +208,16 @@ class AccountDeletionService {
   Future<void> _deleteUserFollowRelationships(String userId) async {
     try {
       // Following relationships
-      final followingQuery = await _firestore.collection('follows').where('followerId', isEqualTo: userId).get();
+      final followingQuery = await _firestore
+          .collection('follows')
+          .where('followerId', isEqualTo: userId)
+          .get();
 
       // Follower relationships
-      final followersQuery = await _firestore.collection('follows').where('followingId', isEqualTo: userId).get();
+      final followersQuery = await _firestore
+          .collection('follows')
+          .where('followingId', isEqualTo: userId)
+          .get();
 
       final batch = _firestore.batch();
       for (var doc in followingQuery.docs) {
@@ -196,7 +227,8 @@ class AccountDeletionService {
         batch.delete(doc.reference);
       }
       await batch.commit();
-      debugPrint('User follow relationships deleted: ${followingQuery.docs.length + followersQuery.docs.length}');
+      debugPrint(
+          'User follow relationships deleted: ${followingQuery.docs.length + followersQuery.docs.length}');
     } catch (e) {
       debugPrint('Error deleting user follow relationships: $e');
     }
@@ -260,16 +292,21 @@ class AccountDeletionService {
 
     try {
       // Check for active subscriptions
-      final subscription = await _firestore.collection('subscriptions').doc(userId).get();
+      final subscription =
+          await _firestore.collection('subscriptions').doc(userId).get();
       if (subscription.exists) {
         final data = subscription.data();
         if (data?['status'] == 'active') {
-          warnings.add('You have an active subscription. It will be cancelled.');
+          warnings
+              .add('You have an active subscription. It will be cancelled.');
         }
       }
 
       // Check for created events with other participants
-      final eventsQuery = await _firestore.collection('events').where('createdBy', isEqualTo: userId).get();
+      final eventsQuery = await _firestore
+          .collection('events')
+          .where('createdBy', isEqualTo: userId)
+          .get();
 
       int activeEvents = 0;
       for (var doc in eventsQuery.docs) {
@@ -280,7 +317,8 @@ class AccountDeletionService {
       }
 
       if (activeEvents > 0) {
-        warnings.add('You have $activeEvents active events with participants. They will be deleted.');
+        warnings.add(
+            'You have $activeEvents active events with participants. They will be deleted.');
       }
     } catch (e) {
       debugPrint('Error validating deletion: $e');

@@ -1,4 +1,4 @@
-﻿/// Friends List Panel - Sliding drawer panel for friends list
+/// Friends List Panel - Sliding drawer panel for friends list
 ///
 /// A lightweight, animated sliding panel showing friends list with
 /// quick actions. Designed to overlay from the right side of the screen.
@@ -188,7 +188,8 @@ class _FriendsListPanelState extends State<FriendsListPanel>
       padding: const EdgeInsets.all(12),
       child: TextField(
         controller: _searchController,
-        onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
+        onChanged: (value) =>
+            setState(() => _searchQuery = value.toLowerCase()),
         style: const TextStyle(color: DesignColors.textPrimary),
         decoration: InputDecoration(
           hintText: 'Search friends...',
@@ -209,7 +210,8 @@ class _FriendsListPanelState extends State<FriendsListPanel>
             borderRadius: BorderRadius.circular(12),
             borderSide: BorderSide.none,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );
@@ -261,16 +263,21 @@ class _FriendsListPanelState extends State<FriendsListPanel>
             // Filter by search query
             if (_searchQuery.isNotEmpty) {
               friends = friends.where((doc) {
-                final name = (doc['displayName'] ?? '').toString().toLowerCase();
-                final username = (doc['username'] ?? '').toString().toLowerCase();
-                return name.contains(_searchQuery) || username.contains(_searchQuery);
+                final name =
+                    (doc['displayName'] ?? '').toString().toLowerCase();
+                final username =
+                    (doc['username'] ?? '').toString().toLowerCase();
+                return name.contains(_searchQuery) ||
+                    username.contains(_searchQuery);
               }).toList();
             }
 
             // Sort: online first
             friends.sort((a, b) {
-              final aOnline = a['isOnline'] == true || a['presence'] == 'online';
-              final bOnline = b['isOnline'] == true || b['presence'] == 'online';
+              final aOnline =
+                  a['isOnline'] == true || a['presence'] == 'online';
+              final bOnline =
+                  b['isOnline'] == true || b['presence'] == 'online';
               if (aOnline && !bOnline) return -1;
               if (!aOnline && bOnline) return 1;
               return 0;
@@ -339,7 +346,8 @@ class _FriendsListPanelState extends State<FriendsListPanel>
         borderRadius: BorderRadius.circular(12),
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
-          onTap: () => _showFriendActions(friend.id, displayName, currentRoomId),
+          onTap: () =>
+              _showFriendActions(friend.id, displayName, currentRoomId),
           child: Padding(
             padding: const EdgeInsets.all(12),
             child: Row(
@@ -350,9 +358,8 @@ class _FriendsListPanelState extends State<FriendsListPanel>
                     CircleAvatar(
                       radius: 24,
                       backgroundColor: DesignColors.accent20,
-                      backgroundImage: avatarUrl.isNotEmpty
-                          ? NetworkImage(avatarUrl)
-                          : null,
+                      backgroundImage:
+                          avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
                       child: avatarUrl.isEmpty
                           ? Text(
                               displayName[0].toUpperCase(),
@@ -414,7 +421,8 @@ class _FriendsListPanelState extends State<FriendsListPanel>
                 // In room indicator
                 if (currentRoomId != null)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: DesignColors.secondary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
@@ -596,10 +604,12 @@ class _FriendsListPanelState extends State<FriendsListPanel>
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildNavButton(Icons.home, 'Home', AppRoutes.home),
-            _buildNavButton(Icons.video_camera_front, 'Rooms', AppRoutes.browseRooms),
+            _buildNavButton(
+                Icons.video_camera_front, 'Rooms', AppRoutes.browseRooms),
             // Speed Dating removed - feature disabled
             // _buildNavButton(Icons.casino, 'Dating', AppRoutes.speedDatingLobby),
-            _buildNavButton(Icons.account_balance_wallet, 'Wallet', AppRoutes.wallet),
+            _buildNavButton(
+                Icons.account_balance_wallet, 'Wallet', AppRoutes.wallet),
             _buildNavButton(Icons.person, 'Profile', AppRoutes.profile),
           ],
         ),

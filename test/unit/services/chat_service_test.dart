@@ -14,7 +14,8 @@ void main() {
         expect(true, true);
       });
 
-      test('Get messages stream - should listen to real-time updates', () async {
+      test('Get messages stream - should listen to real-time updates',
+          () async {
         // Arrange
         const roomId = 'room-123';
 
@@ -128,7 +129,8 @@ void main() {
         expect(true, true);
       });
 
-      test('Handle pagination boundary - should not duplicate messages', () async {
+      test('Handle pagination boundary - should not duplicate messages',
+          () async {
         // Act & Assert
         expect(true, true);
       });

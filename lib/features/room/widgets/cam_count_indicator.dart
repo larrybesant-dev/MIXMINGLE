@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/providers/camera_providers.dart';
 
@@ -62,7 +62,8 @@ class CamCountIndicator extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
                   value: count / maxCameras,
-                  backgroundColor: isAtCapacity ? Colors.red[200] : Colors.blue[200],
+                  backgroundColor:
+                      isAtCapacity ? Colors.red[200] : Colors.blue[200],
                   valueColor: AlwaysStoppedAnimation(
                     isAtCapacity ? Colors.red[600] : Colors.blue[600],
                   ),
@@ -74,7 +75,9 @@ class CamCountIndicator extends ConsumerWidget {
 
               // Status message
               Text(
-                isAtCapacity ? 'ðŸ”´ Room at camera capacity' : 'ðŸ“Š $percentFull% full',
+                isAtCapacity
+                    ? 'ðŸ”´ Room at camera capacity'
+                    : 'ðŸ“Š $percentFull% full',
                 style: TextStyle(
                   fontSize: 12,
                   color: isAtCapacity ? Colors.red[600] : Colors.blue[600],

@@ -1,4 +1,4 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -40,8 +40,10 @@ class SharedFile {
 
   String get fileSizeFormatted {
     if (fileSize < 1024) return '$fileSize B';
-    if (fileSize < 1024 * 1024) return '${(fileSize / 1024).toStringAsFixed(1)} KB';
-    if (fileSize < 1024 * 1024 * 1024) return '${(fileSize / (1024 * 1024)).toStringAsFixed(1)} MB';
+    if (fileSize < 1024 * 1024)
+      return '${(fileSize / 1024).toStringAsFixed(1)} KB';
+    if (fileSize < 1024 * 1024 * 1024)
+      return '${(fileSize / (1024 * 1024)).toStringAsFixed(1)} MB';
     return '${(fileSize / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
   }
 
@@ -106,7 +108,8 @@ class FileShareService {
 
       // Create storage path
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final storageRef = _storage.ref().child('chat_files/$chatId/${timestamp}_$fileName');
+      final storageRef =
+          _storage.ref().child('chat_files/$chatId/${timestamp}_$fileName');
 
       // Upload file
       final uploadTask = await storageRef.putFile(file);
@@ -154,7 +157,8 @@ class FileShareService {
 
       // Create storage path
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final storageRef = _storage.ref().child('chat_files/$chatId/${timestamp}_$fileName');
+      final storageRef =
+          _storage.ref().child('chat_files/$chatId/${timestamp}_$fileName');
 
       // Upload file
       final uploadTask = await storageRef.putData(bytes);
@@ -191,7 +195,9 @@ class FileShareService {
         .orderBy('uploadedAt', descending: true)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => SharedFile.fromMap({...doc.data(), 'id': doc.id})).toList();
+      return snapshot.docs
+          .map((doc) => SharedFile.fromMap({...doc.data(), 'id': doc.id}))
+          .toList();
     });
   }
 
@@ -224,7 +230,8 @@ class FileShareService {
       return FileType.video;
     } else if (['mp3', 'wav', 'aac', 'flac', 'm4a'].contains(extension)) {
       return FileType.audio;
-    } else if (['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt'].contains(extension)) {
+    } else if (['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt']
+        .contains(extension)) {
       return FileType.document;
     } else {
       return FileType.other;

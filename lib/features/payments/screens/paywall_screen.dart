@@ -331,7 +331,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
     final pricing = _selectedTier!.pricing;
     if (pricing == null) return 'Subscribe';
 
-    final price = _isYearly ? pricing.yearlyPriceDisplay : pricing.monthlyPriceDisplay;
+    final price =
+        _isYearly ? pricing.yearlyPriceDisplay : pricing.monthlyPriceDisplay;
     return 'Subscribe for $price${_isYearly ? "/year" : "/month"}';
   }
 
@@ -399,10 +400,11 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
       return;
     }
 
-    final success = await ref.read(purchaseProvider.notifier).purchaseSubscription(
-      _selectedTier!,
-      isYearly: _isYearly,
-    );
+    final success =
+        await ref.read(purchaseProvider.notifier).purchaseSubscription(
+              _selectedTier!,
+              isYearly: _isYearly,
+            );
 
     if (success && mounted) {
       _showSuccessDialog();
@@ -415,7 +417,8 @@ class _PaywallScreenState extends ConsumerState<PaywallScreen>
   }
 
   Future<void> _handleRestore() async {
-    final success = await ref.read(purchaseProvider.notifier).restorePurchases();
+    final success =
+        await ref.read(purchaseProvider.notifier).restorePurchases();
 
     if (mounted) {
       if (success) {
@@ -538,7 +541,8 @@ class _BillingOption extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? DesignColors.gold.withAlpha(51) : Colors.transparent,
+          color:
+              isSelected ? DesignColors.gold.withAlpha(51) : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: isSelected
               ? Border.all(color: DesignColors.gold.withAlpha(128), width: 1)
@@ -550,7 +554,9 @@ class _BillingOption extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? DesignColors.gold : Colors.white.withAlpha(128),
+                color: isSelected
+                    ? DesignColors.gold
+                    : Colors.white.withAlpha(128),
                 fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
@@ -650,7 +656,8 @@ class _PulsingCtaButtonState extends State<_PulsingCtaButton>
               boxShadow: widget.enabled
                   ? [
                       BoxShadow(
-                        color: DesignColors.gold.withAlpha((50 + 30 * pulseValue).round()),
+                        color: DesignColors.gold
+                            .withAlpha((50 + 30 * pulseValue).round()),
                         blurRadius: 16 + 8 * pulseValue,
                         spreadRadius: 0,
                         offset: const Offset(0, 4),
@@ -662,7 +669,8 @@ class _PulsingCtaButtonState extends State<_PulsingCtaButton>
               widget.label,
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: widget.enabled ? Colors.black : Colors.white.withAlpha(128),
+                color:
+                    widget.enabled ? Colors.black : Colors.white.withAlpha(128),
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.5,

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/report.dart' show ReportType;
 import 'package:mixmingle/shared/models/moderation.dart' show UserReport;
@@ -40,9 +40,11 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               // Stats Cards
               Row(
                 children: [
-                  Expanded(child: _buildStatCard('Total Reports', '0', Icons.flag)),
+                  Expanded(
+                      child: _buildStatCard('Total Reports', '0', Icons.flag)),
                   const SizedBox(width: 12),
-                  Expanded(child: _buildStatCard('Pending', '0', Icons.pending)),
+                  Expanded(
+                      child: _buildStatCard('Pending', '0', Icons.pending)),
                 ],
               ),
               const SizedBox(height: 24),
@@ -80,7 +82,9 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                   }
 
                   return Column(
-                    children: reports.map((report) => _buildReportCard(report)).toList(),
+                    children: reports
+                        .map((report) => _buildReportCard(report))
+                        .toList(),
                   );
                 },
               ),
@@ -133,7 +137,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: _getReportTypeColor(report.type),
                     borderRadius: BorderRadius.circular(4),
@@ -271,7 +276,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
     try {
       final moderationService = ref.read(moderationServiceProvider);
       final currentUser = ref.read(authServiceProvider).currentUser;
-      await moderationService.reviewReport(report.id, currentUser?.uid ?? 'admin', status);
+      await moderationService.reviewReport(
+          report.id, currentUser?.uid ?? 'admin', status);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

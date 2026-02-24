@@ -28,5 +28,3 @@ export 'widgets/neon_coin_package_card.dart';
 export 'screens/paywall_screen.dart';
 export 'screens/coin_store_screen.dart';
 export 'screens/wallet_page.dart';
-
-

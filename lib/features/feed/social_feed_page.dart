@@ -490,7 +490,8 @@ class _CommentsSheetState extends State<_CommentsSheet> {
               builder: (ctx, snapshot) {
                 if (!snapshot.hasData) {
                   return const Center(
-                    child: CircularProgressIndicator(color: DesignColors.accent),
+                    child:
+                        CircularProgressIndicator(color: DesignColors.accent),
                   );
                 }
 
@@ -686,8 +687,7 @@ class _TipDialogState extends State<_TipDialog> {
                 ? 'Sent $_selectedAmount coins to ${widget.post.userName}!'
                 : 'Failed to send tip. Check your balance.',
           ),
-          backgroundColor:
-              success ? DesignColors.success : DesignColors.error,
+          backgroundColor: success ? DesignColors.success : DesignColors.error,
         ),
       );
     }

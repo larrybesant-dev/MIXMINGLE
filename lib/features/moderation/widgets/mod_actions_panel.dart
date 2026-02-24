@@ -95,7 +95,8 @@ class _ModActionsPanelState extends State<ModActionsPanel> {
             ),
             const SizedBox(height: 16),
             ElevatedButton.icon(
-              onPressed: () => _autoModService.cleanupExpiredActions(widget.roomId),
+              onPressed: () =>
+                  _autoModService.cleanupExpiredActions(widget.roomId),
               icon: const Icon(Icons.cleaning_services),
               label: const Text('Clean Up Expired Bans'),
             ),

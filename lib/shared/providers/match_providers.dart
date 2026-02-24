@@ -1,4 +1,3 @@
-
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/social/match_service.dart';
@@ -66,7 +65,8 @@ final acceptedMatchesProvider = StreamProvider<List<Match>>((ref) async* {
 });
 
 /// Potential matches provider (users to swipe on)
-final potentialMatchesProvider = StreamProvider<List<UserProfile>>((ref) async* {
+final potentialMatchesProvider =
+    StreamProvider<List<UserProfile>>((ref) async* {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) {
     yield [];
@@ -83,7 +83,8 @@ final potentialMatchesProvider = StreamProvider<List<UserProfile>>((ref) async* 
 });
 
 /// Match controller for match operations
-final matchControllerProvider = NotifierProvider<MatchController, AsyncValue<Match?>>(() {
+final matchControllerProvider =
+    NotifierProvider<MatchController, AsyncValue<Match?>>(() {
   return MatchController();
 });
 
@@ -217,7 +218,8 @@ class MatchController extends Notifier<AsyncValue<Match?>> {
 }
 
 /// Swipe controller for swipe-based matching
-final swipeControllerProvider = NotifierProvider<SwipeController, AsyncValue<List<UserProfile>>>(() {
+final swipeControllerProvider =
+    NotifierProvider<SwipeController, AsyncValue<List<UserProfile>>>(() {
   return SwipeController();
 });
 
@@ -347,7 +349,8 @@ class SwipeController extends Notifier<AsyncValue<List<UserProfile>>> {
 }
 
 /// Match statistics provider
-final matchStatisticsProvider = StreamProvider<Map<String, dynamic>>((ref) async* {
+final matchStatisticsProvider =
+    StreamProvider<Map<String, dynamic>>((ref) async* {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) {
     yield {};
@@ -392,5 +395,3 @@ final remainingSwipesProvider = StreamProvider<int>((ref) async* {
 
   yield limit - swipesUsed;
 });
-
-

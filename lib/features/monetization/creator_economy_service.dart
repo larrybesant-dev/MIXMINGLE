@@ -69,16 +69,16 @@ class EarningRecord {
   });
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'creatorId': creatorId,
-    'source': source.name,
-    'amount': amount,
-    'platformFee': platformFee,
-    'netAmount': netAmount,
-    'sourceId': sourceId,
-    'description': description,
-    'timestamp': timestamp.toIso8601String(),
-  };
+        'id': id,
+        'creatorId': creatorId,
+        'source': source.name,
+        'amount': amount,
+        'platformFee': platformFee,
+        'netAmount': netAmount,
+        'sourceId': sourceId,
+        'description': description,
+        'timestamp': timestamp.toIso8601String(),
+      };
 
   factory EarningRecord.fromMap(Map<String, dynamic> map) {
     return EarningRecord(
@@ -133,16 +133,16 @@ class PayoutRequest {
   });
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'creatorId': creatorId,
-    'amount': amount,
-    'method': method.name,
-    'status': status.name,
-    'requestedAt': requestedAt.toIso8601String(),
-    'processedAt': processedAt?.toIso8601String(),
-    'transactionId': transactionId,
-    'paymentDetails': paymentDetails,
-  };
+        'id': id,
+        'creatorId': creatorId,
+        'amount': amount,
+        'method': method.name,
+        'status': status.name,
+        'requestedAt': requestedAt.toIso8601String(),
+        'processedAt': processedAt?.toIso8601String(),
+        'transactionId': transactionId,
+        'paymentDetails': paymentDetails,
+      };
 
   factory PayoutRequest.fromMap(Map<String, dynamic> map) {
     return PayoutRequest(
@@ -203,14 +203,14 @@ class CreatorBonus {
   });
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'creatorId': creatorId,
-    'type': type.name,
-    'amount': amount,
-    'reason': reason,
-    'awardedAt': awardedAt.toIso8601String(),
-    'isClaimed': isClaimed,
-  };
+        'id': id,
+        'creatorId': creatorId,
+        'type': type.name,
+        'amount': amount,
+        'reason': reason,
+        'awardedAt': awardedAt.toIso8601String(),
+        'isClaimed': isClaimed,
+      };
 }
 
 enum BonusType {
@@ -225,7 +225,8 @@ enum BonusType {
 /// Service for managing creator economy
 class CreatorEconomyService {
   static CreatorEconomyService? _instance;
-  static CreatorEconomyService get instance => _instance ??= CreatorEconomyService._();
+  static CreatorEconomyService get instance =>
+      _instance ??= CreatorEconomyService._();
 
   CreatorEconomyService._();
 
@@ -262,7 +263,11 @@ class CreatorEconomyService {
       minFollowers: 100,
       minMonthlyEarnings: 50,
       revenueSharePercent: 0.75,
-      benefits: ['Enhanced analytics', 'Priority support', 'Custom room themes'],
+      benefits: [
+        'Enhanced analytics',
+        'Priority support',
+        'Custom room themes'
+      ],
       badgeIcon: 'â­',
     ),
     const CreatorTierConfig(
@@ -271,7 +276,11 @@ class CreatorEconomyService {
       minFollowers: 1000,
       minMonthlyEarnings: 200,
       revenueSharePercent: 0.80,
-      benefits: ['Full analytics dashboard', 'Dedicated support', 'Featured placement'],
+      benefits: [
+        'Full analytics dashboard',
+        'Dedicated support',
+        'Featured placement'
+      ],
       badgeIcon: 'ðŸŒŸ',
     ),
     const CreatorTierConfig(
@@ -287,13 +296,15 @@ class CreatorEconomyService {
 
   // Stream controllers
   final _earningsController = StreamController<EarningRecord>.broadcast();
-  final _tierChangeController = StreamController<Map<String, dynamic>>.broadcast();
+  final _tierChangeController =
+      StreamController<Map<String, dynamic>>.broadcast();
 
   /// Stream of new earnings
   Stream<EarningRecord> get earningsStream => _earningsController.stream;
 
   /// Stream of tier changes
-  Stream<Map<String, dynamic>> get tierChangeStream => _tierChangeController.stream;
+  Stream<Map<String, dynamic>> get tierChangeStream =>
+      _tierChangeController.stream;
 
   /// Get tier configurations
   List<CreatorTierConfig> get tierConfigs => List.unmodifiable(_tierConfigs);
@@ -375,7 +386,8 @@ class CreatorEconomyService {
     if (!creatorDoc.exists) return null;
 
     final creatorData = creatorDoc.data()!;
-    final pendingBalance = (creatorData['pendingBalance'] as num?)?.toDouble() ?? 0;
+    final pendingBalance =
+        (creatorData['pendingBalance'] as num?)?.toDouble() ?? 0;
 
     // Check minimum payout threshold
     const minPayout = 10.0;
@@ -426,17 +438,20 @@ class CreatorEconomyService {
     bool autoUpgrade = true,
   }) async {
     final creatorDoc = await _creatorsCollection.doc(creatorId).get();
-    if (!creatorDoc.exists) return {'success': false, 'error': 'Creator not found'};
+    if (!creatorDoc.exists)
+      return {'success': false, 'error': 'Creator not found'};
 
     final creatorData = creatorDoc.data()!;
     final currentTierId = creatorData['tier'] as String? ?? 'starter';
     final followers = (creatorData['followerCount'] as int?) ?? 0;
-    final monthlyEarnings = (creatorData['monthlyEarnings'] as num?)?.toDouble() ?? 0;
+    final monthlyEarnings =
+        (creatorData['monthlyEarnings'] as num?)?.toDouble() ?? 0;
 
     // Find eligible tier
     CreatorTierConfig? eligibleTier;
     for (final tier in _tierConfigs.reversed) {
-      if (followers >= tier.minFollowers && monthlyEarnings >= tier.minMonthlyEarnings) {
+      if (followers >= tier.minFollowers &&
+          monthlyEarnings >= tier.minMonthlyEarnings) {
         eligibleTier = tier;
         break;
       }
@@ -453,8 +468,10 @@ class CreatorEconomyService {
     }
 
     // Check if this is an upgrade or downgrade
-    final currentTierIndex = _tierConfigs.indexWhere((t) => t.id == currentTierId);
-    final newTierIndex = _tierConfigs.indexWhere((t) => t.id == eligibleTier!.id);
+    final currentTierIndex =
+        _tierConfigs.indexWhere((t) => t.id == currentTierId);
+    final newTierIndex =
+        _tierConfigs.indexWhere((t) => t.id == eligibleTier!.id);
     final isUpgrade = newTierIndex > currentTierIndex;
 
     // Only auto-upgrade, not downgrade (downgrades should be manual)
@@ -572,20 +589,25 @@ class CreatorEconomyService {
       } else if (daysSinceActive >= 14 && daysSinceActive < 30) {
         // Second warning - larger incentive
         incentives['retentionBonus'] = 50.0;
-        incentives['message'] = 'Your fans are waiting! Here\'s a special bonus.';
+        incentives['message'] =
+            'Your fans are waiting! Here\'s a special bonus.';
       } else if (daysSinceActive >= 30) {
         // Critical - significant incentive
         incentives['retentionBonus'] = 100.0;
         incentives['boostDays'] = 3;
-        incentives['message'] = 'Welcome back offer: Bonus + 3 days of free boosts!';
+        incentives['message'] =
+            'Welcome back offer: Bonus + 3 days of free boosts!';
       }
     }
 
     // Check for declining engagement
-    final previousMonthEarnings = (creatorData['previousMonthEarnings'] as num?)?.toDouble() ?? 0;
-    final monthlyEarnings = (creatorData['monthlyEarnings'] as num?)?.toDouble() ?? 0;
+    final previousMonthEarnings =
+        (creatorData['previousMonthEarnings'] as num?)?.toDouble() ?? 0;
+    final monthlyEarnings =
+        (creatorData['monthlyEarnings'] as num?)?.toDouble() ?? 0;
 
-    if (previousMonthEarnings > 0 && monthlyEarnings < previousMonthEarnings * 0.5) {
+    if (previousMonthEarnings > 0 &&
+        monthlyEarnings < previousMonthEarnings * 0.5) {
       // Declining earnings - support bonus
       incentives['supportBonus'] = previousMonthEarnings * 0.1;
       incentives['message'] = (incentives['message'] ?? '') +
@@ -631,7 +653,8 @@ class CreatorEconomyService {
     DateTime? startDate,
     DateTime? endDate,
   }) async {
-    final start = startDate ?? DateTime.now().subtract(const Duration(days: 30));
+    final start =
+        startDate ?? DateTime.now().subtract(const Duration(days: 30));
     final end = endDate ?? DateTime.now();
 
     final earningsSnapshot = await _earningsCollection
@@ -747,5 +770,3 @@ class CreatorEconomyService {
     _tierChangeController.close();
   }
 }
-
-

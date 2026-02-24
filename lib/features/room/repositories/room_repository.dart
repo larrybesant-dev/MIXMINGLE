@@ -91,11 +91,7 @@ class RoomRepository implements IRoomRepository {
     required Map<String, dynamic> participantData,
   }) async {
     _assertUid(uid);
-    await _rooms
-        .doc(roomId)
-        .collection('participants')
-        .doc(uid)
-        .set({
+    await _rooms.doc(roomId).collection('participants').doc(uid).set({
       ...participantData,
       'uid': uid,
       'joinedAt': FieldValue.serverTimestamp(),
@@ -108,11 +104,7 @@ class RoomRepository implements IRoomRepository {
   @override
   Future<void> leaveRoom({required String roomId, required String uid}) async {
     _assertUid(uid);
-    await _rooms
-        .doc(roomId)
-        .collection('participants')
-        .doc(uid)
-        .delete();
+    await _rooms.doc(roomId).collection('participants').doc(uid).delete();
     await _rooms
         .doc(roomId)
         .update({'participantCount': FieldValue.increment(-1)});

@@ -16,7 +16,8 @@ class RoomDiscoveryPage extends ConsumerStatefulWidget {
   ConsumerState<RoomDiscoveryPage> createState() => _RoomDiscoveryPageState();
 }
 
-class _RoomDiscoveryPageState extends ConsumerState<RoomDiscoveryPage> with SingleTickerProviderStateMixin {
+class _RoomDiscoveryPageState extends ConsumerState<RoomDiscoveryPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _searchController = TextEditingController();
   String _searchQuery = '';
@@ -280,7 +281,8 @@ class _RoomDiscoveryPageState extends ConsumerState<RoomDiscoveryPage> with Sing
     );
   }
 
-  Widget _buildCategoryCard(RoomCategory category, RoomDiscoveryService discoveryService) {
+  Widget _buildCategoryCard(
+      RoomCategory category, RoomDiscoveryService discoveryService) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       color: Colors.white.withValues(alpha: 0.1),
@@ -481,7 +483,8 @@ class _RoomDiscoveryPageState extends ConsumerState<RoomDiscoveryPage> with Sing
     }
   }
 
-  Future<void> _showCategoryRooms(RoomCategory category, RoomDiscoveryService discoveryService) async {
+  Future<void> _showCategoryRooms(
+      RoomCategory category, RoomDiscoveryService discoveryService) async {
     final rooms = await discoveryService.getRoomsByCategory(category.id);
 
     if (!mounted) return;
@@ -565,7 +568,7 @@ class _RoomDiscoveryPageState extends ConsumerState<RoomDiscoveryPage> with Sing
       context,
       MaterialPageRoute(
         builder: (context) => RoomAccessWrapper(
-          room:   room,
+          room: room,
           userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
         ),
       ),

@@ -1,4 +1,4 @@
-﻿/// Analytics Service
+/// Analytics Service
 ///
 /// Centralized analytics tracking using Firebase Analytics.
 /// Provides methods for logging events, setting user properties,
@@ -345,7 +345,8 @@ class AnalyticsService {
       parameters: {
         AnalyticsParams.roomId: roomId,
         if (roomType != null) AnalyticsParams.roomType: roomType,
-        if (participantCount != null) AnalyticsParams.participantCount: participantCount,
+        if (participantCount != null)
+          AnalyticsParams.participantCount: participantCount,
         if (loadTimeMs != null) AnalyticsParams.loadTime: loadTimeMs,
       },
     );

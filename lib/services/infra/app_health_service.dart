@@ -54,7 +54,8 @@ class AppHealthService {
   /// Get system health status
   Future<Map<String, dynamic>> getSystemHealth() async {
     try {
-      final doc = await _firestore.collection('system').doc('health_status').get();
+      final doc =
+          await _firestore.collection('system').doc('health_status').get();
 
       return doc.data() ??
           {
@@ -83,13 +84,14 @@ class AppHealthService {
   Future<String> getMaintenanceMessage() async {
     try {
       final doc = await _firestore.collection('system').doc('settings').get();
-      return doc['maintenance_message'] as String? ?? 'MixMingle is undergoing maintenance. Please try again later.';
+      return doc['maintenance_message'] as String? ??
+          'MixMingle is undergoing maintenance. Please try again later.';
     } catch (e) {
       return 'Unable to connect to service. Please try again later.';
     }
   }
 
- /// Test methods for health dashboard (stub implementations)
+  /// Test methods for health dashboard (stub implementations)
   Future<bool> testFirebaseCore() async {
     try {
       return true; // Firestore is always initialized if this service is created
@@ -129,5 +131,3 @@ class AppHealthService {
 final appHealthServiceProvider = Provider((ref) {
   return AppHealthService();
 });
-
-

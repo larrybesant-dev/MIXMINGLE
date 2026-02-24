@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 
 /// Generic pagination controller for Firestore queries
@@ -74,7 +74,8 @@ class PaginationController<T> extends ChangeNotifier {
     notifyListeners();
 
     try {
-      final query = queryBuilder().startAfterDocument(_lastDocument!).limit(pageSize);
+      final query =
+          queryBuilder().startAfterDocument(_lastDocument!).limit(pageSize);
 
       final snapshot = await query.get();
 
@@ -160,7 +161,11 @@ class StreamPaginationController<T> extends ChangeNotifier {
       return stream;
     }
 
-    return queryBuilder().startAfterDocument(_lastDocument!).limit(pageSize).snapshots().map((snapshot) {
+    return queryBuilder()
+        .startAfterDocument(_lastDocument!)
+        .limit(pageSize)
+        .snapshots()
+        .map((snapshot) {
       final newItems = snapshot.docs.map(fromDocument).toList();
       _items.addAll(newItems);
 

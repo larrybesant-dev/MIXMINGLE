@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/providers/social_graph_providers.dart';
 import '../../shared/providers/auth_providers.dart';
@@ -55,7 +55,9 @@ class FollowButton extends ConsumerWidget {
                 style: TextStyle(fontSize: compact ? 12 : 14),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isFollowing ? Colors.grey[800] : Theme.of(context).primaryColor,
+                backgroundColor: isFollowing
+                    ? Colors.grey[800]
+                    : Theme.of(context).primaryColor,
                 foregroundColor: Colors.white,
                 padding: compact
                     ? const EdgeInsets.symmetric(horizontal: 12, vertical: 6)
@@ -312,10 +314,13 @@ class _UserListTile extends ConsumerWidget {
       leading: Stack(
         children: [
           CircleAvatar(
-            backgroundImage: user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
+            backgroundImage:
+                user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
             child: user.photoUrl == null
                 ? Text(
-                    user.displayName?.isNotEmpty == true ? user.displayName![0].toUpperCase() : '?',
+                    user.displayName?.isNotEmpty == true
+                        ? user.displayName![0].toUpperCase()
+                        : '?',
                   )
                 : null,
           ),
@@ -327,7 +332,9 @@ class _UserListTile extends ConsumerWidget {
         ],
       ),
       title: Text(user.displayName ?? user.nickname ?? 'Unknown'),
-      subtitle: user.bio != null ? Text(user.bio!, maxLines: 1, overflow: TextOverflow.ellipsis) : null,
+      subtitle: user.bio != null
+          ? Text(user.bio!, maxLines: 1, overflow: TextOverflow.ellipsis)
+          : null,
       trailing: FollowButton(userId: user.id, compact: true),
       onTap: () {
         // Navigate to user profile

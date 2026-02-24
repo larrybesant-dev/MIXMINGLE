@@ -22,7 +22,8 @@ class TokenExpiryHarness {
   });
 
   /// Simulate a networked call with token expiry and refresh.
-  Future<T> runWithExpiry<T>(FutureOr<T> Function() action, {FutureOr<void> Function()? onTokenRefresh}) async {
+  Future<T> runWithExpiry<T>(FutureOr<T> Function() action,
+      {FutureOr<void> Function()? onTokenRefresh}) async {
     if (forceExpiry) {
       logger?.call('[TokenExpiry] Forcing token expiry');
       await Future.delayed(expiryDelay);

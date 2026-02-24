@@ -1,4 +1,4 @@
-﻿/// Notifications Provider
+/// Notifications Provider
 /// FCM token management and notification handling
 library;
 
@@ -53,9 +53,11 @@ class NotificationsController extends Notifier<NotificationsState> {
         provisional: false,
       );
 
-      final enabled = settings.authorizationStatus == AuthorizationStatus.authorized;
+      final enabled =
+          settings.authorizationStatus == AuthorizationStatus.authorized;
 
-      debugPrint('ðŸ“± Notification permission: ${settings.authorizationStatus}');
+      debugPrint(
+          'ðŸ“± Notification permission: ${settings.authorizationStatus}');
 
       if (enabled) {
         // Get FCM token
@@ -220,7 +222,8 @@ final notificationsProvider =
 );
 
 /// Notification badge count provider
-final notificationBadgeProvider = StreamProvider.family<int, String>((ref, userId) {
+final notificationBadgeProvider =
+    StreamProvider.family<int, String>((ref, userId) {
   return FirebaseFirestore.instance
       .collection('chats')
       .where('participantIds', arrayContains: userId)
@@ -229,7 +232,8 @@ final notificationBadgeProvider = StreamProvider.family<int, String>((ref, userI
     int totalUnread = 0;
     for (final doc in snapshot.docs) {
       final data = doc.data();
-      final unreadCount = (data['unreadCount'] as Map<String, dynamic>?)?[userId] ?? 0;
+      final unreadCount =
+          (data['unreadCount'] as Map<String, dynamic>?)?[userId] ?? 0;
       totalUnread += unreadCount as int;
     }
     return totalUnread;

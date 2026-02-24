@@ -36,25 +36,29 @@ final liveRoomsProvider = StreamProvider<List<Room>>((ref) {
 });
 
 /// Family provider for fetching rooms by category
-final roomsByCategoryProvider = StreamProvider.family<List<Room>, String>((ref, category) {
+final roomsByCategoryProvider =
+    StreamProvider.family<List<Room>, String>((ref, category) {
   final roomService = ref.watch(roomServiceProvider);
   return roomService.fetchRoomsByCategory(category);
 });
 
 /// Family provider for fetching rooms by host ID
-final roomsByHostProvider = StreamProvider.family<List<Room>, String>((ref, hostId) {
+final roomsByHostProvider =
+    StreamProvider.family<List<Room>, String>((ref, hostId) {
   final roomService = ref.watch(roomServiceProvider);
   return roomService.fetchRoomsByHost(hostId);
 });
 
 /// Family provider for fetching a single room by ID
-final roomByIdProvider = FutureProvider.family<Room?, String>((ref, roomId) async {
+final roomByIdProvider =
+    FutureProvider.family<Room?, String>((ref, roomId) async {
   final roomService = ref.watch(roomServiceProvider);
   return roomService.fetchRoomById(roomId);
 });
 
 /// Family provider for searching rooms by tags
-final roomsByTagsProvider = StreamProvider.family<List<Room>, List<String>>((ref, tags) {
+final roomsByTagsProvider =
+    StreamProvider.family<List<Room>, List<String>>((ref, tags) {
   final roomService = ref.watch(roomServiceProvider);
   return roomService.searchRoomsByTags(tags);
 });
@@ -178,5 +182,3 @@ class DeleteRoomNotifier extends AsyncNotifier<void> {
 final deleteRoomProvider = AsyncNotifierProvider<DeleteRoomNotifier, void>(() {
   return DeleteRoomNotifier();
 });
-
-

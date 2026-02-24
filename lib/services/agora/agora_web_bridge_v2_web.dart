@@ -31,7 +31,8 @@ class AgoraWebBridgeV2 {
 
       if (bridge == null) {
         AppLogger.error('âŒ Bridge agoraWeb not available - is null');
-        debugPrint('[BRIDGE] Step 3: Bridge is NULL - window.agoraWeb not defined in HTML');
+        debugPrint(
+            '[BRIDGE] Step 3: Bridge is NULL - window.agoraWeb not defined in HTML');
         return false;
       }
 
@@ -114,14 +115,16 @@ class AgoraWebBridgeV2 {
     }
   }
 
-  static Future<bool> enableLocalTracks({required bool enableAudio, required bool enableVideo}) async {
+  static Future<bool> enableLocalTracks(
+      {required bool enableAudio, required bool enableVideo}) async {
     if (!kIsWeb) return false;
 
     try {
       final bridge = js.context['agoraWeb'];
       if (bridge == null) return false;
 
-      debugPrint('[BRIDGE] Calling JS enableLocalTracks(audio=$enableAudio, video=$enableVideo)');
+      debugPrint(
+          '[BRIDGE] Calling JS enableLocalTracks(audio=$enableAudio, video=$enableVideo)');
 
       final enableTracksFn = bridge['enableLocalTracks'];
       final promiseObj = enableTracksFn.apply([enableAudio, enableVideo]);
@@ -183,7 +186,8 @@ class AgoraWebBridgeV2 {
       final bridge = js.context['agoraWeb'];
       if (bridge == null) return false;
 
-      debugPrint('[BRIDGE] Calling JS muteRemoteAudio(uid=$remoteUid, muted=$muted)');
+      debugPrint(
+          '[BRIDGE] Calling JS muteRemoteAudio(uid=$remoteUid, muted=$muted)');
 
       final muteRemoteFn = bridge['muteRemoteAudio'];
       if (muteRemoteFn == null) {
@@ -227,7 +231,8 @@ class AgoraWebBridgeV2 {
 
   /// Set callback for remote user published event
   /// Called when a remote user publishes video or audio
-  static void setOnRemoteUserPublished(void Function(Map<String, dynamic> event)? callback) {
+  static void setOnRemoteUserPublished(
+      void Function(Map<String, dynamic> event)? callback) {
     if (!kIsWeb) return;
 
     try {
@@ -264,7 +269,8 @@ class AgoraWebBridgeV2 {
 
   /// Set callback for remote user unpublished event
   /// Called when a remote user unpublishes video or audio
-  static void setOnRemoteUserUnpublished(void Function(Map<String, dynamic> event)? callback) {
+  static void setOnRemoteUserUnpublished(
+      void Function(Map<String, dynamic> event)? callback) {
     if (!kIsWeb) return;
 
     try {
@@ -299,7 +305,8 @@ class AgoraWebBridgeV2 {
 
   /// Set callback for remote user left event
   /// Called when a remote user completely leaves the channel
-  static void setOnRemoteUserLeft(void Function(Map<String, dynamic> event)? callback) {
+  static void setOnRemoteUserLeft(
+      void Function(Map<String, dynamic> event)? callback) {
     if (!kIsWeb) return;
 
     try {

@@ -73,7 +73,9 @@ class ModerationAction {
       moderatorName: data['moderatorName'] as String? ?? 'Unknown',
       reason: data['reason'] as String? ?? '',
       timestamp: (data['timestamp'] as Timestamp).toDate(),
-      expiresAt: data['expiresAt'] != null ? (data['expiresAt'] as Timestamp).toDate() : null,
+      expiresAt: data['expiresAt'] != null
+          ? (data['expiresAt'] as Timestamp).toDate()
+          : null,
       isAutoModerated: data['isAutoModerated'] as bool? ?? false,
       metadata: data['metadata'] as Map<String, dynamic>?,
     );

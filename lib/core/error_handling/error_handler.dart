@@ -40,7 +40,8 @@ class AppError {
   });
 
   /// Parse Firebase Auth errors
-  factory AppError.fromFirebaseAuth(FirebaseAuthException e, {VoidCallback? onRetry}) {
+  factory AppError.fromFirebaseAuth(FirebaseAuthException e,
+      {VoidCallback? onRetry}) {
     String title = 'Authentication Error';
     String message;
 
@@ -79,7 +80,8 @@ class AppError {
       title: title,
       message: message,
       technicalDetails: '${e.code}: ${e.message}',
-      isRetryable: e.code == 'network-request-failed' || e.code == 'too-many-requests',
+      isRetryable:
+          e.code == 'network-request-failed' || e.code == 'too-many-requests',
       onRetry: onRetry,
     );
   }
@@ -415,7 +417,8 @@ class ErrorSnackbar {
 /// Error Handler Service - Centralized error handling
 class ErrorHandlerService {
   /// Show error dialog
-  static void showDialog(BuildContext context, Object error, {VoidCallback? onRetry}) {
+  static void showDialog(BuildContext context, Object error,
+      {VoidCallback? onRetry}) {
     final appError = _parseError(error, onRetry: onRetry);
     showGeneralDialog(
       context: context,
@@ -424,7 +427,8 @@ class ErrorHandlerService {
   }
 
   /// Show error snackbar
-  static void showSnackbar(BuildContext context, Object error, {VoidCallback? onRetry}) {
+  static void showSnackbar(BuildContext context, Object error,
+      {VoidCallback? onRetry}) {
     final appError = _parseError(error, onRetry: onRetry);
     ErrorSnackbar.show(context, appError);
   }
@@ -437,7 +441,8 @@ class ErrorHandlerService {
       return AppError.fromFirebaseAuth(error, onRetry: onRetry);
     } else if (error is FirebaseException) {
       return AppError.fromFirestore(error, onRetry: onRetry);
-    } else if (error.toString().contains('network') || error.toString().contains('connection')) {
+    } else if (error.toString().contains('network') ||
+        error.toString().contains('connection')) {
       return AppError.network(onRetry: onRetry);
     } else {
       return AppError.unknown(error, onRetry: onRetry);

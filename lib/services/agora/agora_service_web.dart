@@ -9,7 +9,8 @@ import 'dart:js_interop';
 external JSPromise _jsInit(JSString appId);
 
 @JS('agoraWebBridge.joinChannel')
-external JSPromise _jsJoinChannel(JSString token, JSString channel, JSString uid);
+external JSPromise _jsJoinChannel(
+    JSString token, JSString channel, JSString uid);
 
 @JS('agoraWebBridge.createCameraTrack')
 external JSPromise _jsCreateCameraTrack([JSString? deviceId]);
@@ -81,7 +82,11 @@ class AgoraService {
 
   bool get isBridgeReady {
     if (!kIsWeb) return false;
-    try { return _jsToBool(_jsBridgeReady); } catch (e) { return false; }
+    try {
+      return _jsToBool(_jsBridgeReady);
+    } catch (e) {
+      return false;
+    }
   }
 
   bool get isInitialized => _initialized;
@@ -94,7 +99,10 @@ class AgoraService {
     try {
       final result = await _jsInit(appId.toJS).toDart;
       final success = _jsToBool(result);
-      if (success) { _initialized = true; _appId = appId; }
+      if (success) {
+        _initialized = true;
+        _appId = appId;
+      }
       return success;
     } catch (e) {
       debugPrint('[AgoraService] Init failed: $e');
@@ -104,17 +112,24 @@ class AgoraService {
 
   Future<void> initialize() async {
     final appId = _pendingAppId ?? _appId;
-    if (appId == null || appId.isEmpty) throw AgoraException('Agora App ID not provided');
+    if (appId == null || appId.isEmpty)
+      throw AgoraException('Agora App ID not provided');
     final ok = await init(appId);
     if (!ok) throw AgoraException('Failed to initialize Agora SDK');
   }
 
-  Future<bool> joinChannel({String? token, required String channelId, required String uid}) async {
+  Future<bool> joinChannel(
+      {String? token, required String channelId, required String uid}) async {
     if (!kIsWeb) return false;
     try {
-      final result = await _jsJoinChannel((token ?? '').toJS, channelId.toJS, uid.toJS).toDart;
+      final result =
+          await _jsJoinChannel((token ?? '').toJS, channelId.toJS, uid.toJS)
+              .toDart;
       final success = _jsToBool(result);
-      if (success) { _inChannel = true; _currentChannelId = channelId; }
+      if (success) {
+        _inChannel = true;
+        _currentChannelId = channelId;
+      }
       return success;
     } catch (e) {
       debugPrint('[AgoraService] Join failed: $e');
@@ -163,7 +178,9 @@ class AgoraService {
     try {
       final result = await _jsSwitchCamera(deviceId.toJS).toDart;
       return _jsToBool(result);
-    } catch (e) { return false; }
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<bool> switchMic(String deviceId) async {
@@ -171,19 +188,27 @@ class AgoraService {
     try {
       final result = await _jsSwitchMic(deviceId.toJS).toDart;
       return _jsToBool(result);
-    } catch (e) { return false; }
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<void> setMicrophoneMuted(bool muted) async {
     if (!kIsWeb) return;
-    try { await _jsSetMicMuted(muted.toJS).toDart; }
-    catch (e) { throw AgoraException('Failed to control microphone', e); }
+    try {
+      await _jsSetMicMuted(muted.toJS).toDart;
+    } catch (e) {
+      throw AgoraException('Failed to control microphone', e);
+    }
   }
 
   Future<void> setVideoCameraMuted(bool muted) async {
     if (!kIsWeb) return;
-    try { await _jsSetVideoMuted(muted.toJS).toDart; }
-    catch (e) { throw AgoraException('Failed to control video', e); }
+    try {
+      await _jsSetVideoMuted(muted.toJS).toDart;
+    } catch (e) {
+      throw AgoraException('Failed to control video', e);
+    }
   }
 
   Future<List<Map<String, dynamic>>> getDevices() async {
@@ -194,11 +219,14 @@ class AgoraService {
       try {
         final dartified = jsResult.dartify();
         if (dartified is List) {
-          return dartified.whereType<Map>().map((item) => {
-            'deviceId': item['deviceId']?.toString() ?? '',
-            'label': item['label']?.toString() ?? 'Unknown Device',
-            'kind': item['kind']?.toString() ?? '',
-          }).toList();
+          return dartified
+              .whereType<Map>()
+              .map((item) => {
+                    'deviceId': item['deviceId']?.toString() ?? '',
+                    'label': item['label']?.toString() ?? 'Unknown Device',
+                    'kind': item['kind']?.toString() ?? '',
+                  })
+              .toList();
         }
       } catch (_) {}
       return [];
@@ -232,10 +260,12 @@ class AgoraService {
     }
   }
 
-  Future<bool> startCameraWithRetry(String videoElementId, {String? deviceId, int retries = 3}) async {
+  Future<bool> startCameraWithRetry(String videoElementId,
+      {String? deviceId, int retries = 3}) async {
     for (int i = 0; i < retries; i++) {
       if (await startCamera(videoElementId, deviceId)) return true;
-      if (i < retries - 1) await Future.delayed(const Duration(milliseconds: 500));
+      if (i < retries - 1)
+        await Future.delayed(const Duration(milliseconds: 500));
     }
     return false;
   }
@@ -243,7 +273,8 @@ class AgoraService {
   Future<bool> startMicWithRetry({String? deviceId, int retries = 3}) async {
     for (int i = 0; i < retries; i++) {
       if (await startMic(deviceId)) return true;
-      if (i < retries - 1) await Future.delayed(const Duration(milliseconds: 500));
+      if (i < retries - 1)
+        await Future.delayed(const Duration(milliseconds: 500));
     }
     return false;
   }
@@ -261,8 +292,10 @@ class AgoraService {
   }) async {
     if (!kIsWeb) return false;
     if (!await init(appId)) return false;
-    if (!await joinChannel(channelId: channel, token: token, uid: uid)) return false;
-    if (enableCamera) await startCameraWithRetry(videoElementId, deviceId: cameraDeviceId);
+    if (!await joinChannel(channelId: channel, token: token, uid: uid))
+      return false;
+    if (enableCamera)
+      await startCameraWithRetry(videoElementId, deviceId: cameraDeviceId);
     if (enableMic) await startMicWithRetry(deviceId: micDeviceId);
     return true;
   }

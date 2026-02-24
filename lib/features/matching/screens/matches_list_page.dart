@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/core/responsive/responsive_utils.dart';
 import 'package:mixmingle/core/animations/app_animations.dart';
@@ -16,7 +16,8 @@ class MatchesPage extends ConsumerStatefulWidget {
   ConsumerState<MatchesPage> createState() => _MatchesPageState();
 }
 
-class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProviderStateMixin {
+class _MatchesPageState extends ConsumerState<MatchesPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -148,7 +149,9 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
   }
 
   Widget _buildMatchCard(BuildContext context, Match match) {
-    final otherUserId = match.user1Id == ref.read(currentUserProvider).value?.id ? match.user2Id : match.user1Id;
+    final otherUserId = match.user1Id == ref.read(currentUserProvider).value?.id
+        ? match.user2Id
+        : match.user1Id;
     final userProfileAsync = ref.watch(userProfileProvider(otherUserId));
 
     return userProfileAsync.when(
@@ -180,10 +183,14 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                               fit: BoxFit.cover,
                             )
                           : Container(
-                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.1),
                               child: Icon(
                                 Icons.person,
-                                size: Responsive.responsiveIconSize(context, 60),
+                                size:
+                                    Responsive.responsiveIconSize(context, 60),
                                 color: Theme.of(context).colorScheme.primary,
                               ),
                             ),
@@ -232,8 +239,12 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                         Text(
                           '${profile.age} years old',
                           style: TextStyle(
-                            fontSize: Responsive.responsiveFontSize(context, 12),
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            fontSize:
+                                Responsive.responsiveFontSize(context, 12),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -253,7 +264,9 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
   }
 
   Widget _buildLikeCard(BuildContext context, Match like) {
-    final otherUserId = like.user1Id == ref.read(currentUserProvider).value?.id ? like.user2Id : like.user1Id;
+    final otherUserId = like.user1Id == ref.read(currentUserProvider).value?.id
+        ? like.user2Id
+        : like.user1Id;
     final userProfileAsync = ref.watch(userProfileProvider(otherUserId));
 
     return userProfileAsync.when(
@@ -275,7 +288,9 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                     tablet: 35.0,
                     desktop: 40.0,
                   ),
-                  backgroundImage: profile.profileImageUrl != null ? NetworkImage(profile.profileImageUrl!) : null,
+                  backgroundImage: profile.profileImageUrl != null
+                      ? NetworkImage(profile.profileImageUrl!)
+                      : null,
                   child: profile.profileImageUrl == null
                       ? Icon(
                           Icons.person,
@@ -299,8 +314,12 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                         Text(
                           profile.bio!,
                           style: TextStyle(
-                            fontSize: Responsive.responsiveFontSize(context, 14),
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                            fontSize:
+                                Responsive.responsiveFontSize(context, 14),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6),
                           ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
@@ -315,7 +334,9 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                     IconButton(
                       icon: const Icon(Icons.close, color: Colors.grey),
                       onPressed: () async {
-                        await ref.read(matchControllerProvider.notifier).reject(otherUserId);
+                        await ref
+                            .read(matchControllerProvider.notifier)
+                            .reject(otherUserId);
                       },
                     ),
                     IconButton(
@@ -324,7 +345,9 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                         color: Theme.of(context).colorScheme.error,
                       ),
                       onPressed: () async {
-                        await ref.read(matchControllerProvider.notifier).accept(otherUserId);
+                        await ref
+                            .read(matchControllerProvider.notifier)
+                            .accept(otherUserId);
                       },
                     ),
                   ],
@@ -359,7 +382,10 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
             Icon(
               icon,
               size: Responsive.responsiveIconSize(context, 80),
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.3),
             ),
             SizedBox(height: Responsive.responsiveSpacing(context, 24)),
             Text(
@@ -375,7 +401,10 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: Responsive.responsiveFontSize(context, 16),
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
               ),
             ),
             SizedBox(height: Responsive.responsiveSpacing(context, 32)),

@@ -53,26 +53,29 @@ final liveRoomControllerProvider =
 // ── Controller ────────────────────────────────────────────────────────────
 
 class LiveRoomController extends Notifier<LiveRoomState> {
-
   // ── Room args (set in enterRoom) ──────────────────────────────────────────
   LiveRoomArgs? _args;
 
   // ── Subsystems ────────────────────────────────────────────────────────────
-  late LiveRoomPresence      _presence;
-  late LiveAgoraClient       _video;
-  late LiveRoomAudioManager  _audio;
+  late LiveRoomPresence _presence;
+  late LiveAgoraClient _video;
+  late LiveRoomAudioManager _audio;
 
   // ── Stream subscriptions ──────────────────────────────────────────────────
   StreamSubscription<List<RoomParticipant>>? _participantSub;
-  StreamSubscription<VideoEngineEvent>?      _videoEventSub;
-  StreamSubscription<DocumentSnapshot>?      _roomMetaSub;
+  StreamSubscription<VideoEngineEvent>? _videoEventSub;
+  StreamSubscription<DocumentSnapshot>? _roomMetaSub;
 
   String get _uid => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   /// Exposes the underlying Agora engine for use in video rendering widgets.
   /// Returns null on web (web uses JS bridge separately).
   RtcEngine? get videoEngine {
-    try { return _video.engine; } catch (_) { return null; }
+    try {
+      return _video.engine;
+    } catch (_) {
+      return null;
+    }
   }
 
   // ── Build ────────────────────────────────────────────────────────────────
@@ -92,9 +95,9 @@ class LiveRoomController extends Notifier<LiveRoomState> {
 
     // Reset state with the correct roomId now that args are known
     state = LiveRoomState(
-      roomId:        args.roomId,
-      localUserId:   _uid,
-      phase:         LiveRoomPhase.joiningRoom,
+      roomId: args.roomId,
+      localUserId: _uid,
+      phase: LiveRoomPhase.joiningRoom,
       statusMessage: 'Joining room…',
     );
 
@@ -116,12 +119,14 @@ class LiveRoomController extends Notifier<LiveRoomState> {
       final meta = RoomMeta.fromFirestore(roomSnap);
 
       // ── 2. Assign local role ──────────────────────────────────────────
-      final role     = meta.ownerId == _uid ? ParticipantRole.host : ParticipantRole.audience;
-      final gridPos  = role == ParticipantRole.host ? 0 : -1;
+      final role = meta.ownerId == _uid
+          ? ParticipantRole.host
+          : ParticipantRole.audience;
+      final gridPos = role == ParticipantRole.host ? 0 : -1;
 
       state = state.copyWith(
-        roomMeta:      meta,
-        localRole:     role,
+        roomMeta: meta,
+        localRole: role,
         statusMessage: 'Registering presence…',
       );
 
@@ -129,10 +134,10 @@ class LiveRoomController extends Notifier<LiveRoomState> {
       _audio = LiveRoomAudioManager.forRoomType(meta.type);
 
       _presence = LiveRoomPresence(
-        roomId:             _args!.roomId,
-        roomType:           meta.type,
+        roomId: _args!.roomId,
+        roomType: meta.type,
         initialDisplayName: _args!.displayName,
-        initialAvatarUrl:   _args!.avatarUrl,
+        initialAvatarUrl: _args!.avatarUrl,
       );
 
       _video = LiveAgoraClient(roomType: meta.type);
@@ -155,7 +160,7 @@ class LiveRoomController extends Notifier<LiveRoomState> {
 
       // ── 7. Initialise and join video channel ──────────────────────────
       state = state.copyWith(
-        phase:         LiveRoomPhase.connectingVideo,
+        phase: LiveRoomPhase.connectingVideo,
         statusMessage: 'Connecting video…',
       );
 
@@ -167,8 +172,8 @@ class LiveRoomController extends Notifier<LiveRoomState> {
       );
 
       await _video.joinChannel(
-        channelId:     _args!.roomId,
-        userId:        _uid,
+        channelId: _args!.roomId,
+        userId: _uid,
         isBroadcaster: role == ParticipantRole.host,
       );
 
@@ -182,8 +187,8 @@ class LiveRoomController extends Notifier<LiveRoomState> {
       }
 
       state = state.copyWith(
-        phase:       LiveRoomPhase.active,
-        clearError:  true,
+        phase: LiveRoomPhase.active,
+        clearError: true,
         clearStatus: true,
       );
     } catch (e, st) {
@@ -223,9 +228,9 @@ class LiveRoomController extends Notifier<LiveRoomState> {
 
     if (wantOn) {
       final decision = _audio.canTurnCamOn(
-        userId:          _uid,
+        userId: _uid,
         currentCamCount: state.onCamCount,
-        maxCams:         meta.maxBroadcasters,
+        maxCams: meta.maxBroadcasters,
       );
       if (!decision.allowed) return decision.reason;
     }
@@ -310,7 +315,7 @@ class LiveRoomController extends Notifier<LiveRoomState> {
     await _presence.promoteParticipant(
       userId,
       gridPosition: freeSlot,
-      role:         ParticipantRole.broadcaster,
+      role: ParticipantRole.broadcaster,
     );
     return null;
   }
@@ -325,7 +330,7 @@ class LiveRoomController extends Notifier<LiveRoomState> {
   /// The demoted user is moved back to the audience row.
   Future<String?> demoteParticipant(String userId) async {
     if (!state.isHost) return 'Only the host can remove broadcasters.';
-    if (userId == _uid)  return 'Cannot demote yourself.';
+    if (userId == _uid) return 'Cannot demote yourself.';
     await _presence.demoteParticipant(userId);
     return null;
   }
@@ -334,7 +339,8 @@ class LiveRoomController extends Notifier<LiveRoomState> {
   /// Call when the app is backgrounded / minimised / screen switches away.
   Future<void> onSuspended() async {
     if (!state.isActive && !state.isSuspended) return;
-    state = state.copyWith(isForegrounded: false, phase: LiveRoomPhase.suspended);
+    state =
+        state.copyWith(isForegrounded: false, phase: LiveRoomPhase.suspended);
 
     // Drop video subscriptions (stay in channel, just stop receiving)
     await _video.dropAllSubscriptions();
@@ -345,8 +351,8 @@ class LiveRoomController extends Notifier<LiveRoomState> {
     await _presence.setForegrounded(false);
 
     state = state.copyWith(
-      isPublishingVideo:    false,
-      isPublishingAudio:    false,
+      isPublishingVideo: false,
+      isPublishingAudio: false,
       subscribedEngineUids: [],
     );
   }
@@ -369,7 +375,8 @@ class LiveRoomController extends Notifier<LiveRoomState> {
 
   Future<void> leaveRoom() async {
     if (state.isLeaving || state.isLeft) return;
-    state = state.copyWith(phase: LiveRoomPhase.leaving, statusMessage: 'Leaving…');
+    state =
+        state.copyWith(phase: LiveRoomPhase.leaving, statusMessage: 'Leaving…');
 
     // Stop video first
     await _video.dropPublishing();
@@ -382,7 +389,7 @@ class LiveRoomController extends Notifier<LiveRoomState> {
     await _presence.leave();
 
     state = state.copyWith(
-      phase:       LiveRoomPhase.left,
+      phase: LiveRoomPhase.left,
       clearStatus: true,
     );
   }
@@ -416,18 +423,16 @@ class LiveRoomController extends Notifier<LiveRoomState> {
 
     // Detect whether the local user's role or cam state changed in Firestore
     // (e.g. host promoted this user while they were audience).
-    final localP = participants
-        .where((p) => p.userId == _uid)
-        .firstOrNull;
+    final localP = participants.where((p) => p.userId == _uid).firstOrNull;
 
     var updated = state.copyWith(participants: participants);
 
     if (localP != null) {
       final roleChanged = localP.role != state.localRole;
-      final camChanged  = localP.isOnCam != state.isCamOn;
+      final camChanged = localP.isOnCam != state.isCamOn;
 
       if (roleChanged) updated = updated.copyWith(localRole: localP.role);
-      if (camChanged)  updated = updated.copyWith(isCamOn:   localP.isOnCam);
+      if (camChanged) updated = updated.copyWith(isCamOn: localP.isOnCam);
 
       state = updated;
 
@@ -486,8 +491,8 @@ class LiveRoomController extends Notifier<LiveRoomState> {
 
       case ActiveSpeakerEvent(:final speakerUid):
         state = state.copyWith(
-          activeSpeakerUid:    speakerUid,
-          clearActiveSpeaker:  speakerUid == null,
+          activeSpeakerUid: speakerUid,
+          clearActiveSpeaker: speakerUid == null,
         );
 
       case EngineErrorEvent(:final message):
@@ -503,7 +508,11 @@ class LiveRoomController extends Notifier<LiveRoomState> {
     _participantSub?.cancel();
     _videoEventSub?.cancel();
     _roomMetaSub?.cancel();
-    try { _presence.dispose(); } catch (_) {}
-    try { _video.dispose();    } catch (_) {}
+    try {
+      _presence.dispose();
+    } catch (_) {}
+    try {
+      _video.dispose();
+    } catch (_) {}
   }
 }

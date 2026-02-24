@@ -1,4 +1,4 @@
-﻿import 'video_tile_model.dart';
+import 'video_tile_model.dart';
 import 'window_state_model.dart';
 import 'publisher_state_model.dart';
 
@@ -87,7 +87,8 @@ class RoomVideoStateModel {
       ),
       maxPublishers: json['maxPublishers'] ?? 12,
       autoMuteOnJoin: json['autoMuteOnJoin'] ?? true,
-      autoDisableVideoOnLowBandwidth: json['autoDisableVideoOnLowBandwidth'] ?? true,
+      autoDisableVideoOnLowBandwidth:
+          json['autoDisableVideoOnLowBandwidth'] ?? true,
       lastUpdated: json['lastUpdated'] != null
           ? DateTime.parse(json['lastUpdated'])
           : null,
@@ -107,7 +108,6 @@ class RoomVideoStateModel {
     return publishers.firstWhere((pub) => pub.userId == userId);
   }
 
-  int get activePublishers => publishers.where((p) => p.status == PublisherStatus.publishing).length;
+  int get activePublishers =>
+      publishers.where((p) => p.status == PublisherStatus.publishing).length;
 }
-
-

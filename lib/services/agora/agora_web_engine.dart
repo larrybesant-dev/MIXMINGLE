@@ -7,10 +7,12 @@ import 'package:flutter/foundation.dart';
 class AgoraWebEngine implements IVideoEngine {
   bool _initialized = false;
   final Map<int, RemoteUser> _remoteUsersMap = {};
-  final StreamController<List<RemoteUser>> _remoteUsersController = StreamController.broadcast();
+  final StreamController<List<RemoteUser>> _remoteUsersController =
+      StreamController.broadcast();
 
   @override
-  Stream<List<RemoteUser>> get remoteUsersStream => _remoteUsersController.stream;
+  Stream<List<RemoteUser>> get remoteUsersStream =>
+      _remoteUsersController.stream;
 
   @override
   Future<void> init(String appId, {String? token}) async {
@@ -29,7 +31,10 @@ class AgoraWebEngine implements IVideoEngine {
   }
 
   @override
-  Future<void> joinChannel({required String channel, required int uid, required String token}) async {
+  Future<void> joinChannel(
+      {required String channel,
+      required int uid,
+      required String token}) async {
     try {
       debugPrint('âœ… Joined channel: $channel with UID: $uid');
 
@@ -60,9 +65,11 @@ class AgoraWebEngine implements IVideoEngine {
   }
 
   @override
-  Future<void> enableLocalTracks({bool enableAudio = true, bool enableVideo = true}) async {
+  Future<void> enableLocalTracks(
+      {bool enableAudio = true, bool enableVideo = true}) async {
     try {
-      debugPrint('âœ… Local tracks enabled - Audio: $enableAudio, Video: $enableVideo');
+      debugPrint(
+          'âœ… Local tracks enabled - Audio: $enableAudio, Video: $enableVideo');
     } catch (e) {
       debugPrint('âŒ Error enabling local tracks: $e');
       rethrow;

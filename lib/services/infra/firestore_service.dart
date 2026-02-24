@@ -37,25 +37,24 @@ class FirestoreService {
   }
 
   Stream<List<User>> getUsersStream() {
-    return _firestore
-        .collection('users')
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => User.fromMap(doc.data())).toList());
+    return _firestore.collection('users').snapshots().map((snapshot) =>
+        snapshot.docs.map((doc) => User.fromMap(doc.data())).toList());
   }
 
   Future<bool> isUsernameTaken(String username) async {
-    final querySnapshot =
-        await _firestore.collection('users').where('username', isEqualTo: username.trim().toLowerCase()).limit(1).get();
+    final querySnapshot = await _firestore
+        .collection('users')
+        .where('username', isEqualTo: username.trim().toLowerCase())
+        .limit(1)
+        .get();
 
     return querySnapshot.docs.isNotEmpty;
   }
 
   // Rooms
   Stream<List<Room>> getRoomsStream() {
-    return _firestore
-        .collection('rooms')
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => Room.fromDocument(doc)).toList());
+    return _firestore.collection('rooms').snapshots().map((snapshot) =>
+        snapshot.docs.map((doc) => Room.fromDocument(doc)).toList());
   }
 
   Future<void> createRoom(Room room) async {
@@ -88,7 +87,8 @@ class FirestoreService {
         .collection('rooms')
         .where('hostId', isEqualTo: userId)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => Room.fromDocument(doc)).toList());
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Room.fromDocument(doc)).toList());
   }
 
   Stream<List<Map<String, dynamic>>> getUserActivityStream(String userId) {
@@ -110,11 +110,16 @@ class FirestoreService {
         .collection('messages')
         .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList());
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList());
   }
 
   Future<void> sendMessage(String roomId, Message message) async {
-    await _firestore.collection('rooms').doc(roomId).collection('messages').add(message.toMap());
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('messages')
+        .add(message.toMap());
   }
 
   // Notifications
@@ -125,11 +130,17 @@ class FirestoreService {
         .collection('notifications')
         .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => notif.Notification.fromMap(doc.data())).toList());
+        .map((snapshot) => snapshot.docs
+            .map((doc) => notif.Notification.fromMap(doc.data()))
+            .toList());
   }
 
   Future<void> createNotification(notif.Notification notification) async {
-    await _firestore.collection('users').doc(notification.userId).collection('notifications').add(notification.toMap());
+    await _firestore
+        .collection('users')
+        .doc(notification.userId)
+        .collection('notifications')
+        .add(notification.toMap());
   }
 
   // Tips
@@ -143,7 +154,8 @@ class FirestoreService {
         .where('receiverId', isEqualTo: userId)
         .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => Tip.fromMap(doc.data())).toList());
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Tip.fromMap(doc.data())).toList());
   }
 
   // Media
@@ -157,7 +169,8 @@ class FirestoreService {
         .where('userId', isEqualTo: userId)
         .orderBy('uploadedAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => MediaItem.fromMap(doc.data())).toList());
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => MediaItem.fromMap(doc.data())).toList());
   }
 
   // Privacy Settings
@@ -171,7 +184,13 @@ class FirestoreService {
   }
 
   Stream<PrivacySettings?> getPrivacySettingsStream(String userId) {
-    return _firestore.collection('users').doc(userId).collection('settings').doc('privacy').snapshots().map((doc) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('settings')
+        .doc('privacy')
+        .snapshots()
+        .map((doc) {
       if (doc.exists) {
         return PrivacySettings.fromMap(userId, doc.data()!);
       }
@@ -219,7 +238,8 @@ class FirestoreService {
     return const Stream.empty();
   }
 
-  Future<void> updateSpeedDatingDecision(String sessionId, String userId, dynamic decision) async {
+  Future<void> updateSpeedDatingDecision(
+      String sessionId, String userId, dynamic decision) async {
     // Stub implementation
   }
 
@@ -246,7 +266,10 @@ class FirestoreService {
   }
 
   Future<List<Message>> getFlaggedMessages() async {
-    final snapshot = await _firestore.collection('messages').where('isFlagged', isEqualTo: true).get();
+    final snapshot = await _firestore
+        .collection('messages')
+        .where('isFlagged', isEqualTo: true)
+        .get();
     return snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList();
   }
 
@@ -255,7 +278,8 @@ class FirestoreService {
     return snapshot.docs.map((doc) => doc.data()).toList();
   }
 
-  Future<void> updateUserFields(String userId, Map<String, dynamic> fields) async {
+  Future<void> updateUserFields(
+      String userId, Map<String, dynamic> fields) async {
     await _firestore.collection('users').doc(userId).update(fields);
   }
 
@@ -286,4 +310,3 @@ class FirestoreService {
     // TODO: Implement room invitation notification
   }
 }
-

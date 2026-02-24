@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
@@ -23,7 +23,8 @@ class ChatListPage extends ConsumerWidget {
         body: currentUserAsync.when(
           data: (currentUser) {
             if (currentUser == null) {
-              return const Center(child: Text('Please sign in to view messages'));
+              return const Center(
+                  child: Text('Please sign in to view messages'));
             }
 
             return conversationListAsync.when(
@@ -45,15 +46,18 @@ class ChatListPage extends ConsumerWidget {
                       (id) => id != currentUser.id,
                       orElse: () => chatRoom.participants.first,
                     );
-                    final unreadCount = chatRoom.unreadCounts[currentUser.id] ?? 0;
+                    final unreadCount =
+                        chatRoom.unreadCounts[currentUser.id] ?? 0;
 
                     // Watch other user profile
-                    final otherUserAsync = ref.watch(userProfileProvider(otherUserId));
+                    final otherUserAsync =
+                        ref.watch(userProfileProvider(otherUserId));
 
                     return otherUserAsync.when(
                       data: (otherUser) {
                         // Watch presence status
-                        final presenceAsync = ref.watch(presenceProvider(otherUserId));
+                        final presenceAsync =
+                            ref.watch(presenceProvider(otherUserId));
 
                         return presenceAsync.when(
                           data: (presence) {
@@ -63,14 +67,21 @@ class ChatListPage extends ConsumerWidget {
                               leading: Stack(
                                 children: [
                                   CircleAvatar(
-                                    backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                                    backgroundImage: otherUser?.photos.isNotEmpty == true
+                                    backgroundColor: Theme.of(context)
+                                        .primaryColor
+                                        .withValues(alpha: 0.3),
+                                    backgroundImage: otherUser
+                                                ?.photos.isNotEmpty ==
+                                            true
                                         ? NetworkImage(otherUser!.photos.first)
                                         : null,
                                     child: otherUser?.photos.isEmpty == true
                                         ? Text(
-                                            otherUser?.displayName?.isNotEmpty == true
-                                                ? otherUser!.displayName![0].toUpperCase()
+                                            otherUser?.displayName
+                                                        ?.isNotEmpty ==
+                                                    true
+                                                ? otherUser!.displayName![0]
+                                                    .toUpperCase()
                                                 : '?',
                                           )
                                         : null,
@@ -87,7 +98,8 @@ class ChatListPage extends ConsumerWidget {
                                           color: Colors.green,
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: Theme.of(context).scaffoldBackgroundColor,
+                                            color: Theme.of(context)
+                                                .scaffoldBackgroundColor,
                                             width: 2,
                                           ),
                                         ),
@@ -96,7 +108,9 @@ class ChatListPage extends ConsumerWidget {
                                 ],
                               ),
                               title: Text(
-                                otherUser?.displayName ?? otherUser?.username ?? 'Unknown',
+                                otherUser?.displayName ??
+                                    otherUser?.username ??
+                                    'Unknown',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
@@ -119,8 +133,12 @@ class ChatListPage extends ConsumerWidget {
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
-                                          color: unreadCount > 0 ? Colors.white : Colors.white70,
-                                          fontWeight: unreadCount > 0 ? FontWeight.w600 : FontWeight.normal,
+                                          color: unreadCount > 0
+                                              ? Colors.white
+                                              : Colors.white70,
+                                          fontWeight: unreadCount > 0
+                                              ? FontWeight.w600
+                                              : FontWeight.normal,
                                         ),
                                       ),
                                     ),
@@ -140,7 +158,8 @@ class ChatListPage extends ConsumerWidget {
                                   if (unreadCount > 0) ...[
                                     const SizedBox(height: 4),
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: Theme.of(context).primaryColor,
                                         borderRadius: BorderRadius.circular(12),
@@ -166,19 +185,26 @@ class ChatListPage extends ConsumerWidget {
                           },
                           loading: () => ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                              backgroundColor: Theme.of(context)
+                                  .primaryColor
+                                  .withValues(alpha: 0.3),
                               backgroundImage:
-                                  otherUser?.photos.isNotEmpty == true ? NetworkImage(otherUser!.photos.first) : null,
+                                  otherUser?.photos.isNotEmpty == true
+                                      ? NetworkImage(otherUser!.photos.first)
+                                      : null,
                               child: otherUser?.photos.isEmpty == true
                                   ? Text(
                                       otherUser?.displayName?.isNotEmpty == true
-                                          ? otherUser!.displayName![0].toUpperCase()
+                                          ? otherUser!.displayName![0]
+                                              .toUpperCase()
                                           : '?',
                                     )
                                   : null,
                             ),
                             title: Text(
-                              otherUser?.displayName ?? otherUser?.username ?? 'Unknown',
+                              otherUser?.displayName ??
+                                  otherUser?.username ??
+                                  'Unknown',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -193,19 +219,26 @@ class ChatListPage extends ConsumerWidget {
                           ),
                           error: (error, stack) => ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                              backgroundColor: Theme.of(context)
+                                  .primaryColor
+                                  .withValues(alpha: 0.3),
                               backgroundImage:
-                                  otherUser?.photos.isNotEmpty == true ? NetworkImage(otherUser!.photos.first) : null,
+                                  otherUser?.photos.isNotEmpty == true
+                                      ? NetworkImage(otherUser!.photos.first)
+                                      : null,
                               child: otherUser?.photos.isEmpty == true
                                   ? Text(
                                       otherUser?.displayName?.isNotEmpty == true
-                                          ? otherUser!.displayName![0].toUpperCase()
+                                          ? otherUser!.displayName![0]
+                                              .toUpperCase()
                                           : '?',
                                     )
                                   : null,
                             ),
                             title: Text(
-                              otherUser?.displayName ?? otherUser?.username ?? 'Unknown',
+                              otherUser?.displayName ??
+                                  otherUser?.username ??
+                                  'Unknown',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -222,17 +255,21 @@ class ChatListPage extends ConsumerWidget {
                       },
                       loading: () => ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                          backgroundColor: Theme.of(context)
+                              .primaryColor
+                              .withValues(alpha: 0.3),
                           child: const Icon(Icons.person, size: 20),
                         ),
-                        title: const Text('Loading...', style: TextStyle(color: Colors.white70)),
+                        title: const Text('Loading...',
+                            style: TextStyle(color: Colors.white70)),
                       ),
                       error: (error, stack) => ListTile(
                         leading: CircleAvatar(
                           backgroundColor: Colors.red.withValues(alpha: 0.3),
                           child: const Icon(Icons.error, size: 20),
                         ),
-                        title: const Text('Error loading user', style: TextStyle(color: Colors.white70)),
+                        title: const Text('Error loading user',
+                            style: TextStyle(color: Colors.white70)),
                       ),
                     );
                   },
@@ -243,7 +280,8 @@ class ChatListPage extends ConsumerWidget {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                    const Icon(Icons.error_outline,
+                        size: 48, color: Colors.red),
                     const SizedBox(height: 16),
                     Text(
                       'Error loading conversations: $error',
@@ -257,7 +295,8 @@ class ChatListPage extends ConsumerWidget {
           },
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (error, stack) => const Center(
-            child: Text('Error loading user', style: TextStyle(color: Colors.white70)),
+            child: Text('Error loading user',
+                style: TextStyle(color: Colors.white70)),
           ),
         ),
       ),

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../theme/colors_v2.dart';
 
 /// NeonBadge: status indicator with neon glow and optional pulse animation.
@@ -16,7 +16,8 @@ class NeonBadge extends StatefulWidget {
   State<NeonBadge> createState() => _NeonBadgeState();
 }
 
-class _NeonBadgeState extends State<NeonBadge> with SingleTickerProviderStateMixin {
+class _NeonBadgeState extends State<NeonBadge>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _pulse;
 
@@ -113,15 +114,18 @@ class _BadgeStyle {
 _BadgeStyle _styleForStatus(NeonStatus status) {
   switch (status) {
     case NeonStatus.online:
-      return const _BadgeStyle(fill: ElectricColors.successMint, glow: ElectricColors.successMint);
+      return const _BadgeStyle(
+          fill: ElectricColors.successMint, glow: ElectricColors.successMint);
     case NeonStatus.busy:
-      return const _BadgeStyle(fill: ElectricColors.hotOrange, glow: ElectricColors.hotOrange);
+      return const _BadgeStyle(
+          fill: ElectricColors.hotOrange, glow: ElectricColors.hotOrange);
     case NeonStatus.offline:
       return _BadgeStyle(
         fill: ElectricColors.onSurfaceMuted.withValues(alpha: 0.9),
         glow: ElectricColors.onSurfaceMuted.withValues(alpha: 0.5),
       );
     case NeonStatus.speaking:
-      return const _BadgeStyle(fill: ElectricColors.electricCyan, glow: ElectricColors.electricCyan);
+      return const _BadgeStyle(
+          fill: ElectricColors.electricCyan, glow: ElectricColors.electricCyan);
   }
 }

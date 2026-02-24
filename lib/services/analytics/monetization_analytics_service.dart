@@ -107,12 +107,15 @@ class RevenueMetrics {
 
 /// Monetization analytics service
 class MonetizationAnalyticsService {
-  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+  final FirebaseFunctions _functions =
+      FirebaseFunctions.instanceFor(region: 'us-central1');
 
   /// Get user engagement metrics
-  Future<UserEngagementMetrics> getUserEngagementMetrics(AnalyticsPeriod period) async {
+  Future<UserEngagementMetrics> getUserEngagementMetrics(
+      AnalyticsPeriod period) async {
     try {
-      final result = await _functions.httpsCallable('getUserEngagementMetrics').call({
+      final result =
+          await _functions.httpsCallable('getUserEngagementMetrics').call({
         'period': period.name,
       });
 
@@ -155,9 +158,11 @@ class MonetizationAnalyticsService {
   }
 
   /// Get coin economy analytics
-  Future<Map<String, dynamic>> getCoinEconomyAnalytics(AnalyticsPeriod period) async {
+  Future<Map<String, dynamic>> getCoinEconomyAnalytics(
+      AnalyticsPeriod period) async {
     try {
-      final result = await _functions.httpsCallable('getCoinEconomyAnalytics').call({
+      final result =
+          await _functions.httpsCallable('getCoinEconomyAnalytics').call({
         'period': period.name,
       });
 
@@ -183,9 +188,11 @@ class MonetizationAnalyticsService {
   }
 
   /// Get subscription analytics
-  Future<Map<String, dynamic>> getSubscriptionAnalytics(AnalyticsPeriod period) async {
+  Future<Map<String, dynamic>> getSubscriptionAnalytics(
+      AnalyticsPeriod period) async {
     try {
-      final result = await _functions.httpsCallable('getSubscriptionAnalytics').call({
+      final result =
+          await _functions.httpsCallable('getSubscriptionAnalytics').call({
         'period': period.name,
       });
 
@@ -215,9 +222,11 @@ class MonetizationAnalyticsService {
   }
 
   /// Get conversion funnel data
-  Future<Map<String, dynamic>> getConversionFunnel(AnalyticsPeriod period) async {
+  Future<Map<String, dynamic>> getConversionFunnel(
+      AnalyticsPeriod period) async {
     try {
-      final result = await _functions.httpsCallable('getConversionFunnel').call({
+      final result =
+          await _functions.httpsCallable('getConversionFunnel').call({
         'period': period.name,
       });
 
@@ -249,7 +258,8 @@ class MonetizationAnalyticsService {
   /// Get real-time metrics (last 24 hours)
   Future<Map<String, dynamic>> getRealtimeMetrics() async {
     try {
-      final result = await _functions.httpsCallable('getRealtimeMetrics').call();
+      final result =
+          await _functions.httpsCallable('getRealtimeMetrics').call();
       return result.data ?? {};
     } catch (e) {
       debugPrint('Error getting realtime metrics: $e');
@@ -264,7 +274,8 @@ class MonetizationAnalyticsService {
     String format = 'csv', // 'csv' or 'json'
   }) async {
     try {
-      final result = await _functions.httpsCallable('exportAnalyticsData').call({
+      final result =
+          await _functions.httpsCallable('exportAnalyticsData').call({
         'period': period.name,
         'metrics': metrics,
         'format': format,
@@ -282,7 +293,8 @@ class MonetizationAnalyticsService {
     int forecastDays = 30,
   }) async {
     try {
-      final result = await _functions.httpsCallable('getPredictiveAnalytics').call({
+      final result =
+          await _functions.httpsCallable('getPredictiveAnalytics').call({
         'forecastDays': forecastDays,
       });
 
@@ -332,7 +344,8 @@ class MonetizationAnalyticsService {
   /// Get user behavior insights
   Future<Map<String, dynamic>> getUserBehaviorInsights(String userId) async {
     try {
-      final result = await _functions.httpsCallable('getUserBehaviorInsights').call({
+      final result =
+          await _functions.httpsCallable('getUserBehaviorInsights').call({
         'userId': userId,
       });
 
@@ -344,7 +357,8 @@ class MonetizationAnalyticsService {
   }
 
   /// Generate monetization report
-  Future<Map<String, dynamic>> generateMonetizationReport(AnalyticsPeriod period) async {
+  Future<Map<String, dynamic>> generateMonetizationReport(
+      AnalyticsPeriod period) async {
     try {
       final [
         engagement,
@@ -390,23 +404,31 @@ class MonetizationAnalyticsService {
 
     if (revenue != null) {
       if (revenue.averageRevenuePerUser > 0) {
-        insights.add('Average revenue per user: \$${revenue.averageRevenuePerUser.toStringAsFixed(2)}');
+        insights.add(
+            'Average revenue per user: \$${revenue.averageRevenuePerUser.toStringAsFixed(2)}');
       }
 
       if (revenue.churnRate > 0) {
-        insights.add('Monthly churn rate: ${(revenue.churnRate * 100).toStringAsFixed(1)}%');
+        insights.add(
+            'Monthly churn rate: ${(revenue.churnRate * 100).toStringAsFixed(1)}%');
       }
 
-      final topCategory = revenue.revenueByCategory.entries.reduce((a, b) => a.value > b.value ? a : b);
-      insights.add('Top revenue source: ${topCategory.key.name} (\$${topCategory.value.toStringAsFixed(2)})');
+      final topCategory = revenue.revenueByCategory.entries
+          .reduce((a, b) => a.value > b.value ? a : b);
+      insights.add(
+          'Top revenue source: ${topCategory.key.name} (\$${topCategory.value.toStringAsFixed(2)})');
     }
 
     if (engagement != null) {
-      final engagementRate = engagement.totalUsers > 0 ? (engagement.activeUsers / engagement.totalUsers * 100) : 0;
-      insights.add('User engagement rate: ${engagementRate.toStringAsFixed(1)}%');
+      final engagementRate = engagement.totalUsers > 0
+          ? (engagement.activeUsers / engagement.totalUsers * 100)
+          : 0;
+      insights
+          .add('User engagement rate: ${engagementRate.toStringAsFixed(1)}%');
 
       if (engagement.averageSessionDuration > 0) {
-        insights.add('Average session duration: ${engagement.averageSessionDuration.toStringAsFixed(1)} minutes');
+        insights.add(
+            'Average session duration: ${engagement.averageSessionDuration.toStringAsFixed(1)} minutes');
       }
     }
 
@@ -415,62 +437,79 @@ class MonetizationAnalyticsService {
 }
 
 /// Riverpod providers
-final monetizationAnalyticsServiceProvider = Provider<MonetizationAnalyticsService>((ref) {
+final monetizationAnalyticsServiceProvider =
+    Provider<MonetizationAnalyticsService>((ref) {
   return MonetizationAnalyticsService();
 });
 
 final userEngagementMetricsProvider =
-    FutureProvider.family<UserEngagementMetrics, AnalyticsPeriod>((ref, period) async {
+    FutureProvider.family<UserEngagementMetrics, AnalyticsPeriod>(
+        (ref, period) async {
   final service = ref.watch(monetizationAnalyticsServiceProvider);
   return service.getUserEngagementMetrics(period);
 });
 
-final revenueMetricsProvider = FutureProvider.family<RevenueMetrics, AnalyticsPeriod>((ref, period) async {
+final revenueMetricsProvider =
+    FutureProvider.family<RevenueMetrics, AnalyticsPeriod>((ref, period) async {
   final service = ref.watch(monetizationAnalyticsServiceProvider);
   return service.getRevenueMetrics(period);
 });
 
-final coinEconomyAnalyticsProvider = FutureProvider.family<Map<String, dynamic>, AnalyticsPeriod>((ref, period) async {
+final coinEconomyAnalyticsProvider =
+    FutureProvider.family<Map<String, dynamic>, AnalyticsPeriod>(
+        (ref, period) async {
   final service = ref.watch(monetizationAnalyticsServiceProvider);
   return service.getCoinEconomyAnalytics(period);
 });
 
-final giftAnalyticsProvider = FutureProvider.family<Map<String, dynamic>, AnalyticsPeriod>((ref, period) async {
+final giftAnalyticsProvider =
+    FutureProvider.family<Map<String, dynamic>, AnalyticsPeriod>(
+        (ref, period) async {
   final service = ref.watch(monetizationAnalyticsServiceProvider);
   return service.getGiftAnalytics(period);
 });
 
-final subscriptionAnalyticsProvider = FutureProvider.family<Map<String, dynamic>, AnalyticsPeriod>((ref, period) async {
+final subscriptionAnalyticsProvider =
+    FutureProvider.family<Map<String, dynamic>, AnalyticsPeriod>(
+        (ref, period) async {
   final service = ref.watch(monetizationAnalyticsServiceProvider);
   return service.getSubscriptionAnalytics(period);
 });
 
-final topSpendersProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final topSpendersProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final service = ref.watch(monetizationAnalyticsServiceProvider);
   return service.getTopSpenders();
 });
 
-final conversionFunnelProvider = FutureProvider.family<Map<String, dynamic>, AnalyticsPeriod>((ref, period) async {
+final conversionFunnelProvider =
+    FutureProvider.family<Map<String, dynamic>, AnalyticsPeriod>(
+        (ref, period) async {
   final service = ref.watch(monetizationAnalyticsServiceProvider);
   return service.getConversionFunnel(period);
 });
 
-final cohortAnalysisProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final cohortAnalysisProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final service = ref.watch(monetizationAnalyticsServiceProvider);
   return service.getCohortAnalysis();
 });
 
-final realtimeMetricsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final realtimeMetricsProvider =
+    FutureProvider<Map<String, dynamic>>((ref) async {
   final service = ref.watch(monetizationAnalyticsServiceProvider);
   return service.getRealtimeMetrics();
 });
 
-final predictiveAnalyticsProvider = FutureProvider<Map<String, dynamic>>((ref) async {
+final predictiveAnalyticsProvider =
+    FutureProvider<Map<String, dynamic>>((ref) async {
   final service = ref.watch(monetizationAnalyticsServiceProvider);
   return service.getPredictiveAnalytics();
 });
 
-final monetizationReportProvider = FutureProvider.family<Map<String, dynamic>, AnalyticsPeriod>((ref, period) async {
+final monetizationReportProvider =
+    FutureProvider.family<Map<String, dynamic>, AnalyticsPeriod>(
+        (ref, period) async {
   final service = ref.watch(monetizationAnalyticsServiceProvider);
   return service.generateMonetizationReport(period);
 });

@@ -1,4 +1,4 @@
-﻿/// Shared validation utilities for forms across the app.
+/// Shared validation utilities for forms across the app.
 /// All validators return null if valid, or an error message string if invalid.
 library;
 
@@ -18,7 +18,8 @@ class ValidationHelpers {
   }
 
   /// Validates string length within bounds.
-  static String? validateLength(String? value, int minLength, int maxLength, String fieldName) {
+  static String? validateLength(
+      String? value, int minLength, int maxLength, String fieldName) {
     final v = value?.trim() ?? '';
     if (v.isEmpty) return null; // Use validateNotEmpty separately if required
     if (v.length < minLength) {
@@ -120,7 +121,8 @@ class ValidationHelpers {
   static String? validateNotEmail(String? value, String fieldName) {
     final v = value?.trim() ?? '';
     if (v.isEmpty) return null; // Use validateNotEmpty separately if required
-    final emailPattern = RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
+    final emailPattern =
+        RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$');
     if (emailPattern.hasMatch(v)) {
       return '$fieldName cannot be an email address';
     }
@@ -163,7 +165,8 @@ class ValidationHelpers {
   }
 
   /// Validates file size in bytes.
-  static String? validateFileSize(int fileSizeBytes, int maxSizeBytes, String fieldName) {
+  static String? validateFileSize(
+      int fileSizeBytes, int maxSizeBytes, String fieldName) {
     if (fileSizeBytes > maxSizeBytes) {
       final maxMB = (maxSizeBytes / (1024 * 1024)).toStringAsFixed(1);
       return '$fieldName cannot exceed $maxMB MB';
@@ -172,7 +175,8 @@ class ValidationHelpers {
   }
 
   /// Validates file extension against allowed list.
-  static String? validateFileExtension(String filename, List<String> allowedExtensions) {
+  static String? validateFileExtension(
+      String filename, List<String> allowedExtensions) {
     final ext = filename.split('.').last.toLowerCase();
     if (!allowedExtensions.contains(ext)) {
       return 'File type .$ext not allowed. Allowed: ${allowedExtensions.join(", ")}';
@@ -212,8 +216,18 @@ class ValidationConstants {
   // File upload
   static const int maxUploadSizeMB = 10; // 10 MB
   static const int maxUploadSizeBytes = maxUploadSizeMB * 1024 * 1024;
-  static const List<String> allowedImageExtensions = ['jpg', 'jpeg', 'png', 'webp'];
-  static const List<String> allowedDocExtensions = ['pdf', 'doc', 'docx', 'txt'];
+  static const List<String> allowedImageExtensions = [
+    'jpg',
+    'jpeg',
+    'png',
+    'webp'
+  ];
+  static const List<String> allowedDocExtensions = [
+    'pdf',
+    'doc',
+    'docx',
+    'txt'
+  ];
 
   // URL validation
   static const String urlPattern = r'^https?://';
@@ -221,5 +235,3 @@ class ValidationConstants {
   // Forbidden characters
   static const List<String> forbiddenChars = ['<', '>', '"', "'", '&'];
 }
-
-

@@ -107,7 +107,12 @@ class MatchService {
   /// Mark match as viewed
   Future<void> markMatchViewed(String uid, String matchUserId) async {
     try {
-      await _db.collection('matches').doc(uid).collection('generated').doc(matchUserId).update({'status': 'viewed'});
+      await _db
+          .collection('matches')
+          .doc(uid)
+          .collection('generated')
+          .doc(matchUserId)
+          .update({'status': 'viewed'});
     } catch (e) {
       AppLogger.warning('[MatchService] Error marking match viewed: $e');
     }
@@ -141,5 +146,3 @@ class MatchService {
     });
   }
 }
-
-

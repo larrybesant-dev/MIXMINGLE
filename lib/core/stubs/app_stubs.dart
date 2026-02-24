@@ -4,7 +4,7 @@
 import 'package:flutter/material.dart';
 
 class MixMingleTheme {
-    static TextStyle get body => const TextStyle(fontSize: 14);
+  static TextStyle get body => const TextStyle(fontSize: 14);
   static ThemeData get light => ThemeData.light();
   static ThemeData get dark => ThemeData.dark();
   static double get spacing => 8.0;

@@ -22,7 +22,8 @@ class SocialService {
     final relationshipId = Following.createId(followerId, followingId);
 
     // Check if already following
-    final existingDoc = await _firestore.collection('followings').doc(relationshipId).get();
+    final existingDoc =
+        await _firestore.collection('followings').doc(relationshipId).get();
 
     if (existingDoc.exists) {
       throw Exception('Already following this user');
@@ -71,7 +72,8 @@ class SocialService {
     final relationshipId = Following.createId(followerId, followingId);
 
     // Check if following exists
-    final doc = await _firestore.collection('followings').doc(relationshipId).get();
+    final doc =
+        await _firestore.collection('followings').doc(relationshipId).get();
 
     if (!doc.exists) {
       throw Exception('Not following this user');
@@ -107,34 +109,51 @@ class SocialService {
   /// Check if user A is following user B
   Future<bool> isFollowing(String followerId, String followingId) async {
     final relationshipId = Following.createId(followerId, followingId);
-    final doc = await _firestore.collection('followings').doc(relationshipId).get();
+    final doc =
+        await _firestore.collection('followings').doc(relationshipId).get();
     return doc.exists;
   }
 
   /// Get followers of a user
   Future<List<User>> getFollowers(String userId) async {
-    final querySnapshot = await _firestore.collection('followings').where('followingId', isEqualTo: userId).get();
+    final querySnapshot = await _firestore
+        .collection('followings')
+        .where('followingId', isEqualTo: userId)
+        .get();
 
-    final followerIds = querySnapshot.docs.map((doc) => doc.data()['followerId'] as String).toList();
+    final followerIds = querySnapshot.docs
+        .map((doc) => doc.data()['followerId'] as String)
+        .toList();
 
     if (followerIds.isEmpty) return [];
 
     // Get user details for followers
-    final usersQuery = await _firestore.collection('users').where(FieldPath.documentId, whereIn: followerIds).get();
+    final usersQuery = await _firestore
+        .collection('users')
+        .where(FieldPath.documentId, whereIn: followerIds)
+        .get();
 
     return usersQuery.docs.map((doc) => User.fromMap(doc.data())).toList();
   }
 
   /// Get users that a user is following
   Future<List<User>> getFollowing(String userId) async {
-    final querySnapshot = await _firestore.collection('followings').where('followerId', isEqualTo: userId).get();
+    final querySnapshot = await _firestore
+        .collection('followings')
+        .where('followerId', isEqualTo: userId)
+        .get();
 
-    final followingIds = querySnapshot.docs.map((doc) => doc.data()['followingId'] as String).toList();
+    final followingIds = querySnapshot.docs
+        .map((doc) => doc.data()['followingId'] as String)
+        .toList();
 
     if (followingIds.isEmpty) return [];
 
     // Get user details for following
-    final usersQuery = await _firestore.collection('users').where(FieldPath.documentId, whereIn: followingIds).get();
+    final usersQuery = await _firestore
+        .collection('users')
+        .where(FieldPath.documentId, whereIn: followingIds)
+        .get();
 
     return usersQuery.docs.map((doc) => User.fromMap(doc.data())).toList();
   }
@@ -145,20 +164,28 @@ class SocialService {
     final following = await getFollowing(userId);
 
     final followingIds = following.map((user) => user.id).toSet();
-    return followers.where((follower) => followingIds.contains(follower.id)).toList();
+    return followers
+        .where((follower) => followingIds.contains(follower.id))
+        .toList();
   }
 
   /// Get follower count for a user
   Future<int> getFollowerCount(String userId) async {
-    final querySnapshot =
-        await _firestore.collection('followings').where('followingId', isEqualTo: userId).count().get();
+    final querySnapshot = await _firestore
+        .collection('followings')
+        .where('followingId', isEqualTo: userId)
+        .count()
+        .get();
     return querySnapshot.count ?? 0;
   }
 
   /// Get following count for a user
   Future<int> getFollowingCount(String userId) async {
-    final querySnapshot =
-        await _firestore.collection('followings').where('followerId', isEqualTo: userId).count().get();
+    final querySnapshot = await _firestore
+        .collection('followings')
+        .where('followerId', isEqualTo: userId)
+        .count()
+        .get();
     return querySnapshot.count ?? 0;
   }
 
@@ -169,11 +196,16 @@ class SocialService {
         .where('followingId', isEqualTo: userId)
         .snapshots()
         .asyncMap((snapshot) async {
-      final followerIds = snapshot.docs.map((doc) => doc.data()['followerId'] as String).toList();
+      final followerIds = snapshot.docs
+          .map((doc) => doc.data()['followerId'] as String)
+          .toList();
 
       if (followerIds.isEmpty) return [];
 
-      final usersQuery = await _firestore.collection('users').where(FieldPath.documentId, whereIn: followerIds).get();
+      final usersQuery = await _firestore
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: followerIds)
+          .get();
 
       return usersQuery.docs.map((doc) => User.fromMap(doc.data())).toList();
     });
@@ -186,15 +218,18 @@ class SocialService {
         .where('followerId', isEqualTo: userId)
         .snapshots()
         .asyncMap((snapshot) async {
-      final followingIds = snapshot.docs.map((doc) => doc.data()['followingId'] as String).toList();
+      final followingIds = snapshot.docs
+          .map((doc) => doc.data()['followingId'] as String)
+          .toList();
 
       if (followingIds.isEmpty) return [];
 
-      final usersQuery = await _firestore.collection('users').where(FieldPath.documentId, whereIn: followingIds).get();
+      final usersQuery = await _firestore
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: followingIds)
+          .get();
 
       return usersQuery.docs.map((doc) => User.fromMap(doc.data())).toList();
     });
   }
 }
-
-

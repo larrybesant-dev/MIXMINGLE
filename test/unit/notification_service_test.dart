@@ -76,7 +76,9 @@ void main() {
       expect(modified.senderName, 'John Doe'); // Preserved
     });
 
-    test('AppNotification.fromFCMPayload() creates notification from FCM message', () {
+    test(
+        'AppNotification.fromFCMPayload() creates notification from FCM message',
+        () {
       final payload = {
         'title': 'New Message',
         'body': 'Hello from Alice!',

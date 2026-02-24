@@ -1,5 +1,3 @@
-library;
-
 library matches_list_page_test;
 
 @TestOn('chrome')

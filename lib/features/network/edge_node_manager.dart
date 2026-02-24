@@ -1,4 +1,4 @@
-﻿/// Edge Node Manager
+/// Edge Node Manager
 ///
 /// Manages edge nodes for low-latency content delivery and failover routing.
 library;
@@ -65,8 +65,7 @@ class EdgeNode {
   double get loadPercentage =>
       maxConnections > 0 ? currentConnections / maxConnections : 0;
 
-  bool get isHealthy =>
-      status == EdgeNodeStatus.online && loadPercentage < 0.9;
+  bool get isHealthy => status == EdgeNodeStatus.online && loadPercentage < 0.9;
 
   factory EdgeNode.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
@@ -92,7 +91,8 @@ class EdgeNode {
       cpuUsage: (data['cpuUsage'] ?? 0).toDouble(),
       memoryUsage: (data['memoryUsage'] ?? 0).toDouble(),
       bandwidthUsage: (data['bandwidthUsage'] ?? 0).toDouble(),
-      lastHealthCheck: (data['lastHealthCheck'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      lastHealthCheck:
+          (data['lastHealthCheck'] as Timestamp?)?.toDate() ?? DateTime.now(),
       metadata: Map<String, dynamic>.from(data['metadata'] ?? {}),
     );
   }
@@ -141,7 +141,8 @@ class EdgeAssignment {
         (r) => r.name == data['region'],
         orElse: () => Region.usEast,
       ),
-      assignedAt: (data['assignedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      assignedAt:
+          (data['assignedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       latencyMs: data['latencyMs'] ?? 0,
       isPrimary: data['isPrimary'] ?? true,
     );
@@ -212,10 +213,12 @@ class EdgeNodeManager {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  CollectionReference get _nodesCollection => _firestore.collection('edge_nodes');
+  CollectionReference get _nodesCollection =>
+      _firestore.collection('edge_nodes');
   CollectionReference get _assignmentsCollection =>
       _firestore.collection('edge_assignments');
-  CollectionReference get _failoversCollection => _firestore.collection('failover_events');
+  CollectionReference get _failoversCollection =>
+      _firestore.collection('failover_events');
 
   final StreamController<EdgeNode> _nodeStatusController =
       StreamController<EdgeNode>.broadcast();
@@ -242,7 +245,8 @@ class EdgeNodeManager {
     int maxConnections = 10000,
     Map<String, dynamic>? metadata,
   }) async {
-    debugPrint('ðŸ–¥ï¸ [EdgeManager] Registering edge node: $name in ${region.name}');
+    debugPrint(
+        'ðŸ–¥ï¸ [EdgeManager] Registering edge node: $name in ${region.name}');
 
     final nodeRef = _nodesCollection.doc();
     final node = EdgeNode(
@@ -275,7 +279,8 @@ class EdgeNodeManager {
     debugPrint('ðŸ“Š [EdgeManager] Node $nodeId status: ${status.name}');
 
     // Trigger failover if node went offline
-    if (status == EdgeNodeStatus.offline || status == EdgeNodeStatus.maintenance) {
+    if (status == EdgeNodeStatus.offline ||
+        status == EdgeNodeStatus.maintenance) {
       await _triggerFailoverForNode(nodeId);
     }
   }
@@ -331,7 +336,8 @@ class EdgeNodeManager {
   }) async {
     debugPrint('ðŸ‘¤ [EdgeManager] Assigning user $oderId to edge');
 
-    final region = preferredRegion ?? GlobalNetworkService.instance.currentRegion;
+    final region =
+        preferredRegion ?? GlobalNetworkService.instance.currentRegion;
     final node = await _selectBestNode(region);
 
     if (node == null) {
@@ -381,7 +387,8 @@ class EdgeNodeManager {
       return _selectLeastLoadedNode(nodes);
     }
 
-    final nodes = snapshot.docs.map((doc) => EdgeNode.fromFirestore(doc)).toList();
+    final nodes =
+        snapshot.docs.map((doc) => EdgeNode.fromFirestore(doc)).toList();
     return _selectLeastLoadedNode(nodes);
   }
 
@@ -491,7 +498,8 @@ class EdgeNodeManager {
     return failover;
   }
 
-  Future<EdgeNode?> _selectAlternativeNode(Region region, String excludeNode) async {
+  Future<EdgeNode?> _selectAlternativeNode(
+      Region region, String excludeNode) async {
     // First try same region
     var snapshot = await _nodesCollection
         .where('region', isEqualTo: region.name)
@@ -543,7 +551,8 @@ class EdgeNodeManager {
 
   /// Trigger failover for all users on a node
   Future<void> _triggerFailoverForNode(String nodeId) async {
-    debugPrint('ðŸ”„ [EdgeManager] Triggering failover for all users on node $nodeId');
+    debugPrint(
+        'ðŸ”„ [EdgeManager] Triggering failover for all users on node $nodeId');
 
     final snapshot = await _assignmentsCollection
         .where('edgeNodeId', isEqualTo: nodeId)
@@ -612,9 +621,8 @@ class EdgeNodeManager {
 
   /// Get nodes by region
   Future<List<EdgeNode>> getNodesByRegion(Region region) async {
-    final snapshot = await _nodesCollection
-        .where('region', isEqualTo: region.name)
-        .get();
+    final snapshot =
+        await _nodesCollection.where('region', isEqualTo: region.name).get();
     return snapshot.docs.map((doc) => EdgeNode.fromFirestore(doc)).toList();
   }
 
@@ -644,7 +652,9 @@ class EdgeNodeManager {
     }
 
     final snapshot = await query.limit(limit).get();
-    return snapshot.docs.map((doc) => FailoverEvent.fromFirestore(doc)).toList();
+    return snapshot.docs
+        .map((doc) => FailoverEvent.fromFirestore(doc))
+        .toList();
   }
 
   /// Get edge statistics
@@ -667,7 +677,8 @@ class EdgeNodeManager {
       'totalNodes': nodes.length,
       'totalConnections': totalConnections,
       'totalCapacity': totalCapacity,
-      'utilizationPercent': totalCapacity > 0 ? totalConnections / totalCapacity * 100 : 0,
+      'utilizationPercent':
+          totalCapacity > 0 ? totalConnections / totalCapacity * 100 : 0,
       'byRegion': byRegion,
       'byStatus': byStatus,
       'healthyNodes': nodes.where((n) => n.isHealthy).length,

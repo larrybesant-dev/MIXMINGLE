@@ -1,4 +1,4 @@
-﻿// Groups Sidebar Widget - Shows groups with active users and join/leave controls
+// Groups Sidebar Widget - Shows groups with active users and join/leave controls
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -317,7 +317,8 @@ class _GroupsSidebarWidgetState extends ConsumerState<GroupsSidebarWidget> {
                   id: 'group_${DateTime.now().millisecondsSinceEpoch}',
                   name: nameController.text,
                   description: descriptionController.text,
-                  imageUrl: 'https://i.pravatar.cc/150?u=${nameController.text}',
+                  imageUrl:
+                      'https://i.pravatar.cc/150?u=${nameController.text}',
                   maxParticipants: 20,
                   participantIds: [ref.read(currentUserIdProvider)],
                   createdAt: DateTime.now(),
@@ -420,7 +421,7 @@ class _GroupTile extends StatelessWidget {
         ),
         trailing: isJoined
             ? IconButton(
-               icon: const Icon(Icons.exit_to_app),
+                icon: const Icon(Icons.exit_to_app),
                 onPressed: onLeave,
                 color: DesignColors.textSecondary,
               )

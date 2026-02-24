@@ -15,7 +15,8 @@ class ShimmerSkeleton extends StatefulWidget {
   State<ShimmerSkeleton> createState() => _ShimmerSkeletonState();
 }
 
-class _ShimmerSkeletonState extends State<ShimmerSkeleton> with SingleTickerProviderStateMixin {
+class _ShimmerSkeletonState extends State<ShimmerSkeleton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _shimmerPosition;
 
@@ -27,7 +28,8 @@ class _ShimmerSkeletonState extends State<ShimmerSkeleton> with SingleTickerProv
       vsync: this,
     )..repeat();
 
-    _shimmerPosition = Tween<double>(begin: -1.0, end: 2.0).animate(_controller);
+    _shimmerPosition =
+        Tween<double>(begin: -1.0, end: 2.0).animate(_controller);
   }
 
   @override
@@ -106,7 +108,8 @@ class SkeletonText extends StatelessWidget {
     this.height = 14,
     this.margin = const EdgeInsets.symmetric(vertical: 4),
     BorderRadius? borderRadius,
-  }) : borderRadius = borderRadius ?? const BorderRadius.all(Radius.circular(4));
+  }) : borderRadius =
+            borderRadius ?? const BorderRadius.all(Radius.circular(4));
 
   @override
   Widget build(BuildContext context) {

@@ -87,8 +87,7 @@ class ExternalApp {
         approvedAt: map['approvedAt'] != null
             ? DateTime.parse(map['approvedAt'] as String)
             : null,
-        metadata:
-            (map['metadata'] as Map<String, dynamic>?) ?? {},
+        metadata: (map['metadata'] as Map<String, dynamic>?) ?? {},
       );
 }
 
@@ -278,7 +277,8 @@ class PlatformAPIService {
         description: description,
         developerEmail: developerEmail,
         type: type,
-        status: type == AppType.internal ? AppStatus.approved : AppStatus.pending,
+        status:
+            type == AppType.internal ? AppStatus.approved : AppStatus.pending,
         scopes: validScopes,
         clientId: clientId,
         clientSecretHash: clientSecretHash,
@@ -353,7 +353,10 @@ class PlatformAPIService {
 
     try {
       // Find app by client ID
-      final appsQuery = await _appsCollection.where('clientId', isEqualTo: clientId).limit(1).get();
+      final appsQuery = await _appsCollection
+          .where('clientId', isEqualTo: clientId)
+          .limit(1)
+          .get();
 
       if (appsQuery.docs.isEmpty) {
         debugPrint('âŒ [PlatformAPI] Client not found');
@@ -639,7 +642,8 @@ class PlatformAPIService {
       query = query.where('status', isEqualTo: status.name);
     }
 
-    final snapshot = await query.orderBy('registeredAt', descending: true).get();
+    final snapshot =
+        await query.orderBy('registeredAt', descending: true).get();
 
     return snapshot.docs.map((doc) => ExternalApp.fromMap(doc.data())).toList();
   }

@@ -139,13 +139,16 @@ void main(List<String> rawArgs) async {
   }
 
   File(diffPath).writeAsStringSync(diffBuffer.toString());
-  print('Diff written → $diffPath  ($totalEdits edit(s) across ${changedFiles.length} file(s))');
+  print(
+      'Diff written → $diffPath  ($totalEdits edit(s) across ${changedFiles.length} file(s))');
 
   if (apply) {
     print('Changes applied in-place.');
-    print('Next: flutter analyze && flutter test test/unit --platform=chrome --dart-define=FLUTTER_WEB_TEST=true');
+    print(
+        'Next: flutter analyze && flutter test test/unit --platform=chrome --dart-define=FLUTTER_WEB_TEST=true');
   } else {
-    print('Dry-run only. Inspect $diffPath then re-run with --apply to apply changes.');
+    print(
+        'Dry-run only. Inspect $diffPath then re-run with --apply to apply changes.');
   }
 }
 
@@ -157,7 +160,8 @@ String _simpleDiff(String oldText, String newText) {
   final oldLines = oldText.split('\n');
   final newLines = newText.split('\n');
   final buf = StringBuffer();
-  final max = oldLines.length > newLines.length ? oldLines.length : newLines.length;
+  final max =
+      oldLines.length > newLines.length ? oldLines.length : newLines.length;
   for (var i = 0; i < max; i++) {
     final o = i < oldLines.length ? oldLines[i] : '';
     final n = i < newLines.length ? newLines[i] : '';

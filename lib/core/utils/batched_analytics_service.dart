@@ -1,10 +1,11 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 
 /// Batches analytics events to reduce network overhead
 /// Combines multiple events into fewer network calls
 class BatchedAnalyticsService {
-  static final BatchedAnalyticsService _instance = BatchedAnalyticsService._internal();
+  static final BatchedAnalyticsService _instance =
+      BatchedAnalyticsService._internal();
   factory BatchedAnalyticsService() => _instance;
   BatchedAnalyticsService._internal();
 
@@ -21,7 +22,8 @@ class BatchedAnalyticsService {
     });
 
     if (kDebugMode) {
-      debugPrint('[BatchedAnalytics] Event added. Batch size: ${_eventBatch.length}');
+      debugPrint(
+          '[BatchedAnalytics] Event added. Batch size: ${_eventBatch.length}');
     }
 
     // Flush if batch is full

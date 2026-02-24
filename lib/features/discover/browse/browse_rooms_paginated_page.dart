@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixmingle/core/pagination/pagination_controller.dart';
@@ -11,10 +11,12 @@ class BrowseRoomsPaginatedPage extends ConsumerStatefulWidget {
   const BrowseRoomsPaginatedPage({super.key});
 
   @override
-  ConsumerState<BrowseRoomsPaginatedPage> createState() => _BrowseRoomsPaginatedPageState();
+  ConsumerState<BrowseRoomsPaginatedPage> createState() =>
+      _BrowseRoomsPaginatedPageState();
 }
 
-class _BrowseRoomsPaginatedPageState extends ConsumerState<BrowseRoomsPaginatedPage> {
+class _BrowseRoomsPaginatedPageState
+    extends ConsumerState<BrowseRoomsPaginatedPage> {
   late PaginationController<Room> _controller;
 
   @override
@@ -25,7 +27,9 @@ class _BrowseRoomsPaginatedPageState extends ConsumerState<BrowseRoomsPaginatedP
     _controller = PaginationController<Room>(
       pageSize: 20,
       queryBuilder: () {
-        return FirebaseFirestore.instance.collection('rooms').orderBy('createdAt', descending: true);
+        return FirebaseFirestore.instance
+            .collection('rooms')
+            .orderBy('createdAt', descending: true);
       },
       fromDocument: (doc) => Room.fromMap(doc.data() as Map<String, dynamic>),
     );
@@ -63,7 +67,8 @@ class _BrowseRoomsPaginatedPageState extends ConsumerState<BrowseRoomsPaginatedP
             child: Card(
               child: ListTile(
                 title: Text(room.name ?? room.title),
-                subtitle: Text('${room.participantIds.length} members â€¢ ${room.viewerCount} viewers'),
+                subtitle: Text(
+                    '${room.participantIds.length} members â€¢ ${room.viewerCount} viewers'),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
                   // Navigate to room details

@@ -3,7 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('Integration Tests - Complete User Journey', () {
     group('Authentication Flow', () {
-      testWidgets('User signup, login, and profile setup', (WidgetTester tester) async {
+      testWidgets('User signup, login, and profile setup',
+          (WidgetTester tester) async {
         // 1. Navigate to signup screen
         // 2. Fill in email, password, display name
         // 3. Agree to terms
@@ -14,7 +15,8 @@ void main() {
         expect(true, true);
       });
 
-      testWidgets('User login with existing account', (WidgetTester tester) async {
+      testWidgets('User login with existing account',
+          (WidgetTester tester) async {
         // 1. Navigate to login screen
         // 2. Enter email and password
         // 3. Submit - authentication succeeds
@@ -34,7 +36,8 @@ void main() {
     });
 
     group('Room Discovery & Joining', () {
-      testWidgets('User browses rooms and joins active room', (WidgetTester tester) async {
+      testWidgets('User browses rooms and joins active room',
+          (WidgetTester tester) async {
         // 1. From home, tap Browse Rooms
         // 2. View available rooms
         // 3. Tap a room to join
@@ -61,7 +64,8 @@ void main() {
     });
 
     group('Video Chat Session', () {
-      testWidgets('Full video chat session - join, communicate, leave', (WidgetTester tester) async {
+      testWidgets('Full video chat session - join, communicate, leave',
+          (WidgetTester tester) async {
         // 1. Join room (video grid renders)
         // 2. Toggle microphone on/off
         // 3. Toggle camera on/off
@@ -76,7 +80,8 @@ void main() {
         expect(true, true);
       });
 
-      testWidgets('Multiple participants join same room', (WidgetTester tester) async {
+      testWidgets('Multiple participants join same room',
+          (WidgetTester tester) async {
         // 1. User 1 creates room
         // 2. User 2 joins room
         // 3. User 3 joins room
@@ -87,7 +92,8 @@ void main() {
         expect(true, true);
       });
 
-      testWidgets('Video quality adjustment during call', (WidgetTester tester) async {
+      testWidgets('Video quality adjustment during call',
+          (WidgetTester tester) async {
         // 1. Join room with High quality
         // 2. Change to Medium quality - encoding updates
         // 3. Change to Low quality - bandwidth reduced
@@ -110,7 +116,8 @@ void main() {
         expect(true, true);
       });
 
-      testWidgets('Typing indicators work in real-time', (WidgetTester tester) async {
+      testWidgets('Typing indicators work in real-time',
+          (WidgetTester tester) async {
         // 1. User starts typing
         // 2. Other users see "User is typing..." indicator
         // 3. User stops typing
@@ -130,7 +137,8 @@ void main() {
     });
 
     group('Presence & Status', () {
-      testWidgets('User presence status updates in real-time', (WidgetTester tester) async {
+      testWidgets('User presence status updates in real-time',
+          (WidgetTester tester) async {
         // 1. User 1 joins room - shows Online (green icon)
         // 2. User 2 sees User 1 online in presence panel
         // 3. User 1 minimizes app - auto-sets Away status
@@ -156,7 +164,8 @@ void main() {
         expect(true, true);
       });
 
-      testWidgets('Moderator mutes user temporarily', (WidgetTester tester) async {
+      testWidgets('Moderator mutes user temporarily',
+          (WidgetTester tester) async {
         // 1. Moderator opens moderation menu
         // 2. Selects user to mute
         // 3. Sets duration (1 hour)
@@ -166,7 +175,8 @@ void main() {
         expect(true, true);
       });
 
-      testWidgets('Moderator kicks user from room', (WidgetTester tester) async {
+      testWidgets('Moderator kicks user from room',
+          (WidgetTester tester) async {
         // 1. Moderator opens moderation menu
         // 2. Selects "Kick" option
         // 3. User disconnected from room
@@ -175,7 +185,8 @@ void main() {
         expect(true, true);
       });
 
-      testWidgets('Moderator bans user permanently', (WidgetTester tester) async {
+      testWidgets('Moderator bans user permanently',
+          (WidgetTester tester) async {
         // 1. Moderator bans user
         // 2. User disconnected
         // 3. User cannot rejoin room
@@ -207,7 +218,8 @@ void main() {
     });
 
     group('Analytics Tracking', () {
-      testWidgets('Room stats update in real-time', (WidgetTester tester) async {
+      testWidgets('Room stats update in real-time',
+          (WidgetTester tester) async {
         // 1. User 1 joins room
         // 2. Analytics: +1 visitor, peak concurrent = 1
         // 3. User 2 joins (different user)
@@ -231,7 +243,8 @@ void main() {
     });
 
     group('Error Recovery', () {
-      testWidgets('Network reconnection during call', (WidgetTester tester) async {
+      testWidgets('Network reconnection during call',
+          (WidgetTester tester) async {
         // 1. In active call
         // 2. Simulate network disconnection
         // 3. App shows "Reconnecting..."
@@ -241,7 +254,8 @@ void main() {
         expect(true, true);
       });
 
-      testWidgets('Permission denied and recovery', (WidgetTester tester) async {
+      testWidgets('Permission denied and recovery',
+          (WidgetTester tester) async {
         // 1. Join room without camera permission
         // 2. App requests permission
         // 3. User denies
@@ -257,7 +271,8 @@ void main() {
     });
 
     group('Data Persistence', () {
-      testWidgets('User settings persist across app restarts', (WidgetTester tester) async {
+      testWidgets('User settings persist across app restarts',
+          (WidgetTester tester) async {
         // 1. Set video quality to Low
         // 2. Set preference: auto-unmute on join
         // 3. Close and restart app
@@ -266,7 +281,8 @@ void main() {
         expect(true, true);
       });
 
-      testWidgets('Room history accessible after leaving', (WidgetTester tester) async {
+      testWidgets('Room history accessible after leaving',
+          (WidgetTester tester) async {
         // 1. Participate in room
         // 2. Leave room
         // 3. From profile, view room history

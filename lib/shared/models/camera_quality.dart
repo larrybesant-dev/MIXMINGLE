@@ -59,7 +59,6 @@ class CameraQualitySettings {
   }
 
   @override
-  String toString() => 'CameraQualitySettings($displayName, ${resolution}p, ${bitrate}kbps)';
+  String toString() =>
+      'CameraQualitySettings($displayName, ${resolution}p, ${bitrate}kbps)';
 }
-
-

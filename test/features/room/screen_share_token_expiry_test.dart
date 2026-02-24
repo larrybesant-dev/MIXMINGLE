@@ -5,7 +5,8 @@ import '../../helpers/token_expiry_harness.dart';
 void main() {
   group('Screen Share Token Expiry', () {
     testWidgets('Screen share resumes after token refresh', (tester) async {
-      final harness = TokenExpiryHarness(forceExpiry: true, duringSession: true, logger: print);
+      final harness = TokenExpiryHarness(
+          forceExpiry: true, duringSession: true, logger: print);
       await harness.runWithExpiry(() async {
         // Simulate screen share
         // ...existing code...
@@ -16,8 +17,10 @@ void main() {
       });
     });
 
-    testWidgets('No stuck overlays or orphaned video after refresh', (tester) async {
-      final harness = TokenExpiryHarness(forceExpiry: true, duringReconnect: true, logger: print);
+    testWidgets('No stuck overlays or orphaned video after refresh',
+        (tester) async {
+      final harness = TokenExpiryHarness(
+          forceExpiry: true, duringReconnect: true, logger: print);
       await harness.runWithExpiry(() async {
         // Simulate disconnect/reconnect during screen share
         // ...existing code...

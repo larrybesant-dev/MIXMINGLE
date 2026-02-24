@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 
 /// Performance logging utilities (debug mode only)
 class PerformanceLogger {
@@ -30,16 +30,19 @@ class PerformanceLogger {
 
     // Log the duration
     final detailsStr = details != null ? ' ($details)' : '';
-    debugPrint('â±ï¸ $operationName: ${duration.inMilliseconds}ms$detailsStr');
+    debugPrint(
+        'â±ï¸ $operationName: ${duration.inMilliseconds}ms$detailsStr');
 
     // Warn if slow
     if (duration.inMilliseconds > 1000) {
-      debugPrint('ðŸŒ SLOW OPERATION: $operationName took ${duration.inMilliseconds}ms');
+      debugPrint(
+          'ðŸŒ SLOW OPERATION: $operationName took ${duration.inMilliseconds}ms');
     }
   }
 
   /// Execute and measure a synchronous operation
-  static T measure<T>(String operationName, T Function() operation, {String? details}) {
+  static T measure<T>(String operationName, T Function() operation,
+      {String? details}) {
     if (!kDebugMode) return operation();
 
     start(operationName);
@@ -77,8 +80,10 @@ class PerformanceLogger {
 
     final totalMs = durations.fold<int>(0, (sum, d) => sum + d.inMilliseconds);
     final avgMs = totalMs ~/ durations.length;
-    final maxMs = durations.map((d) => d.inMilliseconds).reduce((a, b) => a > b ? a : b);
-    final minMs = durations.map((d) => d.inMilliseconds).reduce((a, b) => a < b ? a : b);
+    final maxMs =
+        durations.map((d) => d.inMilliseconds).reduce((a, b) => a > b ? a : b);
+    final minMs =
+        durations.map((d) => d.inMilliseconds).reduce((a, b) => a < b ? a : b);
 
     return '''
 $operationName Statistics:
@@ -154,7 +159,8 @@ class WidgetPerformanceTracker {
 
     final duration = DateTime.now().difference(_buildStartTime!);
     if (duration.inMilliseconds > 16) {
-      debugPrint('ðŸ”´ Slow widget build: $widgetName took ${duration.inMilliseconds}ms');
+      debugPrint(
+          'ðŸ”´ Slow widget build: $widgetName took ${duration.inMilliseconds}ms');
     }
     _buildStartTime = null;
   }

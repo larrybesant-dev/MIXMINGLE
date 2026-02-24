@@ -44,8 +44,10 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(postId != null ? 'Post created!' : 'Failed to create post'),
-          backgroundColor: postId != null ? DesignColors.success : DesignColors.error,
+          content:
+              Text(postId != null ? 'Post created!' : 'Failed to create post'),
+          backgroundColor:
+              postId != null ? DesignColors.success : DesignColors.error,
         ),
       );
     }
@@ -133,7 +135,8 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                   icon: Icons.emoji_events,
                   label: 'Achievement',
                   isSelected: _selectedType == PostType.achievement,
-                  onTap: () => setState(() => _selectedType = PostType.achievement),
+                  onTap: () =>
+                      setState(() => _selectedType = PostType.achievement),
                 ),
               ],
             ),

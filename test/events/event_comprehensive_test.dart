@@ -26,10 +26,14 @@ void main() {
         );
 
         // Act
-        await fakeFirestore.collection('events').doc(testEventId).set(eventData);
+        await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .set(eventData);
 
         // Assert
-        final doc = await fakeFirestore.collection('events').doc(testEventId).get();
+        final doc =
+            await fakeFirestore.collection('events').doc(testEventId).get();
         expect(doc.exists, isTrue);
         expect(doc.data()?['title'], 'New Test Event');
         expect(doc.data()?['hostId'], testUserId);
@@ -40,10 +44,14 @@ void main() {
         final eventData = TestData.event(id: testEventId, hostId: testUserId);
 
         // Act
-        await fakeFirestore.collection('events').doc(testEventId).set(eventData);
+        await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .set(eventData);
 
         // Assert
-        final doc = await fakeFirestore.collection('events').doc(testEventId).get();
+        final doc =
+            await fakeFirestore.collection('events').doc(testEventId).get();
         expect(doc.data()?['createdAt'], isNotNull);
       });
 
@@ -53,17 +61,23 @@ void main() {
           'id': testEventId,
           'title': 'Test Event',
           'hostId': testUserId,
-          'startTime': Timestamp.fromDate(DateTime.now().add(const Duration(days: 1))),
-          'endTime': Timestamp.fromDate(DateTime.now().add(const Duration(days: 1, hours: 2))),
+          'startTime':
+              Timestamp.fromDate(DateTime.now().add(const Duration(days: 1))),
+          'endTime': Timestamp.fromDate(
+              DateTime.now().add(const Duration(days: 1, hours: 2))),
           'maxCapacity': 50,
           'createdAt': FieldValue.serverTimestamp(),
         };
 
         // Act
-        await fakeFirestore.collection('events').doc(testEventId).set(eventData);
+        await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .set(eventData);
 
         // Assert
-        final doc = await fakeFirestore.collection('events').doc(testEventId).get();
+        final doc =
+            await fakeFirestore.collection('events').doc(testEventId).get();
         expect(doc.exists, isTrue);
         expect(doc.data()?['title'], isNotNull);
         expect(doc.data()?['hostId'], isNotNull);
@@ -75,10 +89,14 @@ void main() {
         final eventData = TestData.event(id: testEventId, hostId: testUserId);
 
         // Act
-        await fakeFirestore.collection('events').doc(testEventId).set(eventData);
+        await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .set(eventData);
 
         // Assert
-        final doc = await fakeFirestore.collection('events').doc(testEventId).get();
+        final doc =
+            await fakeFirestore.collection('events').doc(testEventId).get();
         expect(doc.data()?['latitude'], isNotNull);
         expect(doc.data()?['longitude'], isNotNull);
       });
@@ -97,15 +115,24 @@ void main() {
         const attendeeId = 'attendee_123';
 
         // Act
-        await fakeFirestore.collection('events').doc(testEventId).collection('rsvps').doc(attendeeId).set({
+        await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .collection('rsvps')
+            .doc(attendeeId)
+            .set({
           'userId': attendeeId,
           'status': 'going',
           'timestamp': FieldValue.serverTimestamp(),
         });
 
         // Assert
-        final rsvpDoc =
-            await fakeFirestore.collection('events').doc(testEventId).collection('rsvps').doc(attendeeId).get();
+        final rsvpDoc = await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .collection('rsvps')
+            .doc(attendeeId)
+            .get();
 
         expect(rsvpDoc.exists, isTrue);
         expect(rsvpDoc.data()?['status'], 'going');
@@ -115,7 +142,12 @@ void main() {
         // Arrange
         const attendeeId = 'attendee_123';
 
-        await fakeFirestore.collection('events').doc(testEventId).collection('rsvps').doc(attendeeId).set({
+        await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .collection('rsvps')
+            .doc(attendeeId)
+            .set({
           'userId': attendeeId,
           'status': 'going',
           'timestamp': FieldValue.serverTimestamp(),
@@ -130,8 +162,12 @@ void main() {
             .update({'status': 'maybe'});
 
         // Assert
-        final rsvpDoc =
-            await fakeFirestore.collection('events').doc(testEventId).collection('rsvps').doc(attendeeId).get();
+        final rsvpDoc = await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .collection('rsvps')
+            .doc(attendeeId)
+            .get();
 
         expect(rsvpDoc.data()?['status'], 'maybe');
       });
@@ -140,18 +176,32 @@ void main() {
         // Arrange
         const attendeeId = 'attendee_123';
 
-        await fakeFirestore.collection('events').doc(testEventId).collection('rsvps').doc(attendeeId).set({
+        await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .collection('rsvps')
+            .doc(attendeeId)
+            .set({
           'userId': attendeeId,
           'status': 'going',
           'timestamp': FieldValue.serverTimestamp(),
         });
 
         // Act
-        await fakeFirestore.collection('events').doc(testEventId).collection('rsvps').doc(attendeeId).delete();
+        await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .collection('rsvps')
+            .doc(attendeeId)
+            .delete();
 
         // Assert
-        final rsvpDoc =
-            await fakeFirestore.collection('events').doc(testEventId).collection('rsvps').doc(attendeeId).get();
+        final rsvpDoc = await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .collection('rsvps')
+            .doc(attendeeId)
+            .get();
 
         expect(rsvpDoc.exists, isFalse);
       });
@@ -180,7 +230,11 @@ void main() {
             .set({'userId': 'user3', 'status': 'maybe'});
 
         // Act
-        final snapshot = await fakeFirestore.collection('events').doc(testEventId).collection('rsvps').get();
+        final snapshot = await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .collection('rsvps')
+            .get();
 
         // Assert
         expect(snapshot.docs.length, 3);
@@ -219,7 +273,10 @@ void main() {
             );
 
         // Act
-        final snapshot = await fakeFirestore.collection('events').where('hostId', isEqualTo: testUserId).get();
+        final snapshot = await fakeFirestore
+            .collection('events')
+            .where('hostId', isEqualTo: testUserId)
+            .get();
 
         // Assert
         expect(snapshot.docs.length, 5);
@@ -227,7 +284,8 @@ void main() {
 
       test('should get event by ID', () async {
         // Act
-        final doc = await fakeFirestore.collection('events').doc('event_1').get();
+        final doc =
+            await fakeFirestore.collection('events').doc('event_1').get();
 
         // Assert
         expect(doc.exists, isTrue);
@@ -244,28 +302,40 @@ void main() {
 
       test('should update event title', () async {
         // Act
-        await fakeFirestore.collection('events').doc(testEventId).update({'title': 'Updated Title'});
+        await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .update({'title': 'Updated Title'});
 
         // Assert
-        final doc = await fakeFirestore.collection('events').doc(testEventId).get();
+        final doc =
+            await fakeFirestore.collection('events').doc(testEventId).get();
         expect(doc.data()?['title'], 'Updated Title');
       });
 
       test('should update event description', () async {
         // Act
-        await fakeFirestore.collection('events').doc(testEventId).update({'description': 'Updated description'});
+        await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .update({'description': 'Updated description'});
 
         // Assert
-        final doc = await fakeFirestore.collection('events').doc(testEventId).get();
+        final doc =
+            await fakeFirestore.collection('events').doc(testEventId).get();
         expect(doc.data()?['description'], 'Updated description');
       });
 
       test('should update event capacity', () async {
         // Act
-        await fakeFirestore.collection('events').doc(testEventId).update({'maxCapacity': 100});
+        await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .update({'maxCapacity': 100});
 
         // Assert
-        final doc = await fakeFirestore.collection('events').doc(testEventId).get();
+        final doc =
+            await fakeFirestore.collection('events').doc(testEventId).get();
         expect(doc.data()?['maxCapacity'], 100);
       });
     });
@@ -282,7 +352,8 @@ void main() {
         await fakeFirestore.collection('events').doc(testEventId).delete();
 
         // Assert
-        final doc = await fakeFirestore.collection('events').doc(testEventId).get();
+        final doc =
+            await fakeFirestore.collection('events').doc(testEventId).get();
         expect(doc.exists, isFalse);
       });
 
@@ -298,7 +369,11 @@ void main() {
         // Act
         await fakeFirestore.collection('events').doc(testEventId).delete();
 
-        final rsvpsSnapshot = await fakeFirestore.collection('events').doc(testEventId).collection('rsvps').get();
+        final rsvpsSnapshot = await fakeFirestore
+            .collection('events')
+            .doc(testEventId)
+            .collection('rsvps')
+            .get();
 
         // Assert - subcollections are not auto-deleted in Firestore
         // But we should document this behavior
@@ -346,7 +421,8 @@ void main() {
 
       test('should check if event is full', () async {
         // Arrange
-        final eventDoc = await fakeFirestore.collection('events').doc(testEventId).get();
+        final eventDoc =
+            await fakeFirestore.collection('events').doc(testEventId).get();
         final maxCapacity = eventDoc.data()?['maxCapacity'] as int;
 
         final rsvpsSnapshot = await fakeFirestore

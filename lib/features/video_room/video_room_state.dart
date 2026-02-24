@@ -1,4 +1,4 @@
-﻿/// Immutable state model for video room
+/// Immutable state model for video room
 class VideoRoomState {
   final String roomId;
   final String userId;
@@ -77,7 +77,8 @@ class VideoRoomState {
   }
 
   @override
-  String toString() => 'VideoRoomState(phase=$phase, isReady=$isReady, error=$error)';
+  String toString() =>
+      'VideoRoomState(phase=$phase, isReady=$isReady, error=$error)';
 }
 
 /// Lifecycle phases for video room
@@ -90,8 +91,3 @@ enum VideoRoomPhase {
   left,
   error,
 }
-
-
-
-
-

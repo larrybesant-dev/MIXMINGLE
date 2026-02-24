@@ -81,10 +81,12 @@ class _ReactionBarWidgetState extends State<ReactionBarWidget> {
           // ── Emoji button row ────────────────────────────────────────────
           Row(
             mainAxisSize: MainAxisSize.min,
-            children: _emojis.map((e) => _EmojiButton(
-              emoji: e,
-              onTap: () => _handleTap(e),
-            )).toList(),
+            children: _emojis
+                .map((e) => _EmojiButton(
+                      emoji: e,
+                      onTap: () => _handleTap(e),
+                    ))
+                .toList(),
           ),
 
           // ── Active floats ────────────────────────────────────────────
@@ -203,8 +205,8 @@ class _EmojiFloatWidget extends StatefulWidget {
 class _EmojiFloatWidgetState extends State<_EmojiFloatWidget>
     with SingleTickerProviderStateMixin {
   late final AnimationController _ctrl;
-  late final Animation<double> _rise;   // 0-120 px upward
-  late final Animation<double> _fade;   // 1 → 0
+  late final Animation<double> _rise; // 0-120 px upward
+  late final Animation<double> _fade; // 1 → 0
 
   @override
   void initState() {
@@ -235,7 +237,7 @@ class _EmojiFloatWidgetState extends State<_EmojiFloatWidget>
     return AnimatedBuilder(
       animation: _ctrl,
       builder: (_, __) => Positioned(
-        bottom: -_rise.value,    // starts at 0, goes negative (upward)
+        bottom: -_rise.value, // starts at 0, goes negative (upward)
         child: Transform.translate(
           offset: Offset(widget.dx, 0),
           child: Opacity(

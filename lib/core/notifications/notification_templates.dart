@@ -1,4 +1,4 @@
-﻿/// Notification Templates
+/// Notification Templates
 ///
 /// Predefined notification templates for various app events including
 /// daily return, favorite host live, room activity, referral rewards,
@@ -35,7 +35,8 @@ class NotificationTemplates {
       body = 'Claim your free $coinsAvailable coins and spotlight minutes!';
     } else if (currentStreak < 7) {
       title = 'Keep your streak alive! ðŸ”¥';
-      body = '$currentStreak-day streak! Claim today for $coinsAvailable coins.';
+      body =
+          '$currentStreak-day streak! Claim today for $coinsAvailable coins.';
     } else {
       title = 'You\'re on fire! ðŸ”¥ðŸ”¥';
       body = '$currentStreak-day streak! Double coins waiting for you!';
@@ -179,10 +180,12 @@ class NotificationTemplates {
       body = '$referredUserName joined using your code! +$coinsEarned coins!';
     } else if (totalReferrals == 5) {
       title = 'Super Referrer! â­';
-      body = '5 friends joined! $referredUserName earned you +$coinsEarned coins!';
+      body =
+          '5 friends joined! $referredUserName earned you +$coinsEarned coins!';
     } else if (totalReferrals == 10) {
       title = 'Referral Champion! ðŸ†';
-      body = '10 friends and counting! +$coinsEarned coins from $referredUserName!';
+      body =
+          '10 friends and counting! +$coinsEarned coins from $referredUserName!';
     } else {
       title = 'Referral Reward! ðŸ’°';
       body = '$referredUserName joined! +$coinsEarned coins for you!';

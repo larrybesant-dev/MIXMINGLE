@@ -1,4 +1,4 @@
-﻿/// Feature flags for gradual rollout and A/B testing
+/// Feature flags for gradual rollout and A/B testing
 ///
 /// Usage:
 /// ```dart
@@ -61,7 +61,3 @@ class FeatureFlags {
   /// Auto-seed Firestore collections if missing
   static const bool autoSeedFirestore = true;
 }
-
-
-
-

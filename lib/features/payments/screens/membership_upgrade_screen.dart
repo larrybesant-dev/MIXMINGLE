@@ -19,10 +19,12 @@ class MembershipUpgradeScreen extends ConsumerStatefulWidget {
   const MembershipUpgradeScreen({super.key});
 
   @override
-  ConsumerState<MembershipUpgradeScreen> createState() => _MembershipUpgradeScreenState();
+  ConsumerState<MembershipUpgradeScreen> createState() =>
+      _MembershipUpgradeScreenState();
 }
 
-class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScreen>
+class _MembershipUpgradeScreenState
+    extends ConsumerState<MembershipUpgradeScreen>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _fadeAnimation;
@@ -205,7 +207,9 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
     return GestureDetector(
       onTap: isCurrent ? null : onTap,
       child: NeonGlowCard(
-        glowColor: isSelected ? tier.primaryColor : DesignColors.accent.withValues(alpha: 0.2),
+        glowColor: isSelected
+            ? tier.primaryColor
+            : DesignColors.accent.withValues(alpha: 0.2),
         borderRadius: 20,
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -360,9 +364,7 @@ class _MembershipUpgradeScreenState extends ConsumerState<MembershipUpgradeScree
           fontWeight: FontWeight.bold,
           glowColor: _selectedTier.primaryColor,
         ),
-
         const SizedBox(height: 16),
-
         ..._selectedTier.benefits.map((benefit) => Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: Row(

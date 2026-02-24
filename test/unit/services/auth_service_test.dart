@@ -92,7 +92,8 @@ void main() {
         expect(true, true);
       });
 
-      test('Delete user account - should remove from Auth and Firestore', () async {
+      test('Delete user account - should remove from Auth and Firestore',
+          () async {
         // Arrange
         const userId = 'user123';
 
@@ -102,7 +103,8 @@ void main() {
     });
 
     group('Session Management', () {
-      test('Persistent login - should maintain session on app restart', () async {
+      test('Persistent login - should maintain session on app restart',
+          () async {
         // Act & Assert
         expect(true, true);
       });
@@ -112,7 +114,8 @@ void main() {
         expect(true, true);
       });
 
-      test('Multiple device login - should handle concurrent sessions', () async {
+      test('Multiple device login - should handle concurrent sessions',
+          () async {
         // Act & Assert
         expect(true, true);
       });

@@ -1,4 +1,3 @@
-﻿
 /// Friends Provider with Real-Time Presence Integration
 ///
 /// Combines user friends list with live presence data
@@ -91,7 +90,8 @@ class FriendWithPresence {
 /// Friends service for Firestore operations
 class FriendsService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final shouldNotUseAuth = FirebaseAuth.instance;  // Kept for backward compatibility
+  final shouldNotUseAuth =
+      FirebaseAuth.instance; // Kept for backward compatibility
 
   /// Get current user's friend IDs
   Future<List<String>> getFriendIds(String userId) async {
@@ -217,8 +217,8 @@ final friendWithPresenceProvider =
         displayName: friendData['displayName'] ?? 'Unknown',
         avatarUrl: friendData['avatarUrl'],
         presence: null,
-        addedAt: (friendData['createdAt'] as Timestamp?)?.toDate() ??
-            DateTime.now(),
+        addedAt:
+            (friendData['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       );
     },
     loading: () => null,
@@ -273,7 +273,3 @@ final friendsPresenceStreamProvider =
   final friendsList = ref.watch(friendsWithPresenceProvider(userId));
   return Stream.value(friendsList);
 });
-
-
-
-

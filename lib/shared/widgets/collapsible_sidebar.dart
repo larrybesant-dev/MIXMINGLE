@@ -1,4 +1,3 @@
-﻿
 /// Collapsible Sidebar Widget - Base widget with collapse/expand animation and hover effects
 library;
 
@@ -29,8 +28,7 @@ class CollapsibleSidebar extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<CollapsibleSidebar> createState() =>
-      _CollapsibleSidebarState();
+  ConsumerState<CollapsibleSidebar> createState() => _CollapsibleSidebarState();
 }
 
 class _CollapsibleSidebarState extends ConsumerState<CollapsibleSidebar>
@@ -258,8 +256,7 @@ class _SidebarItemState extends State<SidebarItem>
                         decoration: BoxDecoration(
                           color: widget.itemColor?.withValues(alpha: 0.12) ??
                               DesignColors.accent.withValues(alpha: 0.12),
-                          borderRadius:
-                              BorderRadius.circular(BorderRadii.md),
+                          borderRadius: BorderRadius.circular(BorderRadii.md),
                           border: Border.all(
                             color: widget.itemColor?.withValues(alpha: 0.3) ??
                                 DesignColors.accent.withValues(alpha: 0.3),
@@ -305,8 +302,8 @@ class _SidebarItemState extends State<SidebarItem>
                                 height: 10,
                                 decoration: BoxDecoration(
                                   color: DesignColors.accent,
-                                  borderRadius:
-                                      BorderRadius.circular(BorderRadii.circular),
+                                  borderRadius: BorderRadius.circular(
+                                      BorderRadii.circular),
                                   border: Border.all(
                                     color: DesignColors.accent,
                                     width: 2,
@@ -345,8 +342,7 @@ class _SidebarItemState extends State<SidebarItem>
                         ),
                       ),
                       // Badge
-                      if (widget.badgeCount != null &&
-                          widget.badgeCount! > 0)
+                      if (widget.badgeCount != null && widget.badgeCount! > 0)
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: Spacing.sm,
@@ -354,8 +350,7 @@ class _SidebarItemState extends State<SidebarItem>
                           ),
                           decoration: BoxDecoration(
                             color: DesignColors.accent,
-                            borderRadius:
-                                BorderRadius.circular(BorderRadii.lg),
+                            borderRadius: BorderRadius.circular(BorderRadii.lg),
                           ),
                           child: Text(
                             widget.badgeCount.toString(),

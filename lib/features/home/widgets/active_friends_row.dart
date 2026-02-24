@@ -140,7 +140,7 @@ class _FriendAvatarState extends State<_FriendAvatar>
             builder: (_, child) {
               final t = AppMotion.pulse.transform(_ctrl.value);
               final alpha = _shouldPulse ? 0.55 + t * 0.45 : 0.4;
-              final blur  = _shouldPulse ? 4.0 + t * 6.0  : 0.0;
+              final blur = _shouldPulse ? 4.0 + t * 6.0 : 0.0;
 
               return Container(
                 width: 52,

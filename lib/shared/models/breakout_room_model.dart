@@ -18,13 +18,14 @@ class BreakoutRoomModel {
       roomId: roomId,
       name: map['name'] ?? '',
       participantUids: List<String>.from(map['participantUids'] ?? []),
-      createdAt: DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
+      createdAt:
+          DateTime.parse(map['createdAt'] ?? DateTime.now().toIso8601String()),
     );
   }
 
   Map<String, dynamic> toMap() => {
-    'name': name,
-    'participantUids': participantUids,
-    'createdAt': createdAt.toIso8601String(),
-  };
+        'name': name,
+        'participantUids': participantUids,
+        'createdAt': createdAt.toIso8601String(),
+      };
 }

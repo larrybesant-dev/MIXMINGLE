@@ -45,8 +45,7 @@ class MockUser extends Mock implements User {
   String? get displayName => _displayName;
 
   @override
-  String? get photoURL =>
-      _photoURL ?? 'https://i.pravatar.cc/150?u=$_uid';
+  String? get photoURL => _photoURL ?? 'https://i.pravatar.cc/150?u=$_uid';
 
   @override
   bool get emailVerified => true;
@@ -90,7 +89,8 @@ class MockUser extends Mock implements User {
   Future<void> delete() async {}
 
   @override
-  Future<void> sendEmailVerification([ActionCodeSettings? actionCodeSettings]) async {}
+  Future<void> sendEmailVerification(
+      [ActionCodeSettings? actionCodeSettings]) async {}
 
   @override
   Future<void> verifyBeforeUpdateEmail(
@@ -145,11 +145,13 @@ class MockUser extends Mock implements User {
   Future<void> unlinkProvider(String providerId) async {}
 
   @override
-  Future<UserCredential> reauthenticateWithCredential(AuthCredential credential) async =>
+  Future<UserCredential> reauthenticateWithCredential(
+          AuthCredential credential) async =>
       throw UnimplementedError();
 
   @override
-  Future<UserCredential> reauthenticateWithProvider(AuthProvider provider) async =>
+  Future<UserCredential> reauthenticateWithProvider(
+          AuthProvider provider) async =>
       throw UnimplementedError();
 
   @override
@@ -176,9 +178,8 @@ class MockUserData {
         'photoURL': photoURL ?? 'https://i.pravatar.cc/150?u=$uid',
         'isOnline': isOnline,
         'lastSeen': DateTime.now().toIso8601String(),
-        'createdAt': DateTime.now()
-            .subtract(const Duration(days: 30))
-            .toIso8601String(),
+        'createdAt':
+            DateTime.now().subtract(const Duration(days: 30)).toIso8601String(),
       };
 
   static Map<String, dynamic> friend({
@@ -192,7 +193,8 @@ class MockUserData {
       {
         'id': id,
         'name': name,
-        'avatarUrl': avatarUrl.isEmpty ? 'https://i.pravatar.cc/150?u=$id' : avatarUrl,
+        'avatarUrl':
+            avatarUrl.isEmpty ? 'https://i.pravatar.cc/150?u=$id' : avatarUrl,
         'isOnline': isOnline,
         'lastSeen': DateTime.now().toIso8601String(),
         'isFavorite': isFavorite,
@@ -216,9 +218,8 @@ class MockUserData {
             avatarUrl.isEmpty ? 'https://i.pravatar.cc/150?u=$id' : avatarUrl,
         'members': members ?? ['test-user-123', 'friend-123'],
         'memberCount': memberCount ?? (members?.length ?? 2),
-        'createdAt': DateTime.now()
-            .subtract(const Duration(days: 7))
-            .toIso8601String(),
+        'createdAt':
+            DateTime.now().subtract(const Duration(days: 7)).toIso8601String(),
         'unreadCount': unreadCount,
       };
 
@@ -409,7 +410,8 @@ class MockDocumentReference extends Mock
   MockDocumentReference(this._data, this._path, this._docId);
 
   @override
-  Future<DocumentSnapshot<Map<String, dynamic>>> get([GetOptions? options]) async {
+  Future<DocumentSnapshot<Map<String, dynamic>>> get(
+      [GetOptions? options]) async {
     final data = _data[_path]?[_docId];
     return MockDocumentSnapshot(_docId, data ?? {}, data != null);
   }
@@ -441,7 +443,8 @@ class MockQuery extends Mock implements Query<Map<String, dynamic>> {
   // snapshots() is handled by Mock class
 }
 
-class MockQuerySnapshot extends Mock implements QuerySnapshot<Map<String, dynamic>> {
+class MockQuerySnapshot extends Mock
+    implements QuerySnapshot<Map<String, dynamic>> {
   final List<QueryDocumentSnapshot<Map<String, dynamic>>> _docs;
 
   MockQuerySnapshot(this._docs);
@@ -505,13 +508,15 @@ extension TestExtensions on WidgetTester {
 
   /// Enters text into a TextField
   Future<void> enterTextToField(String text) async {
-    Future<void> origEnterText(WidgetTester self, Finder finder, String text) => self.enterText(finder, text);
+    Future<void> origEnterText(WidgetTester self, Finder finder, String text) =>
+        self.enterText(finder, text);
     await origEnterText(this, find.byType(TextField), text);
     await pumpAndSettle();
   }
 
   /// Waits for a widget to appear
-  Future<void> waitForWidget<T>({Duration timeout = const Duration(seconds: 5)}) async {
+  Future<void> waitForWidget<T>(
+      {Duration timeout = const Duration(seconds: 5)}) async {
     await pumpAndSettle();
     expect(find.byType(T), findsWidgets);
   }

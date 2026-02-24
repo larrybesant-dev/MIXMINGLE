@@ -50,7 +50,8 @@ final storeOfferingsProvider = Provider<List<StoreOffering>>((ref) {
 });
 
 /// Provider for membership benefits
-final membershipBenefitsProvider = Provider.family<List<TierBenefit>, MembershipTier>((ref, tier) {
+final membershipBenefitsProvider =
+    Provider.family<List<TierBenefit>, MembershipTier>((ref, tier) {
   return tier.benefits;
 });
 
@@ -108,7 +109,8 @@ class PurchaseNotifier extends Notifier<PurchaseState> {
   }
 
   /// Purchase a subscription
-  Future<bool> purchaseSubscription(MembershipTier tier, {bool isYearly = false}) async {
+  Future<bool> purchaseSubscription(MembershipTier tier,
+      {bool isYearly = false}) async {
     state = PurchaseState.loading;
 
     try {
@@ -116,8 +118,12 @@ class PurchaseNotifier extends Notifier<PurchaseState> {
 
       // Build product ID from tier and billing period
       final productId = isYearly
-          ? (tier == MembershipTier.vipPlus ? RevenueCatConfig.vipPlusYearly : RevenueCatConfig.vipYearly)
-          : (tier == MembershipTier.vipPlus ? RevenueCatConfig.vipPlusMonthly : RevenueCatConfig.vipMonthly);
+          ? (tier == MembershipTier.vipPlus
+              ? RevenueCatConfig.vipPlusYearly
+              : RevenueCatConfig.vipYearly)
+          : (tier == MembershipTier.vipPlus
+              ? RevenueCatConfig.vipPlusMonthly
+              : RevenueCatConfig.vipMonthly);
 
       final result = await revenueCat.purchaseSubscription(productId);
 
@@ -126,11 +132,13 @@ class PurchaseNotifier extends Notifier<PurchaseState> {
           isSuccess: true,
           successMessage: 'Welcome to ${tier.displayName}! ðŸŽ‰',
         );
-        debugPrint('âœ… [Purchase] Subscription successful: ${tier.displayName}');
+        debugPrint(
+            'âœ… [Purchase] Subscription successful: ${tier.displayName}');
         return true;
       } else {
         state = PurchaseState(error: result.errorMessage ?? 'Purchase failed');
-        debugPrint('âŒ [Purchase] Subscription failed: ${result.errorMessage}');
+        debugPrint(
+            'âŒ [Purchase] Subscription failed: ${result.errorMessage}');
         return false;
       }
     } catch (e) {
@@ -159,7 +167,8 @@ class PurchaseNotifier extends Notifier<PurchaseState> {
         final totalCoins = package.getTotalCoins(isVipPlus);
 
         // Add coins to balance
-        await membership.addCoins(totalCoins, description: 'Purchased ${package.displayName}');
+        await membership.addCoins(totalCoins,
+            description: 'Purchased ${package.displayName}');
 
         // Log success
         await membership.logCoinPurchaseCompleted(package, totalCoins);
@@ -171,9 +180,11 @@ class PurchaseNotifier extends Notifier<PurchaseState> {
         debugPrint('âœ… [Purchase] Coins purchased: $totalCoins');
         return true;
       } else {
-        await membership.logCoinPurchaseFailed(package, result.errorMessage ?? 'Unknown');
+        await membership.logCoinPurchaseFailed(
+            package, result.errorMessage ?? 'Unknown');
         state = PurchaseState(error: result.errorMessage ?? 'Purchase failed');
-        debugPrint('âŒ [Purchase] Coin purchase failed: ${result.errorMessage}');
+        debugPrint(
+            'âŒ [Purchase] Coin purchase failed: ${result.errorMessage}');
         return false;
       }
     } catch (e) {
@@ -254,7 +265,8 @@ class CoinStoreNotifier extends Notifier<CoinStoreState> {
 }
 
 /// Provider for coin store state
-final coinStoreProvider = NotifierProvider<CoinStoreNotifier, CoinStoreState>(() {
+final coinStoreProvider =
+    NotifierProvider<CoinStoreNotifier, CoinStoreState>(() {
   return CoinStoreNotifier();
 });
 
@@ -269,7 +281,8 @@ final canAffordProvider = Provider.family<bool, int>((ref, amount) {
 });
 
 /// Provider for transaction history
-final coinTransactionHistoryProvider = FutureProvider<List<CoinTransaction>>((ref) async {
+final coinTransactionHistoryProvider =
+    FutureProvider<List<CoinTransaction>>((ref) async {
   final service = ref.watch(membershipServiceProvider);
   return service.getCoinTransactionHistory();
 });
@@ -277,7 +290,8 @@ final coinTransactionHistoryProvider = FutureProvider<List<CoinTransaction>>((re
 /// Extension methods for coin operations in widgets
 extension CoinOperationsRef on WidgetRef {
   /// Check if user can afford an amount
-  bool canAfford(int amount) => read(membershipServiceProvider).canAfford(amount);
+  bool canAfford(int amount) =>
+      read(membershipServiceProvider).canAfford(amount);
 
   /// Deduct coins for a gift
   Future<bool> sendGift(int amount, String recipientId) async {

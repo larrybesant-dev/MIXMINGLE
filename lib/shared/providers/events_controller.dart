@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,13 +44,16 @@ final upcomingEventsProvider = StreamProvider<List<Event>>((ref) {
 });
 
 // Nearby events provider (returns empty list for now - location feature not implemented)
-final nearbyEventsProvider = FutureProvider.family<List<Event>, Map<String, dynamic>>((ref, params) async {
+final nearbyEventsProvider =
+    FutureProvider.family<List<Event>, Map<String, dynamic>>(
+        (ref, params) async {
   // TODO: Implement location-based events when location feature is ready
   return [];
 });
 
 // Events by category provider (returns empty list for now - categories not implemented)
-final eventsByCategoryProvider = FutureProvider.family<List<Event>, String>((ref, category) async {
+final eventsByCategoryProvider =
+    FutureProvider.family<List<Event>, String>((ref, category) async {
   // TODO: Implement category filtering when categories are added to Event model
   return [];
 });
@@ -143,7 +145,9 @@ final filteredEventsProvider = Provider<List<Event>>((ref) {
 
       // Filter by category
       if (searchState.category != null && searchState.category!.isNotEmpty) {
-        filtered = filtered.where((event) => event.category == searchState.category).toList();
+        filtered = filtered
+            .where((event) => event.category == searchState.category)
+            .toList();
       }
 
       return filtered;

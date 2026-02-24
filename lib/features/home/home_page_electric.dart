@@ -1,4 +1,4 @@
-﻿/// Home Page Electric
+/// Home Page Electric
 /// Main landing page after onboarding completion
 /// Shows: Live Rooms, Speed Dating, Discovery, Chats
 library;
@@ -34,20 +34,20 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
 
   // Vibe palette — same keys as rooms list page for consistency
   static const _kVibeColors = <String, Color>{
-    'Chill':      Color(0xFF4A90FF),
-    'Hype':       Color(0xFFFF4D8B),
-    'Deep Talk':  Color(0xFF8B5CF6),
+    'Chill': Color(0xFF4A90FF),
+    'Hype': Color(0xFFFF4D8B),
+    'Deep Talk': Color(0xFF8B5CF6),
     'Late Night': Color(0xFF6366F1),
-    'Study':      Color(0xFF00E5CC),
-    'Party':      Color(0xFFFFAB00),
+    'Study': Color(0xFF00E5CC),
+    'Party': Color(0xFFFFAB00),
   };
   static const _kVibeIcons = <String, IconData>{
-    'Chill':      Icons.waves_outlined,
-    'Hype':       Icons.bolt,
-    'Deep Talk':  Icons.forum_outlined,
+    'Chill': Icons.waves_outlined,
+    'Hype': Icons.bolt,
+    'Deep Talk': Icons.forum_outlined,
     'Late Night': Icons.nightlight_outlined,
-    'Study':      Icons.menu_book_outlined,
-    'Party':      Icons.celebration_outlined,
+    'Study': Icons.menu_book_outlined,
+    'Party': Icons.celebration_outlined,
   };
   Color _vc(String? v) => _kVibeColors[v] ?? DesignColors.accent;
   IconData _vi(String? v) => _kVibeIcons[v] ?? Icons.graphic_eq;
@@ -78,16 +78,16 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     return Stack(
       children: [
         ClubBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: _buildAppBar(profile),
-        body: _buildBody(),
-        bottomNavigationBar: _buildNeonNavBar(),
-      ),
-    ),
-    if (showOverlay) const OnboardingWelcomeOverlay(),
-  ],
-);
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: _buildAppBar(profile),
+            body: _buildBody(),
+            bottomNavigationBar: _buildNeonNavBar(),
+          ),
+        ),
+        if (showOverlay) const OnboardingWelcomeOverlay(),
+      ],
+    );
   }
 
   // ══════════════════════════════════════════════════════════
@@ -101,12 +101,15 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       title: Row(children: [
         // Logo dot pulse
         Container(
-          width: 10, height: 10,
+          width: 10,
+          height: 10,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: DesignColors.accent,
             boxShadow: [
-              BoxShadow(color: DesignColors.accent.withValues(alpha: 0.7), blurRadius: 10),
+              BoxShadow(
+                  color: DesignColors.accent.withValues(alpha: 0.7),
+                  blurRadius: 10),
             ],
           ),
         ),
@@ -129,21 +132,23 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
             decoration: BoxDecoration(
               color: _vc(profile!.vibeTag).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppSizes.chipBorderRadius),
-              border: Border.all(color: _vc(profile.vibeTag).withValues(alpha: 0.45)),
+              border: Border.all(
+                  color: _vc(profile.vibeTag).withValues(alpha: 0.45)),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
               Icon(_vi(profile.vibeTag), size: 11, color: _vc(profile.vibeTag)),
               const SizedBox(width: AppSpacing.spaceXS),
               Text(profile.vibeTag!,
-                  style: AppTypography.chipLabel.copyWith(
-                      color: _vc(profile.vibeTag))),
+                  style: AppTypography.chipLabel
+                      .copyWith(color: _vc(profile.vibeTag))),
             ]),
           ),
         ],
       ]),
       actions: [
         IconButton(
-          icon: const Icon(Icons.notifications_outlined, color: DesignColors.textGray),
+          icon: const Icon(Icons.notifications_outlined,
+              color: DesignColors.textGray),
           onPressed: () => Navigator.pushNamed(context, '/notifications'),
         ),
         GestureDetector(
@@ -151,11 +156,14 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           child: Padding(
             padding: const EdgeInsets.only(right: 16),
             child: profile?.photoUrl != null
-                ? CircleAvatar(radius: 16,
+                ? CircleAvatar(
+                    radius: 16,
                     backgroundImage: NetworkImage(profile!.photoUrl!))
-                : CircleAvatar(radius: 16,
+                : CircleAvatar(
+                    radius: 16,
                     backgroundColor: DesignColors.accent.withValues(alpha: 0.2),
-                    child: const Icon(Icons.person, size: 16, color: DesignColors.accent)),
+                    child: const Icon(Icons.person,
+                        size: 16, color: DesignColors.accent)),
           ),
         ),
       ],
@@ -177,9 +185,13 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     return Container(
       decoration: BoxDecoration(
         color: DesignColors.background,
-        border: Border(top: BorderSide(color: DesignColors.accent.withValues(alpha: 0.15))),
+        border: Border(
+            top:
+                BorderSide(color: DesignColors.accent.withValues(alpha: 0.15))),
         boxShadow: [
-          BoxShadow(color: DesignColors.accent.withValues(alpha: 0.06), blurRadius: 20),
+          BoxShadow(
+              color: DesignColors.accent.withValues(alpha: 0.06),
+              blurRadius: 20),
         ],
       ),
       child: SafeArea(
@@ -196,33 +208,44 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                 behavior: HitTestBehavior.opaque,
                 child: SizedBox(
                   width: 56,
-                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-                    AnimatedContainer(
-                      duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.all(AppSpacing.spaceSM - 2),
-                      decoration: BoxDecoration(
-                        color: selected
-                            ? DesignColors.accent.withValues(alpha: 0.15)
-                            : Colors.transparent,
-                        borderRadius: BorderRadius.circular(10),
-                        boxShadow: selected
-                            ? [BoxShadow(color: DesignColors.accent.withValues(alpha: 0.3),
-                                blurRadius: 8)]
-                            : null,
-                      ),
-                      child: Icon(
-                        selected ? item.activeIcon : item.icon,
-                        size: AppSizes.iconNav,
-                        color: selected ? DesignColors.accent : DesignColors.textGray,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.spaceXS - 2),
-                    Text(item.label,
-                        style: AppTypography.navLabel.copyWith(
-                          color: selected ? DesignColors.accent : DesignColors.textGray,
-                          fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                        )),
-                  ]),
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.all(AppSpacing.spaceSM - 2),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? DesignColors.accent.withValues(alpha: 0.15)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: selected
+                                ? [
+                                    BoxShadow(
+                                        color: DesignColors.accent
+                                            .withValues(alpha: 0.3),
+                                        blurRadius: 8)
+                                  ]
+                                : null,
+                          ),
+                          child: Icon(
+                            selected ? item.activeIcon : item.icon,
+                            size: AppSizes.iconNav,
+                            color: selected
+                                ? DesignColors.accent
+                                : DesignColors.textGray,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.spaceXS - 2),
+                        Text(item.label,
+                            style: AppTypography.navLabel.copyWith(
+                              color: selected
+                                  ? DesignColors.accent
+                                  : DesignColors.textGray,
+                              fontWeight:
+                                  selected ? FontWeight.w700 : FontWeight.w400,
+                            )),
+                      ]),
                 ),
               );
             }),
@@ -257,8 +280,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     final p = profileAsync.asData?.value;
     final roomsAsync = ref.watch(liveRoomsProvider);
     // #2 Composite heating-up score: joinVelocity x2 + viewerCount
-    final liveRooms = <Room>[...(roomsAsync.value ?? <Room>[])]
-      ..sort((a, b) {
+    final liveRooms = <Room>[...(roomsAsync.value ?? <Room>[])]..sort((a, b) {
         final aScore = (a.joinVelocity * 2) + a.viewerCount;
         final bScore = (b.joinVelocity * 2) + b.viewerCount;
         return bScore.compareTo(aScore);
@@ -278,7 +300,9 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     final vibe = p?.topVibe ?? p?.vibeTag;
     final vibeLabel = (p != null && p.topVibe != null && p.topVibeCount > 1)
         ? '${p.topVibe} vibes — x${p.topVibeCount} rooms'
-        : vibe != null ? '$vibe vibes today' : null;
+        : vibe != null
+            ? '$vibe vibes today'
+            : null;
 
     final sw = MediaQuery.sizeOf(context).width;
     final hPad = AppLayout.responsivePaddingH(sw);
@@ -288,7 +312,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
         SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.fromLTRB(hPad, AppSpacing.spaceLG, hPad, 0),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
               Text('$greeting,', style: AppTypography.greeting),
               const SizedBox(height: AppSpacing.spaceXS),
               Text(name, style: AppTypography.display),
@@ -303,14 +328,16 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                       _vc(vibe).withValues(alpha: 0.2),
                       _vc(vibe).withValues(alpha: 0.05),
                     ]),
-                    borderRadius: BorderRadius.circular(AppSizes.chipBorderRadius),
+                    borderRadius:
+                        BorderRadius.circular(AppSizes.chipBorderRadius),
                     border: Border.all(color: _vc(vibe).withValues(alpha: 0.4)),
                   ),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
                     Icon(_vi(vibe), size: 13, color: _vc(vibe)),
                     const SizedBox(width: AppSpacing.spaceXS),
                     Text(vibeLabel ?? '$vibe vibes today',
-                        style: AppTypography.chipLabel.copyWith(color: _vc(vibe))),
+                        style:
+                            AppTypography.chipLabel.copyWith(color: _vc(vibe))),
                   ]),
                 ),
               ],
@@ -321,7 +348,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           child: Padding(
             padding: EdgeInsets.fromLTRB(hPad, AppSpacing.spaceXL, hPad, 0),
             child: Row(children: [
-              Expanded(child: _ctaCard(
+              Expanded(
+                  child: _ctaCard(
                 icon: Icons.add_circle_outline,
                 label: 'Start a Room',
                 sublabel: 'Go live now',
@@ -329,7 +357,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                 onTap: () => Navigator.pushNamed(context, '/create-room'),
               )),
               const SizedBox(width: AppSpacing.spaceMD),
-              Expanded(child: _ctaCard(
+              Expanded(
+                  child: _ctaCard(
                 icon: Icons.bolt,
                 label: 'Speed Dating',
                 sublabel: '5-min video dates',
@@ -352,8 +381,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                 TextButton(
                   onPressed: () => setState(() => _selectedIndex = 2),
                   child: Text('See All',
-                      style: AppTypography.caption.copyWith(
-                          color: DesignColors.accent)),
+                      style: AppTypography.caption
+                          .copyWith(color: DesignColors.accent)),
                 ),
                 const SizedBox(width: AppSpacing.spaceSM),
               ],
@@ -369,9 +398,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   // #7 — Vibe suggestion banner
   Widget _buildVibeSuggestionBanner(UserProfile? p) {
     if (p == null) return const SizedBox.shrink();
-    final suggestion = ref
-        .read(vibeIntelligenceServiceProvider)
-        .getVibeSuggestion(p);
+    final suggestion =
+        ref.read(vibeIntelligenceServiceProvider).getVibeSuggestion(p);
     if (suggestion == null) return const SizedBox.shrink();
     const nudgeColor = Color(0xFFFFAB00);
     final sw2 = MediaQuery.sizeOf(context).width;
@@ -380,23 +408,26 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       padding: EdgeInsets.fromLTRB(hPad2, AppSpacing.spaceLG, hPad2, 0),
       child: Container(
         padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.spaceMD + 2, vertical: AppSpacing.spaceSM + 2),
+            horizontal: AppSpacing.spaceMD + 2,
+            vertical: AppSpacing.spaceSM + 2),
         decoration: BoxDecoration(
           color: nudgeColor.withValues(alpha: 0.09),
           borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
           border: Border.all(color: nudgeColor.withValues(alpha: 0.4)),
         ),
         child: Row(children: [
-          const Icon(Icons.lightbulb_outline, size: AppSizes.iconStandard - 6, color: nudgeColor),
+          const Icon(Icons.lightbulb_outline,
+              size: AppSizes.iconStandard - 6, color: nudgeColor),
           const SizedBox(width: AppSpacing.spaceSM + 2),
           Expanded(
             child: Text(suggestion,
-                style: AppTypography.caption.copyWith(
-                    color: nudgeColor, fontWeight: FontWeight.w600)),
+                style: AppTypography.caption
+                    .copyWith(color: nudgeColor, fontWeight: FontWeight.w600)),
           ),
           GestureDetector(
             onTap: () => setState(() => _dismissedSuggestion = true),
-            child: const Icon(Icons.close, size: AppSizes.iconStandard - 8, color: nudgeColor),
+            child: const Icon(Icons.close,
+                size: AppSizes.iconStandard - 8, color: nudgeColor),
           ),
         ]),
       ),
@@ -426,7 +457,9 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           ),
           borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
           border: Border.all(color: color.withValues(alpha: 0.4)),
-          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.12), blurRadius: 12)],
+          boxShadow: [
+            BoxShadow(color: color.withValues(alpha: 0.12), blurRadius: 12)
+          ],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Icon(icon, color: color, size: AppSizes.iconLarge),
@@ -451,7 +484,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           decoration: BoxDecoration(
             color: DesignColors.accent.withValues(alpha: 0.06),
             borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
-            border: Border.all(color: DesignColors.accent.withValues(alpha: 0.15)),
+            border:
+                Border.all(color: DesignColors.accent.withValues(alpha: 0.15)),
           ),
           child: Column(children: [
             const Icon(Icons.mic_none_outlined,
@@ -464,7 +498,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
               onTap: () => Navigator.pushNamed(context, '/create-room'),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.spaceXL, vertical: AppSpacing.spaceSM + 2),
+                    horizontal: AppSpacing.spaceXL,
+                    vertical: AppSpacing.spaceSM + 2),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                       colors: [Color(0xFF4A90FF), Color(0xFF8B5CF6)]),
@@ -493,7 +528,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           final room = rooms[i];
           final color = _vc(room.vibeTag);
           return GestureDetector(
-            onTap: () => Navigator.pushNamed(context, '/room', arguments: room.id),
+            onTap: () =>
+                Navigator.pushNamed(context, '/room', arguments: room.id),
             child: Container(
               width: 164,
               margin: const EdgeInsets.only(right: AppSpacing.spaceMD),
@@ -501,51 +537,57 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [color.withValues(alpha: 0.2), DesignColors.background],
+                  colors: [
+                    color.withValues(alpha: 0.2),
+                    DesignColors.background
+                  ],
                 ),
                 borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
                 border: Border.all(color: color.withValues(alpha: 0.35)),
               ),
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.spaceMD),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.spaceSM - 2,
-                        vertical: AppSpacing.spaceXS - 2),
-                    decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(AppSpacing.spaceXS)),
-                    child: const Text('LIVE',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1)),
-                  ),
-                  const Spacer(),
-                  Text(room.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTypography.bodySm.copyWith(
-                          color: DesignColors.white,
-                          fontWeight: FontWeight.w700)),
-                  const SizedBox(height: AppSpacing.spaceXS),
-                  Row(children: [
-                    Icon(Icons.remove_red_eye_outlined,
-                        size: AppSpacing.spaceMD - 1, color: color),
-                    const SizedBox(width: AppSpacing.spaceXS - 1),
-                    Text('${room.viewerCount}',
-                        style: AppTypography.captionSm.copyWith(
-                            color: color, fontWeight: FontWeight.w600)),
-                    const SizedBox(width: AppSpacing.spaceSM - 2),
-                    const Icon(Icons.videocam_outlined,
-                        size: 11, color: DesignColors.textGray),
-                    const SizedBox(width: AppSpacing.spaceXS - 1),
-                    Text('${room.camCount}',
-                        style: AppTypography.captionSm),
-                  ]),
-                ]),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.spaceSM - 2,
+                            vertical: AppSpacing.spaceXS - 2),
+                        decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.9),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.spaceXS)),
+                        child: const Text('LIVE',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1)),
+                      ),
+                      const Spacer(),
+                      Text(room.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodySm.copyWith(
+                              color: DesignColors.white,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(height: AppSpacing.spaceXS),
+                      Row(children: [
+                        Icon(Icons.remove_red_eye_outlined,
+                            size: AppSpacing.spaceMD - 1, color: color),
+                        const SizedBox(width: AppSpacing.spaceXS - 1),
+                        Text('${room.viewerCount}',
+                            style: AppTypography.captionSm.copyWith(
+                                color: color, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: AppSpacing.spaceSM - 2),
+                        const Icon(Icons.videocam_outlined,
+                            size: 11, color: DesignColors.textGray),
+                        const SizedBox(width: AppSpacing.spaceXS - 1),
+                        Text('${room.camCount}',
+                            style: AppTypography.captionSm),
+                      ]),
+                    ]),
               ),
             ),
           );
@@ -554,7 +596,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     );
   }
 
-    Widget _buildSpeedDatingTab() {
+  Widget _buildSpeedDatingTab() {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(AppSpacing.spaceXL),
@@ -602,7 +644,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                       colors: [DesignColors.gold, Color(0xFFFF6B35)]),
-                  borderRadius: BorderRadius.circular(AppSizes.buttonBorderRadius + 10),
+                  borderRadius:
+                      BorderRadius.circular(AppSizes.buttonBorderRadius + 10),
                   boxShadow: [
                     BoxShadow(
                         color: DesignColors.gold.withValues(alpha: 0.35),

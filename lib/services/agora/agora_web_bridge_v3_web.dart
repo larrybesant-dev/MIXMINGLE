@@ -27,7 +27,8 @@ class AgoraWebBridgeV3 {
     }
 
     try {
-      debugPrint('[BRIDGE] Initializing with appId: ${appId.substring(0, 8)}...');
+      debugPrint(
+          '[BRIDGE] Initializing with appId: ${appId.substring(0, 8)}...');
       AppLogger.info('ðŸŒ Initializing Agora Web SDK v5...');
 
       final initFn = js.context['agoraWebInit'];
@@ -64,7 +65,8 @@ class AgoraWebBridgeV3 {
     if (!kIsWeb) return false;
 
     try {
-      debugPrint('[BRIDGE] Joining channel: $channelName, uid: $uid, token length: ${token.length}');
+      debugPrint(
+          '[BRIDGE] Joining channel: $channelName, uid: $uid, token length: ${token.length}');
       AppLogger.info('ðŸ”— Joining Agora channel: $channelName...');
 
       final joinFn = js.context['agoraWebJoinChannel'];
@@ -74,7 +76,8 @@ class AgoraWebBridgeV3 {
 
       // Call JS joinChannel(appId, channelName, token, uid)
       final promiseObj = joinFn.call(appId, channelName, token, uid);
-      final result = await _promiseToFuture(promiseObj, timeout: const Duration(seconds: 35));
+      final result = await _promiseToFuture(promiseObj,
+          timeout: const Duration(seconds: 35));
 
       if (result == true) {
         AppLogger.info('âœ… Successfully joined channel: $channelName');
@@ -185,11 +188,10 @@ class AgoraWebBridgeV3 {
 
       // Convert JavaScript object to Dart Map
       return Map<String, dynamic>.from(
-        stateObj.keys.fold<Map<String, dynamic>>({}, (map, key) {
-          map[key] = stateObj[key];
-          return map;
-        })
-      );
+          stateObj.keys.fold<Map<String, dynamic>>({}, (map, key) {
+        map[key] = stateObj[key];
+        return map;
+      }));
     } catch (e) {
       debugPrint('[BRIDGE] Error getting state: $e');
       return {'error': e.toString()};
@@ -263,7 +265,8 @@ class AgoraWebBridgeV3 {
         (jsPromise as dynamic).then(resolveFunc, rejectFunc);
       } catch (e) {
         // If standard .then() fails, try alternative approach
-        completer.completeError(Exception('Failed to attach promise handlers: $e'));
+        completer
+            .completeError(Exception('Failed to attach promise handlers: $e'));
       }
 
       // Apply timeout

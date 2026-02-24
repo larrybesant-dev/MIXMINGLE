@@ -1,4 +1,4 @@
-﻿// lib/core/routing/app_routes.dart
+// lib/core/routing/app_routes.dart
 // Centralized route management for MixMingle
 
 import 'package:flutter/material.dart';
@@ -93,7 +93,8 @@ class AppRoutes {
         if (chatId == null) return _errorRoute('Chat ID required');
         return MaterialPageRoute(
           builder: (_) => AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: ChatConversationPage(chatId: chatId)),
+            child: ProfileCompleteGuard(
+                child: ChatConversationPage(chatId: chatId)),
           ),
         );
       case following:

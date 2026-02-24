@@ -43,7 +43,8 @@ class MockProfileService extends _i1.Mock implements _i2.ProfileService {
       ) as _i3.Future<_i4.UserProfile?>);
 
   @override
-  _i3.Future<_i4.UserProfile?> getUserProfile(String? userId) => (super.noSuchMethod(
+  _i3.Future<_i4.UserProfile?> getUserProfile(String? userId) =>
+      (super.noSuchMethod(
         Invocation.method(
           #getUserProfile,
           [userId],
@@ -52,7 +53,8 @@ class MockProfileService extends _i1.Mock implements _i2.ProfileService {
       ) as _i3.Future<_i4.UserProfile?>);
 
   @override
-  _i3.Future<void> updateUserProfile(_i4.UserProfile? profile) => (super.noSuchMethod(
+  _i3.Future<void> updateUserProfile(_i4.UserProfile? profile) =>
+      (super.noSuchMethod(
         Invocation.method(
           #updateUserProfile,
           [profile],
@@ -98,12 +100,15 @@ class MockProfileService extends _i1.Mock implements _i2.ProfileService {
       ) as _i3.Future<void>);
 
   @override
-  _i3.Future<List<_i4.UserProfile>> searchUsersByInterests(List<String>? interests) => (super.noSuchMethod(
+  _i3.Future<List<_i4.UserProfile>> searchUsersByInterests(
+          List<String>? interests) =>
+      (super.noSuchMethod(
         Invocation.method(
           #searchUsersByInterests,
           [interests],
         ),
-        returnValue: _i3.Future<List<_i4.UserProfile>>.value(<_i4.UserProfile>[]),
+        returnValue:
+            _i3.Future<List<_i4.UserProfile>>.value(<_i4.UserProfile>[]),
       ) as _i3.Future<List<_i4.UserProfile>>);
 
   @override
@@ -121,11 +126,13 @@ class MockProfileService extends _i1.Mock implements _i2.ProfileService {
             radiusKm,
           ],
         ),
-        returnValue: _i3.Future<List<_i4.UserProfile>>.value(<_i4.UserProfile>[]),
+        returnValue:
+            _i3.Future<List<_i4.UserProfile>>.value(<_i4.UserProfile>[]),
       ) as _i3.Future<List<_i4.UserProfile>>);
 
   @override
-  _i3.Stream<_i4.UserProfile?> streamCurrentUserProfile() => (super.noSuchMethod(
+  _i3.Stream<_i4.UserProfile?> streamCurrentUserProfile() =>
+      (super.noSuchMethod(
         Invocation.method(
           #streamCurrentUserProfile,
           [],
@@ -134,7 +141,8 @@ class MockProfileService extends _i1.Mock implements _i2.ProfileService {
       ) as _i3.Stream<_i4.UserProfile?>);
 
   @override
-  _i3.Stream<_i4.UserProfile?> streamUserProfile(String? userId) => (super.noSuchMethod(
+  _i3.Stream<_i4.UserProfile?> streamUserProfile(String? userId) =>
+      (super.noSuchMethod(
         Invocation.method(
           #streamUserProfile,
           [userId],
@@ -143,11 +151,13 @@ class MockProfileService extends _i1.Mock implements _i2.ProfileService {
       ) as _i3.Stream<_i4.UserProfile?>);
 
   @override
-  _i3.Future<List<_i4.UserProfile>> searchUsers(String query) => (super.noSuchMethod(
+  _i3.Future<List<_i4.UserProfile>> searchUsers(String query) =>
+      (super.noSuchMethod(
         Invocation.method(
           #searchUsers,
           [query],
         ),
-        returnValue: _i3.Future<List<_i4.UserProfile>>.value(<_i4.UserProfile>[]),
+        returnValue:
+            _i3.Future<List<_i4.UserProfile>>.value(<_i4.UserProfile>[]),
       ) as _i3.Future<List<_i4.UserProfile>>);
 }

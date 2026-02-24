@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 class ReportReasonChip extends StatelessWidget {
   final String reason;
@@ -22,7 +22,8 @@ class ReportReasonChip extends StatelessWidget {
       label: Text(reason),
       selected: isSelected,
       onSelected: onSelected,
-      selectedColor: selectedColor ?? Theme.of(context).colorScheme.primaryContainer,
+      selectedColor:
+          selectedColor ?? Theme.of(context).colorScheme.primaryContainer,
       backgroundColor: unselectedColor,
       labelStyle: TextStyle(
         color: isSelected

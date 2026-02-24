@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 // Intentionally empty - web-specific implementation pending
 /*
@@ -13,7 +13,8 @@ class JsBridgeException implements Exception {
   JsBridgeException(this.message, [this.originalError]);
 
   @override
-  String toString() => 'JsBridgeException: $message${originalError != null ? ' (${originalError.toString()})' : ''}';
+  String toString() =>
+      'JsBridgeException: $message${originalError != null ? ' (${originalError.toString()})' : ''}';
 }
 
 /*
@@ -80,7 +81,3 @@ ORIGINAL WEB IMPLEMENTATION (pending ):
 /// final result = await callAgoraMethod('joinChannel', [token, channelId, uid]);
 /// ```
 */
-
-
-
-

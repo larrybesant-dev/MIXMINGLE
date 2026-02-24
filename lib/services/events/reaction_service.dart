@@ -7,13 +7,21 @@ class ReactionService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Stream<List<ReactionModel>> reactionStream(String roomId) {
-    return _firestore.collection('rooms').doc(roomId).collection('reactions')
-      .orderBy('timestamp', descending: false)
-      .snapshots()
-      .map((snap) => snap.docs.map((doc) => ReactionModel.fromMap(doc.data())).toList());
+    return _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('reactions')
+        .orderBy('timestamp', descending: false)
+        .snapshots()
+        .map((snap) =>
+            snap.docs.map((doc) => ReactionModel.fromMap(doc.data())).toList());
   }
 
   Future<void> sendReaction(String roomId, ReactionModel reaction) async {
-    await _firestore.collection('rooms').doc(roomId).collection('reactions').add(reaction.toMap());
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('reactions')
+        .add(reaction.toMap());
   }
 }

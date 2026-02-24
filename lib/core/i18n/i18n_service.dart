@@ -33,8 +33,8 @@ class SupportedLocale {
     this.translationCompleteness = 1.0,
   });
 
-  Locale get locale => Locale(code.split('_').first,
-      code.contains('_') ? code.split('_').last : null);
+  Locale get locale => Locale(
+      code.split('_').first, code.contains('_') ? code.split('_').last : null);
 }
 
 /// Translation entry with metadata
@@ -163,7 +163,8 @@ class I18nService extends ChangeNotifier {
   bool _isInitialized = false;
 
   // Streams
-  final _localeChangeController = StreamController<LocaleChangeEvent>.broadcast();
+  final _localeChangeController =
+      StreamController<LocaleChangeEvent>.broadcast();
 
   /// Get current locale code
   String get currentLocale => _currentLocale;
@@ -182,7 +183,8 @@ class I18nService extends ChangeNotifier {
   Stream<LocaleChangeEvent> get localeChanges => _localeChangeController.stream;
 
   /// Get text direction
-  TextDirection get textDirection => isRTL ? TextDirection.RTL : TextDirection.LTR;
+  TextDirection get textDirection =>
+      isRTL ? TextDirection.RTL : TextDirection.LTR;
 
   /// Initialize the service
   Future<void> initialize() async {
@@ -279,7 +281,8 @@ class I18nService extends ChangeNotifier {
       translate(key, params: params);
 
   /// Translate with plural support
-  String translatePlural(String key, int count, {Map<String, dynamic>? params}) {
+  String translatePlural(String key, int count,
+      {Map<String, dynamic>? params}) {
     final translations = _translations[_currentLocale];
     if (translations == null) return key;
 
@@ -361,7 +364,8 @@ class I18nService extends ChangeNotifier {
       return translatePlural('time.years_ago', years, params: {'count': years});
     } else if (difference.inDays > 30) {
       final months = (difference.inDays / 30).floor();
-      return translatePlural('time.months_ago', months, params: {'count': months});
+      return translatePlural('time.months_ago', months,
+          params: {'count': months});
     } else if (difference.inDays > 0) {
       return translatePlural('time.days_ago', difference.inDays,
           params: {'count': difference.inDays});
@@ -407,10 +411,8 @@ class I18nService extends ChangeNotifier {
   /// Load remote translation updates
   Future<void> loadRemoteTranslations() async {
     try {
-      final doc = await _firestore
-          .collection('translations')
-          .doc(_currentLocale)
-          .get();
+      final doc =
+          await _firestore.collection('translations').doc(_currentLocale).get();
 
       if (doc.exists) {
         final remoteTranslations = doc.data() ?? {};

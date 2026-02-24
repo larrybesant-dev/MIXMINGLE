@@ -240,4 +240,3 @@ class _EqualizerBarsState extends State<_EqualizerBars>
     );
   }
 }
-

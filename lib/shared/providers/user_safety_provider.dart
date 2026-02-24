@@ -1,4 +1,4 @@
-﻿/// User Safety Provider
+/// User Safety Provider
 /// Report and block users
 library;
 
@@ -226,7 +226,8 @@ Future<void> showReportDialog({
                 style: const TextStyle(color: Colors.white),
                 decoration: InputDecoration(
                   filled: true,
-                  fillColor: Colors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+                  fillColor: Colors.white
+                      .withValues(alpha: 255, red: 255, green: 255, blue: 255),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -259,7 +260,8 @@ Future<void> showReportDialog({
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+                    fillColor: Colors.white.withValues(
+                        alpha: 255, red: 255, green: 255, blue: 255),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -291,13 +293,15 @@ Future<void> showReportDialog({
                   maxLines: 3,
                   decoration: InputDecoration(
                     filled: true,
-                    fillColor: Colors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+                    fillColor: Colors.white.withValues(
+                        alpha: 255, red: 255, green: 255, blue: 255),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
                     hintText: 'Provide more context...',
                     hintStyle: TextStyle(
-                      color: Colors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+                      color: Colors.white.withValues(
+                          alpha: 255, red: 255, green: 255, blue: 255),
                     ),
                   ),
                 ),
@@ -317,16 +321,15 @@ Future<void> showReportDialog({
             onPressed: selectedCategory != null && selectedReason != null
                 ? () async {
                     try {
-                      await ref
-                          .read(userSafetyProvider.notifier)
-                          .reportUser(
+                      await ref.read(userSafetyProvider.notifier).reportUser(
                             reporterId: currentUserId,
                             reportedUserId: targetUserId,
                             reason: selectedReason!,
                             category: selectedCategory!,
-                            description: descriptionController.text.trim().isEmpty
-                                ? null
-                                : descriptionController.text.trim(),
+                            description:
+                                descriptionController.text.trim().isEmpty
+                                    ? null
+                                    : descriptionController.text.trim(),
                           );
 
                       if (context.mounted) {

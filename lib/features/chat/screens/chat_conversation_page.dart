@@ -1,4 +1,4 @@
-﻿// lib/features/chat/screens/chat_conversation_page.dart
+// lib/features/chat/screens/chat_conversation_page.dart
 //
 // Direct-message conversation page.
 // Uses Riverpod auth, DesignColors, and shows read-receipt ticks.
@@ -20,8 +20,7 @@ class ChatConversationPage extends ConsumerStatefulWidget {
       _ChatConversationPageState();
 }
 
-class _ChatConversationPageState
-    extends ConsumerState<ChatConversationPage> {
+class _ChatConversationPageState extends ConsumerState<ChatConversationPage> {
   final TextEditingController _input = TextEditingController();
   final ScrollController _scroll = ScrollController();
   final FirebaseFirestore _db = FirebaseFirestore.instance;
@@ -34,10 +33,8 @@ class _ChatConversationPageState
     if (user == null) return;
     _input.clear();
 
-    final ref2 = _db
-        .collection('chats')
-        .doc(widget.chatId)
-        .collection('messages');
+    final ref2 =
+        _db.collection('chats').doc(widget.chatId).collection('messages');
 
     await ref2.add({
       'text': text,
@@ -58,7 +55,8 @@ class _ChatConversationPageState
   }
 
   // ── Mark messages as read ──────────────────────────────────────────────
-  Future<void> _markRead(String userId, List<QueryDocumentSnapshot> docs) async {
+  Future<void> _markRead(
+      String userId, List<QueryDocumentSnapshot> docs) async {
     final batch = _db.batch();
     for (final doc in docs) {
       final data = doc.data() as Map<String, dynamic>;
@@ -72,13 +70,12 @@ class _ChatConversationPageState
     await batch.commit();
   }
 
-  Stream<QuerySnapshot<Map<String, dynamic>>> _messagesStream() =>
-      _db
-          .collection('chats')
-          .doc(widget.chatId)
-          .collection('messages')
-          .orderBy('timestamp', descending: true)
-          .snapshots();
+  Stream<QuerySnapshot<Map<String, dynamic>>> _messagesStream() => _db
+      .collection('chats')
+      .doc(widget.chatId)
+      .collection('messages')
+      .orderBy('timestamp', descending: true)
+      .snapshots();
 
   @override
   void dispose() {
@@ -125,8 +122,8 @@ class _ChatConversationPageState
                   if (snapshot.hasError) {
                     return Center(
                       child: Text('Error loading messages',
-                          style: DesignTypography.body.copyWith(
-                              color: DesignColors.error)),
+                          style: DesignTypography.body
+                              .copyWith(color: DesignColors.error)),
                     );
                   }
                   final docs = snapshot.data?.docs ?? [];
@@ -165,8 +162,7 @@ class _ChatConversationPageState
                       final ts = (data['timestamp'] as Timestamp?)?.toDate();
                       final senderId = data['senderId'] as String? ?? '';
                       final isMe = senderId == user?.id;
-                      final readBy =
-                          List<String>.from(data['readBy'] ?? []);
+                      final readBy = List<String>.from(data['readBy'] ?? []);
                       final isRead = readBy.length >= 2;
 
                       return _MessageBubble(
@@ -207,8 +203,8 @@ class _ChatConversationPageState
                       color: DesignColors.white.withValues(alpha: 0.35)),
                   filled: true,
                   fillColor: DesignColors.surfaceLight,
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 18, vertical: 12),
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(26),
                     borderSide: BorderSide(
@@ -216,8 +212,8 @@ class _ChatConversationPageState
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(26),
-                    borderSide: const BorderSide(
-                        color: DesignColors.divider, width: 1),
+                    borderSide:
+                        const BorderSide(color: DesignColors.divider, width: 1),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(26),
@@ -285,8 +281,8 @@ class _MessageBubble extends StatelessWidget {
           right: isMe ? 0 : 60,
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        constraints: BoxConstraints(
-            maxWidth: MediaQuery.of(context).size.width * 0.72),
+        constraints:
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.72),
         decoration: BoxDecoration(
           gradient: isMe
               ? LinearGradient(

@@ -1,11 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum ModerationAction {
-  warning,    // Send warning
-  mute,       // Temporary mute
-  shadowBan,  // User can't see/chat
-  kick,       // Remove from room
-  ban,        // Permanent ban
+  warning, // Send warning
+  mute, // Temporary mute
+  shadowBan, // User can't see/chat
+  kick, // Remove from room
+  ban, // Permanent ban
 }
 
 class ModerationRule {
@@ -26,22 +26,20 @@ class ModerationRule {
   });
 
   Map<String, dynamic> toJson() => {
-    'ruleId': ruleId,
-    'keywords': keywords,
-    'enabled': enabled,
-    'severity': severity,
-    'action': action.name,
-    'durationMinutes': durationMinutes,
-  };
+        'ruleId': ruleId,
+        'keywords': keywords,
+        'enabled': enabled,
+        'severity': severity,
+        'action': action.name,
+        'durationMinutes': durationMinutes,
+      };
 
-  factory ModerationRule.fromJson(Map<String, dynamic> json) =>
-      ModerationRule(
+  factory ModerationRule.fromJson(Map<String, dynamic> json) => ModerationRule(
         ruleId: json['ruleId'] as String,
         keywords: List<String>.from(json['keywords'] as List<dynamic>),
         enabled: json['enabled'] as bool,
         severity: json['severity'] as int,
-        action:
-            ModerationAction.values.byName(json['action'] as String),
+        action: ModerationAction.values.byName(json['action'] as String),
         durationMinutes: json['durationMinutes'] as int?,
       );
 }
@@ -70,19 +68,18 @@ class ModerationLog {
   });
 
   Map<String, dynamic> toJson() => {
-    'logId': logId,
-    'roomId': roomId,
-    'action': action.name,
-    'targetUserId': targetUserId,
-    'targetUserName': targetUserName,
-    'moderatorId': moderatorId,
-    'reason': reason,
-    'timestamp': timestamp,
-    'durationMinutes': durationMinutes,
-  };
+        'logId': logId,
+        'roomId': roomId,
+        'action': action.name,
+        'targetUserId': targetUserId,
+        'targetUserName': targetUserName,
+        'moderatorId': moderatorId,
+        'reason': reason,
+        'timestamp': timestamp,
+        'durationMinutes': durationMinutes,
+      };
 
-  factory ModerationLog.fromJson(Map<String, dynamic> json) =>
-      ModerationLog(
+  factory ModerationLog.fromJson(Map<String, dynamic> json) => ModerationLog(
         logId: json['logId'] as String,
         roomId: json['roomId'] as String,
         action: ModerationAction.values.byName(json['action'] as String),
@@ -90,8 +87,8 @@ class ModerationLog {
         targetUserName: json['targetUserName'] as String?,
         moderatorId: json['moderatorId'] as String,
         reason: json['reason'] as String?,
-        timestamp: (json['timestamp'] as Timestamp?)?.toDate() ??
-            DateTime.now(),
+        timestamp:
+            (json['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
         durationMinutes: json['durationMinutes'] as int?,
       );
 }

@@ -1,4 +1,3 @@
-﻿
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_profile.dart';
 import 'user_providers.dart';
@@ -14,7 +13,8 @@ import 'user_providers.dart';
 /// ```dart
 /// final displayName = ref.watch(userDisplayNameProvider(userId));
 /// ```
-final userDisplayNameProvider = FutureProvider.family<String, String>((ref, userId) async {
+final userDisplayNameProvider =
+    FutureProvider.family<String, String>((ref, userId) async {
   if (userId.isEmpty) {
     return 'Unknown User';
   }
@@ -48,7 +48,9 @@ final userDisplayNameProvider = FutureProvider.family<String, String>((ref, user
 /// ```dart
 /// final names = ref.watch(batchUserDisplayNamesProvider(userIds));
 /// ```
-final batchUserDisplayNamesProvider = FutureProvider.family<Map<String, String>, List<String>>((ref, userIds) async {
+final batchUserDisplayNamesProvider =
+    FutureProvider.family<Map<String, String>, List<String>>(
+        (ref, userIds) async {
   final names = <String, String>{};
 
   // Fetch all names in parallel
@@ -92,5 +94,3 @@ String getDisplayNameInitial(String displayName) {
   }
   return displayName[0].toUpperCase();
 }
-
-

@@ -256,8 +256,7 @@ void main() {
       expect(find.text('No messages yet'), findsOneWidget);
     });
 
-    testWidgets('renders all messages in list',
-        (WidgetTester tester) async {
+    testWidgets('renders all messages in list', (WidgetTester tester) async {
       final messages = TestFixtures.chatMessages();
 
       await tester.pumpWidget(
@@ -321,8 +320,7 @@ void main() {
       expect(inputField, findsOneWidget);
     });
 
-    testWidgets('typing in input field works',
-        (WidgetTester tester) async {
+    testWidgets('typing in input field works', (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -436,8 +434,7 @@ void main() {
       expect(find.text('Their message'), findsOneWidget);
     });
 
-    testWidgets('messages fade in on entry',
-        (WidgetTester tester) async {
+    testWidgets('messages fade in on entry', (WidgetTester tester) async {
       final messages = TestFixtures.chatMessages();
 
       await tester.pumpWidget(
@@ -461,8 +458,7 @@ void main() {
       }
     });
 
-    testWidgets('empty message is not sent',
-        (WidgetTester tester) async {
+    testWidgets('empty message is not sent', (WidgetTester tester) async {
       var sentCount = 0;
 
       await tester.pumpWidget(

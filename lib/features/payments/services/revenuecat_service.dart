@@ -382,7 +382,8 @@ class RevenueCatService extends ChangeNotifier {
       _tierStreamController?.add(_currentTier);
       notifyListeners();
 
-      debugPrint('âœ… [RevenueCat] Purchase successful: ${newTier.displayName}');
+      debugPrint(
+          'âœ… [RevenueCat] Purchase successful: ${newTier.displayName}');
       return PurchaseResult.success(tier: newTier, productId: productId);
     } catch (e) {
       debugPrint('âŒ [RevenueCat] Purchase failed: $e');

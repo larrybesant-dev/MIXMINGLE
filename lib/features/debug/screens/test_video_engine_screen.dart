@@ -11,7 +11,8 @@ class TestVideoEngineScreen extends StatefulWidget {
 
 class _TestVideoEngineScreenState extends State<TestVideoEngineScreen> {
   final VideoEngineService _videoEngine = VideoEngineService();
-  final TextEditingController _channelController = TextEditingController(text: 'testRoom');
+  final TextEditingController _channelController =
+      TextEditingController(text: 'testRoom');
   bool _joined = false;
   bool _audioMuted = false;
   bool _videoMuted = false;
@@ -67,11 +68,14 @@ class _TestVideoEngineScreenState extends State<TestVideoEngineScreen> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            TextField(controller: _channelController, decoration: const InputDecoration(labelText: 'Channel')),
+            TextField(
+                controller: _channelController,
+                decoration: const InputDecoration(labelText: 'Channel')),
             const SizedBox(height: 16),
             Row(
               children: [
-                ElevatedButton(onPressed: _initEngine, child: const Text('Init Engine')),
+                ElevatedButton(
+                    onPressed: _initEngine, child: const Text('Init Engine')),
                 const SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: _joined ? _leaveChannel : _joinChannel,
@@ -104,10 +108,13 @@ class _TestVideoEngineScreenState extends State<TestVideoEngineScreen> {
             const SizedBox(height: 16),
             Expanded(
               child: ListView(
-                children: _remoteUsers.map((u) => ListTile(
-                  title: Text('Remote UID: ${u.uid}'),
-                  subtitle: Text('Video: ${u.videoEnabled} | Audio: ${u.audioEnabled}'),
-                )).toList(),
+                children: _remoteUsers
+                    .map((u) => ListTile(
+                          title: Text('Remote UID: ${u.uid}'),
+                          subtitle: Text(
+                              'Video: ${u.videoEnabled} | Audio: ${u.audioEnabled}'),
+                        ))
+                    .toList(),
               ),
             ),
           ],

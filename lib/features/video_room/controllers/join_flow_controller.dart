@@ -15,11 +15,11 @@ import '../../../core/design_system/design_constants.dart';
 
 /// Phases of the join flow
 enum JoinPhase {
-  idle,         // Not attempting to join
-  entering,     // Stage 1: "Entering room…" (150ms)
-  connecting,   // Stage 2: "Connecting audio & video…" (400-1000ms)
-  live,         // Stage 3: "You're live" appears (400ms)
-  error,        // Join failed
+  idle, // Not attempting to join
+  entering, // Stage 1: "Entering room…" (150ms)
+  connecting, // Stage 2: "Connecting audio & video…" (400-1000ms)
+  live, // Stage 3: "You're live" appears (400ms)
+  error, // Join failed
 }
 
 /// Extension to get display text for each phase
@@ -99,13 +99,17 @@ class JoinFlowNotifier extends Notifier<JoinFlowState> {
       await Future.delayed(DesignAnimations.joinStage3Duration);
       state = state.copyWith(isJoining: false);
     } catch (e) {
-      state = JoinFlowState(phase: JoinPhase.error, errorMessage: 'Join failed: $e', isJoining: false);
+      state = JoinFlowState(
+          phase: JoinPhase.error,
+          errorMessage: 'Join failed: $e',
+          isJoining: false);
       rethrow;
     }
   }
 
   void setError(String message) {
-    state = JoinFlowState(phase: JoinPhase.error, errorMessage: message, isJoining: false);
+    state = JoinFlowState(
+        phase: JoinPhase.error, errorMessage: message, isJoining: false);
   }
 
   void reset() {

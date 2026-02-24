@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 
 /// Mix & Mingle App Logger
 /// Debug-only logging utility for tracking errors and unexpected states
@@ -13,7 +13,8 @@ class AppLogger {
         debugPrint('  Error: $error');
       }
       if (stackTrace != null) {
-        debugPrint('  Stack: ${stackTrace.toString().split('\n').take(5).join('\n')}');
+        debugPrint(
+            '  Stack: ${stackTrace.toString().split('\n').take(5).join('\n')}');
       }
     }
   }
@@ -41,7 +42,8 @@ class AppLogger {
   }
 
   /// Log provider failure
-  static void providerError(String providerName, Object error, [StackTrace? stackTrace]) {
+  static void providerError(String providerName, Object error,
+      [StackTrace? stackTrace]) {
     AppLogger.error('Provider $providerName failed', error, stackTrace);
   }
 
@@ -51,7 +53,8 @@ class AppLogger {
   }
 
   /// Log Firestore operation error
-  static void firestoreError(String operation, Object error, [StackTrace? stackTrace]) {
+  static void firestoreError(String operation, Object error,
+      [StackTrace? stackTrace]) {
     AppLogger.error('Firestore $operation failed', error, stackTrace);
   }
 

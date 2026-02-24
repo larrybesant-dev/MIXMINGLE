@@ -58,18 +58,18 @@ class LiveRoomState {
   const LiveRoomState({
     required this.roomId,
     required this.localUserId,
-    this.phase              = LiveRoomPhase.idle,
+    this.phase = LiveRoomPhase.idle,
     this.roomMeta,
-    this.localRole          = ParticipantRole.audience,
-    this.participants       = const [],
-    this.visibleEngineUids  = const [],
+    this.localRole = ParticipantRole.audience,
+    this.participants = const [],
+    this.visibleEngineUids = const [],
     this.subscribedEngineUids = const [],
     this.localEngineUid,
-    this.isCamOn            = false,
-    this.isMicOn            = false,
-    this.isPublishingVideo  = false,
-    this.isPublishingAudio  = false,
-    this.isForegrounded     = true,
+    this.isCamOn = false,
+    this.isMicOn = false,
+    this.isPublishingVideo = false,
+    this.isPublishingAudio = false,
+    this.isForegrounded = true,
     this.activeSpeakerUid,
     this.error,
     this.statusMessage,
@@ -85,13 +85,13 @@ class LiveRoomState {
   final RoomMeta? roomMeta;
 
   // ── Local user ────────────────────────────────────────────────────────────
-  final String localRole;       // ParticipantRole constant
-  final int?   localEngineUid;  // Video engine integer uid
-  final bool   isCamOn;         // Logical cam toggle (user intention)
-  final bool   isMicOn;         // Logical mic toggle (user intention)
-  final bool   isPublishingVideo; // Engine actually streaming video
-  final bool   isPublishingAudio; // Engine actually streaming audio
-  final bool   isForegrounded;
+  final String localRole; // ParticipantRole constant
+  final int? localEngineUid; // Video engine integer uid
+  final bool isCamOn; // Logical cam toggle (user intention)
+  final bool isMicOn; // Logical mic toggle (user intention)
+  final bool isPublishingVideo; // Engine actually streaming video
+  final bool isPublishingAudio; // Engine actually streaming audio
+  final bool isForegrounded;
 
   // ── Participant list (from Firestore) ─────────────────────────────────────
   final List<RoomParticipant> participants;
@@ -113,28 +113,27 @@ class LiveRoomState {
 
   // ── Computed helpers ──────────────────────────────────────────────────────
 
-  bool get isIdle       => phase == LiveRoomPhase.idle;
-  bool get isJoining    => phase == LiveRoomPhase.joiningRoom ||
-                           phase == LiveRoomPhase.connectingVideo;
-  bool get isActive     => phase == LiveRoomPhase.active;
-  bool get isSuspended  => phase == LiveRoomPhase.suspended;
-  bool get isLeaving    => phase == LiveRoomPhase.leaving;
-  bool get isLeft       => phase == LiveRoomPhase.left;
-  bool get hasError     => phase == LiveRoomPhase.error;
+  bool get isIdle => phase == LiveRoomPhase.idle;
+  bool get isJoining =>
+      phase == LiveRoomPhase.joiningRoom ||
+      phase == LiveRoomPhase.connectingVideo;
+  bool get isActive => phase == LiveRoomPhase.active;
+  bool get isSuspended => phase == LiveRoomPhase.suspended;
+  bool get isLeaving => phase == LiveRoomPhase.leaving;
+  bool get isLeft => phase == LiveRoomPhase.left;
+  bool get hasError => phase == LiveRoomPhase.error;
 
-  bool get isHost        => localRole == ParticipantRole.host;
+  bool get isHost => localRole == ParticipantRole.host;
   bool get isBroadcaster =>
       localRole == ParticipantRole.broadcaster ||
       localRole == ParticipantRole.host;
 
-  int get onCamCount      => participants.where((p) => p.isOnCam).length;
-  int get activeMicCount  => participants.where((p) => p.isMicActive).length;
+  int get onCamCount => participants.where((p) => p.isOnCam).length;
+  int get activeMicCount => participants.where((p) => p.isMicActive).length;
 
   /// Participants in the broadcaster grid (gridPosition ≥ 0).
   List<RoomParticipant> get gridParticipants =>
-      participants
-          .where((p) => p.isGridVisible)
-          .toList()
+      participants.where((p) => p.isGridVisible).toList()
         ..sort((a, b) => a.gridPosition.compareTo(b.gridPosition));
 
   /// Participants in the audience row (gridPosition == -1).
@@ -145,60 +144,60 @@ class LiveRoomState {
   List<RoomParticipant> get pendingRequests =>
       participants.where((p) => p.camRequestPending).toList();
 
-  int    get maxBroadcasters => roomMeta?.maxBroadcasters ?? 4;
-  int    get maxActiveMics   => roomMeta?.maxActiveMics   ?? 2;
-  String get roomType        => roomMeta?.type            ?? RoomType.social;
+  int get maxBroadcasters => roomMeta?.maxBroadcasters ?? 4;
+  int get maxActiveMics => roomMeta?.maxActiveMics ?? 2;
+  String get roomType => roomMeta?.type ?? RoomType.social;
 
   /// Video publishing is allowed only when all three conditions are true:
   ///   1. App is foregrounded
   ///   2. User has cam on
   ///   3. At least one subscriber exists (someone is watching)
   bool get canPublishVideo =>
-      isForegrounded &&
-      isCamOn &&
-      isActive &&
-      subscribedEngineUids.isNotEmpty;
+      isForegrounded && isCamOn && isActive && subscribedEngineUids.isNotEmpty;
 
   // ── copyWith ──────────────────────────────────────────────────────────────
 
   LiveRoomState copyWith({
-    LiveRoomPhase?        phase,
-    RoomMeta?             roomMeta,
-    String?               localRole,
-    int?                  localEngineUid,
-    bool?                 isCamOn,
-    bool?                 isMicOn,
-    bool?                 isPublishingVideo,
-    bool?                 isPublishingAudio,
-    bool?                 isForegrounded,
+    LiveRoomPhase? phase,
+    RoomMeta? roomMeta,
+    String? localRole,
+    int? localEngineUid,
+    bool? isCamOn,
+    bool? isMicOn,
+    bool? isPublishingVideo,
+    bool? isPublishingAudio,
+    bool? isForegrounded,
     List<RoomParticipant>? participants,
-    List<int>?            visibleEngineUids,
-    List<int>?            subscribedEngineUids,
-    int?                  activeSpeakerUid,
-    String?               error,
-    String?               statusMessage,
-    bool clearError         = false,
+    List<int>? visibleEngineUids,
+    List<int>? subscribedEngineUids,
+    int? activeSpeakerUid,
+    String? error,
+    String? statusMessage,
+    bool clearError = false,
     bool clearActiveSpeaker = false,
-    bool clearStatus        = false,
+    bool clearStatus = false,
   }) =>
       LiveRoomState(
-        roomId:              roomId,
-        localUserId:         localUserId,
-        phase:               phase                ?? this.phase,
-        roomMeta:            roomMeta             ?? this.roomMeta,
-        localRole:           localRole            ?? this.localRole,
-        localEngineUid:      localEngineUid       ?? this.localEngineUid,
-        isCamOn:             isCamOn              ?? this.isCamOn,
-        isMicOn:             isMicOn              ?? this.isMicOn,
-        isPublishingVideo:   isPublishingVideo    ?? this.isPublishingVideo,
-        isPublishingAudio:   isPublishingAudio    ?? this.isPublishingAudio,
-        isForegrounded:      isForegrounded       ?? this.isForegrounded,
-        participants:        participants         ?? this.participants,
-        visibleEngineUids:   visibleEngineUids    ?? this.visibleEngineUids,
+        roomId: roomId,
+        localUserId: localUserId,
+        phase: phase ?? this.phase,
+        roomMeta: roomMeta ?? this.roomMeta,
+        localRole: localRole ?? this.localRole,
+        localEngineUid: localEngineUid ?? this.localEngineUid,
+        isCamOn: isCamOn ?? this.isCamOn,
+        isMicOn: isMicOn ?? this.isMicOn,
+        isPublishingVideo: isPublishingVideo ?? this.isPublishingVideo,
+        isPublishingAudio: isPublishingAudio ?? this.isPublishingAudio,
+        isForegrounded: isForegrounded ?? this.isForegrounded,
+        participants: participants ?? this.participants,
+        visibleEngineUids: visibleEngineUids ?? this.visibleEngineUids,
         subscribedEngineUids: subscribedEngineUids ?? this.subscribedEngineUids,
-        activeSpeakerUid:    clearActiveSpeaker   ? null : (activeSpeakerUid ?? this.activeSpeakerUid),
-        error:               clearError           ? null : (error            ?? this.error),
-        statusMessage:       clearStatus          ? null : (statusMessage    ?? this.statusMessage),
+        activeSpeakerUid: clearActiveSpeaker
+            ? null
+            : (activeSpeakerUid ?? this.activeSpeakerUid),
+        error: clearError ? null : (error ?? this.error),
+        statusMessage:
+            clearStatus ? null : (statusMessage ?? this.statusMessage),
       );
 
   @override

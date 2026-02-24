@@ -14,13 +14,23 @@ class CameraService {
     if (userId == null) throw Exception('Not authenticated');
 
     try {
-      await _firestore.collection('rooms').doc(roomId).collection('participants').doc(userId).update({
+      await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('participants')
+          .doc(userId)
+          .update({
         'isCameraOn': enable,
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
       if (enable) {
-        await _firestore.collection('rooms').doc(roomId).collection('camera').doc(userId).set({
+        await _firestore
+            .collection('rooms')
+            .doc(roomId)
+            .collection('camera')
+            .doc(userId)
+            .set({
           'isLive': true,
           'startedAt': FieldValue.serverTimestamp(),
           'quality': 'high',
@@ -29,7 +39,12 @@ class CameraService {
           'isSpotlighted': false,
         });
       } else {
-        await _firestore.collection('rooms').doc(roomId).collection('camera').doc(userId).delete();
+        await _firestore
+            .collection('rooms')
+            .doc(roomId)
+            .collection('camera')
+            .doc(userId)
+            .delete();
       }
       debugPrint('âœ… Camera toggled: $enable');
     } catch (e) {
@@ -46,7 +61,12 @@ class CameraService {
     try {
       final settings = CameraQualitySettings.forQuality(quality);
 
-      await _firestore.collection('rooms').doc(roomId).collection('camera').doc(userId).update({
+      await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('camera')
+          .doc(userId)
+          .update({
         'quality': quality.name,
         'resolution': settings.resolution,
         'bitrate': settings.bitrate,
@@ -65,14 +85,20 @@ class CameraService {
       final roomRef = _firestore.collection('rooms').doc(roomId);
 
       // Remove current spotlight
-      final spotlightQuery = await roomRef.collection('camera').where('isSpotlighted', isEqualTo: true).get();
+      final spotlightQuery = await roomRef
+          .collection('camera')
+          .where('isSpotlighted', isEqualTo: true)
+          .get();
 
       for (var doc in spotlightQuery.docs) {
         await doc.reference.update({'isSpotlighted': false});
       }
 
       // Apply new spotlight
-      await roomRef.collection('camera').doc(targetUid).update({'isSpotlighted': true});
+      await roomRef
+          .collection('camera')
+          .doc(targetUid)
+          .update({'isSpotlighted': true});
 
       debugPrint('âœ… Camera spotlighted: $targetUid');
     } catch (e) {
@@ -115,8 +141,12 @@ class CameraService {
 
       for (var doc in snapshot.docs) {
         try {
-          final participantDoc =
-              await _firestore.collection('rooms').doc(roomId).collection('participants').doc(doc.id).get();
+          final participantDoc = await _firestore
+              .collection('rooms')
+              .doc(roomId)
+              .collection('participants')
+              .doc(doc.id)
+              .get();
 
           if (participantDoc.exists) {
             // âœ… SAFETY FIX: Use optional chaining instead of force unwrap
@@ -130,7 +160,8 @@ class CameraService {
                 viewCount: doc['viewCount'] ?? 0,
                 isFrozen: _isFrozen(doc['lastFrameAt'] as Timestamp?),
                 isSpotlighted: doc['isSpotlighted'] ?? false,
-                startedAt: (doc['startedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+                startedAt: (doc['startedAt'] as Timestamp?)?.toDate() ??
+                    DateTime.now(),
                 userName: data['displayName'] ?? 'User',
                 userPhotoUrl: data['photoUrl'],
                 isVIP: data['isVIP'] ?? false,
@@ -160,7 +191,8 @@ class CameraService {
   /// Detect if camera is frozen
   bool _isFrozen(Timestamp? lastFrameAt) {
     if (lastFrameAt == null) return false;
-    final secondsSinceLastFrame = DateTime.now().difference(lastFrameAt.toDate()).inSeconds;
+    final secondsSinceLastFrame =
+        DateTime.now().difference(lastFrameAt.toDate()).inSeconds;
     return secondsSinceLastFrame > 10; // Frozen if no frame in 10s
   }
 
@@ -200,8 +232,12 @@ class CameraService {
   /// Get camera count
   Future<int> getActiveCameraCount(String roomId) async {
     try {
-      final snapshot =
-          await _firestore.collection('rooms').doc(roomId).collection('camera').where('isLive', isEqualTo: true).get();
+      final snapshot = await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('camera')
+          .where('isLive', isEqualTo: true)
+          .get();
 
       return snapshot.docs.length;
     } catch (e) {
@@ -213,7 +249,12 @@ class CameraService {
   /// Increment view count
   Future<void> incrementViewCount(String roomId, String cameraUid) async {
     try {
-      await _firestore.collection('rooms').doc(roomId).collection('camera').doc(cameraUid).update({
+      await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('camera')
+          .doc(cameraUid)
+          .update({
         'viewCount': FieldValue.increment(1),
       });
     } catch (e) {

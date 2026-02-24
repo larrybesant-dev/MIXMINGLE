@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Video tile data for grid layout
 class VideoTile {
@@ -152,7 +152,8 @@ class DynamicVideoGrid extends StatelessWidget {
   }
 
   /// Scrollable grid layout for 16+ participants
-  Widget _buildScrollableGrid(List<VideoTile> tiles, {required int crossAxisCount}) {
+  Widget _buildScrollableGrid(List<VideoTile> tiles,
+      {required int crossAxisCount}) {
     return GridView.builder(
       itemCount: tiles.length,
       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(

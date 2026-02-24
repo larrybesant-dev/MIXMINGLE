@@ -1,4 +1,4 @@
-﻿/// Performance Service
+/// Performance Service
 ///
 /// Centralized performance monitoring using Firebase Performance.
 /// Provides methods for custom traces, metrics, and HTTP monitoring.
@@ -10,7 +10,8 @@ import 'package:flutter/foundation.dart';
 /// Singleton service for performance monitoring
 class PerformanceService {
   static PerformanceService? _instance;
-  static PerformanceService get instance => _instance ??= PerformanceService._();
+  static PerformanceService get instance =>
+      _instance ??= PerformanceService._();
 
   PerformanceService._();
 
@@ -80,7 +81,8 @@ class PerformanceService {
   }
 
   /// Set a metric for an active trace
-  Future<void> setTraceMetric(String traceName, String metricName, int value) async {
+  Future<void> setTraceMetric(
+      String traceName, String metricName, int value) async {
     try {
       final trace = _activeTraces[traceName];
       if (trace == null) {
@@ -89,14 +91,16 @@ class PerformanceService {
       }
 
       trace.setMetric(metricName, value);
-      debugPrint('ðŸ“Š [Performance] Metric set: $traceName.$metricName = $value');
+      debugPrint(
+          'ðŸ“Š [Performance] Metric set: $traceName.$metricName = $value');
     } catch (e) {
       debugPrint('âŒ [Performance] Failed to set metric: $e');
     }
   }
 
   /// Increment a metric for an active trace
-  Future<void> incrementTraceMetric(String traceName, String metricName, int incrementBy) async {
+  Future<void> incrementTraceMetric(
+      String traceName, String metricName, int incrementBy) async {
     try {
       final trace = _activeTraces[traceName];
       if (trace == null) {
@@ -105,14 +109,16 @@ class PerformanceService {
       }
 
       trace.incrementMetric(metricName, incrementBy);
-      debugPrint('ðŸ“Š [Performance] Metric incremented: $traceName.$metricName += $incrementBy');
+      debugPrint(
+          'ðŸ“Š [Performance] Metric incremented: $traceName.$metricName += $incrementBy');
     } catch (e) {
       debugPrint('âŒ [Performance] Failed to increment metric: $e');
     }
   }
 
   /// Set an attribute for an active trace
-  Future<void> setTraceAttribute(String traceName, String attributeName, String value) async {
+  Future<void> setTraceAttribute(
+      String traceName, String attributeName, String value) async {
     try {
       final trace = _activeTraces[traceName];
       if (trace == null) {
@@ -121,7 +127,8 @@ class PerformanceService {
       }
 
       trace.putAttribute(attributeName, value);
-      debugPrint('ðŸ“Š [Performance] Attribute set: $traceName.$attributeName = $value');
+      debugPrint(
+          'ðŸ“Š [Performance] Attribute set: $traceName.$attributeName = $value');
     } catch (e) {
       debugPrint('âŒ [Performance] Failed to set attribute: $e');
     }
@@ -151,11 +158,13 @@ class PerformanceService {
     try {
       final result = operation();
       stopwatch.stop();
-      debugPrint('ðŸ“Š [Performance] $name completed in ${stopwatch.elapsedMilliseconds}ms');
+      debugPrint(
+          'ðŸ“Š [Performance] $name completed in ${stopwatch.elapsedMilliseconds}ms');
       return result;
     } catch (e) {
       stopwatch.stop();
-      debugPrint('âŒ [Performance] $name failed after ${stopwatch.elapsedMilliseconds}ms: $e');
+      debugPrint(
+          'âŒ [Performance] $name failed after ${stopwatch.elapsedMilliseconds}ms: $e');
       rethrow;
     }
   }
@@ -193,7 +202,8 @@ class PerformanceService {
 
   /// Stop Agora connect trace
   Future<void> stopAgoraConnectTrace({bool success = true}) async {
-    await setTraceAttribute('agora_connect_time', 'success', success.toString());
+    await setTraceAttribute(
+        'agora_connect_time', 'success', success.toString());
     await stopTrace('agora_connect_time');
   }
 
@@ -205,7 +215,8 @@ class PerformanceService {
 
   /// Stop Firestore presence write trace
   Future<void> stopFirestorePresenceTrace({bool success = true}) async {
-    await setTraceAttribute('firestore_presence_write_time', 'success', success.toString());
+    await setTraceAttribute(
+        'firestore_presence_write_time', 'success', success.toString());
     await stopTrace('firestore_presence_write_time');
   }
 
@@ -217,7 +228,8 @@ class PerformanceService {
 
   /// Stop video stream start trace
   Future<void> stopVideoStreamTrace({bool success = true}) async {
-    await setTraceAttribute('video_stream_start_time', 'success', success.toString());
+    await setTraceAttribute(
+        'video_stream_start_time', 'success', success.toString());
     await stopTrace('video_stream_start_time');
   }
 
@@ -292,7 +304,8 @@ class PerformanceService {
   // ============================================================
 
   /// Record a simple duration metric
-  Future<void> recordDuration(String name, int durationMs, {Map<String, String>? attributes}) async {
+  Future<void> recordDuration(String name, int durationMs,
+      {Map<String, String>? attributes}) async {
     await startTrace(name);
     if (attributes != null) {
       for (final entry in attributes.entries) {
@@ -311,7 +324,8 @@ class TraceNames {
   // Room join traces
   static const String roomJoinTotal = 'room_join_total';
   static const String agoraConnectTime = 'agora_connect_time';
-  static const String firestorePresenceWriteTime = 'firestore_presence_write_time';
+  static const String firestorePresenceWriteTime =
+      'firestore_presence_write_time';
   static const String videoStreamStartTime = 'video_stream_start_time';
 
   // Video reliability traces

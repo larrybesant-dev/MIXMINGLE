@@ -11,7 +11,8 @@ import '../../shared/models/user_profile.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-final vibeIntelligenceServiceProvider = Provider<VibeIntelligenceService>((ref) {
+final vibeIntelligenceServiceProvider =
+    Provider<VibeIntelligenceService>((ref) {
   return VibeIntelligenceService(FirebaseFirestore.instance);
 });
 
@@ -51,16 +52,13 @@ class VibeIntelligenceService {
     if (top == null || topCount < threshold) return null;
 
     // Find an alternative vibe to suggest
-    final alternatives = _kVibes
-        .where((v) => v != top)
-        .toList()
+    final alternatives = _kVibes.where((v) => v != top).toList()
       ..sort(); // deterministic across builds
     if (alternatives.isEmpty) return null;
 
     // Prefer a vibe the user has never tried
-    final neverTried = alternatives
-        .where((v) => !history.containsKey(v))
-        .toList();
+    final neverTried =
+        alternatives.where((v) => !history.containsKey(v)).toList();
 
     final suggestion = neverTried.isNotEmpty
         ? neverTried.first
@@ -90,10 +88,12 @@ class VibeIntelligenceService {
     final tags = <String>[];
 
     // Activity tiers
-    if (p.roomsHostedCount >= 10) tags.add('Super Host');
+    if (p.roomsHostedCount >= 10)
+      tags.add('Super Host');
     else if (p.roomsHostedCount >= 3) tags.add('Rising Host');
 
-    if (p.totalRoomsJoined >= 50) tags.add('Room Regular');
+    if (p.totalRoomsJoined >= 50)
+      tags.add('Room Regular');
     else if (p.totalRoomsJoined >= 20) tags.add('Social Butterfly');
 
     if (p.eventsAttended >= 10) tags.add('Event Lover');
@@ -115,7 +115,8 @@ class VibeIntelligenceService {
     if (p.followersCount >= 100) tags.add('Influencer');
 
     // Energy
-    if (p.energyScore >= 90) tags.add('High Energy');
+    if (p.energyScore >= 90)
+      tags.add('High Energy');
     else if (p.energyScore >= 50) tags.add('Active Member');
 
     return tags.take(5).toList(); // cap at 5 tags
@@ -124,6 +125,11 @@ class VibeIntelligenceService {
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   static const _kVibes = [
-    'Chill', 'Hype', 'Deep Talk', 'Late Night', 'Study', 'Party',
+    'Chill',
+    'Hype',
+    'Deep Talk',
+    'Late Night',
+    'Study',
+    'Party',
   ];
 }

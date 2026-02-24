@@ -21,12 +21,12 @@ import 'package:flutter/material.dart';
 
 class DesignColors {
   // Primary accent - BRIGHT BLUE (MINGLE color) - neon blue
-  static const Color accent = Color(0xFF4A90FF);  // Brighter blue
+  static const Color accent = Color(0xFF4A90FF); // Brighter blue
   static const Color accentLight = Color(0xFF6BA8FF);
   static const Color accentDark = Color(0xFF2563EB);
 
   // Secondary accent - ORANGE/CORAL (MIX color) - warm orange-red
-  static const Color secondary = Color(0xFFFF6B35);  // Coral orange
+  static const Color secondary = Color(0xFFFF6B35); // Coral orange
   static const Color secondaryLight = Color(0xFFFF8A5C);
   static const Color secondaryDark = Color(0xFFE85A2A);
 
@@ -55,28 +55,28 @@ class DesignColors {
   static const Color white = Color(0xFFFFFFFF);
 
   // Dark navy background palette (DJ streaming vibe)
-  static const Color background = Color(0xFF080C14);      // Deep navy black
-  static const Color surfaceLight = Color(0xFF1A1F2E);    // Lighter navy
-  static const Color surfaceDefault = Color(0xFF0D1117);  // Default dark navy
-  static const Color surfaceAlt = Color(0xFF151A26);      // Alt navy surface
-  static const Color surfaceDark = Color(0xFF060A10);     // Darkest navy
-  static const Color divider = Color(0xFF2D3748);         // Subtle navy divider
-  static const Color textGray = Color(0xFF9CA3AF);        // Muted gray
-  static const Color textLightGray = Color(0xFFD1D5DB);   // Light gray
+  static const Color background = Color(0xFF080C14); // Deep navy black
+  static const Color surfaceLight = Color(0xFF1A1F2E); // Lighter navy
+  static const Color surfaceDefault = Color(0xFF0D1117); // Default dark navy
+  static const Color surfaceAlt = Color(0xFF151A26); // Alt navy surface
+  static const Color surfaceDark = Color(0xFF060A10); // Darkest navy
+  static const Color divider = Color(0xFF2D3748); // Subtle navy divider
+  static const Color textGray = Color(0xFF9CA3AF); // Muted gray
+  static const Color textLightGray = Color(0xFFD1D5DB); // Light gray
   static const Color textDark = Color(0xFF1F2937);
 
   // Status colors
-  static const Color roomEnergyCalm = Color(0xFF4A90FF);  // Blue
+  static const Color roomEnergyCalm = Color(0xFF4A90FF); // Blue
   static const Color roomEnergyActive = Color(0xFFFF6B35); // Orange
   static const Color roomEnergyBuzzing = Color(0xFFEF4444); // Red
 
   // Semantic colors
-  static const Color success = Color(0xFF22C55E);  // Bright green
-  static const Color warning = Color(0xFFF59E0B);  // Amber
-  static const Color error = Color(0xFFEF4444);    // Red (not accent!)
+  static const Color success = Color(0xFF22C55E); // Bright green
+  static const Color warning = Color(0xFFF59E0B); // Amber
+  static const Color error = Color(0xFFEF4444); // Red (not accent!)
 
   // Transparency
-  static const Color overlay = Color(0x99080C14);  // Navy overlay
+  static const Color overlay = Color(0x99080C14); // Navy overlay
   static const Color shadowColor = Color(0x40000000);
 
   // Text colors
@@ -236,12 +236,12 @@ class DesignSpacing {
   static const double spaceXXL = 32;
 
   // ── Card spacing ────────────────────────────────────────────────────────
-  static const double cardPadding = lg;      // 16 px inside cards
-  static const double cardSpacing = lg;      // 16 px between cards
+  static const double cardPadding = lg; // 16 px inside cards
+  static const double cardSpacing = lg; // 16 px between cards
   static const double cardBorderRadius = 18.0; // 16–20 px range
 
   // ── Button sizing (Layout Guide §3) ─────────────────────────────────────
-  static const double buttonMinHeight = 52;   // 48–56 px
+  static const double buttonMinHeight = 52; // 48–56 px
   static const double buttonMinWidth = 120;
   static const double buttonPadding = lg;
   static const double buttonBorderRadius = 14.0; // 12–16 px range
@@ -254,12 +254,12 @@ class DesignSpacing {
   // ── Avatar sizes (radii) ─────────────────────────────────────────────────
   /// Profile hero — 108 px diameter, radius 54
   static const double avatarHeroRadius = 54;
-  static const double avatarLarge = 32;  // 64 px diameter
+  static const double avatarLarge = 32; // 64 px diameter
   static const double avatarMedium = 24; // 48 px diameter
-  static const double avatarSmall = 20;  // 40 px diameter
+  static const double avatarSmall = 20; // 40 px diameter
 
   // ── Page structure ────────────────────────────────────────────────────────
-  static const double headerHeight = 64;     // 56–72 px
+  static const double headerHeight = 64; // 56–72 px
   static const double headerHeightLg = 72;
 
   // ── Control bar (rooms) ──────────────────────────────────────────────────
@@ -301,9 +301,11 @@ class DesignAnimations {
 
   // Micro interactions
   static const Duration cardHoverDuration = Duration(milliseconds: 150);
-  static const Duration notificationFadeInDuration = Duration(milliseconds: 150);
+  static const Duration notificationFadeInDuration =
+      Duration(milliseconds: 150);
   static const Duration notificationVisibleDuration = Duration(seconds: 3);
-  static const Duration notificationFadeOutDuration = Duration(milliseconds: 200);
+  static const Duration notificationFadeOutDuration =
+      Duration(milliseconds: 200);
 
   // Curves (DESIGN_BIBLE.md specifies easeOutCubic, easeInOut, easeInCubic)
   static const Curve easeOutCubic = Cubic(0.215, 0.61, 0.355, 1.0);
@@ -421,12 +423,12 @@ class RoomEnergyThresholds {
 // ==============================================================================
 
 enum JoinPhase {
-  initial,      // Before join is clicked
-  entering,     // Stage 1: "Entering roomâ€¦" (150ms)
-  connecting,   // Stage 2: "Connecting audioâ€¦" (400â€“1000ms)
-  live,         // Stage 3: "You're live" (400ms fade-in)
-  error,        // Join failed
-  left,         // User left room
+  initial, // Before join is clicked
+  entering, // Stage 1: "Entering roomâ€¦" (150ms)
+  connecting, // Stage 2: "Connecting audioâ€¦" (400â€“1000ms)
+  live, // Stage 3: "You're live" (400ms fade-in)
+  error, // Join failed
+  left, // User left room
 }
 
 extension JoinPhaseExtension on JoinPhase {
@@ -466,11 +468,11 @@ extension JoinPhaseExtension on JoinPhase {
 // ==============================================================================
 
 enum NotificationType {
-  userArrived,    // "Emma just joined"
-  userLeft,       // "Emma left the room"
-  userSpeaking,   // "Emma is speakingâ€¦"
-  youAreLive,     // "You're live with 5 others"
-  error,          // Error message
+  userArrived, // "Emma just joined"
+  userLeft, // "Emma left the room"
+  userSpeaking, // "Emma is speakingâ€¦"
+  youAreLive, // "You're live with 5 others"
+  error, // Error message
 }
 
 extension NotificationTypeExtension on NotificationType {
@@ -538,8 +540,5 @@ class DesignConstants {
   static const double padding = DesignSpacing.lg;
   static const double radius = DesignSpacing.cardBorderRadius;
 }
-
-
-
 
 // (flutter/material.dart imported at top of file)

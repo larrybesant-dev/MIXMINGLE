@@ -82,8 +82,10 @@ class _HealthDashboardState extends ConsumerState<HealthDashboard> {
           _devicesLoaded = true;
 
           // Auto-select first camera and mic
-          final cameras = _devices.where((d) => d['kind'] == 'videoinput').toList();
-          final mics = _devices.where((d) => d['kind'] == 'audioinput').toList();
+          final cameras =
+              _devices.where((d) => d['kind'] == 'videoinput').toList();
+          final mics =
+              _devices.where((d) => d['kind'] == 'audioinput').toList();
 
           if (cameras.isNotEmpty) _selectedCamera = cameras.first['deviceId'];
           if (mics.isNotEmpty) _selectedMic = mics.first['deviceId'];
@@ -112,7 +114,8 @@ class _HealthDashboardState extends ConsumerState<HealthDashboard> {
     }
   }
 
-  Future<void> _runWithLoading(String action, Future<bool> Function() task) async {
+  Future<void> _runWithLoading(
+      String action, Future<bool> Function() task) async {
     setState(() {
       _isLoading = true;
       _lastAction = action;
@@ -190,7 +193,8 @@ class _HealthDashboardState extends ConsumerState<HealthDashboard> {
                       ),
                     ),
                     IconButton(
-                      icon: const Icon(Icons.close, color: Colors.red, size: 16),
+                      icon:
+                          const Icon(Icons.close, color: Colors.red, size: 16),
                       onPressed: () => setState(() => _lastError = ''),
                     ),
                   ],
@@ -314,7 +318,8 @@ class _HealthDashboardState extends ConsumerState<HealthDashboard> {
                 Colors.blue,
                 () => _runWithLoading('Start Camera', () async {
                   _showVideoContainer(true);
-                  final ok = await _agora.startCamera('agora-video-container', _selectedCamera);
+                  final ok = await _agora.startCamera(
+                      'agora-video-container', _selectedCamera);
                   _cameraActive = ok;
                   return ok;
                 }),
@@ -436,6 +441,7 @@ class _HealthDashboardState extends ConsumerState<HealthDashboard> {
       ),
     );
   }
+
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
@@ -637,7 +643,9 @@ class _HealthDashboardState extends ConsumerState<HealthDashboard> {
                 return DropdownMenuItem(
                   value: deviceId,
                   child: Text(
-                    deviceLabel.isEmpty ? 'Device ${deviceList.indexOf(d) + 1}' : deviceLabel,
+                    deviceLabel.isEmpty
+                        ? 'Device ${deviceList.indexOf(d) + 1}'
+                        : deviceLabel,
                     overflow: TextOverflow.ellipsis,
                   ),
                 );

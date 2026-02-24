@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/core/responsive/responsive_utils.dart';
 import 'package:mixmingle/core/accessibility/accessibility_utils.dart';
@@ -66,7 +66,8 @@ class ThemeToggleWidget extends ConsumerWidget {
                             onTap: () {},
                           ),
                         ),
-                        SizedBox(width: Responsive.responsiveSpacing(context, 12)),
+                        SizedBox(
+                            width: Responsive.responsiveSpacing(context, 12)),
                         Expanded(
                           child: _ThemeOption(
                             title: 'Dark',
@@ -76,7 +77,8 @@ class ThemeToggleWidget extends ConsumerWidget {
                             onTap: () {},
                           ),
                         ),
-                        SizedBox(width: Responsive.responsiveSpacing(context, 12)),
+                        SizedBox(
+                            width: Responsive.responsiveSpacing(context, 12)),
                         Expanded(
                           child: _ThemeOption(
                             title: 'System',
@@ -137,7 +139,8 @@ class _ThemeOption extends StatelessWidget {
                     : theme.colorScheme.primary.withValues(alpha: 0.1))
                 : theme.cardColor,
             border: Border.all(
-              color: isSelected ? theme.colorScheme.primary : theme.dividerColor,
+              color:
+                  isSelected ? theme.colorScheme.primary : theme.dividerColor,
               width: isSelected ? 2 : 1,
             ),
             borderRadius: BorderRadius.circular(12),
@@ -147,14 +150,18 @@ class _ThemeOption extends StatelessWidget {
               Icon(
                 icon,
                 size: Responsive.responsiveIconSize(context, 24),
-                color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                color: isSelected
+                    ? theme.colorScheme.primary
+                    : theme.colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               SizedBox(height: Responsive.responsiveSpacing(context, 8)),
               ResponsiveText(
                 title,
                 style: theme.textTheme.bodyMedium?.copyWith(
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  color: isSelected ? theme.colorScheme.primary : theme.colorScheme.onSurface,
+                  color: isSelected
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
               ),

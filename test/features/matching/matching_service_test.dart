@@ -262,7 +262,8 @@ void main() {
   });
 
   group('MatchingService', () {
-    test('calculateMatchScore returns perfect score for identical profiles', () async {
+    test('calculateMatchScore returns perfect score for identical profiles',
+        () async {
       const answers = QuestionnaireAnswers(
         relationshipIntent: RelationshipIntent.seriousRelationship,
         partnerVibe: PartnerVibe.intellectual,
@@ -308,14 +309,16 @@ void main() {
         createdAt: DateTime.now(),
       );
 
-      final matchScore = await matchingService.calculateMatchScore(profile1, profile2);
+      final matchScore =
+          await matchingService.calculateMatchScore(profile1, profile2);
 
       expect(matchScore.overallScore, greaterThan(90.0));
       expect(matchScore.compatibilityReasons.isNotEmpty, true);
       expect(matchScore.isStrongMatch, true);
     });
 
-    test('calculateMatchScore returns low score for incompatible profiles', () async {
+    test('calculateMatchScore returns low score for incompatible profiles',
+        () async {
       final profile1 = MatchingProfile(
         userId: 'user1',
         displayName: 'User 1',
@@ -380,7 +383,8 @@ void main() {
         createdAt: DateTime.now(),
       );
 
-      final matchScore = await matchingService.calculateMatchScore(profile1, profile2);
+      final matchScore =
+          await matchingService.calculateMatchScore(profile1, profile2);
 
       expect(matchScore.overallScore, lessThan(50.0));
       expect(matchScore.potentialChallenges.isNotEmpty, true);

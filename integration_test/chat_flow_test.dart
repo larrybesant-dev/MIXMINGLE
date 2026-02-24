@@ -7,7 +7,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('Chat Flow Integration Tests', () {
-    testWidgets('should send and receive messages', (WidgetTester tester) async {
+    testWidgets('should send and receive messages',
+        (WidgetTester tester) async {
       // Arrange
       app.main();
       await tester.pumpAndSettle(Duration(seconds: 2));
@@ -27,7 +28,8 @@ void main() {
           // Act - Send a message
           final messageField = find.byType(TextField);
           if (messageField.evaluate().isNotEmpty) {
-            await tester.enterText(messageField.first, 'Hello, this is a test message!');
+            await tester.enterText(
+                messageField.first, 'Hello, this is a test message!');
             await tester.pumpAndSettle();
 
             // Tap send button

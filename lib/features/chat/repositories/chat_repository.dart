@@ -15,8 +15,7 @@ class ChatRepository implements IChatRepository {
       : _db = db ?? FirebaseFirestore.instance;
 
   @override
-  Stream<List<ChatMessage>> watchMessages(String channelId,
-      {int limit = 50}) {
+  Stream<List<ChatMessage>> watchMessages(String channelId, {int limit = 50}) {
     return _db
         .collection('channels')
         .doc(channelId)
@@ -34,12 +33,9 @@ class ChatRepository implements IChatRepository {
     required String text,
   }) async {
     _assertUid(senderUid);
-    if (text.trim().isEmpty) throw ArgumentError('Message text must not be empty');
-    await _db
-        .collection('channels')
-        .doc(channelId)
-        .collection('messages')
-        .add({
+    if (text.trim().isEmpty)
+      throw ArgumentError('Message text must not be empty');
+    await _db.collection('channels').doc(channelId).collection('messages').add({
       'senderUid': senderUid,
       'text': text.trim(),
       'createdAt': FieldValue.serverTimestamp(),
@@ -70,7 +66,8 @@ class ChatRepository implements IChatRepository {
     final senderUid = doc.data()?['senderUid'] as String?;
     // Allow sender or moderator (moderator check is Firestore-rules side)
     if (senderUid != requestingUid) {
-      throw Exception('Permission denied: cannot delete another user\'s message');
+      throw Exception(
+          'Permission denied: cannot delete another user\'s message');
     }
     await ref.update({'deleted': true, 'text': ''});
   }

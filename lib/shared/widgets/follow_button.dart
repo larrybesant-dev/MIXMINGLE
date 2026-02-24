@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/providers/profile_controller.dart';
 
@@ -30,7 +30,8 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
       final controller = ref.read(profileControllerProvider);
 
       if (isCurrentlyFollowing) {
-        await controller.unfollowUser(widget.currentUserId, widget.targetUserId);
+        await controller.unfollowUser(
+            widget.currentUserId, widget.targetUserId);
       } else {
         await controller.followUser(widget.currentUserId, widget.targetUserId);
       }
@@ -40,7 +41,8 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(isCurrentlyFollowing ? 'Unfollowed successfully' : 'Following'),
+            content: Text(
+                isCurrentlyFollowing ? 'Unfollowed successfully' : 'Following'),
             duration: const Duration(seconds: 2),
           ),
         );
@@ -73,7 +75,8 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
         return ElevatedButton.icon(
           onPressed: _isLoading ? null : () => _toggleFollow(isFollowing),
           style: ElevatedButton.styleFrom(
-            backgroundColor: isFollowing ? Colors.grey[700] : Theme.of(context).primaryColor,
+            backgroundColor:
+                isFollowing ? Colors.grey[700] : Theme.of(context).primaryColor,
             foregroundColor: Colors.white,
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             shape: RoundedRectangleBorder(
@@ -84,7 +87,8 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
               ? const SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                  child: CircularProgressIndicator(
+                      strokeWidth: 2, color: Colors.white),
                 )
               : Icon(isFollowing ? Icons.person_remove : Icons.person_add),
           label: Text(isFollowing ? 'Unfollow' : 'Follow'),

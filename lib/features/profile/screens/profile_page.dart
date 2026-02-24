@@ -19,11 +19,11 @@ import '../widgets/layer_creator.dart';
 import '../widgets/layer_safety.dart';
 
 // ─── Neon palette shortcuts ───────────────────────────────────────────────────
-const _kPink    = Color(0xFFFF4D8B);   // live / dating
-const _kCyan    = Color(0xFF00E5CC);   // recently active / event host
-const _kBlue    = Color(0xFF4A90FF);   // accent / social
-const _kAmber   = Color(0xFFFFAB00);   // creator / VIP
-const _kPurple  = Color(0xFF8B5CF6);   // vibes / badges
+const _kPink = Color(0xFFFF4D8B); // live / dating
+const _kCyan = Color(0xFF00E5CC); // recently active / event host
+const _kBlue = Color(0xFF4A90FF); // accent / social
+const _kAmber = Color(0xFFFFAB00); // creator / VIP
+const _kPurple = Color(0xFF8B5CF6); // vibes / badges
 
 // ════════════════════════════════════════════════════════════════════
 // ProfilePage — 5-Layer Identity + Attraction + Authority + Monetization + Control
@@ -133,9 +133,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               _buildHeroNameSection(p),
               const SizedBox(height: 16),
               // ── Vibe Tags ─────────────────────────────────────────
-              if (p.vibeTag != null || (p.interests != null && p.interests!.isNotEmpty))
+              if (p.vibeTag != null ||
+                  (p.interests != null && p.interests!.isNotEmpty))
                 _buildVibeTagsSection(p),
-              if (p.vibeTag != null || (p.interests != null && p.interests!.isNotEmpty))
+              if (p.vibeTag != null ||
+                  (p.interests != null && p.interests!.isNotEmpty))
                 const SizedBox(height: 12),
               // ── Music Genres ──────────────────────────────────────
               if (p.musicGenres != null && p.musicGenres!.isNotEmpty)
@@ -143,8 +145,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               if (p.musicGenres != null && p.musicGenres!.isNotEmpty)
                 const SizedBox(height: 16),
               // ── Bio ───────────────────────────────────────────────
-              if (p.bio != null && p.bio!.isNotEmpty)
-                _buildBioSection(p),
+              if (p.bio != null && p.bio!.isNotEmpty) _buildBioSection(p),
               if (p.bio != null && p.bio!.isNotEmpty)
                 const SizedBox(height: 16),
               // ── Badges ────────────────────────────────────────────
@@ -193,7 +194,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       const SizedBox(height: 24),
     ];
 
-    final live = (p.roomsHostedCount > 0 || p.presenceStatus == 'in_room' || p.eventsHostingCount > 0)
+    final live = (p.roomsHostedCount > 0 ||
+            p.presenceStatus == 'in_room' ||
+            p.eventsHostingCount > 0)
         ? [
             LayerLivePresence(
               p: p,
@@ -232,13 +235,27 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
     switch (mode) {
       case ProfileMode.dating:
-        return [...attraction, ...dating, ...social, ...live, ...creator, ...supporting];
+        return [
+          ...attraction,
+          ...dating,
+          ...social,
+          ...live,
+          ...creator,
+          ...supporting
+        ];
       case ProfileMode.creator:
         return [...creator, ...attraction, ...live, ...social, ...supporting];
       case ProfileMode.eventHost:
         return [...live, ...social, ...attraction, ...creator, ...supporting];
       case ProfileMode.social:
-        return [...social, ...attraction, ...live, ...creator, ...dating, ...supporting];
+        return [
+          ...social,
+          ...attraction,
+          ...live,
+          ...creator,
+          ...dating,
+          ...supporting
+        ];
     }
   }
 
@@ -268,9 +285,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             if (p.relationshipType != null)
               _datingRow('Relationship', p.relationshipType!, color),
             if (p.preferredGenders != null && p.preferredGenders!.isNotEmpty)
-              _datingRow('Interested in', p.preferredGenders!.join(', '), color),
+              _datingRow(
+                  'Interested in', p.preferredGenders!.join(', '), color),
             if (p.minAgePreference != null && p.maxAgePreference != null)
-              _datingRow('Age range', '${p.minAgePreference} – ${p.maxAgePreference}', color),
+              _datingRow('Age range',
+                  '${p.minAgePreference} – ${p.maxAgePreference}', color),
           ]),
         ),
       ],
@@ -283,8 +302,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(color: Color(0xFF8892A4), fontSize: 13)),
-          Text(value, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w600)),
+          Text(label,
+              style: const TextStyle(color: Color(0xFF8892A4), fontSize: 13)),
+          Text(value,
+              style: TextStyle(
+                  color: color, fontSize: 13, fontWeight: FontWeight.w600)),
         ],
       ),
     );
@@ -295,15 +317,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final widgets = <Widget>[];
     if (p.galleryPhotos != null && p.galleryPhotos!.isNotEmpty) {
       widgets.addAll([
-        _sectionHeader(Icons.photo_library_outlined, 'Gallery', DesignColors.accent),
+        _sectionHeader(
+            Icons.photo_library_outlined, 'Gallery', DesignColors.accent),
         const SizedBox(height: 10),
         _buildGalleryGrid(p.galleryPhotos!),
         const SizedBox(height: 20),
       ]);
     }
-    if (p.lifestylePrompts != null && p.lifestylePrompts!.values.any((v) => v)) {
+    if (p.lifestylePrompts != null &&
+        p.lifestylePrompts!.values.any((v) => v)) {
       widgets.addAll([
-        _sectionHeader(Icons.favorite_border, 'Lifestyle', DesignColors.secondary),
+        _sectionHeader(
+            Icons.favorite_border, 'Lifestyle', DesignColors.secondary),
         const SizedBox(height: 10),
         _buildLifestyleRow(p.lifestylePrompts!),
         const SizedBox(height: 20),
@@ -311,7 +336,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     }
     if (p.musicTastes != null && p.musicTastes!.isNotEmpty) {
       widgets.addAll([
-        _sectionHeader(Icons.music_note_outlined, 'Music', DesignColors.tertiary),
+        _sectionHeader(
+            Icons.music_note_outlined, 'Music', DesignColors.tertiary),
         const SizedBox(height: 10),
         _buildChipWrap(p.musicTastes!, DesignColors.tertiary),
         const SizedBox(height: 20),
@@ -334,22 +360,31 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       LayerSafety(
         p: p,
         isOwner: true,
-        onEditDmRestriction: () => Navigator.pushNamed(context, '/settings/privacy'),
-        onToggleHideDistance: () => Navigator.pushNamed(context, '/settings/privacy'),
-        onToggleHideFollowers: () => Navigator.pushNamed(context, '/settings/privacy'),
-        onToggleRestrictInvites: () => Navigator.pushNamed(context, '/settings/privacy'),
+        onEditDmRestriction: () =>
+            Navigator.pushNamed(context, '/settings/privacy'),
+        onToggleHideDistance: () =>
+            Navigator.pushNamed(context, '/settings/privacy'),
+        onToggleHideFollowers: () =>
+            Navigator.pushNamed(context, '/settings/privacy'),
+        onToggleRestrictInvites: () =>
+            Navigator.pushNamed(context, '/settings/privacy'),
         onBlockList: () => Navigator.pushNamed(context, '/settings/blocked'),
         onSetup2FA: () => Navigator.pushNamed(context, '/settings/security'),
-        onContentModeration: () => Navigator.pushNamed(context, '/creator/moderation'),
+        onContentModeration: () =>
+            Navigator.pushNamed(context, '/creator/moderation'),
       ),
       const SizedBox(height: 24),
       _sectionHeader(Icons.settings_outlined, 'Account', DesignColors.textGray),
       const SizedBox(height: 10),
-      _navTile(Icons.privacy_tip_outlined, 'Privacy Settings', () => Navigator.pushNamed(context, '/settings/privacy')),
-      _navTile(Icons.notifications_outlined, 'Notifications', () => Navigator.pushNamed(context, '/notifications')),
-      _navTile(Icons.settings_outlined, 'Account Settings', () => Navigator.pushNamed(context, '/settings')),
+      _navTile(Icons.privacy_tip_outlined, 'Privacy Settings',
+          () => Navigator.pushNamed(context, '/settings/privacy')),
+      _navTile(Icons.notifications_outlined, 'Notifications',
+          () => Navigator.pushNamed(context, '/notifications')),
+      _navTile(Icons.settings_outlined, 'Account Settings',
+          () => Navigator.pushNamed(context, '/settings')),
       if (p.isCreatorEnabled)
-        _navTile(Icons.monetization_on_outlined, 'Creator Settings', () => Navigator.pushNamed(context, '/creator/settings')),
+        _navTile(Icons.monetization_on_outlined, 'Creator Settings',
+            () => Navigator.pushNamed(context, '/creator/settings')),
       const SizedBox(height: 20),
       _buildLogoutButton(),
       const SizedBox(height: 12),
@@ -357,7 +392,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         child: TextButton(
           onPressed: _showDeleteAccountDialog,
           child: const Text('Delete Account',
-              style: TextStyle(color: DesignColors.error, decoration: TextDecoration.underline)),
+              style: TextStyle(
+                  color: DesignColors.error,
+                  decoration: TextDecoration.underline)),
         ),
       ),
       const SizedBox(height: 20),
@@ -375,7 +412,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       backgroundColor: DesignColors.background,
       leading: !_isOwner
           ? IconButton(
-              icon: const Icon(Icons.arrow_back_ios_new, color: DesignColors.white),
+              icon: const Icon(Icons.arrow_back_ios_new,
+                  color: DesignColors.white),
               onPressed: () => Navigator.pop(context),
             )
           : null,
@@ -402,13 +440,21 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 : Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Color(0xFF0D1117), Color(0xFF1A1F2E), Color(0xFF0D1117)],
+                        colors: [
+                          Color(0xFF0D1117),
+                          Color(0xFF1A1F2E),
+                          Color(0xFF0D1117)
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                     ),
                     child: Stack(children: [
-                      Center(child: Icon(Icons.music_note, color: DesignColors.accent.withValues(alpha: 0.08), size: 140)),
+                      Center(
+                          child: Icon(Icons.music_note,
+                              color:
+                                  DesignColors.accent.withValues(alpha: 0.08),
+                              size: 140)),
                     ]),
                   ),
             // ── Gradient fade to background ─────────────────────────
@@ -442,13 +488,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         gradient: LinearGradient(
-                          colors: [avatarGlow, avatarGlow.withValues(alpha: 0.3)],
+                          colors: [
+                            avatarGlow,
+                            avatarGlow.withValues(alpha: 0.3)
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         boxShadow: [
-                          BoxShadow(color: avatarGlow.withValues(alpha: 0.55), blurRadius: 24, spreadRadius: 3),
-                          BoxShadow(color: avatarGlow.withValues(alpha: 0.25), blurRadius: 48, spreadRadius: 6),
+                          BoxShadow(
+                              color: avatarGlow.withValues(alpha: 0.55),
+                              blurRadius: 24,
+                              spreadRadius: 3),
+                          BoxShadow(
+                              color: avatarGlow.withValues(alpha: 0.25),
+                              blurRadius: 48,
+                              spreadRadius: 6),
                         ],
                       ),
                       child: Padding(
@@ -456,9 +511,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         child: CircleAvatar(
                           radius: 55,
                           backgroundColor: DesignColors.surfaceDefault,
-                          backgroundImage: p.photoUrl != null ? NetworkImage(p.photoUrl!) : null,
+                          backgroundImage: p.photoUrl != null
+                              ? NetworkImage(p.photoUrl!)
+                              : null,
                           child: p.photoUrl == null
-                              ? const Icon(Icons.person, size: 52, color: DesignColors.textGray)
+                              ? const Icon(Icons.person,
+                                  size: 52, color: DesignColors.textGray)
                               : null,
                         ),
                       ),
@@ -469,7 +527,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         bottom: 0,
                         right: 0,
                         child: GestureDetector(
-                          onTap: () => Navigator.pushNamed(context, AppRoutes.editProfile),
+                          onTap: () => Navigator.pushNamed(
+                              context, AppRoutes.editProfile),
                           child: Container(
                             width: 32,
                             height: 32,
@@ -477,9 +536,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                               shape: BoxShape.circle,
                               color: DesignColors.surfaceLight,
                               border: Border.all(color: avatarGlow, width: 2),
-                              boxShadow: [BoxShadow(color: avatarGlow.withValues(alpha: 0.4), blurRadius: 8)],
+                              boxShadow: [
+                                BoxShadow(
+                                    color: avatarGlow.withValues(alpha: 0.4),
+                                    blurRadius: 8)
+                              ],
                             ),
-                            child: const Icon(Icons.edit, size: 15, color: DesignColors.white),
+                            child: const Icon(Icons.edit,
+                                size: 15, color: DesignColors.white),
                           ),
                         ),
                       ),
@@ -489,13 +553,23 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         top: 4,
                         right: 0,
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
                             color: _kPink,
                             borderRadius: BorderRadius.circular(8),
-                            boxShadow: [BoxShadow(color: _kPink.withValues(alpha: 0.6), blurRadius: 6)],
+                            boxShadow: [
+                              BoxShadow(
+                                  color: _kPink.withValues(alpha: 0.6),
+                                  blurRadius: 6)
+                            ],
                           ),
-                          child: const Text('LIVE', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                          child: const Text('LIVE',
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.5)),
                         ),
                       ),
                   ],
@@ -520,10 +594,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   // ══════════════════════════════════════════════════════════
   Widget _buildHeroNameSection(UserProfile p) {
     final name = p.displayName ?? p.nickname ?? 'Anonymous';
-    final age  = p.age;
+    final age = p.age;
     final flag = p.countryCode != null ? _countryFlag(p.countryCode!) : null;
     final days = DateTime.now().difference(p.createdAt).inDays;
-    final joined = days == 0 ? 'Joined today' : days == 1 ? 'Joined yesterday' : 'Joined $days days ago';
+    final joined = days == 0
+        ? 'Joined today'
+        : days == 1
+            ? 'Joined yesterday'
+            : 'Joined $days days ago';
 
     return Column(
       children: [
@@ -566,7 +644,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(joined, style: const TextStyle(color: DesignColors.textGray, fontSize: 12)),
+            Text(joined,
+                style: const TextStyle(
+                    color: DesignColors.textGray, fontSize: 12)),
             if (p.presenceStatus != null && p.presenceStatus != 'offline') ...[
               const SizedBox(width: 10),
               _presencePill(p.presenceStatus!),
@@ -601,13 +681,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final IconData icon;
     switch (status) {
       case 'in_room':
-        color = _kPink; label = 'In a room'; icon = Icons.graphic_eq;
+        color = _kPink;
+        label = 'In a room';
+        icon = Icons.graphic_eq;
         break;
       case 'online':
-        color = _kCyan; label = 'Active now'; icon = Icons.circle;
+        color = _kCyan;
+        label = 'Active now';
+        icon = Icons.circle;
         break;
       default:
-        color = DesignColors.textGray; label = 'Recently active'; icon = Icons.access_time_outlined;
+        color = DesignColors.textGray;
+        label = 'Recently active';
+        icon = Icons.access_time_outlined;
     }
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -619,16 +705,24 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, size: 8, color: color),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600)),
+        Text(label,
+            style: TextStyle(
+                color: color, fontSize: 10, fontWeight: FontWeight.w600)),
       ]),
     );
   }
 
   Widget _statBadge(String value, String label) {
     return Column(mainAxisSize: MainAxisSize.min, children: [
-      Text(value, style: const TextStyle(color: DesignColors.white, fontSize: 18, fontWeight: FontWeight.w700, height: 1)),
+      Text(value,
+          style: const TextStyle(
+              color: DesignColors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              height: 1)),
       const SizedBox(height: 2),
-      Text(label, style: const TextStyle(color: DesignColors.textGray, fontSize: 11)),
+      Text(label,
+          style: const TextStyle(color: DesignColors.textGray, fontSize: 11)),
     ]);
   }
 
@@ -663,10 +757,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: tags.map((tag) => Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: _vibeChip(tag, _kPurple),
-            )).toList(),
+            children: tags
+                .map((tag) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: _vibeChip(tag, _kPurple),
+                    ))
+                .toList(),
           ),
         ),
       ],
@@ -678,15 +774,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [color.withValues(alpha: 0.18), color.withValues(alpha: 0.06)],
+          colors: [
+            color.withValues(alpha: 0.18),
+            color.withValues(alpha: 0.06)
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: color.withValues(alpha: 0.5)),
-        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 6)],
+        boxShadow: [
+          BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 6)
+        ],
       ),
-      child: Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w600)),
+      child: Text(label,
+          style: TextStyle(
+              color: color, fontSize: 13, fontWeight: FontWeight.w600)),
     );
   }
 
@@ -703,23 +806,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: genres.map((g) => Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _kCyan.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: _kCyan.withValues(alpha: 0.35)),
-                  boxShadow: [BoxShadow(color: _kCyan.withValues(alpha: 0.12), blurRadius: 4)],
-                ),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  const Icon(Icons.headphones, size: 12, color: _kCyan),
-                  const SizedBox(width: 5),
-                  Text(g, style: const TextStyle(color: _kCyan, fontSize: 12, fontWeight: FontWeight.w600)),
-                ]),
-              ),
-            )).toList(),
+            children: genres
+                .map((g) => Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _kCyan.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border:
+                              Border.all(color: _kCyan.withValues(alpha: 0.35)),
+                          boxShadow: [
+                            BoxShadow(
+                                color: _kCyan.withValues(alpha: 0.12),
+                                blurRadius: 4)
+                          ],
+                        ),
+                        child: Row(mainAxisSize: MainAxisSize.min, children: [
+                          const Icon(Icons.headphones, size: 12, color: _kCyan),
+                          const SizedBox(width: 5),
+                          Text(g,
+                              style: const TextStyle(
+                                  color: _kCyan,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600)),
+                        ]),
+                      ),
+                    ))
+                .toList(),
           ),
         ),
       ],
@@ -737,7 +852,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         Row(children: [
           Container(height: 1, width: 32, color: _kBlue.withValues(alpha: 0.7)),
           Container(height: 1, width: 16, color: _kPink.withValues(alpha: 0.5)),
-          Expanded(child: Container(height: 1, color: DesignColors.divider.withValues(alpha: 0.3))),
+          Expanded(
+              child: Container(
+                  height: 1,
+                  color: DesignColors.divider.withValues(alpha: 0.3))),
         ]),
         const SizedBox(height: 12),
         Container(
@@ -779,7 +897,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     if (p.communityRating >= 4.5 && p.totalRoomsJoined >= 10)
       badges.add(_BadgeItem(Icons.star_outline, 'Top Host', _kAmber));
     if (p.twoFactorEnabled)
-      badges.add(_BadgeItem(Icons.security_outlined, '2FA Active', DesignColors.success));
+      badges.add(_BadgeItem(
+          Icons.security_outlined, '2FA Active', DesignColors.success));
 
     // Always show at least placeholder row so space is reserved
     if (badges.isEmpty && p.computedTags.isEmpty) {
@@ -796,44 +915,60 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           child: Row(
             children: [
               ...badges.map((b) => Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [b.color.withValues(alpha: 0.18), b.color.withValues(alpha: 0.06)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            b.color.withValues(alpha: 0.18),
+                            b.color.withValues(alpha: 0.06)
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border:
+                            Border.all(color: b.color.withValues(alpha: 0.5)),
+                        boxShadow: [
+                          BoxShadow(
+                              color: b.color.withValues(alpha: 0.2),
+                              blurRadius: 6)
+                        ],
+                      ),
+                      child: Row(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(b.icon, size: 13, color: b.color),
+                        const SizedBox(width: 5),
+                        Text(b.label,
+                            style: TextStyle(
+                                color: b.color,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700)),
+                      ]),
                     ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: b.color.withValues(alpha: 0.5)),
-                    boxShadow: [BoxShadow(color: b.color.withValues(alpha: 0.2), blurRadius: 6)],
-                  ),
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(b.icon, size: 13, color: b.color),
-                    const SizedBox(width: 5),
-                    Text(b.label, style: TextStyle(color: b.color, fontSize: 12, fontWeight: FontWeight.w700)),
-                  ]),
-                ),
-              )),
+                  )),
               // Computed behaviour tags (purple neon chips)
               ...p.computedTags.map((tag) => Padding(
-                padding: const EdgeInsets.only(right: 8),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFF8B5CF6).withValues(alpha: 0.45)),
-                  ),
-                  child: Text(tag,
-                      style: const TextStyle(
-                        color: Color(0xFF8B5CF6),
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                      )),
-                ),
-              )),
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                            color: const Color(0xFF8B5CF6)
+                                .withValues(alpha: 0.45)),
+                      ),
+                      child: Text(tag,
+                          style: const TextStyle(
+                            color: Color(0xFF8B5CF6),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          )),
+                    ),
+                  )),
             ],
           ),
         ),
@@ -847,7 +982,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Widget _buildEnergyScoreSection(UserProfile p) {
     final score = p.energyScore;
     final ratio = score / 100.0;
-    final tier = score < 30 ? 'Warm Up' : score < 65 ? 'Active' : 'High Energy';
+    final tier = score < 30
+        ? 'Warm Up'
+        : score < 65
+            ? 'Active'
+            : 'High Energy';
     const barColor = Color(0xFF00E5CC);
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       _miniSectionLabel(Icons.bolt, 'Energy Score', barColor),
@@ -863,7 +1002,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           Row(children: [
             Text('$score',
                 style: const TextStyle(
-                    color: barColor, fontSize: 22, fontWeight: FontWeight.w900)),
+                    color: barColor,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900)),
             const Text(' / 100',
                 style: TextStyle(color: DesignColors.textGray, fontSize: 13)),
             const Spacer(),
@@ -876,7 +1017,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
               child: Text(tier,
                   style: const TextStyle(
-                      color: barColor, fontSize: 11, fontWeight: FontWeight.w700)),
+                      color: barColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700)),
             ),
           ]),
           const SizedBox(height: 8),
@@ -900,13 +1043,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       decoration: BoxDecoration(
         color: DesignColors.surfaceLight.withValues(alpha: 0.4),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: DesignColors.divider.withValues(alpha: 0.3), style: BorderStyle.solid),
+        border: Border.all(
+            color: DesignColors.divider.withValues(alpha: 0.3),
+            style: BorderStyle.solid),
       ),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(Icons.lock_outline, size: 13, color: DesignColors.textGray.withValues(alpha: 0.5)),
+        Icon(Icons.lock_outline,
+            size: 13, color: DesignColors.textGray.withValues(alpha: 0.5)),
         const SizedBox(width: 6),
         Text('Badges unlock as you engage',
-            style: TextStyle(color: DesignColors.textGray.withValues(alpha: 0.6), fontSize: 12)),
+            style: TextStyle(
+                color: DesignColors.textGray.withValues(alpha: 0.6),
+                fontSize: 12)),
       ]),
     );
   }
@@ -918,39 +1066,54 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final stats = <_StatItem>[];
 
     if (p.roomsHostedCount > 0)
-      stats.add(_StatItem('${p.roomsHostedCount}', 'Rooms Hosted', Icons.mic_none_outlined, _kBlue));
+      stats.add(_StatItem('${p.roomsHostedCount}', 'Rooms Hosted',
+          Icons.mic_none_outlined, _kBlue));
     if (p.eventsAttended > 0)
-      stats.add(_StatItem('${p.eventsAttended}', 'Events', Icons.event_outlined, _kCyan));
+      stats.add(_StatItem(
+          '${p.eventsAttended}', 'Events', Icons.event_outlined, _kCyan));
     if (p.communityRating > 0)
-      stats.add(_StatItem(p.communityRating.toStringAsFixed(1), 'Rating', Icons.star_outline, _kAmber));
+      stats.add(_StatItem(p.communityRating.toStringAsFixed(1), 'Rating',
+          Icons.star_outline, _kAmber));
     if (p.mutualsCount > 0)
-      stats.add(_StatItem('${p.mutualsCount}', 'Mutuals', Icons.people_outline, _kPurple));
+      stats.add(_StatItem(
+          '${p.mutualsCount}', 'Mutuals', Icons.people_outline, _kPurple));
 
     if (stats.isEmpty) return const SizedBox.shrink();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _miniSectionLabel(Icons.bar_chart_outlined, 'Activity', DesignColors.secondary),
+        _miniSectionLabel(
+            Icons.bar_chart_outlined, 'Activity', DesignColors.secondary),
         const SizedBox(height: 10),
         Row(
-          children: stats.map((s) => Expanded(
-            child: Container(
-              margin: const EdgeInsets.only(right: 8),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: s.color.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: s.color.withValues(alpha: 0.25)),
-              ),
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
-                Icon(s.icon, size: 16, color: s.color),
-                const SizedBox(height: 4),
-                Text(s.value, style: TextStyle(color: s.color, fontSize: 16, fontWeight: FontWeight.w800)),
-                Text(s.label, style: const TextStyle(color: DesignColors.textGray, fontSize: 10), textAlign: TextAlign.center),
-              ]),
-            ),
-          )).toList(),
+          children: stats
+              .map((s) => Expanded(
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: s.color.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border:
+                            Border.all(color: s.color.withValues(alpha: 0.25)),
+                      ),
+                      child: Column(mainAxisSize: MainAxisSize.min, children: [
+                        Icon(s.icon, size: 16, color: s.color),
+                        const SizedBox(height: 4),
+                        Text(s.value,
+                            style: TextStyle(
+                                color: s.color,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800)),
+                        Text(s.label,
+                            style: const TextStyle(
+                                color: DesignColors.textGray, fontSize: 10),
+                            textAlign: TextAlign.center),
+                      ]),
+                    ),
+                  ))
+              .toList(),
         ),
       ],
     );
@@ -973,7 +1136,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
-            BoxShadow(color: _kBlue.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 4)),
+            BoxShadow(
+                color: _kBlue.withValues(alpha: 0.35),
+                blurRadius: 14,
+                offset: const Offset(0, 4)),
           ],
         ),
         child: Row(
@@ -982,7 +1148,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             Icon(Icons.edit_outlined, color: Colors.white, size: 18),
             SizedBox(width: 8),
             Text('Edit Profile',
-                style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.3)),
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.3)),
           ],
         ),
       ),
@@ -996,16 +1166,23 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     return Row(children: [
       Icon(icon, size: 14, color: color),
       const SizedBox(width: 5),
-      Text(label.toUpperCase(), style: TextStyle(
-        color: color, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.2,
-        shadows: [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 6)],
-      )),
+      Text(label.toUpperCase(),
+          style: TextStyle(
+            color: color,
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+            shadows: [
+              Shadow(color: color.withValues(alpha: 0.5), blurRadius: 6)
+            ],
+          )),
     ]);
   }
 
   Widget _neonDivider(Color color) {
     return Row(children: [
-      Expanded(child: Container(height: 1, color: color.withValues(alpha: 0.3))),
+      Expanded(
+          child: Container(height: 1, color: color.withValues(alpha: 0.3))),
       Container(
         margin: const EdgeInsets.symmetric(horizontal: 10),
         width: 6,
@@ -1013,12 +1190,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: color,
-          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.7), blurRadius: 6)],
+          boxShadow: [
+            BoxShadow(color: color.withValues(alpha: 0.7), blurRadius: 6)
+          ],
         ),
       ),
-      Expanded(child: Container(height: 1, color: color.withValues(alpha: 0.3))),
+      Expanded(
+          child: Container(height: 1, color: color.withValues(alpha: 0.3))),
     ]);
   }
+
   // ══════════════════════════════════════════════════════════
   //  SUPPORTING CONTENT SUB-WIDGETS  (Gallery, Lifestyle, Socials)
   // ══════════════════════════════════════════════════════════
@@ -1027,7 +1208,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3, crossAxisSpacing: 6, mainAxisSpacing: 6, childAspectRatio: 1,
+        crossAxisCount: 3,
+        crossAxisSpacing: 6,
+        mainAxisSpacing: 6,
+        childAspectRatio: 1,
       ),
       itemCount: photos.length,
       itemBuilder: (ctx, i) => GestureDetector(
@@ -1049,7 +1233,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         child: Stack(
           alignment: Alignment.topRight,
           children: [
-            InteractiveViewer(child: Image.network(photos[index], fit: BoxFit.contain)),
+            InteractiveViewer(
+                child: Image.network(photos[index], fit: BoxFit.contain)),
             Padding(
               padding: const EdgeInsets.all(8),
               child: IconButton(
@@ -1064,19 +1249,25 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   static const Map<String, String> _lifestyleLabels = {
-    'smoking': 'Smoking', 'drinking': 'Drinking', 'fitness': 'Fitness',
-    'pets': 'Has Pets', 'kids': 'Has Kids',
+    'smoking': 'Smoking',
+    'drinking': 'Drinking',
+    'fitness': 'Fitness',
+    'pets': 'Has Pets',
+    'kids': 'Has Kids',
   };
   static const Map<String, IconData> _lifestyleIcons = {
-    'smoking': Icons.smoke_free, 'drinking': Icons.local_bar_outlined,
-    'fitness': Icons.fitness_center_outlined, 'pets': Icons.pets_outlined,
+    'smoking': Icons.smoke_free,
+    'drinking': Icons.local_bar_outlined,
+    'fitness': Icons.fitness_center_outlined,
+    'pets': Icons.pets_outlined,
     'kids': Icons.child_care_outlined,
   };
 
   Widget _buildLifestyleRow(Map<String, bool> lifestyle) {
     final active = lifestyle.entries.where((e) => e.value).toList();
     return Wrap(
-      spacing: 8, runSpacing: 8,
+      spacing: 8,
+      runSpacing: 8,
       children: active.map((e) {
         final label = _lifestyleLabels[e.key] ?? e.key;
         final icon = _lifestyleIcons[e.key] ?? Icons.check_circle_outline;
@@ -1085,12 +1276,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           decoration: BoxDecoration(
             color: DesignColors.secondary.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: DesignColors.secondary.withValues(alpha: 0.4)),
+            border: Border.all(
+                color: DesignColors.secondary.withValues(alpha: 0.4)),
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Icon(icon, size: 14, color: DesignColors.secondary),
             const SizedBox(width: 6),
-            Text(label, style: const TextStyle(color: DesignColors.secondary, fontSize: 13, fontWeight: FontWeight.w500)),
+            Text(label,
+                style: const TextStyle(
+                    color: DesignColors.secondary,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500)),
           ]),
         );
       }).toList(),
@@ -1099,30 +1295,44 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   Widget _buildChipWrap(List<String> items, Color color) {
     return Wrap(
-      spacing: 8, runSpacing: 8,
-      children: items.map((item) => Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: color.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.35)),
-        ),
-        child: Text(item, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w500)),
-      )).toList(),
+      spacing: 8,
+      runSpacing: 8,
+      children: items
+          .map((item) => Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: color.withValues(alpha: 0.35)),
+                ),
+                child: Text(item,
+                    style: TextStyle(
+                        color: color,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500)),
+              ))
+          .toList(),
     );
   }
 
   static const Map<String, String> _socialIcons = {
-    'instagram': 'IG', 'tiktok': 'TK', 'snapchat': 'SC', 'twitter': 'X',
+    'instagram': 'IG',
+    'tiktok': 'TK',
+    'snapchat': 'SC',
+    'twitter': 'X',
   };
   static const Map<String, Color> _socialColors = {
-    'instagram': Color(0xFFE1306C), 'tiktok': Color(0xFF69C9D0),
-    'snapchat': Color(0xFFFFFC00), 'twitter': Color(0xFF1DA1F2),
+    'instagram': Color(0xFFE1306C),
+    'tiktok': Color(0xFF69C9D0),
+    'snapchat': Color(0xFFFFFC00),
+    'twitter': Color(0xFF1DA1F2),
   };
 
   Widget _buildSocialRow(Map<String, String> links) {
     return Wrap(
-      spacing: 10, runSpacing: 10,
+      spacing: 10,
+      runSpacing: 10,
       children: links.entries.map((e) {
         final color = _socialColors[e.key] ?? DesignColors.accent;
         final abbr = _socialIcons[e.key] ?? e.key.substring(0, 2).toUpperCase();
@@ -1135,13 +1345,19 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           ),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             Container(
-              width: 22, height: 22,
-              decoration: BoxDecoration(color: color.withValues(alpha: 0.25), shape: BoxShape.circle),
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.25), shape: BoxShape.circle),
               alignment: Alignment.center,
-              child: Text(abbr, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w800)),
+              child: Text(abbr,
+                  style: TextStyle(
+                      color: color, fontSize: 9, fontWeight: FontWeight.w800)),
             ),
             const SizedBox(width: 8),
-            Text(e.value, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w500)),
+            Text(e.value,
+                style: TextStyle(
+                    color: color, fontSize: 13, fontWeight: FontWeight.w500)),
           ]),
         );
       }).toList(),
@@ -1155,12 +1371,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     return Row(children: [
       Icon(icon, size: 18, color: color),
       const SizedBox(width: 8),
-      Text(title, style: DesignTypography.subheading.copyWith(
-        color: color,
-        shadows: [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 12)],
-      )),
+      Text(title,
+          style: DesignTypography.subheading.copyWith(
+            color: color,
+            shadows: [
+              Shadow(color: color.withValues(alpha: 0.5), blurRadius: 12)
+            ],
+          )),
       const SizedBox(width: 8),
-      Expanded(child: Container(height: 1, color: color.withValues(alpha: 0.25))),
+      Expanded(
+          child: Container(height: 1, color: color.withValues(alpha: 0.25))),
     ]);
   }
 
@@ -1179,7 +1399,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               Icon(icon, size: 20, color: DesignColors.accent),
               const SizedBox(width: 12),
               Expanded(child: Text(label, style: DesignTypography.body)),
-              const Icon(Icons.arrow_forward_ios, size: 14, color: DesignColors.textGray),
+              const Icon(Icons.arrow_forward_ios,
+                  size: 14, color: DesignColors.textGray),
             ]),
           ),
         ),
@@ -1196,7 +1417,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           color: DesignColors.background.withValues(alpha: 0.7),
           shape: BoxShape.circle,
           border: Border.all(color: color.withValues(alpha: 0.6)),
-          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8)],
+          boxShadow: [
+            BoxShadow(color: color.withValues(alpha: 0.3), blurRadius: 8)
+          ],
         ),
         child: Icon(icon, color: color, size: 18),
       ),
@@ -1218,7 +1441,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             padding: EdgeInsets.symmetric(vertical: 14),
             child: Center(
               child: Text('Logout',
-                  style: TextStyle(color: DesignColors.error, fontWeight: FontWeight.w600, fontSize: 15)),
+                  style: TextStyle(
+                      color: DesignColors.error,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 15)),
             ),
           ),
         ),
@@ -1228,10 +1454,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   Color _modeAccent(ProfileMode m) {
     switch (m) {
-      case ProfileMode.social:    return const Color(0xFF4A90FF);
-      case ProfileMode.dating:    return const Color(0xFFFF4D8B);
-      case ProfileMode.creator:   return const Color(0xFFFFAB00);
-      case ProfileMode.eventHost: return const Color(0xFF00E5CC);
+      case ProfileMode.social:
+        return const Color(0xFF4A90FF);
+      case ProfileMode.dating:
+        return const Color(0xFFFF4D8B);
+      case ProfileMode.creator:
+        return const Color(0xFFFFAB00);
+      case ProfileMode.eventHost:
+        return const Color(0xFF00E5CC);
     }
   }
 
@@ -1252,13 +1482,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       builder: (_) => AlertDialog(
         backgroundColor: DesignColors.surfaceLight,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Logout', style: TextStyle(color: DesignColors.white)),
+        title:
+            const Text('Logout', style: TextStyle(color: DesignColors.white)),
         content: const Text('Are you sure you want to logout?',
             style: TextStyle(color: DesignColors.textGray)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: DesignColors.textGray)),
+            child: const Text('Cancel',
+                style: TextStyle(color: DesignColors.textGray)),
           ),
           TextButton(
             onPressed: () async {
@@ -1268,7 +1500,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 Navigator.pushReplacementNamed(context, AppRoutes.login);
               }
             },
-            child: const Text('Logout', style: TextStyle(color: DesignColors.error)),
+            child: const Text('Logout',
+                style: TextStyle(color: DesignColors.error)),
           ),
         ],
       ),
@@ -1281,14 +1514,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       builder: (_) => AlertDialog(
         backgroundColor: DesignColors.surfaceLight,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Delete Account', style: TextStyle(color: DesignColors.white)),
+        title: const Text('Delete Account',
+            style: TextStyle(color: DesignColors.white)),
         content: const Text(
             'This action cannot be undone. All data will be permanently deleted.',
             style: TextStyle(color: DesignColors.textGray)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel', style: TextStyle(color: DesignColors.textGray)),
+            child: const Text('Cancel',
+                style: TextStyle(color: DesignColors.textGray)),
           ),
           TextButton(
             onPressed: () async {
@@ -1297,7 +1532,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 await ref.read(authServiceProvider).deleteAccount();
                 if (mounted) {
                   navigator.pop();
-                  navigator.pushNamedAndRemoveUntil(AppRoutes.login, (_) => false);
+                  navigator.pushNamedAndRemoveUntil(
+                      AppRoutes.login, (_) => false);
                 }
               } catch (e) {
                 if (mounted) {
@@ -1307,7 +1543,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 }
               }
             },
-            child: const Text('Delete', style: TextStyle(color: DesignColors.error)),
+            child: const Text('Delete',
+                style: TextStyle(color: DesignColors.error)),
           ),
         ],
       ),

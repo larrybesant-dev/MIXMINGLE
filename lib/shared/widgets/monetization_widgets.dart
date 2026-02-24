@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/subscription.dart';
 import 'package:mixmingle/shared/providers/gamification_payment_providers.dart';
 import 'package:mixmingle/shared/providers/auth_providers.dart';
-import 'package:mixmingle/services/payments/coin_economy_service.dart' show CoinEconomyService;
+import 'package:mixmingle/services/payments/coin_economy_service.dart'
+    show CoinEconomyService;
 
 /// Coin shop widget
 class CoinShop extends ConsumerStatefulWidget {
@@ -90,7 +91,9 @@ class _CoinShopState extends ConsumerState<CoinShop> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Successfully purchased ${package['coins'] + package['bonus']} coins!')),
+          SnackBar(
+              content: Text(
+                  'Successfully purchased ${package['coins'] + package['bonus']} coins!')),
         );
       }
     } catch (e) {
@@ -190,7 +193,10 @@ class _CoinShopState extends ConsumerState<CoinShop> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.05)],
+            colors: [
+              color.withValues(alpha: 0.1),
+              color.withValues(alpha: 0.05)
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -200,7 +206,8 @@ class _CoinShopState extends ConsumerState<CoinShop> {
           children: [
             if (isPopular)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(12),
@@ -415,7 +422,8 @@ class SubscriptionManager extends ConsumerStatefulWidget {
   const SubscriptionManager({super.key});
 
   @override
-  ConsumerState<SubscriptionManager> createState() => _SubscriptionManagerState();
+  ConsumerState<SubscriptionManager> createState() =>
+      _SubscriptionManagerState();
 }
 
 class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
@@ -520,7 +528,8 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Successfully subscribed to ${plan['name']}!')),
+          SnackBar(
+              content: Text('Successfully subscribed to ${plan['name']}!')),
         );
       }
     } catch (e) {
@@ -578,11 +587,13 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
                             children: [
                               Row(
                                 children: [
-                                  Icon(Icons.star, color: Colors.purple.shade700, size: 32),
+                                  Icon(Icons.star,
+                                      color: Colors.purple.shade700, size: 32),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           'Current: ${subscription.tier.name.toUpperCase()}',
@@ -594,7 +605,8 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
                                         ),
                                         Text(
                                           '${subscription.daysRemaining} days left',
-                                          style: TextStyle(color: Colors.purple.shade700),
+                                          style: TextStyle(
+                                              color: Colors.purple.shade700),
                                         ),
                                       ],
                                     ),
@@ -671,7 +683,10 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.05)],
+            colors: [
+              color.withValues(alpha: 0.1),
+              color.withValues(alpha: 0.05)
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -681,7 +696,8 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
           children: [
             if (isPopular)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 decoration: BoxDecoration(
                   color: color,
                   borderRadius: BorderRadius.circular(12),
@@ -705,7 +721,9 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
             ),
             const SizedBox(height: 8),
             Text(
-              isFree ? 'Free forever' : '\$${plan['price']}/${plan['period'] ?? 'month'}',
+              isFree
+                  ? 'Free forever'
+                  : '\$${plan['price']}/${plan['period'] ?? 'month'}',
               style: TextStyle(
                 fontSize: 20,
                 color: color,
@@ -743,7 +761,8 @@ class _SubscriptionManagerState extends ConsumerState<SubscriptionManager> {
                 ),
                 child: Text(
                   isFree ? 'Current Plan' : 'Subscribe',
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
                 ),
               ),
             ),

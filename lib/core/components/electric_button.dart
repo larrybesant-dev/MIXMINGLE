@@ -29,7 +29,8 @@ class ElectricButton extends StatefulWidget {
   State<ElectricButton> createState() => _ElectricButtonState();
 }
 
-class _ElectricButtonState extends State<ElectricButton> with SingleTickerProviderStateMixin {
+class _ElectricButtonState extends State<ElectricButton>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scale;
 
@@ -67,7 +68,8 @@ class _ElectricButtonState extends State<ElectricButton> with SingleTickerProvid
 
   @override
   Widget build(BuildContext context) {
-    final styles = _styleForVariant(widget.variant, context, enabled: widget.isEnabled);
+    final styles =
+        _styleForVariant(widget.variant, context, enabled: widget.isEnabled);
 
     return AnimatedBuilder(
       animation: _scale,
@@ -80,10 +82,12 @@ class _ElectricButtonState extends State<ElectricButton> with SingleTickerProvid
       child: Opacity(
         opacity: widget.isEnabled ? 1.0 : 0.6,
         child: GestureDetector(
-          onTap: widget.isEnabled ? () {
-            debugPrint('ðŸ”˜ ElectricButton tapped: ${widget.label}');
-            widget.onPressed?.call();
-          } : null,
+          onTap: widget.isEnabled
+              ? () {
+                  debugPrint('ðŸ”˜ ElectricButton tapped: ${widget.label}');
+                  widget.onPressed?.call();
+                }
+              : null,
           onTapDown: _handleTapDown,
           onTapUp: _handleTapUp,
           onTapCancel: _handleTapCancel,
@@ -101,7 +105,8 @@ class _ElectricButtonState extends State<ElectricButton> with SingleTickerProvid
                 vertical: Spacing.sm,
               ),
               child: Row(
-                mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
+                mainAxisSize:
+                    widget.expand ? MainAxisSize.max : MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (widget.isLoading) ...[
@@ -110,7 +115,8 @@ class _ElectricButtonState extends State<ElectricButton> with SingleTickerProvid
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(styles.foreground),
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(styles.foreground),
                       ),
                     ),
                     const SizedBox(width: Spacing.sm),

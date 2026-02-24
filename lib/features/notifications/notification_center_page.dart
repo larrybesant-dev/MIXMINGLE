@@ -1,11 +1,12 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
 /// Provider for notifications stream
-final notificationsStreamProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
+final notificationsStreamProvider =
+    StreamProvider<List<Map<String, dynamic>>>((ref) {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) {
     return Stream.value([]);
@@ -45,10 +46,12 @@ class NotificationCenterPage extends ConsumerStatefulWidget {
   const NotificationCenterPage({super.key});
 
   @override
-  ConsumerState<NotificationCenterPage> createState() => _NotificationCenterPageState();
+  ConsumerState<NotificationCenterPage> createState() =>
+      _NotificationCenterPageState();
 }
 
-class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage> {
+class _NotificationCenterPageState
+    extends ConsumerState<NotificationCenterPage> {
   final _firestore = FirebaseFirestore.instance;
   bool _showUnreadOnly = false;
 
@@ -63,7 +66,9 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
         actions: [
           // Filter toggle
           IconButton(
-            icon: Icon(_showUnreadOnly ? Icons.mark_email_read : Icons.mark_email_unread),
+            icon: Icon(_showUnreadOnly
+                ? Icons.mark_email_read
+                : Icons.mark_email_unread),
             tooltip: _showUnreadOnly ? 'Show All' : 'Show Unread',
             onPressed: () {
               setState(() {
@@ -118,8 +123,9 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
       ),
       body: notificationsAsync.when(
         data: (notifications) {
-          final filteredNotifications =
-              _showUnreadOnly ? notifications.where((n) => n['isRead'] != true).toList() : notifications;
+          final filteredNotifications = _showUnreadOnly
+              ? notifications.where((n) => n['isRead'] != true).toList()
+              : notifications;
 
           if (filteredNotifications.isEmpty) {
             return Center(
@@ -133,12 +139,16 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    _showUnreadOnly ? 'No unread notifications' : 'No notifications yet',
+                    _showUnreadOnly
+                        ? 'No unread notifications'
+                        : 'No notifications yet',
                     style: theme.textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _showUnreadOnly ? 'All caught up!' : 'You\'ll see notifications here when you get them',
+                    _showUnreadOnly
+                        ? 'All caught up!'
+                        : 'You\'ll see notifications here when you get them',
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
@@ -167,9 +177,11 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+              Icon(Icons.error_outline,
+                  size: 48, color: theme.colorScheme.error),
               const SizedBox(height: 16),
-              Text('Error loading notifications', style: theme.textTheme.titleMedium),
+              Text('Error loading notifications',
+                  style: theme.textTheme.titleMedium),
               const SizedBox(height: 8),
               Text(
                 error.toString(),
@@ -183,7 +195,8 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
     );
   }
 
-  Widget _buildNotificationCard(BuildContext context, Map<String, dynamic> notification) {
+  Widget _buildNotificationCard(
+      BuildContext context, Map<String, dynamic> notification) {
     final theme = Theme.of(context);
     final isRead = notification['isRead'] == true;
     final title = notification['title'] as String? ?? 'Notification';
@@ -194,7 +207,9 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      color: isRead ? null : theme.colorScheme.primaryContainer.withValues(alpha: 0.1),
+      color: isRead
+          ? null
+          : theme.colorScheme.primaryContainer.withValues(alpha: 0.1),
       child: InkWell(
         onTap: () => _handleNotificationTap(notification),
         borderRadius: BorderRadius.circular(12),
@@ -228,7 +243,8 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
                           child: Text(
                             title,
                             style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
+                              fontWeight:
+                                  isRead ? FontWeight.normal : FontWeight.bold,
                             ),
                           ),
                         ),
@@ -248,7 +264,8 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
                       Text(
                         body,
                         style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.8),
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -259,7 +276,8 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
                       Text(
                         _formatTimestamp(createdAt),
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.6),
                         ),
                       ),
                     ],
@@ -283,7 +301,9 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
                     value: 'read',
                     child: Row(
                       children: [
-                        Icon(isRead ? Icons.mark_email_unread : Icons.mark_email_read),
+                        Icon(isRead
+                            ? Icons.mark_email_unread
+                            : Icons.mark_email_read),
                         const SizedBox(width: 8),
                         Text(isRead ? 'Mark Unread' : 'Mark Read'),
                       ],
@@ -385,14 +405,16 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
       case 'message':
         final conversationId = data?['conversationId'] as String?;
         if (conversationId != null && mounted) {
-          Navigator.pushNamed(context, '/chat', arguments: {'conversationId': conversationId});
+          Navigator.pushNamed(context, '/chat',
+              arguments: {'conversationId': conversationId});
         }
         break;
       case 'event':
       case 'eventInvite':
         final eventId = data?['eventId'] as String?;
         if (eventId != null && mounted) {
-          Navigator.pushNamed(context, '/events/details', arguments: {'eventId': eventId});
+          Navigator.pushNamed(context, '/events/details',
+              arguments: {'eventId': eventId});
         }
         break;
       case 'match':
@@ -403,7 +425,8 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
       case 'follow':
         final userId = data?['userId'] as String?;
         if (userId != null && mounted) {
-          Navigator.pushNamed(context, '/profile/user', arguments: {'userId': userId});
+          Navigator.pushNamed(context, '/profile/user',
+              arguments: {'userId': userId});
         }
         break;
       default:
@@ -478,7 +501,8 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear All Notifications'),
-        content: const Text('Are you sure you want to delete all notifications? This cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to delete all notifications? This cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -498,7 +522,10 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
     if (user == null) return;
 
     try {
-      final allDocs = await _firestore.collection('notifications').where('userId', isEqualTo: user.uid).get();
+      final allDocs = await _firestore
+          .collection('notifications')
+          .where('userId', isEqualTo: user.uid)
+          .get();
 
       final batch = _firestore.batch();
       for (final doc in allDocs.docs) {

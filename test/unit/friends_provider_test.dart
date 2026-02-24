@@ -28,7 +28,8 @@ void main() {
 
       test('returns all friends from database', () async {
         for (int i = 0; i < friendsList.length; i++) {
-          mockFirestore.setMockData('friends', 'friend-${i + 1}', friendsList[i]);
+          mockFirestore.setMockData(
+              'friends', 'friend-${i + 1}', friendsList[i]);
         }
 
         final retrievedFriends = <Map<String, dynamic>>[];
@@ -291,8 +292,7 @@ void main() {
         }
 
         final aliceFriends = friends
-            .where((f) =>
-                f['name'].toString().toLowerCase().contains('alice'))
+            .where((f) => f['name'].toString().toLowerCase().contains('alice'))
             .toList();
 
         expect(aliceFriends.length, equals(2));
@@ -309,9 +309,8 @@ void main() {
           mockFirestore.setMockData('friends', friend['id'], friend);
         }
 
-        final onlineFriends = friends
-            .where((f) => f['isOnline'] as bool)
-            .toList();
+        final onlineFriends =
+            friends.where((f) => f['isOnline'] as bool).toList();
 
         expect(onlineFriends.length, equals(2));
       });
@@ -406,7 +405,8 @@ void main() {
 
         mockFirestore.setMockData('friends', friend['id'] as String, friend);
 
-        final retrieved = mockFirestore.getMockData('friends', friend['id'] as String);
+        final retrieved =
+            mockFirestore.getMockData('friends', friend['id'] as String);
 
         expect(retrieved['avatarUrl'], anyOf([isNull, isEmpty]));
       });

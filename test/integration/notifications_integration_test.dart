@@ -228,7 +228,8 @@ void main() {
       ));
 
       final messages = container.read(notificationsByTypeProvider('message'));
-      final friendRequests = container.read(notificationsByTypeProvider('friend_request'));
+      final friendRequests =
+          container.read(notificationsByTypeProvider('friend_request'));
 
       expect(messages.length, 2);
       expect(friendRequests.length, 1);

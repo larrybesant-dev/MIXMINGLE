@@ -1,4 +1,4 @@
-﻿// ignore_for_file: use_build_context_synchronously
+// ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,10 +33,12 @@ class SettingsPage extends ConsumerWidget {
               Card(
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundImage: currentUser?.photoUrl != null && currentUser?.photoUrl?.isNotEmpty == true
+                    backgroundImage: currentUser?.photoUrl != null &&
+                            currentUser?.photoUrl?.isNotEmpty == true
                         ? NetworkImage(currentUser!.photoUrl!) as ImageProvider
                         : null,
-                    child: (currentUser?.photoUrl == null || currentUser?.photoUrl?.isEmpty == true)
+                    child: (currentUser?.photoUrl == null ||
+                            currentUser?.photoUrl?.isEmpty == true)
                         ? const Icon(Icons.person)
                         : null,
                   ),
@@ -57,7 +59,8 @@ class SettingsPage extends ConsumerWidget {
                     return Card(
                       color: Colors.purple.shade50,
                       child: ListTile(
-                        leading: Icon(Icons.star, color: Colors.purple.shade700),
+                        leading:
+                            Icon(Icons.star, color: Colors.purple.shade700),
                         title: Text(
                           '${subscription.tier.name.toUpperCase()} Member',
                           style: TextStyle(
@@ -65,7 +68,8 @@ class SettingsPage extends ConsumerWidget {
                             color: Colors.purple.shade900,
                           ),
                         ),
-                        subtitle: Text('${subscription.daysRemaining} days remaining'),
+                        subtitle: Text(
+                            '${subscription.daysRemaining} days remaining'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
                           Navigator.of(context).pushNamed('/subscription');
@@ -77,7 +81,8 @@ class SettingsPage extends ConsumerWidget {
                     child: ListTile(
                       leading: const Icon(Icons.card_membership),
                       title: const Text('Free Plan'),
-                      subtitle: const Text('Upgrade to unlock premium features'),
+                      subtitle:
+                          const Text('Upgrade to unlock premium features'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         Navigator.of(context).pushNamed('/subscription');
@@ -120,7 +125,8 @@ class SettingsPage extends ConsumerWidget {
                       title: const Text('Account Settings'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
-                        Navigator.of(context).pushNamed(AppRoutes.accountSettings);
+                        Navigator.of(context)
+                            .pushNamed(AppRoutes.accountSettings);
                       },
                     ),
                     const Divider(height: 1),
@@ -153,7 +159,8 @@ class SettingsPage extends ConsumerWidget {
                       title: const Text('Privacy Settings'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
-                        Navigator.of(context).pushNamed(AppRoutes.privacySettings);
+                        Navigator.of(context)
+                            .pushNamed(AppRoutes.privacySettings);
                       },
                     ),
                     const Divider(height: 1),
@@ -184,7 +191,8 @@ class SettingsPage extends ConsumerWidget {
                   title: const Text('Notification Settings'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                    Navigator.of(context).pushNamed(AppRoutes.notificationSettings);
+                    Navigator.of(context)
+                        .pushNamed(AppRoutes.notificationSettings);
                   },
                 ),
               ),
@@ -207,7 +215,8 @@ class SettingsPage extends ConsumerWidget {
                   onTap: () {
                     // TODO: Implement theme settings
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Theme settings coming soon')),
+                      const SnackBar(
+                          content: Text('Theme settings coming soon')),
                     );
                   },
                 ),
@@ -231,7 +240,8 @@ class SettingsPage extends ConsumerWidget {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Help center coming soon')),
+                          const SnackBar(
+                              content: Text('Help center coming soon')),
                         );
                       },
                     ),
@@ -290,7 +300,8 @@ class SettingsPage extends ConsumerWidget {
                           ),
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(true),
-                            style: TextButton.styleFrom(foregroundColor: Colors.red),
+                            style: TextButton.styleFrom(
+                                foregroundColor: Colors.red),
                             child: const Text('Logout'),
                           ),
                         ],

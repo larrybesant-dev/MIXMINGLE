@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
@@ -48,9 +48,9 @@ class HomePageNeon extends ConsumerWidget {
                   NeonText(
                     'WELCOME BACK',
                     style: Theme.of(context).textTheme.headlineLarge?.copyWith(
-                      letterSpacing: 2,
-                      fontWeight: FontWeight.w900,
-                    ),
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.w900,
+                        ),
                     glowColor: ClubColors.primary,
                     glowSize: 12,
                   ),
@@ -60,8 +60,8 @@ class HomePageNeon extends ConsumerWidget {
                   Text(
                     user?.email ?? 'Party Starter',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: ClubColors.textSecondary,
-                    ),
+                          color: ClubColors.textSecondary,
+                        ),
                   ),
 
                   const SizedBox(height: 40),
@@ -95,7 +95,8 @@ class HomePageNeon extends ConsumerWidget {
             ),
           ),
           icon: const Icon(Icons.fiber_smart_record),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         ),
       ),
     );
@@ -159,9 +160,9 @@ class HomePageNeon extends ConsumerWidget {
         NeonText(
           'MIX & MINGLE',
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
-            fontWeight: FontWeight.w900,
-            letterSpacing: 3,
-          ),
+                fontWeight: FontWeight.w900,
+                letterSpacing: 3,
+              ),
           glowColor: ClubColors.secondary,
           glowSize: 10,
         ),
@@ -171,10 +172,10 @@ class HomePageNeon extends ConsumerWidget {
         NeonText(
           'GLOBAL DJ VIBES',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: ClubColors.secondary,
-            letterSpacing: 2,
-            fontWeight: FontWeight.w600,
-          ),
+                color: ClubColors.secondary,
+                letterSpacing: 2,
+                fontWeight: FontWeight.w600,
+              ),
         ),
       ],
     );
@@ -252,9 +253,9 @@ class HomePageNeon extends ConsumerWidget {
                 Text(
                   label,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -272,24 +273,21 @@ class HomePageNeon extends ConsumerWidget {
         NeonText(
           'FEATURED',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            letterSpacing: 2,
-          ),
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+              ),
           glowColor: ClubColors.secondary,
         ),
-
         const SizedBox(height: 16),
-
         _buildFeatureCard(
           context,
           title: 'Create Your Room',
-          description: 'Host your own live broadcast and connect with the world',
+          description:
+              'Host your own live broadcast and connect with the world',
           icon: Icons.video_camera_front,
           color: ClubColors.primary,
         ),
-
         const SizedBox(height: 12),
-
         _buildFeatureCard(
           context,
           title: 'Find Your Vibe',
@@ -297,9 +295,7 @@ class HomePageNeon extends ConsumerWidget {
           icon: Icons.search,
           color: ClubColors.secondary,
         ),
-
         const SizedBox(height: 12),
-
         _buildFeatureCard(
           context,
           title: 'Connect & Chat',
@@ -345,16 +341,16 @@ class HomePageNeon extends ConsumerWidget {
                 Text(
                   title,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: color,
-                  ),
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   description,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: ClubColors.textSecondary,
-                  ),
+                        color: ClubColors.textSecondary,
+                      ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -416,7 +412,8 @@ class HomePageNeon extends ConsumerWidget {
     VoidCallback? onTap,
   }) {
     return GestureDetector(
-      onTap: onTap ?? (route != null ? () => Navigator.pushNamed(context, route) : null),
+      onTap: onTap ??
+          (route != null ? () => Navigator.pushNamed(context, route) : null),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -429,8 +426,8 @@ class HomePageNeon extends ConsumerWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: ClubColors.textSecondary,
-            ),
+                  color: ClubColors.textSecondary,
+                ),
           ),
         ],
       ),

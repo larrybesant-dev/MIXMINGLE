@@ -24,7 +24,10 @@ final blockedUsersProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
 
       // Fetch user details
       try {
-        final userDoc = await FirebaseFirestore.instance.collection('users').doc(blockedUserId).get();
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(blockedUserId)
+            .get();
 
         if (userDoc.exists) {
           blockedUsers.add({
@@ -156,8 +159,11 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
               return Card(
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                    child: photoUrl == null ? Text(displayName.substring(0, 1).toUpperCase()) : null,
+                    backgroundImage:
+                        photoUrl != null ? NetworkImage(photoUrl) : null,
+                    child: photoUrl == null
+                        ? Text(displayName.substring(0, 1).toUpperCase())
+                        : null,
                   ),
                   title: Text(displayName),
                   subtitle: Column(
@@ -196,7 +202,9 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
                         tooltip: 'View Profile',
                       ),
                       TextButton(
-                        onPressed: _isUnblocking ? null : () => _unblockUser(user['id'], displayName),
+                        onPressed: _isUnblocking
+                            ? null
+                            : () => _unblockUser(user['id'], displayName),
                         child: const Text('Unblock'),
                       ),
                     ],

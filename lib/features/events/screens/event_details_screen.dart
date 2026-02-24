@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/core/responsive/responsive_utils.dart';
 import 'package:mixmingle/core/animations/app_animations.dart';
@@ -68,10 +68,14 @@ class EventDetailsPage extends ConsumerWidget {
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) {
                             return Container(
-                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.2),
                               child: Icon(
                                 Icons.event,
-                                size: Responsive.responsiveIconSize(context, 80),
+                                size:
+                                    Responsive.responsiveIconSize(context, 80),
                                 color: Theme.of(context).colorScheme.primary,
                               ),
                             );
@@ -111,7 +115,8 @@ class EventDetailsPage extends ConsumerWidget {
                             content: _formatEventDateTime(event.date),
                           ),
                         ),
-                        SizedBox(height: Responsive.responsiveSpacing(context, 16)),
+                        SizedBox(
+                            height: Responsive.responsiveSpacing(context, 16)),
 
                         // Location
                         AppAnimations.slideInFromBottom(
@@ -123,7 +128,8 @@ class EventDetailsPage extends ConsumerWidget {
                             content: event.location,
                           ),
                         ),
-                        SizedBox(height: Responsive.responsiveSpacing(context, 16)),
+                        SizedBox(
+                            height: Responsive.responsiveSpacing(context, 16)),
 
                         // Description
                         AppAnimations.slideInFromBottom(
@@ -135,7 +141,8 @@ class EventDetailsPage extends ConsumerWidget {
                             content: event.description,
                           ),
                         ),
-                        SizedBox(height: Responsive.responsiveSpacing(context, 16)),
+                        SizedBox(
+                            height: Responsive.responsiveSpacing(context, 16)),
 
                         // Attendees
                         AppAnimations.slideInFromBottom(
@@ -146,7 +153,8 @@ class EventDetailsPage extends ConsumerWidget {
                             event,
                           ),
                         ),
-                        SizedBox(height: Responsive.responsiveSpacing(context, 100)),
+                        SizedBox(
+                            height: Responsive.responsiveSpacing(context, 100)),
                       ],
                     ),
                   ),
@@ -159,8 +167,10 @@ class EventDetailsPage extends ConsumerWidget {
           data: (event) {
             if (event == null) return null;
 
-            final isAttending = currentUser != null && event.attendeeIds.contains(currentUser.id);
-            final isCreator = currentUser != null && event.creatorId == currentUser.id;
+            final isAttending = currentUser != null &&
+                event.attendeeIds.contains(currentUser.id);
+            final isCreator =
+                currentUser != null && event.creatorId == currentUser.id;
             final isFull = event.attendeeIds.length >= event.maxAttendees;
             final isPast = event.date.isBefore(DateTime.now());
 
@@ -221,7 +231,10 @@ class EventDetailsPage extends ConsumerWidget {
                     title,
                     style: TextStyle(
                       fontSize: Responsive.responsiveFontSize(context, 14),
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                      color: Theme.of(context)
+                          .colorScheme
+                          .onSurface
+                          .withValues(alpha: 0.6),
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -299,9 +312,12 @@ class EventDetailsPage extends ConsumerWidget {
                             children: [
                               CircleAvatar(
                                 radius: 20,
-                                backgroundImage:
-                                    profile.profileImageUrl != null ? NetworkImage(profile.profileImageUrl!) : null,
-                                child: profile.profileImageUrl == null ? const Icon(Icons.person, size: 20) : null,
+                                backgroundImage: profile.profileImageUrl != null
+                                    ? NetworkImage(profile.profileImageUrl!)
+                                    : null,
+                                child: profile.profileImageUrl == null
+                                    ? const Icon(Icons.person, size: 20)
+                                    : null,
                               ),
                               const SizedBox(height: 4),
                               Text(
@@ -366,7 +382,8 @@ class EventDetailsPage extends ConsumerWidget {
                   context: context,
                   builder: (context) => AlertDialog(
                     title: const Text('Delete Event'),
-                    content: const Text('Are you sure you want to delete this event?'),
+                    content: const Text(
+                        'Are you sure you want to delete this event?'),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),
@@ -381,7 +398,9 @@ class EventDetailsPage extends ConsumerWidget {
                 );
 
                 if (confirm == true && context.mounted) {
-                  await ref.read(eventsControllerProvider.notifier).deleteEvent(event.id);
+                  await ref
+                      .read(eventsControllerProvider.notifier)
+                      .deleteEvent(event.id);
                   if (context.mounted) {
                     Navigator.of(context).pop();
                   }
@@ -402,9 +421,13 @@ class EventDetailsPage extends ConsumerWidget {
             ? null
             : () async {
                 if (isAttending) {
-                  await ref.read(eventsControllerProvider.notifier).leaveEvent(event.id);
+                  await ref
+                      .read(eventsControllerProvider.notifier)
+                      .leaveEvent(event.id);
                 } else {
-                  await ref.read(eventsControllerProvider.notifier).joinEvent(event.id);
+                  await ref
+                      .read(eventsControllerProvider.notifier)
+                      .joinEvent(event.id);
                 }
               },
         icon: Icon(isAttending ? Icons.check_circle : Icons.add_circle),
@@ -423,8 +446,22 @@ class EventDetailsPage extends ConsumerWidget {
   }
 
   String _formatEventDateTime(DateTime date) {
-    final weekday = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][date.weekday - 1];
-    final month = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][date.month - 1];
+    final weekday =
+        ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][date.weekday - 1];
+    final month = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ][date.month - 1];
     final time = '${date.hour}:${date.minute.toString().padLeft(2, '0')}';
 
     return '$weekday, $month ${date.day}, ${date.year} at $time';

@@ -1,6 +1,7 @@
-﻿library;
+library;
 
 import 'package:flutter/material.dart';
+
 /// Chat Box Widget - Enhanced with message animations and smooth picker transitions
 ///
 /// Features:
@@ -43,12 +44,33 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
   late Animation<double> _pickerHeightAnimation;
 
   final List<String> _emojis = const [
-    'ðŸ˜€', 'ðŸ˜‚', 'ðŸ˜', 'ðŸ¥°', 'ðŸ˜Ž', 'ðŸ¤”', 'ðŸ˜’', 'ðŸ”¥',
-    'ðŸ’¯', 'ðŸ‘', 'ðŸ‘', 'ðŸŽ‰', 'ðŸŽŠ', 'ðŸ’ª', 'âœ¨', 'ðŸŒŸ',
+    'ðŸ˜€',
+    'ðŸ˜‚',
+    'ðŸ˜',
+    'ðŸ¥°',
+    'ðŸ˜Ž',
+    'ðŸ¤”',
+    'ðŸ˜’',
+    'ðŸ”¥',
+    'ðŸ’¯',
+    'ðŸ‘',
+    'ðŸ‘',
+    'ðŸŽ‰',
+    'ðŸŽŠ',
+    'ðŸ’ª',
+    'âœ¨',
+    'ðŸŒŸ',
   ];
 
   final List<String> _stickers = const [
-    'ðŸ‘‹', 'ðŸ¤', 'ðŸ’¼', 'ðŸŽ¯', 'ðŸŽ¬', 'ðŸŽ¨', 'ðŸŽ­', 'ðŸŽ®',
+    'ðŸ‘‹',
+    'ðŸ¤',
+    'ðŸ’¼',
+    'ðŸŽ¯',
+    'ðŸŽ¬',
+    'ðŸŽ¨',
+    'ðŸŽ­',
+    'ðŸŽ®',
   ];
 
   @override
@@ -449,7 +471,8 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
         hoverColor: DesignColors.accentDark,
         child: Padding(
           padding: const EdgeInsets.all(Spacing.xs),
-          child: Center( // ignore: prefer_const_constructors
+          child: Center(
+            // ignore: prefer_const_constructors
             child: Text(
               item,
               style: DesignTypography.body.copyWith(
@@ -469,11 +492,12 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
 
     final currentUser = ref.read(currentUserProvider).value;
     ref.read(chatMessagesProvider.notifier).sendMessage(
-      senderId: currentUser?.id ?? 'anonymous',
-      senderName: currentUser?.displayName ?? 'You',
-      senderAvatarUrl: currentUser?.avatarUrl ?? 'https://i.pravatar.cc/150?u=current',
-      content: content,
-    );
+          senderId: currentUser?.id ?? 'anonymous',
+          senderName: currentUser?.displayName ?? 'You',
+          senderAvatarUrl:
+              currentUser?.avatarUrl ?? 'https://i.pravatar.cc/150?u=current',
+          content: content,
+        );
 
     _messageController.clear();
     if (_showEmojiPicker) _toggleEmojiPicker();
@@ -580,8 +604,8 @@ class _ChatMessageTile extends ConsumerWidget {
     final currentUser = ref.watch(currentUserProvider).value;
     final isCurrentUser = message.senderId == (currentUser?.id ?? '');
     final senderLabel = isCurrentUser
-      ? 'You'
-      : (message.senderName.isNotEmpty ? message.senderName : 'Unknown');
+        ? 'You'
+        : (message.senderName.isNotEmpty ? message.senderName : 'Unknown');
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: Spacing.sm),

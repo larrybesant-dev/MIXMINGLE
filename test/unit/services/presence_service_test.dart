@@ -89,7 +89,8 @@ void main() {
     });
 
     group('Presence Stream Handling', () {
-      test('Subscribe to presence updates - should listen to changes', () async {
+      test('Subscribe to presence updates - should listen to changes',
+          () async {
         // Act & Assert
         expect(true, true);
       });
@@ -116,7 +117,8 @@ void main() {
         expect(true, true);
       });
 
-      test('Network disconnected - should mark Offline after timeout', () async {
+      test('Network disconnected - should mark Offline after timeout',
+          () async {
         // Act & Assert
         expect(true, true);
       });

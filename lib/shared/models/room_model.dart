@@ -24,8 +24,9 @@ class RoomModel {
 
   factory RoomModel.fromDoc(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
-    final participantsMap = (data['participants'] as Map<String, dynamic>? ?? {})
-      .map((uid, p) => MapEntry(uid, ParticipantModel.fromMap(uid, p)));
+    final participantsMap =
+        (data['participants'] as Map<String, dynamic>? ?? {})
+            .map((uid, p) => MapEntry(uid, ParticipantModel.fromMap(uid, p)));
     return RoomModel(
       roomId: doc.id,
       hostId: data['hostId'] ?? '',

@@ -89,8 +89,7 @@ void main() {
     });
 
     group('Registration Tests', () {
-      test('createUserWithEmailAndPassword succeeds with valid data',
-          () async {
+      test('createUserWithEmailAndPassword succeeds with valid data', () async {
         const email = 'newuser@example.com';
         const password = 'newpassword123';
 

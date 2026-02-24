@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Terms and legal agreements management
 class TermsService {
@@ -10,7 +10,8 @@ class TermsService {
   /// Get current terms of service
   Future<String> getTermsOfService() async {
     try {
-      final doc = await _firestore.collection('legal').doc('terms_of_service').get();
+      final doc =
+          await _firestore.collection('legal').doc('terms_of_service').get();
       return doc['content'] ?? _defaultTermsOfService();
     } catch (e) {
       return _defaultTermsOfService();
@@ -20,7 +21,8 @@ class TermsService {
   /// Get current privacy policy
   Future<String> getPrivacyPolicy() async {
     try {
-      final doc = await _firestore.collection('legal').doc('privacy_policy').get();
+      final doc =
+          await _firestore.collection('legal').doc('privacy_policy').get();
       return doc['content'] ?? _defaultPrivacyPolicy();
     } catch (e) {
       return _defaultPrivacyPolicy();
@@ -134,5 +136,3 @@ If you have questions about this privacy policy, please contact us at privacy@mi
     ''';
   }
 }
-
-

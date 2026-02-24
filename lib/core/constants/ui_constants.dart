@@ -2,8 +2,8 @@ library;
 
 import 'package:flutter/material.dart';
 import '../../core/design_system/design_constants.dart';
-/// UI Constants - Centralized theme, spacing, and animation constants
 
+/// UI Constants - Centralized theme, spacing, and animation constants
 
 /// Animation durations for smooth transitions
 class AnimationDurations {
@@ -208,9 +208,9 @@ class AppCurves {
 /// Aligned with Layout Guide §3
 class WidgetSizes {
   // Heights
-  static const double topBarHeight = 64;       // 56–72 (Layout Guide §4)
-  static const double bottomNavHeight = 64;    // Layout Guide §4
-  static const double controlBarHeight = 72;   // Room controls (Layout Guide §6)
+  static const double topBarHeight = 64; // 56–72 (Layout Guide §4)
+  static const double bottomNavHeight = 64; // Layout Guide §4
+  static const double controlBarHeight = 72; // Room controls (Layout Guide §6)
   static const double sidebarWidth = 320;
   static const double sidebarWidthMobile = 280;
   static const double videoTileMinSize = 150;
@@ -226,17 +226,17 @@ class WidgetSizes {
   // Icon sizes
   static const double smallIconSize = 16;
   static const double mediumIconSize = 24;
-  static const double largeIconSize = 28;      // 28–32 (Layout Guide §3)
+  static const double largeIconSize = 28; // 28–32 (Layout Guide §3)
   static const double extraLargeIconSize = 32;
 
   // Avatar sizes (diameters)
-  static const double avatarHero = 108;        // Profile hero
+  static const double avatarHero = 108; // Profile hero
   static const double avatarLarge = 64;
   static const double avatarMedium = 48;
   static const double avatarSmall = 40;
 
   // Border radii
-  static const double cardBorderRadius = 18;   // 16–20 (Layout Guide §3)
+  static const double cardBorderRadius = 18; // 16–20 (Layout Guide §3)
   static const double buttonBorderRadius = 14; // 12–16
   static const double chipBorderRadius = 17;
 }

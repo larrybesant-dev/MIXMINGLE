@@ -31,7 +31,8 @@ class NetworkDegradationHarness {
     }
     // Simulate latency
     if (maxLatencyMs > 0) {
-      final latency = minLatencyMs + Random().nextInt(maxLatencyMs - minLatencyMs + 1);
+      final latency =
+          minLatencyMs + Random().nextInt(maxLatencyMs - minLatencyMs + 1);
       logger?.call('[NetworkDegradation] Latency: ${latency}ms');
       await Future.delayed(Duration(milliseconds: latency));
     }
@@ -40,9 +41,11 @@ class NetworkDegradationHarness {
     // Simulate disconnect/reconnect
     if (simulateDisconnect && reconnectLoops > 0) {
       for (int i = 0; i < reconnectLoops; i++) {
-        logger?.call('[NetworkDegradation] Simulating disconnect (loop ${i + 1})');
+        logger?.call(
+            '[NetworkDegradation] Simulating disconnect (loop ${i + 1})');
         await Future.delayed(Duration(milliseconds: 500));
-        logger?.call('[NetworkDegradation] Simulating reconnect (loop ${i + 1})');
+        logger
+            ?.call('[NetworkDegradation] Simulating reconnect (loop ${i + 1})');
         await Future.delayed(Duration(milliseconds: 500));
       }
     }

@@ -58,7 +58,7 @@ class _RoomByIdPageState extends ConsumerState<RoomByIdPage> {
           );
         }
         return RoomAccessWrapper(
-          room:   room,
+          room: room,
           userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
         );
       },

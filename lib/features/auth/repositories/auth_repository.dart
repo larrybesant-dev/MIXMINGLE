@@ -10,8 +10,7 @@ import 'i_auth_repository.dart';
 class AuthRepository implements IAuthRepository {
   final FirebaseAuth _auth;
 
-  AuthRepository({FirebaseAuth? auth})
-      : _auth = auth ?? FirebaseAuth.instance;
+  AuthRepository({FirebaseAuth? auth}) : _auth = auth ?? FirebaseAuth.instance;
 
   @override
   User? get currentUser => _auth.currentUser;

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../core/theme/neon_colors.dart';
 
 /// ============================================================================
@@ -117,8 +117,10 @@ class _BrandedHeaderState extends State<BrandedHeader>
                                       begin: Alignment.topLeft,
                                       end: Alignment.bottomRight,
                                       colors: [
-                                        NeonColors.neonOrange.withValues(alpha: 0.1),
-                                        NeonColors.neonBlue.withValues(alpha: 0.1),
+                                        NeonColors.neonOrange
+                                            .withValues(alpha: 0.1),
+                                        NeonColors.neonBlue
+                                            .withValues(alpha: 0.1),
                                       ],
                                     ),
                                     border: Border.all(
@@ -162,12 +164,14 @@ class _BrandedHeaderState extends State<BrandedHeader>
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: NeonColors.neonOrange.withValues(alpha: 0.4),
+                                color: NeonColors.neonOrange
+                                    .withValues(alpha: 0.4),
                                 blurRadius: 16,
                                 spreadRadius: 2,
                               ),
                               BoxShadow(
-                                color: NeonColors.neonBlue.withValues(alpha: 0.15),
+                                color:
+                                    NeonColors.neonBlue.withValues(alpha: 0.15),
                                 blurRadius: 12,
                                 spreadRadius: 1,
                               ),
@@ -180,7 +184,8 @@ class _BrandedHeaderState extends State<BrandedHeader>
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    NeonColors.neonOrange.withValues(alpha: 0.1),
+                                    NeonColors.neonOrange
+                                        .withValues(alpha: 0.1),
                                     NeonColors.neonBlue.withValues(alpha: 0.1),
                                   ],
                                 ),

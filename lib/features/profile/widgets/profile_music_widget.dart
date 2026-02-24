@@ -34,7 +34,8 @@ class _ProfileMusicBadgeState extends ConsumerState<ProfileMusicBadge> {
     super.initState();
     // Auto-play when profile opens
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(profileMusicProvider.notifier)
+      ref
+          .read(profileMusicProvider.notifier)
           .playPreview(widget.profile.favoriteTrackPreviewUrl);
     });
   }
@@ -255,7 +256,8 @@ class ProfileMusicEditor extends StatelessWidget {
           // Header
           Row(
             children: [
-              const Icon(Icons.music_note, color: NeonColors.neonPurple, size: 18),
+              const Icon(Icons.music_note,
+                  color: NeonColors.neonPurple, size: 18),
               const SizedBox(width: 8),
               const Text(
                 'Profile Music',
@@ -358,10 +360,14 @@ class _SelectedTrackRow extends StatelessWidget {
 
   Color _sourceColor(TrackSource? s) {
     switch (s) {
-      case TrackSource.spotify:    return const Color(0xFF1DB954);
-      case TrackSource.appleMusic: return const Color(0xFFFC3C44);
-      case TrackSource.soundcloud: return const Color(0xFFFF5500);
-      default: return NeonColors.neonPurple;
+      case TrackSource.spotify:
+        return const Color(0xFF1DB954);
+      case TrackSource.appleMusic:
+        return const Color(0xFFFC3C44);
+      case TrackSource.soundcloud:
+        return const Color(0xFFFF5500);
+      default:
+        return NeonColors.neonPurple;
     }
   }
 }
@@ -406,8 +412,8 @@ class _OutlineButton extends StatelessWidget {
 // Simple track picker bottom sheet (URL-based for now)
 // ─────────────────────────────────────────────────────────────────
 class _TrackPickerSheet extends StatefulWidget {
-  final void Function(String? url, String? title, String? artist,
-      TrackSource? source) onSave;
+  final void Function(
+      String? url, String? title, String? artist, TrackSource? source) onSave;
 
   const _TrackPickerSheet({required this.onSave});
 
@@ -431,8 +437,8 @@ class _TrackPickerSheet extends StatefulWidget {
 }
 
 class _TrackPickerSheetState extends State<_TrackPickerSheet> {
-  final _urlCtrl    = TextEditingController();
-  final _titleCtrl  = TextEditingController();
+  final _urlCtrl = TextEditingController();
+  final _titleCtrl = TextEditingController();
   final _artistCtrl = TextEditingController();
   TrackSource _source = TrackSource.other;
 
@@ -463,8 +469,7 @@ class _TrackPickerSheetState extends State<_TrackPickerSheet> {
           const SizedBox(height: 10),
           _field('Artist', _artistCtrl),
           const SizedBox(height: 10),
-          _field('Preview URL (MP3/AAC)', _urlCtrl,
-              hint: 'https://...'),
+          _field('Preview URL (MP3/AAC)', _urlCtrl, hint: 'https://...'),
           const SizedBox(height: 10),
           // Source picker
           DropdownButtonFormField<TrackSource>(
@@ -480,7 +485,7 @@ class _TrackPickerSheetState extends State<_TrackPickerSheet> {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-    items: TrackSource.values
+            items: TrackSource.values
                 .map((s) => DropdownMenuItem(
                     value: s,
                     child: Text(s.name,
@@ -500,8 +505,12 @@ class _TrackPickerSheetState extends State<_TrackPickerSheet> {
               onPressed: () {
                 widget.onSave(
                   _urlCtrl.text.trim().isEmpty ? null : _urlCtrl.text.trim(),
-                  _titleCtrl.text.trim().isEmpty ? null : _titleCtrl.text.trim(),
-                  _artistCtrl.text.trim().isEmpty ? null : _artistCtrl.text.trim(),
+                  _titleCtrl.text.trim().isEmpty
+                      ? null
+                      : _titleCtrl.text.trim(),
+                  _artistCtrl.text.trim().isEmpty
+                      ? null
+                      : _artistCtrl.text.trim(),
                   _source,
                 );
                 Navigator.pop(context);

@@ -67,8 +67,7 @@ class _MockVideoGridWidgetState extends State<MockVideoGridWidget>
   @override
   Widget build(BuildContext context) {
     const columns = 3;
-    final rows =
-        (widget.participants.length / columns).ceil();
+    final rows = (widget.participants.length / columns).ceil();
 
     return SingleChildScrollView(
       child: GridView.builder(
@@ -181,7 +180,9 @@ class _MockVideoGridWidgetState extends State<MockVideoGridWidget>
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Icon(
-                              isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                              isPinned
+                                  ? Icons.push_pin
+                                  : Icons.push_pin_outlined,
                               size: 14,
                               color: DesignColors.accent,
                             ),
@@ -249,8 +250,7 @@ void main() {
 
     testWidgets('displays participant name on tile',
         (WidgetTester tester) async {
-      final participants =
-          TestFixtures.participants().sublist(0, 1);
+      final participants = TestFixtures.participants().sublist(0, 1);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -270,8 +270,7 @@ void main() {
 
     testWidgets('tapping pin button toggles pin state',
         (WidgetTester tester) async {
-      final participants =
-          TestFixtures.participants().sublist(0, 1);
+      final participants = TestFixtures.participants().sublist(0, 1);
       var pinCount = 0;
 
       await tester.pumpWidget(
@@ -285,8 +284,7 @@ void main() {
         ),
       );
 
-      final pinButton =
-          find.byKey(Key('pin-button-${participants[0]['id']}'));
+      final pinButton = find.byKey(Key('pin-button-${participants[0]['id']}'));
       expect(pinButton, findsOneWidget);
 
       await tester.tap(pinButton);
@@ -297,8 +295,7 @@ void main() {
 
     testWidgets('pinned participant has blue border',
         (WidgetTester tester) async {
-      final participants =
-          TestFixtures.participants().sublist(0, 1);
+      final participants = TestFixtures.participants().sublist(0, 1);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -311,8 +308,7 @@ void main() {
       );
 
       // Pin the participant
-      final pinButton =
-          find.byKey(Key('pin-button-${participants[0]['id']}'));
+      final pinButton = find.byKey(Key('pin-button-${participants[0]['id']}'));
       await tester.tap(pinButton);
       await tester.pumpAndSettle();
 
@@ -346,8 +342,7 @@ void main() {
       );
     });
 
-    testWidgets('displays unread count badge',
-        (WidgetTester tester) async {
+    testWidgets('displays unread count badge', (WidgetTester tester) async {
       final participants = [
         MockUserData.participant(
           userId: 'p1',
@@ -409,8 +404,7 @@ void main() {
       expect(find.byType(GridView), findsOneWidget);
     });
 
-    testWidgets(
-        'entry animation triggers on widget build',
+    testWidgets('entry animation triggers on widget build',
         (WidgetTester tester) async {
       final participants = TestFixtures.participants();
 
@@ -463,8 +457,7 @@ void main() {
 
     testWidgets('unpinning participant removes blue border',
         (WidgetTester tester) async {
-      final participants =
-          TestFixtures.participants().sublist(0, 1);
+      final participants = TestFixtures.participants().sublist(0, 1);
 
       await tester.pumpWidget(
         MaterialApp(
@@ -476,8 +469,7 @@ void main() {
         ),
       );
 
-      final pinButton =
-          find.byKey(Key('pin-button-${participants[0]['id']}'));
+      final pinButton = find.byKey(Key('pin-button-${participants[0]['id']}'));
 
       // Pin
       await tester.tap(pinButton);

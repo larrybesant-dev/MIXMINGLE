@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/features/profile/screens/create_profile_page.dart';
@@ -28,7 +28,8 @@ class ProfileGuard extends ConsumerWidget {
     }
 
     return FutureBuilder<DocumentSnapshot>(
-      future: FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
+      future:
+          FirebaseFirestore.instance.collection('users').doc(user.uid).get(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
@@ -66,9 +67,10 @@ class ProfileGuard extends ConsumerWidget {
           final profileData = snapshot.data!.data() as Map<String, dynamic>?;
 
           // Check for required profile fields
-          final hasDisplayName =
-              profileData?['displayName'] != null && (profileData!['displayName'] as String).isNotEmpty;
-          final hasUsername = profileData?['username'] != null && (profileData!['username'] as String).isNotEmpty;
+          final hasDisplayName = profileData?['displayName'] != null &&
+              (profileData!['displayName'] as String).isNotEmpty;
+          final hasUsername = profileData?['username'] != null &&
+              (profileData!['username'] as String).isNotEmpty;
           // Use 'birthday' — the actual field written by UserProfile.toMap().
           // ('age' is never stored; it is derived from birthday at runtime.)
           final hasBirthday = profileData?['birthday'] != null;

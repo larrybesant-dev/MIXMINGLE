@@ -190,7 +190,8 @@ class _HypeMomentBannerState extends State<HypeMomentBanner>
                 const SizedBox(width: 8),
                 GestureDetector(
                   onTap: _dismiss,
-                  child: Icon(Icons.close, size: 14, color: vt.primary.withValues(alpha: 0.7)),
+                  child: Icon(Icons.close,
+                      size: 14, color: vt.primary.withValues(alpha: 0.7)),
                 ),
               ],
             ),

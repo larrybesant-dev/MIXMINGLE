@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -26,7 +26,8 @@ enum TransactionType {
 /// Enhanced coin economy service
 class CoinEconomyService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+  final FirebaseFunctions _functions =
+      FirebaseFunctions.instanceFor(region: 'us-central1');
 
   /// Get user's current coin balance
   Future<int> getUserBalance(String userId) async {
@@ -114,7 +115,10 @@ class CoinEconomyService {
       final today = DateTime.now();
       final todayString = '${today.year}-${today.month}-${today.day}';
 
-      final lastClaimDoc = await _firestore.collection('user_daily_logins').doc('${userId}_$todayString').get();
+      final lastClaimDoc = await _firestore
+          .collection('user_daily_logins')
+          .doc('${userId}_$todayString')
+          .get();
 
       if (!lastClaimDoc.exists) {
         // Award 10 coins for daily login
@@ -127,7 +131,10 @@ class CoinEconomyService {
         );
 
         // Mark as claimed
-        await _firestore.collection('user_daily_logins').doc('${userId}_$todayString').set({
+        await _firestore
+            .collection('user_daily_logins')
+            .doc('${userId}_$todayString')
+            .set({
           'userId': userId,
           'date': todayString,
           'claimedAt': FieldValue.serverTimestamp(),
@@ -139,7 +146,8 @@ class CoinEconomyService {
   }
 
   /// Award room participation bonus
-  Future<void> awardRoomParticipationBonus(String userId, String roomId, int minutes) async {
+  Future<void> awardRoomParticipationBonus(
+      String userId, String roomId, int minutes) async {
     try {
       // Award 1 coin per 5 minutes of participation
       final coinsEarned = (minutes / 5).floor();
@@ -165,13 +173,19 @@ class CoinEconomyService {
       final today = DateTime.now();
       final todayString = '${today.year}-${today.month}-${today.day}';
 
-      final messageCountDoc = await _firestore.collection('user_message_counts').doc('${userId}_$todayString').get();
+      final messageCountDoc = await _firestore
+          .collection('user_message_counts')
+          .doc('${userId}_$todayString')
+          .get();
 
       final currentCount = messageCountDoc.data()?['count'] ?? 0;
       final newCount = currentCount + 1;
 
       // Update message count
-      await _firestore.collection('user_message_counts').doc('${userId}_$todayString').set({
+      await _firestore
+          .collection('user_message_counts')
+          .doc('${userId}_$todayString')
+          .set({
         'userId': userId,
         'date': todayString,
         'count': newCount,
@@ -209,7 +223,8 @@ class CoinEconomyService {
   }
 
   /// Award badge earning bonus
-  Future<void> awardBadgeBonus(String userId, String badgeId, String badgeName) async {
+  Future<void> awardBadgeBonus(
+      String userId, String badgeId, String badgeName) async {
     try {
       // Different coin amounts based on badge rarity
       final rarityMultipliers = {
@@ -221,7 +236,8 @@ class CoinEconomyService {
       };
 
       // Get badge rarity from badge definition
-      final badgeDoc = await _firestore.collection('badge_definitions').doc(badgeId).get();
+      final badgeDoc =
+          await _firestore.collection('badge_definitions').doc(badgeId).get();
       final rarity = badgeDoc.data()?['rarity'] ?? 'common';
       final coinAmount = rarityMultipliers[rarity] ?? 5;
 
@@ -254,7 +270,8 @@ class CoinEconomyService {
   }
 
   /// Get user's transaction history
-  Future<List<Map<String, dynamic>>> getTransactionHistory(String userId, {int limit = 50}) async {
+  Future<List<Map<String, dynamic>>> getTransactionHistory(String userId,
+      {int limit = 50}) async {
     try {
       final transactions = await _firestore
           .collection('coin_transactions')
@@ -354,22 +371,27 @@ final coinEconomyServiceProvider = Provider<CoinEconomyService>((ref) {
   return CoinEconomyService();
 });
 
-final userCoinBalanceProvider = FutureProvider.family<int, String>((ref, userId) async {
+final userCoinBalanceProvider =
+    FutureProvider.family<int, String>((ref, userId) async {
   final service = ref.watch(coinEconomyServiceProvider);
   return service.getUserBalance(userId);
 });
 
-final coinPackagesProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final coinPackagesProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final service = ref.watch(coinEconomyServiceProvider);
   return service.getCoinPackages();
 });
 
-final userTransactionHistoryProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, userId) async {
+final userTransactionHistoryProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, userId) async {
   final service = ref.watch(coinEconomyServiceProvider);
   return service.getTransactionHistory(userId);
 });
 
-final userEarningStatsProvider = FutureProvider.family<Map<String, dynamic>, String>((ref, userId) async {
+final userEarningStatsProvider =
+    FutureProvider.family<Map<String, dynamic>, String>((ref, userId) async {
   final service = ref.watch(coinEconomyServiceProvider);
   return service.getEarningStats(userId);
 });

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 
 class PrivacyPolicyPage extends StatelessWidget {
@@ -134,7 +134,8 @@ class PrivacyPolicyPage extends StatelessWidget {
                 text: TextSpan(
                   style: TextStyle(color: Colors.grey.shade600),
                   children: [
-                    const TextSpan(text: 'By using Mix & Mingle, you agree to our\n'),
+                    const TextSpan(
+                        text: 'By using Mix & Mingle, you agree to our\n'),
                     TextSpan(
                       text: 'Terms of Service',
                       style: TextStyle(

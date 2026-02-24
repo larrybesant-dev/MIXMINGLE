@@ -1,4 +1,4 @@
-﻿/// FCM Notifications Service - Friend Presence Alerts
+/// FCM Notifications Service - Friend Presence Alerts
 ///
 /// Monitors friend presence changes and sends push notifications
 /// Reference: DESIGN_BIBLE.md Section G (Backend Integration)
@@ -194,8 +194,7 @@ class FcmNotificationService {
 /// FCM notification service provider
 /// Note: Typically used in conjunction with PresenceNotificationService
 /// which handles the actual presence monitoring and calls this service.
-final fcmNotificationServiceProvider =
-    Provider<FcmNotificationService>((ref) {
+final fcmNotificationServiceProvider = Provider<FcmNotificationService>((ref) {
   final firestore = FirestoreService();
   return FcmNotificationService(firestore: firestore);
 });

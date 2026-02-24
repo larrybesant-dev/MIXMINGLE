@@ -29,9 +29,8 @@ class VideoSubscriptionService {
         .collection('participants')
         .snapshots()
         .listen((snapshot) {
-      final participants = snapshot.docs
-          .map((doc) => Participant.fromJson(doc.data()))
-          .toList();
+      final participants =
+          snapshot.docs.map((doc) => Participant.fromJson(doc.data())).toList();
       callback(participants);
     });
   }
@@ -108,5 +107,3 @@ class VideoSubscriptionService {
     unsubscribe();
   }
 }
-
-
