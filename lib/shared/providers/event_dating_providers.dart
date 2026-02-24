@@ -1,11 +1,11 @@
-﻿
+
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../services/events_service.dart';
-// TEMP DISABLED: import '../../services/speed_dating_service.dart';
+import '../../services/events/events_service.dart';
+// TEMP DISABLED: import '../../services/events/speed_dating_service.dart';
 import '../models/event.dart';
 // TEMP DISABLED: import '../models/speed_dating.dart';
 import 'auth_providers.dart';

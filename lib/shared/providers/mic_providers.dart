@@ -1,7 +1,7 @@
-﻿
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/mic_state.dart';
-import '../../services/mic_service.dart';
+import '../../services/video/mic_service.dart';
 
 final micServiceProvider = Provider((ref) => MicService());
 

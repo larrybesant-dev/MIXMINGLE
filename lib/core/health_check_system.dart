@@ -1,4 +1,4 @@
-﻿/// Project Health Check System
+/// Project Health Check System
 ///
 /// This file provides runtime health checks for MixMingle application
 /// Verifies all critical services are initialized and operational
@@ -9,7 +9,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../services/firestore_seeding_service.dart';
+import '../services/infra/firestore_seeding_service.dart';
 
 /// Health check result entity
 class HealthCheckResult {

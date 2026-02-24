@@ -24,7 +24,6 @@ import '../features/settings/blocked_users_page.dart';
 import '../features/legal/privacy_policy_page.dart';
 import '../features/legal/terms_of_service_page.dart';
 import '../features/reporting/moderation_page.dart';
-import '../features/notifications/screens/notifications_page.dart';
 import '../features/notifications/notification_center_page.dart';
 import '../features/events/screens/create_event_page.dart';
 import '../features/events/screens/events_list_page.dart';
@@ -356,7 +355,7 @@ class AppRoutes {
       // ========== Protected Routes with Auth Guard ==========
       case home:
         return _createFadeRoute(
-          page: const HomePageElectric(),
+          page: const AuthGate(child: HomePageElectric()),
           settings: settings,
         );
 
@@ -731,7 +730,8 @@ class AppRoutes {
       case notifications:
         return _createSlideRoute(
           page: const AuthGate(
-            child: ProfileGuard(child: NotificationsPage()),
+            // NotificationsPage had Stream.value([]) — use the real Firestore-backed center instead
+            child: ProfileGuard(child: NotificationCenterPage()),
           ),
           settings: settings,
           direction: SlideDirection.down,

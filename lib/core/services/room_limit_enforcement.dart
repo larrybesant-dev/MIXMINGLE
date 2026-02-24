@@ -1,4 +1,4 @@
-import '../../services/room_limit_manager.dart';
+import '../../services/room/room_limit_manager.dart';
 import '../feature_flags.dart';
 import '../utils/app_logger.dart';
 

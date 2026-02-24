@@ -1,8 +1,8 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import '../shared/models/broadcaster_queue.dart';
-import 'profile_service.dart';
+import '../../shared/models/broadcaster_queue.dart';
+import '../user/profile_service.dart';
 
 /// Service to manage broadcaster queue and recording
 class BroadcasterService {

@@ -1,6 +1,6 @@
-﻿
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/broadcaster_service.dart';
+import '../../services/video/broadcaster_service.dart';
 import '../models/broadcaster_queue.dart';
 
 // ============================================================================

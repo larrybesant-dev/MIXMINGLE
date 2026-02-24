@@ -1,11 +1,11 @@
-﻿// lib/providers/chat_providers.dart
+// lib/providers/chat_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/chat_message.dart';
 import '../models/chat_room.dart';
-import '../../services/chat_service.dart';
-import '../../services/typing_service.dart';
-import '../../services/file_share_service.dart';
+import '../../services/chat/chat_service.dart';
+import '../../services/chat/typing_service.dart';
+import '../../services/storage/file_share_service.dart';
 
 final chatServiceProvider = Provider((ref) => ChatService());
 final typingServiceProvider = Provider((ref) => TypingService());

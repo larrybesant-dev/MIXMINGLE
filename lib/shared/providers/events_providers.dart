@@ -1,6 +1,6 @@
-﻿
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/events_service.dart';
+import '../../services/events/events_service.dart';
 import '../models/event.dart';
 import '../models/user_profile.dart';
 import 'auth_providers.dart';

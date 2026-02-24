@@ -14,8 +14,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import './join_flow_controller.dart';
 import '../../../shared/models/participant.dart';
-import '../../../services/agora_service.dart';
-import '../../../services/room_firestore_service.dart';
+import '../../../services/agora/agora_service.dart';
+import '../../../services/room/room_firestore_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/providers/agora_provider.dart';
 

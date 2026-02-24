@@ -1,10 +1,10 @@
-﻿// Agora Web Bridge v3 - Production Ready
+// Agora Web Bridge v3 - Production Ready
 // Interfaces with agora_web_v5_production.js
 // ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:js' as js;
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
-import '../core/utils/app_logger.dart';
+import '../../core/utils/app_logger.dart';
 
 class AgoraWebBridgeV3 {
   static bool get isAvailable {

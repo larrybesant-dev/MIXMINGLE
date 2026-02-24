@@ -1,6 +1,6 @@
-﻿import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import 'package:agora_rtc_engine/agora_rtc_engine.dart' as native;
-import '../core/utils/app_logger.dart';
+import '../../core/utils/app_logger.dart';
 
 // Import web bridge v3 - Production ready with SDK v5
 import 'agora_web_bridge_v3.dart';
@@ -16,9 +16,9 @@ import 'agora_web_bridge_v3.dart';
 /// - View room UI
 /// - Broadcast from mobile
 ///
-/// Set to FALSE when Agora Web bridge is rewritten for SDK v5.
+/// Agora Web bridge is ready (SDK v5 + production JS bridge).
 // ignore: constant_identifier_names
-const bool AGORA_WEB_DISABLED = true;
+const bool AGORA_WEB_DISABLED = false;
 
 void _consoleLog(String msg) {
   if (!kIsWeb) return;

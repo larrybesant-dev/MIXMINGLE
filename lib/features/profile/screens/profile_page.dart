@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixmingle/shared/providers/profile_controller.dart';
 import 'package:mixmingle/shared/providers/providers.dart';
 import 'package:mixmingle/shared/models/user_profile.dart';
@@ -8,6 +9,7 @@ import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/app/app_routes.dart';
 import 'package:mixmingle/core/design_system/design_constants.dart';
+import 'package:mixmingle/core/intelligence/vibe_intelligence_service.dart';
 
 import '../widgets/profile_mode_selector.dart';
 import '../widgets/layer_attraction.dart';
@@ -15,6 +17,13 @@ import '../widgets/layer_live_presence.dart';
 import '../widgets/layer_social_proof.dart';
 import '../widgets/layer_creator.dart';
 import '../widgets/layer_safety.dart';
+
+// ─── Neon palette shortcuts ───────────────────────────────────────────────────
+const _kPink    = Color(0xFFFF4D8B);   // live / dating
+const _kCyan    = Color(0xFF00E5CC);   // recently active / event host
+const _kBlue    = Color(0xFF4A90FF);   // accent / social
+const _kAmber   = Color(0xFFFFAB00);   // creator / VIP
+const _kPurple  = Color(0xFF8B5CF6);   // vibes / badges
 
 // ════════════════════════════════════════════════════════════════════
 // ProfilePage — 5-Layer Identity + Attraction + Authority + Monetization + Control
@@ -44,6 +53,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   /// Local mode state — starts from what the profile says, owner can toggle.
   ProfileMode? _selectedMode;
 
+  /// Guards one-time local tag refresh per page lifecycle.
+  bool _tagsRefreshed = false;
+
   bool get _isOwner =>
       widget.targetUserId == null ||
       widget.targetUserId == FirebaseAuth.instance.currentUser?.uid;
@@ -51,6 +63,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(currentUserProfileProvider);
+
+    // Seed computed tags once per page load without waiting for nightly CF.
+    ref.listen(currentUserProfileProvider, (_, next) {
+      final p = next.asData?.value;
+      if (p != null && !_tagsRefreshed && _isOwner) {
+        _tagsRefreshed = true;
+        _refreshBehaviorTags(p);
+      }
+    });
 
     return ClubBackground(
       child: ScaffoldMessenger(
@@ -80,6 +101,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   // ══════════════════════════════════════════════════════════
+  //  LOCAL BEHAVIOR TAG REFRESH
+  // ══════════════════════════════════════════════════════════
+  Future<void> _refreshBehaviorTags(UserProfile p) async {
+    try {
+      final freshTags =
+          ref.read(vibeIntelligenceServiceProvider).computeBehaviorTags(p);
+      if (freshTags.toSet() != p.computedTags.toSet()) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(p.id)
+            .update({'computedTags': freshTags});
+      }
+    } catch (_) {}
+  }
+
+  // ══════════════════════════════════════════════════════════
   //  MAIN SCROLL VIEW
   // ══════════════════════════════════════════════════════════
   Widget _buildContent(UserProfile p) {
@@ -92,8 +129,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              _buildIdentityCard(p),
-              const SizedBox(height: 14),
+              // ── Hero: name + flag + presence ──────────────────────
+              _buildHeroNameSection(p),
+              const SizedBox(height: 16),
+              // ── Vibe Tags ─────────────────────────────────────────
+              if (p.vibeTag != null || (p.interests != null && p.interests!.isNotEmpty))
+                _buildVibeTagsSection(p),
+              if (p.vibeTag != null || (p.interests != null && p.interests!.isNotEmpty))
+                const SizedBox(height: 12),
+              // ── Music Genres ──────────────────────────────────────
+              if (p.musicGenres != null && p.musicGenres!.isNotEmpty)
+                _buildMusicGenresSection(p),
+              if (p.musicGenres != null && p.musicGenres!.isNotEmpty)
+                const SizedBox(height: 16),
+              // ── Bio ───────────────────────────────────────────────
+              if (p.bio != null && p.bio!.isNotEmpty)
+                _buildBioSection(p),
+              if (p.bio != null && p.bio!.isNotEmpty)
+                const SizedBox(height: 16),
+              // ── Badges ────────────────────────────────────────────
+              _buildBadgesSection(p),
+              const SizedBox(height: 16),
+              _buildEnergyScoreSection(p),
+              const SizedBox(height: 16),
+              _buildActivityStatsSection(p),
+              const SizedBox(height: 20),
+              // ── Neon divider ──────────────────────────────────────
+              _neonDivider(_modeAccent(mode)),
+              const SizedBox(height: 20),
+              // ── Mode Selector ─────────────────────────────────────
               ProfileModeSelector(
                 selected: mode,
                 isOwner: _isOwner,
@@ -101,6 +165,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
               const SizedBox(height: 20),
               ..._buildOrderedLayers(p, mode),
+              // ── Edit Profile button (owner) ───────────────────────
+              if (_isOwner) ...[
+                const SizedBox(height: 24),
+                _buildEditProfileButton(),
+                const SizedBox(height: 8),
+              ],
               if (_isOwner) ..._buildOwnerFooter(p),
             ]),
           ),
@@ -295,50 +365,140 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   // ══════════════════════════════════════════════════════════
-  //  SLIVER APP BAR
+  //  SLIVER APP BAR — Banner + Centered Avatar (TikTok-style)
   // ══════════════════════════════════════════════════════════
   Widget _buildSliverAppBar(UserProfile p) {
+    final avatarGlow = _avatarGlowColor(p);
     return SliverAppBar(
-      expandedHeight: 220,
+      expandedHeight: 280,
       pinned: true,
       backgroundColor: DesignColors.background,
-      leading: null,
+      leading: !_isOwner
+          ? IconButton(
+              icon: const Icon(Icons.arrow_back_ios_new, color: DesignColors.white),
+              onPressed: () => Navigator.pop(context),
+            )
+          : null,
       automaticallyImplyLeading: false,
       actions: [
         if (_isOwner)
           Padding(
             padding: const EdgeInsets.only(right: 12),
             child: _neonIconButton(
-              Icons.edit_outlined,
+              Icons.settings_outlined,
               DesignColors.accent,
-              () => Navigator.pushNamed(context, AppRoutes.editProfile),
+              () => Navigator.pushNamed(context, '/settings'),
             ),
           ),
       ],
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
+          clipBehavior: Clip.none,
           fit: StackFit.expand,
           children: [
+            // ── Banner image or gradient ────────────────────────────
             p.coverPhotoUrl != null
                 ? Image.network(p.coverPhotoUrl!, fit: BoxFit.cover)
                 : Container(
                     decoration: const BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [Color(0xFF0D1117), Color(0xFF1A1A2E), Color(0xFF0D1117)],
+                        colors: [Color(0xFF0D1117), Color(0xFF1A1F2E), Color(0xFF0D1117)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                     ),
-                    child: const Center(
-                      child: Icon(Icons.music_note, color: Color(0x224A90FF), size: 80),
-                    ),
+                    child: Stack(children: [
+                      Center(child: Icon(Icons.music_note, color: DesignColors.accent.withValues(alpha: 0.08), size: 140)),
+                    ]),
                   ),
+            // ── Gradient fade to background ─────────────────────────
             Container(
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.transparent, Color(0xCC080C14)],
+                  colors: [
+                    Colors.transparent,
+                    DesignColors.background.withValues(alpha: 0.6),
+                    DesignColors.background,
+                  ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
+                  stops: const [0.0, 0.6, 1.0],
+                ),
+              ),
+            ),
+            // ── Avatar — centered, bottom of banner ─────────────────
+            Positioned(
+              bottom: 12,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    // Outer neon glow ring
+                    Container(
+                      width: 116,
+                      height: 116,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(
+                          colors: [avatarGlow, avatarGlow.withValues(alpha: 0.3)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        boxShadow: [
+                          BoxShadow(color: avatarGlow.withValues(alpha: 0.55), blurRadius: 24, spreadRadius: 3),
+                          BoxShadow(color: avatarGlow.withValues(alpha: 0.25), blurRadius: 48, spreadRadius: 6),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(3),
+                        child: CircleAvatar(
+                          radius: 55,
+                          backgroundColor: DesignColors.surfaceDefault,
+                          backgroundImage: p.photoUrl != null ? NetworkImage(p.photoUrl!) : null,
+                          child: p.photoUrl == null
+                              ? const Icon(Icons.person, size: 52, color: DesignColors.textGray)
+                              : null,
+                        ),
+                      ),
+                    ),
+                    // ── Edit avatar button (owner only) ──────────────
+                    if (_isOwner)
+                      Positioned(
+                        bottom: 0,
+                        right: 0,
+                        child: GestureDetector(
+                          onTap: () => Navigator.pushNamed(context, AppRoutes.editProfile),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: DesignColors.surfaceLight,
+                              border: Border.all(color: avatarGlow, width: 2),
+                              boxShadow: [BoxShadow(color: avatarGlow.withValues(alpha: 0.4), blurRadius: 8)],
+                            ),
+                            child: const Icon(Icons.edit, size: 15, color: DesignColors.white),
+                          ),
+                        ),
+                      ),
+                    // ── Live indicator ───────────────────────────────
+                    if (p.presenceStatus == 'in_room')
+                      Positioned(
+                        top: 4,
+                        right: 0,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: _kPink,
+                            borderRadius: BorderRadius.circular(8),
+                            boxShadow: [BoxShadow(color: _kPink.withValues(alpha: 0.6), blurRadius: 6)],
+                          ),
+                          child: const Text('LIVE', style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.w800, letterSpacing: 0.5)),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
@@ -348,119 +508,481 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     );
   }
 
-  // ══════════════════════════════════════════════════════════
-  //  IDENTITY CARD
-  // ══════════════════════════════════════════════════════════
-  Widget _buildIdentityCard(UserProfile p) {
-    final name = p.displayName ?? p.nickname ?? 'Anonymous';
-    final age = p.age;
-    final mode = _selectedMode ?? p.profileMode;
+  /// Glow color based on presence status — Live=pink, Active=cyan, else blue
+  Color _avatarGlowColor(UserProfile p) {
+    if (p.presenceStatus == 'in_room') return _kPink;
+    if (p.presenceStatus == 'online') return _kCyan;
+    return _kBlue;
+  }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: DesignColors.surfaceLight,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _modeAccent(mode).withValues(alpha: 0.35)),
-      ),
-      child: Row(
-        children: [
-          // Avatar — neon ring tinted to active mode color
-          Container(
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: _modeAccent(mode), width: 2.5),
-              boxShadow: [
-                BoxShadow(color: _modeAccent(mode).withValues(alpha: 0.45), blurRadius: 18, spreadRadius: 2),
-              ],
-            ),
-            child: CircleAvatar(
-              radius: 44,
-              backgroundColor: DesignColors.surfaceDefault,
-              backgroundImage: p.photoUrl != null ? NetworkImage(p.photoUrl!) : null,
-              child: p.photoUrl == null
-                  ? const Icon(Icons.person, size: 44, color: DesignColors.textGray)
-                  : null,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        age != null ? '$name, $age' : name,
-                        style: DesignTypography.heading.copyWith(shadows: DesignColors.primaryGlow),
-                      ),
-                    ),
-                    // Online dot
-                    if (p.presenceStatus == 'online' || p.presenceStatus == 'in_room')
-                      Container(
-                        width: 10, height: 10,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: p.presenceStatus == 'in_room'
-                              ? const Color(0xFFFFAB00)
-                              : const Color(0xFF00C853),
-                          boxShadow: [
-                            BoxShadow(
-                              color: (p.presenceStatus == 'in_room'
-                                  ? const Color(0xFFFFAB00)
-                                  : const Color(0xFF00C853)).withValues(alpha: 0.6),
-                              blurRadius: 6,
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
+  // ══════════════════════════════════════════════════════════
+  //  HERO NAME SECTION  — Name + Flag + Joined + Presence
+  // ══════════════════════════════════════════════════════════
+  Widget _buildHeroNameSection(UserProfile p) {
+    final name = p.displayName ?? p.nickname ?? 'Anonymous';
+    final age  = p.age;
+    final flag = p.countryCode != null ? _countryFlag(p.countryCode!) : null;
+    final days = DateTime.now().difference(p.createdAt).inDays;
+    final joined = days == 0 ? 'Joined today' : days == 1 ? 'Joined yesterday' : 'Joined $days days ago';
+
+    return Column(
+      children: [
+        // Name + flag row
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Flexible(
+              child: Text(
+                age != null ? '$name, $age' : name,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w800,
+                  color: DesignColors.white,
+                  height: 1.15,
+                  shadows: DesignColors.primaryGlow,
                 ),
-                if (p.gender != null) ...[
-                  const SizedBox(height: 2),
-                  Text(p.gender!, style: DesignTypography.caption.copyWith(color: DesignColors.textGray)),
-                ],
-                if (p.location != null && p.location!.isNotEmpty && !p.hideDistance) ...[
-                  const SizedBox(height: 4),
-                  Row(children: [
-                    const Icon(Icons.location_on_outlined, size: 13, color: DesignColors.secondary),
-                    const SizedBox(width: 4),
-                    Text(p.location!, style: DesignTypography.caption.copyWith(color: DesignColors.secondary)),
-                  ]),
-                ],
-                const SizedBox(height: 8),
-                Row(children: [
-                  if (!p.hideFollowers || _isOwner)
-                    _statPill('${p.followersCount}', 'Followers'),
-                  if (!p.hideFollowers || _isOwner) const SizedBox(width: 8),
-                  _statPill('${p.followingCount}', 'Following'),
-                  if (p.isCreatorEnabled) ...[
-                    const SizedBox(width: 8),
-                    _statPill('${p.subscriberCount}', 'Subs'),
-                  ],
-                ]),
-              ],
+              ),
             ),
-          ),
-        ],
-      ),
+            if (flag != null) ...[
+              const SizedBox(width: 8),
+              Text(flag, style: const TextStyle(fontSize: 22)),
+            ],
+            if (p.isPhotoVerified == true || p.isIdVerified == true) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _kBlue,
+                ),
+                child: const Icon(Icons.check, size: 10, color: Colors.white),
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+        // Joined + presence
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(joined, style: const TextStyle(color: DesignColors.textGray, fontSize: 12)),
+            if (p.presenceStatus != null && p.presenceStatus != 'offline') ...[
+              const SizedBox(width: 10),
+              _presencePill(p.presenceStatus!),
+            ],
+          ],
+        ),
+        // Follower stats row
+        const SizedBox(height: 14),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _statBadge('${_formatCount(p.followersCount)}', 'Followers'),
+            const SizedBox(width: 12),
+            Container(width: 1, height: 28, color: DesignColors.divider),
+            const SizedBox(width: 12),
+            _statBadge('${_formatCount(p.followingCount)}', 'Following'),
+            if (p.roomsHostedCount > 0) ...[
+              const SizedBox(width: 12),
+              Container(width: 1, height: 28, color: DesignColors.divider),
+              const SizedBox(width: 12),
+              _statBadge('${p.roomsHostedCount}', 'Rooms'),
+            ],
+          ],
+        ),
+      ],
     );
   }
 
-  Widget _statPill(String count, String label) {
+  Widget _presencePill(String status) {
+    final Color color;
+    final String label;
+    final IconData icon;
+    switch (status) {
+      case 'in_room':
+        color = _kPink; label = 'In a room'; icon = Icons.graphic_eq;
+        break;
+      case 'online':
+        color = _kCyan; label = 'Active now'; icon = Icons.circle;
+        break;
+      default:
+        color = DesignColors.textGray; label = 'Recently active'; icon = Icons.access_time_outlined;
+    }
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: DesignColors.accent.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: DesignColors.accent.withValues(alpha: 0.3)),
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
-      child: RichText(
-        text: TextSpan(
-          children: [
-            TextSpan(text: '$count ', style: const TextStyle(color: DesignColors.white, fontWeight: FontWeight.w700, fontSize: 12)),
-            TextSpan(text: label, style: const TextStyle(color: DesignColors.textGray, fontSize: 10)),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(icon, size: 8, color: color),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600)),
+      ]),
+    );
+  }
+
+  Widget _statBadge(String value, String label) {
+    return Column(mainAxisSize: MainAxisSize.min, children: [
+      Text(value, style: const TextStyle(color: DesignColors.white, fontSize: 18, fontWeight: FontWeight.w700, height: 1)),
+      const SizedBox(height: 2),
+      Text(label, style: const TextStyle(color: DesignColors.textGray, fontSize: 11)),
+    ]);
+  }
+
+  static String _formatCount(int n) {
+    if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
+    if (n >= 1000) return '${(n / 1000).toStringAsFixed(1)}K';
+    return '$n';
+  }
+
+  static String _countryFlag(String countryCode) {
+    return countryCode
+        .toUpperCase()
+        .split('')
+        .map((c) => String.fromCharCode(c.codeUnitAt(0) + 127397))
+        .join();
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  VIBE TAGS SECTION
+  // ══════════════════════════════════════════════════════════
+  Widget _buildVibeTagsSection(UserProfile p) {
+    // Combine vibeTag (single) + interests into chips
+    final tags = <String>[];
+    if (p.vibeTag != null) tags.add(p.vibeTag!);
+    if (p.interests != null) tags.addAll(p.interests!.take(5));
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _miniSectionLabel(Icons.bolt_outlined, 'Vibes', _kPurple),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: tags.map((tag) => Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: _vibeChip(tag, _kPurple),
+            )).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _vibeChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color.withValues(alpha: 0.18), color.withValues(alpha: 0.06)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: color.withValues(alpha: 0.5)),
+        boxShadow: [BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 6)],
+      ),
+      child: Text(label, style: TextStyle(color: color, fontSize: 13, fontWeight: FontWeight.w600)),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  MUSIC GENRES SECTION
+  // ══════════════════════════════════════════════════════════
+  Widget _buildMusicGenresSection(UserProfile p) {
+    final genres = p.musicGenres!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _miniSectionLabel(Icons.music_note_outlined, 'Music', _kCyan),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: genres.map((g) => Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _kCyan.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: _kCyan.withValues(alpha: 0.35)),
+                  boxShadow: [BoxShadow(color: _kCyan.withValues(alpha: 0.12), blurRadius: 4)],
+                ),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  const Icon(Icons.headphones, size: 12, color: _kCyan),
+                  const SizedBox(width: 5),
+                  Text(g, style: const TextStyle(color: _kCyan, fontSize: 12, fontWeight: FontWeight.w600)),
+                ]),
+              ),
+            )).toList(),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  BIO SECTION
+  // ══════════════════════════════════════════════════════════
+  Widget _buildBioSection(UserProfile p) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Neon underline divider
+        Row(children: [
+          Container(height: 1, width: 32, color: _kBlue.withValues(alpha: 0.7)),
+          Container(height: 1, width: 16, color: _kPink.withValues(alpha: 0.5)),
+          Expanded(child: Container(height: 1, color: DesignColors.divider.withValues(alpha: 0.3))),
+        ]),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: DesignColors.surfaceLight.withValues(alpha: 0.5),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: _kBlue.withValues(alpha: 0.18)),
+          ),
+          child: Text(
+            p.bio!,
+            style: const TextStyle(
+              color: DesignColors.textLightGray,
+              fontSize: 14,
+              height: 1.6,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  BADGES & SOCIAL PROOF
+  // ══════════════════════════════════════════════════════════
+  Widget _buildBadgesSection(UserProfile p) {
+    final badges = <_BadgeItem>[];
+
+    if (p.isPremium || p.isVip)
+      badges.add(_BadgeItem(Icons.workspace_premium, 'VIP', _kAmber));
+    if (p.isCreatorBadge || p.isCreatorEnabled)
+      badges.add(_BadgeItem(Icons.movie_creation_outlined, 'Creator', _kPink));
+    if (p.isPhotoVerified == true || p.isIdVerified == true)
+      badges.add(_BadgeItem(Icons.verified_outlined, 'Verified', _kBlue));
+    if (p.isBoosted)
+      badges.add(_BadgeItem(Icons.rocket_launch_outlined, 'Boosted', _kCyan));
+    if (p.communityRating >= 4.5 && p.totalRoomsJoined >= 10)
+      badges.add(_BadgeItem(Icons.star_outline, 'Top Host', _kAmber));
+    if (p.twoFactorEnabled)
+      badges.add(_BadgeItem(Icons.security_outlined, '2FA Active', DesignColors.success));
+
+    // Always show at least placeholder row so space is reserved
+    if (badges.isEmpty && p.computedTags.isEmpty) {
+      return _buildEmptyBadgesPlaceholder();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _miniSectionLabel(Icons.military_tech_outlined, 'Badges', _kAmber),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              ...badges.map((b) => Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [b.color.withValues(alpha: 0.18), b.color.withValues(alpha: 0.06)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: b.color.withValues(alpha: 0.5)),
+                    boxShadow: [BoxShadow(color: b.color.withValues(alpha: 0.2), blurRadius: 6)],
+                  ),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(b.icon, size: 13, color: b.color),
+                    const SizedBox(width: 5),
+                    Text(b.label, style: TextStyle(color: b.color, fontSize: 12, fontWeight: FontWeight.w700)),
+                  ]),
+                ),
+              )),
+              // Computed behaviour tags (purple neon chips)
+              ...p.computedTags.map((tag) => Padding(
+                padding: const EdgeInsets.only(right: 8),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF8B5CF6).withValues(alpha: 0.45)),
+                  ),
+                  child: Text(tag,
+                      style: const TextStyle(
+                        color: Color(0xFF8B5CF6),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      )),
+                ),
+              )),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  ENERGY SCORE SECTION  (#6)
+  // ══════════════════════════════════════════════════════════
+  Widget _buildEnergyScoreSection(UserProfile p) {
+    final score = p.energyScore;
+    final ratio = score / 100.0;
+    final tier = score < 30 ? 'Warm Up' : score < 65 ? 'Active' : 'High Energy';
+    const barColor = Color(0xFF00E5CC);
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      _miniSectionLabel(Icons.bolt, 'Energy Score', barColor),
+      const SizedBox(height: 8),
+      Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: barColor.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: barColor.withValues(alpha: 0.25)),
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Row(children: [
+            Text('$score',
+                style: const TextStyle(
+                    color: barColor, fontSize: 22, fontWeight: FontWeight.w900)),
+            const Text(' / 100',
+                style: TextStyle(color: DesignColors.textGray, fontSize: 13)),
+            const Spacer(),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+              decoration: BoxDecoration(
+                color: barColor.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: barColor.withValues(alpha: 0.4)),
+              ),
+              child: Text(tier,
+                  style: const TextStyle(
+                      color: barColor, fontSize: 11, fontWeight: FontWeight.w700)),
+            ),
+          ]),
+          const SizedBox(height: 8),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: LinearProgressIndicator(
+              value: ratio,
+              minHeight: 6,
+              backgroundColor: barColor.withValues(alpha: 0.12),
+              valueColor: const AlwaysStoppedAnimation<Color>(barColor),
+            ),
+          ),
+        ]),
+      ),
+    ]);
+  }
+
+  Widget _buildEmptyBadgesPlaceholder() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: DesignColors.surfaceLight.withValues(alpha: 0.4),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: DesignColors.divider.withValues(alpha: 0.3), style: BorderStyle.solid),
+      ),
+      child: Row(mainAxisSize: MainAxisSize.min, children: [
+        Icon(Icons.lock_outline, size: 13, color: DesignColors.textGray.withValues(alpha: 0.5)),
+        const SizedBox(width: 6),
+        Text('Badges unlock as you engage',
+            style: TextStyle(color: DesignColors.textGray.withValues(alpha: 0.6), fontSize: 12)),
+      ]),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  ACTIVITY STATS SECTION
+  // ══════════════════════════════════════════════════════════
+  Widget _buildActivityStatsSection(UserProfile p) {
+    final stats = <_StatItem>[];
+
+    if (p.roomsHostedCount > 0)
+      stats.add(_StatItem('${p.roomsHostedCount}', 'Rooms Hosted', Icons.mic_none_outlined, _kBlue));
+    if (p.eventsAttended > 0)
+      stats.add(_StatItem('${p.eventsAttended}', 'Events', Icons.event_outlined, _kCyan));
+    if (p.communityRating > 0)
+      stats.add(_StatItem(p.communityRating.toStringAsFixed(1), 'Rating', Icons.star_outline, _kAmber));
+    if (p.mutualsCount > 0)
+      stats.add(_StatItem('${p.mutualsCount}', 'Mutuals', Icons.people_outline, _kPurple));
+
+    if (stats.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _miniSectionLabel(Icons.bar_chart_outlined, 'Activity', DesignColors.secondary),
+        const SizedBox(height: 10),
+        Row(
+          children: stats.map((s) => Expanded(
+            child: Container(
+              margin: const EdgeInsets.only(right: 8),
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                color: s.color.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: s.color.withValues(alpha: 0.25)),
+              ),
+              child: Column(mainAxisSize: MainAxisSize.min, children: [
+                Icon(s.icon, size: 16, color: s.color),
+                const SizedBox(height: 4),
+                Text(s.value, style: TextStyle(color: s.color, fontSize: 16, fontWeight: FontWeight.w800)),
+                Text(s.label, style: const TextStyle(color: DesignColors.textGray, fontSize: 10), textAlign: TextAlign.center),
+              ]),
+            ),
+          )).toList(),
+        ),
+      ],
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  EDIT PROFILE BUTTON  (owner only)
+  // ══════════════════════════════════════════════════════════
+  Widget _buildEditProfileButton() {
+    return GestureDetector(
+      onTap: () => Navigator.pushNamed(context, AppRoutes.editProfile),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF4A90FF), Color(0xFF8B5CF6)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: [
+            BoxShadow(color: _kBlue.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 4)),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.edit_outlined, color: Colors.white, size: 18),
+            SizedBox(width: 8),
+            Text('Edit Profile',
+                style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.3)),
           ],
         ),
       ),
@@ -468,7 +990,37 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   // ══════════════════════════════════════════════════════════
-  //  SUPPORTING CONTENT SUB-WIDGETS
+  //  SHARED HELPERS
+  // ══════════════════════════════════════════════════════════
+  Widget _miniSectionLabel(IconData icon, String label, Color color) {
+    return Row(children: [
+      Icon(icon, size: 14, color: color),
+      const SizedBox(width: 5),
+      Text(label.toUpperCase(), style: TextStyle(
+        color: color, fontSize: 10, fontWeight: FontWeight.w700, letterSpacing: 1.2,
+        shadows: [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 6)],
+      )),
+    ]);
+  }
+
+  Widget _neonDivider(Color color) {
+    return Row(children: [
+      Expanded(child: Container(height: 1, color: color.withValues(alpha: 0.3))),
+      Container(
+        margin: const EdgeInsets.symmetric(horizontal: 10),
+        width: 6,
+        height: 6,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color,
+          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.7), blurRadius: 6)],
+        ),
+      ),
+      Expanded(child: Container(height: 1, color: color.withValues(alpha: 0.3))),
+    ]);
+  }
+  // ══════════════════════════════════════════════════════════
+  //  SUPPORTING CONTENT SUB-WIDGETS  (Gallery, Lifestyle, Socials)
   // ══════════════════════════════════════════════════════════
   Widget _buildGalleryGrid(List<String> photos) {
     return GridView.builder(
@@ -761,4 +1313,20 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       ),
     );
   }
+}
+
+// ─── Lightweight data models used by badge + stat sections ───────────────────
+class _BadgeItem {
+  final IconData icon;
+  final String label;
+  final Color color;
+  const _BadgeItem(this.icon, this.label, this.color);
+}
+
+class _StatItem {
+  final String value;
+  final String label;
+  final IconData icon;
+  final Color color;
+  const _StatItem(this.value, this.label, this.icon, this.color);
 }

@@ -1,4 +1,4 @@
-﻿// lib/features/room/live/live_room_screen.dart
+// lib/features/room/live/live_room_screen.dart
 //
 // Main room screen for the cost-optimized multi-user video room architecture.
 //
@@ -15,7 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/providers/auth_providers.dart';
 import '../../../shared/providers/messaging_providers.dart';
-import '../../../services/messaging_service.dart';
+import '../../../services/chat/messaging_service.dart';
 import '../../../shared/models/message.dart';
 import 'live_room_schema.dart';
 import 'live_room_state.dart';

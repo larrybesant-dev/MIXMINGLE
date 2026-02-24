@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // OAUTH SIGN-IN BUTTONS
 // ============================================================================
 // Beautiful, reusable OAuth sign-in buttons for Google, Facebook, and Apple
@@ -7,7 +7,7 @@
 // ============================================================================
 
 import 'package:flutter/material.dart';
-import '../../services/oauth_service.dart';
+import '../../services/auth/oauth_service.dart';
 import '../../core/design_system/design_constants.dart';
 
 /// OAuth Sign-In Buttons Widget

@@ -1,8 +1,8 @@
-﻿// lib/providers/room_discovery_providers.dart
+// lib/providers/room_discovery_providers.dart
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/room_discovery_service.dart';
+import '../../services/room/room_discovery_service.dart';
 
 final roomDiscoveryServiceProvider =
     Provider<RoomDiscoveryService>((ref) => RoomDiscoveryService());

@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/services/monetization_service.dart';
+import 'package:mixmingle/services/payments/monetization_service.dart';
 
 class WithdrawalPage extends ConsumerStatefulWidget {
   const WithdrawalPage({super.key});

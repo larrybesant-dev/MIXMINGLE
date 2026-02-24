@@ -1,9 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import '../shared/models/user_presence.dart';
+import '../../shared/models/user_presence.dart';
 
 /// Service for managing user online/offline presence
 /// Phase 2 Enhanced: Error handling, retry guards, stream stability

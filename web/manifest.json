@@ -1,10 +1,10 @@
 {
     "name": "Mix & Mingle",
     "short_name": "Mix & Mingle",
-    "start_url": ".",
+    "start_url": "/",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
+    "background_color": "#0A0A18",
+    "theme_color": "#1a1a2e",
     "description": "Connect and mingle with people in real-time video rooms",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,

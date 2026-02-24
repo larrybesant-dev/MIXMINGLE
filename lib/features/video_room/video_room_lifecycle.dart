@@ -1,6 +1,6 @@
-﻿import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import '../../core/utils/app_logger.dart';
-import '../../services/agora_platform_service.dart';
+import '../../services/agora/agora_platform_service.dart';
 /// Manages video room lifecycle: init â†’ join â†’ leave â†’ cleanup
 class VideoRoomLifecycle {
   final String appId;

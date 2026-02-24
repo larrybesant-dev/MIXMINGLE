@@ -1,7 +1,7 @@
-﻿// lib/providers/reaction_providers.dart
+// lib/providers/reaction_providers.dart
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/reaction_service.dart';
+import '../../services/events/reaction_service.dart';
 import '../models/reaction_model.dart';
 
 final reactionServiceProvider = Provider<ReactionService>((ref) => ReactionService());

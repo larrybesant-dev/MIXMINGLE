@@ -1,4 +1,5 @@
 import { onCall } from "firebase-functions/v2/https";
+import { onSchedule } from "firebase-functions/v2/scheduler";
 import * as logger from "firebase-functions/logger";
 import { RtcTokenBuilder, RtcRole } from "agora-token";
 import * as admin from "firebase-admin";
@@ -128,3 +129,72 @@ function hashCode(str: string): number {
 
 // Export match functions
 export { generateUserMatches, handleLike, handlePass, refreshDailyMatches } from './matches';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// ROOM CLEANUP — runs every hour, marks stale live rooms as 'ended'
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Mark any room that has been "live" for more than 6 hours (with no update in
+ * the last 30 min) as ended.  This prevents orphan rooms from clogging the
+ * discovery feed when a host disconnects without properly closing the room.
+ */
+export const cleanupStaleRooms = onSchedule(
+  {
+    schedule: "every 60 minutes",
+    region: "us-central1",
+    timeoutSeconds: 120,
+  },
+  async () => {
+    const db = admin.firestore();
+    const now = admin.firestore.Timestamp.now();
+
+    // Rooms live > 6 hours
+    const staleCutoff = admin.firestore.Timestamp.fromMillis(
+      now.toMillis() - 6 * 60 * 60 * 1000
+    );
+    // Rooms not updated in > 30 minutes
+    const inactiveCutoff = admin.firestore.Timestamp.fromMillis(
+      now.toMillis() - 30 * 60 * 1000
+    );
+
+    const snapshot = await db
+      .collection("rooms")
+      .where("isLive", "==", true)
+      .where("createdAt", "<", staleCutoff)
+      .limit(100)
+      .get();
+
+    if (snapshot.empty) {
+      logger.info("cleanupStaleRooms: no stale rooms found");
+      return;
+    }
+
+    const batch = db.batch();
+    let count = 0;
+
+    for (const doc of snapshot.docs) {
+      const data = doc.data();
+      const updatedAt = data.updatedAt as admin.firestore.Timestamp | undefined;
+
+      // Skip recently active rooms
+      if (updatedAt && updatedAt > inactiveCutoff) continue;
+
+      batch.update(doc.ref, {
+        isLive: false,
+        status: "ended",
+        endedAt: now,
+        endReason: "auto_cleanup_stale",
+        updatedAt: now,
+      });
+      count++;
+    }
+
+    if (count > 0) {
+      await batch.commit();
+      logger.info(`cleanupStaleRooms: ended ${count} stale room(s)`);
+    } else {
+      logger.info("cleanupStaleRooms: all live rooms are still active");
+    }
+  }
+);

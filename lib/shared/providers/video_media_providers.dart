@@ -1,10 +1,10 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/agora_video_service.dart';
-import '../../services/storage_service.dart';
-import '../../services/moderation_service.dart';
+import '../../services/agora/agora_video_service.dart';
+import '../../services/storage/storage_service.dart';
+import '../../services/moderation/moderation_service.dart';
 import '../models/report.dart';
 import '../models/block.dart';
 import '../models/media_item.dart';

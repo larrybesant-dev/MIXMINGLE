@@ -1,7 +1,7 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../shared/models/typing_indicator.dart';
+import '../../shared/models/typing_indicator.dart';
 
 /// Service for managing typing indicators in chats
 /// Phase 2 Enhanced: Error handling, retry guards, stream stability

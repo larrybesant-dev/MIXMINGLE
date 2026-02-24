@@ -1,7 +1,7 @@
-﻿
+
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/match_service.dart';
+import '../../services/social/match_service.dart';
 import '../models/match.dart';
 import '../models/user_profile.dart';
 import 'auth_providers.dart';

@@ -1,0 +1,77 @@
+Analyzing MIXMINGLE...                                          
+
+   info - The referenced identifier is a wildcard - lib\app.dart:38:40 - no_wildcard_variable_uses
+   info - The import of 'package:flutter/cupertino.dart' is unnecessary because all of the used elements are also provided by the import of 'package:flutter/material.dart' - lib\app_routes.dart:2:8 - unnecessary_import
+warning - Unused import: 'package:mix_and_mingle/shared/models/user_profile.dart' - lib\app_routes.dart:60:8 - unused_import
+   info - The imported package 'web' isn't a dependency of the importing package - lib\core\multi_window_bridge.dart:2:8 - depend_on_referenced_packages
+  error - 'ChatConversationPage' isn't a function - lib\core\routing\app_routes.dart:202:22 - invocation_of_non_function
+  error - The name 'ChatConversationPage' is defined in the libraries 'package:mix_and_mingle/features/chat/screens/chat_conversation_page.dart' and 'package:mix_and_mingle/features/profile/screens/following_list_page.dart' - lib\core\routing\app_routes.dart:202:22 - ambiguous_import
+  error - The method 'FollowingListPage' isn't defined for the type 'AppRoutes' - lib\core\routing\app_routes.dart:261:20 - undefined_method
+   info - The referenced identifier is a wildcard - lib\core\routing\app_routes.dart:361:33 - no_wildcard_variable_uses
+   info - The referenced identifier is a wildcard - lib\core\routing\app_routes.dart:367:47 - no_wildcard_variable_uses
+warning - The value of the field '_avatarUrl' isn't used - lib\features\app\screens\profile_edit_page.dart:29:11 - unused_field
+warning - The value of the field '_selectedImage' isn't used - lib\features\app\screens\profile_edit_page.dart:30:10 - unused_field
+  error - Undefined name '_saveProfile' - lib\features\app\screens\profile_edit_page.dart:68:46 - undefined_identifier
+  error - The getter 'background' isn't defined for the type 'DesignColors' - lib\features\chat\screens\chat_conversation_page.dart:58:37 - undefined_getter
+  error - The getter 'accent' isn't defined for the type 'DesignColors' - lib\features\chat\screens\chat_conversation_page.dart:60:39 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\screens\chat_conversation_page.dart:81:51 - deprecated_member_use
+  error - The getter 'inputBackground' isn't defined for the type 'DesignColors' - lib\features\chat\screens\chat_conversation_page.dart:118:27 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\screens\chat_conversation_page.dart:129:47 - deprecated_member_use
+  error - The getter 'inputFill' isn't defined for the type 'DesignColors' - lib\features\chat\screens\chat_conversation_page.dart:132:43 - undefined_getter
+  error - The getter 'accent' isn't defined for the type 'DesignColors' - lib\features\chat\screens\chat_conversation_page.dart:135:64 - undefined_getter
+  error - The getter 'accent' isn't defined for the type 'DesignColors' - lib\features\chat\screens\chat_conversation_page.dart:139:64 - undefined_getter
+  error - The getter 'accent' isn't defined for the type 'DesignColors' - lib\features\chat\screens\chat_conversation_page.dart:143:64 - undefined_getter
+  error - The getter 'accent' isn't defined for the type 'DesignColors' - lib\features\chat\screens\chat_conversation_page.dart:156:35 - undefined_getter
+  error - The getter 'accent' isn't defined for the type 'DesignColors' - lib\features\chat\screens\chat_conversation_page.dart:171:49 - undefined_getter
+  error - The getter 'accent' isn't defined for the type 'DesignColors' - lib\features\chat\screens\chat_conversation_page.dart:185:40 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\chat\screens\chat_conversation_page.dart:201:51 - deprecated_member_use
+   info - The imported package 'web' isn't a dependency of the importing package - lib\features\debug\health_dashboard.dart:8:8 - depend_on_referenced_packages
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\feed\social_feed_page.dart:66:25 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\feed\social_feed_page.dart:71:25 - unnecessary_null_comparison
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\feed\social_feed_page.dart:91:25 - unnecessary_null_comparison
+warning - The '!' will have no effect because the receiver can't be null - lib\features\feed\social_feed_page.dart:91:66 - unnecessary_non_null_assertion
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\feed\social_feed_page.dart:435:43 - unnecessary_null_comparison
+warning - The declaration '_buildFAB' isn't referenced - lib\features\home\screens\home_page_electric.dart:443:10 - unused_element
+warning - The operand can't be 'null', so the condition is always 'false' - lib\features\moderation\widgets\blocked_user_tile.dart:24:27 - unnecessary_null_comparison
+  error - The named parameter 'child' is required, but there's no corresponding argument - lib\features\payments\screens\membership_upgrade_screen.dart:62:11 - missing_required_argument
+  error - The named parameter 'size' isn't defined - lib\features\payments\screens\membership_upgrade_screen.dart:157:7 - undefined_named_parameter
+  error - The named parameter 'weight' isn't defined - lib\features\payments\screens\membership_upgrade_screen.dart:158:7 - undefined_named_parameter
+  error - The argument type 'TierBenefit' can't be assigned to the parameter type 'String'.  - lib\features\payments\screens\membership_upgrade_screen.dart:327:27 - argument_type_not_assignable
+  error - The named parameter 'size' isn't defined - lib\features\payments\screens\membership_upgrade_screen.dart:359:11 - undefined_named_parameter
+  error - The named parameter 'weight' isn't defined - lib\features\payments\screens\membership_upgrade_screen.dart:360:11 - undefined_named_parameter
+  error - The argument type 'TierBenefit' can't be assigned to the parameter type 'String'.  - lib\features\payments\screens\membership_upgrade_screen.dart:379:23 - argument_type_not_assignable
+  error - The named parameter 'label' is required, but there's no corresponding argument - lib\features\payments\screens\membership_upgrade_screen.dart:398:12 - missing_required_argument
+  error - The named parameter 'text' isn't defined - lib\features\payments\screens\membership_upgrade_screen.dart:399:7 - undefined_named_parameter
+  error - The argument type 'Future<void> Function()?' can't be assigned to the parameter type 'VoidCallback'.  - lib\features\payments\screens\membership_upgrade_screen.dart:402:18 - argument_type_not_assignable
+  error - The getter 'error' isn't defined for the type 'PurchaseResult' - lib\features\payments\screens\membership_upgrade_screen.dart:484:34 - undefined_getter
+  error - The getter 'background' isn't defined for the type 'DesignColors' - lib\features\profile\screens\following_list_page.dart:52:37 - undefined_getter
+  error - The getter 'inputBackground' isn't defined for the type 'DesignColors' - lib\features\profile\screens\following_list_page.dart:116:33 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\screens\following_list_page.dart:127:53 - deprecated_member_use
+  error - The getter 'inputFill' isn't defined for the type 'DesignColors' - lib\features\profile\screens\following_list_page.dart:130:49 - undefined_getter
+  error - The getter 'accent' isn't defined for the type 'DesignColors' - lib\features\profile\screens\following_list_page.dart:134:49 - undefined_getter
+  error - The getter 'accent' isn't defined for the type 'DesignColors' - lib\features\profile\screens\following_list_page.dart:141:49 - undefined_getter
+  error - The getter 'accent' isn't defined for the type 'DesignColors' - lib\features\profile\screens\following_list_page.dart:148:49 - undefined_getter
+  error - The getter 'accent' isn't defined for the type 'DesignColors' - lib\features\profile\screens\following_list_page.dart:165:41 - undefined_getter
+  error - The getter 'accent' isn't defined for the type 'DesignColors' - lib\features\profile\screens\following_list_page.dart:183:49 - undefined_getter
+  error - The getter 'accent' isn't defined for the type 'DesignColors' - lib\features\profile\screens\following_list_page.dart:198:40 - undefined_getter
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\profile\screens\following_list_page.dart:218:36 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\features\profile\screens\suggested_users_page.dart:210:48 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\features\profile\screens\suggested_users_page.dart:217:48 - use_build_context_synchronously
+  error - The getter 'grey' isn't defined for the type 'DesignColors' - lib\features\profile\screens\suggested_users_page.dart:225:61 - undefined_getter
+   info - 'dart:html' is deprecated and shouldn't be used. Use package:web and dart:js_interop instead - lib\features\room\screens\voice_room_page.dart:16:1 - deprecated_member_use
+  error - The getter 'notifier' isn't defined for the type 'Provider<RoomsState>' - lib\features\rooms\screens\rooms_list_page.dart:106:34 - undefined_getter
+  error - The getter 'notifier' isn't defined for the type 'Provider<RoomsState>' - lib\features\rooms\screens\rooms_list_page.dart:381:59 - undefined_getter
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\rooms\screens\rooms_list_page.dart:390:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\features\rooms\screens\rooms_list_page.dart:391:37 - use_build_context_synchronously
+warning - Unused import: 'dart:typed_data' - lib\features\settings\account_settings_page.dart:8:8 - unused_import
+   info - The variable name 'String' isn't a lowerCamelCase identifier - lib\features\settings\account_settings_page.dart:383:13 - non_constant_identifier_names
+  error - Local variable 'String' can't be referenced before it is declared - lib\features\settings\account_settings_page.dart:383:22 - referenced_before_declaration
+   info - The constant name 'AGORA_WEB_DISABLED' isn't a lowerCamelCase identifier - lib\services\agora_platform_service.dart:20:12 - constant_identifier_names
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - lib\services\agora_web_bridge_v2.dart:4:1 - deprecated_member_use
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - lib\services\agora_web_bridge_v2_simple.dart:3:1 - deprecated_member_use
+   info - 'dart:js' is deprecated and shouldn't be used. Use dart:js_interop instead - lib\services\agora_web_bridge_v3.dart:4:1 - deprecated_member_use
+warning - The operand can't be 'null', so the condition is always 'true' - lib\services\app_health_service.dart:95:25 - unnecessary_null_comparison
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\shared\colors\design_colors.dart:9:66 - deprecated_member_use
+   info - The imported package 'web' isn't a dependency of the importing package - lib\utils\media_permissions_helper.dart:2:8 - depend_on_referenced_packages
+   info - The imported package 'web' isn't a dependency of the importing package - lib\utils\multi_window_room_manager.dart:2:8 - depend_on_referenced_packages
+

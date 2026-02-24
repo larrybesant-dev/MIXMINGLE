@@ -1,7 +1,7 @@
-﻿
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/camera_state.dart';
-import '../../services/camera_service.dart';
+import '../../services/camera/camera_service.dart';
 
 final cameraServiceProvider = Provider((ref) => CameraService());
 

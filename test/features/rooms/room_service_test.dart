@@ -1,8 +1,8 @@
 import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mix_and_mingle/shared/models/room.dart';
-import 'package:mix_and_mingle/features/rooms/services/category_service.dart';
-import 'package:mix_and_mingle/features/rooms/services/room_service.dart';
+import 'package:mix_and_mingle/features/room/services/category_service.dart';
+import 'package:mix_and_mingle/features/room/services/room_service.dart';
 
 void main() {
   late FakeFirebaseFirestore fakeFirestore;

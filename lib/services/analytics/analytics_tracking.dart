@@ -1,7 +1,7 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:async';
 import 'analytics_service.dart';
-import '../shared/providers/providers.dart';
+import '../../shared/providers/providers.dart';
 
 /// Extension on AsyncValue to add automatic analytics tracking
 /// Usage:

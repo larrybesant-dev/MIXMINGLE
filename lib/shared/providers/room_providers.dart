@@ -1,14 +1,14 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../services/firestore_service.dart';
-import '../../services/room_discovery_service.dart';
-import '../../services/room_manager_service.dart';
-import '../../services/room_service.dart';
+import '../../services/infra/firestore_service.dart';
+import '../../services/room/room_discovery_service.dart';
+import '../../services/room/room_manager_service.dart';
+import '../../services/room/room_service.dart';
 import '../models/room.dart';
 import '../models/user.dart';
 import '../models/room_role.dart';

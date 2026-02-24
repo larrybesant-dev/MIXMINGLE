@@ -1,0 +1,77 @@
+  plugins {
+    id "com.android.application"
+    id "com.google.gms.google-services"
+    id "kotlin-android"
+    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+// Defensive fallback: Define version params if not provided by Flutter plugin
+if (!project.hasProperty('flutterVersionCode')) {
+    ext.flutterVersionCode = 1
+}
+if (!project.hasProperty('flutterVersionName')) {
+    ext.flutterVersionName = "1.0.0"
+}
+
+android {
+    namespace = "com.mixandmingle.mixandmingle"
+    compileSdkVersion 34
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = JavaVersion.VERSION_1_8
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    defaultConfig {
+        applicationId "com.mixandmingle.mixandmingle"
+        minSdkVersion 24
+        targetSdkVersion 34
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+        multiDexEnabled true
+    }
+
+    buildTypes {
+        release {
+            // TODO: Add your own signing config for the release build.
+            // Signing with the debug keys for now, so `flutter run --release` works.
+            signingConfig signingConfigs.debug
+        }
+    }
+}
+
+flutter {
+    source = "../.."
+}
+
+dependencies {
+    // Firebase
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation 'com.google.firebase:firebase-auth-ktx'
+    implementation 'com.google.firebase:firebase-firestore-ktx'
+    implementation 'com.google.firebase:firebase-storage-ktx'
+    implementation 'com.google.firebase:firebase-functions-ktx'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx'
+
+    // Agora
+    implementation 'io.agora.rtc:full-sdk:4.3.0'
+
+    // AndroidX
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+
+    // Play Services
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+
+    // Stripe
+    implementation 'com.stripe:stripe-android:20.40.0'
+}

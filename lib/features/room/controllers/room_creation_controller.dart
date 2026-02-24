@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/room.dart';
 import '../services/category_service.dart';
 import '../services/room_service.dart';

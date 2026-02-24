@@ -4,6 +4,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 /// The active mode displayed at top of profile.
 enum ProfileMode { social, dating, creator, eventHost }
 
+/// Source platform for a user's favourite track preview.
+enum TrackSource { spotify, appleMusic, soundcloud, internal, other }
+
 class UserProfile {
   final String id;
   final String email;
@@ -79,6 +82,62 @@ class UserProfile {
   final bool restrictRoomInvites;
   final bool twoFactorEnabled;
 
+  // ── Onboarding ──────────────────────────────────────────────
+  /// Set to true once the user has dismissed the first-run welcome overlay.
+  /// Used to show the welcome tour exactly once per new account.
+  final bool onboardingComplete;
+
+  // ── Sprint 1: Vibe & Genres ──────────────────────────────────
+  /// The user's chosen energy vibe (e.g. "Chill", "Hype", "Deep Talk").
+  /// Displayed on the NeonProfileCard and used in search/room filters.
+  final String? vibeTag;
+
+  /// Favourite music genres (e.g. "Afrobeat", "Lo-Fi", "House").
+  /// Distinct from the legacy free-form [musicTastes] field.
+  final List<String>? musicGenres;
+
+  /// ISO 3166-1 alpha-2 country code (e.g. "GB", "NG").
+  /// Converted to a flag emoji on the NeonProfileCard.
+  final String? countryCode;
+
+  // ── Sprint 4 Stubs: Monetisation Rails (read-only until enabled) ─
+  /// VIP tier: null | 'bronze' | 'silver' | 'gold'
+  final String? vipTier;
+
+  /// True when the user has any active VIP entitlement.
+  final bool isVip;
+
+  /// True when the user has an active profile boost.
+  final bool isBoosted;
+
+  /// When the active boost expires. Null when not boosted.
+  final DateTime? boostExpiresAt;
+
+  // ── Intelligence Layer: Self-Improving Systems ───────────────
+  /// Vibe join history: maps vibe name → cumulative join count.
+  /// Incremented by VibeIntelligenceService on every room join.
+  final Map<String, int> vibeHistory;
+
+  /// Behavior-computed tags written by a Cloud Function nightly.
+  /// Examples: "Night Owl", "Super Host", "Party Animal"
+  final List<String> computedTags;
+
+  // ── Profile Music (MySpace-style) ────────────────────────────
+  /// Platform-specific track ID (Spotify track ID, etc.).
+  final String? favoriteTrackId;
+
+  /// Where the track comes from.
+  final TrackSource? favoriteTrackSource;
+
+  /// Direct URL to a short audio preview (10–30 s).
+  final String? favoriteTrackPreviewUrl;
+
+  /// Display title of the track.
+  final String? favoriteTrackTitle;
+
+  /// Display artist name.
+  final String? favoriteTrackArtist;
+
   UserProfile({
     required this.id,
     required this.email,
@@ -142,6 +201,25 @@ class UserProfile {
     this.hideFollowers = false,
     this.restrictRoomInvites = false,
     this.twoFactorEnabled = false,
+    this.onboardingComplete = false,
+    // Sprint 1
+    this.vibeTag,
+    this.musicGenres,
+    this.countryCode,
+    // Sprint 4 stubs
+    this.vipTier,
+    this.isVip = false,
+    this.isBoosted = false,
+    this.boostExpiresAt,
+    // Intelligence layer
+    this.vibeHistory = const {},
+    this.computedTags = const [],
+    // Profile music
+    this.favoriteTrackId,
+    this.favoriteTrackSource,
+    this.favoriteTrackPreviewUrl,
+    this.favoriteTrackTitle,
+    this.favoriteTrackArtist,
   });
 
   // Computed property for age
@@ -163,6 +241,33 @@ class UserProfile {
   String? get profileImageUrl => photoUrl;
   String? get username => displayName ?? nickname;
   bool get isOnline => false; // Default to false, override with presence data
+
+  // ── Intelligence: computed getters ──────────────────────────
+
+  /// The vibe the user has joined most. Falls back to [vibeTag] if no history.
+  String? get topVibe {
+    if (vibeHistory.isEmpty) return vibeTag;
+    return vibeHistory.entries
+        .reduce((a, b) => a.value >= b.value ? a : b)
+        .key;
+  }
+
+  /// How many times the user has joined their top vibe.
+  int get topVibeCount => topVibe != null ? (vibeHistory[topVibe] ?? 0) : 0;
+
+  /// Energy score (0–100) computed from activity metrics.
+  int get energyScore {
+    final raw = (roomsHostedCount * 3) + (eventsAttended * 2) + totalRoomsJoined;
+    return raw.clamp(0, 100);
+  }
+
+  /// The user's second-most-joined vibe (useful for suggestions).
+  String? get secondVibe {
+    if (vibeHistory.length < 2) return null;
+    final sorted = vibeHistory.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return sorted[1].key;
+  }
 
   factory UserProfile.fromMap(Map<String, dynamic> map) {
     ProfileMode parseMode(String? v) {
@@ -241,7 +346,41 @@ class UserProfile {
       hideFollowers: map['hideFollowers'] as bool? ?? false,
       restrictRoomInvites: map['restrictRoomInvites'] as bool? ?? false,
       twoFactorEnabled: map['twoFactorEnabled'] as bool? ?? false,
+      onboardingComplete: map['onboardingComplete'] as bool? ?? false,
+      // Sprint 1
+      vibeTag: map['vibeTag'] as String?,
+      musicGenres: (map['musicGenres'] as List<dynamic>?)?.cast<String>(),
+      countryCode: map['countryCode'] as String?,
+      // Sprint 4 stubs
+      vipTier: map['vipTier'] as String?,
+      isVip: map['isVip'] as bool? ?? false,
+      isBoosted: map['isBoosted'] as bool? ?? false,
+      boostExpiresAt: map['boostExpiresAt'] is Timestamp
+          ? (map['boostExpiresAt'] as Timestamp).toDate()
+          : null,
+      // Intelligence layer
+      vibeHistory: (map['vibeHistory'] as Map<String, dynamic>?)
+              ?.map((k, v) => MapEntry(k, (v as num).toInt())) ??
+          const {},
+      computedTags: (map['computedTags'] as List<dynamic>?)?.cast<String>() ?? const [],
+      // Profile music
+      favoriteTrackId: map['favoriteTrackId'] as String?,
+      favoriteTrackSource: _parseTrackSource(map['favoriteTrackSource'] as String?),
+      favoriteTrackPreviewUrl: map['favoriteTrackPreviewUrl'] as String?,
+      favoriteTrackTitle: map['favoriteTrackTitle'] as String?,
+      favoriteTrackArtist: map['favoriteTrackArtist'] as String?,
     );
+  }
+
+  static TrackSource? _parseTrackSource(String? raw) {
+    switch (raw) {
+      case 'spotify':    return TrackSource.spotify;
+      case 'appleMusic': return TrackSource.appleMusic;
+      case 'soundcloud': return TrackSource.soundcloud;
+      case 'internal':   return TrackSource.internal;
+      case 'other':      return TrackSource.other;
+      default:           return null;
+    }
   }
 
   // ── Public profile: safe to expose to any authenticated user ──
@@ -286,6 +425,23 @@ class UserProfile {
       'is18PlusVerified': is18PlusVerified,
       'createdAt': Timestamp.fromDate(createdAt),
       'updatedAt': Timestamp.fromDate(updatedAt),
+      // Sprint 1
+      'vibeTag': vibeTag,
+      'musicGenres': musicGenres,
+      'countryCode': countryCode,
+      // Sprint 4 stubs
+      'vipTier': vipTier,
+      'isVip': isVip,
+      'isBoosted': isBoosted,
+      'boostExpiresAt': boostExpiresAt != null ? Timestamp.fromDate(boostExpiresAt!) : null,      // Intelligence layer
+      'vibeHistory': vibeHistory,
+      'computedTags': computedTags,
+      // Profile music (public – shared on profile view)
+      'favoriteTrackId': favoriteTrackId,
+      'favoriteTrackSource': favoriteTrackSource?.name,
+      'favoriteTrackPreviewUrl': favoriteTrackPreviewUrl,
+      'favoriteTrackTitle': favoriteTrackTitle,
+      'favoriteTrackArtist': favoriteTrackArtist,
     };
   }
 
@@ -381,6 +537,25 @@ class UserProfile {
       'hideFollowers': hideFollowers,
       'restrictRoomInvites': restrictRoomInvites,
       'twoFactorEnabled': twoFactorEnabled,
+      'onboardingComplete': onboardingComplete,
+      // Sprint 1
+      'vibeTag': vibeTag,
+      'musicGenres': musicGenres,
+      'countryCode': countryCode,
+      // Sprint 4 stubs
+      'vipTier': vipTier,
+      'isVip': isVip,
+      'isBoosted': isBoosted,
+      'boostExpiresAt': boostExpiresAt != null ? Timestamp.fromDate(boostExpiresAt!) : null,
+      // Intelligence layer
+      'vibeHistory': vibeHistory,
+      'computedTags': computedTags,
+      // Profile music
+      'favoriteTrackId': favoriteTrackId,
+      'favoriteTrackSource': favoriteTrackSource?.name,
+      'favoriteTrackPreviewUrl': favoriteTrackPreviewUrl,
+      'favoriteTrackTitle': favoriteTrackTitle,
+      'favoriteTrackArtist': favoriteTrackArtist,
     };
   }
 
@@ -424,6 +599,25 @@ class UserProfile {
     bool? hideFollowers,
     bool? restrictRoomInvites,
     bool? twoFactorEnabled,
+    bool? onboardingComplete,
+    // Sprint 1
+    String? vibeTag,
+    List<String>? musicGenres,
+    String? countryCode,
+    // Sprint 4 stubs
+    String? vipTier,
+    bool? isVip,
+    bool? isBoosted,
+    DateTime? boostExpiresAt,
+    // Intelligence layer
+    Map<String, int>? vibeHistory,
+    List<String>? computedTags,
+    // Profile music
+    String? favoriteTrackId,
+    TrackSource? favoriteTrackSource,
+    String? favoriteTrackPreviewUrl,
+    String? favoriteTrackTitle,
+    String? favoriteTrackArtist,
   }) {
     return UserProfile(
       id: id,
@@ -468,6 +662,25 @@ class UserProfile {
       hideFollowers: hideFollowers ?? this.hideFollowers,
       restrictRoomInvites: restrictRoomInvites ?? this.restrictRoomInvites,
       twoFactorEnabled: twoFactorEnabled ?? this.twoFactorEnabled,
+      onboardingComplete: onboardingComplete ?? this.onboardingComplete,
+      // Sprint 1
+      vibeTag: vibeTag ?? this.vibeTag,
+      musicGenres: musicGenres ?? this.musicGenres,
+      countryCode: countryCode ?? this.countryCode,
+      // Sprint 4 stubs
+      vipTier: vipTier ?? this.vipTier,
+      isVip: isVip ?? this.isVip,
+      isBoosted: isBoosted ?? this.isBoosted,
+      boostExpiresAt: boostExpiresAt ?? this.boostExpiresAt,
+      // Intelligence layer
+      vibeHistory: vibeHistory ?? this.vibeHistory,
+      computedTags: computedTags ?? this.computedTags,
+      // Profile music
+      favoriteTrackId: favoriteTrackId ?? this.favoriteTrackId,
+      favoriteTrackSource: favoriteTrackSource ?? this.favoriteTrackSource,
+      favoriteTrackPreviewUrl: favoriteTrackPreviewUrl ?? this.favoriteTrackPreviewUrl,
+      favoriteTrackTitle: favoriteTrackTitle ?? this.favoriteTrackTitle,
+      favoriteTrackArtist: favoriteTrackArtist ?? this.favoriteTrackArtist,
     );
   }
 }

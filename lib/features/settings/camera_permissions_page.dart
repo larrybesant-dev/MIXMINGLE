@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:mixmingle/services/camera_permission_service.dart';
+import 'package:mixmingle/services/camera/camera_permission_service.dart';
 import 'package:mixmingle/shared/models/camera_permission.dart';
 import 'package:mixmingle/shared/widgets/camera_permission_list.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';

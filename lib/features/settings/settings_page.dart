@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/providers/providers.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
+import '../../core/services/music_settings_service.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -39,6 +40,9 @@ class SettingsPage extends ConsumerWidget {
               icon: Icons.notifications,
               onTap: () => _showNotificationDialog(context),
             ),
+            const Divider(color: Colors.white24),
+            _buildSectionHeader('Sound & Music'),
+            const _SoundSettingsSection(),
             const Divider(color: Colors.white24),
             _buildSectionHeader('Developer'),
             _buildSettingTile(
@@ -208,6 +212,149 @@ class SettingsPage extends ConsumerWidget {
             child: const Text('Logout', style: TextStyle(color: Colors.red)),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Sound & Music toggle section (stateful sub-widget)
+// ─────────────────────────────────────────────────────────────────
+class _SoundSettingsSection extends ConsumerStatefulWidget {
+  const _SoundSettingsSection();
+  @override
+  ConsumerState<_SoundSettingsSection> createState() =>
+      _SoundSettingsSectionState();
+}
+
+class _SoundSettingsSectionState extends ConsumerState<_SoundSettingsSection> {
+  bool _landingMusic  = true;
+  bool _profileMusic  = true;
+  bool _microSounds   = true;
+  bool _globalMute    = false;
+  bool _loaded        = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final svcAsync = ref.read(musicSettingsProvider);
+    svcAsync.whenData((svc) {
+      if (mounted) {
+        setState(() {
+          _landingMusic = svc.landingMusicEnabled;
+          _profileMusic = svc.profileMusicEnabled;
+          _microSounds  = svc.microSoundsEnabled;
+          _globalMute   = svc.globalMute;
+          _loaded       = true;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final svcAsync = ref.watch(musicSettingsProvider);
+    return svcAsync.when(
+      loading: () => const SizedBox(
+        height: 60,
+        child: Center(
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (svc) {
+        if (!_loaded) {
+          _landingMusic = svc.landingMusicEnabled;
+          _profileMusic = svc.profileMusicEnabled;
+          _microSounds  = svc.microSoundsEnabled;
+          _globalMute   = svc.globalMute;
+          _loaded       = true;
+        }
+        return Column(children: [
+          _toggle(
+            icon: Icons.volume_off,
+            title: 'Mute all sounds',
+            subtitle: 'Overrides all audio settings',
+            value: _globalMute,
+            onChanged: (v) async {
+              setState(() => _globalMute = v);
+              await svc.setGlobalMute(v);
+            },
+          ),
+          _toggle(
+            icon: Icons.music_note,
+            title: 'Landing page music',
+            subtitle: 'Intro sting + ambient loop on start screen',
+            value: _landingMusic && !_globalMute,
+            enabled: !_globalMute,
+            onChanged: (v) async {
+              setState(() => _landingMusic = v);
+              await svc.setLandingMusicEnabled(v);
+            },
+          ),
+          _toggle(
+            icon: Icons.person,
+            title: 'Profile music',
+            subtitle: 'Play track preview when viewing profiles',
+            value: _profileMusic && !_globalMute,
+            enabled: !_globalMute,
+            onChanged: (v) async {
+              setState(() => _profileMusic = v);
+              await svc.setProfileMusicEnabled(v);
+            },
+          ),
+          _toggle(
+            icon: Icons.notifications_active,
+            title: 'Micro-sounds',
+            subtitle: 'Subtle sounds for joins, reactions, energy spikes',
+            value: _microSounds && !_globalMute,
+            enabled: !_globalMute,
+            onChanged: (v) async {
+              setState(() => _microSounds = v);
+              await svc.setMicroSoundsEnabled(v);
+            },
+          ),
+        ]);
+      },
+    );
+  }
+
+  Widget _toggle({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required bool value,
+    bool enabled = true,
+    required Future<void> Function(bool) onChanged,
+  }) {
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.45,
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        decoration: BoxDecoration(
+          color: const Color(0xFF2A2A3D),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: const Color(0xFFFF4C4C).withValues(alpha: 0.2),
+          ),
+        ),
+        child: SwitchListTile(
+          secondary: Icon(icon, color: Colors.white70),
+          title: Text(title,
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w500)),
+          subtitle: Text(subtitle,
+              style: const TextStyle(color: Colors.white60, fontSize: 12)),
+          value: value,
+          onChanged: enabled ? onChanged : null,
+          activeThumbColor: const Color(0xFFFF7A3C),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12)),
+        ),
       ),
     );
   }

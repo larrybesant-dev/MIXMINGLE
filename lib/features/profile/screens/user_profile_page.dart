@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/core/responsive/responsive_utils.dart';
 import 'package:mixmingle/core/animations/app_animations.dart';
@@ -8,7 +8,7 @@ import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/shared/widgets/skeleton_loaders.dart';
 import 'package:mixmingle/shared/widgets/follow_button.dart';
-import 'package:mixmingle/services/reporting_service.dart' as reporting;
+import 'package:mixmingle/services/events/reporting_service.dart' as reporting;
 import 'package:mixmingle/features/reporting/report_dialog.dart';
 
 class UserProfilePage extends ConsumerWidget {

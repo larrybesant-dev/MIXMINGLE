@@ -1,9 +1,9 @@
-﻿import 'dart:io';
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image/image.dart' as img;
-import '../core/utils/performance_logger.dart';
-import '../core/utils/app_logger.dart';
+import '../../core/utils/performance_logger.dart';
+import '../../core/utils/app_logger.dart';
 
 class ImageOptimizationService {
   final FirebaseStorage _storage = FirebaseStorage.instance;

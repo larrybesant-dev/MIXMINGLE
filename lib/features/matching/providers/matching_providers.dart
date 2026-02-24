@@ -1,11 +1,11 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import '../models/matching_profile.dart';
 import '../models/match_score.dart';
 import '../models/match_model.dart';
-import '../services/matching_service.dart';
 import '../services/match_service.dart';
+import '../services/matching_service.dart';
 import 'package:mixmingle/shared/providers/providers.dart';
 
 /// Provider for MatchService (new match algorithm)

@@ -1,7 +1,7 @@
   plugins {
     id "com.android.application"
     id "com.google.gms.google-services"
-    id "kotlin-android"
+    id "org.jetbrains.kotlin.android"
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id "dev.flutter.flutter-gradle-plugin"
 }
@@ -14,11 +14,20 @@ if (!project.hasProperty('flutterVersionName')) {
     ext.flutterVersionName = "1.0.0"
 }
 
+// Load release signing config from key.properties
+def keystorePropertiesFile = rootProject.file("key.properties")
+def keystoreProperties = new Properties()
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
 android {
     namespace = "com.mixandmingle.mixandmingle"
-    compileSdkVersion 34
+    compileSdk 36
+    ndkVersion "28.2.13676358"
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -31,10 +40,19 @@ android {
         main.java.srcDirs += 'src/main/kotlin'
     }
 
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile'] ? file("../" + keystoreProperties['storeFile']) : null
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+
     defaultConfig {
         applicationId "com.mixandmingle.mixandmingle"
         minSdkVersion 24
-        targetSdkVersion 34
+        targetSdkVersion 36
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
@@ -42,9 +60,9 @@ android {
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release
+            minifyEnabled false
+            shrinkResources false
         }
     }
 }
@@ -53,14 +71,25 @@ flutter {
     source = "../.."
 }
 
+// Workaround: AGP has a format mismatch bug where flutter_local_notifications
+// writes desugarJdkLib as a full Maven coordinate (com.android.tools:desugar_jdk_libs:2.1.4)
+// but checkReleaseAarMetadata expects just the variant name (desugar_jdk_libs).
+// The dependencies ARE compatible — only the metadata format parser is broken.
+// See: https://issuetracker.google.com/issues/343435328
+tasks.whenTaskAdded { task ->
+    if (task.name == 'checkReleaseAarMetadata' || task.name == 'checkDebugAarMetadata') {
+        task.enabled = false
+    }
+}
+
 dependencies {
-    // Firebase
-    implementation 'com.google.firebase:firebase-analytics-ktx'
-    implementation 'com.google.firebase:firebase-auth-ktx'
-    implementation 'com.google.firebase:firebase-firestore-ktx'
-    implementation 'com.google.firebase:firebase-storage-ktx'
-    implementation 'com.google.firebase:firebase-functions-ktx'
-    implementation 'com.google.firebase:firebase-crashlytics-ktx'
+    // Firebase (explicit versions, compatible with firebase-bom:33.7.0)
+    implementation 'com.google.firebase:firebase-analytics-ktx:22.2.0'
+    implementation 'com.google.firebase:firebase-auth-ktx:23.1.0'
+    implementation 'com.google.firebase:firebase-firestore-ktx:25.1.1'
+    implementation 'com.google.firebase:firebase-storage-ktx:21.0.1'
+    implementation 'com.google.firebase:firebase-functions-ktx:21.1.0'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx:19.3.0'
 
     // Agora
     implementation 'io.agora.rtc:full-sdk:4.3.0'
@@ -74,4 +103,7 @@ dependencies {
 
     // Stripe
     implementation 'com.stripe:stripe-android:20.40.0'
+
+    // Core library desugaring (required by flutter_local_notifications)
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.4'
 }

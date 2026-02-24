@@ -1,0 +1,49 @@
+> Task :gradle:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle:pluginDescriptors
+> Task :gradle:processResources
+
+> Task :gradle:compileKotlin
+w: file:///C:/Users/LARRY/flutter/packages/flutter_tools/gradle/src/main/kotlin/FlutterPlugin.kt:11:37 'ApkVariant' is deprecated. Deprecated in Java
+w: file:///C:/Users/LARRY/flutter/packages/flutter_tools/gradle/src/main/kotlin/FlutterPlugin.kt:614:69 'ApkVariant' is deprecated. Deprecated in Java
+w: file:///C:/Users/LARRY/flutter/packages/flutter_tools/gradle/src/main/kotlin/plugins/PluginHandler.kt:201:68 Unchecked cast: NamedDomainObjectContainer<out BuildType> to NamedDomainObjectContainer<BuildType>
+w: file:///C:/Users/LARRY/flutter/packages/flutter_tools/gradle/src/main/kotlin/plugins/PluginHandler.kt:202:73 Unchecked cast: NamedDomainObjectContainer<out BuildType> to NamedDomainObjectContainer<BuildType>
+
+> Task :gradle:compileJava NO-SOURCE
+> Task :gradle:compileGroovy NO-SOURCE
+> Task :gradle:classes
+> Task :gradle:jar
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:generateReleaseResValues UP-TO-DATE
+
+> Task :app:compileFlutterBuildRelease FAILED
+C:\Users\LARRY\MIXMINGLE\.dart_tool\package_config.json does not exist.
+Did you run this command from the same directory as your pubspec.yaml file?
+C:\Users\LARRY\MIXMINGLE\.dart_tool\package_config.json does not exist.
+Did you run this command from the same directory as your pubspec.yaml file?
+Target gen_dart_plugin_registrant failed: Error: 
+Target dart_build failed: Error: 
+
+
+[Incubating] Problems report is available at: file:///C:/Users/LARRY/MIXMINGLE/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:compileFlutterBuildRelease'.
+> Process 'command 'C:\Users\LARRY\flutter\bin\flutter.bat'' finished with non-zero exit value 1
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.13/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 9s
+6 actionable tasks: 5 executed, 1 up-to-date

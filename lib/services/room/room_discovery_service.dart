@@ -1,6 +1,6 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../shared/models/moderation.dart';
+import '../../shared/models/moderation.dart';
 
 /// Service for room categories and discovery
 class RoomDiscoveryService {

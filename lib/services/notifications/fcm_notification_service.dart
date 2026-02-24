@@ -1,4 +1,4 @@
-﻿/// FCM Notifications Service - Friend Presence Alerts
+/// FCM Notifications Service - Friend Presence Alerts
 ///
 /// Monitors friend presence changes and sends push notifications
 /// Reference: DESIGN_BIBLE.md Section G (Backend Integration)
@@ -7,9 +7,9 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'firestore_service.dart';
-import '../core/utils/app_logger.dart';
-import '../app/app_routes.dart';
+import '../infra/firestore_service.dart';
+import '../../core/utils/app_logger.dart';
+import '../../app/app_routes.dart';
 
 /// FCM Notification service for friend presence alerts
 class FcmNotificationService {

@@ -1,8 +1,8 @@
-﻿// lib/providers/ai_providers.dart
+// lib/providers/ai_providers.dart
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/ai_summary_service.dart';
-import '../../services/ai_moderation_service.dart';
+import '../../services/moderation/ai_summary_service.dart';
+import '../../services/moderation/ai_moderation_service.dart';
 import '../models/ai_summary_model.dart';
 
 final aiSummaryServiceProvider = Provider<AISummaryService>((ref) => AISummaryService());

@@ -6,7 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:mix_and_mingle/firebase_options.dart';
+import 'package:mix_and_mingle/core/config/firebase_options.dart';
 
 void main() {
   const authEmulatorHost = '127.0.0.1';
@@ -52,7 +52,7 @@ void main() {
       // ignore: avoid_print
       print(
           '[storage-test] signed in: uid=${FirebaseAuth.instance.currentUser?.uid}');
-      
+
       firebaseInitialized = true;
     } catch (e) {
       // ignore: avoid_print

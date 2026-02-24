@@ -1,10 +1,10 @@
-﻿// Agora Web bridge implementation
+// Agora Web bridge implementation
 // Calls the JavaScript bridge defined in web/index.html
 // ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:js' as js;
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
-import '../core/utils/app_logger.dart';
+import '../../core/utils/app_logger.dart';
 
 class AgoraWebBridgeV2 {
   static bool get isAvailable {

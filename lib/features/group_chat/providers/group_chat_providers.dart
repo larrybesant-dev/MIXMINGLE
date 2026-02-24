@@ -1,6 +1,6 @@
-﻿import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/services/agora_video_service.dart';
+import 'package:mixmingle/services/agora/agora_video_service.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
 import '../models/group_chat_message.dart';
 import '../models/group_chat_participant.dart';

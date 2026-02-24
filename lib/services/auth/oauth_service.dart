@@ -11,7 +11,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:google_sign_in/google_sign_in.dart';
 // import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 // import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'error_tracking_service.dart';
+import '../infra/error_tracking_service.dart';
 
 /// OAuth provider types
 enum OAuthProvider {

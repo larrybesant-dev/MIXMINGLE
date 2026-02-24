@@ -1,4 +1,4 @@
-import '../shared/models/remote_user.dart';
+import '../../shared/models/remote_user.dart';
 import 'dart:async';
 
 abstract class IVideoEngine {

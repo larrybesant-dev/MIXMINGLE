@@ -1,7 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
-import 'package:mixmingle/services/room_discovery_service.dart';
+import 'package:mixmingle/services/room/room_discovery_service.dart';
 import 'package:mixmingle/shared/models/moderation.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/glow_text.dart';

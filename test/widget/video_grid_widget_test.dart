@@ -11,7 +11,7 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mixmingle/design/design_colors.dart';
+import 'package:mixmingle/core/design_system/design_colors.dart';
 import '../test_helpers.dart';
 
 // Mock VideoGridWidget for testing

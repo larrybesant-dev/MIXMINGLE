@@ -1,14 +1,5 @@
-buildscript {
-    ext.kotlin_version = '1.9.0'
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:8.3.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-    }
-}
+// Plugin and Kotlin versions are managed in settings.gradle (new plugin DSL).
+// Removing buildscript {} to avoid AGP version conflict with settings.gradle.
 
 allprojects {
     repositories {

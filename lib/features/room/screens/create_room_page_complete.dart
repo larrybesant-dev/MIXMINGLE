@@ -6,7 +6,6 @@ import '../../../shared/models/room.dart';
 import '../../../shared/club_background.dart';
 import '../../../shared/glow_text.dart';
 import '../../../shared/neon_button.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb_auth_room;
 import '../room_access_wrapper.dart';
 
 /// Complete Create Room Page
@@ -43,8 +42,7 @@ class _CreateRoomPageCompleteState extends ConsumerState<CreateRoomPageComplete>
     setState(() => _isCreating = true);
 
     try {
-      final currentUserAsync = ref.read(currentUserProvider);
-      final currentUser = currentUserAsync.value;
+      final currentUser = await ref.read(currentUserProvider.future);
       if (currentUser == null) throw Exception('User not authenticated');
 
       final service = ref.read(roomServiceProvider);
@@ -64,7 +62,7 @@ class _CreateRoomPageCompleteState extends ConsumerState<CreateRoomPageComplete>
           MaterialPageRoute(
             builder: (context) => RoomAccessWrapper(
             room: room,
-            userId: fb_auth_room.FirebaseAuth.instance.currentUser?.uid ?? '',
+            userId: currentUser.id,
           ),
           ),
         );

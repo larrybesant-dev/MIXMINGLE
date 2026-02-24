@@ -1,0 +1,205 @@
+Flutter Web Audit Report
+Generated: 2026-02-13 21:41:41
+
+SUMMARY
+=======
+Total Dart files: 724
+Defined classes/enums: 1785
+
+MISSING IMPORTS (47)
+===============
+❌ Missing: ../shared/models/speed_dating_round.dart in lib\_disabled\speed_dating\speed_dating_page.dart
+❌ Missing: ../shared/models/speed_dating_result.dart in lib\_disabled\speed_dating\speed_dating_page.dart
+❌ Missing: ../shared/models/user_profile.dart in lib\_disabled\speed_dating\speed_dating_page.dart
+❌ Missing: ../providers/speed_dating_controller.dart in lib\_disabled\speed_dating\speed_dating_page.dart
+❌ Missing: ../providers/profile_controller.dart in lib\_disabled\speed_dating\speed_dating_page.dart
+❌ Missing: ../../features/onboarding/providers/onboarding_controller.dart in lib\core\routing\guards\age_verified_guard.dart
+❌ Missing: ../../features/onboarding/screens/age_gate_page.dart in lib\core\routing\guards\age_verified_guard.dart
+❌ Missing: ../../features/onboarding/providers/onboarding_controller.dart in lib\core\routing\guards\profile_complete_guard.dart
+❌ Missing: ../../features/onboarding/onboarding_flow.dart in lib\core\routing\guards\profile_complete_guard.dart
+❌ Missing: ../../../providers/room_providers.dart in lib\features\discover\room_discovery_page_complete.dart
+❌ Missing: ../../../shared/models/room.dart in lib\features\discover\room_discovery_page_complete.dart
+❌ Missing: ../../../app_routes.dart in lib\features\discover\room_discovery_page_complete.dart
+❌ Missing: ../../../shared/club_background.dart in lib\features\discover\room_discovery_page_complete.dart
+❌ Missing: ../../../shared/glow_text.dart in lib\features\discover\room_discovery_page_complete.dart
+❌ Missing: ../../../shared/neon_button.dart in lib\features\discover\room_discovery_page_complete.dart
+❌ Missing: ../../../shared/auth_guard.dart in lib\features\discover\room_discovery_page_complete.dart
+❌ Missing: ../../../../providers/providers.dart in lib\features\notifications\screens\notifications_page.dart
+❌ Missing: ../../../../core/design_system/design_constants.dart in lib\features\payments\widgets\membership_badge.dart
+❌ Missing: ../../../../core/design_system/design_constants.dart in lib\features\payments\widgets\neon_coin_package_card.dart
+❌ Missing: ../../../../core/design_system/design_constants.dart in lib\features\payments\widgets\neon_tier_card.dart
+❌ Missing: ../../../../core/design_system/design_constants.dart in lib\features\room\screens\room_discovery_screen.dart
+❌ Missing: ../../../../core/design_system/design_constants.dart in lib\features\room\widgets\room_card_widget.dart
+❌ Missing: account_settings_web_stub.dart' if (dart.library.html) 'account_settings_web.dart in lib\features\settings\account_settings_page.dart
+❌ Missing: ../../../../core/design_system/design_constants.dart in lib\features\video_room\screens\room_screen.dart
+❌ Missing: ../../../../core/design_system/design_constants.dart in lib\features\video_room\widgets\energy_pulse_widget.dart
+❌ Missing: ../../../../core/design_system/design_constants.dart in lib\features\video_room\widgets\presence_card.dart
+❌ Missing: ./core/design_system/design_constants.dart in lib\features\video_room\widgets\presence_card.dart
+❌ Missing: ./core/design_system/design_animations.dart in lib\features\video_room\widgets\presence_card.dart
+❌ Missing: ../../../core/utils/app_logger.dart in lib\features\video_room\video_room_view.dart
+❌ Missing: ../../core/design_system/design_constants.dart in lib\screens\video_chat_page.dart
+❌ Missing: ../../../core/design_system/design_constants.dart in lib\shared\widgets\tip_overlay.dart
+❌ Missing: ../../../providers/providers.dart in lib\shared\widgets\tip_overlay.dart
+❌ Missing: ../../../shared/widgets/gift_selector.dart in lib\shared\widgets\tip_overlay.dart
+❌ Missing: ../../providers/providers.dart in lib\shared\gift_selector.dart
+❌ Missing: ../../core/design_system/design_constants.dart in lib\shared\loading_states_guide.dart
+❌ Missing: ../core/utils/async_value_utils.dart in lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart
+❌ Missing: ../shared/widgets/offline_widgets.dart in lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart
+❌ Missing: ../core/utils/navigation_utils.dart in lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart
+❌ Missing: ../core/utils/firestore_utils.dart in lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart
+❌ Missing: ../core/utils/app_logger.dart in lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart
+❌ Missing: ../shared/error_boundary.dart in lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart
+❌ Missing: ../core/utils/async_value_utils.dart in lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart
+❌ Missing: ../core/utils/navigation_utils.dart in lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart
+❌ Missing: ../core/utils/app_logger.dart in lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart
+❌ Missing: ../core/utils/firestore_utils.dart in lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart
+❌ Missing: ../shared/widgets/offline_widgets.dart in lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart
+❌ Missing: ../shared/widgets/empty_states.dart in lib\PHASE_11_STABILITY_USAGE_EXAMPLES.dart
+
+DUPLICATE CHILD PARAMETERS (135)
+==========================
+lib\_disabled\speed_dating\speed_dating_decision_page.dart
+lib\_disabled\speed_dating\speed_dating_lobby_page.dart
+lib\_disabled\speed_dating\speed_dating_page.dart
+lib\_disabled\speed_dating\speed_dating_room_page.dart
+lib\core\accessibility\accessibility_utils.dart
+lib\core\animations\custom_animations.dart
+lib\core\autonomy\governance_dashboard.dart
+lib\core\design_system\design_animations.dart
+lib\core\ecosystem\ecosystem_dashboard.dart
+lib\core\ecosystem\marketplace_dashboard.dart
+lib\core\ecosystem\partner_portal.dart
+lib\core\empire\economy_dashboard.dart
+lib\core\empire\trust_network_dashboard.dart
+lib\core\enterprise\enterprise_dashboard.dart
+lib\core\error\error_boundary.dart
+lib\core\insights\insights_dashboard.dart
+lib\core\launch\beta_feedback_form.dart
+lib\core\launch\early_access_banner.dart
+lib\core\launch\launch_countdown_widget.dart
+lib\core\launch\launch_readiness_report.dart
+lib\core\liveops\creator_dashboard.dart
+lib\core\monitoring\monitoring_dashboard.dart
+lib\core\platform\trust_dashboard.dart
+lib\core\routing\app_routes.dart
+lib\core\theme\neon_widgets.dart
+lib\features\app\screens\email_verification_page.dart
+lib\features\app\screens\profile_edit_page.dart
+lib\features\app\screens\splash_page.dart
+lib\features\app\screens\splash_screen.dart
+lib\features\auth\screens\neon_splash_page.dart
+lib\features\auth\terms_acceptance_dialog.dart
+lib\features\auth\testable_login_page.dart
+lib\features\beta\beta_landing_page.dart
+lib\features\browse_rooms\browse_rooms_page.dart
+lib\features\chat\screens\chat_conversation_page.dart
+lib\features\chat\screens\chat_page.dart
+lib\features\discover\room_discovery_page.dart
+lib\features\error\error_page.dart
+lib\features\events\screens\create_event_page.dart
+lib\features\events\screens\event_chat_page.dart
+lib\features\events\screens\event_details_screen.dart
+lib\features\feed\social_feed_page.dart
+lib\features\go_live\go_live_page.dart
+lib\features\group_chat\screens\group_chat_room_page.dart
+lib\features\home\screens\home_page_electric.dart
+lib\features\home\screens\home_page_neon.dart
+lib\features\matching\examples\matching_example.dart
+lib\features\matching\screens\matches_list_page.dart
+lib\features\messages\chat_screen.dart
+lib\features\messages\messages_page.dart
+lib\features\moderation\screens\admin_report_review_screen.dart
+lib\features\moderation\screens\report_user_screen.dart
+lib\features\notifications\notification_center_page.dart
+lib\features\onboarding\screens\first_recommendation_page.dart
+lib\features\onboarding\screens\first_room_recommendation_screen.dart
+lib\features\onboarding\screens\interests_screen.dart
+lib\features\onboarding\screens\interests_selection_page.dart
+lib\features\onboarding\screens\permissions_request_page.dart
+lib\features\onboarding\screens\permissions_screen.dart
+lib\features\onboarding\screens\profile_essentials_page.dart
+lib\features\onboarding\screens\profile_setup_screen.dart
+lib\features\onboarding\screens\tutorial_page.dart
+lib\features\onboarding\screens\welcome_screen.dart
+lib\features\onboarding\widgets\neon_button.dart
+lib\features\payments\screens\coin_store_screen.dart
+lib\features\payments\screens\membership_upgrade_screen.dart
+lib\features\payments\screens\paywall_screen.dart
+lib\features\profile\screens\edit_profile_page.dart
+lib\features\profile\screens\profile_page.dart
+lib\features\profile\screens\suggested_users_page.dart
+lib\features\profile\screens\user_discovery_page_new.dart
+lib\features\profile\screens\user_profile_page.dart
+lib\features\profile\profile_page.dart
+lib\features\reporting\report_dialog.dart
+lib\features\room\screens\room_page.dart
+lib\features\room\screens\voice_room_page.dart
+lib\features\room\widgets\camera_tile.dart
+lib\features\room\widgets\dynamic_video_grid.dart
+lib\features\room\widgets\participant_list_sidebar.dart
+lib\features\room\widgets\raised_hands_panel.dart
+lib\features\room\widgets\spotlight_view.dart
+lib\features\room\widgets\voice_room_chat_overlay.dart
+lib\features\rooms\screens\rooms_list_page.dart
+lib\features\rooms\create_room_page_complete.dart
+lib\features\settings\account_settings_page.dart
+lib\features\speed_dating\screens\speed_dating_call_page.dart
+lib\features\speed_dating\screens\speed_dating_lobby_cloud.dart
+lib\features\speed_dating\screens\speed_dating_session_page.dart
+lib\features\video_room\screens\join_room_screen.dart
+lib\features\video_room\screens\leave_room_screen.dart
+lib\features\video_room\screens\polished_room_screen.dart
+lib\features\video_room\widgets\media_controls_widget.dart
+lib\features\video_room\widgets\participant_card_widget.dart
+lib\features\video_room\widgets\presence_card.dart
+lib\features\video_room\video_room_view.dart
+lib\features\voice_room\widgets\analytics_dashboard_widget.dart
+lib\features\voice_room\widgets\room_moderation_widget.dart
+lib\features\voice_room\widgets\user_presence_widget.dart
+lib\features\chat_room_page.dart
+lib\features\create_event_page.dart
+lib\features\create_profile_page.dart
+lib\features\match_preferences_page.dart
+lib\features\onboarding_flow.dart
+lib\screens\test_video_engine_screen.dart
+lib\shared\widgets\auth_guard.dart
+lib\shared\widgets\chat_box_widget.dart
+lib\shared\widgets\collapsible_sidebar.dart
+lib\shared\widgets\enhanced_stage_layout.dart
+lib\shared\widgets\error_boundary.dart
+lib\shared\widgets\friends_list_panel.dart
+lib\shared\widgets\groups_sidebar_widget.dart
+lib\shared\widgets\live_room_card.dart
+lib\shared\widgets\loading_indicators.dart
+lib\shared\widgets\loading_widgets.dart
+lib\shared\widgets\neon_app_bar.dart
+lib\shared\widgets\neon_components.dart
+lib\shared\widgets\notification_widget.dart
+lib\shared\widgets\offline_banner.dart
+lib\shared\widgets\offline_widgets.dart
+lib\shared\widgets\permission_aware_video_view.dart
+lib\shared\widgets\room_capacity_widgets.dart
+lib\shared\widgets\skeleton_loaders.dart
+lib\shared\widgets\social_graph_widgets.dart
+lib\shared\widgets\stage_layout.dart
+lib\shared\widgets\top_bar_widget.dart
+lib\shared\widgets\video_grid_widget.dart
+lib\shared\widgets\video_tile.dart
+lib\shared\widgets\voice_room_controls.dart
+lib\shared\widgets\voice_room_participant_list.dart
+lib\shared\auth_guard.dart
+lib\shared\club_background.dart
+lib\shared\error_boundary.dart
+lib\shared\live_room_card.dart
+lib\shared\loading_widgets.dart
+lib\app_routes.dart
+
+POSSIBLY UNDEFINED TYPES (4)
+========================
+AnimationController
+VideoViewController
+StreamController
+TabController
+
+Note: Undefined types may include false positives for types from external packages
+or types imported with library prefixes (e.g., 'package:name/file.dart' as prefix).

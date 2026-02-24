@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/services/badge_service.dart';
+import 'package:mixmingle/services/gamification/badge_service.dart';
 
 /// Badge display widget
 class BadgeWidget extends ConsumerWidget {

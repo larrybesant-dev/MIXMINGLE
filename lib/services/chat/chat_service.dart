@@ -1,8 +1,8 @@
 // lib/services/chat_service.dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../shared/models/chat_message.dart';
-import '../shared/models/chat_room.dart';
+import '../../shared/models/chat_message.dart';
+import '../../shared/models/chat_room.dart';
 
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

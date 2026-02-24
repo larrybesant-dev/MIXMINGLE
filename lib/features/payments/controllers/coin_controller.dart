@@ -8,7 +8,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/membership_tier.dart';
 import '../models/coin_package.dart';
-import '../services/revenuecat_service.dart';
+import 'package:mixmingle/services/payments/revenuecat_service.dart';
 import '../services/membership_service.dart';
 
 /// Provider for the membership service (singleton)

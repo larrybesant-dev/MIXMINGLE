@@ -1,6 +1,6 @@
-﻿
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/event_chat_service.dart';
+import '../../services/chat/event_chat_service.dart';
 import '../models/chat_message.dart';
 
 // Service provider

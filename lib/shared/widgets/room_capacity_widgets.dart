@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/feature_flags.dart';
 import '../../core/design_system/design_constants.dart';
-import '../../services/room_limit_manager.dart';
+import '../../services/room/room_limit_manager.dart';
 
 /// UI Widgets for displaying room publisher capacity status
 ///

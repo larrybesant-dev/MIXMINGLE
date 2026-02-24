@@ -1,9 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/subscription.dart';
 import 'package:mixmingle/shared/providers/gamification_payment_providers.dart';
 import 'package:mixmingle/shared/providers/auth_providers.dart';
-import 'package:mixmingle/services/coin_economy_service.dart' show CoinEconomyService;
+import 'package:mixmingle/services/payments/coin_economy_service.dart' show CoinEconomyService;
 
 /// Coin shop widget
 class CoinShop extends ConsumerStatefulWidget {

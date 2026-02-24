@@ -8,8 +8,8 @@ library;
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../shared/models/user_presence.dart';
-import '../core/utils/app_logger.dart';
+import '../../shared/models/user_presence.dart';
+import '../../core/utils/app_logger.dart';
 import 'fcm_notification_service.dart';
 
 /// Tracks presence of a single friend for notification purposes

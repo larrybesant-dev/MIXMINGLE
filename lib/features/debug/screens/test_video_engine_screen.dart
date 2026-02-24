@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../services/video_engine_service.dart';
+import '../../../services/video/video_engine_service.dart';
 import '../../../shared/models/remote_user.dart';
 
 class TestVideoEngineScreen extends StatefulWidget {

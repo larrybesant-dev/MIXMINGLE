@@ -1,4 +1,4 @@
-﻿/// Payments Feature
+/// Payments Feature
 ///
 /// Exports all payments-related functionality:
 /// - Membership tiers and benefits
@@ -13,7 +13,7 @@ export 'models/membership_tier.dart';
 export 'models/coin_package.dart';
 
 // Services
-export 'services/revenuecat_service.dart';
+export 'package:mixmingle/services/payments/revenuecat_service.dart';
 export 'services/membership_service.dart';
 
 // Controllers

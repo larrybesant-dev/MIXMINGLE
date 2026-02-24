@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/core/components/electric_button.dart';
 import 'package:mixmingle/core/components/glass_card.dart';
 import 'package:mixmingle/core/components/neon_badge.dart';
@@ -9,17 +10,19 @@ import 'package:mixmingle/core/theme/colors_v2.dart';
 import 'package:mixmingle/core/theme/spacing.dart';
 import 'package:mixmingle/core/theme/typography_v2.dart';
 import 'package:mixmingle/shared/widgets/mix_mingle_logo.dart';
+import 'package:mixmingle/core/services/landing_music_service.dart';
 
-class LandingPage extends StatefulWidget {
+class LandingPage extends ConsumerStatefulWidget {
   const LandingPage({super.key});
 
   @override
-  State<LandingPage> createState() => _LandingPageState();
+  ConsumerState<LandingPage> createState() => _LandingPageState();
 }
 
-class _LandingPageState extends State<LandingPage> with SingleTickerProviderStateMixin {
+class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  LandingMusicService? _music;
 
   /// Web-safe image provider - returns null on web to avoid CORS errors
   ImageProvider? _safeImageProvider(String? url) {
@@ -36,11 +39,22 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
       duration: const Duration(milliseconds: 1600),
       vsync: this,
     )..repeat(reverse: true);
+
+    // Start landing music after the first frame so providers are ready.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final svc = ref.read(landingMusicProvider);
+      if (svc != null) {
+        _music = svc;
+        await _music!.start();
+      }
+    });
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
+    // Fade out music when landing page leaves the tree.
+    _music?.fadeOut();
     super.dispose();
   }
 
@@ -158,7 +172,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
               ],
             ),
             child: Text(
-              'ðŸ”¥ NEW: Live Video Speed Dating',
+              '🔥 NEW: Live Video Speed Dating',
               style: textTheme.labelLarge?.copyWith(
                 color: ElectricColors.onSurfacePrimary,
                 fontWeight: FontWeight.bold,
@@ -229,7 +243,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
             final roomName = data['name'] ?? data['title'] ?? 'Untitled Room';
             final time = _getTimeAgo(data['createdAt']);
             activities.add({
-              'icon': 'ðŸ”´',
+              'icon': '🔴',
               'text': '$hostName went live in $roomName',
               'time': time,
               'status': NeonStatus.speaking,
@@ -240,9 +254,9 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
         // Show placeholder if no real data
         if (activities.isEmpty) {
           activities.addAll([
-            {'icon': 'ðŸŽ§', 'text': 'Be the first to go live!', 'time': 'Now', 'status': NeonStatus.online},
-            {'icon': 'ðŸ“¡', 'text': 'Start your stream and connect', 'time': 'Today', 'status': NeonStatus.online},
-            {'icon': 'ðŸ”´', 'text': 'Share your sound with the world', 'time': 'Soon', 'status': NeonStatus.speaking},
+            {'icon': '🎧', 'text': 'Be the first to go live!', 'time': 'Now', 'status': NeonStatus.online},
+            {'icon': '🎤', 'text': 'Start your stream and connect', 'time': 'Today', 'status': NeonStatus.online},
+            {'icon': '🔴', 'text': 'Share your sound with the world', 'time': 'Soon', 'status': NeonStatus.speaking},
           ]);
         }
 
@@ -482,9 +496,9 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
 
   Widget _buildHowItWorks(TextTheme textTheme) {
     final steps = [
-      {'step': '1', 'emoji': 'ðŸŽ§', 'title': 'Join a room', 'desc': 'Browse live rooms and drop in instantly.'},
-      {'step': '2', 'emoji': 'ðŸ“¡', 'title': 'Go live', 'desc': 'Start your own stream with zero setup friction.'},
-      {'step': '3', 'emoji': 'ðŸ’¸', 'title': 'Tip & connect', 'desc': 'Support creators and build connections.'},
+      {'step': '1', 'emoji': '🎧', 'title': 'Join a room', 'desc': 'Browse live rooms and drop in instantly.'},
+      {'step': '2', 'emoji': '🎤', 'title': 'Go live', 'desc': 'Start your own stream with zero setup friction.'},
+      {'step': '3', 'emoji': '💰', 'title': 'Tip & connect', 'desc': 'Support creators and build connections.'},
     ];
 
     return Padding(
@@ -633,7 +647,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                             ],
                           ),
                           child: Text(
-                            'ðŸ”¥ NEW',
+                            '🔥 NEW',
                             style: textTheme.labelLarge?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -644,7 +658,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                     ),
                     const SizedBox(height: Spacing.sm),
                     Text(
-                      'ðŸ’˜ Live Video Speed Dating',
+                      '💘 Live Video Speed Dating',
                       style: textTheme.headlineSmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -890,7 +904,7 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
         'title': 'Ambient Composer',
       },
       {
-        'emoji': 'âš¡',
+        'emoji': '⚡',
         'quote': 'This is where electronic music culture thrives. The community here is incredible.',
         'name': 'Kai Thunder',
         'title': 'Festival Curator',

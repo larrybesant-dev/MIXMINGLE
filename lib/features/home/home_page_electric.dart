@@ -6,10 +6,17 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design_system/design_constants.dart';
+import '../../shared/models/user_profile.dart';
+import '../../shared/models/room.dart';
 import '../../shared/widgets/club_background.dart';
-import '../../shared/widgets/neon_components.dart';
 import '../../shared/providers/all_providers.dart';
+import '../../core/intelligence/vibe_intelligence_service.dart';
 import '../events/screens/events_page.dart';
+import '../onboarding/widgets/onboarding_welcome_overlay.dart';
+import '../discover/room_discovery_page_complete.dart';
+import '../chat/screens/chat_list_page.dart';
+import '../profile/screens/profile_page.dart';
+import '../room/providers/room_providers.dart';
 
 /// Home Page with Electric theme - main post-onboarding landing
 class HomePageElectric extends ConsumerStatefulWidget {
@@ -21,81 +28,204 @@ class HomePageElectric extends ConsumerStatefulWidget {
 
 class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   int _selectedIndex = 0;
+  bool _dismissedSuggestion = false;
+  bool _overlayTriggered = false;
 
-  final List<NavigationDestination> _destinations = const [
-    NavigationDestination(
-      icon: Icon(Icons.home_outlined),
-      selectedIcon: Icon(Icons.home),
-      label: 'Home',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.speed_outlined),
-      selectedIcon: Icon(Icons.speed),
-      label: 'Speed Dating',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.video_call_outlined),
-      selectedIcon: Icon(Icons.video_call),
-      label: 'Rooms',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.event_outlined),
-      selectedIcon: Icon(Icons.event),
-      label: 'Events',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.chat_bubble_outline),
-      selectedIcon: Icon(Icons.chat_bubble),
-      label: 'Chats',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.person_outline),
-      selectedIcon: Icon(Icons.person),
-      label: 'Profile',
-    ),
-  ];
+  // Vibe palette — same keys as rooms list page for consistency
+  static const _kVibeColors = <String, Color>{
+    'Chill':      Color(0xFF4A90FF),
+    'Hype':       Color(0xFFFF4D8B),
+    'Deep Talk':  Color(0xFF8B5CF6),
+    'Late Night': Color(0xFF6366F1),
+    'Study':      Color(0xFF00E5CC),
+    'Party':      Color(0xFFFFAB00),
+  };
+  static const _kVibeIcons = <String, IconData>{
+    'Chill':      Icons.waves_outlined,
+    'Hype':       Icons.bolt,
+    'Deep Talk':  Icons.forum_outlined,
+    'Late Night': Icons.nightlight_outlined,
+    'Study':      Icons.menu_book_outlined,
+    'Party':      Icons.celebration_outlined,
+  };
+  Color _vc(String? v) => _kVibeColors[v] ?? DesignColors.accent;
+  IconData _vi(String? v) => _kVibeIcons[v] ?? Icons.graphic_eq;
 
   @override
   Widget build(BuildContext context) {
-    return ClubBackground(
+    // Show the welcome overlay exactly once for every new account that has
+    // not yet completed onboarding (onboardingComplete == false in Firestore).
+    ref.listen<AsyncValue<UserProfile?>>(currentUserProfileProvider, (_, next) {
+      next.whenData((profile) {
+        if (!_overlayTriggered &&
+            profile != null &&
+            !profile.onboardingComplete) {
+          _overlayTriggered = true;
+          // Post-frame so the widget tree is settled before adding the overlay.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              ref.read(welcomeOverlayVisibleProvider.notifier).show();
+            }
+          });
+        }
+      });
+    });
+
+    final showOverlay = ref.watch(welcomeOverlayVisibleProvider);
+    final profile = ref.watch(currentUserProfileProvider).asData?.value;
+
+    return Stack(
+      children: [
+        ClubBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: const NeonText(
-            'MIX & MINGLE',
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
-            textColor: DesignColors.white,
-            glowColor: DesignColors.gold,
-          ),
-          backgroundColor: DesignColors.background,
-          elevation: 0,
-          actions: [
-            // Notifications icon
-            IconButton(
-              icon: const Icon(Icons.notifications_outlined),
-              onPressed: () {
-                Navigator.pushNamed(context, '/notifications');
-              },
-            ),
-            // Settings icon
-            IconButton(
-              icon: const Icon(Icons.settings_outlined),
-              onPressed: () {
-                Navigator.pushNamed(context, '/settings');
-              },
-            ),
-          ],
-        ),
+        appBar: _buildAppBar(profile),
         body: _buildBody(),
-        bottomNavigationBar: NavigationBar(
-          selectedIndex: _selectedIndex,
-          onDestinationSelected: (index) {
-            setState(() => _selectedIndex = index);
-          },
-          destinations: _destinations,
-          backgroundColor: DesignColors.background,
-          indicatorColor: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+        bottomNavigationBar: _buildNeonNavBar(),
+      ),
+    ),
+    if (showOverlay) const OnboardingWelcomeOverlay(),
+  ],
+);
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  NEON APP BAR
+  // ══════════════════════════════════════════════════════════
+  PreferredSizeWidget _buildAppBar(UserProfile? profile) {
+    return AppBar(
+      backgroundColor: DesignColors.background,
+      elevation: 0,
+      automaticallyImplyLeading: false,
+      title: Row(children: [
+        // Logo dot pulse
+        Container(
+          width: 10, height: 10,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: DesignColors.accent,
+            boxShadow: [
+              BoxShadow(color: DesignColors.accent.withValues(alpha: 0.7), blurRadius: 10),
+            ],
+          ),
+        ),
+        const SizedBox(width: 10),
+        const Text(
+          'MIX & MINGLE',
+          style: TextStyle(
+            color: DesignColors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.5,
+            shadows: DesignColors.primaryGlow,
+          ),
+        ),
+        if (profile?.vibeTag != null) ...[
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: _vc(profile!.vibeTag).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: _vc(profile.vibeTag).withValues(alpha: 0.45)),
+            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(_vi(profile.vibeTag), size: 10, color: _vc(profile.vibeTag)),
+              const SizedBox(width: 4),
+              Text(profile.vibeTag!,
+                  style: TextStyle(color: _vc(profile.vibeTag),
+                      fontSize: 10, fontWeight: FontWeight.w700)),
+            ]),
+          ),
+        ],
+      ]),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.notifications_outlined, color: DesignColors.textGray),
+          onPressed: () => Navigator.pushNamed(context, '/notifications'),
+        ),
+        GestureDetector(
+          onTap: () => Navigator.pushNamed(context, '/settings'),
+          child: Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: profile?.photoUrl != null
+                ? CircleAvatar(radius: 16,
+                    backgroundImage: NetworkImage(profile!.photoUrl!))
+                : CircleAvatar(radius: 16,
+                    backgroundColor: DesignColors.accent.withValues(alpha: 0.2),
+                    child: const Icon(Icons.person, size: 16, color: DesignColors.accent)),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  NEON BOTTOM NAV BAR
+  // ══════════════════════════════════════════════════════════
+  Widget _buildNeonNavBar() {
+    const items = [
+      _NavItem(Icons.home_outlined, Icons.home, 'Home'),
+      _NavItem(Icons.bolt_outlined, Icons.bolt, 'Speed'),
+      _NavItem(Icons.video_call_outlined, Icons.video_call, 'Rooms'),
+      _NavItem(Icons.event_outlined, Icons.event, 'Events'),
+      _NavItem(Icons.chat_bubble_outline, Icons.chat_bubble, 'Chats'),
+      _NavItem(Icons.person_outline, Icons.person, 'Profile'),
+    ];
+    return Container(
+      decoration: BoxDecoration(
+        color: DesignColors.background,
+        border: Border(top: BorderSide(color: DesignColors.accent.withValues(alpha: 0.15))),
+        boxShadow: [
+          BoxShadow(color: DesignColors.accent.withValues(alpha: 0.06), blurRadius: 20),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 60,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: List.generate(items.length, (i) {
+              final item = items[i];
+              final selected = _selectedIndex == i;
+              return GestureDetector(
+                onTap: () => setState(() => _selectedIndex = i),
+                behavior: HitTestBehavior.opaque,
+                child: SizedBox(
+                  width: 56,
+                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? DesignColors.accent.withValues(alpha: 0.15)
+                            : Colors.transparent,
+                        borderRadius: BorderRadius.circular(10),
+                        boxShadow: selected
+                            ? [BoxShadow(color: DesignColors.accent.withValues(alpha: 0.3),
+                                blurRadius: 8)]
+                            : null,
+                      ),
+                      child: Icon(
+                        selected ? item.activeIcon : item.icon,
+                        size: 22,
+                        color: selected ? DesignColors.accent : DesignColors.textGray,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(item.label,
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
+                          color: selected ? DesignColors.accent : DesignColors.textGray,
+                        )),
+                  ]),
+                ),
+              );
+            }),
+          ),
         ),
       ),
     );
@@ -120,292 +250,376 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     }
   }
 
-  /// Home Tab - Quick actions and featured content
+  /// Home Tab — personalized vibe greeting + heating-up rooms
   Widget _buildHomeTab() {
-    final user = ref.watch(currentUserProfileProvider);
+    final profileAsync = ref.watch(currentUserProfileProvider);
+    final p = profileAsync.asData?.value;
+    final roomsAsync = ref.watch(liveRoomsProvider);
+    // #2 Composite heating-up score: joinVelocity x2 + viewerCount
+    final liveRooms = ([...(roomsAsync.value ?? [])])
+      ..sort((a, b) {
+        final aScore = (a.joinVelocity * 2) + a.viewerCount;
+        final bScore = (b.joinVelocity * 2) + b.viewerCount;
+        return bScore.compareTo(aScore);
+      });
+    final heatingUp = liveRooms.take(6).toList();
 
-    return user.when(
-      data: (profile) {
-        if (profile == null) {
-          return const Center(child: Text('Profile not found'));
-        }
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Good morning'
+        : hour < 17
+            ? 'Good afternoon'
+            : hour < 21
+                ? 'Good evening'
+                : 'Late night vibes';
+    final name = p?.displayName?.split(' ').first ?? 'there';
+    // #3 — smart vibe greeting: prefer topVibe (behaviour-driven) over static vibeTag
+    final vibe = p?.topVibe ?? p?.vibeTag;
+    final vibeLabel = (p != null && p.topVibe != null && p.topVibeCount > 1)
+        ? '${p.topVibe} vibes — x${p.topVibeCount} rooms'
+        : vibe != null ? '$vibe vibes today' : null;
 
-        return CustomScrollView(
-          slivers: [
-            // Welcome header
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Welcome back,',
-                      style: TextStyle(
-                        color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    NeonText(
-                      (profile.displayName ?? 'User').toUpperCase(),
-                      fontSize: 32,
+    return CustomScrollView(
+      slivers: [
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('$greeting,',
+                  style: TextStyle(
+                      color: DesignColors.white.withValues(alpha: 0.6),
+                      fontSize: 15)),
+              const SizedBox(height: 4),
+              Text(name,
+                  style: const TextStyle(
+                      color: DesignColors.white,
+                      fontSize: 30,
                       fontWeight: FontWeight.w900,
-                      textColor: DesignColors.white,
-                      glowColor: DesignColors.gold,
-                    ),
-                  ],
+                      letterSpacing: 0.5,
+                      shadows: DesignColors.primaryGlow)),
+              if (vibe != null) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [
+                      _vc(vibe).withValues(alpha: 0.2),
+                      _vc(vibe).withValues(alpha: 0.05),
+                    ]),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: _vc(vibe).withValues(alpha: 0.4)),
+                  ),
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    Icon(_vi(vibe), size: 12, color: _vc(vibe)),
+                    const SizedBox(width: 5),
+                    Text(vibeLabel ?? '$vibe vibes today',
+                        style: TextStyle(
+                            color: _vc(vibe),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600)),
+                  ]),
                 ),
-              ),
-            ),
-
-            // Quick Actions
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Column(mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Quick Actions',
-                      style: TextStyle(
+              ],
+            ]),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+            child: Row(children: [
+              Expanded(child: _ctaCard(
+                icon: Icons.add_circle_outline,
+                label: 'Start a Room',
+                sublabel: 'Go live now',
+                color: const Color(0xFFFF4D8B),
+                onTap: () => Navigator.pushNamed(context, '/create-room'),
+              )),
+              const SizedBox(width: 12),
+              Expanded(child: _ctaCard(
+                icon: Icons.bolt,
+                label: 'Speed Dating',
+                sublabel: '5-min video dates',
+                color: DesignColors.gold,
+                onTap: () => setState(() => _selectedIndex = 1),
+              )),
+            ]),
+          ),
+        ),
+        // #7 — Adaptive vibe suggestion banner
+        if (!_dismissedSuggestion)
+          SliverToBoxAdapter(child: _buildVibeSuggestionBanner(p)),
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 28, 0, 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('🔥 Heating Up',
+                    style: TextStyle(
                         color: DesignColors.white,
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    _buildQuickActions(),
-                  ],
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800)),
+                TextButton(
+                  onPressed: () => setState(() => _selectedIndex = 2),
+                  child: Text('See All',
+                      style: TextStyle(color: DesignColors.accent, fontSize: 13)),
                 ),
-              ),
-            ),
-
-            // Live Rooms Preview
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'ðŸ”¥ Live Rooms',
-                          style: TextStyle(
-                            color: DesignColors.white,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            setState(() => _selectedIndex = 2);
-                          },
-                          child: const Text('See All'),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    _buildLiveRoomsPreview(),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (error, stack) => Center(child: Text('Error: $error')),
-    );
-  }
-
-  Widget _buildQuickActions() {
-    return Row(
-      children: [
-        Expanded(
-          child: NeonGlowCard(
-            glowColor: DesignColors.gold,
-            onTap: () {
-              debugPrint('📘 Speed Dating button pressed');
-              Navigator.pushNamed(context, '/discover-rooms');
-            },
-            child: const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.speed,
-                  size: 40,
-                  color: DesignColors.gold,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Speed Dating',
-                  style: TextStyle(
-                    color: DesignColors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                const SizedBox(width: 8),
               ],
             ),
           ),
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: NeonGlowCard(
-            glowColor: DesignColors.accent,
-            onTap: () {
-              debugPrint('ðŸ”˜ Rooms button pressed');
-              setState(() => _selectedIndex = 2);
-            },
-            child: const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.video_call,
-                  size: 40,
-                  color: DesignColors.accent,
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Join Room',
-                  style: TextStyle(
-                    color: DesignColors.white,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ),
+        SliverToBoxAdapter(child: _buildHeatingUpRail(heatingUp)),
+        const SliverToBoxAdapter(child: SizedBox(height: 30)),
       ],
     );
   }
 
-  Widget _buildLiveRoomsPreview() {
-    final roomsAsync = ref.watch(liveRoomsProvider);
-    final rooms = roomsAsync.value?.take(3).toList() ?? [];
-
-    if (rooms.isEmpty) {
-      return const Center(
-        child: Text(
-          'No live rooms right now',
-          style: TextStyle(color: DesignColors.white),
+  // #7 — Vibe suggestion banner
+  Widget _buildVibeSuggestionBanner(UserProfile? p) {
+    if (p == null) return const SizedBox.shrink();
+    final suggestion = ref
+        .read(vibeIntelligenceServiceProvider)
+        .getVibeSuggestion(p);
+    if (suggestion == null) return const SizedBox.shrink();
+    const nudgeColor = Color(0xFFFFAB00);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: nudgeColor.withValues(alpha: 0.09),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: nudgeColor.withValues(alpha: 0.4)),
         ),
-      );
-    }
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: rooms
-          .map((room) => NeonGlowCard(
-                glowColor: DesignColors.accent,
-                onTap: () {
-                  Navigator.pushNamed(context, '/room', arguments: room.id);
-                },
-                child: Row(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Icon(
-                        Icons.video_call,
-                        color: DesignColors.accent,
-                        size: 30,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            room.title,
-                            style: const TextStyle(
-                              color: DesignColors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${room.viewerCount} watching',
-                            style: TextStyle(
-                              color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: const Text(
-                        'LIVE',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ))
-          .toList(),
+        child: Row(children: [
+          const Icon(Icons.lightbulb_outline, size: 18, color: nudgeColor),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(suggestion,
+                style: const TextStyle(
+                    color: nudgeColor, fontSize: 12, fontWeight: FontWeight.w600)),
+          ),
+          GestureDetector(
+            onTap: () => setState(() => _dismissedSuggestion = true),
+            child: const Icon(Icons.close, size: 16, color: nudgeColor),
+          ),
+        ]),
+      ),
     );
   }
 
-  /// Speed Dating Tab
-  Widget _buildSpeedDatingTab() {
+  Widget _ctaCard({
+    required IconData icon,
+    required String label,
+    required String sublabel,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              color.withValues(alpha: 0.18),
+              color.withValues(alpha: 0.05),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.4)),
+          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.12), blurRadius: 12)],
+        ),
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Icon(icon, color: color, size: 26),
+          const SizedBox(height: 8),
+          Text(label,
+              style: const TextStyle(
+                  color: DesignColors.white,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800)),
+          const SizedBox(height: 2),
+          Text(sublabel,
+              style: const TextStyle(color: DesignColors.textGray, fontSize: 11)),
+        ]),
+      ),
+    );
+  }
+
+  Widget _buildHeatingUpRail(List<Room> rooms) {
+    if (rooms.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(20),
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: DesignColors.accent.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: DesignColors.accent.withValues(alpha: 0.15)),
+          ),
+          child: Column(children: [
+            const Icon(Icons.mic_none_outlined, size: 40, color: DesignColors.accent),
+            const SizedBox(height: 10),
+            const Text('No live rooms yet — be the first!',
+                style: TextStyle(color: DesignColors.textGray, fontSize: 14)),
+            const SizedBox(height: 14),
+            GestureDetector(
+              onTap: () => Navigator.pushNamed(context, '/create-room'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [Color(0xFF4A90FF), Color(0xFF8B5CF6)]),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: const Text('Start a Room',
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.w700)),
+              ),
+            ),
+          ]),
+        ),
+      );
+    }
+    return SizedBox(
+      height: 160,
+      child: ListView.builder(
+        padding: const EdgeInsets.only(left: 20, right: 8, top: 8, bottom: 8),
+        scrollDirection: Axis.horizontal,
+        itemCount: rooms.length,
+        itemBuilder: (_, i) {
+          final room = rooms[i];
+          final color = _vc(room.vibeTag);
+          return GestureDetector(
+            onTap: () => Navigator.pushNamed(context, '/room', arguments: room.id),
+            child: Container(
+              width: 160,
+              margin: const EdgeInsets.only(right: 12),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [color.withValues(alpha: 0.2), DesignColors.background],
+                ),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: color.withValues(alpha: 0.35)),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.9),
+                        borderRadius: BorderRadius.circular(4)),
+                    child: const Text('LIVE',
+                        style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 9,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1)),
+                  ),
+                  const Spacer(),
+                  Text(room.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: DesignColors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 4),
+                  Row(children: [
+                    Icon(Icons.remove_red_eye_outlined, size: 11, color: color),
+                    const SizedBox(width: 3),
+                    Text('${room.viewerCount}',
+                        style: TextStyle(
+                            color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.videocam_outlined,
+                        size: 11, color: DesignColors.textGray),
+                    const SizedBox(width: 3),
+                    Text('${room.camCount}',
+                        style: const TextStyle(
+                            color: DesignColors.textGray, fontSize: 11)),
+                  ]),
+                ]),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+    Widget _buildSpeedDatingTab() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(mainAxisSize: MainAxisSize.min,
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.speed,
-              size: 80,
-              color: DesignColors.gold,
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: DesignColors.gold.withValues(alpha: 0.12),
+                boxShadow: [
+                  BoxShadow(
+                      color: DesignColors.gold.withValues(alpha: 0.3),
+                      blurRadius: 30)
+                ],
+              ),
+              child: const Icon(Icons.bolt, size: 52, color: DesignColors.gold),
             ),
-            const SizedBox(height: 20),
-            const NeonText(
-              'SPEED DATING',
-              fontSize: 32,
-              fontWeight: FontWeight.w900,
-              textColor: DesignColors.white,
-              glowColor: DesignColors.gold,
-            ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 24),
             const Text(
-              '5-minute video dates with matched singles',
-              style: TextStyle(color: DesignColors.white),
+              'SPEED DATING',
+              style: TextStyle(
+                  color: DesignColors.white,
+                  fontSize: 32,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                  shadows: DesignColors.secondaryGlow),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Match. Connect. Vibe. — 5-minute video dates.',
               textAlign: TextAlign.center,
+              style: TextStyle(color: DesignColors.textGray, fontSize: 14),
             ),
             const SizedBox(height: 40),
-            NeonButton(
-              label: 'START SPEED DATING',
-              onPressed: () {
-                Navigator.pushNamed(context, '/discover-rooms');
-              },
-              glowColor: DesignColors.gold,
-              height: 54,
+            GestureDetector(
+              onTap: () => Navigator.pushNamed(context, '/discover-rooms'),
+              child: Container(
+                width: double.infinity,
+                height: 52,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [DesignColors.gold, Color(0xFFFF6B35)]),
+                  borderRadius: BorderRadius.circular(26),
+                  boxShadow: [
+                    BoxShadow(
+                        color: DesignColors.gold.withValues(alpha: 0.35),
+                        blurRadius: 18,
+                        offset: const Offset(0, 6))
+                  ],
+                ),
+                child: const Text(
+                  'START SPEED DATING',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1),
+                ),
+              ),
             ),
           ],
         ),
@@ -413,35 +627,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     );
   }
 
-  /// Rooms Tab
   Widget _buildRoomsTab() {
-    return Center(
-      child: Column(mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'Rooms feature - See rooms list',
-            style: TextStyle(color: DesignColors.white),
-          ),
-          const SizedBox(height: 20),
-          NeonButton(
-            label: 'BROWSE ROOMS',
-            onPressed: () {
-              Navigator.pushNamed(context, '/browse-rooms');
-            },
-            glowColor: DesignColors.accent,
-          ),
-          const SizedBox(height: 12),
-          NeonButton(
-            label: 'CREATE ROOM',
-            onPressed: () {
-              Navigator.pushNamed(context, '/create-room');
-            },
-            glowColor: DesignColors.secondary,
-          ),
-        ],
-      ),
-    );
+    return const RoomDiscoveryPageComplete();
   }
 
   /// Events Tab
@@ -451,34 +638,23 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
 
   /// Chats Tab
   Widget _buildChatsTab() {
-    return const Center(
-      child: Text(
-        'Chats feature coming soon',
-        style: TextStyle(color: DesignColors.white),
-      ),
-    );
+    return const ChatListPage();
   }
 
   /// Profile Tab
   Widget _buildProfileTab() {
-    return Center(
-      child: Column(mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'Profile feature',
-            style: TextStyle(color: DesignColors.white),
-          ),
-          const SizedBox(height: 20),
-          NeonButton(
-            label: 'EDIT PROFILE',
-            onPressed: () {
-              Navigator.pushNamed(context, '/profile/edit');
-            },
-            glowColor: DesignColors.gold,
-          ),
-        ],
-      ),
-    );
+    return const ProfilePage();
   }
+}
+
+// ══════════════════════════════════════════════════════════
+//  DATA CLASSES
+// ══════════════════════════════════════════════════════════
+
+@immutable
+class _NavItem {
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  const _NavItem(this.icon, this.activeIcon, this.label);
 }

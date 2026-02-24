@@ -126,3 +126,142 @@ exports.onNewMessage = pushNotifications.onNewMessage;
 exports.onNewFollow = pushNotifications.onNewFollow;
 exports.sendEventReminders = pushNotifications.sendEventReminders;
 exports.cleanupOldNotifications = pushNotifications.cleanupOldNotifications;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// #10  BEHAVIOR TAG INTELLIGENCE
+// ─────────────────────────────────────────────────────────────────────────────
+const { onSchedule } = require('firebase-functions/v2/scheduler');
+const { onDocumentWritten } = require('firebase-functions/v2/firestore');
+
+/**
+ * computeBehaviorTags  — runs nightly at 03:00 UTC
+ * Reads every user doc, recomputes behavior tags from activity metrics and
+ * writes them back to users/{uid}.computedTags.
+ *
+ * Tag rules (mirror of VibeIntelligenceService.computeBehaviorTags in Dart):
+ *   roomsHostedCount >= 10  → "Super Host"
+ *   totalRoomsJoined >= 30  → "Social Butterfly"
+ *   eventsAttended >= 5     → "Event Junkie"
+ *   communityRating >= 4.5  → "Top Rated"
+ *   vibeHistory contains 3+ joins in "Late Night" → "Night Owl"
+ */
+exports.computeBehaviorTags = onSchedule('every 24 hours', async (_event) => {
+  const db = admin.firestore();
+  const usersSnap = await db.collection('users').get();
+
+  const batch = db.batch();
+  let updateCount = 0;
+
+  for (const doc of usersSnap.docs) {
+    const d = doc.data();
+    const tags = [];
+
+    if ((d.roomsHostedCount || 0) >= 10)          tags.push('Super Host');
+    if ((d.totalRoomsJoined || 0) >= 30)           tags.push('Social Butterfly');
+    if ((d.eventsAttended || 0) >= 5)              tags.push('Event Junkie');
+    if ((d.communityRating || 0) >= 4.5)           tags.push('Top Rated');
+    const lateNight = ((d.vibeHistory || {})['Late Night'] || 0);
+    if (lateNight >= 3)                            tags.push('Night Owl');
+
+    // Only write if tags changed to avoid unnecessary writes
+    const existing = (d.computedTags || []).slice().sort().join(',');
+    if (existing !== tags.slice().sort().join(',')) {
+      batch.update(doc.ref, { computedTags: tags });
+      updateCount++;
+    }
+
+    // Commit in chunks of 400 to stay under Firestore batch limit
+    if (updateCount > 0 && updateCount % 400 === 0) {
+      await batch.commit();
+    }
+  }
+
+  await batch.commit();
+  logger.info(`computeBehaviorTags: updated ${updateCount} users`);
+});
+
+/**
+ * updateJoinVelocity — runs every 5 minutes
+ * For each live room, counts how many new participant joins happened in the
+ * last 5 minutes (by inspecting Firestore timestamp metadata) and writes
+ * the result back as rooms/{roomId}.joinVelocity.
+ *
+ * Lightweight: only scans rooms where isLive == true.
+ */
+exports.updateJoinVelocity = onSchedule('every 5 minutes', async (_event) => {
+  const db = admin.firestore();
+  const now = Date.now();
+  const windowMs = 5 * 60 * 1000; // 5 minutes
+
+  const liveRooms = await db.collection('rooms').where('isLive', '==', true).get();
+
+  const roomUpdates = liveRooms.docs.map(async (roomDoc) => {
+    const data = roomDoc.data();
+    const joinTimestamps = data.recentJoins || []; // array of server millis
+
+    // Separate fresh joins (within window) from stale ones
+    const freshJoins = joinTimestamps.filter((t) => now - t < windowMs);
+    const velocity   = freshJoins.length;
+
+    const fields = {};
+    if (velocity !== (data.joinVelocity || 0)) fields.joinVelocity = velocity;
+
+    // TTL cleanup: prune stale entries to prevent unbounded array growth
+    if (freshJoins.length < joinTimestamps.length) fields.recentJoins = freshJoins;
+
+    if (Object.keys(fields).length > 0) {
+      await roomDoc.ref.update(fields);
+    }
+  });
+
+  await Promise.all(roomUpdates);
+  logger.info(`updateJoinVelocity: processed ${liveRooms.size} live rooms`);
+});
+
+/**
+ * onRoomMemberJoin — Firestore trigger on rooms/{roomId}
+ * When a room document's participantIds array changes (new member joined),
+ * records the join timestamp in recentJoins and increments the user's
+ * vibeHistory for the room's vibeTag.
+ */
+exports.onRoomMemberJoin = onDocumentWritten('rooms/{roomId}', async (event) => {
+  const before = event.data?.before?.data() || {};
+  const after  = event.data?.after?.data()  || {};
+
+  const prevIds = before.participantIds || [];
+  const currIds = after.participantIds   || [];
+
+  // Find newly added participants
+  const newJoins = currIds.filter((id) => !prevIds.includes(id));
+  if (newJoins.length === 0) return;
+
+  const db = admin.firestore();
+  const vibeTag = after.vibeTag;
+  const now = admin.firestore.FieldValue.serverTimestamp();
+  const nowMs = Date.now();
+
+  const tasks = [];
+
+  // Append join timestamp for velocity tracking
+  tasks.push(
+    event.data.after.ref.update({
+      recentJoins: admin.firestore.FieldValue.arrayUnion(nowMs),
+    })
+  );
+
+  // Increment vibeHistory for each new joiner
+  if (vibeTag) {
+    for (const userId of newJoins) {
+      const userRef = db.collection('users').doc(userId);
+      tasks.push(
+        userRef.update({
+          [`vibeHistory.${vibeTag}`]: admin.firestore.FieldValue.increment(1),
+          lastRoomJoinedAt: now,
+        })
+      );
+    }
+  }
+
+  await Promise.all(tasks);
+  logger.info(`onRoomMemberJoin: ${newJoins.length} new joins in room ${event.params.roomId}`);
+});

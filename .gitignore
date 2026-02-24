@@ -127,3 +127,8 @@ libapp.so*
 *.so
 *.dill
 .git_backup/
+
+# Windows Flutter ephemeral backup dirs (contain paths too long for Windows git)
+windows/flutter/ephemeral/
+windows/flutter/ephemeral-backup-*/
+

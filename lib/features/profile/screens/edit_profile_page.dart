@@ -1,5 +1,8 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
@@ -24,6 +27,37 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   final _nicknameController = TextEditingController();
   final _bioController = TextEditingController();
   final _locationController = TextEditingController();
+  final _zipController = TextEditingController();
+
+  // ZIP lookup state
+  String? _zipResolvedCity;
+  bool _zipLooking = false;
+  String? _zipError;
+
+  Future<void> _lookupZip(String zip) async {
+    if (zip.length != 5) return;
+    setState(() { _zipLooking = true; _zipError = null; _zipResolvedCity = null; });
+    try {
+      final res = await http.get(Uri.parse('https://api.zippopotam.us/us/$zip'));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body) as Map<String, dynamic>;
+        final places = data['places'] as List<dynamic>;
+        if (places.isNotEmpty) {
+          final city = places[0]['place name'] as String;
+          final state = places[0]['state abbreviation'] as String;
+          final resolved = '$city, $state';
+          setState(() { _zipResolvedCity = resolved; _zipError = null; });
+          _locationController.text = resolved;
+        }
+      } else {
+        setState(() { _zipError = 'ZIP code not found'; });
+      }
+    } catch (_) {
+      setState(() { _zipError = 'Could not look up ZIP code'; });
+    } finally {
+      setState(() { _zipLooking = false; });
+    }
+  }
   final _instagramController = TextEditingController();
   final _tiktokController = TextEditingController();
   final _snapchatController = TextEditingController();
@@ -133,6 +167,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _nicknameController.dispose();
     _bioController.dispose();
     _locationController.dispose();
+    _zipController.dispose();
     _instagramController.dispose();
     _tiktokController.dispose();
     _snapchatController.dispose();
@@ -569,11 +604,56 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               title: 'Your World',
               color: DesignColors.success,
               children: [
-                _buildNeonTextField(
-                  controller: _locationController,
-                  label: 'City / Location',
-                  icon: Icons.location_on_outlined,
+                // ZIP → City/State lookup
+                TextFormField(
+                  controller: _zipController,
+                  decoration: InputDecoration(
+                    labelText: 'ZIP Code (Optional)',
+                    hintText: '90210',
+                    prefixIcon: const Icon(Icons.location_on_outlined),
+                    suffixIcon: _zipLooking
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: Padding(
+                              padding: EdgeInsets.all(12),
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
+                        : _zipResolvedCity != null
+                            ? const Icon(Icons.check_circle, color: Colors.green)
+                            : null,
+                    errorText: _zipError,
+                  ),
+                  keyboardType: TextInputType.number,
+                  inputFormatters: [
+                    FilteringTextInputFormatter.digitsOnly,
+                    LengthLimitingTextInputFormatter(5),
+                  ],
+                  onChanged: (val) {
+                    if (val.length == 5) _lookupZip(val);
+                    if (val.length < 5) {
+                      setState(() {
+                        _zipResolvedCity = null;
+                        _zipError = null;
+                        _locationController.clear();
+                      });
+                    }
+                  },
                 ),
+                if (_zipResolvedCity != null) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      const Icon(Icons.place, size: 14, color: Colors.green),
+                      const SizedBox(width: 4),
+                      Text(
+                        _zipResolvedCity!,
+                        style: const TextStyle(color: Colors.green, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 16),
                 _buildAgeRangeSlider(),
               ],
@@ -762,6 +842,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               bottom: 0,
               right: 0,
               child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: _isUploading
                     ? null
                     : () => _pickAndUploadAvatar(profile.id, profile),
@@ -794,6 +875,19 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 'Square photo recommended.\nShows on your profile card & in rooms.',
                 style: DesignTypography.caption.copyWith(color: DesignColors.textGray),
               ),
+              const SizedBox(height: 8),
+              TextButton.icon(
+                onPressed: _isUploading
+                    ? null
+                    : () => _pickAndUploadAvatar(profile.id, profile),
+                icon: const Icon(Icons.photo_library_outlined, size: 16),
+                label: Text(_isUploading ? 'Uploading…' : 'Change Photo'),
+                style: TextButton.styleFrom(
+                  foregroundColor: DesignColors.accent,
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
             ],
           ),
         ),
@@ -806,6 +900,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   // ════════════════════════════════════════════════════════════
   Widget _buildCoverPhotoButton(UserProfile profile) {
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: _isUploading ? null : () => _pickAndUploadCoverPhoto(profile.id, profile),
       child: Container(
         height: 80,
@@ -888,6 +983,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     top: 4,
                     right: 4,
                     child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () => setState(() => _galleryPhotos.removeAt(i)),
                       child: Container(
                         padding: const EdgeInsets.all(4),
@@ -904,6 +1000,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               );
             }
             return GestureDetector(
+              behavior: HitTestBehavior.opaque,
               onTap: () => _addGalleryPhoto(profile),
               child: Container(
                 decoration: BoxDecoration(

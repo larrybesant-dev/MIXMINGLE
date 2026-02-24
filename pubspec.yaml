@@ -1,7 +1,7 @@
 name: mixmingle
 description: A social video chat platform for live performances and global connections.
 publish_to: "none"
-version: 0.1.0+101
+version: 1.0.0+1
 
 environment:
   sdk: ">=3.3.0 <4.0.0"
@@ -41,6 +41,9 @@ dependencies:
   photo_view: ^0.15.0
   lottie: ^3.0.0
 
+  # Audio (landing music, profile music, micro-sounds)
+  audioplayers: ^6.1.0
+
   # Utilities
   intl: ^0.20.2
   timeago: ^3.7.0
@@ -61,13 +64,14 @@ dependencies:
   # Environment
   flutter_dotenv: ^6.0.0
   # Web platform interop (required by web-only implementation files)
-  web: ^0.5.0
+  web: ^1.1.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
   integration_test:
     sdk: flutter
+  flutter_launcher_icons: ^0.14.3
   mockito: ^5.4.4
   build_runner: ^2.4.8
   fake_cloud_firestore: ^4.0.1
@@ -77,12 +81,23 @@ dev_dependencies:
 
 
 dependency_overrides:
-  web: ^0.5.0
+  web: ^1.1.0
   firebase_storage_platform_interface: any
   cloud_firestore_platform_interface: any
   cloud_functions_platform_interface: any
   firebase_auth_platform_interface: any
   firebase_messaging_platform_interface: any
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/app_logo.png"
+  adaptive_icon_background: "#0D0D1A"
+  adaptive_icon_foreground: "assets/images/app_logo.png"
+  web:
+    generate: false
+  windows:
+    generate: false
+
 flutter:
   uses-material-design: true
   assets:
@@ -91,6 +106,7 @@ flutter:
     - assets/images/logo.jpg
     - assets/icons/
     - assets/animations/
+    - assets/audio/
     - assets/data/interests.json
     - .env
 

@@ -1,7 +1,7 @@
-﻿import 'package:cloud_functions/cloud_functions.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
-import '../core/utils/app_logger.dart';
+import '../../core/utils/app_logger.dart';
 
 /// Service to seed Firestore collections with initial data
 class FirestoreSeedingService {

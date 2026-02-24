@@ -61,6 +61,28 @@ class Room {
   final bool isRoomLocked; // No new joins allowed
   final bool isRoomEnded; // Room is closed
 
+  // ── Sprint 1: Vibe ─────────────────────────────────────────
+  /// Vibe tag describing the room's energy (matches user VibeTag vocabulary).
+  final String? vibeTag;
+
+  /// Coarse energy bucket used for home-screen rails ("chill" | "high_energy").
+  final String? energyLevel;
+
+  // ── Sprint 4 Stubs: Monetisation Rails (feature-flagged off) ────────
+  /// True when the room requires a paid ticket or VIP tier to enter.
+  final bool isPremiumRoom;
+
+  /// Access gate: "everyone" | "vip_only" | "subscribers_only"
+  final String? accessTier;
+
+  /// Boost score — higher value surfaces the room in recommended rails.
+  final int boostScore;
+
+  // ── Intelligence Layer ──────────────────────────────────────
+  /// Number of new joins in the last 5 minutes — written by Cloud Function.
+  /// Used to power the "Heating Up" rail on home/rooms pages.
+  final int joinVelocity;
+
   // Getters for convenience properties
   int get currentMembers => participantIds.length;
   int get capacity => maxUsers;
@@ -110,6 +132,15 @@ class Room {
     this.removedUsers = const [],
     this.isRoomLocked = false,
     this.isRoomEnded = false,
+    // Sprint 1
+    this.vibeTag,
+    this.energyLevel,
+    // Sprint 4 stubs
+    this.isPremiumRoom = false,
+    this.accessTier,
+    this.boostScore = 0,
+    // Intelligence layer
+    this.joinVelocity = 0,
   })  : updatedAt = updatedAt ?? createdAt,
         isActive = isActive ?? isLive,
         privacy = privacy ?? (isLocked ? 'private' : 'public'),
@@ -179,6 +210,15 @@ class Room {
       removedUsers: List<String>.from(json['removedUsers'] ?? []),
       isRoomLocked: json['isRoomLocked'] ?? false,
       isRoomEnded: json['isRoomEnded'] ?? false,
+      // Sprint 1
+      vibeTag: json['vibeTag'] as String?,
+      energyLevel: json['energyLevel'] as String?,
+      // Sprint 4 stubs
+      isPremiumRoom: json['isPremiumRoom'] as bool? ?? false,
+      accessTier: json['accessTier'] as String?,
+      boostScore: json['boostScore'] as int? ?? 0,
+      // Intelligence layer
+      joinVelocity: json['joinVelocity'] as int? ?? 0,
     );
   }
 
@@ -229,6 +269,15 @@ class Room {
       'removedUsers': removedUsers,
       'isRoomLocked': isRoomLocked,
       'isRoomEnded': isRoomEnded,
+      // Sprint 1
+      'vibeTag': vibeTag,
+      'energyLevel': energyLevel,
+      // Sprint 4 stubs
+      'isPremiumRoom': isPremiumRoom,
+      'accessTier': accessTier,
+      'boostScore': boostScore,
+      // Intelligence layer
+      'joinVelocity': joinVelocity,
     };
   }
 
@@ -279,6 +328,15 @@ class Room {
       'removedUsers': removedUsers,
       'isRoomLocked': isRoomLocked,
       'isRoomEnded': isRoomEnded,
+      // Sprint 1
+      'vibeTag': vibeTag,
+      'energyLevel': energyLevel,
+      // Sprint 4 stubs
+      'isPremiumRoom': isPremiumRoom,
+      'accessTier': accessTier,
+      'boostScore': boostScore,
+      // Intelligence layer
+      'joinVelocity': joinVelocity,
     };
   }
 
@@ -351,6 +409,15 @@ class Room {
     List<String>? removedUsers,
     bool? isRoomLocked,
     bool? isRoomEnded,
+    // Sprint 1
+    String? vibeTag,
+    String? energyLevel,
+    // Sprint 4 stubs
+    bool? isPremiumRoom,
+    String? accessTier,
+    int? boostScore,
+    // Intelligence layer
+    int? joinVelocity,
   }) {
     return Room(
       id: id ?? this.id,
@@ -389,6 +456,15 @@ class Room {
       removedUsers: removedUsers ?? this.removedUsers,
       isRoomLocked: isRoomLocked ?? this.isRoomLocked,
       isRoomEnded: isRoomEnded ?? this.isRoomEnded,
+      // Sprint 1
+      vibeTag: vibeTag ?? this.vibeTag,
+      energyLevel: energyLevel ?? this.energyLevel,
+      // Sprint 4 stubs
+      isPremiumRoom: isPremiumRoom ?? this.isPremiumRoom,
+      accessTier: accessTier ?? this.accessTier,
+      boostScore: boostScore ?? this.boostScore,
+      // Intelligence layer
+      joinVelocity: joinVelocity ?? this.joinVelocity,
     );
   }
 

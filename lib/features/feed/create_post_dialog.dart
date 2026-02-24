@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/design_system/design_constants.dart';
-import '../../services/social_feed_service.dart';
+import '../../services/social/social_feed_service.dart';
 import '../../shared/models/post.dart';
 
 /// Dialog for creating a new post

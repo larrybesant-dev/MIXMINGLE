@@ -1,5 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
-import '../shared/models/tip.dart';
+import '../../shared/models/tip.dart';
 
 class TippingService {
   final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');

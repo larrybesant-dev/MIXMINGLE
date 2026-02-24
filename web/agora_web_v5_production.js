@@ -38,6 +38,11 @@
     }
   };
 
+  // ========== FLUTTER CALLBACK HOLDER ==========
+  // Flutter (via dart:js) can register callbacks on window.agoraWeb
+  // for remote user events. We initialize it once here.
+  window.agoraWeb = window.agoraWeb || {};
+
   // ========== STATE ==========
   let state = {
     initialized: false,
@@ -212,10 +217,11 @@
         throw new Error('AgoraRTC SDK not available');
       }
 
-      // Create client with modern codec (AV1 if available, else VP8)
+      // Create client with VP8 codec — widest cross-browser support
+      // (AV1 is not available on Safari; VP8 works on Chrome, Edge, Firefox, Safari)
       state.client = window.AgoraRTC.createClient({
         mode: 'rtc',
-        codec: 'av1',  // newer, more efficient; fallback to vp8 automatic
+        codec: 'vp8',
       });
 
       log('DEBUG', 'Client created, setting role to host...');
@@ -224,6 +230,46 @@
       await state.client.setClientRole('host');
 
       log('SUCCESS', 'Agora client created and configured');
+
+      // ---- REMOTE USER EVENT LISTENERS ----
+      // Subscribe to incoming audio/video from other participants
+      // and fire Flutter callbacks so the Dart UI can update.
+      state.client.on('user-published', async (user, mediaType) => {
+        log('INFO', `Remote user published uid=${user.uid} mediaType=${mediaType}`);
+        state.remoteUsers.set(String(user.uid), user);
+        try {
+          await state.client.subscribe(user, mediaType);
+          if (mediaType === 'audio' && user.audioTrack) {
+            user.audioTrack.play();
+            log('SUCCESS', `▶️ Playing remote audio uid=${user.uid}`);
+          }
+        } catch (subErr) {
+          log('ERROR', `Failed to subscribe uid=${user.uid}`, subErr);
+        }
+        // Notify Flutter
+        if (typeof window.agoraWeb.onRemoteUserPublished === 'function') {
+          try { window.agoraWeb.onRemoteUserPublished({ uid: String(user.uid), mediaType }); } catch (_) {}
+        }
+      });
+
+      state.client.on('user-unpublished', (user, mediaType) => {
+        log('INFO', `Remote user unpublished uid=${user.uid} mediaType=${mediaType}`);
+        // Notify Flutter
+        if (typeof window.agoraWeb.onRemoteUserUnpublished === 'function') {
+          try { window.agoraWeb.onRemoteUserUnpublished({ uid: String(user.uid), mediaType }); } catch (_) {}
+        }
+      });
+
+      state.client.on('user-left', (user) => {
+        log('INFO', `Remote user left uid=${user.uid}`);
+        state.remoteUsers.delete(String(user.uid));
+        // Notify Flutter
+        if (typeof window.agoraWeb.onRemoteUserLeft === 'function') {
+          try { window.agoraWeb.onRemoteUserLeft({ uid: String(user.uid) }); } catch (_) {}
+        }
+      });
+      // ---- END REMOTE USER LISTENERS ----
+
       return state.client;
     } catch (err) {
       log('ERROR', 'Failed to create client', {
@@ -555,6 +601,36 @@
       lastErrors: state.errorLog.slice(-5)
     };
   };
+
+  // ========== WEB TAB VISIBILITY HANDLING ==========
+  // When the user switches browser tabs, mute local tracks to prevent
+  // continuous audio/video transmission from a background tab.
+  // This mirrors the AppLifecycleState.paused handling on mobile.
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', async function () {
+      if (!state.currentChannel) return; // Not in a channel
+
+      if (document.hidden) {
+        log('INFO', 'Tab hidden — muting local tracks to save bandwidth');
+        try {
+          if (state.localTracks.audio) await state.localTracks.audio.setMuted(true);
+          if (state.localTracks.video) await state.localTracks.video.setMuted(true);
+        } catch (e) {
+          log('WARNING', 'Failed to mute tracks on tab hidden', e.message);
+        }
+      } else {
+        log('INFO', 'Tab visible — unmuting local tracks');
+        try {
+          // Only unmute if they were previously active; rely on Flutter state
+          // for whether audio/video was actually enabled by the user.
+          if (state.localTracks.audio) await state.localTracks.audio.setMuted(false);
+          if (state.localTracks.video) await state.localTracks.video.setMuted(false);
+        } catch (e) {
+          log('WARNING', 'Failed to unmute tracks on tab visible', e.message);
+        }
+      }
+    });
+  }
 
   // ========== STARTUP ==========
   log('INFO', 'Agora Web v5 bridge loaded and ready');

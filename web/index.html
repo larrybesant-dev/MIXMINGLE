@@ -12,6 +12,7 @@
     content="default-src 'self' https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https: fonts.googleapis.com; font-src 'self' https: fonts.gstatic.com; img-src 'self' https: data: blob:; connect-src 'self' https: wss: blob:; frame-src; media-src 'self' https: blob:; object-src 'none'; base-uri 'self';">
   <title>Mix & Mingle</title>
   <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="icon" type="image/png" href="favicon.png">
 
   <style>
@@ -90,6 +91,7 @@
   <!-- Production Bridge Validation - Verify bridge loaded successfully -->
   <script>
     (function() {
+      const startTime = Date.now();
       const checkInterval = setInterval(() => {
         const required = [
           'agoraWebInit',
@@ -106,8 +108,8 @@
           console.log('%c[AGORA] ✅ Production bridge ready with all functions',
                       'color: #4CAF50; font-weight: bold;');
           clearInterval(checkInterval);
-        } else if (Date.now() > 15000) { // 15 second timeout
-          console.warn('%c[AGORA] ⚠️  Missing functions: ' + missing.join(', '),
+        } else if (Date.now() - startTime > 15000) { // 15 second timeout
+          console.warn('%c[AGORA] ⚠️  Missing functions after 15s: ' + missing.join(', '),
                        'color: #FF9800; font-weight: bold;');
           clearInterval(checkInterval);
         }
@@ -196,16 +198,34 @@
   <script src="flutter_bootstrap.js" defer></script>
 
   <script>
-    // Hide loading screen once Flutter has rendered
-    window.addEventListener('load', function () {
-      // Give Flutter time to render (increased timeout to 5 seconds)
-      setTimeout(function () {
+    // Hide loading screen when Flutter has actually rendered its first frame.
+    // Uses a MutationObserver to detect Flutter's root element (flt-glass-pane),
+    // with a 6-second hard fallback.
+    (function () {
+      function hideLoader() {
         const loadingDiv = document.getElementById('loading');
-        if (loadingDiv) {
-          loadingDiv.classList.add('hidden');
+        if (loadingDiv) loadingDiv.classList.add('hidden');
+      }
+
+      // Observe body for Flutter's root element
+      const observer = new MutationObserver(function () {
+        if (document.querySelector('flt-glass-pane') ||
+            document.querySelector('flutter-view')) {
+          observer.disconnect();
+          // Small delay so Flutter paints at least one frame
+          requestAnimationFrame(function () { requestAnimationFrame(hideLoader); });
         }
-      }, 4500); // 4.5 seconds to let Flutter render
-    });
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      // Hard fallback: hide after 6 seconds regardless
+      window.addEventListener('load', function () {
+        setTimeout(function () {
+          observer.disconnect();
+          hideLoader();
+        }, 6000);
+      });
+    })();
   </script>
 </body>
 

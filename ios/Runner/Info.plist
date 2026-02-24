@@ -5,7 +5,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Mix Mingle</string>
+	<string>Mix &amp; Mingle</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -13,7 +13,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>mix_and_mingle</string>
+	<string>MixMingle</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -53,5 +53,11 @@
 	<string>Mix &amp; Mingle needs microphone access to enable audio chat in rooms</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Mix &amp; Mingle needs photo library access to let you share images</string>
+
+	<!-- Background Modes: Enable FCM background push delivery -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

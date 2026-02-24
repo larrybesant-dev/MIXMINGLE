@@ -1,7 +1,7 @@
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/foundation.dart';
-import '../shared/models/remote_user.dart';
-import 'video_engine_interface.dart';
+import '../../shared/models/remote_user.dart';
+import '../video/video_engine_interface.dart';
 import 'dart:async';
 
 class AgoraMobileEngine implements IVideoEngine {

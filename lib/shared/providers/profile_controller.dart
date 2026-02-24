@@ -1,8 +1,9 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_profile.dart';
-import '../../services/profile_service.dart';
-import '../../services/storage_service.dart';
+import '../../services/user/profile_service.dart';
+import '../../services/storage/storage_service.dart';
 import 'package:image_picker/image_picker.dart';
 import 'video_media_providers.dart'; // Import to use storageServiceProvider
 
@@ -75,6 +76,13 @@ class ProfileController {
   Future<void> updateProfile(UserProfile profile) async {
     try {
       await _profileService.updateUserProfile(profile);
+      // Sync displayName to Firebase Auth so the loading fallback can
+      // distinguish new users (null displayName) from returning ones.
+      final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
+      if (firebaseUser != null && (profile.displayName ?? '').isNotEmpty) {
+        await firebaseUser.updateDisplayName(profile.displayName);
+        debugPrint('✅ [ProfileController] Firebase Auth displayName synced: ${profile.displayName}');
+      }
     } catch (e) {
       debugPrint('Failed to update profile: $e');
       rethrow;

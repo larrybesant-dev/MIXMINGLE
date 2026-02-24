@@ -1,9 +1,9 @@
-﻿
+
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../services/chat_service.dart';
-import '../../services/messaging_service.dart';
+import '../../services/chat/chat_service.dart';
+import '../../services/chat/messaging_service.dart';
 import '../models/message.dart';
 import '../models/chat_message.dart';
 import '../models/direct_message.dart';

@@ -12,6 +12,12 @@
 @import agora_rtc_engine;
 #endif
 
+#if __has_include(<audioplayers_darwin/AudioplayersDarwinPlugin.h>)
+#import <audioplayers_darwin/AudioplayersDarwinPlugin.h>
+#else
+@import audioplayers_darwin;
+#endif
+
 #if __has_include(<cloud_firestore/FLTFirebaseFirestorePlugin.h>)
 #import <cloud_firestore/FLTFirebaseFirestorePlugin.h>
 #else
@@ -58,6 +64,12 @@
 #import <firebase_messaging/FLTFirebaseMessagingPlugin.h>
 #else
 @import firebase_messaging;
+#endif
+
+#if __has_include(<firebase_performance/FirebasePerformancePlugin.h>)
+#import <firebase_performance/FirebasePerformancePlugin.h>
+#else
+@import firebase_performance;
 #endif
 
 #if __has_include(<firebase_remote_config/FirebaseRemoteConfigPlugin.h>)
@@ -142,6 +154,7 @@
 
 + (void)registerWithRegistry:(NSObject<FlutterPluginRegistry>*)registry {
   [AgoraRtcNgPlugin registerWithRegistrar:[registry registrarForPlugin:@"AgoraRtcNgPlugin"]];
+  [AudioplayersDarwinPlugin registerWithRegistrar:[registry registrarForPlugin:@"AudioplayersDarwinPlugin"]];
   [FLTFirebaseFirestorePlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseFirestorePlugin"]];
   [FirebaseFunctionsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FirebaseFunctionsPlugin"]];
   [FilePickerPlugin registerWithRegistrar:[registry registrarForPlugin:@"FilePickerPlugin"]];
@@ -150,6 +163,7 @@
   [FLTFirebaseCorePlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseCorePlugin"]];
   [FLTFirebaseCrashlyticsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseCrashlyticsPlugin"]];
   [FLTFirebaseMessagingPlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseMessagingPlugin"]];
+  [FirebasePerformancePlugin registerWithRegistrar:[registry registrarForPlugin:@"FirebasePerformancePlugin"]];
   [FirebaseRemoteConfigPlugin registerWithRegistrar:[registry registrarForPlugin:@"FirebaseRemoteConfigPlugin"]];
   [FLTFirebaseStoragePlugin registerWithRegistrar:[registry registrarForPlugin:@"FLTFirebaseStoragePlugin"]];
   [FlutterLocalNotificationsPlugin registerWithRegistrar:[registry registrarForPlugin:@"FlutterLocalNotificationsPlugin"]];

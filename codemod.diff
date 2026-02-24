@@ -1,0 +1,5 @@
+=== lib/shared/widgets\badge_widgets.dart (1 change(s)) ===
+  L180  -     final badgeWidgets = <Widget>[];
+  L180  +     final badgeWidgets = const <Widget>[];
+
+

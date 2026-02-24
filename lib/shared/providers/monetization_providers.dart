@@ -1,7 +1,7 @@
-﻿// lib/providers/monetization_providers.dart
+// lib/providers/monetization_providers.dart
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/monetization_service.dart';
+import '../../services/payments/monetization_service.dart';
 import '../models/entitlement_model.dart';
 
 final monetizationServiceProvider = Provider<MonetizationService>((ref) => MonetizationService());

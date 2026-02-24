@@ -2,8 +2,8 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../shared/models/subscription_plan_model.dart';
-import '../shared/models/entitlement_model.dart';
+import '../../shared/models/subscription_plan_model.dart';
+import '../../shared/models/entitlement_model.dart';
 
 class MonetizationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -9,7 +9,7 @@ import 'package:mixmingle/shared/models/room_role.dart';
 import 'package:mixmingle/shared/models/room_event.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
 import 'package:mixmingle/shared/providers/room_providers.dart' as legacy_room_providers;
-import 'package:mixmingle/services/agora_video_service.dart';
+import 'package:mixmingle/services/agora/agora_video_service.dart';
 import 'package:mixmingle/core/utils/app_logger.dart';
 import 'package:mixmingle/features/room/widgets/voice_room_chat_overlay.dart';
 import 'package:mixmingle/features/room/widgets/moderation_panel.dart';
@@ -239,6 +239,14 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
       await agoraService.joinRoom(widget.room.id);
       AppLogger.info('ðŸ”¥ [JOIN] joinRoom completed');
 
+
+      // #1 Record vibe join for intelligence layer
+      final vibeUid = firebase_auth.FirebaseAuth.instance.currentUser?.uid;
+      if (vibeUid != null && widget.room.vibeTag != null) {
+        ref.read(vibeIntelligenceServiceProvider)
+            .recordVibeJoin(userId: vibeUid, vibeTag: widget.room.vibeTag!);
+      }
+
       // Trigger tile animation
       _tileAnimationController.forward();
 
@@ -248,9 +256,12 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
           _isInitializing = false;
           _currentSpeakerUserId ??= user!.id; // Default speaker is self when stage mode is used
         });
-
+        // #8 Activate vibe accent for this room
+        if (widget.room.vibeTag != null) {
+          ref.read(activeVibeProvider.notifier).set(widget.room.vibeTag);
+        }
         // System message will be added automatically via Firestore trigger
-        debugPrint('âœ… Successfully joined room');
+        debugPrint('✅ Successfully joined room');
       }
     } catch (e) {
       debugPrint('âŒ Failed to initialize room: $e');
@@ -294,6 +305,8 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
       // System message will be added automatically via Firestore trigger
       debugPrint('ðŸ‘‹ Leaving room...');
       await agoraService.leaveRoom();
+      // #8 Reset vibe accent
+      ref.read(activeVibeProvider.notifier).set(null);
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -431,6 +444,8 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
       }
     }
 
+    // #8 Reset vibe accent on dispose
+    ref.read(activeVibeProvider.notifier).set(null);
     super.dispose();
   }
 

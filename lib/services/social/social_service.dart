@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../shared/models/following.dart';
-import '../shared/models/user.dart';
-import 'analytics_service.dart';
+import '../../shared/models/following.dart';
+import '../../shared/models/user.dart';
+import '../analytics/analytics_service.dart';
 
 /// Service for handling social features like following/unfollowing users
 class SocialService {

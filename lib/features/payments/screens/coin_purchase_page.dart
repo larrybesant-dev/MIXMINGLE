@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/services/payment_service.dart';
+import 'package:mixmingle/services/payments/payment_service.dart';
 import 'package:mixmingle/shared/providers/auth_providers.dart';
 
 class CoinPurchasePage extends ConsumerStatefulWidget {

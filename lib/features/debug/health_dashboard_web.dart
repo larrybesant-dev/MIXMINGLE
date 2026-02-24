@@ -1,9 +1,9 @@
-﻿// ignore_for_file: avoid_web_libraries_in_flutter
+// ignore_for_file: avoid_web_libraries_in_flutter
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/app_health_service.dart';
-import '../../services/agora_web_bridge_v5.dart';
-import '../../services/agora_service.dart';
+import '../../services/infra/app_health_service.dart';
+import '../../services/agora/agora_web_bridge_v5.dart';
+import '../../services/agora/agora_service.dart';
 import '../../core/design_system/design_constants.dart';
 import 'package:web/web.dart' as web;
 import 'dart:ui_web' as ui_web;

@@ -7,7 +7,7 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/membership_tier.dart';
-import '../services/revenuecat_service.dart';
+import 'package:mixmingle/services/payments/revenuecat_service.dart';
 import '../services/membership_service.dart';
 import '../../../core/theme/neon_colors.dart';
 import '../../../core/design_system/design_constants.dart';

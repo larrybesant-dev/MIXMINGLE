@@ -1,7 +1,7 @@
-﻿// lib/providers/relationship_providers.dart
+// lib/providers/relationship_providers.dart
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/relationship_service.dart';
+import '../../services/social/relationship_service.dart';
 import '../models/relationship_model.dart';
 
 final relationshipServiceProvider = Provider<RelationshipService>((ref) => RelationshipService());

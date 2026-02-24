@@ -90,4 +90,8 @@ export '../../features/room/providers/room_subcollection_providers.dart';
 // Group chat feature providers
 export '../../features/group_chat/providers/group_chat_providers.dart';
 
-
+// ============================================================================
+// INTELLIGENCE + VIBE THEME PROVIDERS  (#7 #8 #10)
+// ============================================================================
+export 'vibe_theme_provider.dart';
+export '../../core/intelligence/vibe_intelligence_service.dart';

@@ -1,6 +1,6 @@
 // lib/services/breakout_room_service.dart
 
-import '../shared/models/breakout_room_model.dart';
+import '../../shared/models/breakout_room_model.dart';
 
 class BreakoutRoomService {
   // Future-ready skeleton for breakout room management

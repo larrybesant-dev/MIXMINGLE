@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../shared/models/post.dart';
+import '../../shared/models/post.dart';
 
 /// Social Feed Service
 /// Manages posts, likes, comments, and feed pagination

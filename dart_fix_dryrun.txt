@@ -1,0 +1,27 @@
+Computing fixes in mixmingle (dry run)...
+
+8 proposed fixes in 5 files.
+
+lib\app_routes.dart
+  unused_import - 2 fixes
+
+lib\core\stubs\matching_stubs.dart
+  unnecessary_cast - 2 fixes
+  unused_import - 1 fix
+
+lib\features\onboarding\screens\profile_essentials_page.dart
+  unused_import - 1 fix
+
+lib\features\speed_dating\screens\speed_dating_session_page.dart
+  unused_import - 1 fix
+
+pubspec.yaml
+  missing_dependency - 1 fix
+
+To fix an individual diagnostic, run one of:
+  dart fix --apply --code=missing_dependency 
+  dart fix --apply --code=unnecessary_cast 
+  dart fix --apply --code=unused_import 
+
+To fix all diagnostics, run:
+  dart fix --apply 

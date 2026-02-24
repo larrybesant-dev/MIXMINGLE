@@ -14,12 +14,13 @@ import 'features/auth/screens/neon_signup_page.dart';
 import 'features/auth/forgot_password_page.dart';
 import 'core/theme/neon_theme.dart';
 import 'core/utils/app_logger.dart';
+import 'shared/providers/vibe_theme_provider.dart';
 import 'core/health_check_system.dart';
 import 'core/crashlytics/crashlytics_service.dart';
 import 'core/performance/performance_service.dart';
-import 'services/notification_service.dart';
-import 'services/agora_service.dart';
-import 'services/room_firestore_service.dart';
+import 'services/notifications/notification_service.dart';
+import 'services/agora/agora_service.dart';
+import 'services/room/room_firestore_service.dart';
 import 'app/app_routes.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -169,15 +170,22 @@ void main() {
 }
 
 /// Always show landing page first - user must manually login
-class _AlwaysLandingApp extends StatelessWidget {
+class _AlwaysLandingApp extends riverpod.ConsumerWidget {
   const _AlwaysLandingApp();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, riverpod.WidgetRef ref) {
+    // #8 Adaptive Neon Glow — vibe accent shifts the app-wide primary colour
+    final vibeAccent = ref.watch(vibeAccentProvider);
+    final themedTheme = NeonTheme.darkTheme.copyWith(
+      colorScheme: NeonTheme.darkTheme.colorScheme.copyWith(
+        primary: vibeAccent,
+      ),
+    );
     return MaterialApp(
       title: 'Mix & Mingle - Vibes Around the World',
       debugShowCheckedModeBanner: false,
-      theme: NeonTheme.darkTheme,
+      theme: themedTheme,
       home: const LandingPage(),
       onGenerateRoute: (settings) {
         debugPrint('🌐 [AlwaysLanding] Route: ${settings.name}');

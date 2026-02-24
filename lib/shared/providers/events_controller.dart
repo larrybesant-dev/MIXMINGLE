@@ -1,9 +1,9 @@
-﻿
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/event.dart';
-import '../../services/events_service.dart';
+import '../../services/events/events_service.dart';
 import 'auth_providers.dart';
 
 // Events service provider

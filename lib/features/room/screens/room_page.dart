@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -9,9 +9,9 @@ import 'package:mixmingle/shared/models/message.dart' as room_message;
 import 'package:mixmingle/shared/widgets/glow_text.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
-import 'package:mixmingle/services/agora_video_service.dart';
-import 'package:mixmingle/services/messaging_service.dart';
-import 'package:mixmingle/services/room_manager_service.dart';
+import 'package:mixmingle/services/agora/agora_video_service.dart';
+import 'package:mixmingle/services/chat/messaging_service.dart';
+import 'package:mixmingle/services/room/room_manager_service.dart';
 import 'package:mixmingle/features/room/widgets/participant_list_sidebar.dart';
 import 'package:mixmingle/features/room/widgets/raised_hands_panel.dart';
 import 'package:mixmingle/features/room/widgets/room_controls.dart';
@@ -44,6 +44,10 @@ class _RoomPageState extends ConsumerState<RoomPage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(agoraVideoServiceProvider).addListener(_onAgoraServiceChanged);
+      // #8 Activate vibe accent for this room
+      if (widget.room.vibeTag != null) {
+        ref.read(activeVibeProvider.notifier).set(widget.room.vibeTag);
+      }
     });
   }
 
@@ -53,6 +57,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     _messageController.dispose();
     _scrollController.dispose();
     ref.read(agoraVideoServiceProvider).leaveRoom();
+    // #8 Reset vibe accent when leaving
+    ref.read(activeVibeProvider.notifier).set(null);
     super.dispose();
   }
 
@@ -69,6 +75,13 @@ class _RoomPageState extends ConsumerState<RoomPage> {
       final agoraService = ref.read(agoraVideoServiceProvider);
       await agoraService.initialize();
       await agoraService.joinRoom(widget.room.id);
+
+      // #1 Record vibe join for intelligence layer
+      final _vibeUid = FirebaseAuth.instance.currentUser?.uid;
+      if (_vibeUid != null && widget.room.vibeTag != null) {
+        ref.read(vibeIntelligenceServiceProvider)
+            .recordVibeJoin(userId: _vibeUid, vibeTag: widget.room.vibeTag!);
+      }
 
       if (mounted) {
         setState(() {

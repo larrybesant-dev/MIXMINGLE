@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
-import '../shared/models/remote_user.dart';
+import '../../shared/models/remote_user.dart';
 import 'video_engine_interface.dart';
-import 'agora_web_engine.dart';
-import 'agora_mobile_engine.dart';
+import '../agora/agora_web_engine.dart';
+import '../agora/agora_mobile_engine.dart';
 
 /// Unified Video Engine Service
 ///

@@ -1,22 +1,22 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import '../../services/auth_service.dart';
-import '../../services/firestore_service.dart';
-import '../../services/analytics_service.dart';
-// REMOVED: import '../../services/agora_service.dart'; - Use AgoraVideoService instead
-import '../../services/messaging_service.dart';
-import '../../services/social_service.dart';
-import '../../services/tipping_service.dart';
-import '../../services/storage_service.dart';
-import '../../services/token_service.dart';
-import '../../services/notification_service.dart';
-import '../../services/room_service.dart';
-import '../../services/moderation_service.dart';
-import '../../services/typing_service.dart';
-import '../../services/coin_economy_service.dart';
-import '../../services/subscription_service.dart';
+import '../../services/auth/auth_service.dart';
+import '../../services/infra/firestore_service.dart';
+import '../../services/analytics/analytics_service.dart';
+// REMOVED: import '../../services/agora/agora_service.dart'; - Use AgoraVideoService instead
+import '../../services/chat/messaging_service.dart';
+import '../../services/social/social_service.dart';
+import '../../services/payments/tipping_service.dart';
+import '../../services/storage/storage_service.dart';
+import '../../services/infra/token_service.dart';
+import '../../services/notifications/notification_service.dart';
+import '../../services/room/room_service.dart';
+import '../../services/moderation/moderation_service.dart';
+import '../../services/chat/typing_service.dart';
+import '../../services/payments/coin_economy_service.dart';
+import '../../services/payments/subscription_service.dart';
 import '../models/user.dart';
 import '../models/room.dart';
 import '../models/privacy_settings.dart';

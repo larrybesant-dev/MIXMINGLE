@@ -1,10 +1,10 @@
-﻿
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/chat_message.dart';
 import '../models/chat_room.dart';
-import '../../services/chat_service.dart';
+import '../../services/chat/chat_service.dart';
 
 // Chat service provider
 final chatServiceProvider = Provider<ChatService>((ref) {

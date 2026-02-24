@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mix_and_mingle/features/rooms/services/category_service.dart';
+import 'package:mix_and_mingle/features/room/services/category_service.dart';
 
 void main() {
   late CategoryService categoryService;

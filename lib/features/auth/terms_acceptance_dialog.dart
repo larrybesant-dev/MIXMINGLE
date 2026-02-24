@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/terms_service.dart';
+import '../../services/infra/terms_service.dart';
 import '../../core/utils/app_logger.dart';
 
 /// Dialog for accepting Terms of Service and Privacy Policy

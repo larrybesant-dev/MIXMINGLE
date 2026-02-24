@@ -46,9 +46,15 @@ class DefaultFirebaseOptions {
     storageBucket: 'mix-and-mingle-v2.firebasestorage.app',
   );
 
+  // ⚠️ WARNING: This iOS config is using the WEB appId — iOS was NOT registered
+  // in Firebase. You MUST:
+  //  1. Go to Firebase Console → Project Settings → Add App → iOS
+  //  2. Enter bundle ID: com.mixandmingle.mixAndMingle
+  //  3. Download GoogleService-Info.plist → place in ios/Runner/
+  //  4. Run: flutterfire configure   (regenerates this file with the real iOS appId)
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4',
-    appId: '1:980846719834:web:a8981485ee574b25077963',
+    appId: '1:980846719834:web:a8981485ee574b25077963', // ← WRONG: replace with iOS appId
     messagingSenderId: '980846719834',
     projectId: 'mix-and-mingle-v2',
     authDomain: 'mix-and-mingle-v2.firebaseapp.com',

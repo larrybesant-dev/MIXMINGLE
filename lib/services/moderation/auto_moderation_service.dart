@@ -1,7 +1,7 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../shared/models/moderation_action.dart';
-import '../shared/models/chat_message.dart';
+import '../../shared/models/moderation_action.dart';
+import '../../shared/models/chat_message.dart';
 
 class AutoModerationService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

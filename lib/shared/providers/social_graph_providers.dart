@@ -1,5 +1,5 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/social_graph_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../services/social/social_graph_service.dart';
 import '../models/user_profile.dart';
 import '../models/user_presence.dart';
 import 'user_providers.dart'; // For profileServiceProvider

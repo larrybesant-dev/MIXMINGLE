@@ -3,8 +3,8 @@ import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import '../shared/models/user_profile.dart';
-import '../core/utils/cache_service.dart';
+import '../../shared/models/user_profile.dart';
+import '../../core/utils/cache_service.dart';
 
 class ProfileService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

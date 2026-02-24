@@ -1,7 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import '../../services/reporting_service.dart';
+import '../../services/events/reporting_service.dart';
 
 /// Admin page for reviewing and moderating reports
 class ModerationPage extends StatefulWidget {

@@ -1,9 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/profile_service.dart';
-import '../../services/presence_service.dart';
+import '../../services/user/profile_service.dart';
+import '../../services/social/presence_service.dart';
 import '../models/user_profile.dart';
 import '../models/user_presence.dart';
 import 'auth_providers.dart';

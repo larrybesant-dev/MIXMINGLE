@@ -1,5 +1,5 @@
-﻿import 'package:flutter/material.dart';
-import '../../services/reporting_service.dart';
+import 'package:flutter/material.dart';
+import '../../services/events/reporting_service.dart';
 
 /// Dialog for submitting a report
 class ReportDialog extends StatefulWidget {

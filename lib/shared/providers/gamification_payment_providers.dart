@@ -1,10 +1,10 @@
-﻿
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/gamification_service.dart';
-import '../../services/badge_service.dart';
-import '../../services/payment_service.dart';
-import '../../services/subscription_service.dart';
-import '../../services/analytics_service.dart';
+import '../../services/gamification/gamification_service.dart';
+import '../../services/gamification/badge_service.dart';
+import '../../services/payments/payment_service.dart';
+import '../../services/payments/subscription_service.dart';
+import '../../services/analytics/analytics_service.dart';
 import '../models/user_level.dart';
 import '../models/user_streak.dart';
 import '../models/achievement.dart';

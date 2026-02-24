@@ -1,10 +1,10 @@
-﻿
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import '../../services/auth_service.dart';
+import '../../services/auth/auth_service.dart';
 import '../models/user.dart' as shared_models;
 import '../models/user_profile.dart';
-import '../../services/firestore_service.dart';
+import '../../services/infra/firestore_service.dart';
 import 'user_providers.dart';
 
 /// Service providers
@@ -38,13 +38,18 @@ final currentUserProvider = StreamProvider<shared_models.User?>((ref) {
       final currentUser = firebaseAuth.currentUser;
 
       if (currentUser != null) {
-        // Return temporary user with Firebase data while Firestore loads
+        // Return temporary user with Firebase data while Firestore loads.
+        // IMPORTANT: Use empty strings when Firebase Auth has no displayName
+        // (new users who haven't completed profile) so the auth gate correctly
+        // routes them to CreateProfilePage instead of HomePageElectric.
         return Stream.value(
           shared_models.User(
             id: currentUser.uid,
             email: currentUser.email ?? '',
-            displayName: currentUser.displayName ?? 'User',
-            username: currentUser.email?.split('@').first ?? 'unknown',
+            displayName: currentUser.displayName ?? '',
+            username: currentUser.displayName != null
+                ? (currentUser.email?.split('@').first ?? '')
+                : '',
             bio: '',
             interests: [],
             avatarUrl: currentUser.photoURL ?? '',
@@ -79,8 +84,10 @@ final currentUserProvider = StreamProvider<shared_models.User?>((ref) {
           shared_models.User(
             id: currentUser.uid,
             email: currentUser.email ?? '',
-            displayName: currentUser.displayName ?? 'User',
-            username: currentUser.email?.split('@').first ?? 'unknown',
+            displayName: currentUser.displayName ?? '',
+            username: currentUser.displayName != null
+                ? (currentUser.email?.split('@').first ?? '')
+                : '',
             bio: '',
             interests: [],
             avatarUrl: currentUser.photoURL ?? '',

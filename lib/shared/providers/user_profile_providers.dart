@@ -1,7 +1,7 @@
-﻿// lib/providers/user_profile_providers.dart
+// lib/providers/user_profile_providers.dart
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/user_profile_service.dart';
+import '../../services/user/user_profile_service.dart';
 import '../models/user_profile_model.dart';
 
 final userProfileServiceProvider = Provider<UserProfileService>((ref) => UserProfileService());

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-import '../shared/models/remote_user.dart';
-import 'video_engine_interface.dart';
+import '../../shared/models/remote_user.dart';
+import '../video/video_engine_interface.dart';
 import 'package:flutter/foundation.dart';
 
 class AgoraWebEngine implements IVideoEngine {

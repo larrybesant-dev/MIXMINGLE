@@ -6,7 +6,7 @@ import '../features/auth/screens/neon_signup_page.dart';
 import '../features/auth/forgot_password_page.dart';
 // TEMP DISABLED: import '../features/onboarding_flow.dart';
 import '../features/landing/landing_page.dart';
-import '../features/home/home_page_electric.dart';
+import '../features/profile/screens/create_profile_page.dart';
 import 'app.dart';
 import '../shared/providers/all_providers.dart';
 import '../core/theme/neon_theme.dart';
@@ -201,18 +201,19 @@ class _ProfileIncompleteApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('ðŸš§ [ProfileIncomplete] Redirecting to home for $userId');
+    debugPrint('🧩 [ProfileIncomplete] Routing to CreateProfilePage for $userId');
 
-    // TEMP DISABLED: Onboarding bypassed
     return MaterialApp(
       title: 'Mix & Mingle',
       debugShowCheckedModeBanner: false,
       theme: NeonTheme.darkTheme,
-      home: const HomePageElectric(), // Skip onboarding, go to home (not const)
+      home: const CreateProfilePage(),
       onGenerateRoute: (settings) {
-        debugPrint('ðŸš§ [ProfileIncomplete] Route: ${settings.name}');
-        // All routes lead to home since onboarding is disabled
-        return MaterialPageRoute(builder: (_) => const HomePageElectric());
+        debugPrint('🧩 [ProfileIncomplete] Route: ${settings.name}');
+        // After profile creation CreateProfilePage navigates to /home which
+        // causes the auth gate to re-evaluate (onboardingComplete now false →
+        // HomePageElectric will show the welcome overlay once).
+        return MaterialPageRoute(builder: (_) => const CreateProfilePage());
       },
     );
   }

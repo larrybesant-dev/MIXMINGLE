@@ -1,9 +1,9 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
-import '../shared/models/achievement.dart';
-import '../shared/models/user_level.dart';
-import '../shared/models/user_streak.dart';
-import '../shared/models/activity.dart';
+import '../../shared/models/achievement.dart';
+import '../../shared/models/user_level.dart';
+import '../../shared/models/user_streak.dart';
+import '../../shared/models/activity.dart';
 
 class GamificationService {
   static final GamificationService _instance = GamificationService._internal();
