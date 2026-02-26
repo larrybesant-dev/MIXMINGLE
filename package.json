@@ -2,7 +2,7 @@
   "name": "mix-and-mingle-admin",
   "version": "1.0.0",
   "description": "Admin scripts for Mix & Mingle app",
-  "main": "create_sample_events.js",
+  "main": "index.js",
   "scripts": {
     "create-events": "node create_sample_events.js"
   },
