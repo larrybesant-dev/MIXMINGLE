@@ -12,6 +12,7 @@
 ## 📦 FILES DELIVERED
 
 ### Backend (806 lines)
+
 ```
 functions/src/
   ✅ speedDatingComplete.ts (806 lines)
@@ -28,6 +29,7 @@ functions/src/
 ```
 
 ### Frontend Providers (585 lines)
+
 ```
 lib/features/speed_dating/providers/
   ✅ speed_dating_queue_cloud.dart (223 lines)
@@ -49,6 +51,7 @@ lib/features/speed_dating/providers/
 ```
 
 ### Frontend Screens (577 lines)
+
 ```
 lib/features/speed_dating/screens/
   ✅ speed_dating_lobby_cloud.dart (577 lines)
@@ -61,6 +64,7 @@ lib/features/speed_dating/screens/
 ```
 
 ### Security (120 lines)
+
 ```
 ✅ firestore_speed_dating.rules (120 lines)
    - speed_dating_queue: write own entry only
@@ -71,6 +75,7 @@ lib/features/speed_dating/screens/
 ```
 
 ### Configuration & Exports
+
 ```
 functions/src/
   ✅ index.ts (UPDATED)
@@ -79,6 +84,7 @@ functions/src/
 ```
 
 ### Documentation (474 lines)
+
 ```
 ✅ SPEED_DATING_PRODUCTION_GUIDE.md (415 lines)
    - Complete deployment steps
@@ -165,6 +171,7 @@ functions/src/
 ## 🔐 SECURITY IMPROVEMENTS
 
 ### Before (v1)
+
 ❌ Client-side matching (insecure)
 ❌ Agora credentials hardcoded in app
 ❌ Direct Firestore writes
@@ -172,6 +179,7 @@ functions/src/
 ❌ Users could create fake sessions
 
 ### After (v2)
+
 ✅ Server-authoritative matching
 ✅ Agora tokens generated server-side (certificate hidden)
 ✅ Cloud Functions validate all operations
@@ -198,6 +206,7 @@ functions/src/
 8. **Minimum Age**: Both users must be 18+
 
 **Performance**:
+
 - Runs every 30 seconds via Cloud Scheduler
 - O(n²) complexity for n users in queue
 - Typical latency: <5 seconds for 100 users
@@ -276,6 +285,7 @@ firebase deploy --only functions
 ```
 
 Expected output:
+
 ```
 ✔  functions[matchSpeedDating(us-central1)] Successful create operation.
 ✔  functions[generateSpeedDatingToken(us-central1)] Successful create operation.
@@ -306,7 +316,7 @@ OR copy rules from `firestore_speed_dating.rules` to `firestore.rules`.
 
 - [ ] Firebase Console > Functions > All 8 functions deployed
 - [ ] Firebase Console > Functions > Logs > matchSpeedDating running every 30s
-- [ ] Firebase Console > Firestore > Rules > speed_dating_* rules visible
+- [ ] Firebase Console > Firestore > Rules > speed*dating*\* rules visible
 - [ ] Test with 2 users → should match within 30 seconds
 
 ---
@@ -314,6 +324,7 @@ OR copy rules from `firestore_speed_dating.rules` to `firestore.rules`.
 ## 🧪 TESTING SCENARIOS
 
 ### Scenario 1: Successful Match
+
 ```
 1. User A (male, 25, straight) joins queue
 2. User B (female, 23, straight) joins queue
@@ -326,6 +337,7 @@ OR copy rules from `firestore_speed_dating.rules` to `firestore.rules`.
 ```
 
 ### Scenario 2: No Match (Incompatible)
+
 ```
 1. User A (male, 25, gay) joins queue
 2. User B (male, 23, straight) joins queue
@@ -335,6 +347,7 @@ OR copy rules from `firestore_speed_dating.rules` to `firestore.rules`.
 ```
 
 ### Scenario 3: Early Exit
+
 ```
 1. Users matched and in session
 2. User A clicks exit button
@@ -345,6 +358,7 @@ OR copy rules from `firestore_speed_dating.rules` to `firestore.rules`.
 ```
 
 ### Scenario 4: Time Expiry
+
 ```
 1. Users matched and in session
 2. 5 minutes elapse
@@ -410,6 +424,7 @@ Cost estimate: $0.0006 per match (Firestore + Functions)
 ## 🐛 COMMON ISSUES
 
 ### Issue: Functions not deploying
+
 ```powershell
 # Check Firebase project
 firebase use
@@ -427,8 +442,10 @@ firebase deploy --only functions --force
 ```
 
 ### Issue: "TypeError: Cannot read property 'appid'"
+
 **Cause**: Agora config not set
 **Fix**:
+
 ```powershell
 firebase functions:config:set agora.appid="ec1b578586d24976a89d787d9ee4d5c7"
 firebase functions:config:set agora.cert="79a3e92a657042d08c3c26a26d1e70b6"
@@ -436,12 +453,15 @@ firebase deploy --only functions
 ```
 
 ### Issue: "User not found in queue"
+
 **Cause**: Queue document deleted before session starts
 **Fix**: Check Firestore rules, ensure no auto-delete logic
 
 ### Issue: Video black screen
+
 **Cause**: Browser permissions or token issue
 **Fix**:
+
 1. Check browser console for camera permissions
 2. Check token expiration (should be 1 hour)
 3. Verify Agora App ID matches Firebase config
@@ -452,6 +472,7 @@ firebase deploy --only functions
 ## 📈 SCALING CONSIDERATIONS
 
 ### Current Capacity
+
 - **Queue Size**: Unlimited (Firestore scales)
 - **Concurrent Sessions**: Unlimited (each has own Agora channel)
 - **Matching Speed**: O(n²) - ~100 users processable in 5s
@@ -459,16 +480,19 @@ firebase deploy --only functions
 ### Optimization Strategies
 
 **If queue > 1000 users**:
+
 ```typescript
 // Use indexed queries with cursor pagination
-const queueQuery = admin.firestore()
-  .collection('speed_dating_queue')
-  .where('status', '==', 'waiting')
-  .orderBy('joinedAt')
+const queueQuery = admin
+  .firestore()
+  .collection("speed_dating_queue")
+  .where("status", "==", "waiting")
+  .orderBy("joinedAt")
   .limit(100); // Process in batches
 ```
 
 **If matching too slow**:
+
 ```typescript
 // Increase matching frequency
 export const matchSpeedDating = onSchedule({
@@ -478,6 +502,7 @@ export const matchSpeedDating = onSchedule({
 ```
 
 **If Firestore costs high**:
+
 ```typescript
 // Cache user profiles in memory
 const userCache = new Map<string, UserProfile>();
@@ -497,6 +522,7 @@ After deployment, monitor:
 - ✅ Error Rate (<1% for all functions)
 
 **Target KPIs**:
+
 - Time to Match: <30 seconds
 - Completion Rate: >80%
 - Match Rate: 10-30% (typical for dating apps)

@@ -47,11 +47,17 @@ import '../features/messages/messages_page.dart';
 import '../features/leaderboards/leaderboards_page.dart';
 import '../features/achievements/achievements_page.dart';
 import '../features/admin/admin_dashboard_page.dart';
+import '../core/guards/admin_guard.dart';
 import '../features/discover/screens/discover_users_page.dart';
 import '../features/matching/screens/match_preferences_page.dart';
 import '../features/landing/landing_page.dart';
 import '../features/profile/screens/create_profile_page.dart';
+import '../features/profile/screens/friend_requests_page.dart';
+import '../features/speed_dating/screens/speed_dating_matches_inbox.dart';
+import '../features/speed_dating/screens/speed_dating_lobby_screen.dart';
+import '../features/match_inbox/screens/match_inbox_page.dart';
 import '../features/onboarding_flow.dart';
+import '../features/onboarding/post_auth_onboarding.dart';
 import '../features/error/error_page.dart';
 import '../features/debug/screens/test_video_engine_screen.dart';
 import '../features/video_room/screens/video_chat_page.dart';
@@ -79,11 +85,21 @@ class AppRoutes {
   static const home = '/home';
   static const createProfile = '/create-profile';
   static const onboarding = '/onboarding';
+  static const onboardingWelcome = '/onboarding/welcome';
+  static const onboardingPermissions = '/onboarding/permissions';
+  static const onboardingProfile = '/onboarding/profile';
+  static const onboardingAgeVerification = '/onboarding/age-verification';
+  static const onboardingTutorial = '/onboarding/tutorial';
 
   // Profile routes
   static const profile = '/profile';
   static const userProfile = '/profile/user';
   static const editProfile = '/profile/edit';
+  static const friendRequests = '/friend-requests';
+  static const speedDatingMatches = '/speed-dating/matches';
+
+  // Match Inbox
+  static const matchInbox = '/match-inbox';
 
   // Matching routes
   static const matches = '/matches';
@@ -99,10 +115,8 @@ class AppRoutes {
   // Video Chat routes (new modern features)
   static const videoChat = '/video-chat';
 
-  // Speed Dating routes - DISABLED (feature removed)
-  // static const speedDating = '/speed-dating';
-  // static const speedDatingLobby = '/speed-dating/lobby';
-  // static const speedDatingDecision = '/speed-dating/decision';
+  // Speed Dating routes
+  static const speedDatingLobby = '/speed-dating/lobby';
 
   // Social Feed routes
   static const feed = '/feed';
@@ -374,6 +388,17 @@ class AppRoutes {
           direction: SlideDirection.up,
         );
 
+      // Post-auth onboarding sub-routes (all render the same full flow)
+      case onboardingWelcome:
+      case onboardingPermissions:
+      case onboardingProfile:
+      case onboardingAgeVerification:
+      case onboardingTutorial:
+        return _createFadeRoute(
+          page: const AuthGate(child: PostAuthOnboarding()),
+          settings: settings,
+        );
+
       // ========== Profile Routes ==========
       case profile:
         return _createSlideRoute(
@@ -406,6 +431,33 @@ class AppRoutes {
         return _createSlideRoute(
           page: const AuthGate(
             child: ProfileGuard(child: EditProfilePage()),
+          ),
+          settings: settings,
+          direction: SlideDirection.up,
+        );
+
+      case friendRequests:
+        return _createSlideRoute(
+          page: const AuthGate(
+            child: ProfileGuard(child: FriendRequestsPage()),
+          ),
+          settings: settings,
+          direction: SlideDirection.up,
+        );
+
+      case speedDatingMatches:
+        return _createSlideRoute(
+          page: const AuthGate(
+            child: ProfileGuard(child: SpeedDatingMatchesInbox()),
+          ),
+          settings: settings,
+          direction: SlideDirection.up,
+        );
+
+      case matchInbox:
+        return _createSlideRoute(
+          page: const AuthGate(
+            child: ProfileGuard(child: MatchInboxPage()),
           ),
           settings: settings,
           direction: SlideDirection.up,
@@ -510,17 +562,16 @@ class AppRoutes {
           settings: settings,
         );
 
-      // Speed Dating Routes - DISABLED (feature removed)
-      // case speedDating:
-      // case speedDatingLobby:
-      //   return _createScaleRoute(
-      //     page: const AuthGate(
-      //       child: ProfileGuard(
-      //         child: SpeedDatingLobbyPage(),
-      //       ),
-      //     ),
-      //     settings: settings,
-      //   );
+      // Speed Dating Routes
+      case speedDatingLobby:
+        return _createScaleRoute(
+          page: const AuthGate(
+            child: ProfileGuard(
+              child: SpeedDatingLobbyScreen(),
+            ),
+          ),
+          settings: settings,
+        );
 
       // Social Feed Route
       case feed:
@@ -812,7 +863,9 @@ class AppRoutes {
       case adminDashboard:
         return _createSlideRoute(
           page: const AuthGate(
-            child: ProfileGuard(child: AdminDashboardPage()),
+            child: ProfileGuard(
+              child: AdminGuard(child: AdminDashboardPage()),
+            ),
           ),
           settings: settings,
           direction: SlideDirection.left,

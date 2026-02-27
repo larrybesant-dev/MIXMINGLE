@@ -94,6 +94,7 @@ class BrowseRoomsPage extends ConsumerWidget {
               height: 50,
               child: ListView(
                 scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   _buildCategoryChip('All', true),
@@ -149,6 +150,8 @@ class BrowseRoomsPage extends ConsumerWidget {
                   }
 
                   return ListView.builder(
+                    physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics()),
                     padding: const EdgeInsets.all(16),
                     itemCount: filteredRooms.length,
                     itemBuilder: (context, index) {

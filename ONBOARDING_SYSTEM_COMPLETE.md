@@ -23,6 +23,7 @@ Implemented a comprehensive 6-step onboarding system for Mix & Mingle that guide
 ## 🏗️ ARCHITECTURE OVERVIEW
 
 ### File Structure
+
 ```
 lib/features/onboarding/
 ├── onboarding_flow.dart                    # Main coordinator widget
@@ -38,6 +39,7 @@ lib/features/onboarding/
 ```
 
 ### Integration Points
+
 - **Auth Gate**: `lib/auth_gate_root.dart` → Shows OnboardingFlow when profile incomplete
 - **Firestore**: Users collection with onboarding fields (ageVerified, onboardingComplete, permissions, etc.)
 - **Routing**: First recommendation navigates to `/home`, `/rooms`, or `/speed-dating/lobby`
@@ -47,14 +49,17 @@ lib/features/onboarding/
 ## 📄 SCREEN-BY-SCREEN BREAKDOWN
 
 ### 1️⃣ Age Gate (age_gate_page.dart)
+
 **Purpose**: Legal compliance - verify user is 18+
 **Features**:
+
 - Checkbox confirmation ("I confirm I am 18 years or older")
 - Cannot proceed without checking
 - Validates before continuing
 - Neon-styled UI with ClubBackground
 
 **Firestore State**:
+
 - Writes `ageVerified: true` to user document (handled after signup)
 
 **Code Stats**: 189 lines
@@ -62,8 +67,10 @@ lib/features/onboarding/
 ---
 
 ### 2️⃣ Profile Essentials (profile_essentials_page.dart)
+
 **Purpose**: Collect core user information
 **Features**:
+
 - Display Name input (required, min 2 chars)
 - Age input (18+ validation)
 - Gender dropdown (Male/Female/Non-binary/Other/Prefer not to say)
@@ -73,6 +80,7 @@ lib/features/onboarding/
 - Saves to Firestore via profileController
 
 **Firestore Fields**:
+
 ```dart
 {
   "displayName": "John Doe",
@@ -84,6 +92,7 @@ lib/features/onboarding/
 ```
 
 **Dependencies**:
+
 - `image_picker` package
 - `profile_controller` provider
 - Firebase Storage (for photo upload)
@@ -93,8 +102,10 @@ lib/features/onboarding/
 ---
 
 ### 3️⃣ Interests Selection (interests_selection_page.dart)
+
 **Purpose**: Personalization - match users by interests
 **Features**:
+
 - 6 interest categories:
   - **Music**: Electronic, Hip-Hop, Rock, Latin, Pop, Jazz
   - **Gaming**: FPS, Strategy, RPG, Casual, Indie
@@ -107,6 +118,7 @@ lib/features/onboarding/
 - Saves array to Firestore
 
 **Firestore Fields**:
+
 ```dart
 {
   "interests": ["Electronic", "Fitness", "Movies", "AI/ML"]
@@ -118,8 +130,10 @@ lib/features/onboarding/
 ---
 
 ### 4️⃣ Permissions Request (permissions_request_page.dart)
+
 **Purpose**: Request system permissions for app features
 **Features**:
+
 - Camera permission (for video rooms & speed dating)
 - Microphone permission (for live conversations)
 - Notifications permission (for matches & messages)
@@ -129,6 +143,7 @@ lib/features/onboarding/
 - Uses `permission_handler` package
 
 **Firestore Fields**:
+
 ```dart
 {
   "permissions": {
@@ -140,6 +155,7 @@ lib/features/onboarding/
 ```
 
 **System Integration**:
+
 - Calls native iOS/Android permission dialogs
 - Handles denied/granted states
 - Saves state regardless of user choice
@@ -149,8 +165,10 @@ lib/features/onboarding/
 ---
 
 ### 5️⃣ Tutorial (tutorial_page.dart)
+
 **Purpose**: Educate users on app features
 **Features**:
+
 - 4 swipeable cards:
   1. **Live Video Rooms** - Join themed rooms, no matching required
   2. **Video Speed Dating** - 5-minute matched dates
@@ -162,6 +180,7 @@ lib/features/onboarding/
 - "GET STARTED" on final card
 
 **UI Details**:
+
 - PageView with smooth transitions
 - Icon + title + description per card
 - Neon glow effects
@@ -172,8 +191,10 @@ lib/features/onboarding/
 ---
 
 ### 6️⃣ First Recommendation (first_recommendation_page.dart)
+
 **Purpose**: Activate user engagement immediately
 **Features**:
+
 - 3 activation options:
   - **Join a Room** → Navigate to `/home` (shows recommended room)
   - **Try Speed Dating** → Navigate to `/speed-dating/lobby`
@@ -183,6 +204,7 @@ lib/features/onboarding/
 - Writes `onboardingComplete: true` and `onboardingCompletedAt: timestamp` to Firestore
 
 **Navigation Logic**:
+
 ```dart
 switch (choice) {
   case 'speed-dating':
@@ -205,6 +227,7 @@ switch (choice) {
 **Purpose**: Manage multi-step flow, progress saving, and completion tracking
 
 **Features**:
+
 - Tracks current step (0-5)
 - Persists progress to Firestore (`onboardingStep` field)
 - Loads saved progress on init
@@ -212,6 +235,7 @@ switch (choice) {
 - Provides navigation methods (nextStep, previousStep, goToStep, skipStep)
 
 **State Model**:
+
 ```dart
 class OnboardingState {
   final int currentStep;
@@ -222,6 +246,7 @@ class OnboardingState {
 ```
 
 **Providers**:
+
 ```dart
 onboardingControllerProvider        // Main controller
 hasCompletedOnboardingProvider      // Check if user finished onboarding
@@ -229,6 +254,7 @@ hasVerifiedAgeProvider              // Check if user confirmed 18+
 ```
 
 **Firestore Fields**:
+
 ```dart
 {
   "onboardingStep": 3,                       // Current progress
@@ -246,6 +272,7 @@ hasVerifiedAgeProvider              // Check if user confirmed 18+
 ### Auth Gate Integration (auth_gate_root.dart)
 
 **Changes Made**:
+
 ```dart
 // OLD CODE (removed):
 return OnboardingGate(
@@ -267,6 +294,7 @@ class _ProfileIncompleteApp extends ConsumerWidget {
 ```
 
 **Flow**:
+
 1. User signs up → Firebase Auth creates account
 2. `auth_gate_root.dart` checks if profile exists
 3. If profile incomplete → Show `OnboardingFlow`
@@ -279,11 +307,12 @@ class _ProfileIncompleteApp extends ConsumerWidget {
 ## 🗄️ FIRESTORE SCHEMA
 
 ### Users Collection Fields Added
+
 ```typescript
 interface UserProfile {
   // Onboarding tracking
   ageVerified?: boolean;
-  onboardingStep?: number;          // 0-5 (current progress)
+  onboardingStep?: number; // 0-5 (current progress)
   onboardingComplete?: boolean;
   onboardingCompletedAt?: Timestamp;
 
@@ -315,12 +344,14 @@ interface UserProfile {
 ## 🎨 UI/UX HIGHLIGHTS
 
 ### Design System
+
 - **ClubBackground**: Gradient background with blur effect
 - **NeonComponents**: NeonText, NeonButton, NeonGlowCard
 - **DesignColors**: accent (magenta), gold, cyan, white
 - **Animations**: Smooth page transitions, glow effects, indicator animations
 
 ### User Experience
+
 - ✅ Progress is saved at each step
 - ✅ Users can skip permissions and tutorial
 - ✅ Cannot skip age gate or profile essentials
@@ -333,6 +364,7 @@ interface UserProfile {
 ## 🔧 DEPENDENCIES
 
 ### Required Packages
+
 ```yaml
 dependencies:
   flutter_riverpod: ^2.4.0
@@ -345,6 +377,7 @@ dependencies:
 ### Platform-Specific Setup
 
 #### iOS (Info.plist)
+
 ```xml
 <key>NSCameraUsageDescription</key>
 <string>Camera access is required for video rooms and speed dating</string>
@@ -355,6 +388,7 @@ dependencies:
 ```
 
 #### Android (AndroidManifest.xml)
+
 ```xml
 <uses-permission android:name="android.permission.CAMERA"/>
 <uses-permission android:name="android.permission.RECORD_AUDIO"/>
@@ -366,6 +400,7 @@ dependencies:
 ## 🚀 DEPLOYMENT CHECKLIST
 
 ### Pre-Deployment
+
 - [x] All 6 screens implemented
 - [x] State management working
 - [x] Firestore writes successful
@@ -378,6 +413,7 @@ dependencies:
 - [ ] **TODO**: Verify Firestore security rules allow onboarding writes
 
 ### Testing Steps
+
 1. Delete existing test user from Firebase Auth
 2. Sign up with new account
 3. Step through entire onboarding flow
@@ -393,39 +429,44 @@ dependencies:
 
 ## 📊 CODE STATISTICS
 
-| Component | Lines of Code | Status |
-|-----------|---------------|--------|
-| AgeGatePage | 189 | ✅ Complete |
-| ProfileEssentialsPage | 335 | ✅ Complete |
-| InterestsSelectionPage | 227 | ✅ Complete |
-| PermissionsRequestPage | 338 | ✅ Complete |
-| TutorialPage | 202 | ✅ Complete |
-| FirstRecommendationPage | 220 | ✅ Complete |
-| OnboardingController | 182 | ✅ Complete |
-| OnboardingFlow | 119 | ✅ Complete |
-| **TOTAL** | **1,812** | **✅ DONE** |
+| Component               | Lines of Code | Status      |
+| ----------------------- | ------------- | ----------- |
+| AgeGatePage             | 189           | ✅ Complete |
+| ProfileEssentialsPage   | 335           | ✅ Complete |
+| InterestsSelectionPage  | 227           | ✅ Complete |
+| PermissionsRequestPage  | 338           | ✅ Complete |
+| TutorialPage            | 202           | ✅ Complete |
+| FirstRecommendationPage | 220           | ✅ Complete |
+| OnboardingController    | 182           | ✅ Complete |
+| OnboardingFlow          | 119           | ✅ Complete |
+| **TOTAL**               | **1,812**     | **✅ DONE** |
 
 ---
 
 ## 🐛 KNOWN ISSUES & FIXES APPLIED
 
 ### ✅ FIXED: Riverpod StateNotifier Error
+
 **Problem**: `StateNotifier` doesn't exist in standard riverpod
 **Solution**: Changed to `Notifier<OnboardingState>` with `build()` method
 
 ### ✅ FIXED: neonBlue Color Not Found
+
 **Problem**: `DesignColors.neonBlue` undefined
 **Solution**: Replaced with `Color(0xFF00D9FF)` (cyan)
 
 ### ✅ FIXED: OnboardingGate Not Found
+
 **Problem**: Old `OnboardingGate` widget removed but still referenced
 **Solution**: Updated `auth_gate_root.dart` to use `OnboardingFlow` directly
 
 ### ✅ FIXED: Syntax Error in neon_signup_page.dart
+
 **Problem**: Corrupted code "returDisplay Name field"
 **Solution**: Fixed error display callback to return proper Container widget
 
 ### ⚠️ WARNINGS (Non-blocking)
+
 - Unused import: `cloud_firestore` in `age_gate_page.dart`
 - Unused import: `user_profile` in `profile_essentials_page.dart`
 - These don't affect build - can be cleaned up later
@@ -435,12 +476,14 @@ dependencies:
 ## 🎯 NEXT STEPS
 
 ### Immediate Actions
+
 1. **Test on device**: Deploy to physical iOS/Android device to test permissions
 2. **Verify navigation**: Ensure all 3 recommendation choices navigate correctly
 3. **Test photo upload**: Ensure profile photo saves to Firebase Storage
 4. **Check Firestore rules**: Verify write permissions for all onboarding fields
 
 ### Future Enhancements
+
 - **Analytics**: Track which step users drop off at
 - **A/B Testing**: Test different onboarding flows
 - **Skip Tutorial Option**: Allow experienced users to skip
@@ -454,12 +497,14 @@ dependencies:
 ## 📚 DOCUMENTATION
 
 ### For Developers
+
 - All code is fully commented with doc strings
 - Each screen has clear purpose and feature list
 - State management follows Riverpod best practices
 - Firestore writes are wrapped in try-catch with error handling
 
 ### For Product Team
+
 - Onboarding flow is ~2-3 minutes long
 - Can skip permissions and tutorial (saves denied state)
 - Must complete age gate and profile (required fields)
@@ -490,6 +535,7 @@ dependencies:
 ---
 
 ## 👤 AUTHOR
+
 Created by: GitHub Copilot with Claude Sonnet 4.5
 Date: January 2025
 Project: Mix & Mingle v2 Onboarding System

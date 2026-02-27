@@ -36,6 +36,7 @@ firebase deploy --only functions
 ```
 
 **Expected Output:**
+
 ```
 ✔ Deploy complete!
 
@@ -87,8 +88,9 @@ Functions:
    - Need an Apple Developer account ($99/year)
 
 ### **Android Setup:**
-   - ✅ Already configured via `google-services.json`
-   - No additional steps needed
+
+- ✅ Already configured via `google-services.json`
+- No additional steps needed
 
 ---
 
@@ -103,6 +105,7 @@ flutter run -d chrome
 ```
 
 Then in the app:
+
 1. Sign in with a test account
 2. Trigger a test error (or crash the app intentionally)
 3. Check Firebase Console → Crashlytics
@@ -123,6 +126,7 @@ Then in the app:
 ```
 
 **Expected:**
+
 - Cloud Function `sendPushNotification` triggers automatically
 - Notification appears on user's device
 - Check Firebase Console → Cloud Messaging for delivery stats
@@ -135,6 +139,7 @@ firebase functions:log
 ```
 
 **Look for:**
+
 - Function execution logs
 - Any errors or warnings
 - Scheduled function runs (check at 9 AM and 2 AM)
@@ -144,18 +149,21 @@ firebase functions:log
 ## Step 6: Build for Production (Optional) 🏗️
 
 ### **Web:**
+
 ```powershell
 flutter build web --release
 firebase deploy --only hosting
 ```
 
 ### **Android:**
+
 ```powershell
 flutter build apk --release
 # Upload to Google Play Console
 ```
 
 ### **iOS:**
+
 ```powershell
 flutter build ios --release
 # Open Xcode, archive, and upload to App Store Connect
@@ -181,15 +189,18 @@ flutter build ios --release
 ## 🚨 Troubleshooting
 
 ### **Functions deployment fails:**
+
 - **Solution:** Make sure all 3 APIs are enabled (Scheduler, Pub/Sub, Eventarc)
 - **Check:** https://console.cloud.google.com/apis/dashboard?project=mix-and-mingle-v2
 
 ### **Push notifications not working:**
+
 - **Web:** Check service worker is registered (`chrome://serviceworker-internals`)
 - **Android:** Verify `google-services.json` is up to date
 - **iOS:** Upload APNs certificate
 
 ### **Crashlytics not reporting:**
+
 - **Wait:** First crash report can take 5-10 minutes
 - **Check:** Firebase Console → Crashlytics → Wait for SDK initialization
 - **Debug:** Run `flutter run --release` (crashes don't always report in debug mode)
@@ -223,6 +234,7 @@ flutter build ios --release
 ## 🎉 Once Complete
 
 You'll have:
+
 - ✅ **Error tracking** with Crashlytics (user context, stack traces)
 - ✅ **Push notifications** (FCM with local display and background handling)
 - ✅ **Cloud Functions** (auto-send notifications, scheduled tasks)
@@ -231,6 +243,7 @@ You'll have:
 **Estimated Total Time:** 25 minutes
 
 **Next Steps After This:**
+
 - Beta testing program (recruit 50-100 testers)
 - Submit to TestFlight (iOS) and Play Console Internal Testing (Android)
 - Collect feedback and iterate
@@ -241,6 +254,7 @@ You'll have:
 **Need Help?** All code is complete and tested. The manual steps above are required by Google/Firebase and cannot be automated.
 
 **Reference Files:**
+
 - [PRODUCTION_INTEGRATION_COMPLETE.md](PRODUCTION_INTEGRATION_COMPLETE.md) - Full implementation summary
 - [DEPLOYMENT_CHECKLIST.md](DEPLOYMENT_CHECKLIST.md) - Detailed step-by-step guide
 - [ERROR_TRACKING_SETUP.md](ERROR_TRACKING_SETUP.md) - Crashlytics configuration

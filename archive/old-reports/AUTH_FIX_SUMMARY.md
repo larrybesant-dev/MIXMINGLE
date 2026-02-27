@@ -1,21 +1,25 @@
 # Authentication Fix Summary for generateAgoraToken
 
 ## Problem
+
 Cloud Functions v2 callable function `generateAgoraToken` was returning `[firebase_functions/internal] internal` errors on Flutter Web, with backend logs showing "The request was not authenticated" warnings.
 
 ## Root Causes Identified
 
 ### 1. Missing Firebase Functions JS SDK in web/index.html
+
 - **Issue**: The web/index.html only initialized Auth, Firestore, Storage, and Messaging—but NOT Cloud Functions
 - **Impact**: Flutter Web's cloud_functions package requires the underlying Firebase Functions JS SDK to be initialized
 - **Fix**: Added `getFunctions` import and initialized Functions with region 'us-central1'
 
 ### 2. Backend function not validating request.auth
+
 - **Issue**: Backend function accepted userId from data payload without verifying request.auth context
 - **Impact**: No enforcement of authenticated user identity, potential security risk
 - **Fix**: Added request.auth logging and validation to ensure user is authenticated via Firebase SDK
 
 ### 3. Frontend not verifying auth state stability before calling function
+
 - **Issue**: Function calls might occur before FirebaseAuth.currentUser is fully initialized
 - **Impact**: Callable functions require stable auth context to attach auth headers automatically
 - **Fix**: Added auth state verification with timeout fallback before calling generateAgoraToken
@@ -23,6 +27,7 @@ Cloud Functions v2 callable function `generateAgoraToken` was returning `[fireba
 ## Changes Applied
 
 ### Frontend (lib/services/agora_video_service.dart)
+
 ```dart
 // Before calling generateAgoraToken:
 1. Check FirebaseAuth.currentUser != null
@@ -33,6 +38,7 @@ Cloud Functions v2 callable function `generateAgoraToken` was returning `[fireba
 ```
 
 ### Backend (functions/src/index.ts)
+
 ```typescript
 // Inside generateAgoraToken handler:
 1. Log request.auth.uid and request.auth.token presence
@@ -43,31 +49,37 @@ Cloud Functions v2 callable function `generateAgoraToken` was returning `[fireba
 ```
 
 ### Web Configuration (web/index.html)
+
 ```javascript
 // Added:
 import { getFunctions } from "firebase-functions.js";
-const functions = getFunctions(app, 'us-central1');
+const functions = getFunctions(app, "us-central1");
 window.firebase.functions = functions;
 ```
 
 ## Verification Steps
 
 ### 1. Backend Deployment
+
 ```bash
 cd functions
 firebase deploy --only functions:generateAgoraToken
 ```
+
 ✅ **Status**: Deployed successfully at 2026-01-27 04:33 UTC
 
 ### 2. Frontend Changes
+
 ✅ **Status**: Code updated with auth verification and logging
 
 ### 3. Web SDK Configuration
+
 ✅ **Status**: Firebase Functions JS SDK added to web/index.html
 
 ## Expected Behavior After Fix
 
 ### Frontend Logs (Flutter)
+
 ```
 ✅ Step 2: Joining room: [roomId]
 ✅ Verifying authentication state...
@@ -82,6 +94,7 @@ firebase deploy --only functions:generateAgoraToken
 ```
 
 ### Backend Logs (Cloud Functions)
+
 ```
 ✅ Callable request verification passed
 ✅ Auth context - UID: abc123..., Token: PRESENT
@@ -109,6 +122,7 @@ firebase deploy --only functions:generateAgoraToken
 ## Rollback Plan (if needed)
 
 If issues persist:
+
 1. Revert web/index.html to remove Functions SDK
 2. Revert backend to previous version without auth checks
 3. Check Firebase console for Cloud Run IAM permissions

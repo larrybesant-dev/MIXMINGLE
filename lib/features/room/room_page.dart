@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import '../../core/analytics/analytics_service.dart';
+import '../../core/providers/connectivity_provider.dart';
 import '../../shared/providers/all_providers.dart';
 import '../../shared/models/room.dart';
 import 'message_bubble.dart';
@@ -29,10 +31,26 @@ class _RoomPageState extends ConsumerState<RoomPage> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initializeAgora();
+    });
   }
 
   Future<void> _initializeAgora() async {
     if (_hasInitializedAgora) return;
+
+    // Guard: do not attempt join when offline
+    if (connectivityNotifier.isOffline) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No internet connection — cannot join video room.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+      return;
+    }
 
     try {
       final agoraService = ref.read(agoraVideoServiceProvider);
@@ -45,6 +63,11 @@ class _RoomPageState extends ConsumerState<RoomPage> {
       // Join the room channel
       await agoraService.joinRoom(widget.room.id);
 
+      AnalyticsService.instance.logEvent(
+        name: 'room_join_success',
+        parameters: {'room_id': widget.room.id},
+      );
+
       if (mounted) {
         setState(() {
           _isAgoraInitialized = true;
@@ -53,6 +76,10 @@ class _RoomPageState extends ConsumerState<RoomPage> {
       }
     } catch (e) {
       debugPrint('Failed to initialize Agora: $e');
+      AnalyticsService.instance.logEvent(
+        name: 'room_join_failed',
+        parameters: {'room_id': widget.room.id, 'error': e.toString()},
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Failed to join video: ${e.toString()}')));
@@ -66,6 +93,10 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     _scrollController.dispose();
     // Leave room if we were in one
     if (_isAgoraInitialized) {
+      AnalyticsService.instance.logEvent(
+        name: 'room_leave',
+        parameters: {'room_id': widget.room.id},
+      );
       try {
         ref.read(agoraVideoServiceProvider).leaveRoom();
       } catch (e) {
@@ -110,11 +141,6 @@ class _RoomPageState extends ConsumerState<RoomPage> {
   @override
   Widget build(BuildContext context) {
     final messagesAsync = ref.watch(messagesProvider(widget.room.id));
-
-    // Initialize Agora when the widget is first built
-    if (!_hasInitializedAgora) {
-      _initializeAgora();
-    }
 
     return ClubBackground(
       child: Scaffold(
@@ -225,13 +251,13 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                           )
                         : Container(
                             color: DesignColors.surfaceDefault,
-                            child: Center(
+                            child: const Center(
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   CircularProgressIndicator(
                                       color: DesignColors.accent),
-                                  const SizedBox(height: AppSpacing.spaceLG),
+                                  SizedBox(height: AppSpacing.spaceLG),
                                   GlowText(
                                       text: 'Initializing video...',
                                       fontSize: 16,

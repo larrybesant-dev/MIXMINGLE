@@ -92,8 +92,9 @@ class _EnhancedChatWidgetState extends ConsumerState<EnhancedChatWidget> {
                   ],
                 ),
                 pinnedMessagesAsync.whenData((pinnedMessages) {
-                      if (pinnedMessages.isEmpty)
+                      if (pinnedMessages.isEmpty) {
                         return const SizedBox.shrink();
+                      }
                       return InkWell(
                         onTap: () {
                           setState(() => _showPinned = !_showPinned);

@@ -23,12 +23,14 @@ This guide walks you through setting up the Agora token server for Mix & Mingle.
 ## 🚀 Deployment Steps
 
 ### 1. Install Firebase CLI (if not already installed)
+
 ```bash
 npm install -g firebase-tools
 firebase login
 ```
 
 ### 2. Initialize Firebase Functions (if not already done)
+
 ```bash
 firebase init functions
 # Select: Use existing project
@@ -39,12 +41,15 @@ firebase init functions
 ```
 
 ### 3. Copy Function Files
+
 The files are already created in `functions/` directory:
+
 - ✅ `functions/package.json`
 - ✅ `functions/index.js`
 - ✅ `functions/.gitignore`
 
 ### 4. Install Dependencies
+
 ```bash
 cd functions
 npm install
@@ -54,23 +59,27 @@ cd ..
 ### 5. Configure Agora Credentials
 
 **Get your credentials from Agora Console:**
+
 1. Go to https://console.agora.io/
 2. Select your project (or create one)
 3. Copy **App ID**
 4. Enable **App Certificate** and copy it
 
 **Set credentials in Firebase:**
+
 ```bash
 firebase functions:config:set agora.app_id="YOUR_AGORA_APP_ID"
 firebase functions:config:set agora.app_certificate="YOUR_AGORA_APP_CERTIFICATE"
 ```
 
 **Verify configuration:**
+
 ```bash
 firebase functions:config:get
 ```
 
 Should show:
+
 ```json
 {
   "agora": {
@@ -81,11 +90,13 @@ Should show:
 ```
 
 ### 6. Deploy Functions
+
 ```bash
 firebase deploy --only functions
 ```
 
 This deploys:
+
 - ✅ `getAgoraToken` - HTTP endpoint for token generation
 - ✅ `cleanupRoomParticipants` - Scheduled cleanup (every 5 minutes)
 - ✅ `onParticipantChange` - Firestore trigger for join/leave events
@@ -93,11 +104,13 @@ This deploys:
 ### 7. Update Cloud Function URL in Flutter
 
 After deployment, you'll see the function URL:
+
 ```
-https://us-central1-mix-and-mingle-v2.cloudfunctions.net/getAgoraToken
+https://us-central1-mix-and-mingle-v2.cloudfunctions.net/generateAgoraToken
 ```
 
 Update in `lib/services/agora_token_service.dart` if different:
+
 ```dart
 AgoraTokenService({
   cloudFunctionUrl: 'YOUR_ACTUAL_FUNCTION_URL',
@@ -107,6 +120,7 @@ AgoraTokenService({
 ## 🔧 Testing the Token Server
 
 ### Test with curl:
+
 ```bash
 # Get Firebase ID token first
 firebase auth:export users.json
@@ -114,11 +128,12 @@ firebase auth:export users.json
 
 # Test token endpoint
 curl -X GET \
-  "https://us-central1-mix-and-mingle-v2.cloudfunctions.net/getAgoraToken?channelName=test-room&uid=12345&role=broadcaster" \
+  "https://us-central1-mix-and-mingle-v2.cloudfunctions.net/generateAgoraToken?channelName=test-room&uid=12345&role=broadcaster" \
   -H "Authorization: Bearer YOUR_ID_TOKEN"
 ```
 
 Expected response:
+
 ```json
 {
   "token": "00685f...",
@@ -178,16 +193,19 @@ match /rooms/{roomId}/messages/{messageId} {
 ## 📊 Monitoring
 
 **View function logs:**
+
 ```bash
 firebase functions:log
 ```
 
 **View specific function:**
+
 ```bash
 firebase functions:log --only getAgoraToken
 ```
 
 **Real-time logs:**
+
 ```bash
 firebase functions:log --only getAgoraToken --follow
 ```
@@ -195,7 +213,9 @@ firebase functions:log --only getAgoraToken --follow
 ## 🐛 Troubleshooting
 
 ### "Agora credentials not configured"
+
 Run:
+
 ```bash
 firebase functions:config:set agora.app_id="YOUR_APP_ID"
 firebase functions:config:set agora.app_certificate="YOUR_CERTIFICATE"
@@ -203,15 +223,18 @@ firebase deploy --only functions
 ```
 
 ### "401 Unauthorized"
+
 - Ensure user is logged in
 - Check Firebase ID token is valid
 - Verify Authorization header format: `Bearer TOKEN`
 
 ### "404 Room not found"
+
 - Room must exist in Firestore first
 - Check room ID matches exactly
 
 ### "403 Access denied: Private room"
+
 - User must be in participants subcollection
 - Or be the room host
 

@@ -5,6 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'dart:async';
 import 'dart:convert';
 import 'agora_platform_service.dart';
 import 'agora_web_bridge_v2.dart';
@@ -59,6 +60,7 @@ class AgoraVideoService extends ChangeNotifier {
   bool _micLocked = false; // Whether mic is locked for turn-based mode
   int? _activeSpeakerUid; // Most active speaker by volume
   String? _agoraAppId; // Store App ID for platform service
+  Timer? _tokenRefreshTimer; // Periodic token renewal for long-running sessions
 
   // Track media state per user to prevent ghost users (uid â†’ { hasVideo, hasAudio })
   final Map<int, Map<String, bool>> _remoteUserMediaState = {};
@@ -554,6 +556,7 @@ class AgoraVideoService extends ChangeNotifier {
         DebugLog.info(_safeLog(' Requesting Agora token...'));
         DebugLog.info(_safeLog('   roomId: $roomId'));
         DebugLog.info(_safeLog('   userId: ${user.uid}'));
+        print('DEBUG: roomId: $roomId, userId: \\${user.uid}');
         DebugLog.info(_safeLog('   FirebaseFunctions region: us-central1'));
         DebugLog.info(_safeLog('   Auth state: VERIFIED'));
 
@@ -578,7 +581,7 @@ class AgoraVideoService extends ChangeNotifier {
             await _functions.httpsCallable('generateAgoraToken').call({
           'roomId': roomId,
           'userId': user.uid,
-        });
+        }); // Endpoint: https://us-central1-mix-and-mingle-v2.cloudfunctions.net/generateAgoraToken
         DebugLog.info(_safeLog(' Callable returned successfully'));
 
         DebugLog.info(_safeLog(' Token response received'));
@@ -675,6 +678,8 @@ class AgoraVideoService extends ChangeNotifier {
 
       _currentChannel = roomId;
       _isInChannel = true;
+      // Start token refresh timer — renew 1h before 24h token expiry
+      _startTokenRefreshTimer(roomId: roomId, userId: _auth.currentUser!.uid);
 
       DebugLog.info(
         _safeLog(
@@ -730,6 +735,10 @@ class AgoraVideoService extends ChangeNotifier {
         }
       }
 
+      // Cancel token refresh timer
+      _tokenRefreshTimer?.cancel();
+      _tokenRefreshTimer = null;
+
       // Leave channel via platform service
       await AgoraPlatformService.leaveChannel();
 
@@ -764,9 +773,42 @@ class AgoraVideoService extends ChangeNotifier {
     }
   }
 
-  /// Toggle microphone mute
-  Future<void> toggleMic() async {
+  // ── Token refresh helpers ─────────────────────────────────────────────────
+
+  /// Start a one-shot timer that refreshes the token ~23h after joining.
+  void _startTokenRefreshTimer({required String roomId, required String userId}) {
+    _tokenRefreshTimer?.cancel();
+    _tokenRefreshTimer = Timer(const Duration(hours: 23), () {
+      _renewAgoraToken(roomId: roomId, userId: userId);
+    });
+    DebugLog.info(_safeLog('🔑 Token refresh scheduled in 23h for channel: $roomId'));
+  }
+
+  /// Fetch a fresh token and renew it in the Agora engine without rejoining.
+  Future<void> _renewAgoraToken({required String roomId, required String userId}) async {
+    if (!_isInChannel) return;
     try {
+      DebugLog.info(_safeLog('🔑 Renewing Agora token for channel: $roomId'));
+      final result = await FirebaseFunctions.instanceFor(region: 'us-central1')
+          .httpsCallable('generateAgoraToken')
+          .call({'roomId': roomId, 'userId': userId});
+      final newToken = result.data['token'] as String?;
+      if (newToken == null || newToken.isEmpty) {
+        throw Exception('renewAgoraToken: empty token returned');
+      }
+      final ok = await AgoraPlatformService.renewToken(newToken);
+      DebugLog.info(_safeLog('✅ Token renewed: $ok'));
+      // Reschedule for the next 23h cycle
+      if (_isInChannel) {
+        _startTokenRefreshTimer(roomId: roomId, userId: userId);
+      }
+    } catch (e) {
+      DebugLog.info(_safeLog('⚠️ Token renewal failed: $e'));
+    }
+  }
+
+  /// Toggle microphone mute
+  Future<void> toggleMic() async {    try {
       _isMicMuted = !_isMicMuted;
       await AgoraPlatformService.setMicMuted(_isMicMuted);
       notifyListeners();

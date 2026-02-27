@@ -99,3 +99,28 @@ export '../../features/group_chat/providers/group_chat_providers.dart';
 // ============================================================================
 export 'vibe_theme_provider.dart';
 export '../../core/intelligence/vibe_intelligence_service.dart';
+
+// ============================================================================
+// FRIEND SYSTEM PROVIDERS
+// ============================================================================
+export 'friend_providers.dart';
+
+// ============================================================================
+// NOTIFICATION SYSTEM PROVIDERS
+// ============================================================================
+export 'notification_providers.dart';
+
+// ============================================================================
+// MATCH INBOX PROVIDERS
+// ============================================================================
+export '../../features/match_inbox/providers/match_inbox_providers.dart';
+
+// ============================================================================
+// ROOM DISCOVERY PROVIDERS
+// ============================================================================
+export '../../features/discover/providers/room_discovery_providers.dart';
+
+// ============================================================================
+// USER DISCOVERY / ACTIVE FRIENDS PROVIDERS
+// ============================================================================
+export '../../features/discover_users/providers/active_friends_provider.dart';

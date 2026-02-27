@@ -7,11 +7,13 @@
 ## Step 1: Hot Restart (30 seconds)
 
 ### In your Flutter terminal:
+
 ```bash
 R
 ```
 
 **Wait for:**
+
 - "Restarted application"
 - "Compiled successfully"
 - App reloads in browser
@@ -21,10 +23,12 @@ R
 ## Step 2: Test Room Discovery (60 seconds)
 
 ### Navigate to Browse Rooms:
+
 1. Click "Browse Rooms" in your app
 2. **OR** Type in browser: `window.location.hash = '#/browse-rooms'`
 
 ### ✅ You should see:
+
 - Search bar at top
 - Category filter chips (All, Music, Gaming, Talk, etc.)
 - Grid of room cards
@@ -33,12 +37,14 @@ R
 - Host usernames (@host)
 
 ### 🧪 Try these actions:
+
 - **Type in search bar** → Rooms filter instantly
 - **Click category chip** → Rooms filter by category
 - **Pull down to refresh** → Rooms reload
 - **Click a room card** → Navigate to room
 
 ### ❌ If you see nothing:
+
 - Check console for errors
 - Check Firestore has rooms with `isLive: true`
 - Check [DEPLOYMENT_STATUS.md](c:\Users\LARRY\MIXMINGLE\DEPLOYMENT_STATUS.md) troubleshooting
@@ -48,6 +54,7 @@ R
 ## Step 3: Test Room Creation (60 seconds)
 
 ### Click the "+" button (Create Room):
+
 1. Should open Create Room page
 2. Fill out the form:
    - **Title:** "My Test Room" (required)
@@ -60,6 +67,7 @@ R
 ### Click "Create Room":
 
 ### ✅ You should see:
+
 - Loading indicator briefly
 - Auto-navigate to your new room
 - Video initializes
@@ -67,12 +75,14 @@ R
 - You see yourself on camera
 
 ### 🧪 Then check:
+
 - Navigate back to Browse Rooms
 - **Your new room should appear in the list!**
 - It should have a live indicator (🔴)
 - Viewer count should be 1
 
 ### ❌ If creation fails:
+
 - Check console for errors
 - Check Firebase Auth is signed in
 - Check Firestore rules allow create
@@ -85,6 +95,7 @@ R
 ### From Browse Rooms, click any room:
 
 ### ✅ You should see:
+
 - Navigate to Room Page
 - Video grid appears
 - Console: "Joined Agora channel: {roomId}"
@@ -93,6 +104,7 @@ R
 - Host info displays
 
 ### ❌ If join fails:
+
 - Check token generation (see Step 5)
 - Check Agora credentials
 - Check console errors
@@ -102,11 +114,13 @@ R
 ## Step 5: Verify Backend (30 seconds)
 
 ### Open browser DevTools → Network tab:
+
 1. Join a room
 2. Look for request to `getAgoraToken`
 3. Check response:
 
 ### ✅ Should see:
+
 ```json
 {
   "token": "006abc123...",
@@ -117,6 +131,7 @@ R
 ```
 
 ### ❌ If no token:
+
 - Check Firebase Functions deployed: `firebase functions:list`
 - Check environment vars: `firebase functions:config:get`
 - Check logs: `firebase functions:log --only getAgoraToken`
@@ -126,11 +141,13 @@ R
 ## Step 6: Test Multi-User (Optional - 60 seconds)
 
 ### Open incognito/private browser window:
+
 1. Sign in with different account
 2. Navigate to Browse Rooms
 3. Click the same room as Step 4
 
 ### ✅ You should see:
+
 - Both users in same room
 - Both video feeds visible
 - Both users can hear each other
@@ -163,6 +180,7 @@ After testing, you should have verified:
 ## 📊 What To Check
 
 ### In Browser Console:
+
 ```
 ✅ Good logs:
 - "Joined Agora channel: DoWJnySEtTtEZsaB80RR"
@@ -176,6 +194,7 @@ After testing, you should have verified:
 ```
 
 ### In Firebase Console:
+
 1. **Firestore → rooms collection:**
    - Your test room should exist
    - Should have `isLive: true`
@@ -192,18 +211,23 @@ After testing, you should have verified:
 ## 🐛 Quick Troubleshooting
 
 ### Issue: Nothing shows in Browse Rooms
+
 **Fix:** Check Firestore rules and test rooms exist
 
 ### Issue: "Token generation failed"
+
 **Fix:** Check Firebase Functions deployed and environment vars set
 
 ### Issue: "Failed to join channel"
+
 **Fix:** Check Agora credentials and token validity
 
 ### Issue: Video not showing
+
 **Fix:** Grant camera permissions and check Agora Web SDK loaded
 
 ### Issue: "Room not found"
+
 **Fix:** Verify room exists in Firestore with correct ID
 
 ---
@@ -211,6 +235,7 @@ After testing, you should have verified:
 ## 📞 Need Help?
 
 Check these docs (in order):
+
 1. [INTEGRATION_COMPLETE_SUMMARY.md](c:\Users\LARRY\MIXMINGLE\INTEGRATION_COMPLETE_SUMMARY.md) - What was changed
 2. [DEPLOYMENT_STATUS.md](c:\Users\LARRY\MIXMINGLE\DEPLOYMENT_STATUS.md) - Full system status
 3. [SYSTEM_STATUS_COMPLETE.md](c:\Users\LARRY\MIXMINGLE\SYSTEM_STATUS_COMPLETE.md) - Technical details
@@ -223,6 +248,7 @@ Check these docs (in order):
 If all checklist items pass, you have a **working, production-ready Paltalk-style video chat platform!**
 
 ### What's Next?
+
 - Build host controls UI (promote, demote, kick, ban)
 - Test moderation features
 - Polish UI/UX

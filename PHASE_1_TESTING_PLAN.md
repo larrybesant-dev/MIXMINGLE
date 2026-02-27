@@ -1,4 +1,5 @@
 # PHASE 1: Testing & Verification Plan
+
 **How to confirm each fix actually works**
 
 ---
@@ -6,6 +7,7 @@
 ## Test Strategy
 
 After each patch, you'll:
+
 1. **Compile test** — Does it build?
 2. **Type test** — Are types correct?
 3. **Export test** — Are providers accessible?
@@ -16,6 +18,7 @@ After each patch, you'll:
 ## Test #1: Import Paths
 
 ### Quick Check
+
 ```bash
 cd c:\Users\LARRY\MIXMINGLE
 flutter analyze
@@ -24,7 +27,9 @@ flutter analyze
 **Expected:** 0 import-related errors
 
 ### Manual Verification
+
 Pick 5 random files from different features:
+
 ```bash
 cat lib/features/room/screens/room_page.dart | head -20
 cat lib/features/chat/screens/chat_page.dart | head -20
@@ -32,11 +37,13 @@ cat lib/features/speed_dating/screens/speed_dating_page.dart | head -20
 ```
 
 Verify all imports follow pattern:
+
 ```dart
 import 'package:mix_and_mingle/[path]/[file].dart';
 ```
 
 NOT:
+
 ```dart
 import '../../../[wrong]/[path].dart';
 ```
@@ -65,6 +72,7 @@ import '../../../[wrong]/[path].dart';
 4. **Test a query that needs the index:**
 
 Create a quick test:
+
 ```dart
 // lib/test/firestore_index_test.dart
 import 'package:firebase_core/firebase_core.dart';
@@ -89,6 +97,7 @@ void main() {
 ```
 
 Run:
+
 ```bash
 flutter test test/firestore_index_test.dart
 ```
@@ -98,6 +107,7 @@ flutter test test/firestore_index_test.dart
 ## Test #3: ChatMessage Consolidation
 
 ### Compilation Test
+
 ```bash
 flutter clean && flutter pub get && flutter analyze
 ```
@@ -105,6 +115,7 @@ flutter clean && flutter pub get && flutter analyze
 **Expected:** 0 errors mentioning ChatMessage or VoiceRoomChatMessage
 
 ### Type Test
+
 Create a test file:
 
 ```dart
@@ -154,16 +165,19 @@ void main() {
 ```
 
 Run:
+
 ```bash
 flutter test test/models/chat_message_test.dart
 ```
 
 **Expected:**
+
 - ✓ ChatMessage serializes correctly
 - ✓ ChatMessage defaults to DM type
 - ✓ No VoiceRoomChatMessage references
 
 ### Search for Remaining References
+
 ```bash
 grep -r "VoiceRoomChatMessage" lib/ --include="*.dart"
 ```
@@ -175,6 +189,7 @@ grep -r "VoiceRoomChatMessage" lib/ --include="*.dart"
 ## Test #4: DateTime Fields
 
 ### Type Safety Test
+
 ```dart
 // test/models/datetime_fields_test.dart
 import 'package:flutter_test/flutter_test.dart';
@@ -239,16 +254,19 @@ void main() {
 ```
 
 Run:
+
 ```bash
 flutter test test/models/datetime_fields_test.dart
 ```
 
 **Expected:**
+
 - ✓ Event DateTime fields work correctly
 - ✓ Event serializes DateTime fields
 - ✓ Speed Dating Round DateTime fields work
 
 ### Manual Verification
+
 ```bash
 # Look for any remaining String date fields
 grep -rn "final String.*[Tt]ime" lib/shared/models/ --include="*.dart"
@@ -262,6 +280,7 @@ grep -rn "final String.*[Dd]ate" lib/shared/models/ --include="*.dart"
 ## Test #5: Provider Exports
 
 ### Accessibility Test
+
 ```dart
 // test/providers/providers_accessibility_test.dart
 import 'package:flutter_test/flutter_test.dart';
@@ -293,16 +312,19 @@ void main() {
 ```
 
 Run:
+
 ```bash
 flutter test test/providers/providers_accessibility_test.dart
 ```
 
 **Expected:**
+
 - ✓ Core providers are exported
 - ✓ Feature providers are accessible
 - ✓ All hidden providers are intentional
 
 ### Check exports explicitly
+
 ```dart
 import 'package:mix_and_mingle/providers/all_providers.dart';
 
@@ -315,6 +337,7 @@ final exampleProvider = authStateProvider;
 ## Test #6: Full Compilation Test
 
 ### Final Phase 1 Verification
+
 ```bash
 cd c:\Users\LARRY\MIXMINGLE
 
@@ -333,6 +356,7 @@ flutter build web --web-renderer html --release
 ```
 
 **Expected output:**
+
 ```
 ✓ 0 Dart analysis errors
 ✓ All tests pass
@@ -356,14 +380,14 @@ flutter build web --web-renderer html --release
 
 Each test failure maps back to one of the 6 patches:
 
-| Test Failure | Patch | Fix |
-|--------------|-------|-----|
-| "Cannot find provider X" | #6 | Add export to all_providers.dart |
-| "Type mismatch" for ChatMessage | #4 | Update type references |
-| "Cannot subtract String" | #5 | Update DateTime fields |
-| "Firestore index missing" | #3 | Verify indexes in Firebase Console |
-| "Unresolved import" | #2 | Replace relative imports |
-| "authServiceProvider not found" | #1 | Already done ✓ |
+| Test Failure                    | Patch | Fix                                |
+| ------------------------------- | ----- | ---------------------------------- |
+| "Cannot find provider X"        | #6    | Add export to all_providers.dart   |
+| "Type mismatch" for ChatMessage | #4    | Update type references             |
+| "Cannot subtract String"        | #5    | Update DateTime fields             |
+| "Firestore index missing"       | #3    | Verify indexes in Firebase Console |
+| "Unresolved import"             | #2    | Replace relative imports           |
+| "authServiceProvider not found" | #1    | Already done ✓                     |
 
 Go back to [PHASE_1_IMPLEMENTATION_PLAN.md](PHASE_1_IMPLEMENTATION_PLAN.md) and re-apply that patch.
 
@@ -378,4 +402,3 @@ Go back to [PHASE_1_IMPLEMENTATION_PLAN.md](PHASE_1_IMPLEMENTATION_PLAN.md) and 
 - ✅ All providers accessible from all_providers.dart
 
 **Then:** You're ready to start **Phase 2: Concurrency Hardening**
-

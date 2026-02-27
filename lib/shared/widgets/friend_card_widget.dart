@@ -301,10 +301,12 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
 
   /// Get status background color
   Color _getStatusBackgroundColor() {
-    if (widget.friend.isOnline)
+    if (widget.friend.isOnline) {
       return DesignColors.accent.withValues(alpha: 0.1);
-    if (widget.friend.isInactive)
+    }
+    if (widget.friend.isInactive) {
       return DesignColors.accent.withValues(alpha: 0.1);
+    }
     return DesignColors.accent;
   }
 

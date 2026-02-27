@@ -9,9 +9,11 @@ FIXES APPLIED (In Priority Order)
 ================================================================================
 
 ### FIX #1: Missing kIsWeb Import in production_initializer.dart ✅ APPLIED
+
 **File:** [lib/config/production_initializer.dart](lib/config/production_initializer.dart)
 **Status:** CRITICAL - COMPLETE
 **Old Code:**
+
 ```dart
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -19,7 +21,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'environment_config.dart';
 // ❌ Missing kIsWeb import
 ```
+
 **New Code:**
+
 ```dart
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -27,7 +31,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;  // ✅ ADDED
 import 'environment_config.dart';
 ```
+
 **Why This Works:**
+
 - `kIsWeb` is defined in `package:flutter/foundation.dart`
 - Now code at line 62 `if (!kIsWeb)` will compile without "undefined name" error
 - This was a BUILD BLOCKER affecting all platforms
@@ -35,23 +41,29 @@ import 'environment_config.dart';
 ---
 
 ### FIX #2: Await Crashlytics setCustomKey() Calls ✅ APPLIED
+
 **File:** [lib/config/production_initializer.dart](lib/config/production_initializer.dart)
 **Status:** HIGH - COMPLETE
 **Old Code:**
+
 ```dart
 if (!kIsWeb) {
   crashlytics.setCustomKey('app_version', '1.0.1+2');        // ❌ fire-and-forget
   crashlytics.setCustomKey('environment', ...);               // ❌ fire-and-forget
 }
 ```
+
 **New Code:**
+
 ```dart
 if (!kIsWeb) {
   await crashlytics.setCustomKey('app_version', '1.0.1+2');   // ✅ awaited
   await crashlytics.setCustomKey('environment', ...);         // ✅ awaited
 }
 ```
+
 **Why This Works:**
+
 - `setCustomKey()` is async and must complete before initialization returns
 - Without await, function may complete while keys are still being set
 - Crash reports will now have custom context on mobile/desktop
@@ -59,9 +71,11 @@ if (!kIsWeb) {
 ---
 
 ### FIX #3: Call waitForBridgeReady() in agora_web_bridge.dart ✅ APPLIED
+
 **File:** [lib/services/agora_web_bridge.dart](lib/services/agora_web_bridge.dart)
 **Status:** HIGH - COMPLETE
 **Old Code:**
+
 ```dart
 static Future<bool> joinChannel({...}) async {
   try {
@@ -74,7 +88,9 @@ static Future<bool> joinChannel({...}) async {
     final result = await js_util.promiseToFuture<dynamic>(...);
     return result == true;  // ❌ dynamic type comparison
 ```
+
 **New Code:**
+
 ```dart
 static Future<bool> joinChannel({...}) async {
   try {
@@ -98,7 +114,9 @@ static Future<bool> joinChannel({...}) async {
     AppLogger.info('✅ joinChannel completed. Result: $result');
     return result;  // ✅ return bool directly
 ```
+
 **Why This Works:**
+
 - Calls existing `waitForBridgeReady()` method which retries for 5 seconds
 - Waits for `window.agoraWeb` to be available before accessing it
 - Changes type from `<dynamic>` to `<bool>` for type-safe comparison
@@ -107,10 +125,12 @@ static Future<bool> joinChannel({...}) async {
 
 ---
 
-### FIX #4: Add Null Check for _agoraAppId in joinRoom() ✅ APPLIED
+### FIX #4: Add Null Check for \_agoraAppId in joinRoom() ✅ APPLIED
+
 **File:** [lib/services/agora_video_service.dart](lib/services/agora_video_service.dart)
 **Status:** HIGH - COMPLETE
 **Old Code:**
+
 ```dart
 Future<void> joinRoom(String roomId) async {
   // On web, _engine is null until join (web uses platform service)
@@ -129,7 +149,9 @@ Future<void> joinRoom(String roomId) async {
     final joined = await AgoraPlatformService.joinChannel(
       appId: _agoraAppId!,  // ❌ Force unwrap - crash if null
 ```
+
 **New Code:**
+
 ```dart
 Future<void> joinRoom(String roomId) async {
   // On web, _engine is null until join (web uses platform service)
@@ -148,7 +170,9 @@ Future<void> joinRoom(String roomId) async {
     return;
   }
 ```
+
 **Why This Works:**
+
 - Checks if `_agoraAppId` is null or empty before using it
 - Throws descriptive exception if `initialize()` was not called
 - Prevents null dereference crash
@@ -157,20 +181,26 @@ Future<void> joinRoom(String roomId) async {
 ---
 
 ### FIX #5: Remove Unused Import Comment ✅ APPLIED
+
 **File:** [lib/services/agora_web_service.dart](lib/services/agora_web_service.dart)
 **Status:** LOW - COMPLETE
 **Old Code:**
+
 ```dart
 import 'dart:js' as js;
 // ignore: unused_import
 import 'dart:js_util' as js_util show promiseToFuture, callMethod;
 ```
+
 **New Code:**
+
 ```dart
 import 'dart:js' as js;
 import 'dart:js_util' as js_util show promiseToFuture, callMethod;  // ✅ removed ignore
 ```
+
 **Why This Works:**
+
 - The import IS used (in promiseToFuture calls below)
 - Removing the outdated ignore comment reduces confusion
 - Linter now validates the import is actually necessary
@@ -178,9 +208,11 @@ import 'dart:js_util' as js_util show promiseToFuture, callMethod;  // ✅ remov
 ---
 
 ### FIX #6: Verified Timer Cleanup (Already Correct) ✅ VERIFIED
+
 **File:** [lib/features/room/screens/voice_room_page.dart](lib/features/room/screens/voice_room_page.dart)
 **Status:** LOW - NO CHANGE NEEDED
 **Finding:** The `_agoraSyncTimer` is already properly cancelled in dispose():
+
 ```dart
 void dispose() {
   // Cancel all timers first to prevent accessing disposed widget
@@ -189,6 +221,7 @@ void dispose() {
   _agoraSyncTimer?.cancel();        // ✅ Already correctly cancelled
   _agoraSyncTimer = null;
 ```
+
 **Action:** No fix needed - code was already correct
 
 ---
@@ -198,9 +231,11 @@ FIXES NOT YET APPLIED (Design Decision Points)
 ================================================================================
 
 ### ISSUE: Riverpod ref.listen() in build() - DESIGN CHOICE
+
 **File:** [lib/features/room/screens/voice_room_page.dart](lib/features/room/screens/voice_room_page.dart#L584-591)
 **Status:** MEDIUM - EVALUATED
 **Current Implementation:**
+
 ```dart
 ref.listen(authStateProvider, (previous, next) {
   next.whenData((user) {
@@ -211,7 +246,9 @@ ref.listen(authStateProvider, (previous, next) {
   });
 });
 ```
+
 **Analysis:**
+
 - Riperpod documentation allows `ref.listen()` in build() for reactive updates
 - The guards `&& !_isJoined && !_isInitializing` prevent duplicate joins
 - Even if listener registered multiple times per build, calls are idempotent
@@ -223,9 +260,11 @@ ref.listen(authStateProvider, (previous, next) {
 ---
 
 ### ISSUE: leaveRoom() Firestore Delete Error Handling - ROBUSTNESS
+
 **File:** [lib/services/agora_video_service.dart](lib/services/agora_video_service.dart#L603-610)
 **Status:** MEDIUM - EVALUATED
 **Current Code:**
+
 ```dart
 try {
   await _firestore.collection('rooms').doc(_currentChannel).collection('participants').doc(user.uid).delete();
@@ -235,7 +274,9 @@ try {
   // silently continues
 }
 ```
+
 **Decision:** NO CHANGE - Acceptable for now
+
 - Error is logged, not silently failing
 - Continuing after delete failure is acceptable (user still left locally)
 - Stale docs would be cleaned by Firestore rules TTL or cloud function
@@ -243,10 +284,12 @@ try {
 
 ---
 
-### ISSUE: _safeLog() Utility Function - PERFORMANCE
+### ISSUE: \_safeLog() Utility Function - PERFORMANCE
+
 **File:** [lib/services/agora_video_service.dart](lib/services/agora_video_service.dart#L17-24)
 **Status:** LOW - EVALUATED
 **Current Code:**
+
 ```dart
 String _safeLog(String input) {
   try {
@@ -256,7 +299,9 @@ String _safeLog(String input) {
   }
 }
 ```
+
 **Decision:** NO CHANGE - Working as intended
+
 - Function is used for emoji handling in logs
 - Overhead is minimal (only on log calls)
 - Prevents encoding issues on edge platforms
@@ -265,11 +310,13 @@ String _safeLog(String input) {
 ---
 
 ### ISSUE: agora_web_service.dart Dead Code - CODE CLEANUP
+
 **File:** [lib/services/agora_web_service.dart](lib/services/agora_web_service.dart)
 **Status:** LOW - EVALUATED
 **Finding:** This file duplicates functionality in `agora_web_bridge.dart`
 **Current Usage:** Only `agora_web_bridge.dart` is imported by platform service
 **Decision:** NO DELETE YET - Rationale:
+
 - Might be referenced by legacy code or tests
 - No immediate harm having it as backup
 - Would need to search all files to confirm safe to delete
@@ -281,13 +328,13 @@ String _safeLog(String input) {
 SUMMARY OF CHANGES
 ================================================================================
 
-| File | Changes | Severity | Status |
-|------|---------|----------|--------|
-| production_initializer.dart | +1 import, +2 await | CRITICAL | ✅ FIXED |
-| agora_web_bridge.dart | +5 lines (waitForBridgeReady call), type cast | HIGH | ✅ FIXED |
-| agora_video_service.dart | +3 lines (_agoraAppId validation) | HIGH | ✅ FIXED |
-| agora_web_service.dart | -1 ignore comment | LOW | ✅ FIXED |
-| voice_room_page.dart | No changes | - | ✅ VERIFIED |
+| File                        | Changes                                       | Severity | Status      |
+| --------------------------- | --------------------------------------------- | -------- | ----------- |
+| production_initializer.dart | +1 import, +2 await                           | CRITICAL | ✅ FIXED    |
+| agora_web_bridge.dart       | +5 lines (waitForBridgeReady call), type cast | HIGH     | ✅ FIXED    |
+| agora_video_service.dart    | +3 lines (\_agoraAppId validation)            | HIGH     | ✅ FIXED    |
+| agora_web_service.dart      | -1 ignore comment                             | LOW      | ✅ FIXED    |
+| voice_room_page.dart        | No changes                                    | -        | ✅ VERIFIED |
 
 **Total Files Modified:** 4
 **Total Lines Added:** 12
@@ -310,6 +357,7 @@ TESTING RECOMMENDATIONS
 ================================================================================
 
 ### Critical Test Cases
+
 1. **Web Platform Join Flow:**
    - [ ] Load app on web, wait 2 seconds for JS to load
    - [ ] Verify slow JS load doesn't block join (waitForBridgeReady retry)
@@ -326,6 +374,7 @@ TESTING RECOMMENDATIONS
    - [ ] Check Crashlytics custom keys appear in test crash
 
 ### Known Safe Behaviors (No Changes Needed)
+
 - ✅ Riverpod listener idempotency with guards
 - ✅ Timer cleanup already correct
 - ✅ Error handling non-blocking

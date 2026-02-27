@@ -66,12 +66,14 @@ The FCM (Firebase Cloud Messaging) notification system has been fully implemente
 ### Integration Points
 
 #### 1. App Startup (main.dart)
+
 ```dart
 await Firebase.initializeApp();
 FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
 ```
 
 #### 2. User Authentication (auth_gate_root.dart)
+
 ```dart
 fcmService.initialize();  // Request permissions, get token
 presenceService.initializePresence();
@@ -79,6 +81,7 @@ presenceService.goOnline();
 ```
 
 #### 3. Friend List Load (future integration point)
+
 ```dart
 presenceNotificationService.initialize(
   friendIds: friendIds,
@@ -87,6 +90,7 @@ presenceNotificationService.initialize(
 ```
 
 #### 4. Room Invitations (friend_card_widget.dart context menu)
+
 ```dart
 fcmService.notifyRoomInvitation(
   recipientUserId: friendId,
@@ -100,14 +104,17 @@ fcmService.notifyRoomInvitation(
 ### Notification Types
 
 **FriendOnline**
+
 - When friend comes online
 - Document structure: `{userId, type: 'friendOnline', title, body, friendId, createdAt, read}`
 
 **FriendOffline**
+
 - When friend goes offline (after 5+ min idleness)
 - Document structure: `{userId, type: 'friendOffline', title, body, friendId, createdAt, read}`
 
 **RoomInvitation**
+
 - When friend invites you to join their room
 - Document structure: `{userId, type: 'roomInvitation', title, body, invitedByUserId, invitedByName, roomId, roomName, createdAt, read}`
 
@@ -121,10 +128,12 @@ fcmService.notifyRoomInvitation(
 ### Build Verification
 
 ✅ **Web Build**: `flutter build web --release --no-tree-shake-icons`
+
 - Result: **BUILD SUCCESSFUL** ✅
 - Output: `Built build\web`
 
 ✅ **Tests**: All 40 tests pass
+
 - `design_constants_test.dart`: 39 tests passing
 - `design_animations_test.dart`: 1 test passing
 

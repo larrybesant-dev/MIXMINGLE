@@ -3,9 +3,10 @@
 ================================================================================
 Last Updated: February 3, 2026
 Purpose: Paste this into VS Code Copilot Chat to fix your entire app like a
-         senior engineer would clean it up.
+senior engineer would clean it up.
 
 Instructions:
+
 1. Copy the entire prompt below (between the === markers)
 2. Open VS Code Copilot Chat (Ctrl+Shift+I)
 3. Paste it into the chat window
@@ -22,6 +23,7 @@ Treat this codebase as if it were your own production app.
 Scan the entire project and fix everything that is incorrect, fragile, duplicated, or architecturally inconsistent, while keeping all existing features and behavior intact.
 
 **Hard rules:**
+
 - Do NOT rewrite the app.
 - Do NOT remove features.
 - Do NOT introduce placeholders or TODOs.

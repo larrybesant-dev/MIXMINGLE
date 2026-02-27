@@ -27,6 +27,16 @@ class MessagingService {
     String? thumbnailUrl,
     Map<String, dynamic>? metadata,
   }) async {
+    // Input validation
+    if (senderId.isEmpty) throw ArgumentError('senderId cannot be empty');
+    if (receiverId.isEmpty) throw ArgumentError('receiverId cannot be empty');
+    if (content.isEmpty && type == DirectMessageType.text) {
+      throw ArgumentError('Message content cannot be empty');
+    }
+    if (senderId == receiverId) {
+      throw ArgumentError('Cannot send message to yourself');
+    }
+
     final conversationId =
         DirectMessage.createConversationId(senderId, receiverId);
 
@@ -44,23 +54,28 @@ class MessagingService {
       timestamp: DateTime.now(),
     );
 
-    // Add message to Firestore
-    await _firestore.collection('direct_messages').add(message.toMap());
+    try {
+      // Add message to Firestore
+      await _firestore.collection('direct_messages').add(message.toMap());
 
-    // Update conversation metadata
-    await _updateConversationMetadata(
-        conversationId, senderId, receiverId, content, DateTime.now());
+      // Update conversation metadata
+      await _updateConversationMetadata(
+          conversationId, senderId, receiverId, content, DateTime.now());
 
-    // Send push notification to receiver
-    await _sendMessageNotification(
-        conversationId, senderId, receiverId, content);
+      // Send push notification to receiver
+      await _sendMessageNotification(
+          conversationId, senderId, receiverId, content);
 
-    // Track analytics
-    _analytics.trackEngagement('direct_message_sent', parameters: {
-      'sender_id': senderId,
-      'receiver_id': receiverId,
-      'message_type': type.name,
-    });
+      // Track analytics
+      _analytics.trackEngagement('direct_message_sent', parameters: {
+        'sender_id': senderId,
+        'receiver_id': receiverId,
+        'message_type': type.name,
+      });
+    } catch (e) {
+      debugPrint('❌ [MessagingService] sendMessage failed: $e');
+      rethrow;
+    }
   }
 
   /// Get messages for a conversation between two users (with pagination)

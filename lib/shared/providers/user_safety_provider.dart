@@ -65,16 +65,16 @@ class UserSafetyController extends Notifier<UserSafetyState> {
         'blockedUsers': FieldValue.arrayUnion([targetUserId]),
       });
 
-      // Remove any existing chats
+      // Remove any existing chat rooms
       final chats = await _firestore
-          .collection('chats')
-          .where('participantIds', arrayContains: currentUserId)
+          .collection('chatRooms')
+          .where('participants', arrayContains: currentUserId)
           .get();
 
       for (final chat in chats.docs) {
         final data = chat.data();
-        final participantIds = List<String>.from(data['participantIds'] ?? []);
-        if (participantIds.contains(targetUserId)) {
+        final participants = List<String>.from(data['participants'] ?? []);
+        if (participants.contains(targetUserId)) {
           await chat.reference.delete();
         }
       }

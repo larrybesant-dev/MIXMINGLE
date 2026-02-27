@@ -1,4 +1,4 @@
-const { onRequest } = require('firebase-functions/v2/https');
+const { onRequest, onCall, HttpsError } = require('firebase-functions/v2/https');
 const logger = require('firebase-functions/logger');
 const admin = require('firebase-admin');
 const { RtcTokenBuilder, RtcRole } = require('agora-token');
@@ -18,9 +18,11 @@ admin.initializeApp();
  */
 exports.getAgoraToken = onRequest((req, res) => {
   return cors(req, res, async () => {
+    res.set('Access-Control-Allow-Origin', '*');
     try {
       const authHeader = req.headers.authorization;
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        res.set('Access-Control-Allow-Origin', '*');
         return res.status(401).json({ error: 'Unauthorized: Missing token' });
       }
 
@@ -31,6 +33,7 @@ exports.getAgoraToken = onRequest((req, res) => {
         decodedToken = await admin.auth().verifyIdToken(idToken);
       } catch (error) {
         logger.error('Token verification failed:', error);
+        res.set('Access-Control-Allow-Origin', '*');
         return res.status(401).json({ error: 'Unauthorized: Invalid token' });
       }
 
@@ -41,6 +44,7 @@ exports.getAgoraToken = onRequest((req, res) => {
       const role = req.query.role || req.body?.role || 'audience';
 
       if (!channelName) {
+        res.set('Access-Control-Allow-Origin', '*');
         return res.status(400).json({ error: 'channelName is required' });
       }
 
@@ -49,6 +53,7 @@ exports.getAgoraToken = onRequest((req, res) => {
 
       if (!agoraAppId || !agoraAppCert) {
         logger.error('Agora credentials not configured in environment');
+        res.set('Access-Control-Allow-Origin', '*');
         return res.status(500).json({
           error: 'Server configuration error',
           hint: 'Set AGORA_APP_ID and AGORA_APP_CERTIFICATE in functions/.env'
@@ -59,6 +64,7 @@ exports.getAgoraToken = onRequest((req, res) => {
       const roomDoc = await roomRef.get();
 
       if (!roomDoc.exists) {
+        res.set('Access-Control-Allow-Origin', '*');
         return res.status(404).json({ error: 'Room not found' });
       }
 
@@ -69,6 +75,7 @@ exports.getAgoraToken = onRequest((req, res) => {
         const participantDoc = await participantRef.get();
 
         if (!participantDoc.exists && roomData.hostId !== userId) {
+          res.set('Access-Control-Allow-Origin', '*');
           return res.status(403).json({ error: 'Access denied: Private room' });
         }
       }
@@ -99,16 +106,19 @@ exports.getAgoraToken = onRequest((req, res) => {
       });
 
       return res.status(200).json({
-        token,
-        appId: agoraAppId,
-        channelName,
-        uid,
-        role: agoraRole,
-        expiresAt: privilegeExpiredTs * 1000
-      });
+        res.set('Access-Control-Allow-Origin', '*');
+        return res.status(200).json({
+          token,
+          appId: agoraAppId,
+          channelName,
+          uid,
+          role: agoraRole,
+          expiresAt: privilegeExpiredTs * 1000
+        });
 
     } catch (error) {
       logger.error('Error generating Agora token:', error);
+      res.set('Access-Control-Allow-Origin', '*');
       return res.status(500).json({
         error: 'Internal server error',
         message: error?.message || 'Unknown error'
@@ -116,6 +126,49 @@ exports.getAgoraToken = onRequest((req, res) => {
     }
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// generateAgoraToken — callable version (used by Flutter via httpsCallable)
+// Flutter passes: { roomId: string, userId: string }
+// Returns:        { token: string, appId: string, uid: number }
+// ─────────────────────────────────────────────────────────────────────────────
+exports.generateAgoraToken = onCall(async (request) => {
+  // Log invocation metadata only (do not log secrets or token values)
+  try {
+    console.log('generateAgoraToken callable invoked; auth present:', !!request.auth);
+    const data = request.data || {};
+    console.log('generateAgoraToken received keys:', Object.keys(data));
+
+    const { roomId, userId } = data || {};
+    if (!roomId || !userId) {
+      console.warn('generateAgoraToken missing parameters:', { roomId: !!roomId, userId: !!userId });
+      // Use HttpsError so client receives a structured error
+      throw new functions.https.HttpsError('invalid-argument', 'Missing required parameters: roomId and userId');
+    }
+
+    // --- Place your existing Agora token generation logic below ---
+    // Example placeholder: replace with your real implementation that uses secrets safely
+    // const token = await createAgoraToken({ roomId, userId });
+    const token = `token_${roomId}_${userId}_${Date.now()}`; // local/test placeholder
+    // --- End placeholder ---
+
+    return { token };
+  } catch (err) {
+    // If it's already an HttpsError, rethrow so Firebase returns the proper code/message
+    if (err instanceof functions.https.HttpsError) throw err;
+    console.error('generateAgoraToken unexpected error:', err);
+    throw new functions.https.HttpsError('internal', 'Internal server error');
+  }
+});
+
+/** Deterministic hash of a Firebase UID string → 32-bit signed integer */
+function _hashToUid(str) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = Math.imul(31, hash) + str.charCodeAt(i) | 0;
+  }
+  return hash;
+}
 
 // Import push notification functions
 const pushNotifications = require('./push_notifications');

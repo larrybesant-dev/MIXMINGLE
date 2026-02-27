@@ -33,8 +33,9 @@ class ChatRepository implements IChatRepository {
     required String text,
   }) async {
     _assertUid(senderUid);
-    if (text.trim().isEmpty)
+    if (text.trim().isEmpty) {
       throw ArgumentError('Message text must not be empty');
+    }
     await _db.collection('channels').doc(channelId).collection('messages').add({
       'senderUid': senderUid,
       'text': text.trim(),

@@ -1,4 +1,5 @@
 # Comprehensive Error Scan Report
+
 **Scan Date:** February 7, 2026
 **Scope:** lib/ and test/ directories (.dart files)
 **Total Errors Found:** 51
@@ -27,6 +28,7 @@ Comprehensive scanning of all Dart files in `lib/` and `test/` folders has ident
 **Line:** 110
 **Error Type:** Missing import
 **Current Code:**
+
 ```dart
 Widget _buildHeader(BuildContext context, bool darkMode, List<Friend> friends,
 ```
@@ -35,6 +37,7 @@ Widget _buildHeader(BuildContext context, bool darkMode, List<Friend> friends,
 **Type Location:** `lib/providers/app_models.dart` (line 6)
 
 **Fix:**
+
 ```dart
 // Add to imports (after line 24):
 import '../../providers/app_models.dart'; // Friend, VideoGroup, VideoQuality
@@ -50,6 +53,7 @@ import '../../providers/app_models.dart'; // Friend, VideoGroup, VideoQuality
 **Line:** 337
 **Error Type:** Missing import
 **Current Code:**
+
 ```dart
 final VideoGroup group;
 ```
@@ -58,6 +62,7 @@ final VideoGroup group;
 **Type Location:** `lib/providers/app_models.dart` (line 47)
 
 **Fix:**
+
 ```dart
 // Add to imports:
 import '../../providers/app_models.dart'; // Friend, VideoGroup, VideoQuality
@@ -73,6 +78,7 @@ import '../../providers/app_models.dart'; // Friend, VideoGroup, VideoQuality
 **Lines:** 223-227
 **Error Type:** Missing import
 **Current Code:**
+
 ```dart
 ref.read(videoQualityProvider.notifier).state = VideoQuality.low;
 ```
@@ -81,6 +87,7 @@ ref.read(videoQualityProvider.notifier).state = VideoQuality.low;
 **Type Location:** `lib/providers/app_models.dart` (line 183) OR `lib/shared/constants/ui_constants.dart`
 
 **Fix:**
+
 ```dart
 // Add to imports:
 import '../../providers/app_models.dart'; // Friend, VideoGroup, VideoQuality
@@ -96,6 +103,7 @@ import '../../providers/app_models.dart'; // Friend, VideoGroup, VideoQuality
 **Lines:** 578, 622, 658
 **Error Type:** Missing property on class
 **Current Code:**
+
 ```dart
 _buildAvatar(message.senderAvatar),  // Line 578
 // ...
@@ -108,6 +116,7 @@ if (message.type == 'file') {       // Line 658
 **Type Location:** `lib/shared/models/chat_message.dart` (line 25)
 
 **Fix:** Add properties to ChatMessage class:
+
 ```dart
 class ChatMessage {
   final String id;
@@ -136,17 +145,20 @@ class ChatMessage {
 **Line:** 148
 **Error Type:** Type not found
 **Current Code:**
+
 ```dart
 final Participant participant;
 ```
 
 **Issue:** `Participant` type doesn't exist anywhere in the codebase
 **Options:**
+
 - Option A: Use existing `AgoraParticipant` from `lib/shared/models/agora_participant.dart`
 - Option B: Use existing `VideoParticipant` from `lib/providers/room_provider.dart`
 - Option C: Create new `Participant` class in `lib/shared/models/`
 
 **Recommended Fix (Option A):**
+
 ```dart
 import '../models/agora_participant.dart';
 
@@ -159,6 +171,7 @@ final AgoraParticipant participant;
 **Affected Lines:** 148
 
 **Related Usages in Same File:**
+
 ```
 Line 160: Required parameter in constructor
 Line 163: required this.participant,
@@ -166,12 +179,13 @@ Line 163: required this.participant,
 
 ---
 
-### 2.2 Importance.default_ Doesn't Exist (API v20)
+### 2.2 Importance.default\_ Doesn't Exist (API v20)
 
 **File:** `lib/services/notification_service.dart`
 **Line:** 190
 **Error Type:** Invalid enum value
 **Current Code:**
+
 ```dart
 importance: Importance.default_,
 ```
@@ -180,12 +194,14 @@ importance: Importance.default_,
 **Reference:** flutter_local_notifications v20.0.0 API changes
 
 **Valid Options:**
+
 - `Importance.none` - No importance
 - `Importance.low` - Low importance
 - `Importance.high` - High importance
 - `Importance.max` - Maximum importance
 
 **Fix:**
+
 ```dart
 // Change from:
 importance: Importance.default_,
@@ -204,6 +220,7 @@ importance: Importance.low,
 **Lines:** 136, 149, 161, 173, 186
 **Error Type:** Constructor argument mismatch
 **Current Code (Line 136):**
+
 ```dart
 const AndroidNotificationChannel(
   id: 'messages_channel',
@@ -217,10 +234,12 @@ const AndroidNotificationChannel(
 ```
 
 **Issue:** In flutter_local_notifications v20:
+
 - Constructor requires: `id`, `name`, `description` as positional arguments
 - `enableSound`, `playSound`, `enableVibration` are not valid parameters
 
 **Correct Constructor Signature:**
+
 ```dart
 const AndroidNotificationChannel(
   'messages_channel',  // id (positional)
@@ -231,6 +250,7 @@ const AndroidNotificationChannel(
 ```
 
 **Fix Pattern:**
+
 ```dart
 // Before:
 const AndroidNotificationChannel(
@@ -262,6 +282,7 @@ const AndroidNotificationChannel(
 **Line:** 113-118
 **Error Type:** Invalid widget parameter
 **Current Code:**
+
 ```dart
 Container(
   padding: const EdgeInsets.all(Spacing.md),
@@ -277,6 +298,7 @@ Container(
 **Correct Parameter:** Use `decoration` with `BoxDecoration`
 
 **Fix:**
+
 ```dart
 Container(
   padding: const EdgeInsets.all(Spacing.md),
@@ -300,6 +322,7 @@ Container(
 **Lines:** 63-74
 **Error Type:** Invalid widget parameter
 **Current Code:**
+
 ```dart
 Container(
   border: Border(
@@ -322,6 +345,7 @@ Container(
 **Line:** 170
 **Error Type:** Invalid widget parameter
 **Current Code:**
+
 ```dart
 border: Border(...)
 ```
@@ -340,6 +364,7 @@ border: Border(...)
 **Lines:** 141, 154, 166, 178, 191, 337
 **Error Type:** Invalid parameter (v20 API)
 **Current Code:**
+
 ```dart
 enableSound: true,
 ```
@@ -359,6 +384,7 @@ enableSound: true,
 **Lines:** 143, 339
 **Error Type:** Invalid parameter (v20 API)
 **Current Code:**
+
 ```dart
 playSound: true,
 ```
@@ -377,6 +403,7 @@ playSound: true,
 **Line:** 356
 **Error Type:** Wrong method signature
 **Current Code:**
+
 ```dart
 await _localNotifications.show(
   // ... parameters
@@ -399,6 +426,7 @@ await _localNotifications.show(
 **Lines:** 13, 29, 73, 101, 121, 142, 162, 183, 211, 234, 271, 306
 **Error Type:** Undefined name at compile time
 **Current Code:**
+
 ```dart
 final bridge = js.context['agoraWeb'];
 ```
@@ -406,6 +434,7 @@ final bridge = js.context['agoraWeb'];
 **Issue:** `js.context` is only available on web platform; compiler doesn't recognize it during analysis
 
 **Fix:** Add proper analyzer directive at file top:
+
 ```dart
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:js' as js;
@@ -437,6 +466,7 @@ class AgoraWebBridgeV2 {
 **Lines:** 13, 14, 33, 70, 102, 130, 155, 179, 204, 220
 **Error Type:** Undefined name at compile time
 **Current Code:**
+
 ```dart
 final jsAvailable = js.context['agoraWebInit'] != null &&
     js.context['agoraWebJoinChannel'] != null;
@@ -458,6 +488,7 @@ final jsAvailable = js.context['agoraWebInit'] != null &&
 **Lines:** 8, 33, 39, 62, 69, 75
 **Error Type:** Undefined name at compile time
 **Current Code:**
+
 ```dart
 static bool get isAvailable => js.context.hasProperty('agoraWeb') && js.context['agoraWeb'] != null;
 ```
@@ -476,6 +507,7 @@ static bool get isAvailable => js.context.hasProperty('agoraWeb') && js.context[
 **Lines:** 57, 102, 146, 180, 216, 254, 292, 331, 374
 **Error Type:** Undefined name at compile time
 **Current Code:**
+
 ```dart
 final bridge = js.context['agoraWeb'];
 ```
@@ -496,6 +528,7 @@ final bridge = js.context['agoraWeb'];
 **Lines:** 10, 22
 **Error Type:** Undefined name at compile time
 **Current Code:**
+
 ```dart
 return js.context['agoraWebV2'] != null;
 ```
@@ -514,6 +547,7 @@ return js.context['agoraWebV2'] != null;
 **Line:** 46
 **Error Type:** Class extends undefined type
 **Current Code:**
+
 ```dart
 class ParticipantsNotifier extends StateNotifier<List<VideoParticipant>> {
 ```
@@ -530,6 +564,7 @@ class ParticipantsNotifier extends StateNotifier<List<VideoParticipant>> {
 **Line:** 61
 **Error Type:** Class extends type
 **Current Code:**
+
 ```dart
 class ChatMessagesNotifier extends StateNotifier<List<ChatMessage>> {
 ```
@@ -540,26 +575,26 @@ class ChatMessagesNotifier extends StateNotifier<List<ChatMessage>> {
 
 ## Error Summary Table
 
-| Category | File | Line(s) | Count | Severity |
-|----------|------|---------|-------|----------|
-| Missing Friend import | friends_sidebar_widget.dart | 110, 282, 321 | 3 | 🔴 Critical |
-| Missing VideoGroup import | groups_sidebar_widget.dart | 337 | 1 | 🔴 Critical |
-| Missing VideoQuality import | top_bar_widget.dart | 223-227 | 3 | 🔴 Critical |
-| Missing ChatMessage properties | chat_box_widget.dart | 578, 622, 658 | 3 | 🔴 Critical |
-| Undefined Participant type | video_grid_widget.dart | 148 | 1 | 🔴 Critical |
-| Importance.default_ invalid | notification_service.dart | 190, 423 | 2 | 🔴 Critical |
-| AndroidNotificationChannel constructor | notification_service.dart | 136, 149, 161, 173, 186 | 5 | 🟠 High |
-| Container border parameter | friends_sidebar_widget.dart | 113-118 | 1 | 🟡 Medium |
-| Container border parameter | groups_sidebar_widget.dart | 63, 74 | 2 | 🟡 Medium |
-| Container border parameter | chat_box_widget.dart | 170 | 1 | 🟡 Medium |
-| enableSound parameter | notification_service.dart | 141, 154, 166, 178, 191, 337 | 6 | 🟠 High |
-| playSound parameter | notification_service.dart | 143, 339 | 2 | 🟠 High |
-| notify() method signature | notification_service.dart | 356 | 1 | 🟠 High |
-| js.context access | agora_web_bridge_v2.dart | 13-306 | 12 | 🔴 Critical |
-| js.context access | agora_web_bridge_v3.dart | 13-220 | 10 | 🔴 Critical |
-| js.context access | agora_web_service.dart | 8-75 | 6 | 🔴 Critical |
-| js.context access | agora_web_engine.dart | 57-374 | 9 | 🔴 Critical |
-| js.context access | agora_web_bridge_v2_simple.dart | 10-22 | 2 | 🔴 Critical |
+| Category                               | File                            | Line(s)                      | Count | Severity    |
+| -------------------------------------- | ------------------------------- | ---------------------------- | ----- | ----------- |
+| Missing Friend import                  | friends_sidebar_widget.dart     | 110, 282, 321                | 3     | 🔴 Critical |
+| Missing VideoGroup import              | groups_sidebar_widget.dart      | 337                          | 1     | 🔴 Critical |
+| Missing VideoQuality import            | top_bar_widget.dart             | 223-227                      | 3     | 🔴 Critical |
+| Missing ChatMessage properties         | chat_box_widget.dart            | 578, 622, 658                | 3     | 🔴 Critical |
+| Undefined Participant type             | video_grid_widget.dart          | 148                          | 1     | 🔴 Critical |
+| Importance.default\_ invalid           | notification_service.dart       | 190, 423                     | 2     | 🔴 Critical |
+| AndroidNotificationChannel constructor | notification_service.dart       | 136, 149, 161, 173, 186      | 5     | 🟠 High     |
+| Container border parameter             | friends_sidebar_widget.dart     | 113-118                      | 1     | 🟡 Medium   |
+| Container border parameter             | groups_sidebar_widget.dart      | 63, 74                       | 2     | 🟡 Medium   |
+| Container border parameter             | chat_box_widget.dart            | 170                          | 1     | 🟡 Medium   |
+| enableSound parameter                  | notification_service.dart       | 141, 154, 166, 178, 191, 337 | 6     | 🟠 High     |
+| playSound parameter                    | notification_service.dart       | 143, 339                     | 2     | 🟠 High     |
+| notify() method signature              | notification_service.dart       | 356                          | 1     | 🟠 High     |
+| js.context access                      | agora_web_bridge_v2.dart        | 13-306                       | 12    | 🔴 Critical |
+| js.context access                      | agora_web_bridge_v3.dart        | 13-220                       | 10    | 🔴 Critical |
+| js.context access                      | agora_web_service.dart          | 8-75                         | 6     | 🔴 Critical |
+| js.context access                      | agora_web_engine.dart           | 57-374                       | 9     | 🔴 Critical |
+| js.context access                      | agora_web_bridge_v2_simple.dart | 10-22                        | 2     | 🔴 Critical |
 
 **TOTAL:** 51 errors
 
@@ -568,6 +603,7 @@ class ChatMessagesNotifier extends StateNotifier<List<ChatMessage>> {
 ## Files Requiring Fixes
 
 ### Critical Priority (Must fix before deployment)
+
 1. ✅ [lib/providers/app_models.dart](lib/providers/app_models.dart) - Add missing imports
 2. ❌ [lib/shared/widgets/friends_sidebar_widget.dart](lib/shared/widgets/friends_sidebar_widget.dart) - 4 errors
 3. ❌ [lib/shared/widgets/groups_sidebar_widget.dart](lib/shared/widgets/groups_sidebar_widget.dart) - 3 errors
@@ -588,28 +624,33 @@ class ChatMessagesNotifier extends StateNotifier<List<ChatMessage>> {
 ## Recommended Fix Order
 
 ### Phase 1: Type Definitions & Imports (30 minutes)
+
 1. Add missing imports to widget files (Friend, VideoGroup, VideoQuality)
 2. Add missing properties to ChatMessage
 3. Update video_grid_widget.dart to use AgoraParticipant instead of Participant
 
 ### Phase 2: Container Widget Fixes (20 minutes)
+
 1. Fix 3 Container widget border parameter issues
 2. Test widget rendering
 
 ### Phase 3: NotificationService Update (45 minutes)
+
 1. Update AndroidNotificationChannel constructors (5 locations)
-2. Replace Importance.default_ with Importance.low
+2. Replace Importance.default\_ with Importance.low
 3. Remove enableSound and playSound parameters
 4. Update notify() method calls
 5. Test on Android device
 
 ### Phase 4: Agora JS Context Guards (40 minutes)
+
 1. Add analyzer directives to all Agora bridge files
 2. Wrap js.context access in kIsWeb checks and try-catch blocks
 3. Update 49 total js.context accesses across 5 files
 4. Test web build
 
 ### Phase 5: Validation (30 minutes)
+
 1. Run `flutter analyze` - expect 0 errors
 2. Run `flutter test` - expect 424/424 tests passing
 3. Run `flutter build web` successfully
@@ -622,6 +663,7 @@ class ChatMessagesNotifier extends StateNotifier<List<ChatMessage>> {
 All detailed line-by-line fixes with code examples are documented in [CRITICAL_FIXES_ACTION_PLAN.md](CRITICAL_FIXES_ACTION_PLAN.md).
 
 **Key Files to Check:**
+
 - ✅ Imports are correctly set (riverpod, models)
 - ✅ Type definitions exist (Friend, VideoGroup, VideoQuality, ChatMessage)
 - ✅ AgoraParticipant is available as alternative to undefined Participant

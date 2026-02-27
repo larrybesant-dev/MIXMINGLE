@@ -5,12 +5,14 @@
 **File:** `lib/features/discover/room_discovery_page.dart`
 
 ### Replace Line 7 (add import):
+
 ```dart
 import '../../shared/models/room.dart';
 import '../room/screens/room_page.dart';
 ```
 
 ### Replace Line 98 (fix DocumentSnapshot conversion):
+
 ```dart
 // OLD:
 if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
@@ -35,6 +37,7 @@ if (snapshot.hasData && snapshot.data!.docs.isNotEmpty) {
 ```
 
 ### Replace Line 126 (same fix):
+
 ```dart
 // OLD:
 children: rooms.map((room) => _buildRoomCard(room)).toList(),
@@ -47,6 +50,7 @@ children: rooms.map((doc) {
 ```
 
 ### Replace Line 418 (fix participantCount):
+
 ```dart
 // OLD:
 '${room.participantCount} online',
@@ -56,6 +60,7 @@ children: rooms.map((doc) {
 ```
 
 ### Replace Line 435 (fix room type):
+
 ```dart
 // OLD:
 color: _getRoomTypeColor(room.type),
@@ -65,6 +70,7 @@ color: _getRoomTypeColor(room.roomType),
 ```
 
 ### Replace Line 439 (fix room type name):
+
 ```dart
 // OLD:
 room.type.name.toUpperCase(),
@@ -74,6 +80,7 @@ room.roomType.toString().split('.').last.toUpperCase(),
 ```
 
 ### Add LoadingSpinner import (line 3):
+
 ```dart
 import 'package:flutter/material.dart';
 
@@ -95,6 +102,7 @@ class LoadingSpinner extends StatelessWidget {
 **File:** `pubspec.yaml`
 
 ### Add dependency (under dependencies section):
+
 ```yaml
 dependencies:
   # ... existing dependencies ...
@@ -104,11 +112,13 @@ dependencies:
 **File:** `lib/features/chat/screens/chat_page.dart`
 
 ### Add import (line 2):
+
 ```dart
 import 'package:file_picker/file_picker.dart';
 ```
 
 ### Replace Lines 149-157 (fix method call):
+
 ```dart
 // OLD:
 final sharedFile = await fileShareService.uploadFileFromBytes(
@@ -138,6 +148,7 @@ final sharedFile = await fileShareService.uploadFileFromBytes(
 **File:** `lib/features/admin/admin_dashboard_page.dart`
 
 ### Replace Line 273:
+
 ```dart
 // OLD:
 await moderationService.reviewReport(report.id, status);
@@ -158,6 +169,7 @@ await moderationService.reviewReport(
 ## Fix 4: Delete HMS Service Files (No Longer Needed)
 
 **Files to DELETE:**
+
 ```
 lib/services/hms_video_service_web.dart
 lib/services/hms_video_service_stub.dart
@@ -167,6 +179,7 @@ lib/services/hms_video_service.dart.bak
 These files use deprecated `dart:js_util` and are replaced by Agora.
 
 **Command:**
+
 ```bash
 rm lib/services/hms_video_service_web.dart
 rm lib/services/hms_video_service_stub.dart
@@ -178,6 +191,7 @@ rm lib/services/hms_video_service.dart.bak
 ## Fix 5: Clean Build & Run
 
 **Terminal Commands:**
+
 ```bash
 # 1. Clean the project
 flutter clean
@@ -205,6 +219,7 @@ flutter run -d chrome
 **File:** `firestore.rules`
 
 ### Add after line 440 (before default deny):
+
 ```firerules
     // SUBSCRIPTIONS: User subscription management
     match /subscriptions/{subscriptionId} {
@@ -233,15 +248,15 @@ flutter run -d chrome
 **File:** `functions/src/cleanup.ts` (CREATE NEW FILE)
 
 ```typescript
-import * as functions from 'firebase-functions/v2';
-import * as admin from 'firebase-admin';
+import * as functions from "firebase-functions/v2";
+import * as admin from "firebase-admin";
 
 /**
  * Cloud Function to clean up all data when a room is deleted
  * Triggers automatically on room deletion
  */
 export const onRoomDelete = functions.firestore.onDocumentDeleted(
-  'rooms/{roomId}',
+  "rooms/{roomId}",
   async (event) => {
     const roomId = event.params.roomId;
     const db = admin.firestore();
@@ -251,10 +266,7 @@ export const onRoomDelete = functions.firestore.onDocumentDeleted(
 
     try {
       // 1. Delete all messages in this room
-      const messagesSnapshot = await db
-        .collection('messages')
-        .where('roomId', '==', roomId)
-        .get();
+      const messagesSnapshot = await db.collection("messages").where("roomId", "==", roomId).get();
 
       if (!messagesSnapshot.empty) {
         const batch = db.batch();
@@ -267,9 +279,7 @@ export const onRoomDelete = functions.firestore.onDocumentDeleted(
 
       // 2. Delete all media files for this room
       try {
-        const [files] = await storage
-          .bucket()
-          .getFiles({ prefix: `room_media/${roomId}/` });
+        const [files] = await storage.bucket().getFiles({ prefix: `room_media/${roomId}/` });
 
         if (files.length > 0) {
           await Promise.all(files.map((file) => file.delete()));
@@ -282,8 +292,8 @@ export const onRoomDelete = functions.firestore.onDocumentDeleted(
 
       // 3. Remove room from users' joinedRooms arrays
       const usersSnapshot = await db
-        .collection('users')
-        .where('joinedRooms', 'array-contains', roomId)
+        .collection("users")
+        .where("joinedRooms", "array-contains", roomId)
         .get();
 
       if (!usersSnapshot.empty) {
@@ -299,8 +309,8 @@ export const onRoomDelete = functions.firestore.onDocumentDeleted(
 
       // 4. Delete any camera permissions for this room
       const permissionsSnapshot = await db
-        .collection('camera_permissions')
-        .where('roomId', '==', roomId)
+        .collection("camera_permissions")
+        .where("roomId", "==", roomId)
         .get();
 
       if (!permissionsSnapshot.empty) {
@@ -317,7 +327,7 @@ export const onRoomDelete = functions.firestore.onDocumentDeleted(
       console.error(`❌ Room cleanup failed for ${roomId}:`, error);
       throw error; // Re-throw to mark function as failed
     }
-  }
+  },
 );
 
 /**
@@ -326,28 +336,26 @@ export const onRoomDelete = functions.firestore.onDocumentDeleted(
  */
 export const cleanupExpiredRooms = functions.scheduler.onSchedule(
   {
-    schedule: 'every 1 hours',
-    timeZone: 'UTC',
+    schedule: "every 1 hours",
+    timeZone: "UTC",
   },
   async () => {
     const db = admin.firestore();
     const now = admin.firestore.Timestamp.now();
-    const oneHourAgo = admin.firestore.Timestamp.fromMillis(
-      now.toMillis() - 60 * 60 * 1000
-    );
+    const oneHourAgo = admin.firestore.Timestamp.fromMillis(now.toMillis() - 60 * 60 * 1000);
 
-    console.log('🔍 Checking for expired rooms...');
+    console.log("🔍 Checking for expired rooms...");
 
     try {
       // Find rooms that are inactive and haven't been updated in 1 hour
       const expiredRooms = await db
-        .collection('rooms')
-        .where('isActive', '==', false)
-        .where('updatedAt', '<', oneHourAgo)
+        .collection("rooms")
+        .where("isActive", "==", false)
+        .where("updatedAt", "<", oneHourAgo)
         .get();
 
       if (expiredRooms.empty) {
-        console.log('✅ No expired rooms found');
+        console.log("✅ No expired rooms found");
         return;
       }
 
@@ -361,27 +369,28 @@ export const cleanupExpiredRooms = functions.scheduler.onSchedule(
 
       console.log(`✅ Deleted ${expiredRooms.size} expired rooms`);
     } catch (error) {
-      console.error('❌ Expired room cleanup failed:', error);
+      console.error("❌ Expired room cleanup failed:", error);
       throw error;
     }
-  }
+  },
 );
 ```
 
 **File:** `functions/src/index.ts` (UPDATE)
 
 ```typescript
-import * as admin from 'firebase-admin';
+import * as admin from "firebase-admin";
 
 // Initialize Firebase Admin
 admin.initializeApp();
 
 // Export all cloud functions
-export { generateAgoraToken } from './agora';
-export { onRoomDelete, cleanupExpiredRooms } from './cleanup'; // ADD THIS
+export { generateAgoraToken } from "./agora";
+export { onRoomDelete, cleanupExpiredRooms } from "./cleanup"; // ADD THIS
 ```
 
 **Deploy:**
+
 ```bash
 cd functions
 npm install
@@ -461,6 +470,7 @@ firebase deploy --only functions
 ```
 
 **Deploy:**
+
 ```bash
 firebase deploy --only firestore:indexes
 ```
@@ -489,6 +499,7 @@ firebase deploy
 ```
 
 **Expected Result:**
+
 - ✅ 0 errors
 - ✅ <10 info/warnings (minor linting)
 - ✅ Clean build
@@ -500,4 +511,3 @@ firebase deploy
 **Time to Complete:** ~30-60 minutes
 **Difficulty:** Easy (copy-paste fixes)
 **Impact:** Resolves all 15 critical errors
-

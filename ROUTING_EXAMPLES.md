@@ -3,6 +3,7 @@
 ## Basic Navigation
 
 ### Navigate to a Simple Route
+
 ```dart
 // Navigate to home
 Navigator.of(context).pushNamed(AppRoutes.home);
@@ -15,6 +16,7 @@ Navigator.of(context).pushNamed(AppRoutes.settings);
 ```
 
 ### Navigate with Query Parameters
+
 ```dart
 // Navigate to user profile
 Navigator.of(context).pushNamed(
@@ -42,6 +44,7 @@ Navigator.of(context).pushNamed(
 ```
 
 ### Navigate and Replace Current Route
+
 ```dart
 // After logout
 Navigator.of(context).pushReplacementNamed(AppRoutes.login);
@@ -54,6 +57,7 @@ Navigator.of(context).pushReplacementNamed(AppRoutes.home);
 ```
 
 ### Navigate and Clear Stack
+
 ```dart
 // Go to home and clear all previous routes
 Navigator.of(context).pushNamedAndRemoveUntil(
@@ -71,6 +75,7 @@ Navigator.of(context).pushNamedAndRemoveUntil(
 ## Deep Link Handling
 
 ### Parse and Navigate from Deep Link
+
 ```dart
 // In your app's deep link handler
 void handleDeepLink(String deepLinkUrl) {
@@ -98,6 +103,7 @@ handleDeepLink('https://mixmingle.app/r/room123');
 ```
 
 ### Generate Deep Links
+
 ```dart
 // Generate event deep link
 String generateEventLink(String eventId) {
@@ -119,6 +125,7 @@ void shareEvent(String eventId) async {
 ## Push Notification Navigation
 
 ### Handle Notification Tap
+
 ```dart
 // In your notification handler
 void onNotificationTapped(Map<String, dynamic> data) {
@@ -168,6 +175,7 @@ void onNotificationTapped(Map<String, dynamic> data) {
 ## Widget-Based Navigation
 
 ### From a Button
+
 ```dart
 ElevatedButton(
   onPressed: () {
@@ -178,6 +186,7 @@ ElevatedButton(
 ```
 
 ### From a List Tile
+
 ```dart
 ListTile(
   leading: const Icon(Icons.settings),
@@ -189,6 +198,7 @@ ListTile(
 ```
 
 ### From a Card Tap
+
 ```dart
 GestureDetector(
   onTap: () {
@@ -204,6 +214,7 @@ GestureDetector(
 ```
 
 ### From FAB
+
 ```dart
 FloatingActionButton(
   onPressed: () {
@@ -266,6 +277,7 @@ class _MainNavigationState extends State<MainNavigation> {
 ## Error Handling
 
 ### Navigate to Error Page
+
 ```dart
 // With custom message
 Navigator.of(context).pushNamed(
@@ -289,6 +301,7 @@ Navigator.of(context).push(
 ```
 
 ### Try-Catch Navigation
+
 ```dart
 try {
   await Navigator.of(context).pushNamed(
@@ -306,6 +319,7 @@ try {
 ## Conditional Navigation
 
 ### Navigate Based on User State
+
 ```dart
 void navigateToProfile(String userId, String currentUserId) {
   if (userId == currentUserId) {
@@ -322,6 +336,7 @@ void navigateToProfile(String userId, String currentUserId) {
 ```
 
 ### Navigate Based on Auth State
+
 ```dart
 void navigateAfterAction() {
   final user = FirebaseAuth.instance.currentUser;
@@ -340,6 +355,7 @@ void navigateAfterAction() {
 ## Riverpod Integration
 
 ### Navigate from Provider
+
 ```dart
 class NavigationController extends StateNotifier<void> {
   NavigationController() : super(null);
@@ -366,6 +382,7 @@ final navigationControllerProvider =
 ```
 
 ### Use in Widget
+
 ```dart
 class MyWidget extends ConsumerWidget {
   @override
@@ -384,6 +401,7 @@ class MyWidget extends ConsumerWidget {
 ## Guard Testing
 
 ### Test AuthGate Redirect
+
 ```dart
 testWidgets('redirects to login when not authenticated', (tester) async {
   await FirebaseAuth.instance.signOut();
@@ -401,6 +419,7 @@ testWidgets('redirects to login when not authenticated', (tester) async {
 ```
 
 ### Test ProfileGuard Redirect
+
 ```dart
 testWidgets('redirects to create profile when incomplete', (tester) async {
   // Setup: User authenticated but no profile
@@ -420,6 +439,7 @@ testWidgets('redirects to create profile when incomplete', (tester) async {
 ## Advanced Patterns
 
 ### Modal Bottom Sheet Navigation
+
 ```dart
 void showUserActions(BuildContext context, String userId) {
   showModalBottomSheet(
@@ -456,6 +476,7 @@ void showUserActions(BuildContext context, String userId) {
 ```
 
 ### Dialog with Navigation
+
 ```dart
 void showDeleteConfirmation(BuildContext context, String itemId) {
   showDialog(
@@ -483,6 +504,7 @@ void showDeleteConfirmation(BuildContext context, String itemId) {
 ```
 
 ### Nested Navigation
+
 ```dart
 class HomePageWithTabs extends StatelessWidget {
   @override
@@ -530,6 +552,7 @@ class DiscoverTab extends StatelessWidget {
 ## Migration from Old Routing
 
 ### Before (Old System)
+
 ```dart
 // Old way - direct widget navigation
 Navigator.push(
@@ -541,6 +564,7 @@ Navigator.push(
 ```
 
 ### After (New System)
+
 ```dart
 // New way - named routes with arguments
 Navigator.of(context).pushNamed(
@@ -550,6 +574,7 @@ Navigator.of(context).pushNamed(
 ```
 
 ### Update Guide
+
 1. Replace all `MaterialPageRoute` with `pushNamed`
 2. Pass objects as IDs in arguments map
 3. Remove direct widget imports from navigation code

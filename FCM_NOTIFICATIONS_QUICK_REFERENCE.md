@@ -93,6 +93,7 @@ ref.read(notificationsProvider.notifier).addNotification(notification);
 ## 📚 Notification Types Reference
 
 ### Message Notification
+
 ```dart
 notifyNewMessage(
   roomId: String,           // Required: conversation/room ID
@@ -103,9 +104,11 @@ notifyNewMessage(
   imageUrl: String?,        // Optional: large image
 )
 ```
+
 **Display**: Green toast with "Reply" and "View" buttons
 
 ### Friend Request Notification
+
 ```dart
 notifyFriendRequest(
   recipientId: String,      // Required: who receives the request
@@ -114,9 +117,11 @@ notifyFriendRequest(
   senderAvatar: String,     // Required: avatar URL
 )
 ```
+
 **Display**: Blue toast with "Accept" and "Decline" buttons
 
 ### Group Invite Notification
+
 ```dart
 notifyGroupInvite(
   recipientId: String,      // Required: who receives the invite
@@ -127,9 +132,11 @@ notifyGroupInvite(
   inviterName: String,      // Required: inviter name
 )
 ```
+
 **Display**: Orange toast with "Accept" and "Decline" buttons
 
 ### System Alert Notification
+
 ```dart
 sendSystemAlert(
   title: String,            // Required: notification title
@@ -138,9 +145,11 @@ sendSystemAlert(
   metadata: Map?,           // Optional: custom data
 )
 ```
+
 **Display**: Grey toast (system message)
 
 ### Incoming Video Call Notification
+
 ```dart
 // Create manually with this structure
 final notification = AppNotification(
@@ -171,25 +180,27 @@ final notification = AppNotification(
 
 ref.read(notificationsProvider.notifier).addNotification(notification);
 ```
+
 **Display**: Purple toast with "Accept" and "Decline" buttons
 
 ---
 
 ## 🎨 Notification Colors & Icons
 
-| Type | Color | Icon | Priority |
-|------|-------|------|----------|
-| message | Green (#4CAF50) | 📧 mail | 1 |
-| friend_request | Blue (#2196F3) | 👤 person_add | 1 |
-| group_invite | Orange (#FF9800) | 👥 group | 1 |
-| video_call | Purple (#9C27B0) | 📹 videocam | 2 |
-| system_alert | Grey (#757575) | ℹ️ info | 0 |
+| Type           | Color            | Icon          | Priority |
+| -------------- | ---------------- | ------------- | -------- |
+| message        | Green (#4CAF50)  | 📧 mail       | 1        |
+| friend_request | Blue (#2196F3)   | 👤 person_add | 1        |
+| group_invite   | Orange (#FF9800) | 👥 group      | 1        |
+| video_call     | Purple (#9C27B0) | 📹 videocam   | 2        |
+| system_alert   | Grey (#757575)   | ℹ️ info       | 0        |
 
 ---
 
 ## 🔧 Working with Notifications
 
 ### Reading Notifications
+
 ```dart
 // Get all notifications
 final notifications = ref.watch(notificationsProvider);
@@ -209,6 +220,7 @@ final recent = ref.watch(recentNotificationsProvider);
 ```
 
 ### Managing Notifications
+
 ```dart
 final notifier = ref.read(notificationsProvider.notifier);
 
@@ -232,6 +244,7 @@ notifier.clearRead();
 ```
 
 ### Handling Actions
+
 ```dart
 // When user taps action button
 await ref.read(notificationsProvider.notifier)
@@ -246,11 +259,13 @@ await ref.read(notificationsProvider.notifier)
 ## 🧪 Running Tests
 
 ### Unit Tests (Models & Configuration)
+
 ```bash
 flutter test test/unit/notification_service_test.dart
 ```
 
 **Covers**:
+
 - ✅ AppNotification model creation
 - ✅ NotificationAction button support
 - ✅ FCM payload parsing
@@ -258,11 +273,13 @@ flutter test test/unit/notification_service_test.dart
 - ✅ Priority configuration
 
 ### Integration Tests (State & Behavior)
+
 ```bash
 flutter test test/integration/notifications_integration_test.dart
 ```
 
 **Covers**:
+
 - ✅ Provider state management
 - ✅ Add/remove notifications
 - ✅ Filtering and sorting
@@ -270,6 +287,7 @@ flutter test test/integration/notifications_integration_test.dart
 - ✅ Memory management
 
 ### Run All Tests
+
 ```bash
 flutter test test/
 ```
@@ -279,6 +297,7 @@ flutter test test/
 ## 🌐 Platform Support
 
 ### Web
+
 ```dart
 // Request browser notification permission
 final granted = await NotificationService()
@@ -297,6 +316,7 @@ if (NotificationService().supportsNotifications) {
 ```
 
 ### Android & iOS
+
 - Automatic configuration via Firebase
 - Local notifications plugin handles native UI
 - Service worker not needed (handled by plugin)
@@ -306,6 +326,7 @@ if (NotificationService().supportsNotifications) {
 ## 💡 Common Patterns
 
 ### Pattern 1: Notification with Metadata
+
 ```dart
 final notification = AppNotification(
   id: 'msg-123',
@@ -325,6 +346,7 @@ final notification = AppNotification(
 ```
 
 ### Pattern 2: Notification with Image
+
 ```dart
 final notification = AppNotification(
   id: 'group-1',
@@ -339,6 +361,7 @@ final notification = AppNotification(
 ```
 
 ### Pattern 3: Notification with Multiple Actions
+
 ```dart
 final notification = AppNotification(
   id: 'msg-1',
@@ -365,6 +388,7 @@ final notification = AppNotification(
 ```
 
 ### Pattern 4: Custom Notification Processing
+
 ```dart
 // After receiving FCM message
 final payload = remoteMessage.data;
@@ -388,6 +412,7 @@ ref.read(notificationsProvider.notifier).addNotification(notification);
 ## ⚙️ Configuration
 
 ### Customize Auto-Dismiss Duration
+
 ```dart
 NotificationWidget(
   notification: notification,
@@ -396,6 +421,7 @@ NotificationWidget(
 ```
 
 ### Customize Stack Position
+
 ```dart
 NotificationStack(
   alignment: Alignment.topLeft,      // Top-left instead of top-right
@@ -404,7 +430,9 @@ NotificationStack(
 ```
 
 ### Customize Notification Colors
+
 The NotificationWidget uses type-based colors automatically:
+
 - message → Green
 - friend_request → Blue
 - group_invite → Orange
@@ -418,6 +446,7 @@ To override, use custom widget wrapper or modify NotificationWidget source.
 ## 🔐 Security Best Practices
 
 ### 1. Validate Sender
+
 ```dart
 // Always check sender matches expected user
 if (notification.senderId == expectedUserId) {
@@ -427,6 +456,7 @@ if (notification.senderId == expectedUserId) {
 ```
 
 ### 2. Sanitize Metadata
+
 ```dart
 // Validate metadata structure
 if (notification.metadata?.containsKey('roomId') ?? false) {
@@ -439,6 +469,7 @@ if (notification.metadata?.containsKey('roomId') ?? false) {
 ```
 
 ### 3. Handle Action Errors
+
 ```dart
 NotificationAction(
   id: 'accept',
@@ -455,6 +486,7 @@ NotificationAction(
 ```
 
 ### 4. Cleanup on Logout
+
 ```dart
 // On user logout
 await NotificationService().deleteToken();
@@ -466,6 +498,7 @@ ref.read(notificationsProvider.notifier).clearAll();
 ## 🐛 Troubleshooting
 
 ### Notifications Not Showing
+
 ```dart
 // Check 1: FCM token available?
 final token = await NotificationService().getToken();
@@ -484,6 +517,7 @@ if (kIsWeb) {
 ```
 
 ### Action Not Executing
+
 ```dart
 // Verify onPressed is not null
 NotificationAction(
@@ -497,6 +531,7 @@ NotificationAction(
 ```
 
 ### Notifications Disappearing Too Fast
+
 ```dart
 // Increase dismissDuration
 NotificationWidget(
@@ -506,6 +541,7 @@ NotificationWidget(
 ```
 
 ### Too Many Notifications Stacking
+
 - NotificationStack limits to 3 simultaneous
 - Each gets staggered dismiss time
 - Older notifications auto-archived
@@ -516,18 +552,21 @@ NotificationWidget(
 ## 📖 Full Documentation
 
 For complete documentation, see:
+
 - `FCM_NOTIFICATIONS_IMPLEMENTATION_GUIDE.md` - Complete guide
 - `FCM_NOTIFICATIONS_SESSION_SUMMARY.md` - Session summary
 
 ## 🔗 Related Files
 
 **Core Implementation**:
+
 - `lib/providers/app_models.dart` - Models
 - `lib/services/notification_service.dart` - Service
 - `lib/shared/widgets/notification_widget.dart` - UI
 - `lib/providers/notification_provider.dart` - State
 
 **Tests**:
+
 - `test/unit/notification_service_test.dart` - Unit tests
 - `test/integration/notifications_integration_test.dart` - Integration tests
 

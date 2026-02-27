@@ -21,10 +21,10 @@
 
 ## Commits
 
-| SHA | Message |
-|-----|---------|
-| `08920d0` | `feat(platform): conditional-import shims for web-only modules` |
-| `20364cb` | `chore(lint): staged lint re-enable + CI hardening` |
+| SHA       | Message                                                                                  |
+| --------- | ---------------------------------------------------------------------------------------- |
+| `08920d0` | `feat(platform): conditional-import shims for web-only modules`                          |
+| `20364cb` | `chore(lint): staged lint re-enable + CI hardening`                                      |
 | `345a673` | `docs: add PR description, PR template, contributing guide, and analysis rollback tools` |
 
 ---
@@ -32,21 +32,26 @@
 ## Changes by area
 
 ### Platform shims (`lib/` + `shim/`)
+
 - Added `<module>.dart` (shim entry), `<module>_stub.dart` (no-op / `UnsupportedError`), `<module>_web.dart` (web implementation) triplets for each web-only module.
 - Shim pattern: `import '<module>_stub.dart' if (dart.library.html) '<module>_web.dart';`
 
 ### Web helpers
+
 - Replaced `dart:html` `HtmlElement` / `IFrameElement` and `package:js` `@JS()` annotations with `package:web` types and `dart:js_interop` `@JS()`.
 
 ### Gradle / Android
+
 - CI step copies APK from `android/app/build/outputs/flutter-apk/` to `build/app/outputs/apk/debug/` before artifact upload so `upload-artifact` always finds the file on AGP 8.x.
 
 ### Analysis options (`analysis_options.yaml`)
+
 - `prefer_const_constructors`, `prefer_const_declarations`, `prefer_final_fields`, `prefer_final_locals` — disabled (staged for later re-enable).
 - `avoid_web_libraries_in_flutter` — disabled (required for Agora web implementations; will be resolved per-file with `// ignore_for_file` once web modules are fully shimmed).
 - `test/**` and `integration_test/**` added to `analyzer: exclude` temporarily.
 
 ### CI (`.github/workflows/ci.yml`)
+
 - `flutter analyze --no-fatal-infos` now gates the PR (blocking, not `continue-on-error`).
 - APK copy fallback added after Gradle assemble.
 - Artifact upload uses dual-path glob with `if-no-files-found: warn`.
@@ -55,13 +60,14 @@
 
 ## Staged lint re-enable plan
 
-| Stage | Rules | Status |
-|-------|-------|--------|
-| Stage 1 | `prefer_const_constructors`, `prefer_final_fields` | Not started — run `dart fix --apply` first |
-| Stage 2 | `unused_local_variable`, `unused_element`, `unused_field` | Not started |
-| Stage 3 | Remove `lib/**_web.dart` from `exclude`; full platform analysis | Not started |
+| Stage   | Rules                                                           | Status                                     |
+| ------- | --------------------------------------------------------------- | ------------------------------------------ |
+| Stage 1 | `prefer_const_constructors`, `prefer_final_fields`              | Not started — run `dart fix --apply` first |
+| Stage 2 | `unused_local_variable`, `unused_element`, `unused_field`       | Not started                                |
+| Stage 3 | Remove `lib/**_web.dart` from `exclude`; full platform analysis | Not started                                |
 
 Commands per stage:
+
 ```bash
 git checkout -b lint-stage-1
 # re-enable rules in analysis_options.yaml
@@ -97,6 +103,7 @@ flutter analyze
 ## Checklist
 
 ### Author
+
 - [x] Branch is up-to-date with `develop`
 - [x] `flutter analyze` is clean (0 issues)
 - [x] No build artifacts committed (`.gitignore` enforced; CI build-artifact check passes)
@@ -108,6 +115,7 @@ flutter analyze
 - [ ] Unit tests pass locally (`flutter test test/unit/`)
 
 ### Reviewer
+
 - [ ] Shim files compile on both web and non-web targets
 - [ ] `_stub.dart` files throw `UnsupportedError` for methods that must not run on non-web
 - [ ] No `dart:html` / `package:js` direct imports remain outside `_web.dart` files (check with `grep -r "dart:html" lib/ --include="*.dart" | grep -v "_web.dart"`)
@@ -115,6 +123,7 @@ flutter analyze
 - [ ] Branch protection rules are active on `develop` and `main`
 
 ### Post-merge
+
 - [ ] Tag the commit: `git tag v<x.y.z>-staged-lint-1`
 - [ ] Open **Stage 1** lint PR within 72 hours
 - [ ] Schedule **Stage 2** lint PR within one week

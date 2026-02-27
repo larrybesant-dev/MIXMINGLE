@@ -1,4 +1,5 @@
 # 🔴 SURGICAL PRIORITY ACTION PLAN
+
 ## Mix & Mingle - Exact Fixes in Sequence
 
 **Target:** Get app building and functional for testing in 4 weeks
@@ -14,12 +15,14 @@
 **File:** `lib/features/room/screens/voice_room_page.dart`
 
 **Action:**
+
 ```bash
 # Remove line 24:
 - import 'package:mix_and_mingle/features/room/widgets/camera_approval_panel.dart';
 ```
 
 **Verification:**
+
 ```bash
 flutter analyze lib/features/room/screens/voice_room_page.dart
 ```
@@ -33,17 +36,20 @@ flutter analyze lib/features/room/screens/voice_room_page.dart
 **File:** `lib/features/room/screens/voice_room_page.dart`, Line ~818
 
 **Find:**
+
 ```dart
 child: const CameraApprovalPanel(),  // ❌ REMOVE THIS
 ```
 
 **Replace with:**
+
 ```dart
 // TODO: Add camera approval UI component or skip this feature for V1
 SizedBox.shrink(),  // Placeholder
 ```
 
 **Or better:** Replace with a simple Container:
+
 ```dart
 Container(
   color: Colors.grey[800],
@@ -63,6 +69,7 @@ Container(
 **File:** `lib/app_routes.dart`, Lines 6-9
 
 **Find:**
+
 ```dart
 import 'splash_simple.dart';
 import 'login_simple.dart';
@@ -81,6 +88,7 @@ import 'home_simple.dart';
 **File:** `lib/features/room/screens/voice_room_page.dart`
 
 **Remove Method:**
+
 ```dart
 // DELETE LINES 128-135 (or wherever this method is)
 void _startAgoraSyncTimer() {
@@ -90,6 +98,7 @@ void _startAgoraSyncTimer() {
 ```
 
 **Remove Variable Usage:**
+
 ```dart
 // Line 264: DELETE THIS LINE
 final kickedUsers = List<String>.from(roomData['kickedUsers'] ?? []);
@@ -117,6 +126,7 @@ flutter build web --release 2>&1 | head -20
 ## Fix 2.1: Delete Old Placeholder Screens
 
 **Files to DELETE entirely:**
+
 ```
 lib/splash_simple.dart
 lib/login_simple.dart
@@ -125,6 +135,7 @@ lib/home_simple.dart
 ```
 
 **Command:**
+
 ```bash
 rm lib/splash_simple.dart
 rm lib/login_simple.dart
@@ -133,6 +144,7 @@ rm lib/home_simple.dart
 ```
 
 **Or in VS Code:**
+
 - Right-click each file → Delete
 
 ---
@@ -140,6 +152,7 @@ rm lib/home_simple.dart
 ## Fix 2.2: Delete Old Disabled/Stub Files
 
 **Files to DELETE:**
+
 ```
 lib/providers/notification_social_providers.dart.disabled
 lib/services/agora_web_service_stub.dart
@@ -155,6 +168,7 @@ lib/PHASE_11_STABILITY_USAGE_EXAMPLES.dart
 ## Fix 2.3: Verify No Dangling References
 
 **After deletion, run:**
+
 ```bash
 flutter analyze 2>&1 | grep "Target of URI doesn't exist"
 ```
@@ -168,11 +182,13 @@ flutter analyze 2>&1 | grep "Target of URI doesn't exist"
 ## Fix 3.1: Identify Duplicate Providers
 
 **Run this grep to see all duplicates:**
+
 ```bash
 grep -r "final.*ServiceProvider.*Provider" lib/providers/ lib/services/ | sort
 ```
 
 **Expected duplicates:**
+
 - `chatServiceProvider` - defined in multiple files
 - `currentUserProfileProvider` - defined in multiple files
 - `eventsServiceProvider` - defined in multiple files
@@ -190,6 +206,7 @@ grep -r "final.*ServiceProvider.*Provider" lib/providers/ lib/services/ | sort
 4. **All CHAT providers** → `lib/providers/chat_providers.dart` (CONSOLIDATE)
 
 **Action:** Create `lib/providers/service_providers.dart`:
+
 ```dart
 // CANONICAL SERVICE PROVIDER DEFINITIONS
 // All services instantiated once and cached here
@@ -226,6 +243,7 @@ final agoraVideoServiceProvider = Provider<AgoraVideoService>((ref) => AgoraVide
 **File:** `lib/providers/all_providers.dart`
 
 **Find and REMOVE all `hide` statements:**
+
 ```dart
 // BEFORE
 export 'messaging_providers.dart'
@@ -239,6 +257,7 @@ export 'messaging_providers.dart'
 ```
 
 **Add at TOP of file:**
+
 ```dart
 // ============================================================================
 // CANONICAL SERVICE PROVIDERS (single source of truth)
@@ -263,6 +282,7 @@ grep -r "from 'package:mix_and_mingle/providers/profile_controller" lib/
 ```
 
 **Update these imports to use canonical location:**
+
 ```dart
 // BEFORE
 import '../providers/messaging_providers.dart';
@@ -291,6 +311,7 @@ flutter analyze 2>&1 | grep -i "ambiguous\|duplicate"
 **File:** `lib/services/payment_service.dart`
 
 **Current state (STUB):**
+
 ```dart
 Future<bool> processPayment({required double amount}) async {
   throw UnimplementedError('Payment processing not yet implemented');
@@ -298,11 +319,13 @@ Future<bool> processPayment({required double amount}) async {
 ```
 
 **Options:**
+
 1. **Stripe Integration** (Recommended)
 2. **PayPal Integration**
 3. **RevenueCat** (for in-app purchases)
 
 **Minimum Implementation for TESTING:**
+
 ```dart
 import 'package:stripe_flutter/stripe_flutter.dart';
 
@@ -347,6 +370,7 @@ Future<bool> processPayment({
 ```
 
 **Add to pubspec.yaml:**
+
 ```yaml
 dependencies:
   flutter_stripe: ^1.8.0
@@ -360,6 +384,7 @@ dependencies:
 **File:** `lib/providers/providers.dart`
 
 **Current (STUB):**
+
 ```dart
 final speedDatingMatchesProvider = StreamProvider<List<SpeedDatingMatch>>((ref) async* {
   yield [];  // Always empty
@@ -367,6 +392,7 @@ final speedDatingMatchesProvider = StreamProvider<List<SpeedDatingMatch>>((ref) 
 ```
 
 **Replace with actual implementation:**
+
 ```dart
 final speedDatingMatchesProvider = StreamProvider<List<SpeedDatingMatch>>((ref) async* {
   final currentUser = ref.watch(currentUserProvider);
@@ -385,6 +411,7 @@ final speedDatingMatchesProvider = StreamProvider<List<SpeedDatingMatch>>((ref) 
 ```
 
 **Add actual matching algorithm to SpeedDatingService:**
+
 ```dart
 Stream<List<SpeedDatingMatch>> getSpeedDatingMatches(String userId) {
   return FirebaseFirestore.instance
@@ -407,6 +434,7 @@ Stream<List<SpeedDatingMatch>> getSpeedDatingMatches(String userId) {
 **File:** `lib/providers/providers.dart`
 
 **Find all `Stream.value([])` returns:**
+
 ```bash
 grep -n "Stream.value(\[\])" lib/providers/providers.dart
 ```
@@ -414,6 +442,7 @@ grep -n "Stream.value(\[\])" lib/providers/providers.dart
 **For each one, replace with actual implementation or meaningful placeholder:**
 
 **Example:**
+
 ```dart
 // BEFORE (stub)
 final searchUsersByInterestsProvider = StreamProvider.family<List<User>, String>(
@@ -486,6 +515,7 @@ class FirestoreSchema {
 **Example:** Update `room_service.dart`
 
 **Before:**
+
 ```dart
 final roomDoc = await FirebaseFirestore.instance
     .collection('rooms')  // ❌ HARDCODED
@@ -494,6 +524,7 @@ final roomDoc = await FirebaseFirestore.instance
 ```
 
 **After:**
+
 ```dart
 final roomDoc = await FirebaseFirestore.instance
     .collection(FirestoreSchema.rooms)  // ✅ CONSTANT
@@ -502,6 +533,7 @@ final roomDoc = await FirebaseFirestore.instance
 ```
 
 **Do this for ALL services** (20+ files):
+
 ```bash
 grep -r "\.collection('users')" lib/services/ | wc -l  # Count how many
 grep -r "\.collection('rooms')" lib/services/ | wc -l
@@ -518,6 +550,7 @@ grep -r "\.collection('messages')" lib/services/ | wc -l
 **File:** `lib/features/room/screens/voice_room_page.dart`
 
 **Find:**
+
 ```dart
 final currentUser = await ref.watch(currentUserProvider);
 // No null check!
@@ -526,6 +559,7 @@ final activeBroadcasters = List<String>.from(roomData['activeBroadcasters'] ?? [
 ```
 
 **Replace with:**
+
 ```dart
 final currentUser = ref.watch(currentUserProvider);
 
@@ -546,6 +580,7 @@ currentUser.whenData((user) {
 **File:** Any service reading from Firestore
 
 **Pattern:**
+
 ```dart
 // UNSAFE
 final isLive = roomData['isLive'] as bool? ?? false;
@@ -671,6 +706,7 @@ open coverage/html/index.html  # View report
 **File:** `firestore.rules` (Firebase console)
 
 **Checklist:**
+
 - [ ] All write operations validate user UID
 - [ ] Payment operations require server-side verification
 - [ ] Message deletion only allowed by sender
@@ -678,6 +714,7 @@ open coverage/html/index.html  # View report
 - [ ] Admin operations protected
 
 **Minimum rules:**
+
 ```javascript
 rules_version = '2';
 service cloud.firestore {
@@ -756,6 +793,7 @@ class AppLogger {
 ```
 
 **Then replace all debugPrint() calls:**
+
 ```dart
 // BEFORE
 debugPrint('User joined room $roomId');
@@ -769,41 +807,49 @@ AppLogger.info('User joined room $roomId');
 # ✅ VERIFICATION CHECKLIST
 
 ## After Phase 1 (Build Unblocked)
+
 - [ ] `flutter pub get` completes successfully
 - [ ] `flutter analyze` shows no errors in voice_room_page.dart, app_routes.dart
 - [ ] `flutter build web --release` completes (may have other pre-existing errors)
 - [ ] No "Target of URI doesn't exist" errors remaining
 
 ## After Phase 2 (Clean Code)
+
 - [ ] 4 old screen files deleted
 - [ ] 4 stub files deleted
 - [ ] `flutter analyze` shows fewer issues
 
 ## After Phase 3 (Providers)
+
 - [ ] No ambiguous export errors
 - [ ] All imports use canonical locations
 - [ ] all_providers.dart has no `hide` statements
 
 ## After Phase 4 (Services)
+
 - [ ] PaymentService has implementation (not UnimplementedError)
 - [ ] SpeedDating returns actual matches
 - [ ] All provider stubs replaced with real implementations
 
 ## After Phase 5 (Schema)
+
 - [ ] FirestoreSchema constants defined and used
 - [ ] grep for hardcoded 'users', 'rooms' shows <10 matches (only in tests)
 
 ## After Phase 6 (Validation)
+
 - [ ] voice_room_page.dart has null checks
 - [ ] Services validate Firestore data structure
 - [ ] No unsafe `as bool` casts without validation
 
 ## After Phase 7 (Tests)
+
 - [ ] test/ directory has 30+ test files
 - [ ] `flutter test --coverage` shows 70%+ coverage
 - [ ] All critical flows have tests
 
 ## After Phase 8 (Security)
+
 - [ ] Firestore rules reviewed and updated
 - [ ] debugPrint replaced with AppLogger
 - [ ] Production build has no debug output
@@ -812,16 +858,16 @@ AppLogger.info('User joined room $roomId');
 
 # 📊 TIMELINE ESTIMATE
 
-| Phase | Duration | Cumulative |
-|-------|----------|-----------|
-| 1: Build Unblock | 2 hours | 2h |
-| 2: Clean Code | 3 hours | 5h |
-| 3: Consolidate Providers | 4 hours | 9h |
-| 4: Missing Services | 8 hours | 17h |
-| 5: Schema Constants | 3 hours | 20h |
-| 6: Validation | 3 hours | 23h |
-| 7: Tests | 30 hours | 53h |
-| 8: Security | 4 hours | 57h |
+| Phase                    | Duration | Cumulative |
+| ------------------------ | -------- | ---------- |
+| 1: Build Unblock         | 2 hours  | 2h         |
+| 2: Clean Code            | 3 hours  | 5h         |
+| 3: Consolidate Providers | 4 hours  | 9h         |
+| 4: Missing Services      | 8 hours  | 17h        |
+| 5: Schema Constants      | 3 hours  | 20h        |
+| 6: Validation            | 3 hours  | 23h        |
+| 7: Tests                 | 30 hours | 53h        |
+| 8: Security              | 4 hours  | 57h        |
 
 **Total: ~57 hours (1.5 weeks full-time, or 3 weeks part-time)**
 
@@ -843,4 +889,4 @@ After completing all 8 phases:
 
 ---
 
-*Use this as your implementation roadmap. Execute phases in order.*
+_Use this as your implementation roadmap. Execute phases in order._

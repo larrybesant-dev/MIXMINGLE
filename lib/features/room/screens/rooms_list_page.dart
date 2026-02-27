@@ -77,7 +77,7 @@ class _RoomsListPageState extends ConsumerState<RoomsListPage>
   }
 
   List<Room> _filtered(List<Room> all, {String? userVibe}) {
-    var rooms = _selectedVibe == _kVibeAll
+    final rooms = _selectedVibe == _kVibeAll
         ? [...all]
         : all
             .where((r) =>

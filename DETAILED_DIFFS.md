@@ -3,6 +3,7 @@
 ## 1. lib/login_simple.dart - Email TextField
 
 ### Before:
+
 ```dart
 TextField(
   controller: _emailController,
@@ -28,6 +29,7 @@ TextField(
 ```
 
 ### After:
+
 ```dart
 TextField(
   controller: _emailController,
@@ -64,6 +66,7 @@ TextField(
 ```
 
 **Changes:**
+
 - Added `cursorColor: DesignColors.gold` ✅
 - Added `labelStyle` with explicit color ✅
 - Changed `style` from reference to inline TextStyle ✅
@@ -75,6 +78,7 @@ TextField(
 ## 2. lib/login_simple.dart - Password TextField
 
 ### Before:
+
 ```dart
 TextField(
   controller: _passwordController,
@@ -93,6 +97,7 @@ TextField(
 ```
 
 ### After:
+
 ```dart
 TextField(
   controller: _passwordController,
@@ -128,6 +133,7 @@ TextField(
 ```
 
 **Changes:**
+
 - Added `cursorColor: DesignColors.gold` ✅
 - Added `labelStyle` with explicit color ✅
 - Made all text styles explicit and visible ✅
@@ -137,6 +143,7 @@ TextField(
 ## 3. lib/login_simple.dart - Error Message
 
 ### Before:
+
 ```dart
 if (_errorMessage != null)
   Container(
@@ -153,6 +160,7 @@ if (_errorMessage != null)
 ```
 
 ### After:
+
 ```dart
 if (_errorMessage != null)
   Container(
@@ -173,6 +181,7 @@ if (_errorMessage != null)
 ```
 
 **Changes:**
+
 - Changed background from `accent` (blue) to `error` (red) ✅
 - Changed text to white for contrast ✅
 - Added fontWeight for emphasis ✅
@@ -182,6 +191,7 @@ if (_errorMessage != null)
 ## 4. lib/core/design_system/design_constants.dart - DesignTypography
 
 ### Before:
+
 ```dart
 class DesignTypography {
   static const TextStyle heading = TextStyle(
@@ -210,6 +220,7 @@ class DesignTypography {
 ```
 
 ### After:
+
 ```dart
 class DesignTypography {
   static const TextStyle heading = TextStyle(
@@ -257,14 +268,16 @@ class DesignTypography {
 ```
 
 **Changes:**
+
 - Changed ALL colors from `accent` (blue) to `white` ✅
 - Ensures universal readability across all backgrounds ✅
 
 ---
 
-## 5. lib/features/room/widgets/voice_room_chat_overlay.dart - _ChatMessageBubble
+## 5. lib/features/room/widgets/voice_room_chat_overlay.dart - \_ChatMessageBubble
 
 ### Before:
+
 ```dart
 return Padding(
   padding: const EdgeInsets.symmetric(vertical: 4),
@@ -328,6 +341,7 @@ return Padding(
 ```
 
 ### After:
+
 ```dart
 return Padding(
   padding: const EdgeInsets.symmetric(vertical: 4),
@@ -397,6 +411,7 @@ return Padding(
 ```
 
 **Changes:**
+
 - Avatar text: Blue → White ✅
 - Message bubbles: Same color → Different (secondary for current, accent for other) ✅
 - Sender name: Blue → White/Accent with proper contrast ✅
@@ -409,6 +424,7 @@ return Padding(
 ## 6. lib/features/video_room/video_room_view.dart - Video Grid
 
 ### Before:
+
 ```dart
 Widget _buildJoinedUI() {
   return Column(
@@ -428,6 +444,7 @@ Widget _buildJoinedUI() {
 ```
 
 ### After:
+
 ```dart
 Widget _buildJoinedUI() {
   return Container(
@@ -537,6 +554,7 @@ Widget _buildJoinedUI() {
 ```
 
 **Changes:**
+
 - Added complete video grid layout ✅
 - Added remote user video placeholders ✅
 - Added local video preview ✅

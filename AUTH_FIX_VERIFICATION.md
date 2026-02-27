@@ -3,6 +3,7 @@
 ## 🔧 Changes Made (Deployed)
 
 ### 1. **`lib/providers/auth_providers.dart` — Line 14-17**
+
 **Problem:** Provider was going through `authServiceProvider`, causing null on web.
 **Fix:** Now directly watches `FirebaseAuth.instance.authStateChanges()`
 
@@ -13,6 +14,7 @@ final authStateProvider = StreamProvider<firebase_auth.User?>((ref) {
 ```
 
 ### 2. **`lib/features/room/screens/room_page.dart` — Line 216-226**
+
 **Problem:** Using `FirebaseAuth.instance.currentUser` directly, which doesn't sync with Riverpod on web.
 **Fix:** Now uses `ref.watch(authStateProvider)` to properly consume auth state
 
@@ -25,6 +27,7 @@ final currentUser = authState.maybeWhen(
 ```
 
 ### 3. **`lib/main.dart` — Verified**
+
 ✅ Firebase initializes **before** `runApp()`
 ✅ `ProviderScope` wraps the app correctly
 
@@ -33,19 +36,22 @@ final currentUser = authState.maybeWhen(
 ## 🧪 Verification Checklist
 
 ### Test 1: Authentication Flow
+
 1. Open **https://mix-and-mingle-v2.web.app**
 2. Log in with your credentials
 3. **Expected:** You see "Logged in as [email]" (not "User not authenticated")
 
 ### Test 2: Browser Console Check
+
 1. Press `CTRL + SHIFT + I` → **Console**
 2. Type:
    ```javascript
-   firebase.auth().currentUser
+   firebase.auth().currentUser;
    ```
 3. **Expected:** Shows `{ uid: "xxxx", ... }`
 
 ### Test 3: Room Page Auth
+
 1. Log in and navigate to a video room
 2. Check browser console for errors
 3. **Expected:**
@@ -55,10 +61,12 @@ final currentUser = authState.maybeWhen(
    - Room actions (raise hand, etc.) work ✅
 
 ### Test 4: Hidden Secrets Video
+
 1. While in a room, click "Hidden Secrets"
 2. **Expected:** Video loads and plays
 
 ### Test 5: Chat Messages
+
 1. Send a chat message in the room
 2. **Expected:** Message appears with your name, not "Anonymous"
 
@@ -67,6 +75,7 @@ final currentUser = authState.maybeWhen(
 ## 🔍 Why This Fixes Everything
 
 **Before:**
+
 ```
 ┌─────────────────────┐
 │  FirebaseAuth       │ ✅ User logged in
@@ -81,6 +90,7 @@ final currentUser = authState.maybeWhen(
 ```
 
 **After:**
+
 ```
 ┌──────────────────────────┐
 │  FirebaseAuth            │ ✅ User logged in
@@ -110,11 +120,11 @@ When `authStateProvider` correctly returns the user:
 
 ## 📋 Files Changed
 
-| File | Line(s) | Change |
-|------|---------|--------|
-| `lib/providers/auth_providers.dart` | 14-17 | Use `FirebaseAuth.instance.authStateChanges()` directly |
-| `lib/features/room/screens/room_page.dart` | 216-226 | Use `ref.watch(authStateProvider)` instead of `FirebaseAuth.instance.currentUser` |
-| `lib/main.dart` | const removed | Minor formatting |
+| File                                       | Line(s)       | Change                                                                            |
+| ------------------------------------------ | ------------- | --------------------------------------------------------------------------------- |
+| `lib/providers/auth_providers.dart`        | 14-17         | Use `FirebaseAuth.instance.authStateChanges()` directly                           |
+| `lib/features/room/screens/room_page.dart` | 216-226       | Use `ref.watch(authStateProvider)` instead of `FirebaseAuth.instance.currentUser` |
+| `lib/main.dart`                            | const removed | Minor formatting                                                                  |
 
 ---
 

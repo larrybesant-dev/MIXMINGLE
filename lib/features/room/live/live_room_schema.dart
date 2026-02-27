@@ -176,11 +176,19 @@ class RoomMeta {
   factory RoomMeta.fromFirestore(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
     final t = (d[RoomFields.type] as String?) ?? RoomType.social;
+    // Resolve owner from whichever field was written at room creation.
+    // Rooms may store the creator as 'ownerId', 'hostId', 'hostUid', or 'createdBy'.
+    final ownerId = [
+      d[RoomFields.ownerId],
+      d['hostId'],
+      d['hostUid'],
+      d['createdBy'],
+    ].whereType<String>().firstWhere((v) => v.isNotEmpty, orElse: () => '');
     return RoomMeta(
       id: doc.id,
-      name: (d[RoomFields.name] as String?) ?? '',
+      name: (d[RoomFields.name] as String?) ?? (d['title'] as String?) ?? '',
       type: t,
-      ownerId: (d[RoomFields.ownerId] as String?) ?? '',
+      ownerId: ownerId,
       maxBroadcasters: (d[RoomFields.maxBroadcasters] as int?) ??
           maxBroadcastersForRoomType(t),
       maxActiveMics:

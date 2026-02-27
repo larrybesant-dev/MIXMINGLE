@@ -9,6 +9,7 @@
 ## 🎯 Deliverables
 
 ### Core Chat Features
+
 ✅ **1-on-1 Direct Messaging** - Real-time chat between two users
 ✅ **Room Chat** - Shared chat in video/audio rooms
 ✅ **Typing Indicators** - Live "User is typing..." with 3-second auto-timeout
@@ -20,6 +21,7 @@
 ✅ **Smart Timestamps** - "2m ago", "Yesterday", "Dec 10" formatting
 
 ### Technical Implementation
+
 ✅ **Riverpod State Management** - StreamProviders for real-time updates
 ✅ **Firestore Collections** - Proper schema with subcollections
 ✅ **Null-Safe Code** - All chat code is null-safe and error-handled
@@ -56,6 +58,7 @@ lib/
 ## 🗄️ Firestore Schema
 
 ### Collection: `chats/{chatId}`
+
 ```javascript
 {
   id: "user1_user2", // Sorted participant IDs
@@ -80,6 +83,7 @@ lib/
 ```
 
 ### Subcollection: `chats/{chatId}/messages/{messageId}`
+
 ```javascript
 {
   id: "auto-generated",
@@ -94,6 +98,7 @@ lib/
 ```
 
 ### Collection: `typing/{chatId_userId}`
+
 ```javascript
 {
   userId: "user1",
@@ -105,6 +110,7 @@ lib/
 ```
 
 ### User Presence: `users/{userId}`
+
 ```javascript
 {
   // ... other user fields
@@ -118,10 +124,13 @@ lib/
 ## 🧩 Provider Architecture
 
 ### Conversation List
+
 ```dart
 final conversationListProvider = StreamProvider<List<ChatRoom>>
 ```
+
 **Usage:**
+
 ```dart
 final chatsAsync = ref.watch(conversationListProvider);
 chatsAsync.when(
@@ -132,19 +141,25 @@ chatsAsync.when(
 ```
 
 ### Messages Stream
+
 ```dart
 final messagesProvider = StreamProvider.family<List<ChatMessage>, String>
 ```
+
 **Usage:**
+
 ```dart
 final messagesAsync = ref.watch(messagesProvider(chatId));
 ```
 
 ### Typing Status
+
 ```dart
 final typingStatusProvider = StreamProvider.family<bool, String>
 ```
+
 **Usage:**
+
 ```dart
 final typingAsync = ref.watch(typingStatusProvider(chatId));
 if (typingAsync.value ?? false) {
@@ -153,12 +168,15 @@ if (typingAsync.value ?? false) {
 ```
 
 ### Presence Tracking
+
 ```dart
 final presenceProvider = StreamProvider.family<Map<String, dynamic>, String>
 ```
+
 **Returns:** `{ 'isOnline': bool, 'lastSeen': DateTime? }`
 
 ### Pinned Messages
+
 ```dart
 final pinnedMessagesProvider = StreamProvider.family<List<ChatMessage>, String>
 ```
@@ -168,6 +186,7 @@ final pinnedMessagesProvider = StreamProvider.family<List<ChatMessage>, String>
 ## 🔧 Service Methods
 
 ### ChatService
+
 ```dart
 // Get/create 1-on-1 chat room
 Future<ChatRoom> getOrCreateChatRoom(String otherUserId)
@@ -190,6 +209,7 @@ Future<void> setUserOffline()
 ```
 
 ### TypingService
+
 ```dart
 // Start typing (auto-stops after 3 seconds)
 Future<void> startTyping(String chatId, String userId, String userName)
@@ -206,8 +226,10 @@ Stream<List<TypingIndicator>> getTypingIndicators(String chatId, String userId)
 ## 🎨 UI Components
 
 ### ChatsListPage
+
 **Location:** `lib/features/chat/screens/chats_list_page.dart`
 **Features:**
+
 - Real-time conversation list sorted by last message time
 - Unread count badges (red circles with count)
 - Avatar with fallback to initials
@@ -216,8 +238,10 @@ Stream<List<TypingIndicator>> getTypingIndicators(String chatId, String userId)
 - Neon glow card design with accent color
 
 ### ChatConversationPage
+
 **Location:** `lib/features/chat/screens/chat_conversation_page.dart`
 **Features:**
+
 - Real-time message streaming
 - Auto-scroll to bottom on new message
 - Message bubbles (sender right, receiver left)
@@ -227,8 +251,10 @@ Stream<List<TypingIndicator>> getTypingIndicators(String chatId, String userId)
 - Input field with typing indicator trigger
 
 ### TypingIndicatorWidget
+
 **Location:** `lib/shared/widgets/typing_indicator_widget.dart`
 **Features:**
+
 - Shows "Alice is typing..."
 - Auto-hides when user stops typing (3s timeout)
 - Displays multiple users: "Alice, Bob, and Charlie are typing..."
@@ -239,6 +265,7 @@ Stream<List<TypingIndicator>> getTypingIndicators(String chatId, String userId)
 ## 🧪 Testing Status
 
 ### Unit Tests
+
 ✅ Message sending
 ✅ Read receipt marking
 ✅ Typing indicator timeout
@@ -246,6 +273,7 @@ Stream<List<TypingIndicator>> getTypingIndicators(String chatId, String userId)
 ✅ Unread count updates
 
 ### Integration Tests
+
 ✅ End-to-end chat flow
 ✅ Real-time message sync
 ✅ Typing indicators across devices
@@ -255,6 +283,7 @@ Stream<List<TypingIndicator>> getTypingIndicators(String chatId, String userId)
 ## 🚀 Usage Examples
 
 ### Send a Message
+
 ```dart
 final chatService = ref.read(chatServiceProvider);
 await chatService.sendMessage(
@@ -265,6 +294,7 @@ await chatService.sendMessage(
 ```
 
 ### Start Typing Indicator
+
 ```dart
 final typingService = ref.read(typingServiceProvider);
 await typingService.startTyping(
@@ -276,12 +306,14 @@ await typingService.startTyping(
 ```
 
 ### Mark Messages as Read
+
 ```dart
 final chatService = ref.read(chatServiceProvider);
 await chatService.markMessagesAsRead(roomId);
 ```
 
 ### Navigate to Chat
+
 ```dart
 Navigator.pushNamed(
   context,
@@ -327,12 +359,15 @@ match /typing/{indicatorId} {
 ## 🐛 Known Issues & Workarounds
 
 ### Issue: Typing indicator stuck on
+
 **Solution:** Service has built-in 3-second auto-timeout. If stuck, manually call `stopTyping()`.
 
 ### Issue: Messages not updating in real-time
+
 **Solution:** Ensure using `ref.watch()` not `ref.read()` in build method.
 
 ### Issue: Unread count not resetting
+
 **Solution:** Call `markMessagesAsRead()` in `initState()` or `onResume()`.
 
 ---
@@ -373,6 +408,7 @@ match /typing/{indicatorId} {
 ## ✅ Stage 4 Complete
 
 **Chat system is production-ready and fully integrated with:**
+
 - ✅ Onboarding (Stage 1)
 - ✅ Home & Rooms (Stage 2)
 - ✅ Speed Dating (Stage 3)
@@ -381,4 +417,3 @@ match /typing/{indicatorId} {
 - ✅ Riverpod State Management
 
 **Ready to proceed to Stage 5: Presence & Social Graph**
-

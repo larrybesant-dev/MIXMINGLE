@@ -16,6 +16,7 @@ static const int maxConcurrentAgoraConnections = 1;  // ❌ WRONG
 ```
 
 **Problems with the old approach:**
+
 1. ❌ Comment was **architecturally wrong** (Agora doesn't limit per account)
 2. ❌ Constant was **wildly inaccurate** (1 instead of 12)
 3. ❌ Not used anywhere in the codebase (orphaned)
@@ -29,6 +30,7 @@ static const int maxConcurrentAgoraConnections = 1;  // ❌ WRONG
 A **complete, production-ready system** for enforcing the 12-publisher limit across the entire app:
 
 ### 1. **Corrected Constant** (feature_flags.dart)
+
 ```dart
 /// Maximum concurrent video publishers in a single Agora channel
 /// Agora does not limit connections per account — only per channel.
@@ -38,7 +40,9 @@ static const int maxConcurrentAgoraConnections = 12;  // ✅ CORRECT
 ```
 
 ### 2. **RoomLimitManager** (room_limit_manager.dart)
+
 Core service that:
+
 - ✅ Reads/writes `activeBroadcasters` from Firestore
 - ✅ Tracks publisher count in real-time
 - ✅ Prevents room join when at capacity
@@ -46,6 +50,7 @@ Core service that:
 - ✅ Streams capacity changes for live UI updates
 
 **Key methods**:
+
 - `isRoomAtCapacity(roomId)` — Check if full
 - `addPublisher(roomId, userId)` — Register broadcaster
 - `removePublisher(roomId, userId)` — Unregister broadcaster
@@ -54,7 +59,9 @@ Core service that:
 - `getStreamsToDowngrade()` — Which grid streams to reduce
 
 ### 3. **Enforcement Utilities** (room_limit_enforcement.dart)
+
 High-level utilities for developers:
+
 - `canUserJoinAsPublisher()` — Pre-join check
 - `registerPublisher()` — Add to active list
 - `unregisterPublisher()` — Remove from active list
@@ -64,7 +71,9 @@ High-level utilities for developers:
 - `getStreamsToDowngrade()` — Grid quality reduction
 
 ### 4. **UI Components** (room_capacity_widgets.dart)
+
 Ready-to-use widgets:
+
 - `RoomCapacityIndicator` — Inline text (12x format)
 - `RoomCapacityCard` — Full card with progress bar
 - `CapacityBadge` — Compact app bar badge
@@ -72,7 +81,9 @@ Ready-to-use widgets:
 - `GoLiveButton` — Pre-built button with enforcement
 
 ### 5. **Updated AgoraVideoService**
+
 Integration point:
+
 ```dart
 // New async methods
 Future<bool> isRoomAtCapacity(String roomId)
@@ -83,7 +94,9 @@ bool isAtBroadcasterCapacity()  // Uses FeatureFlags.maxConcurrentAgoraConnectio
 ```
 
 ### 6. **Comprehensive Implementation Guide**
+
 Full documentation at: `ROOM_PUBLISHER_LIMIT_IMPLEMENTATION.md`
+
 - Architecture explanation
 - Integration points (where to add code)
 - Graceful degradation strategy
@@ -133,6 +146,7 @@ RoomLimitEnforcement.invalidateRoomCache(roomId);
 ## 📊 Architecture Breakdown
 
 ### Data Flow
+
 ```
 User clicks "Go Live"
     ↓
@@ -158,6 +172,7 @@ Room UI updates via watchRoomCapacity() stream
 ```
 
 ### Real-Time Updates
+
 ```
 Room Capacity = 10
 User A starts streaming
@@ -176,23 +191,27 @@ User Z's "Go Live" button may disable if now at capacity
 ## 🎯 Technical Highlights
 
 ### ✅ Architecturally Sound
+
 - Based on actual testing (12 is proven stable)
 - Uses constant from feature_flags.dart
 - Documented in code comments
 
 ### ✅ Production Grade
+
 - Firestore real-time listeners (not polling)
 - Atomic operations (no race conditions)
 - Error handling for network issues
 - Graceful degradation (adaptive bitrate)
 
 ### ✅ Developer Friendly
+
 - High-level utility functions (not complex logic)
 - Clear method names and documentation
 - Ready-to-use UI components
 - Test-friendly design
 
 ### ✅ User Friendly
+
 - Clear messaging ("Room full", "X/12 on camera")
 - Visual capacity bar
 - No forced disconnects
@@ -203,6 +222,7 @@ User Z's "Go Live" button may disable if now at capacity
 ## 📚 Files Created/Modified
 
 ### Created:
+
 ```
 ✅ lib/services/room_limit_manager.dart              (290 lines)
 ✅ lib/core/services/room_limit_enforcement.dart     (380 lines)
@@ -211,6 +231,7 @@ User Z's "Go Live" button may disable if now at capacity
 ```
 
 ### Modified:
+
 ```
 ✅ lib/core/feature_flags.dart                       (Updated constant & comment)
 ✅ lib/services/agora_video_service.dart             (Added imports & 3 new methods)
@@ -221,16 +242,19 @@ User Z's "Go Live" button may disable if now at capacity
 ## 🎓 Key Learnings
 
 ### Agora Architecture Truth
+
 - **Per-account limit**: ❌ Doesn't exist
 - **Per-channel limit**: ✅ 12 publishers (Flutter Web RTC)
 - This is different from Live Streaming mode (1-6 hosts)
 
 ### Your Implementation's Advantage
+
 - Based on **actual testing** with your users
 - Validated during earlier integration work
 - Now **architecturally correct** throughout the codebase
 
 ### Graceful Degradation
+
 - Adaptive bitrate tier by publisher count
 - Automatic stream downgrade when full
 - No hard disconnects (audience mode fallback)
@@ -240,17 +264,20 @@ User Z's "Go Live" button may disable if now at capacity
 ## ✍️ Next Steps
 
 ### Immediate (< 1 hour)
+
 1. Run `flutter pub get` to ensure all imports work
 2. Check for any import errors in the new files
 3. It will compile without changes (can add optional UI updates)
 
 ### Short Term (This Sprint)
+
 1. Integrate `GoLiveButton` or enforcement checks into your go_live form
 2. Add `RoomCapacityIndicator` to room header/toolbar
 3. Add cleanup in room leave logic
 4. Test with 2-3 users going live
 
 ### Medium Term (Quality Pass)
+
 1. Add analytics logging (optional)
 2. Add unit tests for RoomLimitManager
 3. Update existing room screens with capacity UI
@@ -275,6 +302,7 @@ The implementation is **ready for production** because:
 ## 💡 Optional Enhancements (Future)
 
 If you want to go deeper:
+
 - [ ] Analytics dashboard of room capacities
 - [ ] Auto-quality scaling (already has framework)
 - [ ] Recorded room stats for metrics
@@ -288,6 +316,7 @@ If you want to go deeper:
 Refer to: `ROOM_PUBLISHER_LIMIT_IMPLEMENTATION.md`
 
 **Sections**:
+
 - "What You Need to Know" — Architecture
 - "Integration Points" — Where to add code
 - "Graceful Degradation" — Quality management

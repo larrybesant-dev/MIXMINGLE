@@ -42,7 +42,10 @@ class Notification {
     return Notification(
       id: map['id'] ?? '',
       userId: map['userId'] ?? '',
-      type: NotificationType.values[map['type'] ?? 0],
+      type: NotificationType.values.firstWhere(
+        (e) => e.name == map['type'],
+        orElse: () => NotificationType.system,
+      ),
       title: map['title'] ?? '',
       message: map['message'] ?? '',
       senderId: map['senderId'],
@@ -51,7 +54,7 @@ class Notification {
       roomName: map['roomName'],
       data: map['data'],
       isRead: map['isRead'] ?? false,
-      timestamp: (map['timestamp'] as Timestamp).toDate(),
+      timestamp: _parseTimestamp(map['timestamp']),
     );
   }
 
@@ -59,7 +62,7 @@ class Notification {
     return {
       'id': id,
       'userId': userId,
-      'type': type.index,
+      'type': type.name,
       'title': title,
       'message': message,
       'senderId': senderId,
@@ -139,5 +142,12 @@ class Notification {
   @override
   String toString() {
     return 'Notification(id: $id, userId: $userId, type: $type, title: $title, isRead: $isRead, timestamp: $timestamp)';
+  }
+
+  static DateTime _parseTimestamp(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is Timestamp) return value.toDate();
+    if (value is String) return DateTime.tryParse(value) ?? DateTime.now();
+    return DateTime.now();
   }
 }

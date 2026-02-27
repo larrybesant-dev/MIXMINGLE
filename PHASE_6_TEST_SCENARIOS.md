@@ -3,10 +3,12 @@
 ## Test Scenario 1: Tooltips on Control Buttons
 
 ### Setup:
+
 - Join any voice room
 - Be at the voice room screen with control bar visible
 
 ### Steps:
+
 1. Move mouse over "Mute" button (has microphone icon)
    - ✅ Expected: Tooltip appears with text like "Mute your microphone (Ctrl+M)" or "Unmute your microphone (Ctrl+M)" depending on current state
 
@@ -23,6 +25,7 @@
    - ✅ Expected: Tooltips appear and disappear cleanly, don't hang
 
 ### Pass Criteria:
+
 - All buttons have descriptive tooltips
 - Tooltips mention keyboard shortcuts where applicable
 - No UI blockage or layout shift
@@ -32,10 +35,12 @@
 ## Test Scenario 2: Empty State Messaging
 
 ### Setup:
+
 - Be the first person to join a room
 - Both video grid and participant sidebar should be empty
 
 ### Steps:
+
 1. Look at video grid area (main video display)
    - ✅ Expected: See large people icon, "No cameras active" heading, participant count message
 
@@ -49,6 +54,7 @@
    - ✅ Expected: Empty state disappears, video tiles appear for active cameras
 
 ### Pass Criteria:
+
 - Icon + heading + subtext visible when alone
 - Text is user-friendly and encouraging
 - Visual hierarchy is clear
@@ -59,10 +65,12 @@
 ## Test Scenario 3: Error Handling
 
 ### Setup:
+
 - Have the app in a state where it might encounter an error
 - For testing: logout, then try to join a room
 
 ### Steps:
+
 1. Logout of app completely
 2. Navigate to a room page
 3. Try to join a room
@@ -81,6 +89,7 @@
    - ✅ Expected: Attempts to join room again
 
 ### Pass Criteria:
+
 - Error message is user-friendly (not showing raw exception)
 - "Retry" button attempts join again
 - "Go Back" button navigates properly
@@ -91,9 +100,11 @@
 ## Test Scenario 4: Keyboard Shortcuts
 
 ### Setup:
+
 - Be in a voice room with the app focused
 
 ### Steps:
+
 1. Press `Ctrl+M` (Windows) or `Cmd+M` (Mac)
    - ✅ Expected: Microphone toggles on/off
    - ✅ Expected: Button icon and state update immediately
@@ -109,6 +120,7 @@
    - ✅ Expected: Microphone activates while held, deactivates on release
 
 ### Pass Criteria:
+
 - All keyboard shortcuts work as documented
 - Visual feedback updates immediately
 - No console errors when shortcuts pressed
@@ -118,10 +130,12 @@
 ## Test Scenario 5: Help Dialog - Basic
 
 ### Setup:
+
 - Be in a voice room
 - Look at top AppBar
 
 ### Steps:
+
 1. Find the `?` (question mark) icon in the AppBar
    - ✅ Expected: Icon visible in top-right area of AppBar
 
@@ -142,6 +156,7 @@
    - ✅ Expected: Dialog closes smoothly
 
 ### Pass Criteria:
+
 - Help button is accessible in AppBar
 - Dialog opens and displays all sections
 - Content is well-formatted and readable
@@ -152,10 +167,12 @@
 ## Test Scenario 6: Help Dialog - Advanced Content
 
 ### Setup:
+
 - Join a room with turn-based mode enabled
 - Open help dialog
 
 ### Steps:
+
 1. Check if "Turn-Based Conversation" section appears
    - ✅ Expected: Section visible if room is in turn-based mode
    - ✅ Expected: Section shows timer, speaking badge, queue info
@@ -169,6 +186,7 @@
    - ✅ Expected: Shows click name, moderation, visual indicators
 
 ### Pass Criteria:
+
 - Conditional sections appear based on room mode
 - Content is accurate for current room state
 - All relevant tips are displayed
@@ -178,10 +196,12 @@
 ## Test Scenario 7: Empty State with Participant Join
 
 ### Setup:
+
 - Be alone in a room (empty state showing)
 - Have another user ready to join
 
 ### Steps:
+
 1. Verify empty state displays correctly
    - ✅ Expected: "Waiting for others to join" message visible
 
@@ -195,6 +215,7 @@
    - ✅ Expected: Empty state "No cameras active" is replaced with video
 
 ### Pass Criteria:
+
 - Empty state appears when alone
 - Updates immediately when others join
 - Transitions smoothly to populated view
@@ -204,9 +225,11 @@
 ## Test Scenario 8: Control Bar Button Tooltips (Detailed)
 
 ### Setup:
+
 - Be in a moderator/host room in turn-based mode
 
 ### Steps:
+
 1. Hover over "Extend +30s" button
    - ✅ Expected: "Give the current speaker 30 more seconds"
 
@@ -226,6 +249,7 @@
    - ✅ Expected: "Configure room settings and preferences"
 
 ### Pass Criteria:
+
 - All moderator-specific buttons have tooltips
 - Queue count dynamically shown in tooltip
 - No typos or unclear descriptions
@@ -235,9 +259,11 @@
 ## Test Scenario 9: Error Messages - Various Types
 
 ### Setup:
+
 - Be able to trigger different error conditions
 
 ### Steps:
+
 1. **Network Timeout Error**
    - ✅ Expected: Message mentions "Connection timed out" and "check your internet"
 
@@ -254,6 +280,7 @@
    - ✅ Expected: Messages are truncated and don't overflow UI
 
 ### Pass Criteria:
+
 - Each error type shows appropriate message
 - Messages are truncated if too long
 - No raw exception strings visible to user
@@ -264,9 +291,11 @@
 ## Test Scenario 10: Visual Consistency
 
 ### Setup:
+
 - Be in a voice room with Phase 6 improvements active
 
 ### Steps:
+
 1. Check color scheme
    - ✅ Expected: Primary buttons are pinkAccent color
    - ✅ Expected: Error/destructive buttons are red
@@ -288,6 +317,7 @@
    - ✅ Expected: No jarring transitions
 
 ### Pass Criteria:
+
 - Electric Lounge theme consistently applied
 - Typography hierarchy clear
 - Spacing is balanced

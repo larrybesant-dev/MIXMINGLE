@@ -3,6 +3,7 @@
 ## ✅ Backend Components (Production Ready)
 
 ### Cloud Functions
+
 - **getAgoraToken** - ✅ **DEPLOYED AND WORKING**
   - Location: `functions/index.js`
   - Validates Firebase Auth (Bearer token)
@@ -10,9 +11,10 @@
   - Uses `process.env.AGORA_APP_ID` and `process.env.AGORA_APP_CERTIFICATE`
   - Generates RTC token with RtcTokenBuilder
   - Returns: `{ token, appId, channelName, uid, role, expiresAt }`
-  - Endpoint: `https://us-central1-mix-and-mingle-v2.cloudfunctions.net/getAgoraToken`
+  - Endpoint: `https://us-central1-mix-and-mingle-v2.cloudfunctions.net/generateAgoraToken`
 
 ### Firestore Schema
+
 - **Room Collection** (`rooms/{roomId}`) - ✅ **COMPLETE**
   - All required fields implemented in `lib/shared/models/room.dart`
   - Supports: host management, speakers, listeners, moderators, banned users
@@ -24,12 +26,14 @@
 ## ✅ Frontend Services (Production Ready)
 
 ### 1. AgoraTokenService - ✅ **WORKING**
+
 - Location: `lib/services/agora_token_service.dart`
 - Fetches tokens from Cloud Function
 - Uses Firebase ID token for auth
 - Error handling for expired tokens, room not found, etc.
 
 ### 2. AgoraService - ✅ **ENHANCED**
+
 - Location: `lib/services/agora_service.dart`
 - Initializes Agora RTC engine
 - Joins/leaves channels with tokens
@@ -38,6 +42,7 @@
 - Event handlers: onJoinSuccess, onUserJoined, onUserOffline
 
 ### 3. RoomManagerService - ✅ **NEW - PRODUCTION READY**
+
 - Location: `lib/services/room_manager_service.dart`
 - **Complete CRUD operations:**
   - `createRoom()` - Creates room with full schema
@@ -61,6 +66,7 @@
 ## ✅ Frontend UI Pages (Production Ready)
 
 ### 1. Room Discovery Page - ✅ **NEW - COMPLETE**
+
 - Location: `lib/features/discover/room_discovery_page_complete.dart`
 - Features:
   - Live room grid with real-time updates
@@ -77,6 +83,7 @@
   - Navigation to create room
 
 ### 2. Create Room Page - ✅ **NEW - COMPLETE**
+
 - Location: `lib/features/rooms/create_room_page_complete.dart`
 - Features:
   - Title input (3-50 characters, validated)
@@ -91,6 +98,7 @@
   - Error handling with SnackBar
 
 ### 3. Room Page - ⚠️ **NEEDS UPDATE**
+
 - Location: `lib/features/room/room_page.dart`
 - Current Status: Basic video view working, needs host controls
 - Required Enhancements:
@@ -106,6 +114,7 @@
 ## ✅ Riverpod Providers (Production Ready)
 
 ### Room Providers - ✅ **ENHANCED**
+
 - Location: `lib/providers/room_providers.dart`
 - Providers added:
   - `roomManagerServiceProvider` - Service instance
@@ -125,6 +134,7 @@
 ## ✅ Integration Status
 
 ### What's Working:
+
 1. ✅ Backend token generation (deployed, tested, working)
 2. ✅ Flutter → Cloud Function → Agora Token (end-to-end tested)
 3. ✅ Room creation with full Firestore schema
@@ -136,6 +146,7 @@
 9. ✅ Search and category filtering
 
 ### What Needs Completion:
+
 1. ⚠️ Room Page - Add host control UI
 2. ⚠️ Room Page - Add participant list UI
 3. ⚠️ Room Page - Add speaker management UI
@@ -149,16 +160,21 @@
 ## 🎯 Immediate Next Steps
 
 ### Step 1: Update App Routes
+
 Add imports and routes for:
+
 - `RoomDiscoveryPageComplete`
 - `CreateRoomPageComplete`
 
 ### Step 2: Update Navigation
+
 Point "Browse Rooms" → `RoomDiscoveryPageComplete`
 Point "Create Room" → `CreateRoomPageComplete`
 
 ### Step 3: Enhance Room Page
+
 Add:
+
 - Participant list sidebar
 - Raised hands UI
 - Host control buttons panel
@@ -167,6 +183,7 @@ Add:
 - End room button (host only)
 
 ### Step 4: Test Complete Flow
+
 1. Create room → Success ✅
 2. Room appears in discovery → Success ✅
 3. Join room → Success ✅
@@ -179,23 +196,27 @@ Add:
 ## 📊 Code Coverage
 
 ### Backend: **100% Complete**
+
 - Cloud Functions ✅
 - Firestore schema ✅
 - Security (auth required) ✅
 
 ### Services: **95% Complete**
+
 - Token fetching ✅
 - Room CRUD ✅
 - Agora integration ✅
 - Missing: Host control service calls (5%)
 
 ### UI Pages: **80% Complete**
+
 - Room Discovery ✅
 - Room Create ✅
 - Room View (basic) ✅
 - Missing: Host control UI (20%)
 
 ### Providers: **100% Complete**
+
 - Room providers ✅
 - Auth providers ✅
 - Service providers ✅
@@ -205,6 +226,7 @@ Add:
 ## 🚀 Production Readiness
 
 ### Ready for Production:
+
 - ✅ Backend token generation
 - ✅ Room creation
 - ✅ Room discovery
@@ -216,6 +238,7 @@ Add:
 - ✅ Privacy controls
 
 ### Needs Testing:
+
 - ⚠️ Multi-user video/audio
 - ⚠️ Host control actions
 - ⚠️ Error scenarios
@@ -227,6 +250,7 @@ Add:
 ## 📝 Test Rooms
 
 Current test rooms in Firestore:
+
 - `DoWJnySEtTtEZsaB80RR` ✅ Working
 - `test-room-001` ✅ Working
 
@@ -251,11 +275,13 @@ Current test rooms in Firestore:
 ## 📦 Files Created/Updated
 
 ### New Files:
+
 1. `lib/services/room_manager_service.dart` ⭐ **NEW**
 2. `lib/features/discover/room_discovery_page_complete.dart` ⭐ **NEW**
 3. `lib/features/rooms/create_room_page_complete.dart` ⭐ **NEW**
 
 ### Updated Files:
+
 1. `lib/providers/room_providers.dart` - Added new providers
 2. `lib/services/agora_service.dart` - Enhanced with web fixes
 3. `web/index.html` - Added Agora Web SDK script
@@ -266,6 +292,7 @@ Current test rooms in Firestore:
 ## 🎊 Summary
 
 **You now have a production-ready Paltalk-style video chat system with:**
+
 - ✅ Complete backend (Cloud Functions + Firestore)
 - ✅ Token generation & security
 - ✅ Room creation & management

@@ -11,6 +11,7 @@
 Successfully completed comprehensive refactoring of Mix & Mingle Flutter web app following strict DESIGN_BIBLE.md and architecture rules. All major components now enforce design system compliance, Firebase backend correctness, real-time presence tracking, and multi-window video room support.
 
 **Test Results**:
+
 - ✅ Design Constants Tests: **39 passed**
 - ✅ Design Animations Tests: **1 passed**
 - ✅ Web Build Release: **SUCCESS** (build/web generated)
@@ -22,6 +23,7 @@ Successfully completed comprehensive refactoring of Mix & Mingle Flutter web app
 ### 1. ✅ DESIGN SYSTEM ENFORCEMENT
 
 #### Changes Made:
+
 - **[lib/shared/widgets/friends_sidebar_widget.dart]**
   - Added imports: `design_constants.dart`, `design_animations.dart`
   - Strategic foundation for replacing Material defaults throughout sidebar
@@ -36,7 +38,9 @@ Successfully completed comprehensive refactoring of Mix & Mingle Flutter web app
   - Enforces: DESIGN_BIBLE.md Sections A, B, C
 
 #### Pattern Reference
+
 All new UI widgets copy the **presence_card.dart** pattern:
+
 ```dart
 import 'package:mix_and_mingle/core/design_system/design_constants.dart';
 import 'package:mix_and_mingle/core/design_system/design_animations.dart';
@@ -53,6 +57,7 @@ import 'package:mix_and_mingle/core/design_system/design_animations.dart';
 #### [lib/features/video_room/video_room_controller.dart]
 
 **Before** (StateNotifier pattern):
+
 ```dart
 class VideoRoomNotifier extends StateNotifier<VideoRoomState> {
   final VideoRoomLifecycle _lifecycle;
@@ -65,6 +70,7 @@ final videoRoomNotifierProvider = StateNotifierProvider.family<...>((ref, params
 ```
 
 **After** (Notifier v3 pattern):
+
 ```dart
 class VideoRoomNotifier extends Notifier<VideoRoomState> {
   late final VideoRoomLifecycle _lifecycle;
@@ -81,6 +87,7 @@ final videoRoomProvider = NotifierProvider.family<...>((params) {...});
 ```
 
 **Improvements**:
+
 - ✅ Lazy initialization in `build()`
 - ✅ Cleaner lifeCycle management
 - ✅ Better memory efficiency
@@ -91,7 +98,9 @@ final videoRoomProvider = NotifierProvider.family<...>((params) {...});
 ### 3. ✅ FIREBASE BACKEND CORRECTNESS
 
 #### [lib/models/user_presence.dart] (NEW)
+
 Comprehensive presence model:
+
 ```dart
 class UserPresence {
   final String userId;
@@ -112,12 +121,14 @@ enum PresenceState { online, idle, away, offline }
 #### [lib/services/presence_service.dart] (ENHANCED)
 
 Features:
+
 - ✅ **Throttled writes**: 10–15s minimum (prevents excessive Firestore ops)
 - ✅ **Stream listeners**: Real-time presence updates
 - ✅ **State transitions**: online → idle → away → offline
 - ✅ **Error handling**: Graceful degradation if Firestore unavailable
 
 **Key Methods**:
+
 ```dart
 Future<void> setOnline(String userId, String roomId, String roomName)
 Future<void> setIdle(String userId)
@@ -130,6 +141,7 @@ Stream<List<UserPresence>> watchPresenceList(List<String> userIds)
 #### [firestore.rules] (UPDATED)
 
 **Security Enforcements**:
+
 ```javascript
 // Users can read ANY presence (for friends list)
 allow read: if request.auth != null;
@@ -142,6 +154,7 @@ allow write: if request.auth.uid == userId &&
 ```
 
 **Collections Secured**:
+
 - `/users/{userId}` - User profiles
 - `/presence/{userId}` - Real-time presence (**CRITICAL**)
 - `/messages/{messageId}` - Chat messages
@@ -156,6 +169,7 @@ allow write: if request.auth.uid == userId &&
 #### [lib/providers/friends_presence_provider.dart] (NEW)
 
 **FriendWithPresence Model**:
+
 ```dart
 class FriendWithPresence {
   final String userId;
@@ -181,16 +195,19 @@ class FriendWithPresence {
 **Providers**:
 
 1. **friendIdsProvider** - Get current user's friend list
+
    ```dart
    final friendIds = ref.watch(friendIdsProvider);  // List<String>
    ```
 
 2. **friendWithPresenceProvider** - Single friend with live presence
+
    ```dart
    final friend = ref.watch(friendWithPresenceProvider('userId'));
    ```
 
 3. **friendsWithPresenceProvider** - All friends, sorted by status
+
    ```dart
    final friends = ref.watch(friendsWithPresenceProvider(userId));
    // Returns: online (by activity) → idle/away → offline (by lastSeen)
@@ -204,6 +221,7 @@ class FriendWithPresence {
 **Sorting**: Online first (by activity recency) → Idle/Away → Offline (by lastSeen)
 
 **Firestore Schema**:
+
 ```
 /users/{userId}
   - displayName: string
@@ -226,6 +244,7 @@ class FriendWithPresence {
 #### [lib/utils/multi_window_room_manager.dart] (NEW)
 
 **Web-Specific Window Management**:
+
 ```dart
 class MultiWindowRoomManager {
   // Opens room in NEW browser tab/window
@@ -249,6 +268,7 @@ class MultiWindowRoomManager {
 **URL Pattern**: `/room/{roomId}?name={roomName}&userId={userId}`
 
 **Integration with Friend Card**:
+
 ```dart
 // Double-click friend card
 void _handleDoubleTap() {
@@ -269,6 +289,7 @@ void _handleDoubleTap() {
 #### [lib/models/participant.dart]
 
 Verified existing model supports:
+
 - ✅ `uid` - Unique identifier
 - ✅ `name` - Display name
 - ✅ `isSpeaking` - Speaking indicator for animations
@@ -287,6 +308,7 @@ Verified existing model supports:
 #### [test/design_constants_test.dart] - **39 TESTS PASSED**
 
 Validates:
+
 - ✅ Color palette (white = 0xFFFFFFFF)
 - ✅ Neutral palette is pure grayscale (R=G=B)
 - ✅ Room energy colors are distinct (calm, active, buzzing)
@@ -299,6 +321,7 @@ Validates:
 #### [test/design_animations_test.dart] - **1 TEST PASSED**
 
 Validates:
+
 - ✅ Join flow timing (150ms → 400ms → 400ms)
 - ✅ Presence animations (250ms slide, 200ms fade)
 - ✅ Speaking pulse (200ms duration)
@@ -335,17 +358,20 @@ Validates:
 ## 📦 File Manifest
 
 ### Created Files
+
 - ✅ `lib/models/user_presence.dart` - Presence state model
 - ✅ `lib/providers/friends_presence_provider.dart` - Real-time friends provider
 - ✅ `lib/shared/widgets/friend_card_widget.dart` - Design-compliant friend card
 - ✅ `lib/utils/multi_window_room_manager.dart` - Web window management
 
 ### Modified Files
+
 - ✅ `lib/features/video_room/video_room_controller.dart` - Riverpod v3 migration
 - ✅ `lib/shared/widgets/friends_sidebar_widget.dart` - Design imports added
 - ✅ `test/design_constants_test.dart` - Fixed imports, all 39 tests pass
 
 ### Verified/No Changes Needed
+
 - ✅ `lib/models/participant.dart` - Correct structure
 - ✅ `lib/core/firestore_schema.dart` - Schema documentation valid
 - ✅ `lib/features/video_room/video_room_state.dart` - State structure correct
@@ -357,12 +383,14 @@ Validates:
 ## 🚀 Verification Checklist
 
 ### Tests Run
+
 - ✅ `flutter test test/design_constants_test.dart` → 39 passed
 - ✅ `flutter test test/design_animations_test.dart` → 1 passed
 - ✅ `flutter build web --release --no-tree-shake-icons` → SUCCESS
 
 ### Design System Enforcement
-- ✅ No Material defaults (Card, ListTile, Colors.*)
+
+- ✅ No Material defaults (Card, ListTile, Colors.\*)
 - ✅ All colors from DesignColors
 - ✅ All typography from DesignTypography
 - ✅ All spacing from DesignSpacing
@@ -370,6 +398,7 @@ Validates:
 - ✅ All shadows from DesignShadows
 
 ### Firebase Backend
+
 - ✅ User collection has displayName, avatarUrl, friends[], lastSeen
 - ✅ Presence collection has state, roomId, lastUpdate, platform
 - ✅ Firestore rules enforce proper access control
@@ -377,12 +406,14 @@ Validates:
 - ✅ Offline/lastSeen handling correct
 
 ### Video Room Integration
+
 - ✅ Riverpod v3 NotifierProvider pattern
 - ✅ Multi-window support via MultiWindowRoomManager
 - ✅ AgoraWebBridgeV5 compatibility confirmed
 - ✅ Join flow timing: 150ms → 400ms → 400ms
 
 ### Friends List
+
 - ✅ Real-time presence listener
 - ✅ Status indicators (green/yellow/red/gray)
 - ✅ Activity badge (speaking, idle time)
@@ -392,6 +423,7 @@ Validates:
 - ✅ Right-click context menu
 
 ### Web Compatibility
+
 - ✅ Uint8List properly handled in account_settings_web.dart
 - ✅ JS bridge imports correct (dart:js_interop)
 - ✅ Web-specific window.open() usage
@@ -422,11 +454,13 @@ Validates:
 ## 🔍 Known Notes & Future Work
 
 ### Current Implementation
+
 - Speed dating feature: **NOT REMOVED** (recommend removal in next phase)
 - FLUTTER_WEB_STARTER references: **Not found** (may have been already removed)
 - Uint8List web compatibility: **Verified working** in account_settings_web.dart
 
 ### Recommended Next Steps
+
 1. **Remove speed_dating feature** (adds unnecessary complexity)
 2. **Refactor friends_sidebar_widget** fully to design system (currently partial)
 3. **Add room invitation flow** via right-click menu
@@ -436,6 +470,7 @@ Validates:
 7. **Add analytics** for room joins/leaves
 
 ### Documentation to Update
+
 - `DESIGN_SYSTEM_DELIVERY_MANIFEST.md` - Log these changes
 - `ARCHITECTURE_ALIGNMENT_EXPLAINED.md` - Note Riverpod v3 migration
 - `ROOMPAGE_DOCUMENTATION.md` - Update for multi-window support
@@ -446,6 +481,7 @@ Validates:
 ## 📞 Contact & Support
 
 For questions about this refactoring:
+
 - Reference **DESIGN_BIBLE.md** Sections A–G
 - Check **presence_card.dart** for widget pattern
 - Review **friends_presence_provider.dart** for Firestore integration

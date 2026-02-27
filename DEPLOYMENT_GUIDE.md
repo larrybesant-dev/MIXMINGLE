@@ -1,6 +1,7 @@
 # Phase 14: Deployment & CI/CD Pipeline
 
 ## Overview
+
 This guide walks through deploying Mix & Mingle to TestFlight (iOS) and Play Store Internal Testing (Android), setting up CI/CD with GitHub Actions, and preparing for production launch.
 
 ---
@@ -8,6 +9,7 @@ This guide walks through deploying Mix & Mingle to TestFlight (iOS) and Play Sto
 ## 📱 iOS Deployment (TestFlight)
 
 ### Prerequisites
+
 1. ✅ Apple Developer Account ($99/year)
 2. ✅ Xcode 15+ installed on Mac
 3. ✅ App Store Connect access
@@ -94,6 +96,7 @@ flutter build ipa --release
 ## 🤖 Android Deployment (Play Store Internal Testing)
 
 ### Prerequisites
+
 1. ✅ Google Play Console Account ($25 one-time)
 2. ✅ App signing key generated
 3. ✅ Package name: `com.mixmingle.app`
@@ -232,9 +235,9 @@ name: Flutter CI/CD
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
   workflow_dispatch:
 
 jobs:
@@ -245,29 +248,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.19.0'
-        channel: 'stable'
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.19.0"
+          channel: "stable"
 
-    - name: Get dependencies
-      run: flutter pub get
+      - name: Get dependencies
+        run: flutter pub get
 
-    - name: Analyze code
-      run: flutter analyze
+      - name: Analyze code
+        run: flutter analyze
 
-    - name: Run tests
-      run: flutter test --coverage
+      - name: Run tests
+        run: flutter test --coverage
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        files: ./coverage/lcov.info
-        token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   # ========================================
   # BUILD ANDROID
@@ -278,54 +281,54 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.19.0'
-        channel: 'stable'
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.19.0"
+          channel: "stable"
 
-    - name: Setup Java
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'zulu'
-        java-version: '17'
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "zulu"
+          java-version: "17"
 
-    - name: Get dependencies
-      run: flutter pub get
+      - name: Get dependencies
+        run: flutter pub get
 
-    - name: Decode keystore
-      run: |
-        echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/keystore.jks
 
-    - name: Create key.properties
-      run: |
-        cat > android/key.properties <<EOF
-        storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-        keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
-        keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
-        storeFile=keystore.jks
-        EOF
+      - name: Create key.properties
+        run: |
+          cat > android/key.properties <<EOF
+          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
+          storeFile=keystore.jks
+          EOF
 
-    - name: Build Android App Bundle
-      run: flutter build appbundle --release
+      - name: Build Android App Bundle
+        run: flutter build appbundle --release
 
-    - name: Upload AAB artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: app-release.aab
-        path: build/app/outputs/bundle/release/app-release.aab
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release.aab
+          path: build/app/outputs/bundle/release/app-release.aab
 
-    - name: Deploy to Play Store Internal Testing
-      uses: r0adkll/upload-google-play@v1
-      with:
-        serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
-        packageName: com.mixmingle.app
-        releaseFiles: build/app/outputs/bundle/release/app-release.aab
-        track: internal
-        status: completed
+      - name: Deploy to Play Store Internal Testing
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_STORE_SERVICE_ACCOUNT_JSON }}
+          packageName: com.mixmingle.app
+          releaseFiles: build/app/outputs/bundle/release/app-release.aab
+          track: internal
+          status: completed
 
   # ========================================
   # BUILD iOS
@@ -336,44 +339,44 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Setup Flutter
-      uses: subosito/flutter-action@v2
-      with:
-        flutter-version: '3.19.0'
-        channel: 'stable'
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.19.0"
+          channel: "stable"
 
-    - name: Get dependencies
-      run: flutter pub get
+      - name: Get dependencies
+        run: flutter pub get
 
-    - name: Setup Xcode
-      uses: maxim-lobanov/setup-xcode@v1
-      with:
-        xcode-version: 'latest-stable'
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: "latest-stable"
 
-    - name: Install CocoaPods
-      run: |
-        cd ios
-        pod install
+      - name: Install CocoaPods
+        run: |
+          cd ios
+          pod install
 
-    - name: Build iOS IPA
-      run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
+      - name: Build iOS IPA
+        run: flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 
-    - name: Upload IPA artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: app-release.ipa
-        path: build/ios/ipa/*.ipa
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release.ipa
+          path: build/ios/ipa/*.ipa
 
-    - name: Deploy to TestFlight
-      uses: apple-actions/upload-testflight-build@v1
-      with:
-        app-path: build/ios/ipa/*.ipa
-        issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-        api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
-        api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
+      - name: Deploy to TestFlight
+        uses: apple-actions/upload-testflight-build@v1
+        with:
+          app-path: build/ios/ipa/*.ipa
+          issuer-id: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          api-key-id: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          api-private-key: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY }}
 ```
 
 ### Required GitHub Secrets
@@ -381,6 +384,7 @@ jobs:
 Add to repository settings → Secrets → Actions:
 
 **Android:**
+
 - `ANDROID_KEYSTORE_BASE64` - Base64 encoded keystore file
 - `ANDROID_KEYSTORE_PASSWORD` - Keystore password
 - `ANDROID_KEY_PASSWORD` - Key password
@@ -388,21 +392,25 @@ Add to repository settings → Secrets → Actions:
 - `PLAY_STORE_SERVICE_ACCOUNT_JSON` - Google Play service account JSON
 
 **iOS:**
+
 - `APP_STORE_CONNECT_ISSUER_ID` - App Store Connect API issuer ID
 - `APP_STORE_CONNECT_API_KEY_ID` - App Store Connect API key ID
 - `APP_STORE_CONNECT_API_PRIVATE_KEY` - App Store Connect API private key
 
 **Coverage:**
+
 - `CODECOV_TOKEN` - Codecov upload token
 
 ### Generate Secrets
 
 **Android Keystore Base64:**
+
 ```bash
 base64 -i android/app/keystore.jks | pbcopy
 ```
 
 **Play Store Service Account:**
+
 1. Go to Google Cloud Console
 2. Create service account with "Service Account User" role
 3. Enable Google Play Android Developer API
@@ -410,6 +418,7 @@ base64 -i android/app/keystore.jks | pbcopy
 5. Download and copy content
 
 **App Store Connect API:**
+
 1. Go to App Store Connect → Users and Access
 2. Keys tab → Generate API Key
 3. Download .p8 file
@@ -422,6 +431,7 @@ base64 -i android/app/keystore.jks | pbcopy
 ### iOS App Store Listing
 
 **App Information:**
+
 - **Name**: Mix & Mingle
 - **Subtitle**: Video Chat, Events & Dating
 - **Category**: Social Networking
@@ -429,18 +439,22 @@ base64 -i android/app/keystore.jks | pbcopy
 - **Content Rights**: Owns or has rights to all content
 
 **Version Information:**
+
 - **Version**: 1.0.0
 - **Copyright**: © 2026 Mix & Mingle LLC
 - **Trade Representative Contact**: [CONTACT_EMAIL]
 
 **App Privacy:**
+
 - **Privacy Policy URL**: https://mixmingle.app/privacy
 - **User Privacy Choices URL**: https://mixmingle.app/privacy#choices
 
 **Age Rating:**
+
 - 17+ (Frequent/Intense Sexual Content or Nudity, Social Networking)
 
 **Description** (4000 chars max):
+
 ```
 Mix & Mingle - Where Video Chat Meets Real Connections
 
@@ -476,11 +490,13 @@ Join thousands of people making real connections on Mix & Mingle!
 ```
 
 **Keywords** (100 chars max):
+
 ```
 video chat,social,dating,events,meetup,friends,voice,rooms,live,speed dating
 ```
 
 **Screenshots** (Required):
+
 - 6.5" iPhone: 1284 x 2778 (3 required)
 - 5.5" iPhone: 1242 x 2208 (3 required)
 - iPad Pro 12.9": 2048 x 2732 (2 recommended)
@@ -490,6 +506,7 @@ video chat,social,dating,events,meetup,friends,voice,rooms,live,speed dating
 ### Android Play Store Listing
 
 **App Details:**
+
 - **App name**: Mix & Mingle
 - **Short description** (80 chars):
   ```
@@ -497,6 +514,7 @@ video chat,social,dating,events,meetup,friends,voice,rooms,live,speed dating
   ```
 
 **Full description** (4000 chars):
+
 ```
 Mix & Mingle - Where Video Chat Meets Real Connections
 
@@ -550,11 +568,13 @@ Having issues? Contact us at support@mixmingle.app
 **Content Rating**: Rated for 18+
 
 **Screenshots** (Required):
+
 - Phone: 1080 x 1920 (2-8 required)
 - 7" Tablet: 1200 x 1920 (optional)
 - 10" Tablet: 1600 x 2560 (optional)
 
 **Feature Graphic**:
+
 - Size: 1024 x 500
 - Required for Play Store
 
@@ -571,6 +591,7 @@ Follow Semantic Versioning: `MAJOR.MINOR.PATCH`
 - **PATCH**: Bug fixes (e.g., 1.0.0 → 1.0.1)
 
 Update in:
+
 1. `pubspec.yaml` - `version: 1.0.0+1`
 2. `ios/Runner/Info.plist` - `CFBundleShortVersionString` and `CFBundleVersion`
 3. `android/app/build.gradle` - `versionCode` and `versionName`
@@ -578,6 +599,7 @@ Update in:
 ### Release Checklist
 
 **Pre-Release:**
+
 - [ ] All tests passing
 - [ ] Code coverage > 70%
 - [ ] No analyzer warnings
@@ -590,6 +612,7 @@ Update in:
 - [ ] App store screenshots ready
 
 **Release:**
+
 - [ ] Bump version number
 - [ ] Update CHANGELOG.md
 - [ ] Create Git tag (e.g., `v1.0.0`)
@@ -603,6 +626,7 @@ Update in:
 - [ ] Monitor Firebase Analytics
 
 **Post-Release:**
+
 - [ ] Submit for App Store review
 - [ ] Promote to Play Store beta
 - [ ] Monitor crash reports
@@ -623,6 +647,7 @@ https://console.firebase.google.com/project/mixmingle/crashlytics
 ### Firebase Analytics
 
 Track key events:
+
 - User sign up
 - Profile created
 - Event created/joined
@@ -643,25 +668,31 @@ Android: https://play.google.com/console/u/0/developers/[DEVELOPER_ID]/app/[APP_
 ### iOS Build Errors
 
 **"Provisioning profile doesn't match"**
+
 - Solution: Run `flutter clean && cd ios && pod install && cd ..`
 
 **"Signing certificate expired"**
+
 - Solution: Renew certificate in Apple Developer portal
 
 ### Android Build Errors
 
 **"Execution failed for task ':app:lintVitalRelease'"**
+
 - Solution: Add `lintOptions { checkReleaseBuilds false }` to `android/app/build.gradle`
 
 **"Keystore file not found"**
+
 - Solution: Verify `key.properties` path is correct
 
 ### CI/CD Failures
 
 **"Flutter not found"**
+
 - Solution: Check Flutter version in workflow matches project
 
 **"Secrets not accessible"**
+
 - Solution: Verify secrets are set in repository settings
 
 ---

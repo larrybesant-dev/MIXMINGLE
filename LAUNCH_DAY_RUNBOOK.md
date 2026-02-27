@@ -98,9 +98,10 @@ firebase deploy --only functions --project=mixmingle-prod
 - [ ] Review user feedback channels
 
 **Thresholds for Action:**
+
 - Crash rate > 1% → Investigate immediately
 - Error rate > 5% → Prepare rollback
-- >10 consecutive sign-up failures → Disable new signups
+- > 10 consecutive sign-up failures → Disable new signups
 - Video chat success rate < 90% → Page Agora support
 
 ### During Peak Usage (First 4 Hours)
@@ -117,12 +118,14 @@ firebase deploy --only functions --project=mixmingle-prod
 ## Rollback Procedure
 
 **Decision Criteria:**
+
 - Crash rate > 2% for >5 minutes
-- >20% of users unable to complete sign-up
+- > 20% of users unable to complete sign-up
 - Video chat unavailable for >50% of users
 - Critical security vulnerability found
 
 **Rollback Steps:**
+
 ```bash
 # 1. Notify team
 # Slack: @launch-team - ROLLBACK INITIATED
@@ -143,41 +146,46 @@ firebase hosting:channel:deploy production --version=<previous-id>
 ## Communication Plan
 
 ### Users
+
 - **In-App Banner**: Any service disruptions
 - **Status Page**: realtime.mixmingle.app/status
 - **Twitter**: @MixMingleApp
 
 ### Internal
+
 - **Slack Channel**: #launch-updates
 - **War Room**: [Zoom link] (if issues)
 
 ## Success Metrics (First 24 Hours)
 
-| Metric | Target | Alert Threshold |
-|--------|--------|-----------------|
-| Uptime | 99.9% | <99.5% |
-| Crash Rate | 0% | >1% |
-| Error Rate | <0.1% | >0.5% |
-| Avg Response | <500ms | >1s |
-| Signup Success | >95% | <90% |
-| Video Connect | >95% | <90% |
-| User Retention | N/A | Watch trend |
+| Metric         | Target | Alert Threshold |
+| -------------- | ------ | --------------- |
+| Uptime         | 99.9%  | <99.5%          |
+| Crash Rate     | 0%     | >1%             |
+| Error Rate     | <0.1%  | >0.5%           |
+| Avg Response   | <500ms | >1s             |
+| Signup Success | >95%   | <90%            |
+| Video Connect  | >95%   | <90%            |
+| User Retention | N/A    | Watch trend     |
 
 ## Post-Launch Activities
 
 ### First 24 Hours
+
 - [ ] Monitor metrics continuously
 - [ ] Respond to user support tickets
 - [ ] Collect user feedback
 - [ ] Team debrief
 
 ### First Week
+
 - [ ] Daily metrics review
 - [ ] Fix any critical bugs
 - [ ] Optimize performance
 - [ ] Plan Phase 2 features
 
 ### First Month
+
 - [ ] Comprehensive analytics review
 - [ ] User research
 - [ ] Security audit results

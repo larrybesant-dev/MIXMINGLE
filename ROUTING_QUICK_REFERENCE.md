@@ -3,11 +3,13 @@
 ## 📱 Common Navigation Tasks
 
 ### Navigate to Page
+
 ```dart
 Navigator.of(context).pushNamed(AppRoutes.matches);
 ```
 
 ### Navigate with Data
+
 ```dart
 Navigator.of(context).pushNamed(
   AppRoutes.userProfile,
@@ -16,11 +18,13 @@ Navigator.of(context).pushNamed(
 ```
 
 ### Replace Current Page
+
 ```dart
 Navigator.of(context).pushReplacementNamed(AppRoutes.home);
 ```
 
 ### Clear Stack & Navigate
+
 ```dart
 Navigator.of(context).pushNamedAndRemoveUntil(
   AppRoutes.home,
@@ -31,6 +35,7 @@ Navigator.of(context).pushNamedAndRemoveUntil(
 ## 🎯 Route Constants
 
 ### Public Routes (No Auth)
+
 - `AppRoutes.splash` - `/`
 - `AppRoutes.landing` - `/landing`
 - `AppRoutes.login` - `/login`
@@ -38,6 +43,7 @@ Navigator.of(context).pushNamedAndRemoveUntil(
 - `AppRoutes.forgotPassword` - `/forgot-password`
 
 ### Main Navigation (Bottom Bar)
+
 - `AppRoutes.home` - `/home` 🏠
 - `AppRoutes.matches` - `/matches` ❤️
 - `AppRoutes.chats` - `/chats` 💬
@@ -45,33 +51,40 @@ Navigator.of(context).pushNamedAndRemoveUntil(
 - `AppRoutes.profile` - `/profile` 👤
 
 ### Profile Routes
+
 - `AppRoutes.userProfile` - `/profile/user?userId={id}`
 - `AppRoutes.editProfile` - `/profile/edit`
 - `AppRoutes.createProfile` - `/create-profile`
 
 ### Chat Routes
+
 - `AppRoutes.chat` - `/chat?chatId={id}` or `?userId={id}`
 - `AppRoutes.messages` - `/messages`
 
 ### Event Routes
+
 - `AppRoutes.eventDetails` - `/events/details?eventId={id}`
 - `AppRoutes.createEvent` - `/events/create`
 
 ### Speed Dating
+
 - `AppRoutes.speedDatingLobby` - `/speed-dating/lobby`
 - `AppRoutes.speedDatingDecision` - `/speed-dating/decision?partnerId={id}`
 
 ### Room Routes
+
 - `AppRoutes.room` - `/room?roomId={id}`
 - `AppRoutes.browseRooms` - `/browse-rooms`
 - `AppRoutes.createRoom` - `/create-room`
 
 ### Settings
+
 - `AppRoutes.settings` - `/settings`
 - `AppRoutes.privacySettings` - `/settings/privacy`
 - `AppRoutes.notifications` - `/notifications`
 
 ### Other
+
 - `AppRoutes.discoverUsers` - `/discover-users`
 - `AppRoutes.buyCoins` - `/buy-coins`
 - `AppRoutes.leaderboards` - `/leaderboards`
@@ -80,29 +93,37 @@ Navigator.of(context).pushNamedAndRemoveUntil(
 ## 🔐 Guards
 
 ### AuthGate
+
 Ensures user is authenticated
+
 - ✅ Passes: User logged in
 - ❌ Redirects: → Login page
 
 ### ProfileGuard
+
 Ensures profile is complete
+
 - ✅ Passes: Has username, age, gender
 - ❌ Redirects: → Create profile page
 
 ### EventGuard
+
 Ensures event access
+
 - ✅ Passes: Has active session or valid event
 - ❌ Shows: "No active session" page
 
 ## 🔗 Deep Links
 
 ### Patterns
+
 - Event: `https://mixmingle.app/e/{eventId}`
 - Room: `https://mixmingle.app/r/{roomId}`
 - Profile: `https://mixmingle.app/u/{userId}`
 - Speed Dating: `https://mixmingle.app/sd/{sessionId}`
 
 ### Parse Deep Link
+
 ```dart
 final uri = Uri.parse(url);
 final result = AppRoutes.parseDeepLink(uri);
@@ -116,6 +137,7 @@ Navigator.of(context).pushNamed(
 ## 🎨 Transitions
 
 ### Types
+
 - **Fade** - Smooth fade (Home, Error)
 - **Slide Left** - Standard navigation
 - **Slide Up** - Modals, Forms
@@ -123,20 +145,23 @@ Navigator.of(context).pushNamed(
 - **Scale** - Speed Dating, Rooms
 
 ### Duration
+
 All transitions: **300ms**
 
 ## 📋 Query Parameters
 
 ### Required Parameters
-| Route | Parameter | Type |
-|-------|-----------|------|
-| userProfile | userId | String |
-| chat | chatId OR userId | String |
-| eventDetails | eventId | String |
-| room | roomId OR room | String/Object |
-| speedDatingDecision | partnerId | String |
+
+| Route               | Parameter        | Type          |
+| ------------------- | ---------------- | ------------- |
+| userProfile         | userId           | String        |
+| chat                | chatId OR userId | String        |
+| eventDetails        | eventId          | String        |
+| room                | roomId OR room   | String/Object |
+| speedDatingDecision | partnerId        | String        |
 
 ### Example
+
 ```dart
 Navigator.of(context).pushNamed(
   AppRoutes.eventDetails,
@@ -147,6 +172,7 @@ Navigator.of(context).pushNamed(
 ## ⚠️ Error Handling
 
 ### Missing Parameters
+
 ```dart
 // Automatically shows error page with helpful message
 Navigator.of(context).pushNamed(AppRoutes.eventDetails);
@@ -154,6 +180,7 @@ Navigator.of(context).pushNamed(AppRoutes.eventDetails);
 ```
 
 ### Custom Error
+
 ```dart
 Navigator.of(context).pushNamed(
   AppRoutes.error,
@@ -164,6 +191,7 @@ Navigator.of(context).pushNamed(
 ## 🧪 Testing
 
 ### Test Navigation
+
 ```dart
 testWidgets('navigates to profile', (tester) async {
   await tester.pumpWidget(MyApp());
@@ -181,6 +209,7 @@ testWidgets('navigates to profile', (tester) async {
 ## 💡 Best Practices
 
 ### ✅ DO
+
 - Use `AppRoutes` constants
 - Pass arguments as maps
 - Handle navigation errors
@@ -188,6 +217,7 @@ testWidgets('navigates to profile', (tester) async {
 - Test navigation flows
 
 ### ❌ DON'T
+
 - Use string literals for routes
 - Pass large objects as arguments (use IDs)
 - Forget to handle missing parameters
@@ -197,6 +227,7 @@ testWidgets('navigates to profile', (tester) async {
 ## 🔄 Common Patterns
 
 ### Login Flow
+
 ```dart
 // After successful login
 Navigator.of(context).pushNamedAndRemoveUntil(
@@ -206,6 +237,7 @@ Navigator.of(context).pushNamedAndRemoveUntil(
 ```
 
 ### Logout Flow
+
 ```dart
 // After logout
 await FirebaseAuth.instance.signOut();
@@ -216,6 +248,7 @@ Navigator.of(context).pushNamedAndRemoveUntil(
 ```
 
 ### View Profile from Match
+
 ```dart
 onTap: () {
   Navigator.of(context).pushNamed(
@@ -226,6 +259,7 @@ onTap: () {
 ```
 
 ### Open Chat from Profile
+
 ```dart
 onPressed: () {
   Navigator.of(context).pushNamed(
@@ -236,6 +270,7 @@ onPressed: () {
 ```
 
 ### Join Event
+
 ```dart
 onPressed: () {
   Navigator.of(context).pushNamed(
@@ -248,6 +283,7 @@ onPressed: () {
 ## 📱 Push Notifications
 
 ### Handle Notification Tap
+
 ```dart
 void onNotificationTap(Map<String, dynamic> data) {
   switch (data['type']) {
@@ -275,6 +311,7 @@ void onNotificationTap(Map<String, dynamic> data) {
 ## 🎯 Quick Checklist
 
 Before pushing navigation code:
+
 - [ ] Using `AppRoutes` constant?
 - [ ] Required parameters provided?
 - [ ] Error handling in place?
@@ -283,6 +320,7 @@ Before pushing navigation code:
 - [ ] Navigation tested?
 
 ## 📚 Full Documentation
+
 - [Complete Routing System](ROUTING_SYSTEM.md)
 - [Route Map & Accessibility](ROUTE_MAP.md)
 - [Detailed Examples](ROUTING_EXAMPLES.md)

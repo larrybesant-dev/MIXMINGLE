@@ -15,6 +15,7 @@ import 'package:mixmingle/services/room/room_manager_service.dart';
 import 'package:mixmingle/features/room/widgets/participant_list_sidebar.dart';
 import 'package:mixmingle/features/room/widgets/raised_hands_panel.dart';
 import 'package:mixmingle/features/room/widgets/room_controls.dart';
+import 'package:mixmingle/core/analytics/analytics_service.dart';
 
 class RoomPage extends ConsumerStatefulWidget {
   final Room room;
@@ -40,6 +41,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logScreenView(screenName: 'screen_room');
     _initializeVideo();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -53,6 +55,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
 
   @override
   void dispose() {
+    AnalyticsService.instance.logRoomLeave(roomId: widget.room.id);
     ref.read(agoraVideoServiceProvider).removeListener(_onAgoraServiceChanged);
     _messageController.dispose();
     _scrollController.dispose();
@@ -77,11 +80,11 @@ class _RoomPageState extends ConsumerState<RoomPage> {
       await agoraService.joinRoom(widget.room.id);
 
       // #1 Record vibe join for intelligence layer
-      final _vibeUid = FirebaseAuth.instance.currentUser?.uid;
-      if (_vibeUid != null && widget.room.vibeTag != null) {
+      final vibeUid = FirebaseAuth.instance.currentUser?.uid;
+      if (vibeUid != null && widget.room.vibeTag != null) {
         ref
             .read(vibeIntelligenceServiceProvider)
-            .recordVibeJoin(userId: _vibeUid, vibeTag: widget.room.vibeTag!);
+            .recordVibeJoin(userId: vibeUid, vibeTag: widget.room.vibeTag!);
       }
 
       if (mounted) {
@@ -90,7 +93,13 @@ class _RoomPageState extends ConsumerState<RoomPage> {
           _hasInitializedVideo = true;
         });
       }
+      AnalyticsService.instance.logRoomJoinSuccess(roomId: widget.room.id);
+      AnalyticsService.instance.logFirstRoomJoinOnce(roomId: widget.room.id);
     } catch (e) {
+      AnalyticsService.instance.logRoomJoinFailed(
+        roomId: widget.room.id,
+        error: e.toString(),
+      );
       debugPrint('âŒ Video initialization failed: $e');
       if (mounted) {
         setState(() {
@@ -396,6 +405,9 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                       ),
                     ),
                   ],
+                  // Room type badge
+                  const SizedBox(width: 8),
+                  _RoomTypeBadge(roomType: currentRoom.roomType),
                 ],
               ),
             ],
@@ -454,8 +466,9 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                               try {
                                 await agoraService.toggleMic();
                               } finally {
-                                if (mounted)
+                                if (mounted) {
                                   setState(() => _isTogglingMic = false);
+                                }
                               }
                             },
                           ),
@@ -475,8 +488,9 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                               try {
                                 await agoraService.toggleVideo();
                               } finally {
-                                if (mounted)
+                                if (mounted) {
                                   setState(() => _isTogglingVideo = false);
+                                }
                               }
                             },
                           ),
@@ -724,8 +738,9 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                                       ),
                                     ),
                                     onSubmitted: (_) {
-                                      if (currentUser != null)
+                                      if (currentUser != null) {
                                         _sendMessage(currentUser);
+                                      }
                                     },
                                   ),
                                 ),
@@ -743,8 +758,9 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                                     ),
                                   ),
                                   onPressed: () {
-                                    if (currentUser != null)
+                                    if (currentUser != null) {
                                       _sendMessage(currentUser);
+                                    }
                                   },
                                   child: const Icon(Icons.send),
                                 ),
@@ -1193,5 +1209,44 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     } else {
       return '${timestamp.day}/${timestamp.month}';
     }
+  }
+}
+
+// ── Room Type Badge chip shown in app bar ─────────────────────────────────────
+class _RoomTypeBadge extends StatelessWidget {
+  final RoomType roomType;
+  const _RoomTypeBadge({required this.roomType});
+
+  @override
+  Widget build(BuildContext context) {
+    final (Color color, IconData icon, String label) = switch (roomType) {
+      RoomType.video => (const Color(0xFFFF4D8B), Icons.videocam_outlined, 'Video'),
+      RoomType.text =>
+        (const Color(0xFF4A90FF), Icons.chat_bubble_outline, 'Text'),
+      RoomType.voice => (const Color(0xFF00E5CC), Icons.mic_outlined, 'Voice'),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.55), width: 1),
+        boxShadow: [
+          BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 6)
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 13),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+                color: color, fontSize: 11, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
   }
 }

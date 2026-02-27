@@ -13,11 +13,13 @@ I've analyzed your entire video room implementation against the **6 Non-Negotiab
 **Status:** FULLY COMPLIANT ✅
 
 **Evidence:**
+
 - Web: Uses `window.agoraWeb` JS bridge ([index.html](../web/index.html))
 - Mobile: Uses `agora_rtc_engine` native SDK
 - Platform routing: `AgoraPlatformService` correctly detects `kIsWeb`
 
 **Code:**
+
 ```dart
 if (kIsWeb) {
   print('[AgoraPlatform] 🌐 Using WEB SDK (JS)');
@@ -54,10 +56,12 @@ Your join sequence follows the correct order:
 **Status:** LIKELY COMPLIANT ⚠️
 
 **Evidence:**
+
 - Token generated with: `roomId` and `user.uid` ([agora_video_service.dart:475](../lib/services/agora_video_service.dart#L475))
 - Join called with: `channelName: roomId` and `uid: '0'` ([agora_video_service.dart:548](../lib/services/agora_video_service.dart#L548))
 
 **POTENTIAL ISSUE:**
+
 ```dart
 // Token generation
 await _functions.httpsCallable('generateAgoraToken').call({
@@ -75,10 +79,12 @@ await AgoraPlatformService.joinChannel(
 **Problem:** Token is generated for `user.uid` but join uses `'0'` (Agora auto-assign).
 
 **Impact:**
+
 - If `generateAgoraToken` requires `userId` to match join `uid`, this will fail
 - If your token generation uses `uid: 0` for all users, this works
 
 **Action Required:** Verify `generateAgoraToken` Cloud Function:
+
 ```typescript
 // Does it do this? (CORRECT)
 const uid = 0; // Let Agora assign
@@ -88,6 +94,7 @@ const uid = request.data.userId; // Use Firebase UID
 ```
 
 **If your token function uses Firebase UID, change join call to:**
+
 ```dart
 await AgoraPlatformService.joinChannel(
   uid: user.uid, // Use Firebase UID, not '0'
@@ -103,6 +110,7 @@ await AgoraPlatformService.joinChannel(
 **Status:** FULLY COMPLIANT ✅
 
 **Evidence:**
+
 ```dart
 // Step 1: Check currentUser
 final user = _auth.currentUser;
@@ -125,6 +133,7 @@ if (authUser == null) throw Exception('Authentication state not ready');
 **Status:** FULLY COMPLIANT ✅
 
 **Evidence:**
+
 - Room passed as parameter: `widget.room` ([room_page.dart:71](../lib/features/room/screens/room_page.dart#L71))
 - Room object validated before page opens
 - Firestore participant write: [agora_video_service.dart:530](../lib/services/agora_video_service.dart#L530)
@@ -148,6 +157,7 @@ All 6 checkpoints implemented with detailed logging:
 6. ✅ `[6/6] Joining Agora channel...` - [agora_video_service.dart:540](../lib/services/agora_video_service.dart#L540)
 
 Plus platform-specific detailed logging:
+
 - `[AgoraPlatform]` logs - [agora_platform_service.dart](../lib/services/agora_platform_service.dart)
 - `[AgoraWeb]` logs - [agora_web_service.dart](../lib/services/agora_web_service.dart)
 
@@ -169,13 +179,23 @@ Check your `generateAgoraToken` Cloud Function:
 // Option A: Token for uid=0 (CORRECT for current code)
 const uid = 0;
 const token = RtcTokenBuilder.buildTokenWithUid(
-  appId, certificate, channelName, uid, role, expireTime
+  appId,
+  certificate,
+  channelName,
+  uid,
+  role,
+  expireTime,
 );
 
 // Option B: Token for Firebase UID (needs code change)
 const uid = hashCode(request.data.userId);
 const token = RtcTokenBuilder.buildTokenWithUid(
-  appId, certificate, channelName, uid, role, expireTime
+  appId,
+  certificate,
+  channelName,
+  uid,
+  role,
+  expireTime,
 );
 ```
 
@@ -187,6 +207,7 @@ const token = RtcTokenBuilder.buildTokenWithUid(
 ## 🧪 RECOMMENDED TEST SEQUENCE
 
 ### Test 1: Web Single User (2 minutes)
+
 1. Open app on Chrome
 2. Join a room
 3. Check console for all 6 checkpoints:
@@ -205,11 +226,13 @@ const token = RtcTokenBuilder.buildTokenWithUid(
 ---
 
 ### Test 2: Web ↔ Mobile (5 minutes)
+
 1. User A: Join on Web (Chrome)
 2. User B: Join same room on Mobile
 3. Wait 5 seconds
 
 **Expected:**
+
 - Both see themselves
 - Both see each other
 - Console shows: `[AgoraWeb] user-published <uid> video`
@@ -218,10 +241,12 @@ const token = RtcTokenBuilder.buildTokenWithUid(
 ---
 
 ### Test 3: Mute/Unmute (1 minute)
+
 1. User A: Click mute button
 2. User B: Should see mic indicator change
 
 **Expected:**
+
 - Remote audio state updates
 - Mute reflects immediately
 
@@ -230,9 +255,11 @@ const token = RtcTokenBuilder.buildTokenWithUid(
 ## 🚨 TROUBLESHOOTING GUIDE
 
 ### If Test 1 Fails at Checkpoint 2 (Token)
+
 **Problem:** Token generation failed
 
 **Check:**
+
 1. Firebase Functions logs for `generateAgoraToken` errors
 2. Agora App ID and Certificate in Firestore `/config/agora`
 3. User has valid Firebase Auth token
@@ -242,9 +269,11 @@ const token = RtcTokenBuilder.buildTokenWithUid(
 ---
 
 ### If Test 2 Shows Local But No Remote Video
+
 **Problem:** Token/UID mismatch or subscription issue
 
 **Check:**
+
 1. Both users see all 6 checkpoints
 2. Console shows `[AgoraWeb] user-published` event
 3. Token function uses same UID as join call
@@ -254,9 +283,11 @@ const token = RtcTokenBuilder.buildTokenWithUid(
 ---
 
 ### If Web Shows "agoraWeb not available"
+
 **Problem:** JS SDK not loaded
 
 **Check:**
+
 1. Browser console for JS errors
 2. Verify `<script src="https://download.agora.io/sdk/release/AgoraRTC_N.js">` in index.html
 3. Verify `window.agoraWeb` object created
@@ -267,14 +298,14 @@ const token = RtcTokenBuilder.buildTokenWithUid(
 
 ## 📊 CONFIDENCE LEVEL
 
-| Component | Status | Confidence |
-|-----------|--------|------------|
-| Platform Routing | ✅ Perfect | 100% |
-| Join Sequence | ✅ Perfect | 100% |
-| Auth Handling | ✅ Perfect | 100% |
-| Logging System | ✅ Perfect | 100% |
-| Token Generation | ⚠️ Verify | 90% |
-| Remote Video | ⚠️ Test | 85% |
+| Component        | Status     | Confidence |
+| ---------------- | ---------- | ---------- |
+| Platform Routing | ✅ Perfect | 100%       |
+| Join Sequence    | ✅ Perfect | 100%       |
+| Auth Handling    | ✅ Perfect | 100%       |
+| Logging System   | ✅ Perfect | 100%       |
+| Token Generation | ⚠️ Verify  | 90%        |
+| Remote Video     | ⚠️ Test    | 85%        |
 
 **Overall:** 95% ready for production
 
@@ -316,6 +347,7 @@ The only unknown is whether the token UID matches the join UID. Once verified, t
 ## 📞 SUPPORT
 
 If you encounter issues:
+
 1. Copy console logs showing all 6 checkpoints
 2. Note which checkpoint fails (1-6)
 3. Note platform (Web/Mobile)

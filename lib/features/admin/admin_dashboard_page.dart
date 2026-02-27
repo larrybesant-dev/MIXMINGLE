@@ -5,6 +5,7 @@ import 'package:mixmingle/shared/models/moderation.dart' show UserReport;
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/glow_text.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
+import 'ads_admin_page.dart';
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
@@ -47,6 +48,23 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
                       child: _buildStatCard('Pending', '0', Icons.pending)),
                 ],
               ),
+              const SizedBox(height: 16),
+
+              // Ad Manager shortcut
+              _buildNavCard(
+                context,
+                title: 'Ad Manager',
+                subtitle: 'Manage advertisers, creatives & promo codes',
+                icon: Icons.campaign_outlined,
+                color: const Color(0xFFFF4C4C),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AdsAdminPage(),
+                  ),
+                ),
+              ),
+
               const SizedBox(height: 24),
 
               // Pending Reports
@@ -90,6 +108,59 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: const TextStyle(
+                          color: Colors.white60, fontSize: 12)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios,
+                color: Colors.white30, size: 16),
+          ],
         ),
       ),
     );

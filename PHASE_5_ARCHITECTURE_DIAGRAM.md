@@ -238,17 +238,20 @@ User sees personalized event recommendations
 ## Key Integration Points
 
 ### Social Graph Integration
+
 - **Following/Followers** from Phase 4 used to find friends
 - `watchEventsFriendsAreAttending()` queries following subcollection
 - `watchFriendsAttendingEvent()` checks which friends are at event
 - Presence indicators show friend online status
 
 ### Presence Integration
+
 - `PresenceIndicator` widget overlaid on avatars
 - Shows online/away/busy/offline status
 - Integrated in attendees list on EventDetailsPage
 
 ### Room Integration
+
 - Events can have `isOnline: true` and `roomId: "abc123"`
 - "Join Room" button navigates to `/room` route
 - Allows users to join video/audio room for virtual events
@@ -309,21 +312,25 @@ EventDetailsPage
 ## Performance Considerations
 
 ### Real-time Updates
+
 - All providers use `StreamProvider` for live data
 - Firestore snapshots provide instant updates
 - UI rebuilds automatically on data changes
 
 ### Caching
+
 - Riverpod caches provider results
 - Same eventId → same provider instance
 - Reduces redundant Firestore queries
 
 ### Batched Writes
+
 - RSVP uses `WriteBatch` for atomicity
 - Updates 2 locations + counter in 1 operation
 - Rollback on failure
 
 ### Query Optimization
+
 - Friends query limited by following count
 - Recommendations limited to top 20
 - Attendees paginated if needed
@@ -359,6 +366,7 @@ match /events/{eventId} {
 ## Future Enhancements
 
 ### Phase 6 Ideas
+
 1. **Event Chat** - Group chat for attendees
 2. **Push Notifications** - Friend RSVPs, event reminders
 3. **Event Photos** - Upload/share photos from event
@@ -375,6 +383,7 @@ match /events/{eventId} {
 ## Summary
 
 Phase 5 Events Engine provides:
+
 - ✅ Real-time event discovery
 - ✅ Social graph integration (friends attending)
 - ✅ AI-powered recommendations

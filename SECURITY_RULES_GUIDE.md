@@ -119,6 +119,7 @@ firebase firestore:rules:get
 ### Using Firebase Rules Playground
 
 1. **Navigate to Console**
+
    ```
    Firebase Console > Firestore Database > Rules > Rules Playground
    ```
@@ -126,6 +127,7 @@ firebase firestore:rules:get
 2. **Test Scenarios**
 
    #### Test 1: User Can Read Own Profile
+
    ```
    Operation: get
    Location: /users/{uid}
@@ -134,6 +136,7 @@ firebase firestore:rules:get
    ```
 
    #### Test 2: User Cannot Read Another User Without Completed Profile
+
    ```
    Operation: get
    Location: /users/other_user_id
@@ -142,6 +145,7 @@ firebase firestore:rules:get
    ```
 
    #### Test 3: Non-Matched Users Cannot Send DMs (Free Users)
+
    ```
    Operation: create
    Location: /direct_messages/msg_id
@@ -150,6 +154,7 @@ firebase firestore:rules:get
    ```
 
    #### Test 4: Premium Users Can Send DMs to Anyone
+
    ```
    Operation: create
    Location: /direct_messages/msg_id
@@ -158,6 +163,7 @@ firebase firestore:rules:get
    ```
 
    #### Test 5: Event Capacity Enforcement
+
    ```
    Operation: update
    Location: /events/event_id
@@ -170,6 +176,7 @@ firebase firestore:rules:get
    ```
 
    #### Test 6: Admin-Only Event Creation
+
    ```
    Operation: create
    Location: /events/new_event_id
@@ -261,8 +268,8 @@ Stop-Process -Name "firebase" -Force
 ```javascript
 // Test in app or via API
 const user = firebase.auth().currentUser;
-const userDoc = await firebase.firestore().collection('users').doc(user.uid).get();
-console.log('User role:', userDoc.data().role); // Should be 'admin'
+const userDoc = await firebase.firestore().collection("users").doc(user.uid).get();
+console.log("User role:", userDoc.data().role); // Should be 'admin'
 ```
 
 ### Admin Panel Route Protection
@@ -307,25 +314,25 @@ class AppRoutes {
 ```javascript
 // functions/src/admin.ts
 
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
+import * as functions from "firebase-functions";
+import * as admin from "firebase-admin";
 
 export const promoteToAdmin = functions.https.onCall(async (data, context) => {
   // Only existing admins can promote others
   if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'Must be authenticated');
+    throw new functions.https.HttpsError("unauthenticated", "Must be authenticated");
   }
 
-  const callerDoc = await admin.firestore().collection('users').doc(context.auth.uid).get();
-  if (callerDoc.data()?.role !== 'admin') {
-    throw new functions.https.HttpsError('permission-denied', 'Must be admin');
+  const callerDoc = await admin.firestore().collection("users").doc(context.auth.uid).get();
+  if (callerDoc.data()?.role !== "admin") {
+    throw new functions.https.HttpsError("permission-denied", "Must be admin");
   }
 
   const { userId, role } = data; // role: 'admin' | 'moderator'
 
-  await admin.firestore().collection('users').doc(userId).update({
+  await admin.firestore().collection("users").doc(userId).update({
     role: role,
-    updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
   });
 
   return { success: true, message: `User promoted to ${role}` };
@@ -454,6 +461,7 @@ try {
 **Symptom**: Cannot create user profile after signup.
 
 **Causes**:
+
 - Missing required fields (`id`, `email`, `displayName`, `username`)
 - Email doesn't match auth token email
 - Username doesn't meet validation (3-20 chars, alphanumeric + underscore)
@@ -461,6 +469,7 @@ try {
 - `membershipTier` not set to 'free'
 
 **Solution**:
+
 ```dart
 // Ensure all required fields are present and valid
 await FirebaseFirestore.instance.collection('users').doc(uid).set({
@@ -479,12 +488,14 @@ await FirebaseFirestore.instance.collection('users').doc(uid).set({
 **Symptom**: "permission-denied" when sending DM.
 
 **Causes**:
+
 - Users are not matched
 - User is not premium
 - Sender has blocked receiver
 - Receiver has blocked sender
 
 **Solution**:
+
 ```dart
 // Check prerequisites
 final isMatched = await checkMatch(receiverId);
@@ -507,10 +518,12 @@ if (isBlocked) {
 **Symptom**: Users can join event when at max capacity.
 
 **Causes**:
+
 - Client-side not checking capacity before update
 - Race condition with multiple simultaneous joins
 
 **Solution**:
+
 ```dart
 // Use Firestore transaction for atomic capacity check
 await FirebaseFirestore.instance.runTransaction((transaction) async {
@@ -532,11 +545,13 @@ await FirebaseFirestore.instance.runTransaction((transaction) async {
 **Symptom**: Admin user cannot access admin dashboard.
 
 **Causes**:
+
 - User document missing `role: 'admin'` field
 - Client-side check not implemented
 - Incorrect role value (typo)
 
 **Solution**:
+
 ```dart
 // Verify user document in Firestore Console
 {
@@ -561,11 +576,13 @@ if (role != 'admin') {
 **Symptom**: Users cannot update speed dating decisions.
 
 **Causes**:
+
 - User is not one of the session participants
 - Session document doesn't exist
 - Trying to update wrong user's decision
 
 **Solution**:
+
 ```dart
 // Verify user is participant
 final sessionDoc = await FirebaseFirestore.instance
@@ -595,18 +612,21 @@ await FirebaseFirestore.instance
 ### Making Changes to Security Rules
 
 1. **Update `firestore.rules`**
+
    ```bash
    # Edit the file
    code firestore.rules
    ```
 
 2. **Test Locally**
+
    ```bash
    firebase emulators:start --only firestore
    npm run test:rules
    ```
 
 3. **Deploy with Version Comment**
+
    ```bash
    # Add version comment in firestore.rules
    // Version: 2.1 - Added XYZ feature - 2026-01-25
@@ -636,6 +656,7 @@ firebase deploy --only firestore:rules --file firestore.rules.backup
 ### Key Metrics to Monitor
 
 1. **Permission Denied Errors**
+
    ```bash
    # View in Firebase Console
    Firestore > Usage > Errors
@@ -654,7 +675,7 @@ firebase deploy --only firestore:rules --file firestore.rules.backup
 ```javascript
 // Cloud Function for monitoring
 export const monitorSecurityDenials = functions.firestore
-  .document('{collection}/{docId}')
+  .document("{collection}/{docId}")
   .onWrite(async (change, context) => {
     // Track failed operations
     // Send alerts if threshold exceeded

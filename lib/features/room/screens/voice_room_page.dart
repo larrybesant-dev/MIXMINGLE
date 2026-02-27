@@ -189,18 +189,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
         if (authErrorDetails.isEmpty) {
           authErrorDetails = 'Provider error: $e';
         }
-        // Fallback: Try to use Firebase Auth directly
-        final firebaseUser = firebase_auth.FirebaseAuth.instance.currentUser;
-        if (firebaseUser != null) {
-          // Get the shared User model from Firestore
-          try {
-            user = await ref
-                .read(firestoreServiceProvider)
-                .getUser(firebaseUser.uid);
-          } catch (_) {
-            user = null;
-          }
-        }
+        // No fallback: rely solely on Riverpod provider for user
       }
 
       AppLogger.info(

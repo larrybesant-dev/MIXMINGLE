@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_presence.dart';
-import 'package:mixmingle/core/stubs/dev_stubs.dart';
+import '../providers/user_providers.dart';
 
 /// Widget that shows user presence status as a colored dot
 class PresenceIndicator extends ConsumerWidget {

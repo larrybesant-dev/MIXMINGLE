@@ -3,12 +3,14 @@
 ## 🚀 Quick Navigation
 
 ### File Locations
+
 - **Main Page**: [lib/screens/video_chat_page.dart](lib/screens/video_chat_page.dart)
 - **State Providers**: [lib/providers/](lib/providers/)
 - **UI Widgets**: [lib/shared/widgets/](lib/shared/widgets/)
 - **Route**: `/video-chat`
 
 ### Routes
+
 ```dart
 AppRoutes.videoChat  // Navigate to video chat
 ```
@@ -222,6 +224,7 @@ ref.read(userPreferencesProvider.notifier)
 ## 🎨 Using the Widgets
 
 ### Main Video Chat Page
+
 ```dart
 import 'screens/video_chat_page.dart';
 
@@ -288,6 +291,7 @@ NotificationWidget(
 ## 💬 Common Patterns
 
 ### Pattern 1: Update List Item
+
 ```dart
 // Update specific friend
 ref.read(friendsProvider.notifier).toggleFavorite(friendId);
@@ -297,6 +301,7 @@ final friends = ref.watch(friendsProvider);
 ```
 
 ### Pattern 2: Filter Data
+
 ```dart
 // Set search query
 ref.read(friendSearchQueryProvider.notifier).state = 'alex';
@@ -310,6 +315,7 @@ final filtered = ref.watch(filteredFriendsProvider).when(
 ```
 
 ### Pattern 3: Combine Multiple Providers
+
 ```dart
 final messages = ref.watch(chatMessagesProvider);
 final darkMode = ref.watch(darkModeProvider);
@@ -323,6 +329,7 @@ return Container(
 ```
 
 ### Pattern 4: Family Providers
+
 ```dart
 // Get notifications by type
 final notificationsByType = ref.watch(
@@ -335,6 +342,7 @@ final notificationsByType = ref.watch(
 ## 🔧 Extending Features
 
 ### Add New Filter
+
 ```dart
 // In friends_provider.dart
 final filteredByStatusProvider = Provider<List<Friend>>((ref) {
@@ -347,6 +355,7 @@ final online = ref.watch(filteredByStatusProvider);
 ```
 
 ### Add New Notification Type
+
 ```dart
 // In notification_provider.dart
 void specialAlert(String message) {
@@ -366,6 +375,7 @@ void specialAlert(String message) {
 ```
 
 ### Add Camera Approval Status
+
 ```dart
 // In participant_provider.dart
 void updateCameraApprovalStatus(String userId, String status) {
@@ -385,6 +395,7 @@ void updateCameraApprovalStatus(String userId, String status) {
 ## 📊 Mock Data Reference
 
 ### Mock Friends (6 total)
+
 ```dart
 Friend(
   id: '1',
@@ -398,6 +409,7 @@ Friend(
 ```
 
 ### Mock Groups (5 total)
+
 ```dart
 VideoGroup(
   id: 'group1',
@@ -413,6 +425,7 @@ VideoGroup(
 ```
 
 ### Mock Participants (3 total)
+
 ```dart
 VideoParticipant(
   userId: 'user1',
@@ -427,6 +440,7 @@ VideoParticipant(
 ```
 
 ### Mock Messages (5+ total)
+
 ```dart
 ChatMessage(
   id: 'msg1',
@@ -444,6 +458,7 @@ ChatMessage(
 ## 🚨 Error Handling
 
 ### Provider Error Example
+
 ```dart
 final filtered = ref.watch(filteredFriendsProvider).when(
   data: (friends) {
@@ -466,6 +481,7 @@ final filtered = ref.watch(filteredFriendsProvider).when(
 ```
 
 ### Widget Error Boundary
+
 ```dart
 Container(
   child: Image.network(
@@ -482,6 +498,7 @@ Container(
 ## 🎯 Testing Providers
 
 ### Test Friends Filtering
+
 ```dart
 test('Filter friends by search', () {
   ref.read(friendSearchQueryProvider.notifier).state = 'alex';
@@ -492,6 +509,7 @@ test('Filter friends by search', () {
 ```
 
 ### Test Group Join
+
 ```dart
 test('Join group', () {
   ref.read(groupsProvider.notifier).joinGroup('group1', 'user1');

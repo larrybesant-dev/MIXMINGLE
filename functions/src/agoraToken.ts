@@ -1,19 +1,38 @@
 // functions/src/agoraToken.ts
 
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
-import { RtcTokenBuilder, RtcRole } from 'agora-access-token';
+import { onCall, HttpsError } from "firebase-functions/v2/https";
+import { defineSecret } from "firebase-functions/params";
+import * as admin from "firebase-admin";
+import { RtcTokenBuilder, RtcRole } from "agora-access-token";
 
 admin.initializeApp();
 
-export const generateAgoraToken = functions.https.onCall(async (data, context) => {
-  const { channelName, uid, role } = data;
-  const appId = functions.config().agora.appid;
-  const appCertificate = functions.config().agora.certificate;
-  const expireTime = 3600;
+const AGORA_APP_ID = defineSecret("AGORA_APP_ID");
+const AGORA_APP_CERTIFICATE = defineSecret("AGORA_APP_CERTIFICATE");
 
-  const agoraRole = role === 'host' ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
-  const token = RtcTokenBuilder.buildTokenWithUid(appId, appCertificate, channelName, uid, agoraRole, expireTime);
-
-  return { token };
-});
+export const generateAgoraToken = onCall(
+  {
+    region: "us-central1",
+    cors: true,
+    secrets: [AGORA_APP_ID, AGORA_APP_CERTIFICATE],
+  },
+  async (request) => {
+    const { channelName, uid, role } = request.data;
+    const appId = AGORA_APP_ID.value();
+    const appCertificate = AGORA_APP_CERTIFICATE.value();
+    if (!appId || !appCertificate) {
+      throw new HttpsError("internal", "Agora credentials not configured.");
+    }
+    const expireTime = 3600;
+    const agoraRole = role === "host" ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
+    const token = RtcTokenBuilder.buildTokenWithUid(
+      appId,
+      appCertificate,
+      channelName,
+      uid,
+      agoraRole,
+      expireTime,
+    );
+    return { token };
+  },
+);

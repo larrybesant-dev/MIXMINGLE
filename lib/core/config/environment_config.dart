@@ -21,12 +21,12 @@ class EnvironmentConfig {
   static const String agoraAppIdProd = 'ec1b578586d24976a89d787d9ee4d5c7';
 
   // API endpoints
-  static const String apiUrlDev =
-      'https://us-central1-mixmingle-dev.cloudfunctions.net';
-  static const String apiUrlStaging =
-      'https://us-central1-mixmingle-staging.cloudfunctions.net';
-  static const String apiUrlProd =
-      'https://us-central1-mixmingle-prod.cloudfunctions.net';
+    static const String apiUrlDev =
+      'https://us-central1-mix-and-mingle-v2.cloudfunctions.net';
+    static const String apiUrlStaging =
+      'https://us-central1-mix-and-mingle-v2.cloudfunctions.net';
+    static const String apiUrlProd =
+      'https://us-central1-mix-and-mingle-v2.cloudfunctions.net';
 
   // Feature flags
   static const Map<String, bool> featureFlags = {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'dart:async';
+import 'package:mixmingle/app/app_routes.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/glow_text.dart';
 
@@ -49,9 +50,9 @@ class _SplashPageState extends State<SplashPage> {
     // Timeout as safety net - 15 seconds
     _timeoutTimer = Timer(const Duration(seconds: 15), () {
       if (mounted && !_hasNavigated) {
-        debugPrint('âš ï¸ Splash timeout (15s) - forcing navigation to login');
+        debugPrint('⚠ Splash timeout (15s) - forcing navigation to onboarding');
         _hasNavigated = true;
-        Navigator.of(context).pushReplacementNamed('/login');
+        Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
       }
     });
   }
@@ -66,11 +67,11 @@ class _SplashPageState extends State<SplashPage> {
       _timeoutTimer?.cancel();
 
       if (user != null) {
-        debugPrint('âœ… User authenticated - navigating to /home');
-        Navigator.of(context).pushReplacementNamed('/home');
+        debugPrint('✅ User authenticated - navigating to /home');
+        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
       } else {
-        debugPrint('â„¹ï¸ No user - navigating to /login');
-        Navigator.of(context).pushReplacementNamed('/login');
+        debugPrint('ℹ No user - navigating to onboarding');
+        Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
       }
     }
   }

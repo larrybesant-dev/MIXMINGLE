@@ -188,6 +188,24 @@ class AgoraPlatformService {
     await _engine!.muteLocalVideoStream(muted);
   }
 
+  /// Renew the Agora token for the current session without re-joining.
+  /// Call this when [onTokenPrivilegeWillExpire] fires or on a ~23h refresh timer.
+  static Future<bool> renewToken(String token) async {
+    if (kIsWeb) {
+      if (AGORA_WEB_DISABLED) return true;
+      return AgoraWebBridgeV3.renewToken(token);
+    }
+    if (_engine == null) return false;
+    try {
+      await _engine!.renewToken(token);
+      AppLogger.info('✅ Agora token renewed');
+      return true;
+    } catch (e) {
+      AppLogger.error('renewToken failed: $e');
+      return false;
+    }
+  }
+
   /// Initialize web-specific Agora instance
   static Future<bool> initializeWeb(String appId) async {
     if (!kIsWeb) return false;

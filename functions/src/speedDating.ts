@@ -58,9 +58,7 @@ export const onSpeedDatingSessionCreated = onDocumentCreated(
           duration: SESSION_DURATION_MS,
         });
 
-      logger.info(
-        `[SpeedDating] Session ${sessionId} will expire at ${endTime.toISOString()}`
-      );
+      logger.info(`[SpeedDating] Session ${sessionId} will expire at ${endTime.toISOString()}`);
 
       // Schedule expiration via delayed write (simpler than Cloud Tasks)
       // In production, use Cloud Tasks for precise timing
@@ -70,7 +68,7 @@ export const onSpeedDatingSessionCreated = onDocumentCreated(
     } catch (error) {
       logger.error(`[SpeedDating] Error setting up session ${sessionId}:`, error);
     }
-  }
+  },
 );
 
 // ============================================================
@@ -78,10 +76,7 @@ export const onSpeedDatingSessionCreated = onDocumentCreated(
 // ============================================================
 async function expireSessionInternal(sessionId: string): Promise<void> {
   try {
-    const sessionRef = admin
-      .firestore()
-      .collection("speed_dating_sessions")
-      .doc(sessionId);
+    const sessionRef = admin.firestore().collection("speed_dating_sessions").doc(sessionId);
 
     const sessionSnap = await sessionRef.get();
     if (!sessionSnap.exists) {
@@ -92,7 +87,7 @@ async function expireSessionInternal(sessionId: string): Promise<void> {
     const sessionData = sessionSnap.data();
     if (sessionData?.status !== "active") {
       logger.info(
-        `[SpeedDating] Session ${sessionId} already ${sessionData?.status}, skipping expiry`
+        `[SpeedDating] Session ${sessionId} already ${sessionData?.status}, skipping expiry`,
       );
       return;
     }
@@ -111,14 +106,10 @@ async function expireSessionInternal(sessionId: string): Promise<void> {
     const participants: string[] = sessionData?.participants || [];
 
     const bothDecided =
-      participants.length === 2 &&
-      decisions[participants[0]] &&
-      decisions[participants[1]];
+      participants.length === 2 && decisions[participants[0]] && decisions[participants[1]];
 
     if (!bothDecided) {
-      logger.warn(
-        `[SpeedDating] Session ${sessionId} expired without both decisions`
-      );
+      logger.warn(`[SpeedDating] Session ${sessionId} expired without both decisions`);
 
       // Auto-submit "pass" for users who didn't decide
       const updates: Record<string, string> = {};
@@ -160,10 +151,7 @@ export const submitSpeedDatingDecision = onCall(
     const { sessionId, decision } = request.data;
 
     if (!sessionId || !decision) {
-      throw new HttpsError(
-        "invalid-argument",
-        "sessionId and decision are required"
-      );
+      throw new HttpsError("invalid-argument", "sessionId and decision are required");
     }
 
     // Validate decision value
@@ -171,15 +159,12 @@ export const submitSpeedDatingDecision = onCall(
     if (!validDecisions.includes(decision)) {
       throw new HttpsError(
         "invalid-argument",
-        `Invalid decision. Must be one of: ${validDecisions.join(", ")}`
+        `Invalid decision. Must be one of: ${validDecisions.join(", ")}`,
       );
     }
 
     try {
-      const sessionRef = admin
-        .firestore()
-        .collection("speed_dating_sessions")
-        .doc(sessionId);
+      const sessionRef = admin.firestore().collection("speed_dating_sessions").doc(sessionId);
 
       const sessionSnap = await sessionRef.get();
       if (!sessionSnap.exists) {
@@ -195,7 +180,7 @@ export const submitSpeedDatingDecision = onCall(
       if (sessionData.status !== "active") {
         throw new HttpsError(
           "failed-precondition",
-          `Cannot submit decision: session is ${sessionData.status}`
+          `Cannot submit decision: session is ${sessionData.status}`,
         );
       }
 
@@ -208,26 +193,20 @@ export const submitSpeedDatingDecision = onCall(
         await expireSessionInternal(sessionId);
         throw new HttpsError(
           "deadline-exceeded",
-          "Session has expired. Decisions are no longer accepted."
+          "Session has expired. Decisions are no longer accepted.",
         );
       }
 
       // Verify user is a participant
       const participants: string[] = sessionData.participants || [];
       if (!participants.includes(userId)) {
-        throw new HttpsError(
-          "permission-denied",
-          "User is not a participant in this session"
-        );
+        throw new HttpsError("permission-denied", "User is not a participant in this session");
       }
 
       // Check if user already decided
       const decisions = sessionData.decisions || {};
       if (decisions[userId]) {
-        throw new HttpsError(
-          "already-exists",
-          "Decision already submitted for this session"
-        );
+        throw new HttpsError("already-exists", "Decision already submitted for this session");
       }
 
       // Submit decision
@@ -251,8 +230,7 @@ export const submitSpeedDatingDecision = onCall(
         const userDecision = decision;
         const otherDecision = updatedDecisions[otherUserId];
 
-        const isPositive = (d: string) =>
-          d === "keep" || d === "exchange" || d === "reconnect";
+        const isPositive = (d: string) => d === "keep" || d === "exchange" || d === "reconnect";
         const isMutual = isPositive(userDecision) && isPositive(otherDecision);
 
         // Mark session as completed
@@ -264,20 +242,15 @@ export const submitSpeedDatingDecision = onCall(
 
         if (isMutual) {
           // Create mutual match record
-          await admin
-            .firestore()
-            .collection("speed_dating_results")
-            .add({
-              sessionId,
-              user1Id: userId,
-              user2Id: otherUserId,
-              matchedAt: admin.firestore.FieldValue.serverTimestamp(),
-              type: "mutual_match",
-            });
+          await admin.firestore().collection("speed_dating_results").add({
+            sessionId,
+            user1Id: userId,
+            user2Id: otherUserId,
+            matchedAt: admin.firestore.FieldValue.serverTimestamp(),
+            type: "mutual_match",
+          });
 
-          logger.info(
-            `[SpeedDating] 💕 Mutual match: ${userId} ↔ ${otherUserId}`
-          );
+          logger.info(`[SpeedDating] 💕 Mutual match: ${userId} ↔ ${otherUserId}`);
         }
 
         return { success: true, isMutual, completed: true };
@@ -292,7 +265,7 @@ export const submitSpeedDatingDecision = onCall(
       logger.error("[SpeedDating] Error submitting decision:", error);
       throw new HttpsError("internal", "Failed to submit decision");
     }
-  }
+  },
 );
 
 // ============================================================
@@ -316,10 +289,7 @@ export const leaveSpeedDatingSession = onCall(
     }
 
     try {
-      const sessionRef = admin
-        .firestore()
-        .collection("speed_dating_sessions")
-        .doc(sessionId);
+      const sessionRef = admin.firestore().collection("speed_dating_sessions").doc(sessionId);
 
       const sessionSnap = await sessionRef.get();
       if (!sessionSnap.exists) {
@@ -334,14 +304,11 @@ export const leaveSpeedDatingSession = onCall(
       // Verify user is a participant
       const participants: string[] = sessionData.participants || [];
       if (!participants.includes(userId)) {
-        throw new HttpsError(
-          "permission-denied",
-          "User is not a participant in this session"
-        );
+        throw new HttpsError("permission-denied", "User is not a participant in this session");
       }
 
       logger.info(
-        `[SpeedDating] User ${userId} leaving session ${sessionId}. Reason: ${reason || "none"}`
+        `[SpeedDating] User ${userId} leaving session ${sessionId}. Reason: ${reason || "none"}`,
       );
 
       // Mark session as abandoned
@@ -361,5 +328,5 @@ export const leaveSpeedDatingSession = onCall(
       logger.error("[SpeedDating] Error leaving session:", error);
       throw new HttpsError("internal", "Failed to leave session");
     }
-  }
+  },
 );

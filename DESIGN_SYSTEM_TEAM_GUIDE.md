@@ -11,16 +11,16 @@
 
 You now have a **binding design system** for your Flutter app. This is not "nice to have"—it's enforcement infrastructure with:
 
-| Component | Purpose | Location |
-|-----------|---------|----------|
-| **design_constants.dart** | Hard-coded design values (colors, spacing, animations, typography) | `lib/core/design_system/` |
-| **design_animations.dart** | Reusable animation widgets + timing helpers | `lib/core/design_system/` |
-| **design_constants_test.dart** | Unit tests validating all constants match DESIGN_BIBLE.md | `test/` |
-| **design_animations_test.dart** | Widget tests validating animation timing and behavior | `test/` |
-| **presence_card.dart** | Canonical example widget (copy this pattern for all widgets) | `lib/features/video_room/widgets/` |
-| **DESIGN_BIBLE.md** | Original 700+ line specification document | `repo root` |
-| **DESIGN_SYSTEM_INTEGRATION.md** | How-to guide for developers (detailed, with code examples) | `repo root` |
-| **DESIGN_SYSTEM_QUICK_REF.md** | Developer cheat sheet (print & tape to desk) | `repo root` |
+| Component                        | Purpose                                                            | Location                           |
+| -------------------------------- | ------------------------------------------------------------------ | ---------------------------------- |
+| **design_constants.dart**        | Hard-coded design values (colors, spacing, animations, typography) | `lib/core/design_system/`          |
+| **design_animations.dart**       | Reusable animation widgets + timing helpers                        | `lib/core/design_system/`          |
+| **design_constants_test.dart**   | Unit tests validating all constants match DESIGN_BIBLE.md          | `test/`                            |
+| **design_animations_test.dart**  | Widget tests validating animation timing and behavior              | `test/`                            |
+| **presence_card.dart**           | Canonical example widget (copy this pattern for all widgets)       | `lib/features/video_room/widgets/` |
+| **DESIGN_BIBLE.md**              | Original 700+ line specification document                          | `repo root`                        |
+| **DESIGN_SYSTEM_INTEGRATION.md** | How-to guide for developers (detailed, with code examples)         | `repo root`                        |
+| **DESIGN_SYSTEM_QUICK_REF.md**   | Developer cheat sheet (print & tape to desk)                       | `repo root`                        |
 
 ---
 
@@ -56,6 +56,7 @@ import 'package:mixmingle/core/design_system/design_animations.dart';  // if nee
 ### STEP 3: Copy Presence Card Pattern (30 minutes)
 
 Open [presence_card.dart](lib/features/video_room/widgets/presence_card.dart) and use it as a template for all new widgets:
+
 - Custom card (no Material Card)
 - All colors from DesignColors
 - All spacing from DesignSpacing
@@ -79,6 +80,7 @@ Merge
 ```
 
 **Checklist:**
+
 - [ ] All `Color(...)` → `DesignColors.*`
 - [ ] All `TextStyle(...)` → `DesignTypography.*`
 - [ ] All `EdgeInsets.all(16)` → `EdgeInsets.all(DesignSpacing.lg)`
@@ -114,29 +116,34 @@ Add this checklist to your PR template (`.github/PULL_REQUEST_TEMPLATE.md`):
 ## WHO DOES WHAT
 
 ### For Designers/Product Teams
+
 - 📖 Reference DESIGN_BIBLE.md for all UI changes
 - 🎨 Any new color, spacing, or animation → update DESIGN_BIBLE.md first
 - ✅ Review code PRs for visual compliance (use presence_card.dart as reference)
 
 ### For Developers
+
 - 💻 Copy presence_card.dart pattern for all widgets
 - 📦 Use only DesignColors/DesignTypography/DesignSpacing/etc.
 - 🧪 Run tests before committing (`flutter test`)
 - 📝 Document any deviations with DESIGN_BIBLE.md section reference
 
 ### For Code Reviewers
+
 - ✅ Use design compliance checklist (above)
 - 📋 Block merge if tests don't pass
 - 🎨 Compare visual output against DESIGN_BIBLE.md screenshots (if included)
 - 📸 Request golden images if animation timing seems off
 
 ### For QA/Testing
+
 - 🎬 Test animations match DESIGN_BIBLE.md timings (join flow must be ≥700ms)
 - 🎨 Verify colors match design palette exactly (use color picker)
 - ✅ Verify all room cards use energy indicator (calm/active/buzzing)
 - 📝 File bugs with reference to violated constant (e.g., "Button uses custom color instead of DesignColors.accent")
 
 ### For CI/CD
+
 - 🤖 Block PRs that fail design tests
 - 🔍 Run `flutter test test/design_*_test.dart` on every commit
 - 📊 Report test coverage for design system (track compliance %)
@@ -183,18 +190,23 @@ Add this checklist to your PR template (`.github/PULL_REQUEST_TEMPLATE.md`):
 ## WHAT SHOULD NOT HAPPEN
 
 ### ❌ "I needed a different color for this part"
+
 **Response:** Update DESIGN_BIBLE.md first, add color to DesignColors, add test, then use it.
 
 ### ❌ "This animation should be faster"
+
 **Response:** Check DESIGN_BIBLE.md. If duration is binding (join flow), you can't change it. File product issue, not code issue.
 
 ### ❌ "I'll use Material Card because it's faster"
+
 **Response:** Reference presence_card.dart. It's literally the same amount of code, just custom.
 
 ### ❌ "No time to write tests"
+
 **Response:** Tests are mandatory. They take <5 minutes per widget and catch regressions. Non-negotiable.
 
 ### ❌ Merging code without running `flutter test`
+
 **Response:** CI/CD will block it. Run it locally first.
 
 ---
@@ -202,12 +214,14 @@ Add this checklist to your PR template (`.github/PULL_REQUEST_TEMPLATE.md`):
 ## TROUBLESHOOTING
 
 ### Tests Fail: "StateNotifier not found"
+
 ```
 Cause: Pubspec cache issue after pub get
 Fix: flutter clean && flutter pub get && flutter test
 ```
 
 ### Widget Looks Wrong Compared to Design
+
 ```bash
 # Check if you're using correct constants
 grep -n "Colors\." lib/features/video_room/widgets/your_widget.dart
@@ -219,6 +233,7 @@ grep -n "EdgeInsets.all([0-9]" lib/features/video_room/widgets/your_widget.dart
 ```
 
 ### Animation Timing Off
+
 ```bash
 # Check test file expectations
 flutter test test/design_animations_test.dart -v
@@ -230,6 +245,7 @@ DesignAnimations.presenceSlideInDuration    # Must be 250ms
 ```
 
 ### "This constant doesn't exist"
+
 ```dart
 // Check what's available:
 // 1. Run: flutter pub get
@@ -250,14 +266,16 @@ DesignAnimations.presenceSlideInDuration    # Must be 250ms
 ## SUCCESS METRICS
 
 ### Code Quality
+
 - ✅ 0 uses of `Colors.*` in custom widgets
-- ✅ 0 magic color hex values (0xFF*)
+- ✅ 0 magic color hex values (0xFF\*)
 - ✅ 0 hardcoded padding values (EdgeInsets.all(16))
 - ✅ 0 hardcoded animation durations (Duration(milliseconds: 150))
 - ✅ 100% of custom widgets use DesignColors/DesignTypography/DesignSpacing
 - ✅ 100% of tests pass (design_constants_test.dart + design_animations_test.dart)
 
 ### Design Consistency
+
 - ✅ All room cards have same appearance (±10px, same colors)
 - ✅ All animations have same feel (same curves, similar durations)
 - ✅ All text is readable (contrast ≥ 4.5:1 per WCAG)
@@ -265,6 +283,7 @@ DesignAnimations.presenceSlideInDuration    # Must be 250ms
 - ✅ All presence arrivals slide in smoothly (250ms per DESIGN_BIBLE.md)
 
 ### Team Velocity
+
 - ✅ New widgets built in <30 minutes (copy presence_card.dart pattern)
 - ✅ Code review time <10 minutes (check design checklist, not custom colors)
 - ✅ No regressions from copy-paste (all values are constants, not magic)
@@ -275,16 +294,19 @@ DesignAnimations.presenceSlideInDuration    # Must be 250ms
 ## NEXT STEPS (IN ORDER)
 
 1. **Run tests** (verify nothing is broken)
+
    ```bash
    flutter test test/design_constants_test.dart test/design_animations_test.dart
    ```
 
 2. **Read quick reference** (bookmark DESIGN_SYSTEM_QUICK_REF.md)
+
    ```
    This is your daily reference. Print it. Keep it open.
    ```
 
 3. **Study presence_card.dart** (understand the pattern)
+
    ```
    Open lib/features/video_room/widgets/presence_card.dart
    Understand how it uses all Design System constants
@@ -292,6 +314,7 @@ DesignAnimations.presenceSlideInDuration    # Must be 250ms
    ```
 
 4. **Update one widget** (practice with lowest-risk widget)
+
    ```
    Pick a simple widget
    Apply pattern from presence_card.dart
@@ -301,6 +324,7 @@ DesignAnimations.presenceSlideInDuration    # Must be 250ms
    ```
 
 5. **Set up CI/CD** (if not already done)
+
    ```
    Add design tests to your CI pipeline
    Block PRs that don't pass
@@ -318,16 +342,16 @@ DesignAnimations.presenceSlideInDuration    # Must be 250ms
 
 ## RESOURCES
 
-| Document | Purpose | Audience |
-|----------|---------|----------|
-| [DESIGN_BIBLE.md](./DESIGN_BIBLE.md) | Original specification (700+ lines) | Product, Designers, Senior Devs |
-| [DESIGN_SYSTEM_QUICK_REF.md](./DESIGN_SYSTEM_QUICK_REF.md) | Cheat sheet (2 pages) | All Developers (PRINT IT) |
-| [DESIGN_SYSTEM_INTEGRATION.md](./DESIGN_SYSTEM_INTEGRATION.md) | How-to guide with examples | Developers implementing widgets |
-| [design_constants.dart](./lib/core/design_system/design_constants.dart) | Source of truth (hard-coded values) | Developers using values |
-| [design_animations.dart](./lib/core/design_system/design_animations.dart) | Reusable animation widgets | Developers building animated UIs |
-| [presence_card.dart](./lib/features/video_room/widgets/presence_card.dart) | Canonical example (COPY THIS) | All developers (reference pattern) |
-| [design_constants_test.dart](./test/design_constants_test.dart) | Unit tests (50+) | CI/CD, Code review |
-| [design_animations_test.dart](./test/design_animations_test.dart) | Widget tests | CI/CD, Code review |
+| Document                                                                   | Purpose                             | Audience                           |
+| -------------------------------------------------------------------------- | ----------------------------------- | ---------------------------------- |
+| [DESIGN_BIBLE.md](./DESIGN_BIBLE.md)                                       | Original specification (700+ lines) | Product, Designers, Senior Devs    |
+| [DESIGN_SYSTEM_QUICK_REF.md](./DESIGN_SYSTEM_QUICK_REF.md)                 | Cheat sheet (2 pages)               | All Developers (PRINT IT)          |
+| [DESIGN_SYSTEM_INTEGRATION.md](./DESIGN_SYSTEM_INTEGRATION.md)             | How-to guide with examples          | Developers implementing widgets    |
+| [design_constants.dart](./lib/core/design_system/design_constants.dart)    | Source of truth (hard-coded values) | Developers using values            |
+| [design_animations.dart](./lib/core/design_system/design_animations.dart)  | Reusable animation widgets          | Developers building animated UIs   |
+| [presence_card.dart](./lib/features/video_room/widgets/presence_card.dart) | Canonical example (COPY THIS)       | All developers (reference pattern) |
+| [design_constants_test.dart](./test/design_constants_test.dart)            | Unit tests (50+)                    | CI/CD, Code review                 |
+| [design_animations_test.dart](./test/design_animations_test.dart)          | Widget tests                        | CI/CD, Code review                 |
 
 ---
 
@@ -349,6 +373,7 @@ Before shipping anything:
 ## FINAL WORDS
 
 **This system exists to:**
+
 - ✅ Make your job easier (copy presence_card.dart, instant compliance)
 - ✅ Ensure consistency (users see same feel everywhere)
 - ✅ Enable fast onboarding (new hires just follow the pattern)

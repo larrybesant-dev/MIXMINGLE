@@ -1,4 +1,5 @@
 <!-- markdownlint-disable MD013 MD060 MD029 MD034 -->
+
 # 🔧 EXPERT FIX IMPLEMENTATION PLAN
 
 **Generated:** January 28, 2026
@@ -15,6 +16,7 @@
 **Status:** ✅ **RESOLVED**
 
 **What Was Fixed:**
+
 ```dart
 // BEFORE (WRONG):
 Future<List<QueryDocumentSnapshot<Object?>>> searchUsers(String? query, {int? limit})
@@ -35,23 +37,23 @@ Future<List<UserProfile>> searchUsers(String query)
 
 **Impact:** Cleans up code, removes potential confusion
 
-| File | Line | Fix |
-|------|------|-----|
-| `lib/core/services/push_notification_service.dart` | 250 | Remove `android` variable or use it |
-| `lib/features/room/screens/voice_room_page.dart` | 430 | Remove unused `roomService` |
-| `lib/features/room/screens/voice_room_page.dart` | 459 | Remove unused `roomService` |
-| `lib/features/room/screens/voice_room_page.dart` | 513 | Remove unused `user` |
-| `test/services/storage_service_test.dart` | 70 | Remove unused `path` |
-| `test/features/room/full_room_e2e_test.dart` | 55 | Remove unused `userId` |
+| File                                               | Line | Fix                                 |
+| -------------------------------------------------- | ---- | ----------------------------------- |
+| `lib/core/services/push_notification_service.dart` | 250  | Remove `android` variable or use it |
+| `lib/features/room/screens/voice_room_page.dart`   | 430  | Remove unused `roomService`         |
+| `lib/features/room/screens/voice_room_page.dart`   | 459  | Remove unused `roomService`         |
+| `lib/features/room/screens/voice_room_page.dart`   | 513  | Remove unused `user`                |
+| `test/services/storage_service_test.dart`          | 70   | Remove unused `path`                |
+| `test/features/room/full_room_e2e_test.dart`       | 55   | Remove unused `userId`              |
 
 **Time Estimate:** 5 minutes
 
 #### Fix 2: Remove Unused Elements (5 minutes)
 
-| File | Line | Element | Action |
-|------|------|---------|--------|
-| `lib/features/room/screens/voice_room_page.dart` | 387 | `_startSpeakerTimer()` | Delete or implement |
-| `test/widgets/room_page_test.dart` | 5 | `_testRoom` | Delete |
+| File                                             | Line | Element                | Action              |
+| ------------------------------------------------ | ---- | ---------------------- | ------------------- |
+| `lib/features/room/screens/voice_room_page.dart` | 387  | `_startSpeakerTimer()` | Delete or implement |
+| `test/widgets/room_page_test.dart`               | 5    | `_testRoom`            | Delete              |
 
 **Time Estimate:** 5 minutes
 
@@ -95,12 +97,14 @@ try {
 #### Fix 5: Replace Deprecated `withOpacity()` (1-2 hours)
 
 **Affected Files (16 instances):**
+
 - `lib/features/app/screens/matches_page.dart` (1 instance)
 - `lib/features/events/widgets/event_card_horizontal.dart` (6 instances)
 - `lib/features/events/widgets/event_card_vertical.dart` (5 instances)
 - `lib/features/events/widgets/event_discovery_list.dart` (4 instances)
 
 **Migration:**
+
 ```dart
 // OLD (Deprecated):
 Colors.blue.withOpacity(0.5)
@@ -112,6 +116,7 @@ Theme.of(context).primaryColor.withValues(alpha: 0.8)
 ```
 
 **Batch Fix Command:**
+
 ```bash
 # Find all instances:
 grep -r "withOpacity" lib/features/app lib/features/events --include="*.dart"
@@ -125,6 +130,7 @@ grep -r "withOpacity" lib/features/app lib/features/events --include="*.dart"
 #### Fix 6: Replace Print Statements (2-3 hours)
 
 **Affected Files (60+ instances):**
+
 - `lib/features/matching/services/match_service.dart` (5)
 - `lib/features/room/screens/voice_room_page.dart` (10)
 - `lib/services/agora_platform_service.dart` (5)
@@ -132,6 +138,7 @@ grep -r "withOpacity" lib/features/app lib/features/events --include="*.dart"
 - Test files (27)
 
 **Migration:**
+
 ```dart
 // OLD:
 print('Debug message');
@@ -143,6 +150,7 @@ AppLogger.error('Error', error);
 ```
 
 **Batch Fix Script:**
+
 ```dart
 // Create a script: replace_prints.dart
 import 'dart:io';
@@ -168,11 +176,13 @@ void main() {
 #### Fix 7: Fix Dead Null-Aware Operators (30 minutes)
 
 **Affected Files:**
+
 - `lib/features/events/screens/events_page.dart:221`
 - `lib/shared/models/event.dart:147`
 - `lib/shared/models/event.dart:148`
 
 **Example Fix:**
+
 ```dart
 // BEFORE (Dead code):
 nonNullableValue ?? fallback  // fallback never used
@@ -228,11 +238,13 @@ SomeType get someGetter => ...;
 ## 📋 EXECUTION CHECKLIST
 
 ### Before Starting
+
 - ✅ Backup current codebase
 - ✅ Create a new git branch: `git checkout -b cleanup/code-quality`
 - ✅ Run tests to establish baseline: `flutter test`
 
 ### Phase 1: Quick Fixes (Day 1)
+
 - [ ] Fix 1: Remove 6 unused variables
 - [ ] Fix 2: Delete 2 unused elements
 - [ ] Fix 3: Remove 1 unused import
@@ -242,6 +254,7 @@ SomeType get someGetter => ...;
 - [ ] Commit: `git commit -m "fix: remove unused variables and elements"`
 
 ### Phase 2: Code Quality (Day 2-3)
+
 - [ ] Fix 5: Replace 16 `withOpacity()` calls
 - [ ] Test: Verify UI still renders correctly
 - [ ] Commit: `git commit -m "refactor: migrate to withValues()"`
@@ -253,6 +266,7 @@ SomeType get someGetter => ...;
 - [ ] Commit: `git commit -m "fix: remove dead null-aware operators"`
 
 ### Phase 3: Test Cleanup (Day 4)
+
 - [ ] Fix 8: Remove 3 duplicate ignores
 - [ ] Fix 9: Fix invalid override
 - [ ] Run: `flutter test`
@@ -260,6 +274,7 @@ SomeType get someGetter => ...;
 - [ ] Commit: `git commit -m "test: cleanup test warnings"`
 
 ### Final Verification
+
 - [ ] Run: `flutter analyze --no-fatal-infos`
 - [ ] Expected: 0 errors, 0-3 warnings (down from 17)
 - [ ] Run: `flutter test`
@@ -275,15 +290,18 @@ SomeType get someGetter => ...;
 ## 🎯 PRIORITY RECOMMENDATIONS
 
 ### Must Do (Critical)
+
 ✅ **COMPLETED** - Fix test mock signature (0 errors achieved!)
 
 ### Should Do (High Priority)
+
 1. **Phase 1: Quick Fixes** (15 minutes)
    - Removes all unused variables
    - Cleans up dead code
    - Immediate improvement to code quality
 
 ### Nice to Have (Medium Priority)
+
 2. **Fix 5: Deprecated APIs** (1-2 hours)
    - Future-proofs the codebase
    - Prevents breaking changes in Flutter updates
@@ -293,6 +311,7 @@ SomeType get someGetter => ...;
    - Production-ready logging
 
 ### Optional (Low Priority)
+
 4. **Phase 3: Test Cleanup** (30 minutes)
    - Aesthetic improvements
    - No functional impact
@@ -326,21 +345,25 @@ firebase deploy --only hosting
 ## 📊 EXPECTED OUTCOMES
 
 ### Current Status
+
 - ✅ Errors: 0 (down from 1)
 - ⚠️ Warnings: 17
 - 📝 Info: 70+
 
 ### After Phase 1 (Quick Fixes)
+
 - ✅ Errors: 0
 - ⚠️ Warnings: 8-10 (down from 17)
 - 📝 Info: 70+
 
 ### After Phase 2 (Code Quality)
+
 - ✅ Errors: 0
 - ⚠️ Warnings: 0-3 (down from 17)
 - 📝 Info: 54 (after removing print warnings)
 
 ### After Phase 3 (Complete)
+
 - ✅ Errors: 0
 - ⚠️ Warnings: 0
 - 📝 Info: 54
@@ -352,17 +375,20 @@ firebase deploy --only hosting
 ## 🚀 DEPLOYMENT IMPACT
 
 ### Current Deployment Status
+
 ✅ **Production:** https://mix-and-mingle-v2.web.app
 ✅ **Status:** Live and functional
 ✅ **Build:** Successful
 
 ### Post-Cleanup Deployment
+
 - No breaking changes expected
 - All fixes are non-functional improvements
 - UI/UX remains identical
 - Performance unchanged or improved
 
 ### Recommended Deployment Strategy
+
 1. Deploy fixes to staging environment first
 2. Run QA tests on staging
 3. Deploy to production during low-traffic hours

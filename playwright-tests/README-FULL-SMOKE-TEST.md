@@ -32,8 +32,8 @@ npm run full-smoke-test
 Update the test credentials in `full-smoke-test.js`:
 
 ```javascript
-const TEST_EMAIL = 'your-test-account@example.com';
-const TEST_PASSWORD = 'YourTestPassword123!';
+const TEST_EMAIL = "your-test-account@example.com";
+const TEST_PASSWORD = "YourTestPassword123!";
 ```
 
 ## Output
@@ -143,11 +143,11 @@ The test uses multiple selector strategies, with test keys as the primary method
 
 ```javascript
 selectors: [
-  '[data-testid="speed-dating-btn"]',  // Primary: Test key
-  '[aria-label*="Speed Dating"]',      // Fallback: ARIA label
-  'button:has-text("favorite")',       // Fallback: Icon text
+  '[data-testid="speed-dating-btn"]', // Primary: Test key
+  '[aria-label*="Speed Dating"]', // Fallback: ARIA label
+  'button:has-text("favorite")', // Fallback: Icon text
   // ... more fallbacks
-]
+];
 ```
 
 ## Troubleshooting
@@ -181,7 +181,7 @@ The test runs in non-headless mode for visibility. To run headless:
 ```javascript
 browser = await chromium.launch({
   headless: true, // Change to true for headless
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
+  args: ["--no-sandbox", "--disable-setuid-sandbox"],
 });
 ```
 
@@ -191,8 +191,8 @@ Adjust timeouts as needed:
 
 ```javascript
 await page.goto(APP_URL, {
-  waitUntil: 'networkidle',
-  timeout: 30000 // 30 seconds
+  waitUntil: "networkidle",
+  timeout: 30000, // 30 seconds
 });
 ```
 
@@ -232,10 +232,10 @@ For complex Flutter apps, you may need custom selectors:
 
 ```javascript
 selectors: [
-  '.flutter-view >> button', // Flutter-specific selectors
+  ".flutter-view >> button", // Flutter-specific selectors
   '[data-semantic-label*="Feature"]', // Custom semantic labels
-  'xpath=//button[contains(@aria-label, "Feature")]' // XPath selectors
-]
+  'xpath=//button[contains(@aria-label, "Feature")]', // XPath selectors
+];
 ```
 
 ## Support

@@ -35,6 +35,7 @@
 ## 🔄 How It Works
 
 ### 1. User Opens Room
+
 ```
 VoiceRoomPage(room: room)
   ↓
@@ -46,6 +47,7 @@ Show spinner "Joining room..."
 ```
 
 ### 2. Room Loads
+
 ```
 Agora engine initialized ✅
 Camera permission requested ✅
@@ -55,6 +57,7 @@ Local preview appears ✅
 ```
 
 ### 3. Others Join
+
 ```
 User joins room
   ↓
@@ -72,6 +75,7 @@ Their tile appears with animation
 ```
 
 ### 4. Live Updates
+
 ```
 User speaks
   ↓
@@ -85,6 +89,7 @@ Speaking indicator shows
 ```
 
 ### 5. User Leaves
+
 ```
 User taps "Leave"
   ↓
@@ -172,6 +177,7 @@ Leave (Always):
 ## 📊 Grid Layouts
 
 ### 1 Camera
+
 ```
 ┌────────────────────┐
 │                    │
@@ -181,6 +187,7 @@ Leave (Always):
 ```
 
 ### 2-3 Cameras
+
 ```
 ┌──────────┬──────────┐
 │  Tile 1  │  Tile 2  │
@@ -190,6 +197,7 @@ Leave (Always):
 ```
 
 ### 4-6 Cameras
+
 ```
 ┌──────────┬──────────┐
 │  Tile 1  │  Tile 2  │
@@ -201,6 +209,7 @@ Leave (Always):
 ```
 
 ### 7-9 Cameras (3 columns)
+
 ```
 ┌────────┬────────┬────────┐
 │ Tile 1 │ Tile 2 │ Tile 3 │
@@ -212,6 +221,7 @@ Leave (Always):
 ```
 
 ### 10+ Cameras (4 columns)
+
 ```
 ┌────┬────┬────┬────┐
 │ T1 │ T2 │ T3 │ T4 │
@@ -231,6 +241,7 @@ Leave (Always):
 ### Tile Entry (500ms)
 
 **Before**:
+
 ```
 Tile is off-screen
 Opacity: 0%
@@ -238,6 +249,7 @@ Position: Down 30px
 ```
 
 **Animation**:
+
 ```
 500ms easeOut
 Opacity: 0% → 100%
@@ -246,6 +258,7 @@ Result: Smooth fade in + slide up
 ```
 
 **After**:
+
 ```
 Tile visible
 Opacity: 100%
@@ -255,6 +268,7 @@ Position: Normal
 ### Speaking Ring (Live)
 
 **Not Speaking**:
+
 ```
 ┌─────────┐
 │ Border  │  Grey, 1px
@@ -264,6 +278,7 @@ Position: Normal
 ```
 
 **Speaking**:
+
 ```
 ┌─ ⓖⓖⓖⓖⓖ ─┐
 │ Border  │  Green, 3px
@@ -313,6 +328,7 @@ Returns: AgoraVideoService
 ## 🛠️ Control Actions
 
 ### Tap Mic Toggle
+
 ```
 Mic Toggle tapped
   ↓
@@ -328,6 +344,7 @@ User sees feedback instantly
 ```
 
 ### Tap Camera Toggle
+
 ```
 Camera Toggle tapped
   ↓
@@ -343,6 +360,7 @@ Local tile disappears/reappears
 ```
 
 ### Tap Chat
+
 ```
 Chat button tapped
   ↓
@@ -356,6 +374,7 @@ System messages shown
 ```
 
 ### Tap Leave
+
 ```
 Leave button tapped
   ↓
@@ -373,11 +392,13 @@ dispose() cleans up
 ## 🎯 Quick Integration
 
 ### Step 1: Import
+
 ```dart
 import 'package:mixmingle/features/room/screens/voice_room_page.dart';
 ```
 
 ### Step 2: Navigate
+
 ```dart
 Navigator.push(
   context,
@@ -388,6 +409,7 @@ Navigator.push(
 ```
 
 ### Step 3: Done!
+
 ```
 VoiceRoomPage automatically:
 ✅ Initializes Agora
@@ -403,6 +425,7 @@ VoiceRoomPage automatically:
 ## 📱 Responsive Behavior
 
 ### Desktop (1920x1080)
+
 ```
 ┌─────────────────────────────┐
 │ AppBar                   │  │
@@ -416,6 +439,7 @@ VoiceRoomPage automatically:
 ```
 
 ### Tablet (720x1024)
+
 ```
 ┌─────────────────────────┐
 │ AppBar              │   │
@@ -429,6 +453,7 @@ VoiceRoomPage automatically:
 ```
 
 ### Mobile Portrait (360x800)
+
 ```
 ┌──────────────┐
 │ AppBar    [≡]│ ← Menu toggle
@@ -463,6 +488,7 @@ VoiceRoomPage automatically:
 ## 🎉 Production Ready
 
 All components are:
+
 - ✅ Implemented
 - ✅ Integrated
 - ✅ Tested

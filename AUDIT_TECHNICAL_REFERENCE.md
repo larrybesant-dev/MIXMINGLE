@@ -20,6 +20,7 @@ import 'agora_web_bridge.dart' if (dart.library.io) 'agora_web_bridge_stub.dart'
 ```
 
 **How This Works:**
+
 - `dart.library.io` is available only on native platforms (iOS, Android, Desktop)
 - When compiling for web, `dart.library.io` doesn't exist
 - Dart compiler automatically selects the appropriate file:
@@ -27,6 +28,7 @@ import 'agora_web_bridge.dart' if (dart.library.io) 'agora_web_bridge_stub.dart'
   - **Native:** imports `agora_web_bridge_stub.dart` (stub that throws)
 
 **Critical Implementation Detail:**
+
 ```dart
 static Future<bool> joinChannel({...}) async {
   AppLogger.info('🌐 joinChannel called - kIsWeb: $kIsWeb');
@@ -46,6 +48,7 @@ static Future<bool> joinChannel({...}) async {
 ```
 
 **Why Both Guards Are Needed:**
+
 1. Runtime check (`kIsWeb`) - Makes decision at runtime
 2. Compile-time conditional import - Prevents web code from importing native libs
 
@@ -59,6 +62,7 @@ SECTION 2: JAVASCRIPT INTEROP - DART:JS PATTERNS
 ### Pattern 1: Calling JavaScript Functions from Dart
 
 **Correct Pattern Used:**
+
 ```dart
 import 'dart:js_util' as js_util;
 
@@ -74,12 +78,14 @@ return result;  // Now guaranteed to be bool
 ```
 
 **Why This Pattern:**
+
 - `js_util.callMethod()` handles object method calls correctly
 - `<bool>` type parameter ensures result is cast to bool
 - `promiseToFuture()` converts JavaScript Promise to Dart Future
 - String method name prevents compilation issues with Wasm
 
 **Anti-Pattern (What NOT to Do):**
+
 ```dart
 // ❌ WRONG - Direct context method call (causes Wasm incompatibility)
 final result = await promiseToFuture(
@@ -107,6 +113,7 @@ if (js.context.hasProperty('agoraWeb')) {
 ### Pattern 3: Promise to Future Conversion
 
 JavaScript Promises must be explicitly converted:
+
 ```dart
 // JavaScript returns Promise
 // window.agoraWeb.joinChannel = async function(...) { ... }
@@ -124,11 +131,13 @@ SECTION 3: RIVERPOD LIFECYCLE ISSUES
 ### Issue: ref.listen() in build() vs initState()
 
 **Riverpod Official Documentation:**
+
 - `ref.listen()` should NOT be in `initState()`
 - `ref.listen()` SHOULD be in `build()` or `didChangeDependencies()`
 - Each rebuild, Riverpod optimizes away duplicate listeners
 
 **Current Implementation (CORRECT for Riverpod 2.0):**
+
 ```dart
 @override
 Widget build(BuildContext context) {
@@ -148,11 +157,13 @@ Widget build(BuildContext context) {
 ```
 
 **Why This Is Safe:**
+
 1. Riverpod deduplicates listeners - same callback not registered twice
 2. Guards prevent duplicate joins: `&& !_isJoined && !_isInitializing`
 3. State machine ensures only one join attempt at a time
 
 **Alternative Pattern (More Explicit):**
+
 ```dart
 class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage> {
   late StreamSubscription<AsyncValue<User?>> _authSub;
@@ -183,11 +194,13 @@ SECTION 4: CRASHLYTICS ON WEB PLATFORM
 ### Issue: Crashlytics Plugin Not Available on Web
 
 **Why:**
+
 - `firebase_crashlytics` is a native plugin (uses Platform channels)
 - Platform channels require native code (iOS/Android/Desktop)
 - Web has no native layer, Platform channels fail
 
 **Solution Used (Correct):**
+
 ```dart
 // Always guard Crashlytics calls with kIsWeb
 if (!kIsWeb) {
@@ -197,6 +210,7 @@ if (!kIsWeb) {
 ```
 
 **Important Detail - Error Tracking Service:**
+
 ```dart
 class ErrorTrackingService {
   final FirebaseCrashlytics _crashlytics = FirebaseCrashlytics.instance;
@@ -213,6 +227,7 @@ class ErrorTrackingService {
 ```
 
 **Web Error Handling:**
+
 - No Crashlytics available
 - Flutter errors logged to browser console
 - Use Firebase Analytics events for web error tracking
@@ -224,6 +239,7 @@ SECTION 5: FIRESTORE INTEGRATION PATTERNS
 ### Pattern: Real-Time Room Updates with Listeners
 
 **Implementation Used:**
+
 ```dart
 // Watch room changes in real-time
 ref.watch(roomProvider(roomId));
@@ -239,11 +255,13 @@ final roomProvider = StreamProvider.family<Room, String>((ref, roomId) {
 ```
 
 **Critical Details:**
+
 1. StreamProvider automatically manages listener lifecycle
 2. Removes listener when provider is no longer watched
 3. Errors are automatically caught and logged
 
 **Participant Sync Pattern:**
+
 ```dart
 // On join
 await _firestore
@@ -267,6 +285,7 @@ await _firestore
 ```
 
 **Error Handling:**
+
 - Delete failures are logged but don't block leave operation
 - Stale docs handled by Firestore rules TTL or cloud function cleanup
 - Real-time listeners automatically update when docs change
@@ -278,16 +297,19 @@ SECTION 6: ASYNC/AWAIT PATTERNS
 ### Critical Issue: Unwaited Futures
 
 **Before (Incorrect):**
+
 ```dart
 crashlytics.setCustomKey('key', value);  // ❌ Fire-and-forget
 ```
 
 **After (Correct):**
+
 ```dart
 await crashlytics.setCustomKey('key', value);  // ✅ Wait for completion
 ```
 
 **Why This Matters:**
+
 - Function might return before async operations complete
 - Custom keys not set if Crashlytics not initialized
 - Leads to missing data in crash reports
@@ -341,6 +363,7 @@ Future<void> joinRoom(String roomId) async {
 ```
 
 **Why Layered Checks:**
+
 1. Each check verifies one invariant
 2. Exceptions are specific and actionable
 3. Prevents silent failures
@@ -393,6 +416,7 @@ if (token == null || uid == null) {
 ```
 
 **Why ID Token Refresh:**
+
 - Firebase Cloud Functions need authentication
 - Tokens expire, refresh ensures valid context
 - Without refresh, old tokens might be rejected
@@ -437,24 +461,28 @@ SECTION 10: TESTING CHECKLIST
 ================================================================================
 
 ### Unit Tests Needed
+
 - [ ] Token generation error handling
 - [ ] Null safety checks
 - [ ] Web/Native platform detection
 - [ ] Firestore document lifecycle
 
 ### Integration Tests Needed
+
 - [ ] Join → Leave → Join cycle
 - [ ] Multiple rapid joins
 - [ ] Network interruption recovery
 - [ ] Firestore sync timing
 
 ### Platform Tests Needed
+
 - [ ] Web platform (Chrome)
 - [ ] Android platform (device/emulator)
 - [ ] iOS platform (device/simulator)
 - [ ] Desktop platform (Windows/Mac)
 
 ### Manual Tests Needed
+
 - [ ] Audio/video quality
 - [ ] Permission dialogs
 - [ ] Error messages clarity
@@ -467,6 +495,7 @@ DEVELOPER QUICK REFERENCE
 ### Common Tasks
 
 **1. Add New Agora Feature**
+
 ```dart
 // Always add to platform service
 static Future<bool> newFeature({required String param}) async {
@@ -479,6 +508,7 @@ static Future<bool> newFeature({required String param}) async {
 ```
 
 **2. Log for Debugging**
+
 ```dart
 DebugLog.info(_safeLog('🔍 Debug message'));
 AppLogger.warning('Warning message');
@@ -486,6 +516,7 @@ AppLogger.error('Error message');
 ```
 
 **3. Handle Errors**
+
 ```dart
 try {
   await riskyOperation();
@@ -500,6 +531,7 @@ try {
 ```
 
 **4. Riverpod State Mutation**
+
 ```dart
 // In provider notifier
 ref.read(participantsProvider.notifier).addParticipant(uid);
@@ -507,6 +539,7 @@ ref.read(participantsProvider.notifier).removeParticipant(uid);
 ```
 
 **5. Firestore Real-Time Updates**
+
 ```dart
 // Watch updates in UI
 final participants = ref.watch(enrichedParticipantsProvider(roomId));
@@ -520,6 +553,7 @@ KNOWN LIMITATIONS & WORKAROUNDS
 ================================================================================
 
 ### Web Platform Limitations
+
 1. **No native camera/microphone access before join**
    - Workaround: Request in browser before Agora join
 
@@ -530,6 +564,7 @@ KNOWN LIMITATIONS & WORKAROUNDS
    - Workaround: Use Firebase Analytics events instead
 
 ### Native Platform Limitations
+
 1. **Permissions required before join**
    - Workaround: request Permissions before calling joinRoom()
 
@@ -541,16 +576,19 @@ PERFORMANCE CONSIDERATIONS
 ================================================================================
 
 ### Memory Management
+
 - Streams in Riverpod auto-cleanup when unwatched
 - Timers must be explicitly cancelled (already done)
 - Listeners must be unregistered (Agora engine handles)
 
 ### Network Optimization
+
 - Token refresh happens once per join
 - Real-time updates batched by Firestore
 - No polling - all event-driven
 
 ### CPU/Battery Usage
+
 - Video only when in foreground
 - Audio processing disabled when muted
 - Lower quality preview on slow networks

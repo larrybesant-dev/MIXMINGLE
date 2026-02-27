@@ -17,6 +17,8 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
+import '../../../core/constants.dart';
+import '../../../services/agora/agora_platform_service.dart';
 import 'live_room_schema.dart';
 
 // ── Events emitted to the controller ──────────────────────────────────────
@@ -72,9 +74,11 @@ class LiveAgoraClient {
   bool _initialized = false;
   bool _inChannel = false;
   String? _channelId;
+  String? _lastUserId;
   int? _localUid;
   bool _publishingVideo = false;
   bool _publishingAudio = false;
+  Timer? _tokenRefreshTimer;
 
   /// Uids currently in the video channel (not necessarily subscribed).
   final Set<int> _channelUids = {};
@@ -157,12 +161,25 @@ class LiveAgoraClient {
 
     final token = await _fetchToken(channelId: channelId, userId: userId);
     _channelId = channelId;
+    _lastUserId = userId;
 
     if (kIsWeb) {
-      // Web path delegates to the existing platform service / web bridge
-      debugPrint('[VIDEO_ENGINE] Web join — using web bridge');
+      // Web path: join via AgoraPlatformService (web bridge v3)
+      debugPrint('[VIDEO_ENGINE] Web join — using AgoraPlatformService / web bridge');
+      final appId = await _loadAppId();
+      final success = await AgoraPlatformService.joinChannel(
+        appId: appId,
+        channelName: channelId,
+        token: token,
+        uid: '0',
+      );
+      if (!success) {
+        _emit(const EngineErrorEvent('Web bridge join failed'));
+        return;
+      }
       _inChannel = true;
       _emit(const EngineJoinedEvent(0));
+      _startTokenRefreshTimer(channelId: channelId, userId: userId);
       return;
     }
 
@@ -197,6 +214,8 @@ class LiveAgoraClient {
 
   Future<void> leaveChannel() async {
     if (!_inChannel) return;
+    _tokenRefreshTimer?.cancel();
+    _tokenRefreshTimer = null;
     if (kIsWeb) {
       _inChannel = false;
       _channelUids.clear();
@@ -306,6 +325,8 @@ class LiveAgoraClient {
   // ── Dispose ────────────────────────────────────────────────────────────────
 
   Future<void> dispose() async {
+    _tokenRefreshTimer?.cancel();
+    _tokenRefreshTimer = null;
     if (_inChannel) await leaveChannel();
     _events.close();
     if (!kIsWeb) {
@@ -348,6 +369,11 @@ class LiveAgoraClient {
           debugPrint(
               '[VIDEO_ENGINE] Joined channel ${conn.channelId} uid=$_localUid');
           _emit(EngineJoinedEvent(_localUid!));
+          // Start token refresh timer for long-running rooms
+          if (_channelId != null && _lastUserId != null) {
+            _startTokenRefreshTimer(
+                channelId: _channelId!, userId: _lastUserId!);
+          }
         },
         onLeaveChannel: (RtcConnection conn, RtcStats stats) {
           debugPrint('[VIDEO_ENGINE] Left channel');
@@ -393,26 +419,82 @@ class LiveAgoraClient {
           debugPrint('[VIDEO_ENGINE] Error $err: $msg');
           _emit(EngineErrorEvent('$err: $msg'));
         },
+        onTokenPrivilegeWillExpire: (RtcConnection conn, String token) {
+          debugPrint('[VIDEO_ENGINE] Token will expire — refreshing...');
+          if (_channelId != null && _lastUserId != null) {
+            _refreshAndRenewToken(
+                channelId: _channelId!, userId: _lastUserId!);
+          }
+        },
       ),
     );
+  }
+
+  // ── Token refresh ─────────────────────────────────────────────────────────
+
+  /// Start a periodic timer that refreshes the token ~23 hours after joining.
+  /// This covers long-running rooms (concerts, social rooms, etc.) where the
+  /// default 24-hour Agora token would otherwise expire mid-session.
+  void _startTokenRefreshTimer({
+    required String channelId,
+    required String userId,
+  }) {
+    _tokenRefreshTimer?.cancel();
+    // Refresh 1 hour before the 24h token expires
+    _tokenRefreshTimer = Timer(const Duration(hours: 23), () {
+      _refreshAndRenewToken(channelId: channelId, userId: userId);
+    });
+    debugPrint('[VIDEO_ENGINE] Token refresh timer set for 23h');
+  }
+
+  /// Re-fetch a fresh token from Cloud Functions and renew it in the engine.
+  Future<void> _refreshAndRenewToken({
+    required String channelId,
+    required String userId,
+  }) async {
+    try {
+      debugPrint('[VIDEO_ENGINE] Refreshing token for channel: $channelId');
+      final newToken = await _fetchToken(channelId: channelId, userId: userId);
+      final ok = await AgoraPlatformService.renewToken(newToken);
+      debugPrint('[VIDEO_ENGINE] Token renewed: $ok');
+      // Reschedule for the next 23h cycle
+      if (_inChannel) {
+        _startTokenRefreshTimer(channelId: channelId, userId: userId);
+      }
+    } catch (e) {
+      debugPrint('[VIDEO_ENGINE] Token refresh failed: $e');
+    }
   }
 
   // ── App ID / Token ────────────────────────────────────────────────────────
 
   String? _cachedAppId;
 
-  Future<String> _loadAppId() async {
-    if (_cachedAppId != null) return _cachedAppId!;
-    final doc = await FirebaseFirestore.instance
-        .collection('config')
-        .doc('agora')
-        .get();
-    final id = doc.data()?['appId'] as String?;
-    if (id == null || id.isEmpty) {
-      throw Exception('Agora App ID not found in Firestore config/agora.');
+  Future<String> _loadAppId() async {    if (_cachedAppId != null) return _cachedAppId!;
+
+    // Try Firestore first, fall back to .env
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('config')
+          .doc('agora')
+          .get();
+      final id = doc.data()?['appId'] as String?;
+      if (id != null && id.isNotEmpty) {
+        _cachedAppId = id;
+        return id;
+      }
+    } catch (_) {
+      // Firestore unavailable — fall through to .env fallback
     }
-    _cachedAppId = id;
-    return id;
+
+    // Fallback: read from .env (AppConstants)
+    final envId = AppConstants.agoraAppId;
+    if (envId.isNotEmpty) {
+      _cachedAppId = envId;
+      return envId;
+    }
+
+    throw Exception('Agora App ID not configured. Add to Firestore config/agora or .env.');
   }
 
   Future<String> _fetchToken({
@@ -420,8 +502,8 @@ class LiveAgoraClient {
     required String userId,
   }) async {
     final result = await FirebaseFunctions.instanceFor(region: 'us-central1')
-        .httpsCallable('generateAgoraToken')
-        .call({'channelName': channelId, 'uid': userId, 'role': 'publisher'});
+      .httpsCallable('generateAgoraToken')
+      .call({'roomId': channelId, 'userId': userId}); // Endpoint: https://us-central1-mix-and-mingle-v2.cloudfunctions.net/generateAgoraToken
     final token = (result.data as Map<String, dynamic>)['token'] as String?;
     if (token == null || token.isEmpty) {
       throw Exception('generateAgoraToken returned an empty token.');

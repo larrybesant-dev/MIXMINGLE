@@ -3,15 +3,19 @@
 ## ✅ ROOT CAUSE #1 — FIRESTORE SECURITY RULES (FIXED)
 
 ### What Was Wrong:
+
 Firestore was rejecting ALL reads/writes because:
+
 1. The rules file had NO top-level `/messages` collection rules
 2. The `/notifications` collection rules were over-restrictive
 3. The `/tips` collection rules were over-restrictive
 
 ### Fix Applied:
+
 **File: `firestore.rules`**
 
 #### Added Top-Level `/messages` Collection Rules:
+
 ```firerules
 match /messages/{messageId} {
   allow read: if isSignedIn();
@@ -24,6 +28,7 @@ match /messages/{messageId} {
 ```
 
 #### Relaxed `/notifications` Rules:
+
 ```firerules
 match /notifications/{notificationId} {
   allow read: if isSignedIn();
@@ -34,6 +39,7 @@ match /notifications/{notificationId} {
 ```
 
 #### Relaxed `/tips` Rules:
+
 ```firerules
 match /tips/{tipId} {
   allow read: if isSignedIn();
@@ -44,6 +50,7 @@ match /tips/{tipId} {
 ```
 
 ### Impact:
+
 - ✅ Presence now works
 - ✅ Messages now work
 - ✅ Chat now works
@@ -60,7 +67,9 @@ match /tips/{tipId} {
 ## ✅ ROOT CAUSE #2 — MISSING FIRESTORE COLLECTIONS (FIXED)
 
 ### What Was Wrong:
+
 Three top-level collections were missing:
+
 - `messages`
 - `notifications`
 - `tips`
@@ -68,14 +77,17 @@ Three top-level collections were missing:
 When collections don't exist AND have no rules defined, the app gets `permission-denied` errors.
 
 ### Fix Applied:
+
 The Firestore rules now **explicitly define** these three collections with proper access rules. Firebase automatically creates collections when the first document is written with valid rules.
 
 When your app tries to:
+
 1. **Read/Write** to `/messages` → Rules now ALLOW it → Firebase creates collection
 2. **Read/Write** to `/notifications` → Rules now ALLOW it → Firebase creates collection
 3. **Read/Write** to `/tips` → Rules now ALLOW it → Firebase creates collection
 
 ### Next Step (Manual - Click in Firebase Console):
+
 1. Go to Firebase Console → Firestore
 2. Click "Start collection"
 3. Create these collections with a dummy doc:
@@ -86,11 +98,13 @@ When your app tries to:
    ```
 
 **Or** — Just let the app create them automatically when it writes:
+
 - The first message creates `/messages`
 - The first notification creates `/notifications`
 - The first tip creates `/tips`
 
 ### Impact:
+
 - ✅ Collections can now be read/written
 - ✅ No more `permission-denied` errors
 - ✅ Chat history persists
@@ -102,13 +116,17 @@ When your app tries to:
 ## ✅ ROOT CAUSE #3 — FONTS (NOW FIXED)
 
 ### What Was Wrong:
+
 Build output showed:
+
 ```
 Could not find a set of Noto fonts to display all missing characters.
 ```
 
 ### Fix Applied:
+
 1. **Added fonts to `pubspec.yaml`:**
+
 ```yaml
 fonts:
   - family: NotoSans
@@ -126,6 +144,7 @@ fonts:
    - Put in: `assets/fonts/`
 
 4. **Rebuild:**
+
 ```bash
 flutter clean
 flutter pub get
@@ -133,6 +152,7 @@ flutter build web --release
 ```
 
 ### Impact:
+
 - ✅ Text renders correctly
 - ✅ Emojis display properly
 - ✅ No font warnings
@@ -144,11 +164,13 @@ flutter build web --release
 ### ⚠️ **TWO-LAYER PROBLEM**
 
 **Layer 1 (Local Code):**
+
 - ✅ `firestore.rules` file fixed
 - ✅ `pubspec.yaml` fonts configured
 - ✅ `assets/fonts/` directory created
 
 **Layer 2 (Firebase Cloud):** ← **NOT DEPLOYED YET**
+
 - ❌ Rules NOT published to Firebase Console
 - ❌ Collections do NOT exist in Firestore
 - ❌ This is why app still shows `permission-denied`
@@ -173,6 +195,7 @@ flutter build web --release
 ### **STEP 2: Create Collections in Firestore** ⏱️ 3 minutes
 
 #### Create `messages` Collection:
+
 1. Firestore → **Data** tab
 2. Click **Start collection** button
 3. Collection ID: `messages` (exact)
@@ -182,6 +205,7 @@ flutter build web --release
 7. Click **Save** ✅
 
 #### Create `notifications` Collection:
+
 1. Click **Start collection**
 2. Collection ID: `notifications`
 3. Click **Next**
@@ -189,6 +213,7 @@ flutter build web --release
 5. Click **Save** ✅
 
 #### Create `tips` Collection:
+
 1. Click **Start collection**
 2. Collection ID: `tips`
 3. Click **Next**
@@ -196,6 +221,7 @@ flutter build web --release
 5. Click **Save** ✅
 
 **Expected:** You see three new collections listed:
+
 ```
 users/
 messages/        ← NEW
@@ -241,6 +267,7 @@ flutter run -d chrome --no-hot
 ```
 
 **Expected Results:**
+
 - ✅ Login screen loads
 - ✅ Text readable (fonts fixed)
 - ✅ **No `permission-denied` errors** (rules deployed)
@@ -261,21 +288,22 @@ The local fixes (Layer 1) don't matter without the Firebase changes (Layer 2).
 
 ## 🔍 SUMMARY OF CHANGES
 
-| Component | Problem | Solution | Status |
-|-----------|---------|----------|--------|
-| Firestore Rules | No `/messages` rules | Added top-level collection rules | ✅ Fixed |
-| Notifications Rules | Too restrictive | Relaxed to `if isSignedIn()` | ✅ Fixed |
-| Tips Rules | Too restrictive | Relaxed to `if isSignedIn()` | ✅ Fixed |
-| Messages Collection | Missing | Rules now define it | ✅ Fixed |
-| Notifications Collection | Missing | Rules now define it | ✅ Fixed |
-| Tips Collection | Missing | Rules now define it | ✅ Fixed |
-| Fonts | Warning only | Working via google_fonts | ✅ No action needed |
+| Component                | Problem              | Solution                         | Status              |
+| ------------------------ | -------------------- | -------------------------------- | ------------------- |
+| Firestore Rules          | No `/messages` rules | Added top-level collection rules | ✅ Fixed            |
+| Notifications Rules      | Too restrictive      | Relaxed to `if isSignedIn()`     | ✅ Fixed            |
+| Tips Rules               | Too restrictive      | Relaxed to `if isSignedIn()`     | ✅ Fixed            |
+| Messages Collection      | Missing              | Rules now define it              | ✅ Fixed            |
+| Notifications Collection | Missing              | Rules now define it              | ✅ Fixed            |
+| Tips Collection          | Missing              | Rules now define it              | ✅ Fixed            |
+| Fonts                    | Warning only         | Working via google_fonts         | ✅ No action needed |
 
 ---
 
 ## 🚀 YOU'RE DONE
 
 The app is now **fully functional** with:
+
 - ✅ Working Firebase backend
 - ✅ Readable UI
 - ✅ All collections accessible

@@ -7,12 +7,24 @@ import 'package:mixmingle/app/app_routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
+import 'package:mixmingle/core/analytics/analytics_service.dart';
 
-class SettingsPage extends ConsumerWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends ConsumerState<SettingsPage> {
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.instance.logScreenView(screenName: 'screen_settings');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentUserAsync = ref.watch(currentUserProvider);
     final subscriptionAsync = ref.watch(userSubscriptionProvider);
 

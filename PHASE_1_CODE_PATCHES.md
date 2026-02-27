@@ -1,10 +1,13 @@
 # PHASE 1: Code Patches — Ready to Apply
+
 **Use these exact code changes to execute Phase 1 fixes**
 
 ---
 
 ## Patch #1: authServiceProvider Export
+
 **Status:** ✅ Already in place — No action needed
+
 - `authServiceProvider` is defined in `auth_providers.dart` ✓
 - `auth_providers.dart` is exported in `all_providers.dart` ✓
 
@@ -17,21 +20,25 @@
 Open **Find & Replace** in VS Code (Ctrl+H):
 
 **Replace 1:**
+
 - Find: `import '../../shared/`
 - Replace: `import 'package:mix_and_mingle/shared/`
 - Click: **Replace All**
 
 **Replace 2:**
+
 - Find: `import '../../../shared/`
 - Replace: `import 'package:mix_and_mingle/shared/`
 - Click: **Replace All**
 
 **Replace 3:**
+
 - Find: `import '../../../features/`
 - Replace: `import 'package:mix_and_mingle/features/`
 - Click: **Replace All**
 
 **Replace 4:**
+
 - Find: `import '../../features/`
 - Replace: `import 'package:mix_and_mingle/features/`
 - Click: **Replace All**
@@ -78,6 +85,7 @@ If the file doesn't exist, create it at the root. If it exists, add these indexe
 ```
 
 ### Deploy Indexes
+
 ```bash
 firebase deploy --only firestore:indexes
 ```
@@ -148,6 +156,7 @@ class ChatMessage {
 Open **Find & Replace** (Ctrl+H):
 
 **Replace:**
+
 - Find: `VoiceRoomChatMessage`
 - Replace: `ChatMessage`
 - Click: **Replace All**
@@ -157,6 +166,7 @@ Open **Find & Replace** (Ctrl+H):
 ## Patch #5: DateTime Field Fixes
 
 ### Find problematic fields first:
+
 ```bash
 grep -rn "final String.*[Tt]ime" lib/shared/models/ --include="*.dart"
 ```
@@ -166,6 +176,7 @@ grep -rn "final String.*[Tt]ime" lib/shared/models/ --include="*.dart"
 #### Fix in `lib/shared/models/event.dart`
 
 **Before:**
+
 ```dart
 class Event {
   final String startTime;
@@ -189,6 +200,7 @@ class Event {
 ```
 
 **After:**
+
 ```dart
 class Event {
   final DateTime startTime;
@@ -230,6 +242,7 @@ final DateTime roundStartTime;
 ```
 
 And in factory:
+
 ```dart
 // Before:
 startTime: json['startTime'] as String,
@@ -253,6 +266,7 @@ final DateTime? lastActivityTime;
 ### Update Usage Sites
 
 **Find usages:**
+
 ```bash
 grep -rn "\.startTime\|\.endTime\|\.createdAt" lib/ --include="*.dart" | head -30
 ```
@@ -260,16 +274,19 @@ grep -rn "\.startTime\|\.endTime\|\.createdAt" lib/ --include="*.dart" | head -3
 For each usage, convert from string parsing to DateTime methods:
 
 **Before:**
+
 ```dart
 if (int.parse(event.startTime) > 1000) { ... }
 ```
 
 **After:**
+
 ```dart
 if (event.startTime.millisecondsSinceEpoch > 1000) { ... }
 ```
 
 Or simpler:
+
 ```dart
 if (event.startTime.isAfter(DateTime.now())) { ... }
 ```
@@ -313,6 +330,7 @@ export '../features/rooms/providers/room_providers.dart';
 ## 🔧 Quick Terminal Commands to Apply Patches
 
 ### Apply all import fixes at once (from project root):
+
 ```bash
 cd c:\Users\LARRY\MIXMINGLE
 
@@ -324,6 +342,7 @@ grep -rn "import '\.\./\.\./\.\." lib/ --include="*.dart"
 ```
 
 ### Test after each patch:
+
 ```bash
 flutter clean
 flutter pub get
@@ -331,6 +350,7 @@ flutter analyze
 ```
 
 ### After all patches complete:
+
 ```bash
 flutter test test/providers_accessibility_test.dart
 ```
@@ -353,13 +373,14 @@ Each patch is independent — you can apply them in any order, but #1-#3 are fas
 ## 📝 Verification After Each Patch
 
 After applying each patch, run:
+
 ```bash
 flutter analyze
 ```
 
 Expected output:
+
 - 0 Dart errors
 - (Markdown warnings are fine for this phase)
 
 If errors appear, they'll tell you exactly which line to fix.
-

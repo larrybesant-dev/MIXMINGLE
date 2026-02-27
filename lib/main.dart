@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -22,6 +22,11 @@ import 'services/notifications/notification_service.dart';
 import 'services/agora/agora_service.dart';
 import 'services/room/room_firestore_service.dart';
 import 'app/app_routes.dart';
+import 'features/buddy_list/buddy_list_screen.dart';
+import 'features/buddy_list/buddy_profile_screen.dart';
+import 'core/web/web_window_service.dart';
+import 'features/video_room/screens/video_window_screen.dart';
+import 'features/chat/screens/chat_pop_out_screen.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -195,10 +200,22 @@ class _AlwaysLandingApp extends riverpod.ConsumerWidget {
       title: 'Mix & Mingle - Vibes Around the World',
       debugShowCheckedModeBanner: false,
       theme: themedTheme,
-      home: const LandingPage(),
+      // Use RootAuthGate as home so returning authenticated users go directly
+      // to the app rather than being shown LandingPage on every startup.
+      // RootAuthGate handles unauthenticated users by showing LandingPage itself.
+      home: const RootAuthGate(),
       onGenerateRoute: (settings) {
-        debugPrint('🌐 [AlwaysLanding] Route: ${settings.name}');
-        switch (settings.name) {
+        debugPrint('🌐 [AppRouter] Route: ${settings.name}');
+        // Strip query-string from the route name before matching.
+        // On Flutter Web (hash routing) pop-out windows open at URLs like
+        // /buddy-profile?uid=xxx — the full string becomes settings.name,
+        // so we must compare only the path portion.
+        final rawName = settings.name ?? '';
+        final routeUri = Uri.tryParse(rawName);
+        final routePath = routeUri?.path ?? rawName;           // e.g. /buddy-profile
+        final routeParams = routeUri?.queryParameters ?? {};    // e.g. {uid: 'abc'}
+
+        switch (routePath) {
           case '/':
           case '/landing':
             return MaterialPageRoute(builder: (_) => const LandingPage());
@@ -211,7 +228,74 @@ class _AlwaysLandingApp extends riverpod.ConsumerWidget {
                 builder: (_) => const ForgotPasswordPage());
           case '/app':
             // After login, go to the auth-protected app
+            // On web, also restore any previously-open pop-out windows.
+            WidgetsBinding.instance.addPostFrameCallback(
+                (_) => WebWindowService.restoreWindowsOnLogin());
             return MaterialPageRoute(builder: (_) => const RootAuthGate());
+
+          // ── Pop-out window routes (no extra auth guard needed;
+          //    opened only from authenticated sessions) ────────────────
+          case '/buddy-list':
+            return MaterialPageRoute(
+                builder: (_) => const BuddyListScreen());
+
+          case '/buddy-profile':
+            // uid may arrive as a query param in the URL (/buddy-profile?uid=X)
+            // or as a plain String argument from Navigator.pushNamed.
+            final uid = routeParams['uid'] ??
+                (settings.arguments as String? ?? '');
+            if (uid.isEmpty) {
+              return MaterialPageRoute(
+                  builder: (_) => const Scaffold(
+                        body: Center(child: Text('User ID missing'))));
+            }
+            return MaterialPageRoute(
+                builder: (_) => BuddyProfileScreen(uid: uid));
+
+          // ── Chat pop-out window ───────────────────────────────
+          case '/buddy-chat':
+            // chatId / name may arrive as URL params or via arguments String.
+            final chatId = routeParams['chatId'] ??
+                Uri.tryParse(settings.arguments as String? ?? '')
+                    ?.queryParameters['chatId'] ??
+                '';
+            final peerName = routeParams['name'] ??
+                Uri.tryParse(settings.arguments as String? ?? '')
+                    ?.queryParameters['name'] ??
+                'Chat';
+            return MaterialPageRoute(
+                builder: (_) => ChatPopOutScreen(
+                      chatId: chatId,
+                      peerName: Uri.decodeComponent(peerName),
+                    ));
+
+          // ── In-app full-page routes ─────────────────────────────────────
+          // NOTE: /feed and /speed-dating are intentionally NOT handled here
+          // so they fall through to AppRoutes.generateRoute below, which
+          // wraps them properly in AuthGate + ProfileGuard.
+
+          case '/video-window':
+            final videoUid = routeParams['uid'] ??
+                Uri.tryParse(settings.arguments as String? ?? '')
+                    ?.queryParameters['uid'] ??
+                (settings.arguments as String? ?? '');
+            final videoName = routeParams['name'] ??
+                Uri.tryParse(settings.arguments as String? ?? '')
+                    ?.queryParameters['name'] ??
+                '';
+            final videoChannelId = routeParams['channelId'];
+            final videoAgoraUidStr = routeParams['agoraUid'];
+            final videoAgoraUid = videoAgoraUidStr != null
+                ? int.tryParse(videoAgoraUidStr)
+                : null;
+            return MaterialPageRoute(
+                builder: (_) => VideoWindowScreen(
+                      uid: videoUid,
+                      displayName: Uri.decodeComponent(videoName),
+                      channelId: videoChannelId,
+                      agoraUid: videoAgoraUid,
+                    ));
+
           default:
             // Delegate all authenticated-app routes to the full AppRoutes table
             return AppRoutes.generateRoute(settings);

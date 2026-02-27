@@ -2,10 +2,13 @@
 /// FCM token management and notification handling
 library;
 
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import '../../app/app.dart' show appNavigatorKey;
+import '../../app/app_routes.dart';
 
 /// Notifications State
 class NotificationsState {
@@ -37,8 +40,19 @@ class NotificationsController extends Notifier<NotificationsState> {
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Track subscriptions so they can be cancelled when the notifier is disposed,
+  // preventing memory leaks and stale listeners on sign-out / hot-restart.
+  StreamSubscription<String>? _tokenRefreshSub;
+  StreamSubscription<RemoteMessage>? _bgMessageSub;
+
   @override
   NotificationsState build() {
+    // Cancel any open subscriptions when this notifier is disposed (e.g. on
+    // sign-out or provider container disposal).
+    ref.onDispose(() {
+      _tokenRefreshSub?.cancel();
+      _bgMessageSub?.cancel();
+    });
     return const NotificationsState();
   }
 
@@ -77,8 +91,8 @@ class NotificationsController extends Notifier<NotificationsState> {
             notificationsEnabled: true,
           );
 
-          // Listen for token refresh
-          _messaging.onTokenRefresh.listen((newToken) {
+          // Listen for token refresh (stored for disposal).
+          _tokenRefreshSub = _messaging.onTokenRefresh.listen((newToken) {
             debugPrint('ðŸ“± FCM Token refreshed: $newToken');
             _firestore.collection('users').doc(userId).update({
               'fcmToken': newToken,
@@ -87,11 +101,11 @@ class NotificationsController extends Notifier<NotificationsState> {
             state = state.copyWith(fcmToken: newToken);
           });
 
-          // Setup foreground message handler
-          FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
+          // NOTE: Foreground message display is handled by NotificationService
+          // to avoid duplicate push notifications. Do NOT add onMessage.listen here.
 
-          // Setup background message handler
-          FirebaseMessaging.onMessageOpenedApp.listen(_handleBackgroundMessage);
+          // Setup background/app-opened message handler (stored for disposal).
+          _bgMessageSub = FirebaseMessaging.onMessageOpenedApp.listen(_handleBackgroundMessage);
 
           // Check if app was opened from terminated state
           final initialMessage = await _messaging.getInitialMessage();
@@ -114,15 +128,6 @@ class NotificationsController extends Notifier<NotificationsState> {
     }
   }
 
-  /// Handle foreground messages
-  void _handleForegroundMessage(RemoteMessage message) {
-    debugPrint('ðŸ“¨ Foreground message: ${message.notification?.title}');
-
-    // TODO: Show in-app notification
-    // You can use a package like flutter_local_notifications
-    // or display a custom banner/snackbar
-  }
-
   /// Handle background/terminated messages
   void _handleBackgroundMessage(RemoteMessage message) {
     debugPrint('ðŸ“¨ Background message: ${message.notification?.title}');
@@ -130,41 +135,35 @@ class NotificationsController extends Notifier<NotificationsState> {
     // Handle notification tap - deep link to relevant screen
     final data = message.data;
 
-    if (data.containsKey('type')) {
-      switch (data['type']) {
-        case 'message':
-          // Navigate to chat
-          final chatId = data['chatId'];
-          if (chatId != null) {
-            // TODO: Navigate to /chat/$chatId
-            debugPrint('Navigate to chat: $chatId');
-          }
-          break;
+    if (!data.containsKey('type')) return;
 
-        case 'match':
-          // Navigate to matches
-          debugPrint('Navigate to matches');
-          break;
+    final nav = appNavigatorKey.currentState;
 
-        case 'speed_dating_match':
-          // Navigate to speed dating session
-          final sessionId = data['sessionId'];
-          if (sessionId != null) {
-            debugPrint('Navigate to speed dating session: $sessionId');
-          }
-          break;
+    switch (data['type']) {
+      case 'message':
+        final chatId = data['chatId'];
+        if (chatId != null && nav != null) {
+          nav.pushNamed(AppRoutes.chat, arguments: {'chatId': chatId});
+        }
+        break;
 
-        case 'room_invite':
-          // Navigate to room
-          final roomId = data['roomId'];
-          if (roomId != null) {
-            debugPrint('Navigate to room: $roomId');
-          }
-          break;
+      case 'match':
+        nav?.pushNamed(AppRoutes.matches);
+        break;
 
-        default:
-          debugPrint('Unknown notification type: ${data['type']}');
-      }
+      case 'speed_dating_match':
+        nav?.pushNamed(AppRoutes.speedDatingMatches);
+        break;
+
+      case 'room_invite':
+        final roomId = data['roomId'];
+        if (roomId != null && nav != null) {
+          nav.pushNamed(AppRoutes.room, arguments: {'roomId': roomId});
+        }
+        break;
+
+      default:
+        debugPrint('[FCM] Unknown notification type: ${data['type']}');
     }
   }
 
@@ -221,20 +220,22 @@ final notificationsProvider =
   NotificationsController.new,
 );
 
-/// Notification badge count provider
+/// Notification badge count provider — counts total unread chat messages.
 final notificationBadgeProvider =
     StreamProvider.family<int, String>((ref, userId) {
   return FirebaseFirestore.instance
-      .collection('chats')
-      .where('participantIds', arrayContains: userId)
+      .collection('chatRooms')
+      .where('participants', arrayContains: userId)
       .snapshots()
       .map((snapshot) {
     int totalUnread = 0;
     for (final doc in snapshot.docs) {
       final data = doc.data();
-      final unreadCount =
-          (data['unreadCount'] as Map<String, dynamic>?)?[userId] ?? 0;
-      totalUnread += unreadCount as int;
+      // unreadCounts is a Map<userId, int> — read only this user's count.
+      final counts =
+          (data['unreadCounts'] as Map<String, dynamic>?) ?? {};
+      final userUnread = (counts[userId] as num?)?.toInt() ?? 0;
+      totalUnread += userUnread;
     }
     return totalUnread;
   });

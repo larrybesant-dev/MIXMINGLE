@@ -84,7 +84,7 @@ class CountryFlags {
   /// e.g. 'US' → '🇺🇸'
   static String toEmoji(String? code) {
     if (code == null || code.length != 2) return '';
-    final base = 0x1F1E6; // Regional Indicator Symbol A
+    const base = 0x1F1E6; // Regional Indicator Symbol A
     final offset = code.toUpperCase().codeUnits;
     if (offset.length != 2) return '';
     return String.fromCharCode(base + offset[0] - 65) +

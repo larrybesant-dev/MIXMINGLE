@@ -6,50 +6,85 @@ import 'package:mixmingle/shared/models/room.dart';
 class RoomService {
   // Advanced role management
   Future<void> promoteToCoHost(String roomId, String userId) async {
-    await _firestore.collection('rooms').doc(roomId).update({
-      'moderators': FieldValue.arrayUnion([userId]),
-      'roleMap.$userId': 'coHost',
-    });
+    if (roomId.isEmpty) throw ArgumentError('roomId cannot be empty');
+    if (userId.isEmpty) throw ArgumentError('userId cannot be empty');
+    try {
+      await _firestore.collection('rooms').doc(roomId).update({
+        'moderators': FieldValue.arrayUnion([userId]),
+        'roleMap.$userId': 'coHost',
+      });
+    } catch (e) {
+      debugPrint('❌ [RoomService] promoteToCoHost failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> demoteFromCoHost(String roomId, String userId) async {
-    await _firestore.collection('rooms').doc(roomId).update({
-      'moderators': FieldValue.arrayRemove([userId]),
-      'roleMap.$userId': 'guest',
-    });
+    if (roomId.isEmpty) throw ArgumentError('roomId cannot be empty');
+    if (userId.isEmpty) throw ArgumentError('userId cannot be empty');
+    try {
+      await _firestore.collection('rooms').doc(roomId).update({
+        'moderators': FieldValue.arrayRemove([userId]),
+        'roleMap.$userId': 'guest',
+      });
+    } catch (e) {
+      debugPrint('❌ [RoomService] demoteFromCoHost failed: $e');
+      rethrow;
+    }
   }
 
   Future<void> transferHostRole(String roomId, String newHostId) async {
-    await _firestore.collection('rooms').doc(roomId).update({
-      'hostId': newHostId,
-      'roleMap.$newHostId': 'host',
-    });
+    if (roomId.isEmpty) throw ArgumentError('roomId cannot be empty');
+    if (newHostId.isEmpty) throw ArgumentError('newHostId cannot be empty');
+    try {
+      await _firestore.collection('rooms').doc(roomId).update({
+        'hostId': newHostId,
+        'roleMap.$newHostId': 'host',
+      });
+    } catch (e) {
+      debugPrint('❌ [RoomService] transferHostRole failed: $e');
+      rethrow;
+    }
   }
 
   // Spotlight stage layout
   Future<void> setSpotlighted(
       String roomId, String userId, bool isSpotlighted) async {
-    await _firestore.collection('rooms').doc(roomId).update({
-      'spotlighted': isSpotlighted
-          ? FieldValue.arrayUnion([userId])
-          : FieldValue.arrayRemove([userId]),
-      'participantMap.$userId.isSpotlighted': isSpotlighted,
-    });
+    if (roomId.isEmpty) throw ArgumentError('roomId cannot be empty');
+    if (userId.isEmpty) throw ArgumentError('userId cannot be empty');
+    try {
+      await _firestore.collection('rooms').doc(roomId).update({
+        'spotlighted': isSpotlighted
+            ? FieldValue.arrayUnion([userId])
+            : FieldValue.arrayRemove([userId]),
+        'participantMap.$userId.isSpotlighted': isSpotlighted,
+      });
+    } catch (e) {
+      debugPrint('❌ [RoomService] setSpotlighted failed: $e');
+      rethrow;
+    }
   }
 
   // Breakout room hooks (future-ready)
   Future<void> createBreakoutRoom(
       String parentRoomId, String name, List<String> participantUids) async {
-    // Skeleton only: store under parent room
-    await _firestore
-        .collection('rooms')
-        .doc(parentRoomId)
-        .collection('breakoutRooms')
-        .add({
-      'name': name,
-      'participantUids': participantUids,
-      'createdAt': DateTime.now().toIso8601String(),
-    });
+    if (parentRoomId.isEmpty) throw ArgumentError('parentRoomId cannot be empty');
+    if (name.isEmpty) throw ArgumentError('Breakout room name cannot be empty');
+    try {
+      // Skeleton only: store under parent room
+      await _firestore
+          .collection('rooms')
+          .doc(parentRoomId)
+          .collection('breakoutRooms')
+          .add({
+        'name': name,
+        'participantUids': participantUids,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    } catch (e) {
+      debugPrint('❌ [RoomService] createBreakoutRoom failed: $e');
+      rethrow;
+    }
   }
 
   // Reliability: Retry flows for join/leave, token, permissions
@@ -92,54 +127,62 @@ class RoomService {
     required String category,
     String privacy = 'public',
   }) async {
-    // Rate limit check
-    await _checkRateLimitServer(
-      uid: hostId,
-      action: 'create_room',
-      limit: 10,
-      windowSeconds: 3600, // 10 rooms per hour
-    );
+    if (hostId.isEmpty) throw ArgumentError('hostId cannot be empty');
+    if (title.isEmpty) throw ArgumentError('Room title cannot be empty');
 
-    final roomId = _firestore.collection('rooms').doc().id;
-    final agoraChannelName = 'room_$roomId';
+    try {
+      // Rate limit check
+      await _checkRateLimitServer(
+        uid: hostId,
+        action: 'create_room',
+        limit: 10,
+        windowSeconds: 3600, // 10 rooms per hour
+      );
 
-    final room = Room(
-      id: roomId,
-      name: title,
-      hostId: hostId,
-      participantIds: [hostId], // Host is automatically a participant
-      isActive: true,
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
-      title: title,
-      description: description,
-      tags: tags,
-      privacy: privacy,
-      status: 'live',
-      category: category,
-      hostName: hostName,
-      viewerCount: 1,
-      isLive: true,
-      roomType: RoomType.voice,
-      moderators: [hostId], // Host is automatically a moderator
-      bannedUsers: [],
-      agoraChannelName: agoraChannelName,
-      speakers: [hostId], // Host starts as speaker
-      listeners: [],
-    );
+      final roomId = _firestore.collection('rooms').doc().id;
+      final agoraChannelName = 'room_$roomId';
 
-    // Add creatorId for Firestore security rules
-    final roomData = room.toMap();
-    roomData['creatorId'] = hostId;
-    // Ensure LiveRoom schema fields are initialized on creation
-    roomData['videoChannelLive'] =
-        false; // set to true by controller when first user enters
-    roomData['participantCount'] = 0;
-    roomData['maxBroadcasters'] ??= 4;
-    roomData['maxActiveMics'] ??= 4;
+      final room = Room(
+        id: roomId,
+        name: title,
+        hostId: hostId,
+        participantIds: [hostId], // Host is automatically a participant
+        isActive: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        title: title,
+        description: description,
+        tags: tags,
+        privacy: privacy,
+        status: 'live',
+        category: category,
+        hostName: hostName,
+        viewerCount: 1,
+        isLive: true,
+        roomType: RoomType.voice,
+        moderators: [hostId], // Host is automatically a moderator
+        bannedUsers: [],
+        agoraChannelName: agoraChannelName,
+        speakers: [hostId], // Host starts as speaker
+        listeners: [],
+      );
 
-    await _firestore.collection('rooms').doc(roomId).set(roomData);
-    return room;
+      // Add creatorId for Firestore security rules
+      final roomData = room.toMap();
+      roomData['creatorId'] = hostId;
+      // Ensure LiveRoom schema fields are initialized on creation
+      roomData['videoChannelLive'] =
+          false; // set to true by controller when first user enters
+      roomData['participantCount'] = 0;
+      roomData['maxBroadcasters'] ??= 4;
+      roomData['maxActiveMics'] ??= 4;
+
+      await _firestore.collection('rooms').doc(roomId).set(roomData);
+      return room;
+    } catch (e) {
+      debugPrint('❌ [RoomService] createVoiceRoom failed: $e');
+      rethrow;
+    }
   }
 
   // Join a voice room - Phase 3: Transaction-based for atomicity

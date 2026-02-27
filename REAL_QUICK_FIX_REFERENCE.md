@@ -1,4 +1,5 @@
 # REAL QUICK-FIX REFERENCE
+
 **For actual issues found in the codebase**
 
 ---
@@ -6,6 +7,7 @@
 ## PRIORITY 1: Do This First (Fixes P0 Blockers)
 
 ### Fix 1: Export authServiceProvider
+
 **File:** `lib/providers/all_providers.dart`
 **Action:** Add this export line
 
@@ -19,11 +21,14 @@ export 'auth_providers.dart';
 ---
 
 ### Fix 2: Consolidate Message Types
+
 **Files:**
+
 - `lib/shared/models/chat_message.dart` (keep this one)
 - `lib/shared/models/voice_room_chat_message.dart` (DELETE)
 
 **Action:** Merge these classes:
+
 ```dart
 // Use only ChatMessage, add room_type field:
 class ChatMessage {
@@ -41,6 +46,7 @@ class ChatMessage {
 **Update:** Change all `VoiceRoomChatMessage` references to `ChatMessage`
 
 **Files to update:**
+
 - `lib/providers/chat_providers.dart`
 - `lib/services/chat_service.dart`
 - `lib/features/room/providers/voice_room_providers.dart`
@@ -48,6 +54,7 @@ class ChatMessage {
 ---
 
 ### Fix 3: Fix Import Paths
+
 **Action:** Replace all relative imports with package imports
 
 **Find & Replace (use VS Code):**
@@ -63,6 +70,7 @@ Replace: `import 'package:mix_and_mingle/shared/`
 ## PRIORITY 2: Do Next (Fixes P1 Feature Breaks)
 
 ### Fix 4: Add Firestore Indexes
+
 **File:** `firestore.indexes.json`
 
 ```json
@@ -103,9 +111,11 @@ Replace: `import 'package:mix_and_mingle/shared/`
 ---
 
 ### Fix 5: Add Transactions to Room Updates
+
 **File:** `lib/services/room_service.dart`
 
 **Current (broken):**
+
 ```dart
 Future<void> joinRoom(String roomId, String userId) async {
   final userData = await _firestore.collection('users').doc(userId).get();
@@ -116,6 +126,7 @@ Future<void> joinRoom(String roomId, String userId) async {
 ```
 
 **Fixed:**
+
 ```dart
 Future<void> joinRoom(String roomId, String userId) async {
   return _firestore.runTransaction((transaction) async {
@@ -135,9 +146,11 @@ Future<void> joinRoom(String roomId, String userId) async {
 ---
 
 ### Fix 6: Add Authorization Checks
+
 **File:** `lib/services/chat_service.dart`
 
 **Add to each mutation method:**
+
 ```dart
 Future<void> deleteMessage(String messageId) async {
   final msgRef = _firestore.collection('messages').doc(messageId);
@@ -154,9 +167,11 @@ Future<void> deleteMessage(String messageId) async {
 ---
 
 ### Fix 7: Add Error Handling to UI
+
 **File:** `lib/features/chat_list_page.dart`
 
 **Current (broken):**
+
 ```dart
 onPressed: () async {
   messagingService.sendMessage(content);
@@ -164,6 +179,7 @@ onPressed: () async {
 ```
 
 **Fixed:**
+
 ```dart
 onPressed: () async {
   try {
@@ -182,9 +198,11 @@ onPressed: () async {
 ---
 
 ### Fix 8: Fix DateTime Type Mismatch
+
 **File:** `lib/shared/models/event.dart`
 
 **Current (broken):**
+
 ```dart
 class Event {
   final String startTime;  // ❌ Wrong
@@ -193,6 +211,7 @@ class Event {
 ```
 
 **Fixed:**
+
 ```dart
 class Event {
   final DateTime startTime;  // ✅ Correct
@@ -203,6 +222,7 @@ class Event {
 ```
 
 **Also update the JSON serialization:**
+
 ```dart
 factory Event.fromJson(Map<String, dynamic> json) {
   return Event(
@@ -222,9 +242,11 @@ Map<String, dynamic> toJson() => {
 ## PRIORITY 3: Stability Fixes
 
 ### Fix 9: Fix Stream Cleanup
+
 **File:** `lib/providers/event_dating_providers.dart`
 
 **Current (memory leak):**
+
 ```dart
 final speedDatingMatchesProvider = StreamProvider<List<SpeedDatingMatch>>((ref) async* {
   final stream = _firestore.collection('speedDatingMatches').snapshots();
@@ -236,6 +258,7 @@ final speedDatingMatchesProvider = StreamProvider<List<SpeedDatingMatch>>((ref) 
 ```
 
 **Fixed:**
+
 ```dart
 final speedDatingMatchesProvider = StreamProvider<List<SpeedDatingMatch>>((ref) {
   final controller = StreamController<List<SpeedDatingMatch>>();
@@ -260,7 +283,9 @@ final speedDatingMatchesProvider = StreamProvider<List<SpeedDatingMatch>>((ref) 
 ---
 
 ### Fix 10: Add Input Validation
+
 **Add to all services:**
+
 ```dart
 Future<void> sendMessage(String content) async {
   // Validate
@@ -285,27 +310,35 @@ Future<void> sendMessage(String content) async {
 ## Testing Your Fixes
 
 ### After Fix 1-3:
+
 ```bash
 flutter clean && flutter pub get && flutter analyze
 ```
+
 Should see 0 errors.
 
 ### After Fix 4:
+
 ```bash
 firebase deploy --only firestore:indexes
 ```
+
 Wait for indexes to build in Firebase Console.
 
 ### After Fix 5-8:
+
 ```bash
 flutter test
 ```
+
 Create tests for:
+
 - Transaction rollback on errors
 - Message deletion authorization
 - DateTime serialization
 
 ### After Fix 9-10:
+
 Run app, enable memory profiler, verify memory stays stable.
 
 ---
@@ -327,18 +360,17 @@ Run app, enable memory profiler, verify memory stays stable.
 
 ## Estimated Time Per Fix
 
-| Fix | Time | Priority |
-|-----|------|----------|
-| 1. Export providers | 5 min | P0 |
-| 2. Consolidate types | 60 min | P0 |
-| 3. Fix imports | 30 min | P0 |
-| 4. Add indexes | 30 min | P1 |
-| 5. Add transactions | 120 min | P1 |
-| 6. Auth checks | 90 min | P1 |
-| 7. Error handling | 120 min | P1 |
-| 8. DateTime fix | 45 min | P1 |
-| 9. Stream cleanup | 60 min | P2 |
-| 10. Input validation | 90 min | P2 |
+| Fix                  | Time    | Priority |
+| -------------------- | ------- | -------- |
+| 1. Export providers  | 5 min   | P0       |
+| 2. Consolidate types | 60 min  | P0       |
+| 3. Fix imports       | 30 min  | P0       |
+| 4. Add indexes       | 30 min  | P1       |
+| 5. Add transactions  | 120 min | P1       |
+| 6. Auth checks       | 90 min  | P1       |
+| 7. Error handling    | 120 min | P1       |
+| 8. DateTime fix      | 45 min  | P1       |
+| 9. Stream cleanup    | 60 min  | P2       |
+| 10. Input validation | 90 min  | P2       |
 
 **Total: 10-12 hours**
-

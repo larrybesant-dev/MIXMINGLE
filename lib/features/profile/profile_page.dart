@@ -208,7 +208,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                     : null,
                 backgroundColor: DesignColors.accent.withValues(alpha: 0.3),
                 child: user.avatarUrl.isEmpty
-                    ? Icon(
+                    ? const Icon(
                         Icons.person,
                         size: AppSizes.avatarHeroRadius * 0.8,
                         color: Colors.white,
@@ -224,7 +224,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
 
   Widget _buildProfileHeader(User user, PrivacySettings? privacySettings) {
     return Container(
-      padding: EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
           AppSpacing.spaceLG,
           AppSizes.avatarHeroRadius + AppSpacing.spaceLG,
           AppSpacing.spaceLG,

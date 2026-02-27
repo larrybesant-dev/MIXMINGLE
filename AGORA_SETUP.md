@@ -13,6 +13,7 @@ Your Agora App ID: `ec1b578586d24976a89d787d9ee4d5c7`
 ```
 
 This will:
+
 - Install `agora-access-token` npm package
 - Configure Firestore with your App ID and Certificate
 - Prepare Firebase Functions
@@ -54,7 +55,7 @@ npm install agora-access-token
 Add to `functions/src/index.ts`:
 
 ```typescript
-export { generateAgoraToken } from './agora';
+export { generateAgoraToken } from "./agora";
 ```
 
 ## Features

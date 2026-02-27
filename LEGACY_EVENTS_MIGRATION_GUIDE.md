@@ -1,6 +1,7 @@
 # Legacy Events Files Migration Guide
 
 ## Overview
+
 The new Phase 5 Events Engine uses a completely rewritten EventsService with social graph integration. Two legacy files still reference old EventsService methods and need to be updated or deprecated.
 
 ---
@@ -8,9 +9,11 @@ The new Phase 5 Events Engine uses a completely rewritten EventsService with soc
 ## Legacy Files
 
 ### 1. lib/providers/event_dating_providers.dart
+
 **Status:** Uses old EventsService methods ❌
 
 **Old Methods Referenced:**
+
 - `getEvent(eventId)` → Use `eventDetailsProvider(eventId)` instead
 - `joinEvent(eventId)` → Use `rsvpToEvent(eventId, 'going')` instead
 - `leaveEvent(eventId)` → Use `removeRsvp(eventId)` instead
@@ -18,14 +21,17 @@ The new Phase 5 Events Engine uses a completely rewritten EventsService with soc
 - `getAllEvents()` → Use `upcomingEventsProvider` instead
 
 **Recommendation:** Refactor this file to use the new Phase 5 providers:
+
 - Replace `EventsService` method calls with Riverpod provider watches
 - Use `ref.watch(eventDetailsProvider(eventId))` for event details
 - Use `ref.read(eventsServiceProvider).rsvpToEvent()` for RSVP actions
 
 ### 2. lib/providers/events_controller.dart
+
 **Status:** Duplicate provider definitions, uses old methods ❌
 
 **Issues:**
+
 - Redefines `eventsServiceProvider` (already in events_providers.dart)
 - Redefines `upcomingEventsProvider` (already in events_providers.dart)
 - Uses old stream methods:
@@ -38,6 +44,7 @@ The new Phase 5 Events Engine uses a completely rewritten EventsService with soc
 - Uses `joinEvent()`, `leaveEvent()`, `updateRSVPStatus()` methods
 
 **Recommendation:**
+
 - **Option A:** Delete this file completely and use `events_providers.dart` instead
 - **Option B:** Refactor to wrap Phase 5 providers with different names to avoid conflicts
 
@@ -46,12 +53,15 @@ The new Phase 5 Events Engine uses a completely rewritten EventsService with soc
 ## Migration Steps
 
 ### Quick Fix (Recommended)
+
 1. Rename or comment out `event_dating_providers.dart` and `events_controller.dart`
 2. Update any screens/widgets that import these files to use `events_providers.dart` instead
 3. Replace method calls with new Phase 5 equivalents
 
 ### Full Migration
+
 1. **Find all usages:**
+
    ```bash
    # Search for imports
    grep -r "event_dating_providers" lib/
@@ -81,6 +91,7 @@ The new Phase 5 Events Engine uses a completely rewritten EventsService with soc
 ## New Phase 5 API Reference
 
 ### Providers (lib/providers/events_providers.dart)
+
 ```dart
 // Service
 ref.watch(eventsServiceProvider)
@@ -105,6 +116,7 @@ ref.read(removeRsvpActionProvider(eventId).future)
 ```
 
 ### EventsService Methods (lib/services/events_service.dart)
+
 ```dart
 // Streams
 watchUpcomingEvents() → Stream<List<Event>>
@@ -133,6 +145,7 @@ getFriendsAttendingEvent(userId, eventId) → Future<List<UserProfile>>
 ## Status Summary
 
 ### ✅ Working (Phase 5)
+
 - `lib/providers/events_providers.dart` - NEW, social-integrated
 - `lib/services/events_service.dart` - Rewritten with social features
 - `lib/shared/widgets/events_widgets.dart` - NEW, social widgets
@@ -140,11 +153,14 @@ getFriendsAttendingEvent(userId, eventId) → Future<List<UserProfile>>
 - `lib/features/events/screens/events_list_page.dart` - Recreated with tabs
 
 ### ⚠️ Legacy (Needs Update)
+
 - `lib/providers/event_dating_providers.dart` - References old methods
 - `lib/providers/events_controller.dart` - Duplicate providers, old methods
 
 ### 📝 Action Required
+
 Either:
+
 1. Delete/deprecate legacy files
 2. Or refactor them to use Phase 5 API
 
@@ -153,6 +169,7 @@ Either:
 ## Testing After Migration
 
 Once legacy files are updated:
+
 ```bash
 # Run analysis
 flutter analyze
@@ -172,6 +189,7 @@ flutter build apk --debug
 ## Questions?
 
 If unsure about migration path:
+
 1. Check which screens import legacy providers
 2. Decide if functionality is still needed
 3. Either delete or refactor to Phase 5 API

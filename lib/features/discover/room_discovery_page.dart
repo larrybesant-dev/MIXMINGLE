@@ -1,13 +1,35 @@
+// lib/features/discover/room_discovery_page.dart
+//
+// RoomDiscoveryPage — 4-section scrolling discovery experience.
+//
+// Sections:
+//   🔥 Trending Now     — top rooms by viewerCount DESC
+//   ✨ New Rooms         — most recently created rooms
+//   👥 Friends in Rooms — rooms where current user's friends are active
+//   ⭐ Recommended For You — score-ranked personalized rooms
+//
+// Phases 2-7 of the Room Discovery Implementation Sweep.
+// Ads inserted every 6-8 cards (AdPlacement.discover).
+// Full analytics, skeleton loaders, empty states, retry, neon polish.
+// ─────────────────────────────────────────────────────────────────────────────
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
-import 'package:mixmingle/services/room/room_discovery_service.dart';
-import 'package:mixmingle/shared/models/moderation.dart';
-import 'package:mixmingle/shared/widgets/club_background.dart';
-import 'package:mixmingle/shared/widgets/glow_text.dart';
-import 'package:mixmingle/shared/providers/all_providers.dart';
-import 'package:mixmingle/shared/models/room.dart';
+import '../../core/analytics/analytics_service.dart' as core_analytics;
+import '../../core/design_system/design_constants.dart';
+import '../../shared/models/room.dart';
+import '../../shared/widgets/club_background.dart';
+import '../../shared/widgets/offline_widgets.dart';
+import '../../shared/widgets/ad_tile_widget.dart';
+import '../../shared/models/ad_entry.dart';
+import '../../app/app_routes.dart';
+import 'providers/room_discovery_providers.dart';
+import 'widgets/room_discovery_section.dart';
+import 'widgets/room_preview_sheet.dart';
 import '../room/room_access_wrapper.dart';
+import '../../features/room/providers/room_providers.dart' show liveRoomsProvider;
 
 class RoomDiscoveryPage extends ConsumerStatefulWidget {
   const RoomDiscoveryPage({super.key});
@@ -16,562 +38,377 @@ class RoomDiscoveryPage extends ConsumerStatefulWidget {
   ConsumerState<RoomDiscoveryPage> createState() => _RoomDiscoveryPageState();
 }
 
-class _RoomDiscoveryPageState extends ConsumerState<RoomDiscoveryPage>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final _searchController = TextEditingController();
-  String _searchQuery = '';
+class _RoomDiscoveryPageState extends ConsumerState<RoomDiscoveryPage> {
+  final ScrollController _scrollController = ScrollController();
+
+  /// Scroll-depth milestones already logged.
+  final Set<int> _loggedDepths = {};
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    // Phase 5 analytics: screen_room_discovery
+    core_analytics.AnalyticsService.instance
+        .logScreenView(screenName: 'screen_room_discovery');
+    _scrollController.addListener(_onScroll);
   }
 
   @override
   void dispose() {
-    _tabController.dispose();
-    _searchController.dispose();
+    _scrollController
+      ..removeListener(_onScroll)
+      ..dispose();
     super.dispose();
   }
 
+  // ── Scroll depth analytics ─────────────────────────────────────────────────
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final max = _scrollController.position.maxScrollExtent;
+    if (max <= 0) return;
+    final percent =
+        (_scrollController.offset / max * 100).clamp(0.0, 100.0).round();
+    for (final milestone in [25, 50, 75, 100]) {
+      if (percent >= milestone && !_loggedDepths.contains(milestone)) {
+        _loggedDepths.add(milestone);
+        // Phase 5 analytics: discovery_scroll_depth
+        core_analytics.AnalyticsService.instance.logEvent(
+          name: 'discovery_scroll_depth',
+          parameters: {'percent': milestone},
+        );
+      }
+    }
+  }
+
+  // ── Actions ────────────────────────────────────────────────────────────────
+
+  void _joinRoom(Room room) {
+    HapticFeedback.mediumImpact();
+    final uid = fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '';
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RoomAccessWrapper(room: room, userId: uid),
+      ),
+    );
+  }
+
+  void _previewRoom(Room room) {
+    // analytics fired inside RoomPreviewSheet.show → discovery_room_preview_opened
+    RoomPreviewSheet.show(
+      context,
+      room: room,
+      onJoin: () => _joinRoom(room),
+    );
+  }
+
+  void _logSectionViewed(String sectionName) {
+    // Phase 5 analytics: discovery_section_viewed
+    core_analytics.AnalyticsService.instance.logEvent(
+      name: 'discovery_section_viewed',
+      parameters: {'section_name': sectionName},
+    );
+  }
+
+  // Adults flag — could be wired to user profile (age > 18 or isNSFW flag).
+  bool get _userIsAdult => false;
+
+  // ── Build ──────────────────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
-    final discoveryService = ref.watch(roomDiscoveryServiceProvider);
+    final combined = ref.watch(roomDiscoveryCombinedProvider);
+    final liveAsync = ref.watch(liveRoomsProvider);
+    final hasError = liveAsync.hasError;
 
     return ClubBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: const GlowText(
-            text: 'Discover Rooms',
-            fontSize: 22,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            glowColor: Color(0xFFFF4C4C),
-          ),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          bottom: TabBar(
-            controller: _tabController,
-            indicatorColor: const Color(0xFFFF4C4C),
-            labelColor: Colors.white,
-            unselectedLabelColor: Colors.white60,
-            tabs: const [
-              Tab(text: 'Trending'),
-              Tab(text: 'Categories'),
-              Tab(text: 'Search'),
-            ],
-          ),
-        ),
-        body: TabBarView(
-          controller: _tabController,
+        body: Column(
           children: [
-            _buildTrendingTab(discoveryService),
-            _buildCategoriesTab(discoveryService),
-            _buildSearchTab(discoveryService),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTrendingTab(RoomDiscoveryService discoveryService) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Trending Rooms
-          const GlowText(
-            text: 'ðŸ”¥ Trending Now',
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          const SizedBox(height: 12),
-          FutureBuilder(
-            future: discoveryService.getTrendingRooms(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              if (snapshot.hasError) {
-                return Text('Error: ${snapshot.error}');
-              }
-              final rooms = snapshot.data ?? [];
-              if (rooms.isEmpty) {
-                return const Text('No trending rooms');
-              }
-              return Column(
-                children: rooms.map((doc) {
-                  final room = Room.fromDocument(doc);
-                  return _buildRoomCard(room);
-                }).toList(),
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-
-          // New Rooms
-          const GlowText(
-            text: 'âœ¨ New Rooms',
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          const SizedBox(height: 12),
-          FutureBuilder(
-            future: discoveryService.getNewRooms(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              final rooms = snapshot.data ?? [];
-              if (rooms.isEmpty) {
-                return const Text('No new rooms');
-              }
-              return Column(
-                children: rooms.map((doc) {
-                  final room = Room.fromDocument(doc);
-                  return _buildRoomCard(room);
-                }).toList(),
-              );
-            },
-          ),
-          const SizedBox(height: 24),
-
-          // Popular Tags
-          const GlowText(
-            text: 'ðŸ·ï¸ Popular Tags',
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          const SizedBox(height: 12),
-          FutureBuilder(
-            future: discoveryService.getPopularTags(),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator());
-              }
-              final tags = snapshot.data ?? [];
-              if (tags.isEmpty) {
-                return const Text('No popular tags');
-              }
-              return Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: tags.map((tag) => _buildTagChip(tag)).toList(),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoriesTab(RoomDiscoveryService discoveryService) {
-    return FutureBuilder<List<RoomCategory>>(
-      future: discoveryService.getCategories(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
-
-        final categories = snapshot.data ?? [];
-        if (categories.isEmpty) {
-          return const Center(child: Text('No categories available'));
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: categories.length,
-          itemBuilder: (context, index) {
-            final category = categories[index];
-            return _buildCategoryCard(category, discoveryService);
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildSearchTab(RoomDiscoveryService discoveryService) {
-    return Column(
-      children: [
-        // Search Bar
-        Padding(
-          padding: const EdgeInsets.all(16),
-          child: TextField(
-            controller: _searchController,
-            decoration: InputDecoration(
-              hintText: 'Search rooms...',
-              prefixIcon: const Icon(Icons.search),
-              suffixIcon: _searchQuery.isNotEmpty
-                  ? IconButton(
-                      icon: const Icon(Icons.clear),
-                      onPressed: () {
-                        setState(() {
-                          _searchController.clear();
-                          _searchQuery = '';
-                        });
-                      },
-                    )
-                  : null,
-              filled: true,
-              fillColor: Colors.white.withValues(alpha: 0.1),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-            ),
-            style: const TextStyle(color: Colors.white),
-            onChanged: (value) {
-              setState(() {
-                _searchQuery = value;
-              });
-            },
-          ),
-        ),
-
-        // Search Results
-        Expanded(
-          child: _searchQuery.isEmpty
-              ? const Center(
-                  child: Text(
-                    'Enter a search term to find rooms',
-                    style: TextStyle(color: Colors.white70),
-                  ),
-                )
-              : FutureBuilder(
-                  future: discoveryService.searchRooms(_searchQuery),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    if (snapshot.hasError) {
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    }
-
-                    final rooms = snapshot.data ?? [];
-                    if (rooms.isEmpty) {
-                      return const Center(
-                        child: Text(
-                          'No rooms found',
-                          style: TextStyle(color: Colors.white70),
-                        ),
-                      );
-                    }
-
-                    return ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: rooms.length,
-                      itemBuilder: (context, index) {
-                        final room = Room.fromDocument(rooms[index]);
-                        return _buildRoomCard(room);
-                      },
-                    );
-                  },
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildCategoryCard(
-      RoomCategory category, RoomDiscoveryService discoveryService) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: Colors.white.withValues(alpha: 0.1),
-      child: InkWell(
-        onTap: () => _showCategoryRooms(category, discoveryService),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              // Icon
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF4C4C), Color(0xFFFFD700)],
-                  ),
-                ),
-                child: const Icon(
-                  Icons.category,
-                  color: Colors.white,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(width: 16),
-
-              // Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      category.name,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      category.description,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${category.roomCount} rooms',
-                      style: const TextStyle(
-                        color: Color(0xFFFFD700),
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const Icon(
-                Icons.chevron_right,
-                color: Colors.white60,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildRoomCard(Room room) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      color: Colors.white.withValues(alpha: 0.1),
-      child: InkWell(
-        onTap: () => _joinRoom(room),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              // Thumbnail/Icon
-              Container(
-                width: 60,
-                height: 60,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFFFF4C4C), Color(0xFFFFD700)],
-                  ),
-                ),
-                child: const Icon(
-                  Icons.groups,
-                  color: Colors.white,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(width: 12),
-
-              // Room Info
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      (room.name ?? room.title),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    if (room.description.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        room.description,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.7),
-                          fontSize: 12,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                    const SizedBox(height: 4),
-                    Row(
+            const OfflineBanner(),
+            Expanded(
+              child: CustomScrollView(
+                controller: _scrollController,
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  // ── Sticky App Bar ─────────────────────────────────────────
+                  SliverAppBar(
+                    pinned: true,
+                    backgroundColor: DesignColors.background,
+                    elevation: 0,
+                    automaticallyImplyLeading: false,
+                    shadowColor:
+                        DesignColors.accent.withValues(alpha: 0.1),
+                    title: Row(
                       children: [
-                        Icon(
-                          Icons.people,
-                          size: 14,
-                          color: Colors.white.withValues(alpha: 0.7),
+                        ShaderMask(
+                          shaderCallback: (b) => const LinearGradient(
+                            colors: [
+                              Color(0xFFFF4D8B),
+                              Color(0xFF8B5CF6)
+                            ],
+                          ).createShader(b),
+                          blendMode: BlendMode.srcIn,
+                          child: const Text(
+                            'Discover Rooms',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 0.5,
+                              shadows: DesignColors.primaryGlow,
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${room.participantIds.length} online',
-                          style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.7),
-                            fontSize: 12,
+                        const Spacer(),
+                        // Go Live CTA
+                        GestureDetector(
+                          onTap: () => Navigator.pushNamed(
+                              context, AppRoutes.goLive),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [
+                                  Color(0xFFFF4D8B),
+                                  Color(0xFF8B5CF6)
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFFF4D8B)
+                                      .withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.bolt,
+                                    size: 14, color: Colors.white),
+                                SizedBox(width: 4),
+                                Text(
+                                  'Go Live',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-
-              // Type Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _getRoomTypeColor(room.roomType),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  room.roomType.name.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
                   ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 
-  Widget _buildTagChip(String tag) {
-    return ActionChip(
-      label: Text(tag),
-      labelStyle: const TextStyle(color: Colors.white),
-      backgroundColor: const Color(0xFFFF4C4C).withValues(alpha: 0.3),
-      side: const BorderSide(color: Color(0xFFFF4C4C)),
-      onPressed: () {
-        setState(() {
-          _searchController.text = tag;
-          _searchQuery = tag;
-          _tabController.index = 2; // Switch to search tab
-        });
-      },
-    );
-  }
+                  // ── Scrollable Body ────────────────────────────────────────
+                  SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 16),
 
-  Color _getRoomTypeColor(RoomType type) {
-    switch (type) {
-      case RoomType.text:
-        return Colors.blue.withValues(alpha: 0.6);
-      case RoomType.voice:
-        return Colors.green.withValues(alpha: 0.6);
-      case RoomType.video:
-        return Colors.purple.withValues(alpha: 0.6);
-    }
-  }
+                        // Top discovery banner ad
+                        Padding(
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 0),
+                          child: AdBannerWidget(
+                            placement: AdPlacement.discover,
+                            userIsAdult: _userIsAdult,
+                            height: 72,
+                          ),
+                        ),
 
-  Future<void> _showCategoryRooms(
-      RoomCategory category, RoomDiscoveryService discoveryService) async {
-    final rooms = await discoveryService.getRoomsByCategory(category.id);
+                        const SizedBox(height: 20),
 
-    if (!mounted) return;
+                        // ── Section 1: Trending Now ────────────────────────
+                        _SectionWrapper(
+                          sectionName: 'trending_now',
+                          onVisible: _logSectionViewed,
+                          child: RoomDiscoverySection(
+                            title: '🔥 Trending Now',
+                            titleGradient: const [
+                              Color(0xFFFF4D8B),
+                              Color(0xFFFF6B35),
+                            ],
+                            rooms: combined.trending,
+                            isLoading: combined.isLoading,
+                            errorMessage: hasError
+                                ? 'Could not load trending rooms.'
+                                : null,
+                            onRetry: () => setState(() {}),
+                            emptyMessage:
+                                'No trending rooms right now',
+                            emptyIcon:
+                                Icons.local_fire_department_outlined,
+                            onRoomTap: _previewRoom,
+                            userIsAdult: _userIsAdult,
+                            adEvery: 8,
+                          ),
+                        ),
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) => Container(
-        height: MediaQuery.of(context).size.height * 0.7,
-        decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.95),
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-          border: Border.all(
-            color: const Color(0xFFFF4C4C).withValues(alpha: 0.5),
-            width: 2,
-          ),
-        ),
-        child: Column(
-          children: [
-            // Handle
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+                        const SizedBox(height: 8),
 
-            // Title
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: GlowText(
-                text: category.name,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Text(
-                category.description,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.7),
-                  fontSize: 14,
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
+                        // Inter-section ad banner
+                        AdBannerWidget(
+                          placement: AdPlacement.discover,
+                          userIsAdult: _userIsAdult,
+                          height: 72,
+                        ),
 
-            // Rooms List
-            Expanded(
-              child: rooms.isEmpty
-                  ? const Center(
-                      child: Text(
-                        'No rooms in this category yet',
-                        style: TextStyle(color: Colors.white70),
-                      ),
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: rooms.length,
-                      itemBuilder: (context, index) {
-                        final room = Room.fromDocument(rooms[index]);
-                        return _buildRoomCard(room);
-                      },
+                        const SizedBox(height: 20),
+
+                        // ── Section 2: New Rooms ──────────────────────────
+                        _SectionWrapper(
+                          sectionName: 'new_rooms',
+                          onVisible: _logSectionViewed,
+                          child: RoomDiscoverySection(
+                            title: '✨ New Rooms',
+                            titleGradient: const [
+                              Color(0xFF00E5CC),
+                              Color(0xFF4A90FF),
+                            ],
+                            rooms: combined.newRooms,
+                            isLoading: combined.isLoading,
+                            errorMessage: hasError
+                                ? 'Could not load new rooms.'
+                                : null,
+                            onRetry: () => setState(() {}),
+                            emptyMessage: 'No new rooms yet',
+                            emptyIcon: Icons.fiber_new_outlined,
+                            onRoomTap: _previewRoom,
+                            userIsAdult: _userIsAdult,
+                            adEvery: 8,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // Inter-section ad banner
+                        AdBannerWidget(
+                          placement: AdPlacement.discover,
+                          userIsAdult: _userIsAdult,
+                          height: 72,
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // ── Section 3: Friends in Rooms ───────────────────
+                        _SectionWrapper(
+                          sectionName: 'friends_in_rooms',
+                          onVisible: _logSectionViewed,
+                          child: RoomDiscoverySection(
+                            title: '👥 Friends in Rooms',
+                            titleGradient: const [
+                              Color(0xFF4A90FF),
+                              Color(0xFF8B5CF6),
+                            ],
+                            rooms: combined.friendsInRooms,
+                            isLoading: combined.isLoading,
+                            errorMessage: hasError
+                                ? 'Could not load friends\' rooms.'
+                                : null,
+                            onRetry: () => setState(() {}),
+                            emptyMessage:
+                                'No friends in rooms right now',
+                            emptyIcon:
+                                Icons.people_outline_rounded,
+                            onRoomTap: _previewRoom,
+                            userIsAdult: _userIsAdult,
+                            adEvery: 8,
+                          ),
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        // Inter-section ad banner
+                        AdBannerWidget(
+                          placement: AdPlacement.discover,
+                          userIsAdult: _userIsAdult,
+                          height: 72,
+                        ),
+
+                        const SizedBox(height: 20),
+
+                        // ── Section 4: Recommended For You ────────────────
+                        _SectionWrapper(
+                          sectionName: 'recommended_for_you',
+                          onVisible: _logSectionViewed,
+                          child: RoomDiscoverySection(
+                            title: '⭐ Recommended For You',
+                            titleGradient: const [
+                              Color(0xFFFFD700),
+                              Color(0xFFFF6B35),
+                            ],
+                            rooms: combined.recommended,
+                            isLoading: combined.isLoading,
+                            errorMessage: hasError
+                                ? 'Could not load recommendations.'
+                                : null,
+                            onRetry: () => setState(() {}),
+                            emptyMessage:
+                                'No recommendations yet',
+                            emptyIcon: Icons.stars_outlined,
+                            onRoomTap: _previewRoom,
+                            userIsAdult: _userIsAdult,
+                            adEvery: 6,
+                          ),
+                        ),
+
+                        // Bottom padding
+                        const SizedBox(height: 40),
+                      ],
                     ),
+                  ),
+                ],
+              ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  void _joinRoom(Room room) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => RoomAccessWrapper(
-          room: room,
-          userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
         ),
       ),
     );
   }
 }
+
+// ── Section visibility wrapper ────────────────────────────────────────────────
+
+/// Fires [onVisible] once after the section is first rendered.
+class _SectionWrapper extends StatefulWidget {
+  final String sectionName;
+  final void Function(String) onVisible;
+  final Widget child;
+
+  const _SectionWrapper({
+    required this.sectionName,
+    required this.onVisible,
+    required this.child,
+  });
+
+  @override
+  State<_SectionWrapper> createState() => _SectionWrapperState();
+}
+
+class _SectionWrapperState extends State<_SectionWrapper> {
+  bool _fired = false;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_fired) {
+      _fired = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) widget.onVisible(widget.sectionName);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.child;
+}
+

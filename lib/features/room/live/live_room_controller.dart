@@ -119,6 +119,7 @@ class LiveRoomController extends Notifier<LiveRoomState> {
       final meta = RoomMeta.fromFirestore(roomSnap);
 
       // ── 2. Assign local role ──────────────────────────────────────────
+      debugPrint('[ROOM_CTRL] ownerId="${meta.ownerId}" localUid="$_uid" match=${meta.ownerId == _uid}');
       final role = meta.ownerId == _uid
           ? ParticipantRole.host
           : ParticipantRole.audience;

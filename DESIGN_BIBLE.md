@@ -7,11 +7,13 @@
 ## A. PRODUCT PERSONALITY
 
 ### Core Identity
+
 **Social. Welcoming. Real. Fast. Human.**
 
-Mix & Mingle is a real-time social platform where people *arrive, participate, and leave*—not a chat app where they *login and type*.
+Mix & Mingle is a real-time social platform where people _arrive, participate, and leave_—not a chat app where they _login and type_.
 
 ### Tone Rules (Non-Negotiable)
+
 1. **Never use system language**
    - ❌ "Connection established"
    - ✅ "You're live with Sarah, James, and 4 others"
@@ -40,6 +42,7 @@ Mix & Mingle is a real-time social platform where people *arrive, participate, a
 ## B. VISUAL HIERARCHY RULES
 
 ### What Must Always Be Visible First
+
 1. **People (presence)**
    - Who's here now
    - Who's speaking
@@ -53,12 +56,14 @@ Mix & Mingle is a real-time social platform where people *arrive, participate, a
    - Settings (secondary)
 
 ### What Is Secondary
+
 - Room description
 - Participant list (if >5 people)
 - Chat history
 - Settings
 
 ### What Should Fade Into Background
+
 - Technical stats
 - Debug info
 - Empty calendar states
@@ -69,9 +74,11 @@ Mix & Mingle is a real-time social platform where people *arrive, participate, a
 ## C. MOTION PHILOSOPHY
 
 ### Core Principle
+
 **Every motion communicates something. No motion is free.**
 
 ### Rules
+
 1. **Micro-delays are intentional**
    - Join button clicked → 150ms before spinner shows (feels responsive)
    - Spinner shows → 300ms minimum (feels deliberate, not instant)
@@ -102,9 +109,11 @@ Mix & Mingle is a real-time social platform where people *arrive, participate, a
 ## D. SOCIAL PROOF DOCTRINE
 
 ### Principle
+
 **Users should NEVER feel alone. Always show presence, activity, and momentum.**
 
 ### What Must Always Display
+
 1. **Current participant count** (with real-time updates)
    - "You're here with 7 others" (not "7 active users")
 
@@ -135,6 +144,7 @@ Mix & Mingle is a real-time social platform where people *arrive, participate, a
 ## A. AUTH / ENTRY FLOW
 
 ### Non-Negotiable Sequence
+
 ```
 User lands on app
     ↓
@@ -151,18 +161,21 @@ Room discovery
 ```
 
 ### Welcome Screen Changes
+
 - **What it shows**: App tagline + one screenshot of a live room
 - **What it doesn't show**: Feature list, why you need it, testimonials
 - **Tone**: "Real people, real-time. No performance."
 - **Button copy**: "Sign up" or "Join in" (not "Get started")
 
 ### Signup Copy Overhaul
+
 - ❌ "Create your account"
 - ✅ "Who are you?"
 - ❌ "Enter your email"
 - ✅ "Your email" (neutral label, no copy)
 
 ### Display Name Screen
+
 - **One field only**: "What should we call you?"
 - **Help text**: "First name works great"
 - **Character limit**: 20 (hard limit, no explanation needed)
@@ -175,38 +188,46 @@ Room discovery
 ### Room Card Must Display (in order of visual hierarchy)
 
 #### 1. Room Name (Large, prominent)
+
 - Font: Bold, 18px minimum
 - Color: Primary (not gray)
 
 #### 2. Live Participant Count (Visual badge)
+
 - Icon: Person + count
 - Color: Green if >0, gray if 0
 - Text: "7 active" (not "7 people", not "participant_count: 7")
 - Animate: If count changes, badge glows once (50ms pulse)
 
 #### 3. Room Energy Level (Visual indicator)
+
 ```
 Calm      = Blue pulse (1 update per 10s or less)
 Active    = Amber pulse (1-2 updates per second)
 Buzzing   = Red/pink pulse (3+ updates per second)
 ```
+
 - Don't show % or numeric data
 - Show only the visual pulse
 
 #### 4. Speaking Indicator (Animated)
+
 - If someone is speaking: Show their avatar + name fading in/out (sync to audio)
 - Text: "Sarah is speaking…" (not "active speaker")
 
 #### 5. Room Topic/Description (Secondary)
+
 - Single line, truncated
 - Font: 12px, gray
 - Example: "Music production talk"
 
 #### 6. Last Activity Time (Tertiary, subtle)
+
 - "Started 4 minutes ago" (not "4m" timestamp)
 - Font: 10px, very light gray
 
 ### Card Visual Design
+
 - Border: Subtle gradient left edge (room's dominant color)
 - Background: Slightly transparent (white/light theme friendly)
 - On hover: Lift effect (transform: translateY(-4px)), shadow increase
@@ -214,6 +235,7 @@ Buzzing   = Red/pink pulse (3+ updates per second)
 - No "Join" button on card—card itself is clickable (entire area)
 
 ### Empty State (No Rooms)
+
 - Icon: Calendar or door with smile
 - Heading: "No rooms right now"
 - Subtext: "Be the first to create one—or check back in a few minutes"
@@ -224,12 +246,14 @@ Buzzing   = Red/pink pulse (3+ updates per second)
 ## C. JOIN FLOW (3-Stage Ritual)
 
 ### Stage 1: "Entering room…"
+
 - Duration: 150ms
 - User sees: Room name, participant list (grayed out), controls disabled
 - What happens (silent): Auth check, Firestore read for room metadata
 - Feeling: Anticipation
 
 ### Stage 2: "Connecting audio & video…"
+
 - Duration: 400–1000ms (depends on network)
 - User sees:
   - Spinner (centered, blue)
@@ -239,6 +263,7 @@ Buzzing   = Red/pink pulse (3+ updates per second)
 - Feeling: Loading with context
 
 ### Stage 3: "You're live"
+
 - Duration: 400ms fade-in
 - User sees:
   - Participant cards animate in (staggered, 50ms apart)
@@ -251,6 +276,7 @@ Buzzing   = Red/pink pulse (3+ updates per second)
 ### Failure States (in join flow)
 
 **Permission Denied**
+
 - Stage: During stage 2
 - You see:
   - Icon: Blocked camera/mic
@@ -259,6 +285,7 @@ Buzzing   = Red/pink pulse (3+ updates per second)
 - What happens: Show FAQ link, offer retry in 5s
 
 **Network Timeout**
+
 - Stage: Stage 2, after 10s
 - You see:
   - Icon: Connection broke
@@ -267,6 +294,7 @@ Buzzing   = Red/pink pulse (3+ updates per second)
 - What happens: Retry every 3s (exponential backoff), show attempt #1, #2, #3
 
 **Room Full**
+
 - Stage: Stage 1
 - You see:
   - Icon: House overflow
@@ -281,6 +309,7 @@ Buzzing   = Red/pink pulse (3+ updates per second)
 ### Participant Card (In-Room)
 
 **Always shows (in order)**
+
 1. Avatar (large, 48px)
 2. Display name (bold, 14px)
 3. Mute indicator (icon below name if mic off)
@@ -288,15 +317,18 @@ Buzzing   = Red/pink pulse (3+ updates per second)
 5. Join time (subtle: "5 min ago")
 
 **On speaker activity:**
+
 - Card **glows** (box-shadow: 0 0 12px rgba(255, 79, 79, 0.5)) for 200ms
 - Background slightly lightens
 - Speaker name **bolds** (if not already)
 
 **On arrival:**
+
 - Card slides in from left (250ms, easeOutCubic)
 - "Emma just joined" notification (top-right, fade in 150ms, auto-dismiss 3s)
 
 **On departure:**
+
 - Card fades out (200ms)
 - Card slides down slightly (200ms)
 - "Emma left the room" notification (top-right, subtle)
@@ -330,11 +362,13 @@ Buzzing   = Red/pink pulse (3+ updates per second)
 ### Status Bar (Top of Room)
 
 **Left side:**
+
 - Room name
 - Participant count badge (updates real-time)
 - Energy level indicator (pulse)
 
 **Right side:**
+
 - Call duration timer (if >2 min: "15:24 / 1 hr 30 min", else hidden)
 - Room info button (icon: info-circle)
 
@@ -354,6 +388,7 @@ Buzzing   = Red/pink pulse (3+ updates per second)
 ## A. Positioning (Not Copying)
 
 ### Paltalk (Old Paradigm)
+
 - Dense, information-heavy interface
 - User feels like they're managing a system
 - Lots of buttons, menus, settings visible
@@ -361,6 +396,7 @@ Buzzing   = Red/pink pulse (3+ updates per second)
 - Visual noise (colored backgrounds, excessive text)
 
 ### Mix & Mingle (New Paradigm)
+
 - **Clarity-first**: Only what matters is visible
 - **Presence-driven**: You feel the people, not the interface
 - **Real-time-native**: Built for live conversation, not chat
@@ -371,16 +407,16 @@ Buzzing   = Red/pink pulse (3+ updates per second)
 
 ## B. Explicit Differentiators
 
-| Dimension | Paltalk | Mix & Mingle |
-|-----------|---------|-------------|
-| **Layout** | Sidebar + room + chat sidebar | Full-screen room, presence cards centered |
-| **Participant list** | Scrollable text list on side | Large animated cards, max 8 visible, rest in drawer |
-| **Onboarding** | 3–5 screens of features | 1 welcome, 1 auth, 1 name field → rooms |
-| **Copy** | Technical, formal | Conversational, human |
-| **Animation** | Rare, feels clunky | Frequent, emotional (arrivals, speaking) |
-| **Room discovery** | Browse rooms → instantly join | Browse rooms → see energy → ceremonial join |
-| **Status** | Static participant count | Real-time pulse, speaking indicator, arrival notifications |
-| **Visual feel** | Dense, gray/blue, corporate | Clean, white/light, accent color only |
+| Dimension            | Paltalk                       | Mix & Mingle                                               |
+| -------------------- | ----------------------------- | ---------------------------------------------------------- |
+| **Layout**           | Sidebar + room + chat sidebar | Full-screen room, presence cards centered                  |
+| **Participant list** | Scrollable text list on side  | Large animated cards, max 8 visible, rest in drawer        |
+| **Onboarding**       | 3–5 screens of features       | 1 welcome, 1 auth, 1 name field → rooms                    |
+| **Copy**             | Technical, formal             | Conversational, human                                      |
+| **Animation**        | Rare, feels clunky            | Frequent, emotional (arrivals, speaking)                   |
+| **Room discovery**   | Browse rooms → instantly join | Browse rooms → see energy → ceremonial join                |
+| **Status**           | Static participant count      | Real-time pulse, speaking indicator, arrival notifications |
+| **Visual feel**      | Dense, gray/blue, corporate   | Clean, white/light, accent color only                      |
 
 ---
 
@@ -404,6 +440,7 @@ Buzzing   = Red/pink pulse (3+ updates per second)
 ## A. Where to Add AnimatedPresence / Motion
 
 ### AnimatedOpacity + Transform (Arrival)
+
 ```dart
 Participant card appears
 → Use: AnimationController + Tween(Offset.zero, Offset(-1, 0))
@@ -413,6 +450,7 @@ Participant card appears
 ```
 
 ### Pulsing (Speaking)
+
 ```dart
 Speaker active
 → Use: Opacity + Transform(scale) animation
@@ -422,6 +460,7 @@ Speaker active
 ```
 
 ### Fade + Slide (Departure)
+
 ```dart
 User leaves room
 → Use: AnimatedOpacity + Transform(translateY)
@@ -461,6 +500,7 @@ class JoinStateController extends StateNotifier<JoinPhase> {
 ```
 
 **In UI:**
+
 ```dart
 switch(joinPhase) {
   case JoinPhase.entering:
@@ -478,6 +518,7 @@ switch(joinPhase) {
 ## C. Presence Updates (Animated)
 
 ### Listen to Firestore Presence
+
 ```dart
 // In VideoRoomLifecycle or similar
 presenceStream = FirebaseFirestore.instance
@@ -497,6 +538,7 @@ presenceStream = FirebaseFirestore.instance
 ```
 
 ### Display Arrival Notification
+
 ```dart
 void _onUserArrived(DocumentSnapshot doc) {
   final userName = doc['displayName'];
@@ -529,6 +571,7 @@ void _onAudioActivity(String userId) {
 ## E. Intentional Delays (Non-Negotiable Timing)
 
 ### Join Button Click
+
 ```dart
 onPressed: () async {
   await Future.delayed(Duration(milliseconds: 150)); // Feel response
@@ -539,6 +582,7 @@ onPressed: () async {
 ```
 
 ### Mute Toggle
+
 ```dart
 onPressed: () async {
   setState(() => isMuted = !isMuted); // Instant visual feedback
@@ -548,6 +592,7 @@ onPressed: () async {
 ```
 
 ### Join Notification (Arrival)
+
 ```dart
 Future<void> _showArrivalNotification(String name) async {
   setState(() => showNotification = true);
@@ -563,18 +608,21 @@ Future<void> _showArrivalNotification(String name) async {
 ## F. Avoiding Material Defaults (Visual Consistency)
 
 ### Don't Use:
+
 - ❌ Material `FloatingActionButton` (outdated for this app)
 - ❌ Standard `AppBar` (use custom top bar)
 - ❌ Material card shadows (too heavy)
 - ❌ Blue accent colors (use #FF4C4C)
 
 ### Do Use:
+
 - ✅ Custom button with rounded corners (12px radius)
 - ✅ Subtle border instead of shadow
 - ✅ White/light backgrounds with accent color for active states
 - ✅ Custom `AnimatedContainer` for state changes
 
 ### Example Custom Button
+
 ```dart
 Container(
   decoration: BoxDecoration(
@@ -602,6 +650,7 @@ Container(
 ## G. Firestore + Agora State Surfacing
 
 ### Display Room Energy
+
 ```dart
 double calculateRoomEnergy() {
   // Based on: message frequency, presence count, audio activity
@@ -619,6 +668,7 @@ Color getRoomPulseColor(double energy) {
 ```
 
 ### Display Recent Activity
+
 ```dart
 String getRecentActivity() {
   final recent = messages.where((m) => m.createdAt.difference(now) < Duration(seconds: 10));

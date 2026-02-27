@@ -3,6 +3,7 @@
 ## Quick Start: Create Your Dashboard in 5 Minutes
 
 ### Step 1: Open Data Studio
+
 Go to: **https://datastudio.google.com**
 
 Click: **Create** → **Report**
@@ -50,6 +51,7 @@ Your dashboard should have **5 panels**:
 **Height**: 150px
 
 ### Scorecard 1: Weekly Active Users (WAU)
+
 - **Chart Type**: Scorecard
 - **Metric**: `users` (SUM)
 - **Date Range**: Last 7 days
@@ -59,6 +61,7 @@ Your dashboard should have **5 panels**:
   - Label: "Weekly Active Users"
 
 ### Scorecard 2: Daily Active Users (DAU)
+
 - **Chart Type**: Scorecard
 - **Metric**: `users` (SUM)
 - **Date Range**: Today
@@ -68,6 +71,7 @@ Your dashboard should have **5 panels**:
   - Label: "Daily Active Users"
 
 ### Scorecard 3: DAU/WAU Ratio
+
 - **Chart Type**: Calculated Field
 - **Formula**: `SUM(users_today) / SUM(users_last_7_days)`
 - **Display**: Percentage
@@ -84,6 +88,7 @@ Your dashboard should have **5 panels**:
 **Height**: 400px
 
 ### Time Series Chart: User Growth
+
 - **Chart Type**: Time series (line chart)
 - **Dimension**: `date`
 - **Metrics**:
@@ -96,6 +101,7 @@ Your dashboard should have **5 panels**:
   - Legend: bottom
 
 ### Goal Line (Optional):
+
 - Add comparison period: Previous 30 days
 - Show trend line
 
@@ -109,21 +115,25 @@ Your dashboard should have **5 panels**:
 ### Scorecard Grid (2x2):
 
 **Card 1: Rooms**
+
 - Metric: `room_users` (COUNT DISTINCT)
 - Label: "Users in Rooms Today"
 - Icon: 🎙️
 
 **Card 2: Events**
+
 - Metric: `event_users` (COUNT DISTINCT)
 - Label: "Event RSVPs Today"
 - Icon: 📅
 
 **Card 3: Session Duration**
+
 - Metric: Custom (from Firebase)
 - Label: "Avg Session (minutes)"
 - Icon: ⏱️
 
 **Card 4: Crash-Free Rate**
+
 - Metric: Custom (from Crashlytics)
 - Label: "Crash-Free Rate"
 - Icon: ✅
@@ -136,6 +146,7 @@ Your dashboard should have **5 panels**:
 **Height**: 300px
 
 ### Chart 1: Platform Distribution (Pie Chart)
+
 - **Dimension**: `platform`
 - **Metric**: `users`
 - **Style**:
@@ -144,6 +155,7 @@ Your dashboard should have **5 panels**:
   - Colors: iOS (blue), Android (green), Web (purple)
 
 ### Chart 2: Top Countries (Bar Chart)
+
 - **Dimension**: `country`
 - **Metric**: `users`
 - **Sort**: Descending
@@ -158,6 +170,7 @@ Your dashboard should have **5 panels**:
 **Height**: 250px
 
 ### Table: Event Breakdown
+
 - **Dimension**: `event_name`
 - **Metrics**:
   - `events` (total count)
@@ -176,17 +189,20 @@ Your dashboard should have **5 panels**:
 Add these filters to your dashboard:
 
 ### Filter 1: Date Range
+
 - **Type**: Date range control
 - **Default**: Last 7 days
 - **Position**: Top of page
 
 ### Filter 2: Platform
+
 - **Type**: Drop-down list
 - **Dimension**: `platform`
 - **Options**: All, iOS, Android, Web
 - **Default**: All
 
 ### Filter 3: Country
+
 - **Type**: Drop-down list with search
 - **Dimension**: `country`
 - **Default**: All
@@ -218,17 +234,20 @@ Add these filters to your dashboard:
 ## Custom Calculated Fields
 
 ### Field 1: Activation Rate
+
 ```
 COUNT_DISTINCT(CASE WHEN event_name IN ('room_joined', 'event_rsvp') THEN user_pseudo_id END)
 / COUNT_DISTINCT(CASE WHEN event_name = 'sign_up' THEN user_pseudo_id END)
 ```
 
 ### Field 2: Events Per User
+
 ```
 COUNT(events) / COUNT_DISTINCT(users)
 ```
 
 ### Field 3: Premium Conversion Rate
+
 ```
 COUNT_DISTINCT(CASE WHEN event_name = 'premium_purchase' THEN user_pseudo_id END)
 / COUNT_DISTINCT(users)
@@ -239,6 +258,7 @@ COUNT_DISTINCT(CASE WHEN event_name = 'premium_purchase' THEN user_pseudo_id END
 ## Advanced: Add Retention Cohort Chart
 
 ### Custom Query for Cohort Analysis:
+
 ```sql
 WITH signups AS (
   SELECT
@@ -267,6 +287,7 @@ ORDER BY s.cohort_date, days_since_signup
 ```
 
 **Chart Type**: Heatmap
+
 - **Rows**: `cohort_date`
 - **Columns**: `days_since_signup`
 - **Metric**: `retained_users`
@@ -279,11 +300,13 @@ ORDER BY s.cohort_date, days_since_signup
 Create a second dashboard optimized for mobile:
 
 ### Layout:
+
 - **Single column** (no side-by-side charts)
 - **Scorecards only** (4 key metrics)
 - **Simplified charts** (no tables)
 
 ### Key Metrics for Mobile:
+
 1. WAU
 2. DAU
 3. Signups Today
@@ -318,19 +341,25 @@ Save your dashboard URL and share it:
 ## Troubleshooting
 
 ### Issue 1: "No data available"
+
 **Solution**:
+
 - Check BigQuery export is linked (see setup_bigquery.ps1)
 - Wait 24-48 hours for data to populate
 - Verify date range includes recent dates
 
 ### Issue 2: "Query exceeds quota"
+
 **Solution**:
+
 - Reduce date range in query
 - Add `LIMIT 10000` to custom queries
 - Enable data caching (Resource → Data freshness)
 
 ### Issue 3: Slow dashboard loading
+
 **Solution**:
+
 - Use date range controls (don't query all-time data)
 - Pre-aggregate data in BigQuery views
 - Enable "Use cache" on all charts

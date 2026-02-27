@@ -3,6 +3,7 @@
 ## Features Implemented ✅
 
 ### 1. **Text Chat Overlay**
+
 - Real-time messaging during voice rooms
 - System messages for join/leave events
 - Chat history with timestamps
@@ -11,6 +12,7 @@
 - Bottom sheet interface
 
 ### 2. **Room Roles & Permissions**
+
 - **Host**: Full control, can manage participants
 - **Co-Host**: Can mute others, manage some features
 - **Listener**: Participate with basic permissions
@@ -18,6 +20,7 @@
 - Permission system for future moderation
 
 ### 3. **Smooth Animations**
+
 - Fade-in for join events
 - Slide transitions for video tiles
 - Scale animations for participant list items
@@ -44,6 +47,7 @@ lib/
 ## Integration Steps
 
 ### Step 1: Update Imports in Your Pages
+
 ```dart
 import 'package:your_app/shared/models/room_role.dart';
 import 'package:your_app/shared/models/voice_room_chat_message.dart';
@@ -52,6 +56,7 @@ import 'package:your_app/features/room/widgets/voice_room_chat_overlay.dart';
 ```
 
 ### Step 2: Get Current User Information
+
 In `voice_room_page.dart`, replace the TODO sections with actual auth data:
 
 ```dart
@@ -69,6 +74,7 @@ showVoiceRoomChat(
 ```
 
 ### Step 3: Connect to Firestore (Optional)
+
 For persistent chat storage:
 
 ```dart
@@ -93,6 +99,7 @@ Future<void> _loadMessagesFromFirestore() async {
 ### Manual Testing Steps
 
 #### 1. **Test Chat Functionality**
+
 ```
 1. Open voice room
 2. Tap "Chat" button in bottom control bar
@@ -107,6 +114,7 @@ Future<void> _loadMessagesFromFirestore() async {
 ```
 
 #### 2. **Test System Messages**
+
 ```
 1. Join room → Should see "You joined the room"
 2. Leave room → Should see "You left the room"
@@ -114,6 +122,7 @@ Future<void> _loadMessagesFromFirestore() async {
 ```
 
 #### 3. **Test Animations**
+
 ```
 1. Join room → Participant tiles fade in with slide animation
 2. Add to participant list → Items scale in smoothly
@@ -122,6 +131,7 @@ Future<void> _loadMessagesFromFirestore() async {
 ```
 
 #### 4. **Test with Real Participants**
+
 ```
 1. Deploy to web or mobile
 2. Use multiple browsers/devices
@@ -164,6 +174,7 @@ void main() {
 ## API Integration Ready
 
 ### Chat Message Structure (Firestore)
+
 ```
 rooms/{roomId}/chat/{messageId}
 {
@@ -178,6 +189,7 @@ rooms/{roomId}/chat/{messageId}
 ```
 
 ### Role Structure (Firestore)
+
 ```
 rooms/{roomId}/participants/{userId}
 {
@@ -195,6 +207,7 @@ rooms/{roomId}/participants/{userId}
 ## Real-World Testing Scenarios
 
 ### Scenario 1: Group Speed Dating Session
+
 ```
 1. Host creates room
 2. 5 participants join (mix of cameras on/off)
@@ -204,6 +217,7 @@ rooms/{roomId}/participants/{userId}
 ```
 
 ### Scenario 2: Virtual Event
+
 ```
 1. Presenter as Host
 2. Moderators as Co-Hosts
@@ -213,6 +227,7 @@ rooms/{roomId}/participants/{userId}
 ```
 
 ### Scenario 3: Low Bandwidth Testing
+
 ```
 1. Disable video for multiple participants
 2. Chat still works smoothly
@@ -223,12 +238,14 @@ rooms/{roomId}/participants/{userId}
 ## Performance Considerations
 
 ### Optimization Tips
+
 1. **Chat History**: Limit to 50 recent messages per room
 2. **Animations**: Use `vsync` for smooth 60fps
 3. **Memory**: Dispose controllers in `dispose()`
 4. **Network**: Batch message syncs every 500ms
 
 ### Metrics to Monitor
+
 - Chat message delivery latency (target: <500ms)
 - Animation FPS (target: 60fps)
 - Memory usage per participant
@@ -237,12 +254,14 @@ rooms/{roomId}/participants/{userId}
 ## Known Limitations & Future Enhancements
 
 ### Current Limitations
+
 - Chat requires manual user ID integration
 - No message reactions/emojis yet
 - No pinned messages
 - No search functionality
 
 ### Planned Features
+
 - Message reactions (👍, ❤️, 😂)
 - Message search
 - User profiles in chat
@@ -254,16 +273,19 @@ rooms/{roomId}/participants/{userId}
 ## Troubleshooting
 
 ### Chat not appearing
+
 - [ ] Check `voiceRoomChatProvider` is initialized
 - [ ] Verify `roomId` is correct
 - [ ] Ensure `currentUserId` and `currentDisplayName` are provided
 
 ### Animations stuttering
+
 - [ ] Check animation duration (aim for 300-500ms)
 - [ ] Verify `vsync: this` in AnimationController
 - [ ] Profile with DevTools Performance tab
 
 ### Messages not persisting
+
 - [ ] Implement Firestore persistence layer
 - [ ] Add chat sync in `_initializeAndJoin()`
 - [ ] Verify Firestore rules allow chat collection
@@ -271,6 +293,7 @@ rooms/{roomId}/participants/{userId}
 ## Quick Reference - Key Methods
 
 ### Chat Notifier
+
 ```dart
 // Add regular message
 ref.read(voiceRoomChatProvider(roomId).notifier).addMessage(
@@ -290,6 +313,7 @@ final messages = ref
 ```
 
 ### Role Notifier
+
 ```dart
 // Update user role
 ref.read(roomRolesProvider(roomId).notifier)
@@ -305,6 +329,7 @@ ref.read(roomRolesProvider(roomId).notifier)
 ```
 
 ### Chat UI
+
 ```dart
 // Show chat
 showVoiceRoomChat(
@@ -332,6 +357,7 @@ showVoiceRoomChat(
 ## Support & Questions
 
 For implementation questions:
+
 1. Check the inline code comments
 2. Review test examples
 3. Refer to Riverpod documentation

@@ -25,4 +25,6 @@ class AgoraWebBridgeV3 {
   static void enableDebugLogging() {}
 
   static void printDebugInfo() {}
+
+  static bool renewToken(String newToken) => false;
 }

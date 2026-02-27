@@ -3,6 +3,7 @@
 Generated: 02/06/2026 06:33:21
 
 ## Project Structure
+
 - .dart_tool
 - .firebase
 - .github
@@ -33,28 +34,32 @@ Generated: 02/06/2026 06:33:21
 - web_modules
 
 ## pubspec.yaml — Key Dependencies
-  # Firebase
-  firebase_core: ^4.2.1
-  firebase_auth: ^6.1.2
-  firebase_storage: ^13.0.4
-  firebase_messaging: ^16.0.4
-  firebase_analytics: ^12.0.4
-  firebase_remote_config: ^6.0.4
-  firebase_crashlytics: ^5.0.5
-  flutter_riverpod: ^3.0.0
-  agora_rtc_engine: ^6.2.2
-  firebase_auth_mocks: ^0.15.1
-  web: ^1.0.0
-    - assets/data/interests.json
+
+# Firebase
+
+firebase_core: ^4.2.1
+firebase_auth: ^6.1.2
+firebase_storage: ^13.0.4
+firebase_messaging: ^16.0.4
+firebase_analytics: ^12.0.4
+firebase_remote_config: ^6.0.4
+firebase_crashlytics: ^5.0.5
+flutter_riverpod: ^3.0.0
+agora_rtc_engine: ^6.2.2
+firebase_auth_mocks: ^0.15.1
+web: ^1.0.0 - assets/data/interests.json
 
 ## Firebase Configuration
+
 ✔ firebase.json present
 ✔ firestore.rules present
 
 ## Core Flutter Entry
+
 ✔ lib/main.dart present
 
 ## Services Detected
+
 - \lib\services\account_deletion_service.dart
 - \lib\services\agora_integration_guide.dart
 - \lib\services\agora_platform_service.dart
@@ -117,6 +122,7 @@ Generated: 02/06/2026 06:33:21
 - \lib\services\video_service.dart
 
 ## Video / Agora Indicators
+
 \lib\config\environment_config.dart
 \lib\config\environment_config.dart
 \lib\config\environment_config.dart
@@ -793,6 +799,7 @@ Generated: 02/06/2026 06:33:21
 \lib\shared\widgets\voice_room_controls.dart
 
 ## Stripe / Payments Indicators
+
 \lib\core\accessibility\accessibility_utils.dart
 \lib\core\accessibility\accessibility_utils.dart
 \lib\core\accessibility\accessibility_utils.dart
@@ -1008,6 +1015,7 @@ Generated: 02/06/2026 06:33:21
 \lib\shared\widgets\voice_room_participant_list.dart
 
 ## Multi-Window / Desktop Indicators
+
 \lib\app.dart
 \lib\firebase_options.dart
 \lib\firebase_options.dart

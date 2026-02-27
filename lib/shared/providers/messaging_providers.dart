@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/chat/chat_service.dart';
@@ -32,9 +33,12 @@ final roomMessagesProvider =
           .toList()
           .reversed // Reverse to show oldest first
           .toList())
-      .handleError((error) {
-    return <Message>[];
-  });
+      .transform(StreamTransformer.fromHandlers(
+        handleError: (error, stackTrace, sink) {
+          debugPrint('[CHAT] messages stream error (emitting empty): $error');
+          sink.add(<Message>[]);
+        },
+      ));
 });
 
 /// Paginated room messages with cursor

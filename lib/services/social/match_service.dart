@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
+import '../../features/match_inbox/services/match_inbox_service.dart';
+import '../../features/match_inbox/models/match_inbox_item.dart';
 
 /// Custom exception for match operations
 class MatchException implements Exception {
@@ -229,15 +231,18 @@ class MatchService {
         // Calculate match quality
         final matchQuality = await _calculateMatchQuality(user1Id, user2Id);
 
-        // Create chat for the match first (generates ID)
-        final chatRef = _firestore.collection('chats').doc();
+        // Create chat room for the match first (generates ID)
+        final chatRef = _firestore.collection('chatRooms').doc();
         chatId = chatRef.id;
 
         final chatData = {
-          'participants': [user1Id, user2Id],
+          'participants': ([user1Id, user2Id]..sort()),
           'createdAt': FieldValue.serverTimestamp(),
           'isActive': true,
           'type': 'match',
+          'lastMessage': '',
+          'lastMessageTime': FieldValue.serverTimestamp(),
+          'unreadCounts': {user1Id: 0, user2Id: 0},
         };
 
         transaction.set(chatRef, chatData);
@@ -264,7 +269,15 @@ class MatchService {
           debugPrint('âš ï¸ Failed to send match notifications: $e');
         });
       }
-
+      // ── Create Match Inbox entries (non-blocking) ─────────────────────
+      MatchInboxService.instance.createMatch(
+        user1Id,
+        user2Id,
+        source: MatchSource.discovery,
+        metadata: matchId != null ? {'globalMatchId': matchId!, 'chatId': chatId ?? ''} : {},
+      ).catchError((e) {
+        debugPrint('âš ï¸ Failed to create match inbox entries: $e');
+      });
       debugPrint('âœ… Match created: $matchId with chat: $chatId');
     } catch (e) {
       debugPrint('âŒ Failed to create match: $e');
@@ -293,9 +306,9 @@ class MatchService {
         // Delete match
         transaction.delete(matchDoc.reference);
 
-        // Mark chat as inactive
+        // Mark chat room as inactive
         if (chatId != null) {
-          final chatRef = _firestore.collection('chats').doc(chatId);
+          final chatRef = _firestore.collection('chatRooms').doc(chatId);
           transaction.update(chatRef, {
             'isActive': false,
             'unmatchedAt': FieldValue.serverTimestamp(),
@@ -474,22 +487,25 @@ class MatchService {
     }
   }
 
-  /// Create chat for match
+  /// Create chat room for match
   Future<String> createChatForMatch(String uid1, String uid2) async {
     try {
-      final doc = await _firestore.collection('chats').add({
-        'members': [uid1, uid2],
+      final sortedIds = ([uid1, uid2]..sort());
+      final roomId = sortedIds.join('_');
+      await _firestore.collection('chatRooms').doc(roomId).set({
+        'participants': sortedIds,
         'lastMessage': '',
         'lastMessageTime': FieldValue.serverTimestamp(),
         'createdAt': FieldValue.serverTimestamp(),
         'isActive': true,
-        'unreadCount': {uid1: 0, uid2: 0},
-      });
+        'unreadCounts': {uid1: 0, uid2: 0},
+        'type': 'match',
+      }, SetOptions(merge: true));
 
-      debugPrint('âœ… Chat created for match: ${doc.id}');
-      return doc.id;
+      debugPrint('Chat room created for match: $roomId');
+      return roomId;
     } catch (e) {
-      debugPrint('âŒ Failed to create chat: $e');
+      debugPrint('Failed to create chat room: $e');
       throw MatchException('Failed to create chat: $e',
           code: 'chat-creation-failed');
     }

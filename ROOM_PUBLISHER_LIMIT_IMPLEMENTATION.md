@@ -16,11 +16,13 @@
 > **Maximum concurrent video streams per channel** = 12 (stable, proven in testing)
 
 This applies to:
+
 - Flutter Web + Agora Web SDK ✅
 - RTC mode ✅
 - Chrome/Firefox/Safari on modern hardware ✅
 
 **NOT to**:
+
 - Individual user accounts ❌
 - Total system connections ❌
 - Channel count per user ❌
@@ -30,18 +32,23 @@ This applies to:
 ## 📁 New Files Added
 
 ### 1. **Core Feature Flag**
+
 ```
 lib/core/feature_flags.dart
 ```
+
 - `FeatureFlags.maxConcurrentAgoraConnections = 12`
 - Centralized constant used everywhere
 - Updated comment explains the architectural reality
 
 ### 2. **Room Limit Manager**
+
 ```
 lib/services/room_limit_manager.dart
 ```
+
 **Responsibilities**:
+
 - Check if room is at capacity
 - Track active publishers in Firestore
 - Add/remove publishers when they go live
@@ -49,6 +56,7 @@ lib/services/room_limit_manager.dart
 - Monitor in real-time via Firestore streams
 
 **Key Methods**:
+
 ```dart
 // Check capacity
 bool isRoomAtCapacity(String roomId)
@@ -69,10 +77,13 @@ Stream<int> watchRoomCapacity(String roomId)
 ```
 
 ### 3. **Enforcement Utilities**
+
 ```
 lib/core/services/room_limit_enforcement.dart
 ```
+
 **Provides**:
+
 - `canUserJoinAsPublisher()` - Check before join
 - `registerPublisher()` - Add user to active list
 - `unregisterPublisher()` - Remove user
@@ -82,6 +93,7 @@ lib/core/services/room_limit_enforcement.dart
 - `getStreamsToDowngrade()` - Which streams to reduce
 
 **Example Usage**:
+
 ```dart
 // Check if user can go live
 final state = await RoomLimitEnforcement.getGoLiveButtonState(roomId, userId);
@@ -94,10 +106,13 @@ if (state == GoLiveButtonState.enabled) {
 ```
 
 ### 4. **UI Feedback Widgets**
+
 ```
 lib/shared/widgets/room_capacity_widgets.dart
 ```
+
 **Components**:
+
 - `RoomCapacityIndicator` - Inline text (12x format)
 - `RoomCapacityCard` - Full card with progress bar
 - `CapacityBadge` - Compact badge for app bar
@@ -105,6 +120,7 @@ lib/shared/widgets/room_capacity_widgets.dart
 - `GoLiveButton` - Pre-built button with enforcement
 
 **Usage**:
+
 ```dart
 // Show capacity in room
 RoomCapacityIndicator(roomId: roomId)
@@ -145,6 +161,7 @@ if (state == GoLiveButtonState.enabled) {
 ```
 
 **Button UI**:
+
 ```dart
 GoLiveButton(
   roomId: roomId,
@@ -179,6 +196,7 @@ registerPublisher(roomId, userId);
 ### 3. **Agora Video Service** (already updated)
 
 Already integrated:
+
 ```dart
 // Check capacity in AgoraVideoService
 Future<bool> isRoomAtCapacity(String roomId)
@@ -252,8 +270,8 @@ The `Room` model already has `activeBroadcasters` field. Ensure it's in firestor
       "hostId": "...",
 
       "activeBroadcasters": ["userId1", "userId2"],
-      "maxBroadcasters": 12,  // Will be deprecated (use FeatureFlags constant)
-      "broadcastersUpdatedAt": 1707418200000,
+      "maxBroadcasters": 12, // Will be deprecated (use FeatureFlags constant)
+      "broadcastersUpdatedAt": 1707418200000
 
       // ... other fields
     }
@@ -262,6 +280,7 @@ The `Room` model already has `activeBroadcasters` field. Ensure it's in firestor
 ```
 
 When running migrations:
+
 ```dart
 // Update all rooms to use correct schema
 db.collection('rooms').get().then((docs) {
@@ -377,6 +396,7 @@ analytics.logEvent('room_at_capacity', {
 ## ✅ Testing Checklist
 
 ### Unit Tests
+
 ```dart
 test('can add publisher under limit', () async {
   // addPublisher returns true when under limit
@@ -392,6 +412,7 @@ test('capacity detection works', () async {
 ```
 
 ### Integration Tests
+
 ```dart
 test('Go Live button disabled when room full', () async {
   // Button state is GoLiveButtonState.roomAtCapacity
@@ -415,6 +436,7 @@ test('Can join as audience when at capacity', () async {
 ### For Users
 
 Show this in-app:
+
 > "This room can have up to 12 people on camera at the same time. When the room is full, new joiners can watch and chat without their video."
 
 ---
@@ -440,18 +462,21 @@ No polling needed — updates happen in milliseconds via Firestore subscriptions
 ## 🎓 Key Concepts
 
 ### Publisher vs. Audience
+
 - **Publisher**: User with camera on (video + audio)
 - **Audience**: User with camera off (audio/chat only)
 - Limit applies only to **publishers** (12 max)
 - **Audience** has no limit (100+)
 
 ### Broadcaster vs. Audience Role (Agora)
+
 - **Broadcaster**: Can publish audio/video
 - **Audience**: Receive-only (can't publish)
 - Room limit enforces max 12 broadcasters
 - Others must be in audience role
 
 ### Room vs. Account Limit
+
 - **Room limit**: 12 publishers per channel (this system)
 - **Account limit**: Doesn't exist (per Agora docs)
 - User can be in multiple rooms, but limited to 12 publishers per room
@@ -463,11 +488,13 @@ No polling needed — updates happen in milliseconds via Firestore subscriptions
 **Issue**: Go Live button still lets users go live when room full
 
 **Check**:
+
 1. Is `GoLiveButton` widget being used, or custom button?
 2. Is `RoomLimitEnforcement.registerPublisher()` being called?
 3. Is room's `activeBroadcasters` field being updated in Firestore?
 
 **Solution**:
+
 ```dart
 // Make sure to:
 1. Call canUserJoinAsPublisher() before enabling button

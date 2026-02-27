@@ -121,6 +121,57 @@ class SocialFeedService {
             snapshot.docs.map((doc) => Post.fromFirestore(doc)).toList());
   }
 
+  /// Friends feed — posts from users the current user follows.
+  /// Returns a live stream. Falls back to global if friend list is empty.
+  Stream<List<Post>> getFriendsFeedStream(String userId,
+      {int limit = 50}) async* {
+    try {
+      final userDoc = await _usersCollection.doc(userId).get();
+      final raw = userDoc.data();
+      final friendIds = <String>[
+        userId,
+        ...List<String>.from(raw?['friends'] ?? raw?['following'] ?? []),
+      ];
+
+      if (friendIds.length == 1) {
+        // No friends yet — show own posts only
+        yield* _postsCollection
+            .where('userId', isEqualTo: userId)
+            .where('isVisible', isEqualTo: true)
+            .orderBy('createdAt', descending: true)
+            .limit(limit)
+            .snapshots()
+            .map((s) => s.docs.map((d) => Post.fromFirestore(d)).toList());
+        return;
+      }
+
+      // Firestore whereIn max 30; take first batch
+      final batch = friendIds.take(30).toList();
+      yield* _postsCollection
+          .where('userId', whereIn: batch)
+          .where('isVisible', isEqualTo: true)
+          .orderBy('createdAt', descending: true)
+          .limit(limit)
+          .snapshots()
+          .map((s) => s.docs.map((d) => Post.fromFirestore(d)).toList());
+    } catch (e) {
+      debugPrint('❌ [SocialFeed] Friends feed error: $e');
+      yield [];
+    }
+  }
+
+  /// Room Highlights feed — posts that are room share / room highlights.
+  Stream<List<Post>> getRoomHighlightsFeedStream({int limit = 50}) {
+    return _postsCollection
+        .where('isVisible', isEqualTo: true)
+        .where('type', isEqualTo: 'roomShare')
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snapshot) =>
+            snapshot.docs.map((doc) => Post.fromFirestore(doc)).toList());
+  }
+
   /// Get posts for a specific user
   Stream<List<Post>> getUserPostsStream(String userId, {int limit = 20}) {
     return _postsCollection

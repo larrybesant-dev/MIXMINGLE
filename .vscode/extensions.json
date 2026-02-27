@@ -7,15 +7,15 @@
     // ========================================
     // TIER 1: ESSENTIAL (KEEP ENABLED ALWAYS)
     // ========================================
-    "dart-code.dart-code",           // Dart language support
-    "dart-code.flutter",              // Flutter framework support
+    "dart-code.dart-code", // Dart language support
+    "dart-code.flutter", // Flutter framework support
     "firebase.vscode-firebase-explorer", // Firebase explorer
 
     // ========================================
     // TIER 2: DEBUGGING & CODE QUALITY
     // ========================================
-    "usernamehw.errorlens",           // Inline error highlighting (critical for Agora bugs)
-    "eamodio.gitlens",                // Git blame & history
+    "usernamehw.errorlens", // Inline error highlighting (critical for Agora bugs)
+    "eamodio.gitlens" // Git blame & history
 
     // ========================================
     // TIER 3: OPTIONAL (ENABLE AS NEEDED)

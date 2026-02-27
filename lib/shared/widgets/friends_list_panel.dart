@@ -23,6 +23,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/design_system/design_constants.dart';
 import '../../app/app_routes.dart';
 import 'gift_selector.dart';
+import 'pop_out_avatar.dart';
 
 /// Sliding friends list panel
 class FriendsListPanel extends StatefulWidget {
@@ -355,20 +356,24 @@ class _FriendsListPanelState extends State<FriendsListPanel>
                 // Avatar with online indicator
                 Stack(
                   children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: DesignColors.accent20,
-                      backgroundImage:
-                          avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
-                      child: avatarUrl.isEmpty
-                          ? Text(
-                              displayName[0].toUpperCase(),
-                              style: const TextStyle(
-                                color: DesignColors.accent,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            )
-                          : null,
+                    PopOutAvatar(
+                      uid: friend.id,
+                      tooltip: displayName,
+                      child: CircleAvatar(
+                        radius: 24,
+                        backgroundColor: DesignColors.accent20,
+                        backgroundImage:
+                            avatarUrl.isNotEmpty ? NetworkImage(avatarUrl) : null,
+                        child: avatarUrl.isEmpty
+                            ? Text(
+                                displayName[0].toUpperCase(),
+                                style: const TextStyle(
+                                  color: DesignColors.accent,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              )
+                            : null,
+                      ),
                     ),
                     if (isOnline)
                       Positioned(

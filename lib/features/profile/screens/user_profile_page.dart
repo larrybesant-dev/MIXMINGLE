@@ -10,16 +10,29 @@ import 'package:mixmingle/shared/widgets/skeleton_loaders.dart';
 import 'package:mixmingle/shared/widgets/follow_button.dart';
 import 'package:mixmingle/services/events/reporting_service.dart' as reporting;
 import 'package:mixmingle/features/reporting/report_dialog.dart';
+import 'package:mixmingle/core/analytics/analytics_service.dart';
 
-class UserProfilePage extends ConsumerWidget {
+class UserProfilePage extends ConsumerStatefulWidget {
   final String userId;
 
   const UserProfilePage({super.key, required this.userId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<UserProfilePage> createState() => _UserProfilePageState();
+}
+
+class _UserProfilePageState extends ConsumerState<UserProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.instance.logScreenView(screenName: 'screen_profile');
+    AnalyticsService.instance.logDiscoverUserViewed(userId: widget.userId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider).value;
-    final profileUserId = userId;
+    final profileUserId = widget.userId;
     final isOwnProfile = profileUserId == currentUser?.id;
 
     final profileAsync = ref.watch(userProfileProvider(profileUserId));

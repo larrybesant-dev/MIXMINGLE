@@ -3,6 +3,7 @@
 ## Critical Fixes - Copy/Paste Ready
 
 ### Fix 1: spotlight_view.dart Import (Line 3)
+
 ```dart
 // ❌ CURRENT (Line 3)
 import '../../shared/models/camera_state.dart';
@@ -19,6 +20,7 @@ import 'package:mix_and_mingle/shared/models/camera_state.dart';
 ---
 
 ### Fix 2: Room Moderation Widget - Text Property (Line 196)
+
 ```dart
 // ❌ CURRENT (Line 196)
 child: Text(
@@ -42,6 +44,7 @@ child: Text(
 ---
 
 ### Fix 3: Advanced Mic Service Provider (Lines 74-86)
+
 ```dart
 // ❌ CURRENT (Lines 74-86)
 final advancedMicServiceProvider = StateNotifierProvider<
@@ -60,6 +63,7 @@ class AdvancedMicServiceNotifier extends StateNotifier<AdvancedMicServiceState> 
 ```
 
 // ✅ CHANGE TO
+
 ```dart
 final advancedMicServiceProvider = StateNotifierProvider<
     AdvancedMicServiceNotifier,
@@ -98,6 +102,7 @@ class AdvancedMicServiceNotifier extends StateNotifier<AdvancedMicServiceState> 
 ---
 
 ### Fix 4: Room Recording Service Provider (Lines 171-179)
+
 ```dart
 // ❌ CURRENT
 final roomRecordingServiceProvider = StateNotifierProvider<RoomRecordingServiceNotifier, RecordingInfo?>((ref) {
@@ -365,24 +370,25 @@ Switch(
 
 ## Critical Files Summary
 
-| File | Issue | Line(s) | Priority |
-|------|-------|---------|----------|
-| `spotlight_view.dart` | Wrong import path | 3 | P0 |
-| `room_moderation_widget.dart` | Invalid property access | 196 | P0 |
-| `advanced_mic_service.dart` | StateNotifierProvider broken | 74-128 | P0 |
-| `room_recording_service.dart` | StateNotifierProvider broken | 171-220 | P0 |
-| `messaging_providers.dart` | Controller architecture | 25-313 | P0 |
-| `speed_dating_service.dart` | Missing all methods | All | P0 |
-| `gamification_service.dart` | Missing 5 methods | Various | P1 |
-| `payment_service.dart` | Missing 6 methods | Various | P1 |
-| `speed_dating_lobby_page.dart` | Type mismatches | Multiple | P1 |
-| `camera_tile.dart` | withOpacity() deprecated | 104, 105, 177, 211, 230 | P3 |
+| File                           | Issue                        | Line(s)                 | Priority |
+| ------------------------------ | ---------------------------- | ----------------------- | -------- |
+| `spotlight_view.dart`          | Wrong import path            | 3                       | P0       |
+| `room_moderation_widget.dart`  | Invalid property access      | 196                     | P0       |
+| `advanced_mic_service.dart`    | StateNotifierProvider broken | 74-128                  | P0       |
+| `room_recording_service.dart`  | StateNotifierProvider broken | 171-220                 | P0       |
+| `messaging_providers.dart`     | Controller architecture      | 25-313                  | P0       |
+| `speed_dating_service.dart`    | Missing all methods          | All                     | P0       |
+| `gamification_service.dart`    | Missing 5 methods            | Various                 | P1       |
+| `payment_service.dart`         | Missing 6 methods            | Various                 | P1       |
+| `speed_dating_lobby_page.dart` | Type mismatches              | Multiple                | P1       |
+| `camera_tile.dart`             | withOpacity() deprecated     | 104, 105, 177, 211, 230 | P3       |
 
 ---
 
 ## Test the Fixes
 
 After each fix batch, run:
+
 ```bash
 flutter clean
 flutter pub get
@@ -390,4 +396,3 @@ flutter analyze
 ```
 
 Target: Get the error count down from 139 to 0.
-

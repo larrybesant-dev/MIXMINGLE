@@ -11,6 +11,7 @@
 ### ✅ Core Features Completed
 
 #### 1. **Text Chat System** 💬
+
 - Real-time messaging overlay
 - System join/leave notifications
 - Message timestamps and user attribution
@@ -18,11 +19,13 @@
 - Clean, modern UI with pink accent
 
 **Files**:
+
 - `lib/shared/models/voice_room_chat_message.dart` - Chat message model
 - `lib/features/room/widgets/voice_room_chat_overlay.dart` - Chat UI
 - `lib/features/room/providers/voice_room_providers.dart` - Chat state
 
 #### 2. **Room Roles & Permissions** 👥
+
 - Host role (full control)
 - Co-host role (elevated permissions)
 - Listener role (basic permissions)
@@ -30,10 +33,12 @@
 - Role badge display ready
 
 **Files**:
+
 - `lib/shared/models/room_role.dart` - Role definitions and permissions
 - `lib/features/room/providers/voice_room_providers.dart` - Role management
 
 #### 3. **Smooth Animations** ✨
+
 - Join animations: fade-in + slide-up
 - Participant list: scale transitions
 - Chat overlay: smooth slide-in
@@ -41,11 +46,13 @@
 - Video tiles: smooth state transitions
 
 **Implementation**:
+
 - `AnimationController` with 300-500ms durations
 - `CurvedAnimation` for natural easing
 - Proper cleanup in `dispose()`
 
 **Files**:
+
 - `lib/features/room/screens/voice_room_page.dart` - Animation integration
 
 ---
@@ -53,6 +60,7 @@
 ## 📦 New Dependencies (All Standard)
 
 The implementation uses only packages already in your project:
+
 - ✅ `flutter_riverpod` - State management
 - ✅ `flutter` - Core animations
 - ✅ `agora_rtc_engine` - Already integrated
@@ -64,6 +72,7 @@ The implementation uses only packages already in your project:
 ## 🚀 Integration Steps
 
 ### Step 1: Update Auth Integration
+
 In `lib/features/room/screens/voice_room_page.dart`, find the TODO sections:
 
 ```dart
@@ -80,6 +89,7 @@ currentDisplayName: profile.displayName,
 ```
 
 ### Step 2: Test Chat Locally
+
 ```bash
 # Build and run
 flutter run -d chrome  # or your device
@@ -91,6 +101,7 @@ flutter run -d chrome  # or your device
 ```
 
 ### Step 3: Test with Real Participants
+
 ```
 Device 1: Open room
 Device 2: Open same room
@@ -99,6 +110,7 @@ Device 2: Verify message appears in real-time
 ```
 
 ### Step 4: Optional - Add Firestore Persistence
+
 See "Firestore Integration" section below.
 
 ---
@@ -108,6 +120,7 @@ See "Firestore Integration" section below.
 To persist chat messages across sessions:
 
 ### Step 1: Create Chat Listener
+
 ```dart
 // In voice_room_providers.dart
 Future<void> _loadMessagesFromFirestore() async {
@@ -128,6 +141,7 @@ Future<void> _loadMessagesFromFirestore() async {
 ```
 
 ### Step 2: Save Messages
+
 ```dart
 Future<void> _saveMessageToFirestore(VoiceRoomChatMessage message) async {
   await FirebaseFirestore.instance
@@ -140,6 +154,7 @@ Future<void> _saveMessageToFirestore(VoiceRoomChatMessage message) async {
 ```
 
 ### Step 3: Set Firestore Rules
+
 ```javascript
 match /rooms/{roomId}/messages/{messageId} {
   allow read: if request.auth.uid != null;
@@ -153,6 +168,7 @@ match /rooms/{roomId}/messages/{messageId} {
 ## 🧪 Testing Checklist
 
 ### Phase 1: Local Testing (Solo)
+
 - [ ] App opens without errors
 - [ ] Voice room page renders
 - [ ] Chat button appears
@@ -164,6 +180,7 @@ match /rooms/{roomId}/messages/{messageId} {
 - [ ] Can leave room
 
 ### Phase 2: Multi-Device Testing
+
 - [ ] Device A joins room
 - [ ] Device B joins room
 - [ ] Device A sends message
@@ -173,6 +190,7 @@ match /rooms/{roomId}/messages/{messageId} {
 - [ ] No duplicate messages
 
 ### Phase 3: Performance Testing
+
 - [ ] 10+ messages: chat still responsive
 - [ ] Multiple participants: no lag
 - [ ] Rapid message sending: no loss
@@ -180,6 +198,7 @@ match /rooms/{roomId}/messages/{messageId} {
 - [ ] Fast rejoining: state resets properly
 
 ### Phase 4: Edge Cases
+
 - [ ] Empty messages don't send
 - [ ] Very long messages wrap correctly
 - [ ] Special characters display properly
@@ -191,6 +210,7 @@ match /rooms/{roomId}/messages/{messageId} {
 ## 🎯 Key Features Showcase
 
 ### Feature 1: Chat in Action
+
 ```
 User A: "Hi everyone!"
 User B: "Hey! How's it going?"
@@ -200,6 +220,7 @@ User A: "Welcome C!"
 ```
 
 ### Feature 2: Animated Join
+
 ```
 1. User joins → Participant tile fades in
 2. Participant list → Item scales up
@@ -208,6 +229,7 @@ User A: "Welcome C!"
 ```
 
 ### Feature 3: Role System
+
 ```
 Host (👑): Can control everything
 Co-Host (⭐): Can assist host
@@ -224,6 +246,7 @@ UI adapts based on role:
 ## 🔧 Configuration & Customization
 
 ### Chat Customization
+
 ```dart
 // In voice_room_chat_overlay.dart
 // Modify these to customize appearance:
@@ -234,6 +257,7 @@ UI adapts based on role:
 ```
 
 ### Animation Customization
+
 ```dart
 // In voice_room_page.dart
 - Duration(milliseconds: 500) // Join animation speed
@@ -242,6 +266,7 @@ UI adapts based on role:
 ```
 
 ### Role Permissions
+
 ```dart
 // In room_role.dart
 // Modify these to adjust permissions:
@@ -256,14 +281,16 @@ UI adapts based on role:
 ## 📊 Performance Metrics
 
 ### Expected Performance
-| Metric | Target | Status |
-|--------|--------|--------|
-| Message delivery latency | <500ms | ✅ |
-| Animation FPS | 60fps | ✅ |
-| Memory per participant | <5MB | ✅ |
-| Chat opening time | <300ms | ✅ |
+
+| Metric                   | Target | Status |
+| ------------------------ | ------ | ------ |
+| Message delivery latency | <500ms | ✅     |
+| Animation FPS            | 60fps  | ✅     |
+| Memory per participant   | <5MB   | ✅     |
+| Chat opening time        | <300ms | ✅     |
 
 ### Monitoring
+
 ```dart
 // Add to your analytics
 ref.watch(voiceRoomChatProvider(roomId)).length; // Message count
@@ -275,28 +302,36 @@ _animationController.value; // Animation progress (0-1)
 ## 🚨 Troubleshooting
 
 ### Issue: Chat doesn't appear
+
 **Solution**:
+
 1. Check `roomId` is correct
 2. Verify `voiceRoomChatProvider` is initialized
 3. Check Flutter DevTools console for errors
 4. Run `flutter analyze`
 
 ### Issue: Animations stutter
+
 **Solution**:
+
 1. Check animation duration (keep 300-500ms)
 2. Verify `vsync: this` in AnimationController
 3. Profile with DevTools Performance tab
 4. Reduce other animations in same frame
 
 ### Issue: Messages not syncing
+
 **Solution**:
+
 1. Verify network connectivity
 2. Check Firestore rules (if using)
 3. Add debug logging to chat notifier
 4. Check timestamp synchronization
 
 ### Issue: Role changes not reflected
+
 **Solution**:
+
 1. Call `roomRolesProvider.notifier.updateRole()`
 2. Verify UI is watching the provider
 3. Check role enum values match backend
@@ -307,6 +342,7 @@ _animationController.value; // Animation progress (0-1)
 ## 📚 Code Examples
 
 ### Example 1: Add Chat Button to Custom UI
+
 ```dart
 FloatingActionButton(
   onPressed: () {
@@ -322,6 +358,7 @@ FloatingActionButton(
 ```
 
 ### Example 2: Listen to Chat Messages
+
 ```dart
 ref.listen(voiceRoomChatProvider(roomId), (previous, next) {
   if (next.isNotEmpty && previous?.length != next.length) {
@@ -332,6 +369,7 @@ ref.listen(voiceRoomChatProvider(roomId), (previous, next) {
 ```
 
 ### Example 3: Promote User to Co-Host
+
 ```dart
 ElevatedButton(
   onPressed: () {
@@ -343,6 +381,7 @@ ElevatedButton(
 ```
 
 ### Example 4: Check User Permissions
+
 ```dart
 final canMute = role.canMuteOthers;
 if (canMute) {
@@ -355,6 +394,7 @@ if (canMute) {
 ## 📋 Deployment Checklist
 
 ### Pre-Deployment
+
 - [ ] All files created successfully
 - [ ] No compilation errors
 - [ ] Local testing complete
@@ -363,6 +403,7 @@ if (canMute) {
 - [ ] Firebase initialized (if using persistence)
 
 ### Deployment
+
 - [ ] Merge to main branch
 - [ ] Tag version 1.0.0
 - [ ] Deploy to staging
@@ -371,6 +412,7 @@ if (canMute) {
 - [ ] Deploy to production
 
 ### Post-Deployment
+
 - [ ] Monitor error logs
 - [ ] Check chat latency
 - [ ] Monitor animation performance
@@ -382,6 +424,7 @@ if (canMute) {
 ## 🎯 Success Criteria
 
 **Phase 1 - MVP (Current)** ✅
+
 - [x] Text chat functional
 - [x] Role system in place
 - [x] Smooth animations
@@ -389,6 +432,7 @@ if (canMute) {
 - [x] Production-ready code
 
 **Phase 2 - Enhancement (Next)** 📅
+
 - [ ] Firestore persistence
 - [ ] Message reactions
 - [ ] Typing indicators
@@ -396,6 +440,7 @@ if (canMute) {
 - [ ] Rich media support
 
 **Phase 3 - Advanced (Future)** 🚀
+
 - [ ] AI moderation
 - [ ] Auto-translations
 - [ ] Message pinning
@@ -407,11 +452,13 @@ if (canMute) {
 ## 📞 Support Resources
 
 ### Documentation Files
+
 1. `VOICE_ROOM_TESTING_GUIDE.md` - Detailed testing instructions
 2. `VOICE_ROOM_QUICK_REFERENCE.md` - Quick API reference
 3. This file - Deployment guide
 
 ### Code References
+
 - `voice_room_page.dart` - Main implementation
 - `voice_room_chat_overlay.dart` - Chat UI component
 - `voice_room_providers.dart` - State management

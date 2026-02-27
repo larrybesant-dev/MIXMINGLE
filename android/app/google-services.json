@@ -9,6 +9,35 @@
       "client_info": {
         "mobilesdk_app_id": "1:980846719834:android:8752ec20ee1dfb78077963",
         "android_client_info": {
+          "package_name": "com.example.mix_and_mingle"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "980846719834-tsffhkc8cifaod49je994284esupcdqk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbS7zVY2o4S1-OOPkqFuUXz5B5hmmsS0U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "980846719834-tsffhkc8cifaod49je994284esupcdqk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:980846719834:android:046ccc25cd68756f077963",
+        "android_client_info": {
           "package_name": "com.mixandmingle.mixandmingle"
         }
       },

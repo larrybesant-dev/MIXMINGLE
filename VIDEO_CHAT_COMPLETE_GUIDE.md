@@ -9,6 +9,7 @@ This is a modern, full-featured Flutter Web video chat application (inspired by 
 ### ✨ 1. UI/UX Features
 
 #### Responsive Video Grid
+
 - **Adaptive Layout**: Automatically adjusts video tile size based on screen size and participant count
 - **1x1 for 1 participant, 2x2 for 4, 3x3 for 9, etc.**
 - **Draggable/Resizable Tiles**: Long-press to pin favorite video (visual indicator with pink border)
@@ -19,6 +20,7 @@ This is a modern, full-featured Flutter Web video chat application (inspired by 
   - Camera approval status badge (orange when pending)
 
 #### Friends List Sidebar
+
 - **Comprehensive Friend Management**:
   - Online/offline status with real-time indicator (green dot)
   - Last seen timestamp
@@ -28,6 +30,7 @@ This is a modern, full-featured Flutter Web video chat application (inspired by 
   - Filter by Online Only or Favorites
 
 #### Groups Sidebar
+
 - **Dynamic Group Management**:
   - Create new groups with name and description
   - Join/Leave group buttons
@@ -37,6 +40,7 @@ This is a modern, full-featured Flutter Web video chat application (inspired by 
   - Collapsible design for more screen space
 
 #### Top Navigation Bar
+
 - **Live indicator** showing current participant count
 - **Video quality selector** (Low/Medium/High - 180p/360p/720p)
 - **Dark/Light mode toggle**
@@ -45,6 +49,7 @@ This is a modern, full-featured Flutter Web video chat application (inspired by 
 - **Responsive controls** that adapt to screen width
 
 #### Chat Integration
+
 - **Rich Text Messaging**:
   - Text messages with timestamps
   - Emoji picker (16 popular emojis)
@@ -55,6 +60,7 @@ This is a modern, full-featured Flutter Web video chat application (inspired by 
   - Timestamps for each message (relative time: "2m ago", "5h ago", etc.)
 
 #### Sidebar Collapsibility
+
 - **Smooth Animations**: Slide animations for show/hide
 - **Toggle Buttons**: Easy collapse/expand controls
 - **Space Efficient**: Maximizes video area when sidebars are collapsed
@@ -63,6 +69,7 @@ This is a modern, full-featured Flutter Web video chat application (inspired by 
 ### 🎮 2. Video & Privacy Features
 
 #### Camera Approval System
+
 - **Three Approval Modes**:
   - **Ask Each Time**: Request approval for each room
   - **Allow All**: Auto-approve all viewers
@@ -79,6 +86,7 @@ This is a modern, full-featured Flutter Web video chat application (inspired by 
   - Visual feedback for approval status
 
 #### Video Control Features
+
 - **Per-Participant Controls**:
   - Toggle audio on/off
   - Toggle camera on/off (shows avatar when off)
@@ -92,6 +100,7 @@ This is a modern, full-featured Flutter Web video chat application (inspired by 
   - Auto-adjust option for poor connections
 
 #### Privacy Features
+
 - Blur background option
 - Auto-mute on join
 - Read receipts toggle
@@ -101,6 +110,7 @@ This is a modern, full-featured Flutter Web video chat application (inspired by 
 ### 👥 3. Friends & Groups Features
 
 #### Friends Management
+
 - **Rich Profile Info**:
   - Avatar with online status indicator
   - Last seen timestamp
@@ -120,6 +130,7 @@ This is a modern, full-featured Flutter Web video chat application (inspired by 
   - Click to navigate
 
 #### Groups Management
+
 - **Group Creation**:
   - Create new groups with custom name and description
   - Auto-generate group avatar
@@ -141,18 +152,21 @@ This is a modern, full-featured Flutter Web video chat application (inspired by 
 ### 🎯 4. Engagement Features
 
 #### Reactions in Video (Emoji Reactions)
+
 - Quick emoji reactions during video calls
 - Integrated emoji picker in chat
 - Visual feedback for reactions
 - Real-time reaction display
 
 #### Favorites & Pinning
+
 - **Pin Friends**: Star toggle in friends list
 - **Pin Groups**: Save frequently used groups
 - **Pin Videos**: Long-press on video tile to pin
 - **Favorite visual indicators**: Star icons and highlighted borders
 
 #### Notifications & Alerts
+
 - **Notification Types**:
   - Friend requests
   - New messages
@@ -174,6 +188,7 @@ Built with **Riverpod** for excellent state management:
 #### Providers Included
 
 **Friends Management**
+
 ```
 - friendsProvider: Main friends list
 - filteredFriendsProvider: Search results
@@ -184,6 +199,7 @@ Built with **Riverpod** for excellent state management:
 ```
 
 **Groups Management**
+
 ```
 - groupsProvider: All groups
 - userJoinedGroupsProvider: User's joined groups
@@ -193,6 +209,7 @@ Built with **Riverpod** for excellent state management:
 ```
 
 **Video Room Management**
+
 ```
 - activeRoomIdProvider: Current room ID
 - participantsProvider: Room participants
@@ -202,6 +219,7 @@ Built with **Riverpod** for excellent state management:
 ```
 
 **Chat**
+
 ```
 - chatMessagesProvider: Messages list
 - lastMessageProvider: Most recent message
@@ -209,6 +227,7 @@ Built with **Riverpod** for excellent state management:
 ```
 
 **Notifications**
+
 ```
 - notificationsProvider: All notifications
 - unreadNotificationsProvider: Unread only
@@ -216,6 +235,7 @@ Built with **Riverpod** for excellent state management:
 ```
 
 **UI State**
+
 ```
 - darkModeProvider: Theme toggle
 - videoQualityProvider: Quality setting
@@ -289,6 +309,7 @@ Or from home screen, click "Video Chat" menu item
 #### 3. Test Features
 
 **Mock Data Included**:
+
 - 6 sample friends with different statuses
 - 5 sample groups with participants
 - 3 video participants in demo room
@@ -297,6 +318,7 @@ Or from home screen, click "Video Chat" menu item
 ### 📊 Demo Users
 
 **Friends**
+
 1. Alex Johnson - Online, Favorite
 2. Sarah Chen - Online, Unread (2)
 3. Jordan Taylor - Offline
@@ -305,6 +327,7 @@ Or from home screen, click "Video Chat" menu item
 6. Riley Davis - Online
 
 **Groups**
+
 1. Daily Standup - 4 participants
 2. Game Night - 4 participants, Unread (3)
 3. Creative Studio - 3 participants, Unread (5)
@@ -312,6 +335,7 @@ Or from home screen, click "Video Chat" menu item
 5. Fitness Buddies - 5 participants, Unread (2)
 
 **Video Participants**
+
 1. Alex Johnson - Video On, Audio On, Camera Approved
 2. Sarah Chen - Video On, Audio On, Camera Approved
 3. Jordan Taylor - Video On, Audio Off, Camera Approved
@@ -319,17 +343,20 @@ Or from home screen, click "Video Chat" menu item
 ### 🎯 Usage Examples
 
 #### Open Video Chat
+
 ```dart
 Navigator.pushNamed(context, AppRoutes.videoChat);
 ```
 
 #### Add a Friend Request Notification
+
 ```dart
 ref.read(notificationsProvider.notifier)
     .friendRequest('Alex Johnson', 'user1');
 ```
 
 #### Send a Message
+
 ```dart
 ref.read(chatMessagesProvider.notifier).sendMessage(
   senderId: 'user1',
@@ -340,24 +367,28 @@ ref.read(chatMessagesProvider.notifier).sendMessage(
 ```
 
 #### Toggle Video for Participant
+
 ```dart
 ref.read(participantsProvider.notifier)
     .toggleVideo('user1', false);
 ```
 
 #### Update Camera Approval
+
 ```dart
 ref.read(participantsProvider.notifier)
     .updateCameraApprovalStatus('user1', 'approved');
 ```
 
 #### Search Friends
+
 ```dart
 ref.read(friendSearchQueryProvider.notifier).state = 'alex';
 // Then watch filteredFriendsProvider
 ```
 
 #### Join a Group
+
 ```dart
 ref.read(groupsProvider.notifier).joinGroup('group1', 'user1');
 ```
@@ -407,6 +438,7 @@ The architecture is ready for WebRTC/Agora integration:
 ### 🎓 Learning Resources
 
 The code includes:
+
 - **Riverpod Patterns**: Provider composition, StateNotifier usage
 - **Flutter Animations**: Slide, fade, scale transitions
 - **Responsive Design**: MediaQuery-based layouts
@@ -416,18 +448,22 @@ The code includes:
 ### 🐛 Troubleshooting
 
 **Sidebar Not Showing?**
+
 - Check `friendsSidebarCollapsedProvider` and `groupsSidebarCollapsedProvider`
 - Click the collapse button to toggle
 
 **Messages Not Updating?**
+
 - Ensure watching `chatMessagesProvider` in Consumer widget
 - Check message type is 'text'
 
 **Video Tiles Not Resizing?**
+
 - App calculates columns based on `MediaQuery.of(context).size.width`
 - Resize browser window or switch between devices
 
 **Notifications Not Showing?**
+
 - Check `notificationsProvider` is being watched
 - Verify notification type is one of: 'friend_request', 'message', 'video_request', 'room_invite', 'system'
 
@@ -447,6 +483,7 @@ The code includes:
 ### 📞 Support
 
 For questions or issues:
+
 1. Check the model definitions in `/lib/providers/app_models.dart`
 2. Review provider implementations in `/lib/providers/`
 3. Examine widget code in `/lib/shared/widgets/`

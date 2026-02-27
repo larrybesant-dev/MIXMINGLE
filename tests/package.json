@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "smoke": "jest --config=jest.smoke.config.js",
+    "auth": "jest --config=jest.auth.config.js",
+    "errors": "jest --config=jest.errors.config.js",
+    "thirdparty": "jest --config=jest.thirdparty.config.js"
+  }
+}

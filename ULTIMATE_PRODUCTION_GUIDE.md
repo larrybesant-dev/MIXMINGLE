@@ -11,13 +11,16 @@
 ## 🎯 Quick Start (3 Steps)
 
 ### Step 1: Open VS Code
+
 - Open Mix & Mingle project in VS Code
 
 ### Step 2: Open Debug Menu
+
 - Press `Ctrl+Shift+D` (or click Debug icon in sidebar)
 - Look for "Production Builds" section
 
 ### Step 3: Select & Run
+
 - Choose configuration from dropdown
 - Press `F5` or click **"Start Debugging"**
 - Watch the magic happen ✨
@@ -29,6 +32,7 @@
 In VS Code Debug menu, you'll see:
 
 ### 1️⃣ **🚀 Ultimate Production (Full)**
+
 - **What it does:** Everything
   - Android build recovery & APK/AAB signing
   - Web build & Firebase deployment
@@ -39,6 +43,7 @@ In VS Code Debug menu, you'll see:
 - **Use when:** Ready to deploy to production
 
 ### 2️⃣ **🔄 Ultimate Production (Dry Run)**
+
 - **What it does:** Simulate everything WITHOUT deploying
   - Shows what WOULD be built
   - Doesn't deploy to Firebase
@@ -47,6 +52,7 @@ In VS Code Debug menu, you'll see:
 - **Use when:** Want to verify pipeline works before full build
 
 ### 3️⃣ **🌐 Ultimate Production (Web Only)**
+
 - **What it does:** Build & deploy only Web
   - Skip Android build
   - Full Web build & Firebase deployment
@@ -55,6 +61,7 @@ In VS Code Debug menu, you'll see:
 - **Use when:** Web needs update, Android is already built
 
 ### 4️⃣ **📱 Ultimate Production (Android Only)**
+
 - **What it does:** Build only Android
   - Skip Web build & Firebase deploy
   - Full Android recovery, APK, AAB
@@ -63,6 +70,7 @@ In VS Code Debug menu, you'll see:
 - **Use when:** Android needs rebuild, Web is already deployed
 
 ### 5️⃣ **⚡ Ultimate Production (No Tests)**
+
 - **What it does:** Full build without tests
   - Android + Web + Deploy
   - Skip automated feature tests
@@ -117,6 +125,7 @@ $env:SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/..."
 After running, you'll get:
 
 ### Build Artifacts
+
 ```
 build/
   app/
@@ -129,6 +138,7 @@ build/
 ```
 
 ### Reports & Logs
+
 ```
 production_logs/
   production_TIMESTAMP.log       ← Master log of everything
@@ -137,6 +147,7 @@ PRODUCTION_READY_REPORT.md       ← Full status report
 ```
 
 ### Individual Logs
+
 ```
 logs/
   android_recovery_TIMESTAMP.log ← Android build details
@@ -164,6 +175,7 @@ After running, check for:
 ## 🎯 Recommended Workflow
 
 ### First Time (Dry Run)
+
 ```powershell
 # Test the pipeline without deploying
 .\ultimate_production.ps1 --dry-run
@@ -173,6 +185,7 @@ After running, check for:
 ```
 
 ### Ready to Deploy
+
 ```powershell
 # Full production build with all tests
 .\ultimate_production.ps1
@@ -183,6 +196,7 @@ After running, check for:
 ```
 
 ### Quick Rebuild (skip tests)
+
 ```powershell
 # Faster build when you're confident
 .\ultimate_production.ps1 --skip-tests
@@ -191,6 +205,7 @@ After running, check for:
 ```
 
 ### Updates (Web or Android only)
+
 ```powershell
 # Update only Web
 .\ultimate_production.ps1 --skip-android
@@ -204,24 +219,29 @@ After running, check for:
 ## 🔔 Optional: Enable Notifications
 
 ### Discord
+
 1. Create Discord server webhook
 2. Copy webhook URL
 3. Set environment variable:
+
 ```powershell
 $env:DISCORD_WEBHOOK_URL = "https://discord.com/api/webhooks/xxx"
 .\ultimate_production.ps1
 ```
 
 ### Slack
+
 1. Create Slack app webhook
 2. Copy webhook URL
 3. Set environment variable:
+
 ```powershell
 $env:SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/xxx"
 .\ultimate_production.ps1
 ```
 
 Both notifications will include:
+
 - Build status (success/warning/error)
 - Android APK/AAB status
 - Web deployment status
@@ -234,6 +254,7 @@ Both notifications will include:
 ### 🚀 Deploy to Stores
 
 **Android (Google Play Store)**
+
 ```
 Take: build/app/outputs/bundle/release/app-release.aab
 1. Go to Google Play Console
@@ -243,12 +264,14 @@ Take: build/app/outputs/bundle/release/app-release.aab
 ```
 
 **Web (Firebase Hosting)**
+
 ```
 Already deployed automatically ✅
 Check Firebase console for live URL
 ```
 
 **iOS (App Store)**
+
 ```powershell
 # On macOS:
 flutter build ios --release
@@ -269,18 +292,22 @@ flutter build ios --release
 ## 🆘 Troubleshooting
 
 ### Build stuck / timeout
+
 - Increase timeout in script or run with `--skip-tests`
 - Check `production_logs/` for specific errors
 
 ### Android build fails
+
 - Run `.\diagnose-android-build.ps1` for detailed diagnostics
 - Check `ANDROID_BUILD_FIXES.md` for common solutions
 
 ### Web deployment fails
+
 - Verify Firebase CLI is authenticated: `firebase login`
 - Check `production_logs/firebase_deploy_*.log` for Firebase errors
 
 ### Tests fail
+
 - Skip tests with: `.\ultimate_production.ps1 --skip-tests`
 - Run individual tests to debug
 - Check `logs/test_*.log` for details
@@ -303,13 +330,13 @@ Your Mix & Mingle app is now ready for production:
 
 ## 🎓 Architecture Reference
 
-| Script | Purpose | Duration |
-|--------|---------|----------|
-| `ultimate_production.ps1` | Master orchestrator | 40-50 min |
-| `recover-android-build.ps1` | Android recovery & build | 15-25 min |
-| `diagnose-android-build.ps1` | Android diagnostics | 5-10 min |
-| `apply-android-fixes.ps1` | Auto-apply Android fixes | 2-3 min |
-| `full_build_and_deploy.ps1` | Alternative full pipeline | 40-50 min |
+| Script                       | Purpose                   | Duration  |
+| ---------------------------- | ------------------------- | --------- |
+| `ultimate_production.ps1`    | Master orchestrator       | 40-50 min |
+| `recover-android-build.ps1`  | Android recovery & build  | 15-25 min |
+| `diagnose-android-build.ps1` | Android diagnostics       | 5-10 min  |
+| `apply-android-fixes.ps1`    | Auto-apply Android fixes  | 2-3 min   |
+| `full_build_and_deploy.ps1`  | Alternative full pipeline | 40-50 min |
 
 **Recommended**: Use `ultimate_production.ps1` via VS Code F5 for production builds.
 

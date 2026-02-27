@@ -9,6 +9,7 @@
 ## 🎯 Deliverables
 
 ### Report System
+
 ✅ **User Reporting** - Report users for spam, harassment, inappropriate content
 ✅ **Report Categories** - 7 report types with severity levels
 ✅ **Report Submission** - Simple UI with reason selection and details
@@ -16,6 +17,7 @@
 ✅ **Analytics Integration** - Track report patterns and trends
 
 ### Block System
+
 ✅ **Block Users** - Prevent specific users from contacting you
 ✅ **Unblock Users** - Restore access to previously blocked users
 ✅ **Blocked List** - View and manage all blocked users
@@ -23,6 +25,7 @@
 ✅ **Automatic Filtering** - Blocked users hidden from all features
 
 ### Admin Dashboard
+
 ✅ **Reports Review** - Centralized dashboard for pending reports
 ✅ **Report Actions** - Resolve or dismiss reports with one tap
 ✅ **User Management** - Ban, warn, or clear user accounts
@@ -30,6 +33,7 @@
 ✅ **Neon UI** - Consistent design with color-coded report types
 
 ### Auto-Moderation
+
 ✅ **AI Content Scanning** - Automatic toxicity detection
 ✅ **Profanity Filter** - Block offensive language in messages
 ✅ **Spam Detection** - Identify and flag spam patterns
@@ -37,6 +41,7 @@
 ✅ **Auto-Actions** - Automatic warnings, temp bans, permanent bans
 
 ### Network Trust System
+
 ✅ **Global Ban Propagation** - Share bans across partnered apps
 ✅ **Cross-App Safety Signals** - Receive warnings from partner platforms
 ✅ **Appeals System** - User appeal process for bans
@@ -44,6 +49,7 @@
 ✅ **Federation Ready** - Multi-platform safety network
 
 ### Room Moderation
+
 ✅ **Host Controls** - Room owners can mute, kick, or ban users
 ✅ **Moderation Panel** - In-room moderation UI
 ✅ **Mute Users** - Silence disruptive users temporarily
@@ -96,6 +102,7 @@ lib/
 ## 🗄️ Firestore Schema
 
 ### Collection: `reports/{reportId}`
+
 ```javascript
 {
   reporterId: "userId",
@@ -115,6 +122,7 @@ lib/
 ```
 
 ### Collection: `blocks/{userId}/blockedUsers/{blockedUserId}`
+
 ```javascript
 {
   blockedUserId: "blockedUserId",
@@ -123,6 +131,7 @@ lib/
 ```
 
 ### Collection: `banned_users/{userId}`
+
 ```javascript
 {
   userId: "userId",
@@ -136,6 +145,7 @@ lib/
 ```
 
 ### Collection: `user_warnings/{warningId}`
+
 ```javascript
 {
   userId: "userId",
@@ -148,6 +158,7 @@ lib/
 ```
 
 ### Collection: `moderation_actions/{actionId}`
+
 ```javascript
 {
   userId: "targetUserId",
@@ -163,6 +174,7 @@ lib/
 ```
 
 ### Collection: `bans/{banId}` (Network Trust)
+
 ```javascript
 {
   banId: "uniqueId",
@@ -185,6 +197,7 @@ lib/
 ```
 
 ### Collection: `safety_signals/{signalId}` (Cross-App)
+
 ```javascript
 {
   signalId: "uniqueId",
@@ -205,6 +218,7 @@ lib/
 ```
 
 ### Collection: `appeals/{appealId}`
+
 ```javascript
 {
   appealId: "uniqueId",
@@ -222,6 +236,7 @@ lib/
 ```
 
 ### Collection: `trust_profiles/{userId}`
+
 ```javascript
 {
   userId: "userId",
@@ -240,36 +255,43 @@ lib/
 ## 🎨 Report Types
 
 ### 1. Spam
+
 **Severity:** Low
 **Examples:** Repeated messages, promotional content, bot-like behavior
 **Color:** Orange
 
 ### 2. Harassment
+
 **Severity:** High
 **Examples:** Bullying, stalking, targeted attacks
 **Color:** Red
 
 ### 3. Inappropriate Content
+
 **Severity:** Medium
 **Examples:** NSFW content, graphic images, offensive material
 **Color:** Deep Purple
 
 ### 4. Hate Speech
+
 **Severity:** Critical
 **Examples:** Racial slurs, discrimination, threats based on identity
 **Color:** Red Accent
 
 ### 5. Violence
+
 **Severity:** Critical
 **Examples:** Threats of harm, glorifying violence, self-harm content
 **Color:** Dark Red
 
 ### 6. Scam
+
 **Severity:** Medium
 **Examples:** Phishing, financial fraud, fake profiles
 **Color:** Amber
 
 ### 7. Other
+
 **Severity:** Variable
 **Examples:** Issues not covered by other categories
 **Color:** Neon Blue
@@ -281,6 +303,7 @@ lib/
 ### ReportService
 
 #### Submit Report
+
 ```dart
 Future<void> submitReport({
   required String reporterId,
@@ -292,12 +315,15 @@ Future<void> submitReport({
 ```
 
 #### Stream Open Reports
+
 ```dart
 Stream<QuerySnapshot> streamOpenReports()
 ```
+
 **Returns:** Real-time stream of unresolved reports
 
 #### Update Report Status
+
 ```dart
 Future<void> updateReportStatus({
   required String reportId,
@@ -305,9 +331,11 @@ Future<void> updateReportStatus({
   required String reviewedBy,
 })
 ```
+
 **Status:** `reviewed`, `resolved`, `dismissed`
 
 #### Ban User
+
 ```dart
 Future<void> banUser({
   required String userId,
@@ -321,6 +349,7 @@ Future<void> banUser({
 ### BlockService
 
 #### Block User
+
 ```dart
 Future<void> blockUser({
   required String userId,
@@ -329,6 +358,7 @@ Future<void> blockUser({
 ```
 
 #### Unblock User
+
 ```dart
 Future<void> unblockUser({
   required String userId,
@@ -337,6 +367,7 @@ Future<void> unblockUser({
 ```
 
 #### Check Block Status
+
 ```dart
 Future<bool> isBlocked({
   required String userId,
@@ -345,9 +376,11 @@ Future<bool> isBlocked({
 ```
 
 #### Stream Blocked Users
+
 ```dart
 Stream<List<String>> streamBlockedUsers(String userId)
 ```
+
 **Returns:** List of blocked user IDs, updated in real-time
 
 ---
@@ -355,6 +388,7 @@ Stream<List<String>> streamBlockedUsers(String userId)
 ### AdminService
 
 #### Ban User (Admin)
+
 ```dart
 Future<void> banUser({
   required String userId,
@@ -366,6 +400,7 @@ Future<void> banUser({
 ```
 
 #### Warn User
+
 ```dart
 Future<void> warnUser({
   required String userId,
@@ -376,6 +411,7 @@ Future<void> warnUser({
 ```
 
 #### Unban User
+
 ```dart
 Future<void> unbanUser({
   required String userId,
@@ -385,6 +421,7 @@ Future<void> unbanUser({
 ```
 
 #### Get User Moderation History
+
 ```dart
 Future<List<ModerationAction>> getUserHistory(String userId)
 ```
@@ -394,10 +431,13 @@ Future<List<ModerationAction>> getUserHistory(String userId)
 ### AutoModerationService
 
 #### Analyze Content
+
 ```dart
 Future<ModerationResult> analyzeContent(String content)
 ```
+
 **Returns:**
+
 ```dart
 {
   isToxic: true,
@@ -408,20 +448,25 @@ Future<ModerationResult> analyzeContent(String content)
 ```
 
 #### Filter Profanity
+
 ```dart
 String filterProfanity(String text)
 ```
+
 **Returns:** Text with profanity replaced by asterisks
 
 #### Detect Spam
+
 ```dart
 Future<bool> isSpam(String content, String userId)
 ```
 
 #### Calculate User Risk
+
 ```dart
 Future<double> calculateRiskScore(String userId)
 ```
+
 **Returns:** Risk score 0.0-1.0
 
 ---
@@ -429,6 +474,7 @@ Future<double> calculateRiskScore(String userId)
 ### NetworkTrustService
 
 #### Global Ban Propagation
+
 ```dart
 Future<NetworkBan> globalBanPropagation({
   required String userId,
@@ -443,6 +489,7 @@ Future<NetworkBan> globalBanPropagation({
 ```
 
 #### Cross-App Safety Signals
+
 ```dart
 Future<SafetySignal> crossAppSafetySignals({
   required String userId,
@@ -457,6 +504,7 @@ Future<SafetySignal> crossAppSafetySignals({
 ```
 
 #### Global Appeals System
+
 ```dart
 Future<Appeal> globalAppealsSystem({
   required String userId,
@@ -468,11 +516,13 @@ Future<Appeal> globalAppealsSystem({
 ```
 
 #### Get Active Bans
+
 ```dart
 Future<List<NetworkBan>> getActiveBans(String userId)
 ```
 
 #### Revoke Ban
+
 ```dart
 Future<void> revokeBan(String banId, {String? reason})
 ```
@@ -482,6 +532,7 @@ Future<void> revokeBan(String banId, {String? reason})
 ### HostModerationService (Room-Level)
 
 #### Mute User
+
 ```dart
 Future<void> muteUser({
   required String roomId,
@@ -491,6 +542,7 @@ Future<void> muteUser({
 ```
 
 #### Kick User
+
 ```dart
 Future<void> kickUser({
   required String roomId,
@@ -499,6 +551,7 @@ Future<void> kickUser({
 ```
 
 #### Ban from Room
+
 ```dart
 Future<void> banFromRoom({
   required String roomId,
@@ -508,6 +561,7 @@ Future<void> banFromRoom({
 ```
 
 #### Unban from Room
+
 ```dart
 Future<void> unbanFromRoom({
   required String roomId,
@@ -520,10 +574,12 @@ Future<void> unbanFromRoom({
 ## 🎨 UI Components
 
 ### AdminDashboardPage
+
 **Location:** `lib/features/admin/admin_dashboard_page.dart`
 **Route:** `/admin/dashboard`
 
 **Features:**
+
 - Real-time pending reports count
 - Color-coded report type badges
 - Resolve/Dismiss buttons
@@ -531,6 +587,7 @@ Future<void> unbanFromRoom({
 - Neon styling with glow effects
 
 **Usage:**
+
 ```dart
 Navigator.pushNamed(context, '/admin/dashboard');
 ```
@@ -538,15 +595,18 @@ Navigator.pushNamed(context, '/admin/dashboard');
 ---
 
 ### ReportUserScreen
+
 **Location:** `lib/features/moderation/screens/report_user_screen.dart`
 
 **Features:**
+
 - 7 report type categories
 - Optional additional details
 - Submit with analytics tracking
 - Success/error feedback
 
 **Usage:**
+
 ```dart
 Navigator.push(
   context,
@@ -562,15 +622,18 @@ Navigator.push(
 ---
 
 ### BlockedUsersScreen
+
 **Location:** `lib/features/moderation/screens/blocked_users_screen.dart`
 
 **Features:**
+
 - Scrollable blocked users list
 - Unblock button per user
 - Empty state UI
 - Real-time updates
 
 **Usage:**
+
 ```dart
 Navigator.pushNamed(context, '/blocked-users');
 ```
@@ -578,14 +641,17 @@ Navigator.pushNamed(context, '/blocked-users');
 ---
 
 ### BlockReportDialog
+
 **Location:** `lib/shared/widgets/block_report_dialog.dart`
 
 **Features:**
+
 - Combined block + report actions
 - Quick access from user profiles
 - One-tap operations
 
 **Usage:**
+
 ```dart
 showDialog(
   context: context,
@@ -600,9 +666,11 @@ showDialog(
 ---
 
 ### HostModerationPanel
+
 **Location:** `lib/features/moderation/widgets/host_moderation_panel.dart`
 
 **Features:**
+
 - In-room moderation controls
 - Mute (1min, 5min, 30min, permanent)
 - Kick user
@@ -610,6 +678,7 @@ showDialog(
 - Visible only to room owner/moderators
 
 **Usage:**
+
 ```dart
 // Inside room screen
 if (isRoomOwner) {
@@ -627,6 +696,7 @@ if (isRoomOwner) {
 ## 🚀 Usage Examples
 
 ### Report a User
+
 ```dart
 final reportService = ReportService();
 
@@ -640,6 +710,7 @@ await reportService.submitReport(
 ```
 
 ### Block a User
+
 ```dart
 final blockService = BlockService();
 
@@ -660,6 +731,7 @@ if (isBlocked) {
 ```
 
 ### Admin Ban User
+
 ```dart
 final adminService = AdminService();
 
@@ -672,6 +744,7 @@ await adminService.banUser(
 ```
 
 ### Auto-Moderate Message
+
 ```dart
 final autoMod = AutoModerationService();
 
@@ -687,6 +760,7 @@ final filtered = autoMod.filterProfanity(messageText);
 ```
 
 ### Room Moderation
+
 ```dart
 final roomMod = HostModerationService();
 
@@ -706,6 +780,7 @@ await roomMod.banFromRoom(
 ```
 
 ### Appeal a Ban
+
 ```dart
 final trustService = NetworkTrustService();
 
@@ -779,6 +854,7 @@ function isAdmin(uid) {
 ## 📊 Analytics Events
 
 ### Report Events
+
 ```dart
 await analytics.logEvent(
   name: 'report_submitted',
@@ -791,6 +867,7 @@ await analytics.logEvent(
 ```
 
 ### Block Events
+
 ```dart
 await analytics.logEvent(
   name: 'user_blocked',
@@ -801,6 +878,7 @@ await analytics.logEvent(
 ```
 
 ### Moderation Actions
+
 ```dart
 await analytics.logEvent(
   name: 'admin_action',
@@ -818,12 +896,15 @@ await analytics.logEvent(
 ## 🐛 Known Issues & Workarounds
 
 ### Issue: Report not appearing in admin dashboard
+
 **Solution:** Check that `status` field is set to `'open'`. Verify admin has proper role permission in Firestore.
 
 ### Issue: Block not preventing messages
+
 **Solution:** Ensure block check is performed before displaying messages. Use `streamBlockedUsers()` to maintain cached list.
 
 ### Issue: Auto-moderation too aggressive
+
 **Solution:** Adjust confidence threshold in `AutoModerationService`. Lower from 0.8 to 0.6 for more permissive filtering.
 
 ---
@@ -861,6 +942,7 @@ await analytics.logEvent(
 ## ✅ Stage 7 Complete
 
 **Moderation and admin system is production-ready and fully integrated with:**
+
 - ✅ User Reporting (7 categories)
 - ✅ Block/Unblock System
 - ✅ Admin Dashboard (fixed and styled)

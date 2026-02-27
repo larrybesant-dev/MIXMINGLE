@@ -1,23 +1,27 @@
 # 🎯 Agora Integration Test Guide
 
 ## ✅ Backend Status
+
 - **Cloud Function**: `getAgoraToken` deployed and working
 - **Test Results**: Both test rooms return valid tokens
   - `DoWJnySEtTtEZsaB80RR` ✅
   - `test-room-001` ✅
 
 ## ✅ Flutter Integration Status
+
 Your Flutter app is **already wired correctly**:
 
 ### 1. Token Service (`agora_token_service.dart`)
+
 ```dart
 ✅ Uses Firebase ID token for auth
 ✅ Calls HTTP endpoint (not callable function)
-✅ Endpoint: https://us-central1-mix-and-mingle-v2.cloudfunctions.net/getAgoraToken
+✅ Endpoint: https://us-central1-mix-and-mingle-v2.cloudfunctions.net/generateAgoraToken
 ✅ Returns: token, appId, channelName, uid, role, expiresAt
 ```
 
 ### 2. Agora Service (`agora_service.dart`)
+
 ```dart
 ✅ Uses AgoraTokenService to fetch tokens
 ✅ Initializes Agora RTC engine with appId from token response
@@ -26,6 +30,7 @@ Your Flutter app is **already wired correctly**:
 ```
 
 ### 3. Room Page (`room_page.dart`)
+
 ```dart
 ✅ Calls agoraService.joinChannel() on initialization
 ✅ Passes room ID as channelName
@@ -40,6 +45,7 @@ Your Flutter app is **already wired correctly**:
 ### Option 1: Test with Existing Room from Firestore
 
 1. **Start Flutter app**:
+
    ```powershell
    flutter run -d chrome
    ```
@@ -51,6 +57,7 @@ Your Flutter app is **already wired correctly**:
    - `test-room-001`
 
 4. **Watch for logs** in Flutter console:
+
    ```
    ✅ "Successfully joined channel: test-room-001"
    ✅ "Joined Agora channel: test-room-001"
@@ -69,10 +76,11 @@ Run this in the Flutter app's browser console to verify token fetch:
 
 ```javascript
 // This will show if the token endpoint is being called
-console.log('Testing token fetch from Flutter...');
+console.log("Testing token fetch from Flutter...");
 ```
 
 Then watch the Network tab for:
+
 - Request to `getAgoraToken?channelName=...`
 - Status: 200 OK
 - Response includes `token`, `appId`, etc.
@@ -82,6 +90,7 @@ Then watch the Network tab for:
 ## 🔍 What to Look For
 
 ### Success Indicators:
+
 - ✅ No "Room not found" errors
 - ✅ Token successfully fetched
 - ✅ Agora engine initialized
@@ -89,6 +98,7 @@ Then watch the Network tab for:
 - ✅ Local user joined event fires
 
 ### Common Issues:
+
 - ❌ "Room not found" → Room doesn't exist in Firestore
 - ❌ "User not authenticated" → Sign in first
 - ❌ "Failed to get ID token" → Token expired, refresh page

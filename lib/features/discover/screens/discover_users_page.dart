@@ -14,7 +14,10 @@ import '../../../shared/providers/user_providers.dart';
 import '../../../shared/models/user_profile.dart';
 import '../../../shared/widgets/social_graph_widgets.dart';
 import '../../../shared/widgets/club_background.dart';
+import '../../../shared/widgets/offline_widgets.dart';
 import '../../../core/design_system/design_constants.dart';
+import 'package:mixmingle/core/analytics/analytics_service.dart';
+import 'package:mixmingle/core/analytics/analytics_events.dart';
 
 class DiscoverUsersPage extends ConsumerStatefulWidget {
   const DiscoverUsersPage({super.key});
@@ -34,6 +37,7 @@ class _DiscoverUsersPageState extends ConsumerState<DiscoverUsersPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    AnalyticsService.instance.logScreenView(screenName: 'screen_discover');
   }
 
   @override
@@ -54,17 +58,19 @@ class _DiscoverUsersPageState extends ConsumerState<DiscoverUsersPage>
     setState(() => _isSearching = true);
     try {
       final results = await ref.read(profileServiceProvider).searchUsers(query);
-      if (mounted)
+      if (mounted) {
         setState(() {
           _searchResults = results;
           _isSearching = false;
         });
+      }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _searchResults = [];
           _isSearching = false;
         });
+      }
     }
   }
 
@@ -99,15 +105,22 @@ class _DiscoverUsersPageState extends ConsumerState<DiscoverUsersPage>
             ],
           ),
         ),
-        body: TabBarView(
-          controller: _tabController,
+        body: Column(
           children: [
-            _SwipeTab(onOpenBrowse: () => _tabController.animateTo(1)),
-            _BrowseTab(
-              searchController: _searchController,
-              searchResults: _searchResults,
-              isSearching: _isSearching,
-              onSearch: _performSearch,
+            const OfflineBanner(),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _SwipeTab(onOpenBrowse: () => _tabController.animateTo(1)),
+                  _BrowseTab(
+                    searchController: _searchController,
+                    searchResults: _searchResults,
+                    isSearching: _isSearching,
+                    onSearch: _performSearch,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -200,6 +213,7 @@ class _SwipeTabState extends ConsumerState<_SwipeTab>
     if (liked) {
       try {
         await ref.read(socialGraphServiceProvider).followUser(user.id);
+        AnalyticsService.instance.logDiscoverUserLiked(userId: user.id);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('You liked ${user.displayName ?? 'them'}!'),
@@ -209,6 +223,8 @@ class _SwipeTabState extends ConsumerState<_SwipeTab>
           ));
         }
       } catch (_) {}
+    } else {
+      AnalyticsService.instance.logEngagement(AnalyticsEvents.discoverUserViewed, params: {'user_id': user.id});
     }
 
     setState(() {
@@ -764,6 +780,8 @@ class _BrowseTab extends ConsumerWidget {
       );
     }
     return ListView.builder(
+      physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: searchResults.length,
       itemBuilder: (_, i) => _UserCard(user: searchResults[i]),
@@ -794,6 +812,8 @@ class _BrowseTab extends ConsumerWidget {
           color: DesignColors.accent,
           onRefresh: () async => ref.invalidate(suggestedUsersProvider),
           child: ListView.builder(
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             itemCount: users.length,
             itemBuilder: (_, i) => _UserCard(user: users[i]),

@@ -13,22 +13,25 @@ QUICK START
 ================================================================================
 
 **Before you start:**
+
 1. Have 2 devices ready (primary + secondary for multi-user testing)
 2. Print or bookmark this file
 3. Time yourself: target 10–15 minutes per platform
 4. Mark ✅ as you complete each section
 
 **Platforms to test:**
+
 - [ ] Web (Chrome)
 - [ ] Android (Emulator or Device)
 - [ ] iOS (Simulator or Device)
 - [ ] Desktop (Windows/Mac/Linux) — if applicable
 
 ================================================================================
-1. PRE-FLIGHT CHECKS (1 minute)
-================================================================================
+
+1. # PRE-FLIGHT CHECKS (1 minute)
 
 ### 1.1 Build & Lint
+
 - [ ] Run: `flutter clean`
 - [ ] Run: `flutter pub get`
 - [ ] Run: `flutter analyze`
@@ -36,6 +39,7 @@ QUICK START
 - [ ] Git status clean: no uncommitted changes
 
 ### 1.2 Environment Validation
+
 - [ ] Firebase project connected and active
 - [ ] Agora App ID loaded from config
 - [ ] Cloud Functions deployed (`generateAgoraToken`)
@@ -46,16 +50,17 @@ QUICK START
 
 ---
 
-================================================================================
-2. AUTHENTICATION FLOW (1 minute)
+================================================================================ 2. AUTHENTICATION FLOW (1 minute)
 ================================================================================
 
 ### 2.1 Launch & Login
+
 - [ ] Launch app on target platform
 - [ ] Use test account credentials
 - [ ] Wait for splash screen to complete
 
 ### 2.2 Login Verification
+
 - [ ] Login succeeds without errors
 - [ ] User document loads from Firestore
 - [ ] Navigation to room lobby
@@ -64,11 +69,13 @@ QUICK START
 ### 2.3 Platform-Specific Checks
 
 **Web:**
+
 - [ ] No Crashlytics plugin errors
 - [ ] Console clean (F12 → Console)
 - [ ] No `MissingPluginException` in logs
 
 **Mobile (Android/iOS):**
+
 - [ ] Crashlytics initialized
 - [ ] No permission prompts yet (should come during room join)
 
@@ -76,17 +83,18 @@ QUICK START
 
 ---
 
-================================================================================
-3. ROOM SELECTION & NAVIGATION (1 minute)
+================================================================================ 3. ROOM SELECTION & NAVIGATION (1 minute)
 ================================================================================
 
 ### 3.1 Select a Room
+
 - [ ] From lobby, tap a room tile
 - [ ] Loading spinner appears
 - [ ] No duplicate join attempts
 - [ ] No immediate "Failed to join" messages
 
 ### 3.2 Pre-Join State
+
 - [ ] `_isInitializing = true` (UI frozen during setup)
 - [ ] Audio/video controls disabled (until join completes)
 - [ ] Joining message or animation visible
@@ -95,11 +103,11 @@ QUICK START
 
 ---
 
-================================================================================
-4. TOKEN GENERATION & PERMISSIONS (1-2 minutes)
+================================================================================ 4. TOKEN GENERATION & PERMISSIONS (1-2 minutes)
 ================================================================================
 
 ### 4.1 Cloud Function Execution
+
 - [ ] Check Firebase Functions console
 - [ ] Look for `generateAgoraToken` invocation
 - [ ] Confirm:
@@ -111,16 +119,19 @@ QUICK START
 ### 4.2 Mobile: Permission Prompts
 
 **Android:**
+
 - [ ] Camera permission prompt appears
 - [ ] Microphone permission prompt appears
 - [ ] Grant permissions to proceed
 
 **iOS:**
+
 - [ ] Camera permission prompt appears
 - [ ] Microphone permission prompt appears
 - [ ] Grant permissions to proceed
 
 **Web:**
+
 - [ ] Browser permission prompt appears (camera + mic)
 - [ ] Grant permissions to proceed
 - [ ] OR dismiss and confirm warning (optional for web testing)
@@ -129,12 +140,13 @@ QUICK START
 
 ---
 
-================================================================================
-5. FIRESTORE PARTICIPANT SYNC (1 minute)
+================================================================================ 5. FIRESTORE PARTICIPANT SYNC (1 minute)
 ================================================================================
 
 ### 5.1 Participant Document Check
+
 Open Firebase Console → Firestore:
+
 - [ ] Navigate to: `rooms/{roomId}/participants`
 - [ ] Confirm your user document exists with fields:
   - [ ] `userId` - Your UID
@@ -146,7 +158,9 @@ Open Firebase Console → Firestore:
   - [ ] `lastActiveAt` - recent timestamp
 
 ### 5.2 User Document Check
+
 Open Firestore:
+
 - [ ] Navigate to: `users/{userId}`
 - [ ] Confirm:
   - [ ] `currentRoomId` = room you just joined
@@ -156,19 +170,20 @@ Open Firestore:
 
 ---
 
-================================================================================
-6. AGORA SDK JOIN VERIFICATION (2-3 minutes)
+================================================================================ 6. AGORA SDK JOIN VERIFICATION (2-3 minutes)
 ================================================================================
 
 ### 6.1 Web (Chrome) Specific
 
 **Console Check (F12 → Console):**
+
 - [ ] See log: `joinChannel called` (or similar)
 - [ ] No JS bridge errors
 - [ ] No "native plugin fallback" messages
 - [ ] No `promiseToFuture` errors
 
 **Video Verification:**
+
 - [ ] Local video tile appears (YOUR camera)
 - [ ] Video controls active (mute, video toggle)
 - [ ] Remote video placeholder visible (waiting for second user)
@@ -176,11 +191,13 @@ Open Firestore:
 ### 6.2 Mobile (Android/iOS) Specific
 
 **Permission State:**
+
 - [ ] Camera permission granted ✅
 - [ ] Microphone permission granted ✅
 - [ ] Audio routing to speaker (not earpiece)
 
 **Video Verification:**
+
 - [ ] Local video tile appears (YOUR camera)
 - [ ] Video controls active
 - [ ] Remote video placeholder visible
@@ -188,6 +205,7 @@ Open Firestore:
 ### 6.3 Multi-User Test (Use Second Device)
 
 On **second device:**
+
 - [ ] Join same room
 - [ ] On **primary device:** Remote video appears (second device's feed)
 - [ ] On **secondary device:** Remote video appears (primary device's feed)
@@ -197,11 +215,11 @@ On **second device:**
 
 ---
 
-================================================================================
-7. AUDIO/VIDEO CONTROLS (1-2 minutes)
+================================================================================ 7. AUDIO/VIDEO CONTROLS (1-2 minutes)
 ================================================================================
 
 ### 7.1 Mute/Unmute Audio
+
 - [ ] Tap mute audio icon
 - [ ] UI updates instantly
 - [ ] Firestore `isAudioOn = false`
@@ -211,6 +229,7 @@ On **second device:**
 - [ ] On second device: see remote participant unmuted
 
 ### 7.2 Toggle Video
+
 - [ ] Tap disable video icon
 - [ ] UI updates instantly
 - [ ] Firestore `isVideoOn = false`
@@ -221,6 +240,7 @@ On **second device:**
 - [ ] Video returns
 
 ### 7.3 Hand Raise (if implemented)
+
 - [ ] Tap hand icon
 - [ ] UI shows "Hand raised"
 - [ ] Firestore updated with hand state
@@ -232,11 +252,11 @@ On **second device:**
 
 ---
 
-================================================================================
-8. CHAT SYSTEM (1-2 minutes)
+================================================================================ 8. CHAT SYSTEM (1-2 minutes)
 ================================================================================
 
 ### 8.1 Send Message (Primary Device)
+
 - [ ] Type a message
 - [ ] Tap send
 - [ ] Message appears immediately in chat
@@ -244,6 +264,7 @@ On **second device:**
 - [ ] Timestamp present
 
 ### 8.2 Receive Message (Secondary Device)
+
 - [ ] On second device, send a message
 - [ ] On primary device: message appears in real-time
 - [ ] No duplicates
@@ -251,7 +272,9 @@ On **second device:**
 - [ ] Order correct (chronological)
 
 ### 8.3 Firestore Chat Collection
+
 Open Firestore:
+
 - [ ] Navigate to: `rooms/{roomId}/messages`
 - [ ] Confirm:
   - [ ] All messages present
@@ -263,32 +286,38 @@ Open Firestore:
 
 ---
 
-================================================================================
-9. LEAVE ROOM FLOW (2 minutes)
+================================================================================ 9. LEAVE ROOM FLOW (2 minutes)
 ================================================================================
 
 ### 9.1 Leave Room
+
 - [ ] Tap "Leave" or "Back" button
 - [ ] No errors on console (web: F12 → Console)
 - [ ] No red screens
 - [ ] Navigation back to lobby
 
 ### 9.2 Agora Cleanup
+
 **Web Console Check:**
+
 - [ ] No `leaveChannel` JS errors
 - [ ] No undefined function warnings
 
 **Mobile Logs:**
+
 - [ ] No platform channel errors
 - [ ] Clean exit from Agora engine
 
 ### 9.3 Firestore Cleanup
+
 Open Firestore and check:
+
 - [ ] Participant document REMOVED from `rooms/{roomId}/participants`
 - [ ] `users/{userId}.currentRoomId` = empty or null
 - [ ] `users/{userId}.lastRoomJoin` = still present (for history)
 
 ### 9.4 UI Reset
+
 - [ ] Video tiles gone
 - [ ] Chat history cleared from screen
 - [ ] Room state reset
@@ -296,6 +325,7 @@ Open Firestore and check:
 - [ ] Back in lobby view
 
 ### 9.5 Second Join Test
+
 - [ ] Join the same room again
 - [ ] Confirm: **no stale Firestore documents**
 - [ ] Confirm: **fresh participant document created**
@@ -305,11 +335,11 @@ Open Firestore and check:
 
 ---
 
-================================================================================
-10. CRASHLYTICS VERIFICATION (1 minute) — Mobile/Desktop Only
+================================================================================ 10. CRASHLYTICS VERIFICATION (1 minute) — Mobile/Desktop Only
 ================================================================================
 
 ### 10.1 Web Verification
+
 - [ ] No Crashlytics initialization errors
 - [ ] No `MissingPluginException` for Crashlytics
 - [ ] Console shows no Crashlytics calls (expected: silent)
@@ -317,10 +347,12 @@ Open Firestore and check:
 ### 10.2 Mobile/Desktop Verification
 
 **Trigger a Logged Event:**
+
 - [ ] Perform an action that logs to Crashlytics
 - [ ] (Example: specific error condition or navigation event)
 
 **Check Firebase Console:**
+
 - [ ] Open: Firebase → Crashlytics
 - [ ] Look for new events in last 5 minutes
 - [ ] Confirm:
@@ -330,7 +362,9 @@ Open Firestore and check:
   - [ ] No errors in stacktrace ✅
 
 ### 10.3 Custom Context Verification
+
 Firestore context should include:
+
 - [ ] `app_version` = your version
 - [ ] `environment` = staging/production
 - [ ] Timestamp of error
@@ -340,17 +374,18 @@ Firestore context should include:
 
 ---
 
-================================================================================
-11. FINAL PASS (1 minute)
+================================================================================ 11. FINAL PASS (1 minute)
 ================================================================================
 
 ### 11.1 Console & Logs
+
 - [ ] Web: F12 → Console shows no red errors
 - [ ] Mobile: Logcat/Xcode logs show no fatal errors
 - [ ] No `MissingPluginException` on web
 - [ ] No unhandled exceptions
 
 ### 11.2 UI/UX State
+
 - [ ] No red screens or exceptions
 - [ ] No infinite spinners
 - [ ] No frozen buttons
@@ -359,12 +394,14 @@ Firestore context should include:
 - [ ] Permissions clearly requested
 
 ### 11.3 Agora Integration
+
 - [ ] No "Failed to join channel via platform service" messages
 - [ ] No "kIsWeb fallback" messages (shouldn't happen)
 - [ ] Web: No "native plugin" errors
 - [ ] Mobile: No "permission denied" silent failures
 
 ### 11.4 Data Integrity
+
 - [ ] No duplicate listeners
 - [ ] No orphaned Firestore documents
 - [ ] Join/leave cycle clean
@@ -414,34 +451,36 @@ PASS/FAIL CRITERIA
 TEST RESULTS SUMMARY
 ================================================================================
 
-**Test Date:** ________________
-**Tester Name:** ________________
+**Test Date:** ******\_\_\_\_******
+**Tester Name:** ******\_\_\_\_******
 **Platform:** ⬜ Web | ⬜ Android | ⬜ iOS | ⬜ Desktop
 
 **Results:**
 
-| Section | Status | Notes |
-|---------|--------|-------|
-| 1. Pre-Flight | ✅ PASS ❌ FAIL | |
-| 2. Authentication | ✅ PASS ❌ FAIL | |
-| 3. Room Selection | ✅ PASS ❌ FAIL | |
-| 4. Token & Permissions | ✅ PASS ❌ FAIL | |
-| 5. Firestore Sync | ✅ PASS ❌ FAIL | |
-| 6. Agora SDK Join | ✅ PASS ❌ FAIL | |
-| 7. Audio/Video Controls | ✅ PASS ❌ FAIL | |
-| 8. Chat System | ✅ PASS ❌ FAIL | |
-| 9. Leave Room | ✅ PASS ❌ FAIL | |
-| 10. Crashlytics | ✅ PASS ❌ FAIL | |
-| 11. Final Pass | ✅ PASS ❌ FAIL | |
+| Section                 | Status          | Notes |
+| ----------------------- | --------------- | ----- |
+| 1. Pre-Flight           | ✅ PASS ❌ FAIL |       |
+| 2. Authentication       | ✅ PASS ❌ FAIL |       |
+| 3. Room Selection       | ✅ PASS ❌ FAIL |       |
+| 4. Token & Permissions  | ✅ PASS ❌ FAIL |       |
+| 5. Firestore Sync       | ✅ PASS ❌ FAIL |       |
+| 6. Agora SDK Join       | ✅ PASS ❌ FAIL |       |
+| 7. Audio/Video Controls | ✅ PASS ❌ FAIL |       |
+| 8. Chat System          | ✅ PASS ❌ FAIL |       |
+| 9. Leave Room           | ✅ PASS ❌ FAIL |       |
+| 10. Crashlytics         | ✅ PASS ❌ FAIL |       |
+| 11. Final Pass          | ✅ PASS ❌ FAIL |       |
 
 **Overall Result:** ⬜ PASS | ⬜ FAIL
 
 **Issues Found:**
-1. _________________________________
-2. _________________________________
-3. _________________________________
+
+1. ***
+2. ***
+3. ***
 
 **Recommended Action:**
+
 - [ ] Ready for Release
 - [ ] Fix Issues & Retest
 - [ ] Escalate to Engineering
@@ -453,6 +492,7 @@ NOTES FOR QA TEAMS
 ================================================================================
 
 ### Timing Tips
+
 - **Pre-Flight:** 1 min (usually cached, just confirm)
 - **Auth:** 1 min (straightforward)
 - **Join Flow:** 3 min (include Cloud Functions log check)
@@ -467,6 +507,7 @@ NOTES FOR QA TEAMS
 **Total: 15–18 minutes per platform**
 
 ### When to Retest
+
 - After any code changes to: `agora_*.dart`, `auth_service.dart`, `voice_room_page.dart`
 - After Firebase Functions deployment
 - After Firestore rule changes
@@ -497,11 +538,12 @@ NOTES FOR QA TEAMS
 ================================================================================
 
 **Sign Off:**
-Tester: _______________________ Date: _____________
+Tester: **********\_\_\_********** Date: ******\_******
 
-**Engineering Lead:** _______________________ Date: _____________
+**Engineering Lead:** **********\_\_\_********** Date: ******\_******
 
 ✅ All tests passed. Ready for:
+
 - [ ] Internal Beta Release
 - [ ] Production Release
 - [ ] Public Beta Release

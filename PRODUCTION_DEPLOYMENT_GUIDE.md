@@ -153,6 +153,7 @@ firebase functions:list
 ### Real-Time Alerts
 
 Configure in Firebase Console:
+
 - Crash rate > 1%
 - API latency > 500ms
 - Authentication failures > 5%
@@ -247,15 +248,19 @@ firebase hosting:channel:deploy <channel>
 ### Common Issues
 
 **Issue**: Firestore quota exceeded
+
 - **Solution**: Increase quota in Firebase Console or optimize queries
 
 **Issue**: High API latency
+
 - **Solution**: Add Firestore indexes, check Network tab in browser
 
 **Issue**: Users unable to join rooms
+
 - **Solution**: Verify Agora token generation, check rate limits
 
 **Issue**: Web build fails
+
 - **Solution**: Run `flutter clean`, check Node.js version
 
 ## Support
@@ -266,8 +271,8 @@ firebase hosting:channel:deploy <channel>
 
 ## Version History
 
-| Version | Date | Notes |
-|---------|------|-------|
+| Version | Date         | Notes      |
+| ------- | ------------ | ---------- |
 | 1.0.1+2 | Jan 31, 2026 | MVP Launch |
 
 ---

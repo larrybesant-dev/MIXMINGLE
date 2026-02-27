@@ -41,6 +41,7 @@ Cloud Function triggers recording stop
 ## Implementation Files
 
 ### 1. **BroadcasterQueue Model**
+
 [lib/shared/models/broadcaster_queue.dart](lib/shared/models/broadcaster_queue.dart)
 
 ```dart
@@ -63,9 +64,11 @@ class BroadcasterQueue {
 ```
 
 ### 2. **BroadcasterService**
+
 [lib/services/broadcaster_service.dart](lib/services/broadcaster_service.dart)
 
 Key methods:
+
 - `requestBroadcast(roomId)` - User requests to broadcast
 - `cancelBroadcastRequest(roomId)` - Cancel pending request
 - `approveNextInQueue(roomId)` - Approve next broadcaster
@@ -74,9 +77,11 @@ Key methods:
 - `stopRecording(roomId, userId)` - Stop recording
 
 ### 3. **Room Page Updates**
+
 [lib/features/room/screens/room_page.dart](lib/features/room/screens/room_page.dart)
 
 New UI elements:
+
 - Broadcaster capacity indicator: `🎥 Broadcasters: 5/20`
 - "Room at Broadcaster Capacity" warning when full
 - "Request to Broadcast" button in participants menu
@@ -86,6 +91,7 @@ New UI elements:
   - ⏳ Waiting in Queue (with cancel option)
 
 ### 4. **Firestore Security Rules**
+
 [firestore.rules](firestore.rules)
 
 ```
@@ -97,9 +103,11 @@ New UI elements:
 ```
 
 ### 5. **Cloud Functions**
+
 [functions/src/broadcasters.ts](functions/src/broadcasters.ts)
 
 Triggers:
+
 1. **onBroadcasterApproved** - When status changes to "broadcasting"
    - Starts recording via Agora REST API
 
@@ -183,6 +191,7 @@ aws s3api put-bucket-lifecycle-configuration \
 ### Step 3: Update Agora Recording Settings
 
 In Agora Dashboard:
+
 1. Go to **Project Management** → Your Project
 2. Expand **Features**
 3. Find **Recording**
@@ -331,6 +340,7 @@ if (activeBroadcasters.length >= maxBroadcasters) {
 **Problem**: Broadcaster is live but recording not starting
 
 **Solutions**:
+
 1. Check Cloud Function logs: `firebase functions:log`
 2. Verify environment variables are set correctly
 3. Check Agora API credentials
@@ -342,6 +352,7 @@ if (activeBroadcasters.length >= maxBroadcasters) {
 **Problem**: No one gets approved when broadcaster exits
 
 **Solutions**:
+
 1. Check Cloud Function trigger (onBroadcasterOffline)
 2. Verify queue has pending entries
 3. Check Firestore security rules allow update
@@ -352,6 +363,7 @@ if (activeBroadcasters.length >= maxBroadcasters) {
 **Problem**: Recording should exist but can't find it
 
 **Solutions**:
+
 1. Check recording file naming: `{roomId}/{userName}/{recordingId}`
 2. Verify S3 bucket exists and has proper ACLs
 3. Check CloudFront or CDN if using one

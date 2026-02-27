@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Reaction {
   final String id;
   final ReactionType type;
@@ -27,9 +29,7 @@ class Reaction {
       fromUserId: map['fromUserId'] ?? '',
       toUserId: map['toUserId'] ?? '',
       roomId: map['roomId'],
-      timestamp: map['timestamp'] != null
-          ? DateTime.parse(map['timestamp'])
-          : DateTime.now(),
+      timestamp: _parseTimestamp(map['timestamp']),
       coinCost: map['coinCost'],
     );
   }
@@ -41,9 +41,16 @@ class Reaction {
       'fromUserId': fromUserId,
       'toUserId': toUserId,
       'roomId': roomId,
-      'timestamp': timestamp.toIso8601String(),
+      'timestamp': Timestamp.fromDate(timestamp),
       'coinCost': coinCost,
     };
+  }
+
+  static DateTime _parseTimestamp(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is Timestamp) return value.toDate();
+    if (value is String) return DateTime.parse(value);
+    return DateTime.now();
   }
 }
 

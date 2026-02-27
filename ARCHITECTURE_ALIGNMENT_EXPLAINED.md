@@ -5,6 +5,7 @@ You've systematically fixed the auth pipeline across all three critical componen
 ## 🔑 What Changed
 
 ### Before
+
 - ❌ `request.auth` on backend = null (unauthenticated)
 - ❌ Web platform had no Firebase Functions JS SDK
 - ❌ Frontend didn't verify auth state stability
@@ -12,6 +13,7 @@ You've systematically fixed the auth pipeline across all three critical componen
 - ❌ Logs: "The request was not authenticated"
 
 ### After
+
 - ✅ `request.auth.uid` populated from Firebase Auth
 - ✅ Web platform now initializes Firebase Functions JS with region
 - ✅ Frontend verifies auth state with 3-second timeout before callable
@@ -64,18 +66,21 @@ Video call initialized ✅
 ## 📍 Where Each Fix Lives
 
 ### Fix 1: Web Platform - Firebase Functions JS SDK
+
 **File**: `web/index.html`
 **Lines**: 47 (import), 68-69 (initialize), 74 (global export)
 **Purpose**: Enable Flutter Web's cloud_functions plugin to attach auth headers
 **Impact**: Request now includes Authorization: Bearer token automatically
 
 ### Fix 2: Frontend - Auth State Verification
+
 **File**: `lib/services/agora_video_service.dart`
 **Lines**: 410-428 (auth verification), 449-452 (logging)
 **Purpose**: Ensure FirebaseAuth is ready before making callable
 **Impact**: Eliminates race condition where currentUser might not be initialized
 
 ### Fix 3: Backend - Auth Context Validation
+
 **File**: `functions/src/index.ts`
 **Lines**: 20-22 (logging), 31-34 (validation)
 **Purpose**: Log and enforce that request came from authenticated Firebase user
@@ -86,11 +91,13 @@ Video call initialized ✅
 The `[firebase_functions/internal] internal` error wasn't a bug in your code—it was a **missing integration point**.
 
 Gen 2 callable functions require:
+
 1. **Frontend**: Authenticated user in local state
 2. **Backend**: Handler expects `request.auth` from SDK
 3. **Web**: JS SDK initialized to attach auth headers
 
 Missing any one breaks the chain. You fixed all three:
+
 - ✅ Stable auth state (frontend)
 - ✅ Auth validation (backend)
 - ✅ Firebase Functions JS SDK (web)
@@ -98,6 +105,7 @@ Missing any one breaks the chain. You fixed all three:
 ## 🚦 What You'll See During Test
 
 ### Perfect Success Path
+
 ```
 Frontend:  "Auth verified - User: user@email.com, UID: abc123"
 Network:   POST to generateAgoraToken with Authorization header
@@ -108,7 +116,9 @@ Result:    ✅ Video initializes
 ```
 
 ### If Something's Wrong
+
 Each layer will fail at its checkpoint:
+
 ```
 Frontend:  "ERROR: FirebaseAuth.currentUser is null"
 → User needs to sign in
@@ -156,6 +166,7 @@ If it fails, the logs will tell you exactly which layer is the problem. And you'
 ## ✅ You're Ready
 
 Three independent checks confirm everything is in place:
+
 1. Web platform has Firebase Functions JS SDK ✅
 2. Frontend verifies auth before calling ✅
 3. Backend logs and validates auth context ✅

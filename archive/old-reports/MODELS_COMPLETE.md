@@ -11,6 +11,7 @@
 ## Summary
 
 All Dart models for Mix & Mingle now have complete implementations with:
+
 - ✅ **fromJson/fromMap** - Parse from Firestore documents
 - ✅ **toJson/toMap** - Convert to Firestore documents
 - ✅ **copyWith** - Immutable update patterns
@@ -24,9 +25,11 @@ All Dart models for Mix & Mingle now have complete implementations with:
 ## New Models Created
 
 ### 1. **Match** (`lib/shared/models/match.dart`)
+
 **Collection:** `matches`
 
 **Features:**
+
 - MatchStatus enum (pending, accepted, rejected, expired)
 - Match score validation (0-100)
 - Cannot match with self validation
@@ -35,6 +38,7 @@ All Dart models for Mix & Mingle now have complete implementations with:
 - copyWith, equality overrides, toString
 
 **Key Fields:**
+
 ```dart
 final String id;
 final String userId1;
@@ -49,9 +53,11 @@ final DateTime expiresAt;
 ---
 
 ### 2. **Report** (`lib/shared/models/report.dart`)
+
 **Collection:** `reports`
 
 **Features:**
+
 - ReportType enum (spam, harassment, inappropriateContent, hateSpeech, violence, scam, other)
 - ReportStatus enum (pending, reviewed, resolved)
 - 1000 character description limit
@@ -61,6 +67,7 @@ final DateTime expiresAt;
 - copyWith, equality overrides, toString
 
 **Key Fields:**
+
 ```dart
 final String id;
 final String reporterId;
@@ -75,15 +82,18 @@ final ReportStatus status;
 ---
 
 ### 3. **Block** (`lib/shared/models/block.dart`)
+
 **Collection:** `blocks`
 
 **Features:**
+
 - Cannot block self validation
 - Helper methods: `blocks()`, `generateId()`
 - Complete fromJson/toJson
 - copyWith, equality overrides, toString
 
 **Key Fields:**
+
 ```dart
 final String id;
 final String blockerId;
@@ -95,9 +105,11 @@ final DateTime blockedAt;
 ---
 
 ### 4. **CoinTransaction** (`lib/shared/models/coin_transaction.dart`)
+
 **Collection:** `coin_transactions` (custom)
 
 **Features:**
+
 - TransactionType enum (tip, messageReaction, profileVisit, subscriptionPurchase, payout, refund, bonus)
 - Positive amount validation
 - Helper methods: `isCredit()`, `isDebit()`
@@ -105,6 +117,7 @@ final DateTime blockedAt;
 - copyWith, equality overrides, toString
 
 **Key Fields:**
+
 ```dart
 final String id;
 final String userId;
@@ -122,30 +135,36 @@ final DateTime timestamp;
 ### Communication Models
 
 #### 5. **ChatRoom** (`lib/shared/models/chat_room.dart`)
+
 **Collection:** `chat_rooms`
 
 **Updates:**
+
 - ✅ Added `copyWith()` method
 - ✅ Added `==` operator override
 - ✅ Added `hashCode` override
 - ✅ Added `toString()` method
 
 **Already Had:**
+
 - fromMap/fromDocument
 - toMap
 
 ---
 
 #### 6. **Message** (`lib/shared/models/message.dart`)
+
 **Collection:** `messages`
 
 **Updates:**
+
 - ✅ Added `copyWith()` method with 18 parameters
 - ✅ Added `==` operator override
 - ✅ Added `hashCode` override
 - ✅ Added `toString()` method
 
 **Already Had:**
+
 - MessageType enum (text, image, video, audio)
 - MessageStatus enum (sending, sent, delivered, read)
 - fromJson/toJson
@@ -155,15 +174,18 @@ final DateTime timestamp;
 ---
 
 #### 7. **DirectMessage** (`lib/shared/models/direct_message.dart`)
+
 **Collection:** `direct_messages`
 
 **Updates:**
+
 - ✅ Added `copyWith()` method
 - ✅ Added `==` operator override
 - ✅ Added `hashCode` override
 - ✅ Added `toString()` method
 
 **Already Had:**
+
 - DirectMessageType enum (text, image, video, audio, file)
 - MessageStatus enum (sending, sent, delivered, read)
 - fromMap/toMap
@@ -175,15 +197,18 @@ final DateTime timestamp;
 ---
 
 #### 8. **MediaItem** (`lib/shared/models/media_item.dart`)
+
 **Collection:** `media`
 
 **Updates:**
+
 - ✅ Added `copyWith()` method
 - ✅ Added `==` operator override
 - ✅ Added `hashCode` override
 - ✅ Added `toString()` method
 
 **Already Had:**
+
 - MediaType enum (image, video, audio, file)
 - fromMap/toMap
 
@@ -192,15 +217,18 @@ final DateTime timestamp;
 ### System Models
 
 #### 9. **Activity** (`lib/shared/models/activity.dart`)
+
 **Collection:** `activities`
 
 **Updates:**
+
 - ✅ Added `copyWith()` method
 - ✅ Added `==` operator override
 - ✅ Added `hashCode` override
 - ✅ Added `toString()` method
 
 **Already Had:**
+
 - ActivityType enum (joinedRoom, hostedRoom, attendedEvent, hostedEvent, newFriend, gotMatch, achievementUnlocked, leveledUp, streakMilestone, other)
 - fromMap/toMap
 - `iconEmoji` getter for UI display
@@ -208,15 +236,18 @@ final DateTime timestamp;
 ---
 
 #### 10. **Notification** (`lib/shared/models/notification.dart`)
+
 **Collection:** `notifications`
 
 **Updates:**
+
 - ✅ Added `copyWith()` method
 - ✅ Added `==` operator override
 - ✅ Added `hashCode` override
 - ✅ Added `toString()` method
 
 **Already Had:**
+
 - NotificationType enum (roomInvite, reaction, newFollower, tip, message, system)
 - fromMap/toMap
 - Support for room and sender context
@@ -226,15 +257,18 @@ final DateTime timestamp;
 ### Event Models
 
 #### 11. **Event** (`lib/shared/models/event.dart`)
+
 **Collection:** `events`
 
 **Updates:**
+
 - ✅ Added `copyWith()` method with 15 parameters
 - ✅ Added `==` operator override
 - ✅ Added `hashCode` override
 - ✅ Added `toString()` method
 
 **Already Had:**
+
 - fromMap/toMap with Timestamp handling
 - Attendee list
 - Location with latitude/longitude
@@ -244,15 +278,18 @@ final DateTime timestamp;
 ---
 
 #### 12. **SpeedDatingRound** (`lib/shared/models/speed_dating_round.dart`)
+
 **Collection:** `speed_dating_rounds`
 
 **Updates:**
+
 - ✅ Added `copyWith()` method
 - ✅ Added `==` operator override
 - ✅ Added `hashCode` override
 - ✅ Added `toString()` method
 
 **Already Had:**
+
 - fromMap/toMap
 - Round tracking (current/total)
 - Participant management
@@ -261,15 +298,18 @@ final DateTime timestamp;
 ---
 
 #### 13. **SpeedDatingResult** (`lib/shared/models/speed_dating_result.dart`)
+
 **Collection:** `speed_dating_results`
 
 **Updates:**
+
 - ✅ Added `copyWith()` method
 - ✅ Added `==` operator override
 - ✅ Added `hashCode` override
 - ✅ Added `toString()` method
 
 **Already Had:**
+
 - fromMap/toMap
 - Mutual match detection
 - User/matched user like tracking
@@ -279,15 +319,18 @@ final DateTime timestamp;
 ### Monetization Models
 
 #### 14. **WithdrawalRequest** (`lib/shared/models/withdrawal_request.dart`)
+
 **Collection:** `withdrawal_requests`
 
 **Updates:**
+
 - ✅ Added `copyWith()` method with 14 parameters
 - ✅ Added `==` operator override
 - ✅ Added `hashCode` override
 - ✅ Added `toString()` method
 
 **Already Had:**
+
 - WithdrawalStatus enum (pending, processing, completed, failed, cancelled)
 - fromMap/toMap
 - Stripe integration fields
@@ -301,24 +344,29 @@ final DateTime timestamp;
 These models already had all required methods:
 
 ### Core Models
+
 1. **User** (`lib/shared/models/user.dart`) - Complete with 35+ fields, freezed or comprehensive manual implementation
 2. **UserProfile** (`lib/shared/models/user_profile.dart`) - Has copyWith, fromJson/toJson
 3. **UserPresence** (`lib/shared/models/user_presence.dart`) - Has copyWith, fromJson/toJson
 4. **Room** (`lib/shared/models/room.dart`) - Complete with enums, fromJson/toJson
 
 ### Matching Models
+
 5. **MatchingProfile** (`lib/features/matching/models/matching_profile.dart`) - Uses `freezed` (auto-generates all methods)
 6. **QuestionnaireAnswers** - Complete
 7. **MatchScore** - Complete
 
 ### Subscription Models
+
 8. **UserSubscription** (`lib/shared/models/subscription.dart`) - Has copyWith, fromJson/toJson
 9. **SubscriptionPackage** - Complete
 
 ### Speed Dating Models
+
 10. **SpeedDatingSession** (`lib/shared/models/speed_dating.dart`) - Has copyWith, fromJson/toJson
 
 ### Additional Models (15+)
+
 11-30+ includes: UserLevel, UserStreak, Tip, Reaction, Following, TypingIndicator, VideoCallRoom, Moderation, CameraPermission, PrivacySettings, NotificationItem, ReadReceipt, etc.
 
 ---
@@ -328,6 +376,7 @@ These models already had all required methods:
 All models now follow the established pattern:
 
 ### 1. Immutable Fields
+
 ```dart
 final String id;
 final String userId;
@@ -335,6 +384,7 @@ final DateTime timestamp;
 ```
 
 ### 2. Const Constructors (where possible)
+
 ```dart
 const Match({
   required this.id,
@@ -344,6 +394,7 @@ const Match({
 ```
 
 ### 3. fromJson with Timestamp Handling
+
 ```dart
 factory Match.fromJson(Map<String, dynamic> json) {
   return Match(
@@ -355,6 +406,7 @@ factory Match.fromJson(Map<String, dynamic> json) {
 ```
 
 ### 4. toJson with Timestamp Conversion
+
 ```dart
 Map<String, dynamic> toJson() {
   return {
@@ -366,6 +418,7 @@ Map<String, dynamic> toJson() {
 ```
 
 ### 5. copyWith with Null-Aware Operators
+
 ```dart
 Match copyWith({
   String? id,
@@ -381,6 +434,7 @@ Match copyWith({
 ```
 
 ### 6. Equality Overrides
+
 ```dart
 @override
 bool operator ==(Object other) {
@@ -400,6 +454,7 @@ int get hashCode {
 ```
 
 ### 7. toString for Debugging
+
 ```dart
 @override
 String toString() {
@@ -408,6 +463,7 @@ String toString() {
 ```
 
 ### 8. Validation Methods
+
 ```dart
 bool get isValid {
   return matchScore >= 0 &&
@@ -417,6 +473,7 @@ bool get isValid {
 ```
 
 ### 9. Helper Methods
+
 ```dart
 bool includes(String userId) {
   return userId == userId1 || userId == userId2;
@@ -433,28 +490,28 @@ String getOtherUserId(String currentUserId) {
 
 All 20 collections from FIRESTORE_SCHEMA.md now have complete Dart models:
 
-| # | Collection | Model File | Status |
-|---|------------|-----------|--------|
-| 1 | users | user.dart | ✅ Complete |
-| 2 | user_profiles | user_profile.dart | ✅ Complete |
-| 3 | user_presence | user_presence.dart | ✅ Complete |
-| 4 | matching_profiles | matching_profile.dart | ✅ Complete (freezed) |
-| 5 | matches | **match.dart** | ✅ **NEW** |
-| 6 | rooms | room.dart | ✅ Complete |
-| 7 | messages | message.dart | ✅ Updated |
-| 8 | direct_messages | direct_message.dart | ✅ Updated |
-| 9 | chat_rooms | chat_room.dart | ✅ Updated |
-| 10 | events | event.dart | ✅ Updated |
-| 11 | speed_dating_sessions | speed_dating.dart | ✅ Complete |
-| 12 | speed_dating_rounds | speed_dating_round.dart | ✅ Updated |
-| 13 | speed_dating_results | speed_dating_result.dart | ✅ Updated |
-| 14 | subscriptions | subscription.dart | ✅ Complete |
-| 15 | withdrawal_requests | withdrawal_request.dart | ✅ Updated |
-| 16 | reports | **report.dart** | ✅ **NEW** |
-| 17 | blocks | **block.dart** | ✅ **NEW** |
-| 18 | activities | activity.dart | ✅ Updated |
-| 19 | notifications | notification.dart | ✅ Updated |
-| 20 | media | media_item.dart | ✅ Updated |
+| #   | Collection            | Model File               | Status                |
+| --- | --------------------- | ------------------------ | --------------------- |
+| 1   | users                 | user.dart                | ✅ Complete           |
+| 2   | user_profiles         | user_profile.dart        | ✅ Complete           |
+| 3   | user_presence         | user_presence.dart       | ✅ Complete           |
+| 4   | matching_profiles     | matching_profile.dart    | ✅ Complete (freezed) |
+| 5   | matches               | **match.dart**           | ✅ **NEW**            |
+| 6   | rooms                 | room.dart                | ✅ Complete           |
+| 7   | messages              | message.dart             | ✅ Updated            |
+| 8   | direct_messages       | direct_message.dart      | ✅ Updated            |
+| 9   | chat_rooms            | chat_room.dart           | ✅ Updated            |
+| 10  | events                | event.dart               | ✅ Updated            |
+| 11  | speed_dating_sessions | speed_dating.dart        | ✅ Complete           |
+| 12  | speed_dating_rounds   | speed_dating_round.dart  | ✅ Updated            |
+| 13  | speed_dating_results  | speed_dating_result.dart | ✅ Updated            |
+| 14  | subscriptions         | subscription.dart        | ✅ Complete           |
+| 15  | withdrawal_requests   | withdrawal_request.dart  | ✅ Updated            |
+| 16  | reports               | **report.dart**          | ✅ **NEW**            |
+| 17  | blocks                | **block.dart**           | ✅ **NEW**            |
+| 18  | activities            | activity.dart            | ✅ Updated            |
+| 19  | notifications         | notification.dart        | ✅ Updated            |
+| 20  | media                 | media_item.dart          | ✅ Updated            |
 
 **Additional:** coin_transactions → **coin_transaction.dart** (NEW)
 
@@ -465,6 +522,7 @@ All 20 collections from FIRESTORE_SCHEMA.md now have complete Dart models:
 ### ✅ All Required Methods Present
 
 Every model now includes:
+
 - [x] fromJson/fromMap
 - [x] toJson/toMap
 - [x] copyWith
@@ -478,6 +536,7 @@ Every model now includes:
 ### ✅ No Compilation Errors
 
 All models compile successfully with no errors in:
+
 - `lib/shared/models/`
 - `lib/features/matching/models/`
 - `lib/features/rooms/models/`
@@ -485,6 +544,7 @@ All models compile successfully with no errors in:
 ### ✅ Immutable Patterns
 
 All models use immutable patterns:
+
 - Final fields
 - Const constructors (where possible)
 - copyWith for updates
@@ -495,12 +555,14 @@ All models use immutable patterns:
 ## Files Modified
 
 ### New Files (4)
+
 1. `lib/shared/models/match.dart` (157 lines)
 2. `lib/shared/models/report.dart` (174 lines)
 3. `lib/shared/models/block.dart` (107 lines)
 4. `lib/shared/models/coin_transaction.dart` (130 lines)
 
 ### Updated Files (10)
+
 1. `lib/shared/models/chat_room.dart` (+55 lines)
 2. `lib/shared/models/message.dart` (+95 lines)
 3. `lib/shared/models/direct_message.dart` (+90 lines)
@@ -519,7 +581,9 @@ All models use immutable patterns:
 ## Testing Recommendations
 
 ### Unit Tests
+
 Create tests for each model:
+
 ```dart
 test('Match.fromJson creates valid instance', () {
   final json = {
@@ -564,7 +628,9 @@ test('Match validation prevents invalid data', () {
 ```
 
 ### Integration Tests
+
 Test Firestore serialization:
+
 ```dart
 test('Match round-trip to Firestore', () async {
   final match = Match(...);
@@ -585,6 +651,7 @@ test('Match round-trip to Firestore', () async {
 ## Usage Examples
 
 ### Creating a New Match
+
 ```dart
 final match = Match(
   id: 'match_${userId1}_$userId2',
@@ -600,6 +667,7 @@ await firestore.collection('matches').doc(match.id).set(match.toJson());
 ```
 
 ### Updating Match Status
+
 ```dart
 final updatedMatch = match.copyWith(
   status: MatchStatus.accepted,
@@ -610,6 +678,7 @@ await firestore.collection('matches').doc(match.id).update(updatedMatch.toJson()
 ```
 
 ### Creating a Report
+
 ```dart
 final report = Report(
   id: firestore.collection('reports').doc().id,
@@ -629,6 +698,7 @@ if (report.isValid) {
 ```
 
 ### Blocking a User
+
 ```dart
 final block = Block(
   id: Block.generateId(currentUser.id, blockedUser.id),
@@ -642,6 +712,7 @@ await firestore.collection('blocks').doc(block.id).set(block.toJson());
 ```
 
 ### Recording a Coin Transaction
+
 ```dart
 final transaction = CoinTransaction(
   id: firestore.collection('coin_transactions').doc().id,
@@ -663,7 +734,9 @@ if (transaction.isValid) {
 ## Next Steps
 
 ### 1. Generate Unit Tests
+
 Create comprehensive test coverage for all models:
+
 - fromJson/toJson round-trip tests
 - copyWith tests
 - Equality tests
@@ -671,7 +744,9 @@ Create comprehensive test coverage for all models:
 - Helper method tests
 
 ### 2. Update Services
+
 Ensure all services use the complete models:
+
 - FirestoreService
 - MatchingService
 - ChatService
@@ -680,21 +755,27 @@ Ensure all services use the complete models:
 - etc.
 
 ### 3. Update UI
+
 Verify all UI code uses the models correctly:
+
 - No direct JSON access
 - Use copyWith for updates
 - Leverage helper methods
 - Display toString for debugging
 
 ### 4. Add Documentation
+
 Document complex models with:
+
 - Usage examples
 - Business logic explanation
 - Relationship diagrams
 - State transition diagrams
 
 ### 5. Performance Testing
+
 Test model performance:
+
 - Large list serialization
 - Deep nesting
 - Equality comparisons
@@ -707,6 +788,7 @@ Test model performance:
 ✅ **All Dart models are now complete and production-ready!**
 
 Every model matches the Firestore schema exactly and includes:
+
 - Complete serialization (fromJson/toJson)
 - Immutable update patterns (copyWith)
 - Value equality (== and hashCode)
@@ -715,6 +797,7 @@ Every model matches the Firestore schema exactly and includes:
 - Domain-specific helpers
 
 The models follow Flutter/Dart best practices and are ready for:
+
 - Unit testing
 - Integration testing
 - UI binding
@@ -722,6 +805,7 @@ The models follow Flutter/Dart best practices and are ready for:
 - Firestore operations
 
 **Total Work:**
+
 - 4 new models created (568 lines)
 - 10 models updated with missing methods (725 lines)
 - 20+ models already complete

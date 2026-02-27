@@ -16,6 +16,23 @@ A social video chat platform built with Flutter, Firebase, and Agora for live pe
 
 ## Tech Stack
 
+## Environment Variables Setup
+
+You must provide your own credentials for Agora and Firebase. Never commit real secrets to the repository.
+
+1. Copy `.env.example` to `.env` in the project root and fill in your real values:
+   - `AGORA_APP_ID`
+   - `AGORA_APP_CERTIFICATE`
+   - `FIREBASE_API_KEY`
+   - `FIREBASE_AUTH_DOMAIN`
+   - `FIREBASE_PROJECT_ID`
+
+2. For Firebase Functions, set secrets using the Firebase CLI or in `functions/.env` (never commit real values):
+   - `AGORA_APP_ID`
+   - `AGORA_APP_CERTIFICATE`
+
+See `.env.example` for the full list of required keys.
+
 - **Frontend**: Flutter 3.x with Material 3
 - **Backend**: Firebase (Auth, Firestore, Storage, Functions, Messaging)
 - **State Management**: Riverpod

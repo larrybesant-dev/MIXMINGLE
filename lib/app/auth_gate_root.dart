@@ -1,10 +1,12 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/design_system/design_constants.dart';
+import '../core/web/web_window_service.dart';
 import '../features/auth/screens/neon_login_page.dart';
 import '../features/auth/screens/neon_signup_page.dart';
 import '../features/auth/forgot_password_page.dart';
 // TEMP DISABLED: import '../features/onboarding_flow.dart';
+import '../features/onboarding/post_auth_onboarding.dart';
 import '../features/landing/landing_page.dart';
 import '../features/profile/screens/create_profile_page.dart';
 import 'app.dart';
@@ -111,17 +113,29 @@ class _UnauthenticatedApp extends StatelessWidget {
 /// ============================================================================
 /// Shows only to authenticated users.
 /// Checks if profile is complete before allowing app access.
-class _AuthenticatedAppGate extends ConsumerWidget {
+///
+/// Uses ConsumerStatefulWidget so optional services (presence, window-restore)
+/// are initialised exactly ONCE per mount, not on every provider rebuild.
+class _AuthenticatedAppGate extends ConsumerStatefulWidget {
   final String userId;
 
   const _AuthenticatedAppGate({required this.userId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_AuthenticatedAppGate> createState() =>
+      _AuthenticatedAppGateState();
+}
+
+class _AuthenticatedAppGateState extends ConsumerState<_AuthenticatedAppGate> {
+  /// Ensures optional services are only initialised once per session.
+  bool _servicesInitialized = false;
+
+  @override
+  Widget build(BuildContext context) {
     // Watch the current user's profile
     final userState = ref.watch(currentUserProvider);
 
-    debugPrint('ðŸ‘¤ [AuthenticatedGate] Checking profile for: $userId');
+    debugPrint('ðŸ‘¤ [AuthenticatedGate] Checking profile for: ${widget.userId}');
 
     return userState.when(
       // Still loading profile
@@ -154,25 +168,44 @@ class _AuthenticatedAppGate extends ConsumerWidget {
         if (displayName.isNotEmpty || username.isNotEmpty) {
           debugPrint('âœ… [AuthenticatedGate] Profile complete. Showing app.');
 
-          // Initialize optional services non-blocking
-          _initializeOptionalServices(ref, userId);
+          // Guard: only initialise once per mount, regardless of how many
+          // times the stream fires (prevents duplicate presence listeners and
+          // redundant restoreWindowsOnLogin calls).
+          if (!_servicesInitialized) {
+            _servicesInitialized = true;
+            _initializeOptionalServices(widget.userId);
+          }
 
-          // Show main app (onboarding check is handled by the OnboardingFlow which
-          // checks onboardingComplete in Firestore and shows itself if needed)
+          // Post-auth onboarding gate: shows once per new account.
+          // Legacy users (onboardingComplete == null) are treated as complete
+          // so they are not interrupted by onboarding.
+          final onboardingDone = user?.onboardingComplete ?? true;
+          if (!onboardingDone) {
+            AppLogger.info(
+                '[AuthGate] onboardingComplete=false → showing PostAuthOnboarding');
+            return const PostAuthOnboarding();
+          }
+
+          // Profile complete + onboarding done → show main app
           return const MixMingleApp();
         }
 
         debugPrint(
             'ðŸš§ [AuthenticatedGate] Profile incomplete. Forcing completion.');
-        return _ProfileIncompleteApp(userId: userId);
+        return _ProfileIncompleteApp(userId: widget.userId);
       },
     );
   }
 
   /// Initialize optional services that don't block app rendering
-  void _initializeOptionalServices(WidgetRef ref, String userId) {
+  /// Called at most once per widget mount due to [_servicesInitialized] guard.
+  void _initializeOptionalServices(String userId) {
     Future.microtask(() async {
       try {
+        // Restore pop-out windows that were open before the user last closed
+        // the tab (no-op on mobile/desktop — kIsWeb guard inside the service).
+        WebWindowService.restoreWindowsOnLogin();
+
         // Initialize presence (non-blocking)
         debugPrint('ðŸ“± [Init] Initializing presence for $userId...');
         final presenceService = ref.read(presenceServiceProvider);

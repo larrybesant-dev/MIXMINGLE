@@ -1,3 +1,4 @@
+import 'package:mixmingle/core/constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -22,7 +23,7 @@ class BroadcasterService {
 
       // Check current queue status for this user
       final existingDoc = await _firestore
-          .collection('rooms')
+          .collection(AppConstants.roomsCollection)
           .doc(roomId)
           .collection('broadcasterQueue')
           .doc(user.uid)
@@ -45,7 +46,7 @@ class BroadcasterService {
 
       // Get current queue length
       final queueSnapshot = await _firestore
-          .collection('rooms')
+          .collection(AppConstants.roomsCollection)
           .doc(roomId)
           .collection('broadcasterQueue')
           .where('status', whereIn: ['pending', 'approved']).get();

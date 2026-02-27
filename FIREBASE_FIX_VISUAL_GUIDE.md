@@ -125,26 +125,28 @@
 
 ## The Key Difference
 
-| Aspect | Before ❌ | After ✅ |
-|--------|----------|---------|
-| **Where Credentials Stored** | Local `.env` file only | Firebase Secret Manager |
-| **How Function Reads Them** | `process.env.VAR` (fails in prod) | `defineSecret("VAR").value()` (works in prod) |
-| **Dependency Declaration** | None | Explicit in function signature |
-| **Security** | Credentials visible in code | Encrypted in Secret Manager |
-| **Deployment** | Works locally, breaks in cloud | Works everywhere ✅ |
+| Aspect                       | Before ❌                         | After ✅                                      |
+| ---------------------------- | --------------------------------- | --------------------------------------------- |
+| **Where Credentials Stored** | Local `.env` file only            | Firebase Secret Manager                       |
+| **How Function Reads Them**  | `process.env.VAR` (fails in prod) | `defineSecret("VAR").value()` (works in prod) |
+| **Dependency Declaration**   | None                              | Explicit in function signature                |
+| **Security**                 | Credentials visible in code       | Encrypted in Secret Manager                   |
+| **Deployment**               | Works locally, breaks in cloud    | Works everywhere ✅                           |
 
 ---
 
 ## The Code Change
 
 ### Before ❌
+
 ```typescript
 // Just accessing process.env directly - DOESN'T WORK IN PRODUCTION
-const appId = process.env.AGORA_APP_ID;  // undefined
-const appCertificate = process.env.AGORA_APP_CERTIFICATE;  // undefined
+const appId = process.env.AGORA_APP_ID; // undefined
+const appCertificate = process.env.AGORA_APP_CERTIFICATE; // undefined
 ```
 
 ### After ✅
+
 ```typescript
 // Properly declaring and using secrets - WORKS IN PRODUCTION
 import { defineSecret } from "firebase-functions/params";
@@ -153,12 +155,12 @@ const agoraAppId = defineSecret("AGORA_APP_ID");
 const agoraAppCertificate = defineSecret("AGORA_APP_CERTIFICATE");
 
 export const generateAgoraToken = onCall(
-  { secrets: [agoraAppId, agoraAppCertificate] },  // Tell Firebase
+  { secrets: [agoraAppId, agoraAppCertificate] }, // Tell Firebase
   async (request) => {
     // Firebase will inject the secrets here
-    const appId = agoraAppId.value();  // ✅ Works!
-    const appCertificate = agoraAppCertificate.value();  // ✅ Works!
-  }
+    const appId = agoraAppId.value(); // ✅ Works!
+    const appCertificate = agoraAppCertificate.value(); // ✅ Works!
+  },
 );
 ```
 
@@ -167,6 +169,7 @@ export const generateAgoraToken = onCall(
 ## Why This Matters
 
 ### 🚫 The Old Way (WRONG)
+
 ```
 Local Development:
   - .env file exists
@@ -180,6 +183,7 @@ Cloud Deployment:
 ```
 
 ### ✅ The New Way (RIGHT)
+
 ```
 Local Development:
   - .env file exists (fallback)

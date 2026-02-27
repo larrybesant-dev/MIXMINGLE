@@ -159,9 +159,10 @@ class RoomFirestoreService {
       for (final roomDoc in rooms.docs) {
         await removeParticipant(roomDoc.id, uid);
       }
-      if (kDebugMode)
+      if (kDebugMode) {
         print(
             '[Room Presence] Cleaned up user from ${rooms.docs.length} rooms: $uid');
+      }
     } catch (e) {
       if (kDebugMode) print('[Room Presence] Cleanup failed: $e');
       // Best-effort cleanup

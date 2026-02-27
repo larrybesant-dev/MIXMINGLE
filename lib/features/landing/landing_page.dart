@@ -24,6 +24,8 @@ class _LandingPageState extends ConsumerState<LandingPage>
   late AnimationController _pulseController;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   LandingMusicService? _music;
+  bool _musicPlaying = false;
+  bool _musicStarted = false; // has music been started at all?
 
   /// Web-safe image provider - returns null on web to avoid CORS errors
   ImageProvider? _safeImageProvider(String? url) {
@@ -42,13 +44,40 @@ class _LandingPageState extends ConsumerState<LandingPage>
     )..repeat(reverse: true);
 
     // Start landing music after the first frame so providers are ready.
+    // On web, browsers block autoplay – we'll start on first user gesture instead.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final svc = ref.read(landingMusicProvider);
       if (svc != null) {
         _music = svc;
-        await _music!.start();
+        if (!kIsWeb) {
+          // Native: autoplay is allowed.
+          await _music!.start();
+          if (mounted) setState(() { _musicPlaying = true; _musicStarted = true; });
+        }
+        // Web: wait for first user gesture (see _onFirstGesture).
       }
     });
+  }
+
+  /// Called on the first pointer-down on web to satisfy the browser autoplay policy.
+  Future<void> _onFirstGesture() async {
+    if (_musicStarted || _music == null) return;
+    _musicStarted = true;
+    await _music!.start();
+    if (mounted) setState(() => _musicPlaying = true);
+  }
+
+  /// Toggle music on/off via the floating button.
+  Future<void> _toggleMusic() async {
+    if (_music == null) return;
+    if (_musicPlaying) {
+      await _music!.fadeOut();
+      if (mounted) setState(() => _musicPlaying = false);
+    } else {
+      _musicStarted = true;
+      await _music!.start();
+      if (mounted) setState(() => _musicPlaying = true);
+    }
   }
 
   @override
@@ -93,7 +122,10 @@ class _LandingPageState extends ConsumerState<LandingPage>
 
     return Scaffold(
       backgroundColor: ElectricColors.surface,
-      body: Stack(
+      body: Listener(
+        // Web autoplay fix: start music on first user gesture.
+        onPointerDown: kIsWeb ? (_) => _onFirstGesture() : null,
+        child: Stack(
         children: [
           Container(
             decoration: const BoxDecoration(
@@ -144,7 +176,42 @@ class _LandingPageState extends ConsumerState<LandingPage>
               ),
             ),
           ),
+          // Floating music toggle button (top-right)
+          Positioned(
+            top: 40,
+            right: 16,
+            child: Tooltip(
+              message: _musicPlaying ? 'Mute music' : 'Play music',
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: _toggleMusic,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: ElectricColors.surfaceElevated.withValues(alpha: 0.85),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: ElectricColors.neonMagenta.withValues(alpha: 0.4),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      _musicPlaying ? Icons.music_note : Icons.music_off,
+                      color: _musicPlaying
+                          ? ElectricColors.neonMagenta
+                          : ElectricColors.onSurfaceSecondary,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
         ],
+      ),
       ),
     );
   }

@@ -11,6 +11,7 @@ cd C:\Users\LARRY\MIXMINGLE
 ```
 
 **Verify you see:**
+
 ```
 ActionItems.md, cleanup_project.ps1, ultimate_production.ps1, pubspec.yaml, etc.
 ```
@@ -24,6 +25,7 @@ ActionItems.md, cleanup_project.ps1, ultimate_production.ps1, pubspec.yaml, etc.
 ```
 
 **What you'll see:**
+
 ```
 [INFO] Starting project cleanup...
 [INFO] Creating backup in: cleanup_backup_2024-01-15_14-30-45/
@@ -48,6 +50,7 @@ cat cleanup_report_*.md
 ```
 
 **Look for:**
+
 - Any ERRORS (red) - FIX THESE
 - WARNINGS (yellow) - should fix
 - Unused assets (blue) - delete if confirmed unused
@@ -58,6 +61,7 @@ cat cleanup_report_*.md
 ## Step 3️⃣: Fix Any Issues Found (5-30 min)
 
 ### If Errors Found
+
 ```powershell
 # View just errors
 cat flutter_analyze_*.txt | Select-String "error"
@@ -67,6 +71,7 @@ code flutter_analyze_*.txt
 ```
 
 ### If Unused Packages Found
+
 ```powershell
 # View packages
 cat pubspec_deps_*.txt
@@ -77,6 +82,7 @@ flutter pub get
 ```
 
 ### If Unused Assets Found
+
 ```powershell
 # Delete if confirmed unused
 Remove-Item "assets/path/to/unused/file.png" -Force
@@ -87,22 +93,26 @@ Remove-Item "assets/path/to/unused/file.png" -Force
 ## Step 4️⃣: Verify Builds Work
 
 ### Test Web Build
+
 ```powershell
 flutter build web --release
 ```
 
 **Expected output:**
+
 ```
 ✓ Built build/web
 ✓ No issues found!
 ```
 
 ### Test Android APK
+
 ```powershell
 flutter build apk --release
 ```
 
 **Expected output:**
+
 ```
 ✓ Built build/app/outputs/flutter-apk/app-release.apk
 ✓ Gradle took X seconds
@@ -117,6 +127,7 @@ If either fails → Fix the error, then retry.
 ## Step 5️⃣: Production Build (The Big One!)
 
 ### Option A: PowerShell (Simple)
+
 ```powershell
 .\ultimate_production.ps1
 ```
@@ -129,6 +140,7 @@ If either fails → Fix the error, then retry.
 4. Watch the build in VS Code terminal
 
 **Expected output:**
+
 ```
 [🚀 ULTIMATE PRODUCTION] Starting production build...
 [✓] Pre-flight checks passed
@@ -146,6 +158,7 @@ If either fails → Fix the error, then retry.
 ```
 
 **Duration:**
+
 - Full build: 40-50 minutes
 - Dry run: 10 minutes (no actual build, just checks)
 - Web only: 20 minutes
@@ -182,6 +195,7 @@ Get-Item "build/app/outputs/bundle/release/app-release.aab"
 ```
 
 Then:
+
 1. Go to: https://play.google.com/console
 2. Click your app
 3. Click "Releases" → "Production"
@@ -195,15 +209,15 @@ Then:
 
 ## Troubleshooting Quick Reference
 
-| Problem | Solution |
-|---------|----------|
-| `cleanup_project.ps1 not found` | Run from project root: `cd C:\Users\LARRY\MIXMINGLE` |
-| `flutter not found` | Install Flutter or add to PATH |
-| Cleanup script hangs | Press Ctrl+C, check disk space `disk usage` |
-| Build fails | Check `flutter_analyze_*.txt`, fix errors, retry |
-| APK not found | Check `flutter build apk --release` output for errors |
-| Firebase deploy fails | Check Firebase CLI: `firebase login` |
-| Tests fail | Skip with `.\ultimate_production.ps1 --no-tests` |
+| Problem                         | Solution                                              |
+| ------------------------------- | ----------------------------------------------------- |
+| `cleanup_project.ps1 not found` | Run from project root: `cd C:\Users\LARRY\MIXMINGLE`  |
+| `flutter not found`             | Install Flutter or add to PATH                        |
+| Cleanup script hangs            | Press Ctrl+C, check disk space `disk usage`           |
+| Build fails                     | Check `flutter_analyze_*.txt`, fix errors, retry      |
+| APK not found                   | Check `flutter build apk --release` output for errors |
+| Firebase deploy fails           | Check Firebase CLI: `firebase login`                  |
+| Tests fail                      | Skip with `.\ultimate_production.ps1 --no-tests`      |
 
 ---
 
@@ -211,8 +225,8 @@ Then:
 
 After all steps:
 
-- [ ] cleanup_report_*.md shows no ERRORS
-- [ ] flutter_analyze_*.txt shows acceptable warnings
+- [ ] cleanup*report*\*.md shows no ERRORS
+- [ ] flutter*analyze*\*.txt shows acceptable warnings
 - [ ] `flutter build web --release` succeeds
 - [ ] `flutter build apk --release` succeeds
 - [ ] ultimate_production.ps1 completes with ✓
@@ -257,13 +271,13 @@ Get-Item build/app/outputs/bundle/release/app-release.aab
 
 ## Expected Timing
 
-| Step | Command | Time |
-|------|---------|------|
-| 2 | cleanup_project.ps1 | 10-20 min |
-| 3 | Fix issues | 5-30 min |
-| 4 | Verify builds | 15 min |
-| 5 | ultimate_production.ps1 | 40-50 min |
-| **Total** | **All steps** | **70-110 min** |
+| Step      | Command                 | Time           |
+| --------- | ----------------------- | -------------- |
+| 2         | cleanup_project.ps1     | 10-20 min      |
+| 3         | Fix issues              | 5-30 min       |
+| 4         | Verify builds           | 15 min         |
+| 5         | ultimate_production.ps1 | 40-50 min      |
+| **Total** | **All steps**           | **70-110 min** |
 
 Or skip cleanup: **50 min** total
 
@@ -284,6 +298,7 @@ Then after reviewing the cleanup report:
 ```
 
 **Your app will be live on:**
+
 - ✅ Google Play Store (in review)
 - ✅ Firebase Hosting (immediately)
 - ⏳ App Store (if on macOS)

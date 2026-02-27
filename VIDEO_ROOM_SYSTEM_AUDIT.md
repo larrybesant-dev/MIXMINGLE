@@ -12,14 +12,14 @@ Your video room system is **90% production-ready**. The architecture is solid wi
 
 ### ✅ Passed Audits
 
-| Requirement | Status | Evidence |
-|-----------|--------|----------|
-| Riverpod State Management | ✅ Complete | `room_providers.dart` with `enrichedParticipantsProvider` |
-| Firebase Auth Integration | ✅ Secure | `authStateProvider` with safe `maybeWhen()` usage |
-| Firestore Security Rules | ✅ Deployed LIVE | 313-line rules with host/moderator restrictions |
-| Agora RTC Integration | ✅ Multi-platform | `agora_video_service.dart` with web + native support |
-| Real-time Updates | ✅ Functional | Stream providers with Firestore listeners |
-| Transaction Safety | ✅ Implemented | `joinVoiceRoom()` uses `runTransaction()` |
+| Requirement               | Status            | Evidence                                                  |
+| ------------------------- | ----------------- | --------------------------------------------------------- |
+| Riverpod State Management | ✅ Complete       | `room_providers.dart` with `enrichedParticipantsProvider` |
+| Firebase Auth Integration | ✅ Secure         | `authStateProvider` with safe `maybeWhen()` usage         |
+| Firestore Security Rules  | ✅ Deployed LIVE  | 313-line rules with host/moderator restrictions           |
+| Agora RTC Integration     | ✅ Multi-platform | `agora_video_service.dart` with web + native support      |
+| Real-time Updates         | ✅ Functional     | Stream providers with Firestore listeners                 |
+| Transaction Safety        | ✅ Implemented    | `joinVoiceRoom()` uses `runTransaction()`                 |
 
 ### Critical Fixes Applied (7/7) ✅
 
@@ -53,6 +53,7 @@ Your video room system is **90% production-ready**. The architecture is solid wi
 ```
 
 **Key Methods:**
+
 - `_initializeAndJoinRoom()` - Full join sequence
 - `_setupAgoraEventHandlers()` - Event listener registration
 - `_startAgoraSyncTimer()` - Periodic Agora↔Firestore sync
@@ -77,6 +78,7 @@ Your video room system is **90% production-ready**. The architecture is solid wi
 ```
 
 **Critical Methods:**
+
 - `initialize()` - Engine setup with event handlers
 - `joinChannel()` - Full 5-step join sequence (token→init→enable→join→preview)
 - `enforceTurnBasedLock()` - Restrict user output to speaker-only
@@ -99,6 +101,7 @@ Your video room system is **90% production-ready**. The architecture is solid wi
 ```
 
 **Critical Methods:**
+
 - `createVoiceRoom()` - Atomic room creation with host as moderator
 - `joinVoiceRoom()` - Transaction-safe join with ban check
 - `markUserOnline()` - Agora event → Firestore sync
@@ -121,6 +124,7 @@ Your video room system is **90% production-ready**. The architecture is solid wi
 ```
 
 **Key Rules:**
+
 ```firestore
 // Room update restricted to host/moderators
 allow update: if request.auth != null &&
@@ -139,12 +143,14 @@ allow write: if request.auth != null &&
 ### 3.1 Participant Management ✅
 
 **Providers:**
+
 - `roomProvider(roomId)` - Stream room document from Firestore
 - `enrichedParticipantsProvider(roomId)` - Merge Agora + Firestore data
 - `agoraParticipantsProvider` - Live Agora video/audio state
 - `roomParticipantsFirestoreProvider(roomId)` - Firestore participant data
 
 **Real-Time Updates:**
+
 - ✅ Join/Leave triggers participant list refresh
 - ✅ Mic toggle updates `isMuted` in Firestore
 - ✅ Camera toggle updates `isOnCam` in Firestore
@@ -154,6 +160,7 @@ allow write: if request.auth != null &&
 ### 3.2 Raised Hands System ✅
 
 **Flow:**
+
 ```
 User raises hand → Firestore write to room.raisedHands[]
 ↓
@@ -167,6 +174,7 @@ Firestore updated atomically (moderators only)
 ```
 
 **Implementation:**
+
 - `_raisedHands` Set in voice_room_page
 - `raisedHandsProvider` in room_providers.dart
 - `approveRaisedHand()` with authorization check
@@ -174,6 +182,7 @@ Firestore updated atomically (moderators only)
 ### 3.3 Turn-Based (Single-Mic) Mode ✅
 
 **Flow:**
+
 ```
 Room.turnBased = true
 ↓
@@ -187,6 +196,7 @@ Timer expires → Next in queue becomes speaker
 ```
 
 **Methods:**
+
 - `enforceTurnBasedLock(speakerId)` - Mute all except speaker
 - `releaseTurnBasedLock()` - Unmute all
 - `_startSpeakerTimer()` - 60-second countdown
@@ -195,6 +205,7 @@ Timer expires → Next in queue becomes speaker
 ### 3.4 Moderation Actions ✅
 
 **Implemented:**
+
 - ✅ Mute user (local audio mute in Firestore)
 - ✅ Block video (local video mute in Firestore)
 - ✅ Kick user (remove from participantIds)
@@ -233,6 +244,7 @@ onTokenPrivilegeWillExpire → Refresh token before expiry
 **Root Cause:** Riverpod was trying to access widget context before element tree was stable
 
 **Solution:** Wrap in `addPostFrameCallback()`
+
 ```dart
 WidgetsBinding.instance.addPostFrameCallback((_) {
   if (!mounted) return;
@@ -247,6 +259,7 @@ WidgetsBinding.instance.addPostFrameCallback((_) {
 **Problem:** `.value` on loading auth state could return null
 
 **Solution:** Use `.maybeWhen()` with safe fallback
+
 ```dart
 User? get currentUser => ref.watch(authStateProvider).maybeWhen(
       data: (user) => user,
@@ -261,6 +274,7 @@ User? get currentUser => ref.watch(authStateProvider).maybeWhen(
 **Problem:** Web platform's Cloud Functions call got 401 errors
 
 **Solution:** Refresh ID token before calling Cloud Functions
+
 ```dart
 await currentUser.getIdToken(true);
 await _functions.httpsCallable('generateAgoraToken').call(...);
@@ -273,6 +287,7 @@ await _functions.httpsCallable('generateAgoraToken').call(...);
 **Problem:** Any user could delete any room (no host/moderator check)
 
 **Solution:** Add `currentUserId` parameter to `deleteRoom()` and verify in service
+
 ```dart
 Future<void> deleteRoom(String roomId, String currentUserId) async {
   final room = await _firestore.collection('rooms').doc(roomId).get();
@@ -291,6 +306,7 @@ Future<void> deleteRoom(String roomId, String currentUserId) async {
 **Problem:** ErrorBoundary error display triggered setState during build phase
 
 **Solution:** Defer with `addPostFrameCallback()`
+
 ```dart
 WidgetsBinding.instance.addPostFrameCallback((_) {
   if (mounted) setState(() { _errorDetails = null; });
@@ -304,6 +320,7 @@ WidgetsBinding.instance.addPostFrameCallback((_) {
 **Problem:** Error display threw "No Directionality widget found"
 
 **Solution:** Wrap error UI in explicit Directionality
+
 ```dart
 return Directionality(
   textDirection: TextDirection.ltr,
@@ -418,6 +435,7 @@ Hosting: firebase hosting:channel:deploy live
 ## 9. Production Readiness Checklist
 
 ### Code Quality
+
 - [x] No unsafe null checks
 - [x] All auth state uses maybeWhen()
 - [x] All async operations have mounted checks
@@ -427,6 +445,7 @@ Hosting: firebase hosting:channel:deploy live
 - [x] Widget lifecycle properly managed
 
 ### Performance
+
 - [x] Riverpod providers cached correctly
 - [x] Firestore queries optimized with limits
 - [x] Agora event handlers only registered on native
@@ -435,6 +454,7 @@ Hosting: firebase hosting:channel:deploy live
 - [x] No memory leaks in listeners
 
 ### Security
+
 - [x] Auth validated before all operations
 - [x] Firestore rules restrict by host/moderator
 - [x] Rate limiting prevents abuse
@@ -443,6 +463,7 @@ Hosting: firebase hosting:channel:deploy live
 - [x] Ban system prevents unauthorized rejoin
 
 ### Testing
+
 - [ ] Web build test needed
 - [ ] iOS device test needed
 - [ ] Android device test needed
@@ -454,12 +475,14 @@ Hosting: firebase hosting:channel:deploy live
 ## 10. Next Steps
 
 ### Immediate (Today)
+
 1. **Build Web**: `flutter build web --release`
 2. **Deploy Hosting**: `firebase hosting:channel:deploy live`
 3. **Test Login**: Verify auth flow works
 4. **Test Join**: Create room and join with test accounts
 
 ### Short Term (This Week)
+
 1. Test on iOS device
 2. Test on Android device
 3. Load test with 50+ participants
@@ -467,6 +490,7 @@ Hosting: firebase hosting:channel:deploy live
 5. Test token refresh edge cases
 
 ### Long Term (Next Sprint)
+
 1. Add call recording with Agora Real-time Transcription
 2. Add screen sharing
 3. Add background blur effect
@@ -477,21 +501,22 @@ Hosting: firebase hosting:channel:deploy live
 
 ## 11. Code Quality Metrics
 
-| Metric | Score | Status |
-|--------|-------|--------|
-| Type Safety | 100% | ✅ No dynamic types |
-| Null Safety | 100% | ✅ All values checked |
-| Provider Caching | 95% | ✅ Excellent memoization |
-| Auth Safety | 100% | ✅ Safe AsyncValue handling |
-| Firestore Rules | 100% | ✅ Comprehensive security |
-| Error Handling | 95% | ✅ Try-catch on all I/O |
-| Documentation | 90% | ✅ Comprehensive comments |
+| Metric           | Score | Status                      |
+| ---------------- | ----- | --------------------------- |
+| Type Safety      | 100%  | ✅ No dynamic types         |
+| Null Safety      | 100%  | ✅ All values checked       |
+| Provider Caching | 95%   | ✅ Excellent memoization    |
+| Auth Safety      | 100%  | ✅ Safe AsyncValue handling |
+| Firestore Rules  | 100%  | ✅ Comprehensive security   |
+| Error Handling   | 95%   | ✅ Try-catch on all I/O     |
+| Documentation    | 90%   | ✅ Comprehensive comments   |
 
 ---
 
 ## 12. Critical Paths Verified
 
 ### Room Creation Flow ✅
+
 ```
 User creates room
   ↓ [Authenticated]
@@ -505,6 +530,7 @@ Ready for participants
 ```
 
 ### User Join Flow ✅
+
 ```
 User clicks "Join"
   ↓ [Auth verified]
@@ -524,6 +550,7 @@ Video grid renders user
 ```
 
 ### Moderator Action Flow ✅
+
 ```
 Moderator clicks "Mute"
   ↓ [Host/moderator verified]

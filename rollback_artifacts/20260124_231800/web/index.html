@@ -1,86 +1,205 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <base href="/">
-  <meta charset="UTF-8">
-  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="description" content="Connect and mingle with people in real-time video rooms.">
-  <meta name="author" content="Mix & Mingle Team">
-  <meta name="robots" content="index, follow">
-  <link rel="canonical" href="https://mix-and-mingle-v2.web.app">
-  <title>Mix & Mingle</title>
+  <head>
+    <base href="/" />
+    <meta charset="UTF-8" />
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="description" content="Connect and mingle with people in real-time video rooms." />
+    <meta name="author" content="Mix & Mingle Team" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://mix-and-mingle-v2.web.app" />
+    <title>Mix & Mingle</title>
 
-  <!-- PWA / Icons -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+    <!-- PWA / Icons -->
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/png" href="favicon.png" />
+    <link rel="apple-touch-icon" href="icons/Icon-192.png" />
 
-  <style>
-    body { margin: 0; padding: 0; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif; }
-    #loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); z-index: 9999; }
-    #loading.hidden { opacity: 0; transition: opacity 0.5s ease-out; pointer-events: none; }
-    .logo { width: 120px; height: 120px; margin-bottom: 30px; animation: pulse 2s ease-in-out infinite; }
-    .logo-circle { width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #4A90E2 0%, #7B68EE 100%); display: flex; align-items: center; justify-content: center; font-size: 56px; font-weight: bold; color: white; box-shadow: 0 10px 40px rgba(74, 144, 226, 0.3); position: relative; overflow: hidden; }
-    .dancer { font-size: 56px; animation: musicFloat 2s ease-in-out infinite; display: inline-block; }
-    .logo-text { font-size: 18px; font-weight: 600; color: white; margin-top: 10px; letter-spacing: 2px; }
-    @keyframes musicFloat { 0%,100% { transform: translateY(0px) scale(1); opacity: 1; } 50% { transform: translateY(-15px) scale(1.1); opacity: 0.8; } }
-    .spinner { width: 50px; height: 50px; border: 4px solid rgba(74, 144, 226, 0.2); border-top-color: #4A90E2; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
-    .loading-text { color: #fff; font-size: 18px; font-weight: 500; margin-bottom: 10px; }
-    .loading-subtext { color: rgba(255, 255, 255, 0.6); font-size: 14px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-  </style>
-
-  <!-- Load Agora SDK synchronously and guard against failure -->
-  <!-- IMPORTANT: load the Iris Web RTC script first and block further boot until it is available -->
-  <script>
-    // Synchronous loader guard
-    (function () {
-      // Create a script element and insert it synchronously so it executes before flutter.js
-      var agoraScript = document.createElement('script');
-      agoraScript.src = "https://download.agora.io/sdk/release/iris-web-rtc_n450_w4220_0.8.6.js";
-      agoraScript.async = false; // ensure execution order
-      agoraScript.onload = function () {
-        window.__AGORA_SDK_LOADED = true;
-        console.log('[AgoraWeb] ✅ Iris Web RTC script loaded');
-      };
-      agoraScript.onerror = function (ev) {
-        window.__AGORA_SDK_LOADED = false;
-        console.error('[AgoraWeb] ❌ Failed to load Iris Web RTC script from CDN', ev);
-      };
-      // Insert before other scripts so it executes first
-      var ref = document.getElementsByTagName('script')[0];
-      ref.parentNode.insertBefore(agoraScript, ref);
-    })();
-  </script>
-
-  <!-- 100ms SDK - temporarily disabled until proper version found -->
-  <!-- <script src="https://unpkg.com/@100mslive/hms-video-web@latest/dist/index.js"></script> -->
-
-  <!-- Flutter loader scripts -->
-  <script src="flutter.js" defer></script>
-  <script src="flutter_bootstrap.js" defer></script>
-
-  <!-- Guard against Chrome extension API errors -->
-  <script>
-    if (typeof window !== 'undefined' && typeof window.process === 'undefined') {
-      window.process = { env: {}, version: '', platform: 'browser', nextTick: function (callback) { setTimeout(callback, 0); } };
-    }
-    if (typeof window !== 'undefined') {
-      if (!window.chrome) {
-        window.chrome = { runtime: { id: undefined, onMessage: { addListener: function () { } }, sendMessage: function () { } }, tabs: { onUpdated: { addListener: function () { } }, onChanged: { addListener: function () { } }, query: function () { }, create: function () { }, update: function () { } }, contextMenus: { onClicked: { addListener: function () { } }, create: function () { } }, downloads: { onCreated: { addListener: function () { } }, download: function () { } }, storage: { local: { get: function () { }, set: function () { } } } };
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, sans-serif;
       }
-      if (!window.chrome.runtime) {
-        window.chrome.runtime = { id: undefined, onMessage: { addListener: function () { } }, sendMessage: function () { } };
+      #loading {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        z-index: 9999;
       }
-    }
-  </script>
+      #loading.hidden {
+        opacity: 0;
+        transition: opacity 0.5s ease-out;
+        pointer-events: none;
+      }
+      .logo {
+        width: 120px;
+        height: 120px;
+        margin-bottom: 30px;
+        animation: pulse 2s ease-in-out infinite;
+      }
+      .logo-circle {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4a90e2 0%, #7b68ee 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 56px;
+        font-weight: bold;
+        color: white;
+        box-shadow: 0 10px 40px rgba(74, 144, 226, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+      .dancer {
+        font-size: 56px;
+        animation: musicFloat 2s ease-in-out infinite;
+        display: inline-block;
+      }
+      .logo-text {
+        font-size: 18px;
+        font-weight: 600;
+        color: white;
+        margin-top: 10px;
+        letter-spacing: 2px;
+      }
+      @keyframes musicFloat {
+        0%,
+        100% {
+          transform: translateY(0px) scale(1);
+          opacity: 1;
+        }
+        50% {
+          transform: translateY(-15px) scale(1.1);
+          opacity: 0.8;
+        }
+      }
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 4px solid rgba(74, 144, 226, 0.2);
+        border-top-color: #4a90e2;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+      }
+      .loading-text {
+        color: #fff;
+        font-size: 18px;
+        font-weight: 500;
+        margin-bottom: 10px;
+      }
+      .loading-subtext {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 14px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+      }
+    </style>
 
-</head>
-<body>
-  <div id="loading">
-    <div class="logo">
-      <div class="logo-circle">
-        <span class="dancer">🎵</span>
-      
+    <!-- Load Agora SDK synchronously and guard against failure -->
+    <!-- IMPORTANT: load the Iris Web RTC script first and block further boot until it is available -->
+    <script>
+      // Synchronous loader guard
+      (function () {
+        // Create a script element and insert it synchronously so it executes before flutter.js
+        var agoraScript = document.createElement("script");
+        agoraScript.src = "https://download.agora.io/sdk/release/iris-web-rtc_n450_w4220_0.8.6.js";
+        agoraScript.async = false; // ensure execution order
+        agoraScript.onload = function () {
+          window.__AGORA_SDK_LOADED = true;
+          console.log("[AgoraWeb] ✅ Iris Web RTC script loaded");
+        };
+        agoraScript.onerror = function (ev) {
+          window.__AGORA_SDK_LOADED = false;
+          console.error("[AgoraWeb] ❌ Failed to load Iris Web RTC script from CDN", ev);
+        };
+        // Insert before other scripts so it executes first
+        var ref = document.getElementsByTagName("script")[0];
+        ref.parentNode.insertBefore(agoraScript, ref);
+      })();
+    </script>
+
+    <!-- 100ms SDK - temporarily disabled until proper version found -->
+    <!-- <script src="https://unpkg.com/@100mslive/hms-video-web@latest/dist/index.js"></script> -->
+
+    <!-- Flutter loader scripts -->
+    <script src="flutter.js" defer></script>
+    <script src="flutter_bootstrap.js" defer></script>
+
+    <!-- Guard against Chrome extension API errors -->
+    <script>
+      if (typeof window !== "undefined" && typeof window.process === "undefined") {
+        window.process = {
+          env: {},
+          version: "",
+          platform: "browser",
+          nextTick: function (callback) {
+            setTimeout(callback, 0);
+          },
+        };
+      }
+      if (typeof window !== "undefined") {
+        if (!window.chrome) {
+          window.chrome = {
+            runtime: {
+              id: undefined,
+              onMessage: { addListener: function () {} },
+              sendMessage: function () {},
+            },
+            tabs: {
+              onUpdated: { addListener: function () {} },
+              onChanged: { addListener: function () {} },
+              query: function () {},
+              create: function () {},
+              update: function () {},
+            },
+            contextMenus: { onClicked: { addListener: function () {} }, create: function () {} },
+            downloads: { onCreated: { addListener: function () {} }, download: function () {} },
+            storage: { local: { get: function () {}, set: function () {} } },
+          };
+        }
+        if (!window.chrome.runtime) {
+          window.chrome.runtime = {
+            id: undefined,
+            onMessage: { addListener: function () {} },
+            sendMessage: function () {},
+          };
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="loading">
+      <div class="logo">
+        <div class="logo-circle">
+          <span class="dancer">🎵</span>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

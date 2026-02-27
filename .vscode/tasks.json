@@ -1,3 +1,23 @@
+	"tasks": [
+		{
+			"label": "Deploy generateAgoraToken (PowerShell)",
+			"type": "shell",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"panel": "shared"
+			},
+			"command": "powershell",
+			"args": [
+				"-NoProfile",
+				"-ExecutionPolicy",
+				"Bypass",
+				"-Command",
+				"npm test; node --check index.js; git add index.js; git commit -m \"Restore real handler with validation and logging\" || Write-Host 'No changes to commit'; git push; gcloud projects add-iam-policy-binding mix-and-mingle-v2 --member=\"serviceAccount:980846719834-compute@developer.gserviceaccount.com\" --role=\"roles/secretmanager.secretAccessor\" && gcloud functions deploy generateAgoraToken --region=us-central1 --runtime=nodejs20 --entry-point=generateAgoraToken --source=. --service-account=980846719834-compute@developer.gserviceaccount.com --set-secrets=\"AGORA_APP_ID=projects/mix-and-mingle-v2/secrets/AGORA_APP_ID:latest,AGORA_APP_CERTIFICATE=projects/mix-and-mingle-v2/secrets/AGORA_APP_CERTIFICATE:latest\" --timeout=120s"
+			],
+			"problemMatcher": []
+		}
+	]
 {
 	"version": "2.0.0",
 	"tasks": [

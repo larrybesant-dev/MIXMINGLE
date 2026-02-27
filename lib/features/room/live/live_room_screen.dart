@@ -12,6 +12,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../shared/providers/auth_providers.dart';
 import '../../../shared/providers/messaging_providers.dart';
@@ -22,6 +24,7 @@ import 'live_room_state.dart';
 import 'live_room_controller.dart';
 import 'live_tile_grid.dart';
 import '../widgets/reaction_bar.dart';
+import '../../../shared/widgets/pop_out_avatar.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   const LiveRoomScreen({
@@ -185,6 +188,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         ],
       ),
       actions: [
+        // Invite friends button
+        IconButton(
+          icon: const Icon(Icons.person_add_alt_1_outlined,
+              color: Colors.white70, size: 20),
+          tooltip: 'Invite friends',
+          onPressed: () => _showInviteSheet(s),
+        ),
         if (s.isActive || s.isSuspended)
           Padding(
             padding: const EdgeInsets.only(right: 12),
@@ -220,7 +230,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           child: ConstrainedBox(
             constraints: BoxConstraints(
               maxHeight: MediaQuery.of(context).size.height * 0.42,
-              minHeight: 180,
+              minHeight: (MediaQuery.of(context).size.height * 0.42).clamp(0.0, 180.0),
             ),
             child: LiveTileGrid(args: _args),
           ),
@@ -261,6 +271,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           },
         ),
       ],
+    );
+  }
+
+  // ── Invite friends bottom sheet ────────────────────────────────────
+
+  void _showInviteSheet(LiveRoomState s) {
+    final roomId = widget.roomId;
+    final roomName = s.roomMeta?.name ?? roomId;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF12082A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _InviteFriendsSheet(
+        roomId: roomId,
+        roomName: roomName,
+      ),
     );
   }
 
@@ -372,25 +400,29 @@ class _AudienceRow extends StatelessWidget {
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      CircleAvatar(
-                        radius: 14,
-                        backgroundColor: pending
-                            ? const Color(0xFF7A5200)
-                            : const Color(0xFF3A1A5E),
-                        backgroundImage: p.avatarUrl != null
-                            ? NetworkImage(p.avatarUrl!)
-                            : null,
-                        child: p.avatarUrl == null
-                            ? Text(
-                                p.displayName.isNotEmpty
-                                    ? p.displayName[0].toUpperCase()
-                                    : '?',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                ),
-                              )
-                            : null,
+                      PopOutAvatar(
+                        uid: p.userId,
+                        tooltip: p.displayName,
+                        child: CircleAvatar(
+                          radius: 14,
+                          backgroundColor: pending
+                              ? const Color(0xFF7A5200)
+                              : const Color(0xFF3A1A5E),
+                          backgroundImage: p.avatarUrl != null
+                              ? NetworkImage(p.avatarUrl!)
+                              : null,
+                          child: p.avatarUrl == null
+                              ? Text(
+                                  p.displayName.isNotEmpty
+                                      ? p.displayName[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                  ),
+                                )
+                              : null,
+                        ),
                       ),
                       // Raised-hand badge for pending requests
                       if (pending)
@@ -636,20 +668,24 @@ class _ChatBubble extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 12,
-            backgroundColor: const Color(0xFF3A1A5E),
-            backgroundImage: message.senderAvatarUrl.isNotEmpty
-                ? NetworkImage(message.senderAvatarUrl)
-                : null,
-            child: message.senderAvatarUrl.isEmpty
-                ? Text(
-                    message.senderName.isNotEmpty
-                        ? message.senderName[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(color: Colors.white, fontSize: 10),
-                  )
-                : null,
+          PopOutAvatar(
+            uid: message.senderId,
+            tooltip: message.senderName,
+            child: CircleAvatar(
+              radius: 12,
+              backgroundColor: const Color(0xFF3A1A5E),
+              backgroundImage: message.senderAvatarUrl.isNotEmpty
+                  ? NetworkImage(message.senderAvatarUrl)
+                  : null,
+              child: message.senderAvatarUrl.isEmpty
+                  ? Text(
+                      message.senderName.isNotEmpty
+                          ? message.senderName[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                    )
+                  : null,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -759,20 +795,24 @@ class _PendingRequestRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: const Color(0xFF3A1A5E),
-            backgroundImage: participant.avatarUrl != null
-                ? NetworkImage(participant.avatarUrl!)
-                : null,
-            child: participant.avatarUrl == null
-                ? Text(
-                    participant.displayName.isNotEmpty
-                        ? participant.displayName[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(color: Colors.white, fontSize: 11),
-                  )
-                : null,
+          PopOutAvatar(
+            uid: participant.userId,
+            tooltip: participant.displayName,
+            child: CircleAvatar(
+              radius: 14,
+              backgroundColor: const Color(0xFF3A1A5E),
+              backgroundImage: participant.avatarUrl != null
+                  ? NetworkImage(participant.avatarUrl!)
+                  : null,
+              child: participant.avatarUrl == null
+                  ? Text(
+                      participant.displayName.isNotEmpty
+                          ? participant.displayName[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(color: Colors.white, fontSize: 11),
+                    )
+                  : null,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -871,4 +911,177 @@ class _ChatInputBar extends StatelessWidget {
       ),
     );
   }
+}
+
+// ── Invite Friends Sheet ───────────────────────────────────────────────────
+
+class _InviteFriendsSheet extends StatefulWidget {
+  final String roomId;
+  final String roomName;
+  const _InviteFriendsSheet(
+      {required this.roomId, required this.roomName});
+
+  @override
+  State<_InviteFriendsSheet> createState() => _InviteFriendsSheetState();
+}
+
+class _InviteFriendsSheetState extends State<_InviteFriendsSheet> {
+  final Set<String> _invited = {};
+
+  Future<void> _sendInvite(String toUid) async {
+    final myUid = FirebaseAuth.instance.currentUser?.uid;
+    if (myUid == null) return;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(toUid)
+        .collection('roomInvites')
+        .add({
+      'fromUid': myUid,
+      'roomId': widget.roomId,
+      'roomName': widget.roomName,
+      'sentAt': FieldValue.serverTimestamp(),
+      'status': 'pending',
+    });
+    if (mounted) setState(() => _invited.add(toUid));
+  }
+
+  Stream<List<_RoomFriend>> _onlineFriendsStream() {
+    final myUid = FirebaseAuth.instance.currentUser?.uid;
+    if (myUid == null) return const Stream.empty();
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(myUid)
+        .collection('following')
+        .snapshots()
+        .asyncMap((snap) async {
+      if (snap.docs.isEmpty) return <_RoomFriend>[];
+      final uids = snap.docs.map((d) => d.id).take(30).toList();
+      final res = await FirebaseFirestore.instance
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: uids)
+          .where('isOnline', isEqualTo: true)
+          .get();
+      return res.docs
+          .map((d) => _RoomFriend(
+                uid: d.id,
+                name: (d.data()['displayName'] as String?) ?? 'User',
+                photo: d.data()['photoUrl'] as String?,
+              ))
+          .toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(height: 14),
+          const Text('Invite Online Friends',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(widget.roomName,
+              style:
+                  const TextStyle(color: Colors.white38, fontSize: 12)),
+          const SizedBox(height: 12),
+          const Divider(color: Color(0xFF2A1A3E), height: 1),
+          Flexible(
+            child: StreamBuilder<List<_RoomFriend>>(
+              stream: _onlineFriendsStream(),
+              builder: (_, snap) {
+                if (!snap.hasData) {
+                  return const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Center(
+                        child: CircularProgressIndicator(
+                            color: Color(0xFFFF4C4C), strokeWidth: 2)),
+                  );
+                }
+                final friends = snap.data!;
+                if (friends.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text('No online friends right now',
+                        style: TextStyle(
+                            color: Colors.white38, fontSize: 13),
+                        textAlign: TextAlign.center),
+                  );
+                }
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: friends.length,
+                  itemBuilder: (_, i) {
+                    final f = friends[i];
+                    final sent = _invited.contains(f.uid);
+                    return ListTile(
+                      dense: true,
+                      leading: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: const Color(0xFF3A1A5E),
+                        backgroundImage: f.photo != null
+                            ? NetworkImage(f.photo!)
+                            : null,
+                        child: f.photo == null
+                            ? Text(f.name[0].toUpperCase(),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13))
+                            : null,
+                      ),
+                      title: Text(f.name,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 13)),
+                      subtitle: const Text('Online',
+                          style: TextStyle(
+                              color: Color(0xFF00E676), fontSize: 11)),
+                      trailing: sent
+                          ? const Icon(Icons.check_circle,
+                              color: Color(0xFF00E676), size: 20)
+                          : TextButton(
+                              onPressed: () => _sendInvite(f.uid),
+                              style: TextButton.styleFrom(
+                                backgroundColor: const Color(0xFFFF4C4C)
+                                    .withValues(alpha: 0.15),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(14)),
+                              ),
+                              child: const Text('Invite',
+                                  style: TextStyle(
+                                      color: Color(0xFFFF4C4C),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RoomFriend {
+  final String uid;
+  final String name;
+  final String? photo;
+  const _RoomFriend({required this.uid, required this.name, this.photo});
 }

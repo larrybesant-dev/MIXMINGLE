@@ -1,6 +1,7 @@
 # 🎯 Web UI Not Showing - Root Cause Analysis
 
 ## The Problem
+
 - ✅ Agora joins successfully (JS bridge working)
 - ❌ UI doesn't transition to "in-room" state
 - ❌ Video grid, chat, participant list not visible
@@ -10,6 +11,7 @@
 ## The Join Success Path (Found)
 
 ### **Step 1: Join Triggered**
+
 **File**: [lib/features/room/screens/voice_room_page.dart](lib/features/room/screens/voice_room_page.dart#L288)
 
 ```dart
@@ -30,9 +32,11 @@ Future<void> _initializeAndJoinRoom() async {
 ```
 
 ### **Step 2: State Set**
+
 **Flag**: `_isJoined = true` (Line 390)
 
 ### **Step 3: Build Method Watches**
+
 **File**: [lib/features/room/screens/voice_room_page.dart](lib/features/room/screens/voice_room_page.dart#L595)
 
 ```dart
@@ -47,6 +51,7 @@ Widget build(BuildContext context) {
 ```
 
 ### **Step 4: Body Render Logic**
+
 **File**: [lib/features/room/screens/voice_room_page.dart](lib/features/room/screens/voice_room_page.dart#L798)
 
 ```dart
@@ -79,6 +84,7 @@ Widget _buildBody(...) {
 ## The Three Possible Bugs (Web Specific)
 
 ### **Bug #1: `_isJoined` Never Set to True**
+
 - Join completes on JS side
 - But `_isJoined` stays `false`
 - Body shows spinner forever
@@ -86,6 +92,7 @@ Widget _buildBody(...) {
 **Why on web**: Native path sets it via `onJoinChannelSuccess` event. Web path only sets via `setState()`.
 
 **Evidence to check**:
+
 ```
 Log should show: "Setting state to initializing"
 Log should show: "joinRoom completed"
@@ -97,6 +104,7 @@ If "setState" log is missing → **This is the bug**
 ---
 
 ### **Bug #2: `_errorMessage` Set After Join**
+
 - Join succeeds
 - But Firestore update throws
 - `setState(() { _errorMessage = e.toString(); })`
@@ -105,6 +113,7 @@ If "setState" log is missing → **This is the bug**
 **Why on web**: Firestore write in `_syncAgoraStateToFirestore` or missing participant registration.
 
 **Evidence to check**:
+
 ```
 Log should NOT show: "Room initialization failed"
 
@@ -114,16 +123,19 @@ If it does → Firestore operation failing
 ---
 
 ### **Bug #3: UI Builds But Video Tiles Empty**
+
 - `_isJoined = true` ✅
 - `_errorMessage = null` ✅
 - Video grid renders ✅
 - But `videoTiles` and `agoraParticipants` are empty
 
 **Why on web**:
+
 - Native: `onJoinChannelSuccess` fires → calls `ref.read(videoTileProvider.notifier).setLocalUid(...)`
 - Web: No event handler → UI shows empty grid
 
 **Evidence to check**:
+
 ```
 videoTileProvider should contain local UID
 agoraParticipantsProvider should populate on user join
@@ -136,6 +148,7 @@ If empty → Event handlers not wired for web
 ## 🔍 What We Need to Test
 
 ### **Test A: Check Logs**
+
 In browser console (F12), after joining room on web:
 
 ```
@@ -150,6 +163,7 @@ If any missing → UI state is broken.
 ---
 
 ### **Test B: Check `_isJoined` State**
+
 Add a temporary debug log:
 
 ```dart
@@ -167,6 +181,7 @@ Look for those logs. If they appear, state IS being set.
 ---
 
 ### **Test C: Check Video Tile Provider**
+
 Add debug in `_buildBody`:
 
 ```dart
@@ -226,6 +241,7 @@ This mirrors what `onJoinChannelSuccess` does on mobile.
 4. **Tell me if video grid shows** or if you see spinner/error
 
 Then I'll either:
+
 - Confirm web path is fixed (congratulate you 🎉)
 - Or give you the exact code patch to wire the missing state
 

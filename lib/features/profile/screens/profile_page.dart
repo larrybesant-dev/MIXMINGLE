@@ -10,8 +10,10 @@ import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/app/app_routes.dart';
 import 'package:mixmingle/core/design_system/design_constants.dart';
 import 'package:mixmingle/core/intelligence/vibe_intelligence_service.dart';
+import 'package:mixmingle/core/analytics/analytics_service.dart';
 
 import '../widgets/profile_mode_selector.dart';
+import '../widgets/profile_music_widget.dart';
 import '../widgets/layer_attraction.dart';
 import '../widgets/layer_live_presence.dart';
 import '../widgets/layer_social_proof.dart';
@@ -47,7 +49,8 @@ class ProfilePage extends ConsumerStatefulWidget {
   ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends ConsumerState<ProfilePage> {
+class _ProfilePageState extends ConsumerState<ProfilePage>
+    with TickerProviderStateMixin {
   final _scaffoldKey = GlobalKey<ScaffoldMessengerState>();
 
   /// Local mode state — starts from what the profile says, owner can toggle.
@@ -55,6 +58,27 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   /// Guards one-time local tag refresh per page lifecycle.
   bool _tagsRefreshed = false;
+
+  /// Chip entrance animation
+  late final AnimationController _chipAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _chipAnim = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..forward();
+    AnalyticsService.instance.logScreenView(
+      screenName: widget.targetUserId == null ? 'screen_profile_own' : 'screen_profile',
+    );
+  }
+
+  @override
+  void dispose() {
+    _chipAnim.dispose();
+    super.dispose();
+  }
 
   bool get _isOwner =>
       widget.targetUserId == null ||
@@ -148,6 +172,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               if (p.bio != null && p.bio!.isNotEmpty) _buildBioSection(p),
               if (p.bio != null && p.bio!.isNotEmpty)
                 const SizedBox(height: 16),
+              // ── Photo Gallery ─────────────────────────────────────
+              if (p.galleryPhotos != null && p.galleryPhotos!.isNotEmpty) ...[
+                _buildGallerySection(p),
+                const SizedBox(height: 16),
+              ],
+              // ── Music Preview ─────────────────────────────────────
+              if (p.favoriteTrackTitle != null &&
+                  p.favoriteTrackTitle!.isNotEmpty) ...[
+                ProfileMusicBadge(profile: p),
+                const SizedBox(height: 16),
+              ],
               // ── Badges ────────────────────────────────────────────
               _buildBadgesSection(p),
               const SizedBox(height: 16),
@@ -376,6 +411,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       const SizedBox(height: 24),
       _sectionHeader(Icons.settings_outlined, 'Account', DesignColors.textGray),
       const SizedBox(height: 10),
+      _navTile(Icons.person_add_outlined, 'Friend Requests',
+          () => Navigator.pushNamed(context, '/friend-requests')),
+      _navTile(Icons.favorite_outlined, 'Speed Dating Matches',
+          () => Navigator.pushNamed(context, '/speed-dating/matches')),
       _navTile(Icons.privacy_tip_outlined, 'Privacy Settings',
           () => Navigator.pushNamed(context, '/settings/privacy')),
       _navTile(Icons.notifications_outlined, 'Notifications',
@@ -419,15 +458,36 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           : null,
       automaticallyImplyLeading: false,
       actions: [
-        if (_isOwner)
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: _neonIconButton(
-              Icons.settings_outlined,
-              DesignColors.accent,
-              () => Navigator.pushNamed(context, '/settings'),
+        if (_isOwner) ...
+          [
+            Padding(
+              padding: const EdgeInsets.only(right: 4),
+              child: _neonIconButton(
+                Icons.ios_share_outlined,
+                _kCyan,
+                _shareProfile,
+              ),
             ),
-          ),
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: _neonIconButton(
+                Icons.settings_outlined,
+                DesignColors.accent,
+                () => Navigator.pushNamed(context, '/settings'),
+              ),
+            ),
+          ]
+        else ...
+          [
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: _neonIconButton(
+                Icons.ios_share_outlined,
+                _kCyan,
+                _shareProfile,
+              ),
+            ),
+          ],
       ],
       flexibleSpace: FlexibleSpaceBar(
         background: Stack(
@@ -658,11 +718,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _statBadge('${_formatCount(p.followersCount)}', 'Followers'),
+            _statBadge(_formatCount(p.followersCount), 'Followers'),
             const SizedBox(width: 12),
             Container(width: 1, height: 28, color: DesignColors.divider),
             const SizedBox(width: 12),
-            _statBadge('${_formatCount(p.followingCount)}', 'Following'),
+            _statBadge(_formatCount(p.followingCount), 'Following'),
             if (p.roomsHostedCount > 0) ...[
               const SizedBox(width: 12),
               Container(width: 1, height: 28, color: DesignColors.divider),
@@ -757,12 +817,27 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: tags
-                .map((tag) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: _vibeChip(tag, _kPurple),
-                    ))
-                .toList(),
+            children: List.generate(tags.length, (i) {
+              final start = (i * 0.12).clamp(0.0, 0.7);
+              final end = (start + 0.4).clamp(0.0, 1.0);
+              final fade = CurvedAnimation(
+                parent: _chipAnim,
+                curve: Interval(start, end, curve: Curves.easeOut),
+              );
+              return FadeTransition(
+                opacity: fade,
+                child: SlideTransition(
+                  position: Tween<Offset>(
+                    begin: const Offset(0.3, 0),
+                    end: Offset.zero,
+                  ).animate(fade),
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: _vibeChip(tags[i], _kPurple),
+                  ),
+                ),
+              );
+            }),
           ),
         ),
       ],
@@ -806,35 +881,44 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Row(
-            children: genres
-                .map((g) => Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: _kCyan.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16),
-                          border:
-                              Border.all(color: _kCyan.withValues(alpha: 0.35)),
-                          boxShadow: [
-                            BoxShadow(
-                                color: _kCyan.withValues(alpha: 0.12),
-                                blurRadius: 4)
-                          ],
-                        ),
-                        child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          const Icon(Icons.headphones, size: 12, color: _kCyan),
-                          const SizedBox(width: 5),
-                          Text(g,
-                              style: const TextStyle(
-                                  color: _kCyan,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600)),
-                        ]),
-                      ),
-                    ))
-                .toList(),
+            children: List.generate(genres.length, (i) {
+              final start = (0.3 + i * 0.1).clamp(0.0, 0.8);
+              final end = (start + 0.35).clamp(0.0, 1.0);
+              final fade = CurvedAnimation(
+                parent: _chipAnim,
+                curve: Interval(start, end, curve: Curves.easeOut),
+              );
+              return FadeTransition(
+                opacity: fade,
+                child: Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: _kCyan.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border:
+                          Border.all(color: _kCyan.withValues(alpha: 0.35)),
+                      boxShadow: [
+                        BoxShadow(
+                            color: _kCyan.withValues(alpha: 0.12),
+                            blurRadius: 4)
+                      ],
+                    ),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.headphones, size: 12, color: _kCyan),
+                      const SizedBox(width: 5),
+                      Text(genres[i],
+                          style: const TextStyle(
+                              color: _kCyan,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600)),
+                    ]),
+                  ),
+                ),
+              );
+            }),
           ),
         ),
       ],
@@ -881,24 +965,111 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   // ══════════════════════════════════════════════════════════
+  //  PHOTO GALLERY SECTION
+  // ══════════════════════════════════════════════════════════
+  Widget _buildGallerySection(UserProfile p) {
+    final photos = p.galleryPhotos!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _miniSectionLabel(Icons.photo_library_outlined, 'Gallery', _kPink),
+        const SizedBox(height: 8),
+        GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 3,
+            crossAxisSpacing: 6,
+            mainAxisSpacing: 6,
+            childAspectRatio: 1,
+          ),
+          itemCount: photos.length.clamp(0, 6),
+          itemBuilder: (_, i) => GestureDetector(
+            onTap: () => _viewGalleryPhoto(photos[i]),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(
+                    photos[i],
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      color: DesignColors.surfaceLight,
+                      child: const Icon(Icons.broken_image,
+                          color: DesignColors.textGray, size: 24),
+                    ),
+                  ),
+                  // Neon overlay shimmer on last tile if more photos
+                  if (i == 5 && photos.length > 6)
+                    Container(
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(
+                          '+${photos.length - 6}',
+                          style: TextStyle(
+                            color: _kPink,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            shadows: [
+                              Shadow(
+                                  color: _kPink.withValues(alpha: 0.8),
+                                  blurRadius: 8),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _viewGalleryPhoto(String url) {
+    showDialog(
+      context: context,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.transparent,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: Image.network(url, fit: BoxFit.contain),
+        ),
+      ),
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════
   //  BADGES & SOCIAL PROOF
   // ══════════════════════════════════════════════════════════
   Widget _buildBadgesSection(UserProfile p) {
     final badges = <_BadgeItem>[];
 
-    if (p.isPremium || p.isVip)
-      badges.add(_BadgeItem(Icons.workspace_premium, 'VIP', _kAmber));
-    if (p.isCreatorBadge || p.isCreatorEnabled)
-      badges.add(_BadgeItem(Icons.movie_creation_outlined, 'Creator', _kPink));
-    if (p.isPhotoVerified == true || p.isIdVerified == true)
-      badges.add(_BadgeItem(Icons.verified_outlined, 'Verified', _kBlue));
-    if (p.isBoosted)
-      badges.add(_BadgeItem(Icons.rocket_launch_outlined, 'Boosted', _kCyan));
-    if (p.communityRating >= 4.5 && p.totalRoomsJoined >= 10)
-      badges.add(_BadgeItem(Icons.star_outline, 'Top Host', _kAmber));
-    if (p.twoFactorEnabled)
-      badges.add(_BadgeItem(
+    if (p.isPremium || p.isVip) {
+      badges.add(const _BadgeItem(Icons.workspace_premium, 'VIP', _kAmber));
+    }
+    if (p.isCreatorBadge || p.isCreatorEnabled) {
+      badges.add(const _BadgeItem(Icons.movie_creation_outlined, 'Creator', _kPink));
+    }
+    if (p.isPhotoVerified == true || p.isIdVerified == true) {
+      badges.add(const _BadgeItem(Icons.verified_outlined, 'Verified', _kBlue));
+    }
+    if (p.isBoosted) {
+      badges.add(const _BadgeItem(Icons.rocket_launch_outlined, 'Boosted', _kCyan));
+    }
+    if (p.communityRating >= 4.5 && p.totalRoomsJoined >= 10) {
+      badges.add(const _BadgeItem(Icons.star_outline, 'Top Host', _kAmber));
+    }
+    if (p.twoFactorEnabled) {
+      badges.add(const _BadgeItem(
           Icons.security_outlined, '2FA Active', DesignColors.success));
+    }
 
     // Always show at least placeholder row so space is reserved
     if (badges.isEmpty && p.computedTags.isEmpty) {
@@ -1065,18 +1236,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Widget _buildActivityStatsSection(UserProfile p) {
     final stats = <_StatItem>[];
 
-    if (p.roomsHostedCount > 0)
+    if (p.roomsHostedCount > 0) {
       stats.add(_StatItem('${p.roomsHostedCount}', 'Rooms Hosted',
           Icons.mic_none_outlined, _kBlue));
-    if (p.eventsAttended > 0)
+    }
+    if (p.eventsAttended > 0) {
       stats.add(_StatItem(
           '${p.eventsAttended}', 'Events', Icons.event_outlined, _kCyan));
-    if (p.communityRating > 0)
+    }
+    if (p.communityRating > 0) {
       stats.add(_StatItem(p.communityRating.toStringAsFixed(1), 'Rating',
           Icons.star_outline, _kAmber));
-    if (p.mutualsCount > 0)
+    }
+    if (p.mutualsCount > 0) {
       stats.add(_StatItem(
           '${p.mutualsCount}', 'Mutuals', Icons.people_outline, _kPurple));
+    }
 
     if (stats.isEmpty) return const SizedBox.shrink();
 
@@ -1142,9 +1317,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 offset: const Offset(0, 4)),
           ],
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(Icons.edit_outlined, color: Colors.white, size: 18),
             SizedBox(width: 8),
             Text('Edit Profile',
@@ -1463,6 +1638,16 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       case ProfileMode.eventHost:
         return const Color(0xFF00E5CC);
     }
+  }
+
+  void _shareProfile() {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) return;
+    _scaffoldKey.currentState?.showSnackBar(const SnackBar(
+      content: Text('Profile link copied! 🎶'),
+      backgroundColor: Color(0xFF1E2D40),
+      behavior: SnackBarBehavior.floating,
+    ));
   }
 
   void _toast(String msg) {

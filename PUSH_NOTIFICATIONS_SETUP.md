@@ -7,6 +7,7 @@ This guide covers the complete push notification system using Firebase Cloud Mes
 ## 📁 Files Created
 
 ### Services
+
 - `lib/services/push_notification_service.dart` - Core FCM service
   - Token management
   - Foreground/background message handling
@@ -14,6 +15,7 @@ This guide covers the complete push notification system using Firebase Cloud Mes
   - Local notifications
 
 ### UI
+
 - `lib/features/notifications/notification_center_page.dart` - In-app notification center
   - Read/unread filtering
   - Mark all as read
@@ -21,6 +23,7 @@ This guide covers the complete push notification system using Firebase Cloud Mes
   - Navigation to related content
 
 ### Backend
+
 - `functions/push_notifications.js` - Cloud Functions
   - Queue processor for sending notifications
   - Auto-notifications for messages, follows, events
@@ -32,6 +35,7 @@ This guide covers the complete push notification system using Firebase Cloud Mes
 ### 1. Firebase Console Setup
 
 #### Android
+
 1. Go to Firebase Console → Project Settings → Cloud Messaging
 2. Under "Cloud Messaging API (Legacy)", copy the Server Key
 3. Download `google-services.json` and place in `android/app/`
@@ -41,11 +45,13 @@ This guide covers the complete push notification system using Firebase Cloud Mes
    ```
 
 #### iOS
+
 1. Download `GoogleService-Info.plist` and place in `ios/Runner/`
 2. In Xcode, enable "Push Notifications" capability
 3. Upload APNs Authentication Key to Firebase Console
 
 #### Web
+
 1. Firebase Console → Project Settings → Cloud Messaging → Web Push certificates
 2. Generate key pair and copy the VAPID key
 3. Update `web/firebase-messaging-sw.js` with your config
@@ -125,6 +131,7 @@ match /notificationQueue/{queueId} {
 ### 6. Test Notifications
 
 #### Send Test Notification
+
 ```dart
 // In your app code
 await PushNotificationService().sendNotificationToUser(
@@ -137,6 +144,7 @@ await PushNotificationService().sendNotificationToUser(
 ```
 
 #### FCM Console Test
+
 1. Firebase Console → Cloud Messaging → Send your first message
 2. Enter title, body, and select target (app or topic)
 3. Click "Test on device" and select your FCM token
@@ -145,29 +153,32 @@ await PushNotificationService().sendNotificationToUser(
 
 The system supports these notification types:
 
-| Type | Trigger | Action |
-|------|---------|--------|
-| **message** | New direct message | Opens chat conversation |
-| **eventInvite** | Event invitation | Opens event details |
-| **match** | New match | Opens matches page |
-| **follow** | New follower | Opens follower's profile |
-| **like** | Profile liked | Opens matches/likes page |
-| **eventReminder** | Event starting soon | Opens event details |
-| **systemAlert** | Admin message | Opens notification center |
+| Type              | Trigger             | Action                    |
+| ----------------- | ------------------- | ------------------------- |
+| **message**       | New direct message  | Opens chat conversation   |
+| **eventInvite**   | Event invitation    | Opens event details       |
+| **match**         | New match           | Opens matches page        |
+| **follow**        | New follower        | Opens follower's profile  |
+| **like**          | Profile liked       | Opens matches/likes page  |
+| **eventReminder** | Event starting soon | Opens event details       |
+| **systemAlert**   | Admin message       | Opens notification center |
 
 ## 🔔 User Experience Flow
 
 ### Foreground (App Open)
+
 1. Message received → Local notification shown
 2. User taps → Navigates to relevant screen
 3. Notification saved to Firestore
 
 ### Background (App Closed)
+
 1. Message received → System notification shown
 2. User taps → App opens to relevant screen
 3. Notification marked as read
 
 ### In-App Notification Center
+
 - Badge count on notification icon
 - Read/unread filtering
 - Swipe actions (mark read, delete)
@@ -200,6 +211,7 @@ await _localNotifications
    - iOS: Add to Xcode project → Build Phases → Copy Bundle Resources
 
 2. Update notification details:
+
 ```dart
 AndroidNotificationDetails(
   'channel_id',
@@ -211,6 +223,7 @@ AndroidNotificationDetails(
 ### Rich Notifications
 
 Add images/actions:
+
 ```dart
 AndroidNotificationDetails(
   'channel_id',
@@ -228,6 +241,7 @@ AndroidNotificationDetails(
 ## 🔐 Privacy & Permissions
 
 ### iOS Info.plist
+
 ```xml
 <key>UIBackgroundModes</key>
 <array>
@@ -236,7 +250,9 @@ AndroidNotificationDetails(
 ```
 
 ### Android Permissions
+
 Already included in `firebase_messaging` plugin:
+
 - `android.permission.INTERNET`
 - `android.permission.RECEIVE_BOOT_COMPLETED`
 - `com.google.android.c2dm.permission.RECEIVE`
@@ -263,6 +279,7 @@ void _handleNotificationTap(Map<String, dynamic> data) {
 ### Notifications Not Received
 
 **Check:**
+
 1. FCM token is saved in Firestore (`users/{userId}/fcmTokens`)
 2. Cloud Functions are deployed (`firebase functions:list`)
 3. App has notification permissions
@@ -272,6 +289,7 @@ void _handleNotificationTap(Map<String, dynamic> data) {
 ### iOS Issues
 
 **Common fixes:**
+
 1. Enable "Push Notifications" capability in Xcode
 2. Upload APNs certificate to Firebase Console
 3. Test with production build (not debug)
@@ -280,6 +298,7 @@ void _handleNotificationTap(Map<String, dynamic> data) {
 ### Android Issues
 
 **Common fixes:**
+
 1. Verify `google-services.json` is in `android/app/`
 2. Check `build.gradle` has Google Services plugin
 3. Ensure minimum SDK version ≥ 21
@@ -288,6 +307,7 @@ void _handleNotificationTap(Map<String, dynamic> data) {
 ### Token Not Saving
 
 **Check:**
+
 1. User is authenticated (`FirebaseAuth.instance.currentUser != null`)
 2. Firestore security rules allow token write
 3. No errors in console logs
@@ -296,11 +316,13 @@ void _handleNotificationTap(Map<String, dynamic> data) {
 ## 📈 Monitoring
 
 ### Firebase Console Metrics
+
 - Cloud Messaging → Delivery metrics
 - Analytics → Events → notification_opened
 - Crashlytics → Errors in notification handling
 
 ### Custom Monitoring
+
 ```dart
 // Track notification performance
 await FirebaseAnalytics.instance.logEvent(

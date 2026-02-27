@@ -14,11 +14,11 @@ The Firebase Cloud Function `generateAgoraToken` was trying to access environmen
 
 ```typescript
 // ❌ BROKEN - process.env variables not set in production
-const appId = process.env.AGORA_APP_ID;  // undefined!
-const appCertificate = process.env.AGORA_APP_CERTIFICATE;  // undefined!
+const appId = process.env.AGORA_APP_ID; // undefined!
+const appCertificate = process.env.AGORA_APP_CERTIFICATE; // undefined!
 
 if (!appId || !appCertificate) {
-  throw new Error("Agora credentials not configured...");  // ← This throws
+  throw new Error("Agora credentials not configured..."); // ← This throws
 }
 ```
 
@@ -29,13 +29,16 @@ This caused Firebase to return `[firebase_functions/internal]` error.
 ## ✅ The Solution (Executed)
 
 ### Step 1: Set Firebase Secrets
+
 ```bash
 echo "ec1b578586d24976a89d787d9ee4d5c7" | firebase functions:secrets:set AGORA_APP_ID
 echo "79a3e92a657042d08c3c26a26d1e70b6" | firebase functions:secrets:set AGORA_APP_CERTIFICATE
 ```
+
 ✅ Both secrets created in Firebase Secret Manager
 
 ### Step 2: Update Cloud Function Code
+
 Changed from using `process.env` to using Firebase's `defineSecret()`:
 
 ```typescript
@@ -46,20 +49,21 @@ const agoraAppId = defineSecret("AGORA_APP_ID");
 const agoraAppCertificate = defineSecret("AGORA_APP_CERTIFICATE");
 
 export const generateAgoraToken = onCall(
-  { secrets: [agoraAppId, agoraAppCertificate] },  // ← Dependency injection
+  { secrets: [agoraAppId, agoraAppCertificate] }, // ← Dependency injection
   async (request) => {
-    const appId = agoraAppId.value();  // ← Securely retrieved
+    const appId = agoraAppId.value(); // ← Securely retrieved
     const appCertificate = agoraAppCertificate.value();
 
     if (!appId || !appCertificate) {
       throw new Error(`Credentials missing...`);
     }
     // ✅ Now generates token successfully
-  }
+  },
 );
 ```
 
 ### Step 3: Deploy Updated Function
+
 ```bash
 firebase deploy --only functions:generateAgoraToken
 ✅ Deploy complete!
@@ -70,6 +74,7 @@ firebase deploy --only functions:generateAgoraToken
 ## 🧪 Verification
 
 ### Firebase Logs Show Success:
+
 ```
 2026-01-27T01:37:35.184435Z I getagoratoken: {
   "message":"Token generated",
@@ -95,6 +100,7 @@ firebase deploy --only functions:generateAgoraToken
 ### Firebase Project Settings
 
 **New Secrets Created:**
+
 - `projects/980846719834/secrets/AGORA_APP_ID/versions/1`
 - `projects/980846719834/secrets/AGORA_APP_CERTIFICATE/versions/1`
 
@@ -102,12 +108,12 @@ firebase deploy --only functions:generateAgoraToken
 
 ## 🎯 End Result
 
-| Aspect | Before | After |
-|--------|--------|-------|
-| Agora Token | ❌ INTERNAL error | ✅ Generated successfully |
-| Firebase Logs | ❌ Credentials undefined | ✅ "Token generated" |
-| User Experience | ❌ Can't join room | ✅ Joins room with video |
-| Environment Config | ❌ Local `.env` only | ✅ Firebase Secrets Manager |
+| Aspect             | Before                   | After                       |
+| ------------------ | ------------------------ | --------------------------- |
+| Agora Token        | ❌ INTERNAL error        | ✅ Generated successfully   |
+| Firebase Logs      | ❌ Credentials undefined | ✅ "Token generated"        |
+| User Experience    | ❌ Can't join room       | ✅ Joins room with video    |
+| Environment Config | ❌ Local `.env` only     | ✅ Firebase Secrets Manager |
 
 ---
 

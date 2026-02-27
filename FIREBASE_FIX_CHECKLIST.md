@@ -1,6 +1,7 @@
 # ✅ FIREBASE FIX - COMPLETION CHECKLIST
 
 ## 🎯 Objective
+
 Fix `[firebase_functions/internal]` error preventing Agora token generation in Firebase Cloud Functions
 
 ---
@@ -61,6 +62,7 @@ Fix `[firebase_functions/internal]` error preventing Agora token generation in F
 - [x] Expected outcome: No more INTERNAL errors
 
 ### Test Steps:
+
 1. Refresh Flutter app at `http://localhost:5000`
 2. Navigate to a voice room
 3. Click "Join Room"
@@ -91,6 +93,7 @@ Fix `[firebase_functions/internal]` error preventing Agora token generation in F
 ## 📋 Files Modified
 
 ### `functions/src/index.ts`
+
 - [x] Added Firebase Secrets imports
 - [x] Defined AGORA_APP_ID secret
 - [x] Defined AGORA_APP_CERTIFICATE secret
@@ -112,24 +115,26 @@ Fix `[firebase_functions/internal]` error preventing Agora token generation in F
 
 ## 📊 Before vs After
 
-| Metric | Before | After |
-|--------|--------|-------|
-| Token Generation | ❌ FAILS | ✅ SUCCESS |
-| Error Type | `[firebase_functions/internal]` | No error |
-| User Experience | Can't join room | Can join room |
-| Logs | Credentials undefined | "Token generated" |
-| Security | Local .env only | Firebase Secrets |
+| Metric           | Before                          | After             |
+| ---------------- | ------------------------------- | ----------------- |
+| Token Generation | ❌ FAILS                        | ✅ SUCCESS        |
+| Error Type       | `[firebase_functions/internal]` | No error          |
+| User Experience  | Can't join room                 | Can join room     |
+| Logs             | Credentials undefined           | "Token generated" |
+| Security         | Local .env only                 | Firebase Secrets  |
 
 ---
 
 ## ✨ What Users Will See
 
 ### Before Fix:
+
 ```
 ❌ Failed to initialize Agora: Exception: Token generation error: [firebase_functions/internal] internal
 ```
 
 ### After Fix:
+
 ```
 ✅ Room loads successfully
 ✅ Video tiles appear (even if cameras off)
@@ -171,11 +176,13 @@ Fix `[firebase_functions/internal]` error preventing Agora token generation in F
 If issues persist:
 
 1. Check Firebase logs:
+
    ```bash
    firebase functions:log
    ```
 
 2. Verify secrets exist:
+
    ```bash
    firebase functions:secrets:access AGORA_APP_ID
    firebase functions:secrets:access AGORA_APP_CERTIFICATE

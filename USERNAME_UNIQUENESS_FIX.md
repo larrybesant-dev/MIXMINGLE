@@ -10,6 +10,7 @@
 ## 🐛 The Problem
 
 ### What Users Were Seeing
+
 - Entering a unique username like `bluecat123`
 - Getting error: "Username is already taken"
 - Trying different usernames → same error
@@ -86,6 +87,7 @@ Future<bool> isUsernameTaken(String username) async {
 ```
 
 **What Changed:**
+
 - ✅ Now detects orphaned username reservations (from failed signups)
 - ✅ Treats orphaned usernames as available
 - ✅ Better logging for debugging
@@ -138,6 +140,7 @@ Future<bool> reserveUsername(String username, String uid) async {
 ```
 
 **What Changed:**
+
 - ✅ Uses Firestore transaction (atomic check + reserve)
 - ✅ Prevents race conditions completely
 - ✅ Returns boolean (true = reserved, false = taken)
@@ -205,6 +208,7 @@ try {
 ```
 
 **What Changed:**
+
 - ✅ Pre-checks username before creating auth account (fast fail)
 - ✅ Uses `reserveUsername()` transaction instead of `.set()`
 - ✅ Better error messages ("Username was just taken by another user")
@@ -216,6 +220,7 @@ try {
 ### 4. Improved Error Messages - Shows Exact Username
 
 **Files:**
+
 - [signup_page.dart](c:\Users\LARRY\MIXMINGLE\lib\features\auth\signup_page.dart#L67)
 - [edit_profile_page.dart](c:\Users\LARRY\MIXMINGLE\lib\features\edit_profile\edit_profile_page.dart#L117)
 
@@ -231,6 +236,7 @@ SnackBar(
 ```
 
 **What Changed:**
+
 - ✅ Shows the exact username that was taken
 - ✅ Longer duration (4 seconds) so users can read it
 - ✅ Clearer feedback
@@ -242,18 +248,21 @@ SnackBar(
 ### Manual Test Cases
 
 #### Test 1: Normal Signup (Happy Path)
+
 1. Enter unique username: `testuser123`
 2. Complete signup form
 3. Submit
 4. ✅ Should succeed, account created
 
 #### Test 2: Duplicate Username (Error Path)
+
 1. Enter existing username: `larryb`
 2. Complete signup form
 3. Submit
 4. ✅ Should fail with: `Username "larryb" is already taken. Please choose a different one.`
 
 #### Test 3: Race Condition (Concurrent Signups)
+
 1. Open two browser tabs
 2. Both enter same username: `racecondition123`
 3. Both submit simultaneously
@@ -261,15 +270,17 @@ SnackBar(
 5. ✅ No orphaned auth accounts
 
 #### Test 4: Case Sensitivity
+
 1. Try username: `LarryB` (mixed case)
 2. If `larryb` already exists
 3. ✅ Should fail with: `Username "larryb" is already taken.`
 4. ✅ Error message shows normalized version
 
 #### Test 5: Orphaned Username Recovery
+
 1. Manually create orphaned username doc (no uid):
    ```javascript
-   db.collection('usernames').doc('orphaned123').set({})
+   db.collection("usernames").doc("orphaned123").set({});
    ```
 2. Try to sign up with `orphaned123`
 3. ✅ Should succeed (treats orphaned as available)
@@ -295,6 +306,7 @@ match /usernames/{username} {
 ```
 
 **Why This Works:**
+
 - ✅ `allow update: if false` prevents accidental overwrites
 - ✅ `allow create` requires authenticated user + valid format
 - ✅ Forces `.set()` to fail if doc exists (correct behavior)
@@ -307,11 +319,13 @@ match /usernames/{username} {
 ## 📊 Performance Impact
 
 ### Before Fix
+
 - Check latency: ~50ms (Firestore read)
 - Create latency: ~200ms (Auth + Firestore write)
 - **Race condition window:** 250ms
 
 ### After Fix
+
 - Check latency: ~50ms (unchanged)
 - Create latency: ~250ms (added transaction overhead: +50ms)
 - **Race condition window:** 0ms (eliminated)
@@ -323,18 +337,21 @@ match /usernames/{username} {
 ## 🚀 Deployment Checklist
 
 ### Before Deployment
+
 - [x] Code changes complete
 - [x] Zero compilation errors
 - [x] Firestore rules already correct (no changes needed)
 - [x] Error messages improved
 
 ### Deploy Steps
+
 1. ✅ Commit code changes
 2. ⏳ Deploy to production
 3. ⏳ Monitor signup error rates
 4. ⏳ Test concurrent signups
 
 ### Post-Deployment Monitoring
+
 - [ ] Check Firebase Console → Authentication → Users (no orphaned accounts)
 - [ ] Check Firestore → usernames collection (no orphaned docs)
 - [ ] Monitor error logs for "Username was just taken" messages
@@ -345,11 +362,13 @@ match /usernames/{username} {
 ## 🎯 Success Metrics
 
 ### Before Fix
+
 - User complaints: Multiple reports
 - Estimated race condition rate: 1-5% (depends on concurrency)
 - Orphaned auth accounts: Possible
 
 ### After Fix (Expected)
+
 - User complaints: 0 (for race conditions)
 - Race condition rate: 0% (mathematically impossible)
 - Orphaned auth accounts: 0 (proper cleanup)
@@ -359,18 +378,23 @@ match /usernames/{username} {
 ## 🤔 FAQ
 
 ### Q: What if a user still gets "username already exists"?
+
 **A:** Now it's **guaranteed to be accurate**. The username is legitimately taken. The transaction ensures this.
 
 ### Q: What about orphaned username reservations from old signups?
+
 **A:** The enhanced `isUsernameTaken()` now detects and treats them as available.
 
 ### Q: Is there any performance cost?
+
 **A:** Minimal (+50ms per signup). The benefit (zero race conditions) far outweighs the cost.
 
 ### Q: Do I need to change Firestore rules?
+
 **A:** No! Your rules are already perfect. They enforce the transaction-based approach.
 
 ### Q: What if two users submit at the EXACT same microsecond?
+
 **A:** The Firestore transaction guarantees only one succeeds. The other gets a clear error message.
 
 ---
@@ -378,7 +402,9 @@ match /usernames/{username} {
 ## 🔧 Maintenance
 
 ### If You See "Username was just taken by another user"
+
 This message means:
+
 - ✅ The transaction worked correctly
 - ✅ Another user reserved the username between check and reservation
 - ✅ The user's auth account was properly cleaned up
@@ -387,6 +413,7 @@ This message means:
 This is **expected behavior** under high concurrency.
 
 ### Cleanup Script (Optional)
+
 If you ever need to clean up orphaned username reservations:
 
 ```dart
@@ -408,6 +435,7 @@ for (var doc in orphaned.docs) {
 ### Why Transactions Are Critical
 
 **Without Transaction:**
+
 ```
 User A                           User B
   |                                |
@@ -426,6 +454,7 @@ User A                           User B
 ```
 
 **With Transaction:**
+
 ```
 User A                           User B
   |                                |

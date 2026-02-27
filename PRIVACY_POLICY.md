@@ -3,7 +3,9 @@
 ## 1. Information We Collect
 
 ### Personal Information
+
 We collect information you provide directly to us, such as when you create an account, update your profile, or contact us for support. This may include:
+
 - Name and username
 - Email address
 - Profile photos
@@ -11,7 +13,9 @@ We collect information you provide directly to us, such as when you create an ac
 - Communication preferences
 
 ### Usage Information
+
 We automatically collect certain information when you use our app:
+
 - Device information (type, operating system, browser)
 - IP address and location data
 - Usage patterns and preferences
@@ -20,6 +24,7 @@ We automatically collect certain information when you use our app:
 ## 2. How We Use Your Information
 
 We use the information we collect to:
+
 - Provide, maintain, and improve our services
 - Process transactions and send related information
 - Send technical notices and support messages
@@ -46,6 +51,7 @@ We retain your information for as long as your account is active or as needed to
 ## 6. Your Rights
 
 You have the right to:
+
 - Access the personal information we hold about you
 - Correct inaccurate information
 - Delete your account and associated data

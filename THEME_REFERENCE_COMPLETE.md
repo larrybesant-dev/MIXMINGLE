@@ -1,11 +1,13 @@
 # Mix & Mingle - Complete Theme Reference 🎨
 
 ## Overview
+
 All pages in Mix & Mingle now use a **unified theme system** with consistent colors, typography, and styling.
 
 ## How It Works
 
 ### 1. **Global Theme** (Applied to All Pages)
+
 ```dart
 // In lib/app.dart
 MaterialApp(
@@ -15,6 +17,7 @@ MaterialApp(
 ```
 
 Every page automatically inherits:
+
 - ✅ Background colors
 - ✅ AppBar styling
 - ✅ Button themes
@@ -24,6 +27,7 @@ Every page automatically inherits:
 - ✅ Navigation themes
 
 ### 2. **Design System Colors**
+
 All colors are defined in one place: `lib/core/design_system/design_constants.dart`
 
 ## Theme Architecture Diagram
@@ -51,31 +55,35 @@ All colors are defined in one place: `lib/core/design_system/design_constants.da
 ## Current Color Palette
 
 ### Primary Colors
-| Color | Value | Usage |
-|-------|-------|-------|
+
+| Color            | Value     | Usage                       |
+| ---------------- | --------- | --------------------------- |
 | Accent (Primary) | `#1E90FF` | Primary actions, highlights |
-| Secondary | `#FF9500` | Alternative actions |
-| Tertiary | `#8B1538` | Special buttons (Go Live) |
+| Secondary        | `#FF9500` | Alternative actions         |
+| Tertiary         | `#8B1538` | Special buttons (Go Live)   |
 
 ### Surface Colors
-| Color | Constant | Usage |
-|-------|----------|-------|
-| Pure Black | `DesignColors.background` | Main background |
-| Dark Gray | `DesignColors.surfaceLight` | Card surfaces |
-| Dialog BG | `DesignColors.dialogBackground` | Dialogs/Popups |
-| Card BG | `DesignColors.cardBackground` | Card components |
-| Alt Surface | `DesignColors.surfaceAlt` | Alternative surfaces |
-| Extra Dark | `DesignColors.surfaceDark` | Deep shadows |
+
+| Color       | Constant                        | Usage                |
+| ----------- | ------------------------------- | -------------------- |
+| Pure Black  | `DesignColors.background`       | Main background      |
+| Dark Gray   | `DesignColors.surfaceLight`     | Card surfaces        |
+| Dialog BG   | `DesignColors.dialogBackground` | Dialogs/Popups       |
+| Card BG     | `DesignColors.cardBackground`   | Card components      |
+| Alt Surface | `DesignColors.surfaceAlt`       | Alternative surfaces |
+| Extra Dark  | `DesignColors.surfaceDark`      | Deep shadows         |
 
 ### Accent Colors
-| Color | Constant | Usage |
-|-------|----------|-------|
-| Gold | `DesignColors.gold` | Highlights, special buttons |
-| Success | `DesignColors.success` | Success states |
-| Error | `DesignColors.error` | Error states |
-| Warning | `DesignColors.warning` | Warning states |
+
+| Color   | Constant               | Usage                       |
+| ------- | ---------------------- | --------------------------- |
+| Gold    | `DesignColors.gold`    | Highlights, special buttons |
+| Success | `DesignColors.success` | Success states              |
+| Error   | `DesignColors.error`   | Error states                |
+| Warning | `DesignColors.warning` | Warning states              |
 
 ### Opacity Variants
+
 ```dart
 DesignColors.accent5    // 5% opacity
 DesignColors.accent10   // 10% opacity
@@ -91,6 +99,7 @@ DesignColors.accent90   // 90% opacity
 ### ✅ Correct: Using Theme System
 
 #### Dialog
+
 ```dart
 showDialog(
   context: context,
@@ -107,6 +116,7 @@ showDialog(
 ```
 
 #### Page with Inherited Theme
+
 ```dart
 class MyPage extends StatelessWidget {
   @override
@@ -130,6 +140,7 @@ class MyPage extends StatelessWidget {
 ```
 
 #### Card with Design Colors
+
 ```dart
 Card(
   // ✅ Inherits from cardTheme automatically
@@ -167,11 +178,13 @@ Card(
 ## Migration Summary
 
 ### What Was Changed
+
 - ✅ **63 files** updated with consistent colors
 - ✅ All hardcoded colors replaced with `DesignColors` constants
 - ✅ Added new color constants to `DesignColors`
 
 ### Color Mappings Applied
+
 ```dart
 // Hardcoded → Design System
 Color(0xFF2A2A3E)  → DesignColors.dialogBackground
@@ -186,6 +199,7 @@ Color(0xFF1A1A1A)  → DesignColors.surfaceLight
 ## Typography System
 
 ### Text Styles Available
+
 ```dart
 DesignTypography.heading1       // Large headers
 DesignTypography.heading2       // Section headers
@@ -197,6 +211,7 @@ DesignTypography.caption        // Caption text
 ```
 
 ### Using Typography
+
 ```dart
 // ✅ Use design typography
 Text(
@@ -214,6 +229,7 @@ Text(
 ## Theme Widget Reference
 
 ### Button Themes
+
 All buttons inherit from `NeonTheme.darkTheme`:
 
 ```dart
@@ -234,6 +250,7 @@ ElevatedButton(
 ```
 
 ### AppBar Theme
+
 ```dart
 // ✅ Uses inherited appBar theme
 AppBar(
@@ -248,6 +265,7 @@ AppBar(
 ```
 
 ### Card Theme
+
 ```dart
 // ✅ Uses inherited card theme
 Card(
@@ -259,6 +277,7 @@ Card(
 ```
 
 ### Input Fields
+
 ```dart
 // ✅ Uses inherited input decoration theme
 TextField(
@@ -272,6 +291,7 @@ TextField(
 ## Best Practices
 
 ### 1. **Prefer Theme Over Custom Colors**
+
 ```dart
 // ✅ GOOD: Let theme handle it
 Scaffold(
@@ -289,6 +309,7 @@ Scaffold(
 ```
 
 ### 2. **Use Design Constants for Colors**
+
 ```dart
 // ✅ GOOD: Using design system
 Container(
@@ -302,6 +323,7 @@ Container(
 ```
 
 ### 3. **Reuse Text Styles**
+
 ```dart
 // ✅ GOOD: Using design typography
 Text('Title', style: DesignTypography.heading1)
@@ -315,6 +337,7 @@ Text('Title', style: TextStyle(
 ```
 
 ### 4. **Use Theme Context for Dynamic Values**
+
 ```dart
 // ✅ GOOD: Gets color from active theme
 Container(
@@ -330,6 +353,7 @@ Container(
 ## Testing Theme Consistency
 
 ### Run This to Verify Setup
+
 ```bash
 # Check for any remaining hardcoded colors
 grep -r "Color(0x" lib/ --include="*.dart" | grep -v "DesignColors" | head -20
@@ -360,7 +384,9 @@ grep -r "DesignColors\." lib/ --include="*.dart" | wc -l
 ## Common Questions
 
 ### Q: Can I still customize colors for specific widgets?
+
 **A:** Yes, but prefer using `DesignColors` constants and only override when necessary:
+
 ```dart
 ElevatedButton(
   style: ElevatedButton.styleFrom(
@@ -371,20 +397,25 @@ ElevatedButton(
 ```
 
 ### Q: How do I add a new color to the design system?
+
 **A:** Add it to `lib/core/design_system/design_constants.dart`:
+
 ```dart
 static const Color myCustomColor = Color(0xFFRRGGBB);
 ```
 
 ### Q: What if I need different colors for light/dark modes?
+
 **A:** Use `Theme.of(context)` to get colors based on the current theme mode.
 
 ### Q: Can I change the global theme?
+
 **A:** Yes, modify `NeonTheme.darkTheme` or `NeonTheme.lightTheme` in `lib/core/theme/neon_theme.dart`.
 
 ## Support
 
 For questions about the theme system, refer to:
+
 - `DESIGN_BIBLE.md` - Design guidelines
 - `lib/core/theme/neon_theme.dart` - Theme implementation
 - `lib/core/design_system/design_constants.dart` - Color definitions

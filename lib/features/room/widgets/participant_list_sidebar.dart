@@ -70,26 +70,100 @@ class ParticipantListSidebar extends ConsumerWidget {
               final isRemoved = room.removedUsers.contains(uid);
               final isMutedByHost = room.mutedUsers.contains(uid);
 
+              // Host spotlight: elevated card with crown
+              if (isHost) {
+                return Container(
+                  margin: const EdgeInsets.symmetric(
+                      horizontal: 8, vertical: 6),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.amber.withValues(alpha: 0.18),
+                        Colors.orange.withValues(alpha: 0.08),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                        color: Colors.amber.withValues(alpha: 0.55),
+                        width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                          color: Colors.amber.withValues(alpha: 0.15),
+                          blurRadius: 10),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: Colors.amber,
+                            child: Icon(Icons.workspace_premium,
+                                color: Colors.white, size: 22),
+                          ),
+                          Positioned(
+                            top: -8,
+                            right: -4,
+                            child: Text('👑',
+                                style: TextStyle(fontSize: 16)),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              participant.displayName.isNotEmpty
+                                  ? participant.displayName
+                                  : uid,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              isCurrent ? 'Host · You' : 'Host',
+                              style: const TextStyle(
+                                  color: Colors.amber,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                      ),
+                      _buildMenu(context, room, uid, isCurrent, isHost,
+                          isMod, isSpeaker) ?? const SizedBox.shrink(),
+                    ],
+                  ),
+                );
+              }
+
               return ListTile(
                 dense: true,
                 leading: CircleAvatar(
                   backgroundColor: isRemoved
                       ? Colors.grey.shade900
-                      : isHost
-                          ? Colors.amber
-                          : isMod
-                              ? Colors.blueAccent
-                              : isSpeaker
-                                  ? Colors.green
-                                  : Colors.grey.shade700,
+                      : isMod
+                          ? Colors.blueAccent
+                          : isSpeaker
+                              ? Colors.green
+                              : Colors.grey.shade700,
                   child: Icon(
-                    isHost
-                        ? Icons.workspace_premium
-                        : isMod
-                            ? Icons.shield
-                            : isSpeaker
-                                ? Icons.mic
-                                : Icons.headset,
+                    isMod
+                        ? Icons.shield
+                        : isSpeaker
+                            ? Icons.mic
+                            : Icons.headset,
                     color: isRemoved ? Colors.grey.shade600 : Colors.white,
                     size: 16,
                   ),
@@ -132,13 +206,11 @@ class ParticipantListSidebar extends ConsumerWidget {
                       child: Text(
                         isRemoved
                             ? 'Removed'
-                            : isHost
-                                ? 'Host'
-                                : isMod
-                                    ? 'Moderator'
-                                    : isSpeaker
-                                        ? 'Speaker'
-                                        : 'Listener',
+                            : isMod
+                                ? 'Moderator'
+                                : isSpeaker
+                                    ? 'Speaker'
+                                    : 'Listener',
                         style: TextStyle(
                           color:
                               isRemoved ? Colors.grey.shade600 : Colors.white70,

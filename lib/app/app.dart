@@ -2,20 +2,43 @@
 // import 'dart:js_util' as js_util;
 // import 'package:mixmingle/helpers/helpers.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_routes.dart';
 import '../core/theme/neon_theme.dart';
+import '../services/fcm_notification_service.dart';
 
-class MixMingleApp extends StatelessWidget {
+/// Global navigator key — shared with FcmNotificationService so that push
+/// notification taps can navigate without a BuildContext.
+final GlobalKey<NavigatorState> appNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'appNavigator');
+
+class MixMingleApp extends StatefulWidget {
   const MixMingleApp({super.key});
+
+  @override
+  State<MixMingleApp> createState() => _MixMingleAppState();
+}
+
+class _MixMingleAppState extends State<MixMingleApp> {
+  @override
+  void initState() {
+    super.initState();
+    // Wire the navigator key so FCM notification taps can navigate.
+    FcmNotificationService.setNavigatorKey(appNavigatorKey);
+    debugPrint('[MixMingleApp] navigator key registered with FCM service');
+  }
 
   @override
   Widget build(BuildContext context) {
     debugPrint('ðŸ—ï¸ Building MixMingleApp...');
 
-    return ProviderScope(
-      child: MaterialApp(
-        title: 'Mix & Mingle - Global DJ Vibes',
+    // NOTE: ProviderScope is intentionally NOT nested here.
+    // The root ProviderScope lives in main.dart and is the single source of
+    // truth for all Riverpod providers. Adding another scope here would create
+    // a child container that shadows providers in the parent, causing
+    // inconsistent provider state between the auth gate and the app.
+    return MaterialApp(
+        title: 'Mix & Mingle',
+        navigatorKey: appNavigatorKey,
         debugShowCheckedModeBanner: false,
         theme: NeonTheme.darkTheme,
         // Use the app routing system
@@ -50,7 +73,6 @@ class MixMingleApp extends StatelessWidget {
             ),
           );
         },
-      ),
-    );
+      );
   }
 }

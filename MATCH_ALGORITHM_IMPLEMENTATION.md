@@ -3,7 +3,9 @@
 ## ✅ Completed
 
 ### Backend (Cloud Functions)
+
 Created [functions/src/matches.ts](functions/src/matches.ts) with:
+
 - ✅ `generateUserMatches` - Callable function that scores candidates and writes top 50 matches
 - ✅ `handleLike` - Detects mutual likes and creates match history
 - ✅ `handlePass` - Records pass decisions
@@ -11,11 +13,14 @@ Created [functions/src/matches.ts](functions/src/matches.ts) with:
 - ✅ `computeMatchScore` - Scoring algorithm (age, gender, interests, lookingFor)
 
 ### Frontend (Flutter)
+
 Created [lib/features/matching/models/match_model.dart](lib/features/matching/models/match_model.dart):
+
 - ✅ `MatchModel` - Generated match with score, status, profile data
 - ✅ `MatchHistoryModel` - History record (liked/passed/mutual_like)
 
 Created [lib/features/matching/services/match_service.dart](lib/features/matching/services/match_service.dart):
+
 - ✅ `generateMatches()` - Calls Cloud Function to generate fresh matches
 - ✅ `watchGeneratedMatches()` - Real-time stream of generated matches
 - ✅ `likeUser()` - Like a user (returns isMutualLike boolean)
@@ -24,12 +29,14 @@ Created [lib/features/matching/services/match_service.dart](lib/features/matchin
 - ✅ `watchMutualMatches()` - Stream of mutual matches only
 
 Updated [lib/features/matching/providers/matching_providers.dart](lib/features/matching/providers/matching_providers.dart):
+
 - ✅ `matchServiceProvider` - Provides MatchService instance
 - ✅ `generatedMatchesProvider` - Stream of generated matches
 - ✅ `mutualMatchesProvider` - Stream of mutual matches
 - ✅ `matchHistoryProvider` - Stream of all match history
 
 Updated [lib/features/app/screens/matches_page.dart](lib/features/app/screens/matches_page.dart):
+
 - ✅ Auto-generates matches on page load
 - ✅ Real-time stream of matches using Riverpod
 - ✅ Match cards with profile photo, name, age, bio, score
@@ -39,6 +46,7 @@ Updated [lib/features/app/screens/matches_page.dart](lib/features/app/screens/ma
 - ✅ Empty state with call-to-action
 
 Updated [functions/src/index.ts](functions/src/index.ts):
+
 - ✅ Exported all match functions from matches.ts module
 
 ## 📋 Firestore Schema
@@ -73,6 +81,7 @@ Collections created by the system:
 ```
 
 **Note:** Users must have these fields in `/users/{uid}`:
+
 - `preferences.genderPreference`: string | 'any'
 - `preferences.ageMin`: number
 - `preferences.ageMax`: number
@@ -108,6 +117,7 @@ Score range: 0-100+
 ## 🚀 Next Steps
 
 ### 1. Deploy Functions
+
 ```bash
 cd functions
 npm install
@@ -115,6 +125,7 @@ firebase deploy --only functions:generateUserMatches,functions:handleLike,functi
 ```
 
 ### 2. Test on Web
+
 1. Navigate to Matches page
 2. Click refresh to generate matches
 3. Verify cards display with photos, names, scores
@@ -122,7 +133,9 @@ firebase deploy --only functions:generateUserMatches,functions:handleLike,functi
 5. Test Pass button (card should disappear)
 
 ### 3. Ensure User Data
+
 Users need complete profiles:
+
 - Set `isActive: true` in user doc
 - Add `preferences` object with:
   - `genderPreference`
@@ -132,6 +145,7 @@ Users need complete profiles:
 - Ensure `age`, `gender`, `displayName`, `photoUrl`, `bio` exist
 
 ### 4. Monitor in Firebase Console
+
 - Check Functions logs for `[generateUserMatches]` entries
 - Verify `/matches/{uid}/generated` collection populates
 - Check `/likes` collection when users interact
@@ -140,6 +154,7 @@ Users need complete profiles:
 ## 🎨 UI Features
 
 ### Matches Page
+
 - Auto-generates matches on first load
 - Real-time updates (no refresh needed)
 - Match cards show:
@@ -156,12 +171,14 @@ Users need complete profiles:
 - Error handling with retry
 
 ### Match Dialog
+
 - Shows "🎉 It's a Match!" on mutual like
 - Simple "Awesome!" button to dismiss
 
 ## 📊 Analytics Points
 
 Consider adding tracking for:
+
 - Match generation requests
 - Like/pass ratios
 - Mutual match rate
@@ -172,6 +189,7 @@ Consider adding tracking for:
 ## 🔧 Tuning
 
 To improve match quality:
+
 1. Adjust scoring weights in `computeMatchScore()`
 2. Add distance calculation (haversine formula)
 3. Add recency score (prefer recently active users)
@@ -186,6 +204,7 @@ To improve match quality:
 - `refreshDailyMatches`: ~10-30min for 500 users (runs at midnight)
 
 To optimize:
+
 - Cache candidate queries
 - Use Firestore indexes
 - Batch write optimizations (already implemented)

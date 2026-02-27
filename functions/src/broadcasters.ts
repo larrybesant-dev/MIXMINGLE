@@ -75,11 +75,7 @@ export const onBroadcasterApproved = functions.firestore
  * Start recording via Agora REST API (Composite Recording)
  * Records the entire room view as if it's being watched by a viewer
  */
-async function startRecording(
-  roomId: string,
-  userId: string,
-  broadcasterData: any
-) {
+async function startRecording(roomId: string, userId: string, broadcasterData: any) {
   const AGORA_APP_ID = agoraAppId.value();
   const AGORA_API_KEY = agoraApiKey.value();
   const AGORA_API_SECRET = agoraApiSecret.value();
@@ -136,7 +132,7 @@ async function startRecording(
       AGORA_APP_ID,
       AGORA_API_KEY,
       AGORA_API_SECRET,
-      roomId
+      roomId,
     );
 
     // Start recording via REST API
@@ -151,23 +147,18 @@ async function startRecording(
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     const recordingDetails = response.data;
 
     // Save recording metadata
-    await db
-      .collection("rooms")
-      .doc(roomId)
-      .collection("broadcasterQueue")
-      .doc(userId)
-      .update({
-        isRecording: true,
-        recordingStartedAt: admin.firestore.FieldValue.serverTimestamp(),
-        recordingId: recordingDetails.resourceId,
-        recordingSessionId: recordingDetails.sid,
-      });
+    await db.collection("rooms").doc(roomId).collection("broadcasterQueue").doc(userId).update({
+      isRecording: true,
+      recordingStartedAt: admin.firestore.FieldValue.serverTimestamp(),
+      recordingId: recordingDetails.resourceId,
+      recordingSessionId: recordingDetails.sid,
+    });
 
     console.log(`✅ Recording started: ${recordingId}`);
   } catch (error) {
@@ -179,11 +170,7 @@ async function startRecording(
 /**
  * Stop recording via Agora REST API
  */
-async function stopRecording(
-  roomId: string,
-  userId: string,
-  broadcasterData: any
-) {
+async function stopRecording(roomId: string, userId: string, broadcasterData: any) {
   const AGORA_APP_ID = agoraAppId.value();
   const AGORA_API_KEY = agoraApiKey.value();
   const AGORA_API_SECRET = agoraApiSecret.value();
@@ -196,9 +183,7 @@ async function stopRecording(
   const sid = broadcasterData.recordingSessionId;
 
   if (!resourceId || !sid) {
-    console.warn(
-      `No recording details found for ${userId}, skipping stop recording`
-    );
+    console.warn(`No recording details found for ${userId}, skipping stop recording`);
     return;
   }
 
@@ -216,20 +201,15 @@ async function stopRecording(
           username: AGORA_API_KEY,
           password: AGORA_API_SECRET,
         },
-      }
+      },
     );
 
     // Update recording status
-    await db
-      .collection("rooms")
-      .doc(roomId)
-      .collection("broadcasterQueue")
-      .doc(userId)
-      .update({
-        isRecording: false,
-        recordingEndedAt: admin.firestore.FieldValue.serverTimestamp(),
-        recordingStatus: "completed",
-      });
+    await db.collection("rooms").doc(roomId).collection("broadcasterQueue").doc(userId).update({
+      isRecording: false,
+      recordingEndedAt: admin.firestore.FieldValue.serverTimestamp(),
+      recordingStatus: "completed",
+    });
 
     console.log(`✅ Recording stopped for ${userId}`);
   } catch (error) {
@@ -245,7 +225,7 @@ async function getAgoraRecordingToken(
   appId: string,
   apiKey: string,
   apiSecret: string,
-  channelName: string
+  channelName: string,
 ): Promise<string> {
   // In production, use the @agora-community/token-server package
   // For now, return placeholder - implement with real token generation
@@ -287,10 +267,7 @@ export const onBroadcasterOffline = functions.firestore
       console.log(`✅ Auto-approved: ${nextBroadcaster.data().userName}`);
 
       // Send notification to approved user
-      const userData = await db
-        .collection("users")
-        .doc(nextBroadcaster.id)
-        .get();
+      const userData = await db.collection("users").doc(nextBroadcaster.id).get();
 
       // TODO: Send push notification or update user's notification feed
       console.log(`Notification sent to ${userData.data()?.displayName}`);

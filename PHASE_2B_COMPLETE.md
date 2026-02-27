@@ -25,11 +25,13 @@
 **Purpose:** Single source of truth for all Firestore field names and collection paths
 
 **Exports:**
+
 - 50+ constants for collections, fields, and paths
 - Helper methods: `roomParticipantsPath()`, `messageDocPath()`, etc.
 - Eliminates hardcoded strings throughout codebase
 
 **Usage Example:**
+
 ```dart
 // Instead of: 'users', 'displayName'
 await _firestore
@@ -44,6 +46,7 @@ await _firestore
 
 **Status:** ✅ EXISTS (VERIFIED CURRENT)
 **Key Sections:**
+
 - Collections overview (19 collections documented)
 - Fields and constraints for each collection
 - Security rules summary
@@ -52,6 +55,7 @@ await _firestore
 - Cost estimates (~$0.80/month for 1K users)
 
 **Critical Collections:**
+
 - `users/` - User profiles
 - `rooms/` - Video rooms
 - `rooms/{roomId}/participants/` - Active participants
@@ -64,6 +68,7 @@ await _firestore
 
 **Status:** ✅ EXISTS (REVIEWED & VERIFIED)
 **Key Rules:**
+
 - Users can read/write only their own profile
 - Anyone can read **active** rooms
 - Only authenticated users can create rooms
@@ -72,6 +77,7 @@ await _firestore
 - Cloud Functions write notifications
 
 **Deployment:**
+
 ```bash
 firebase deploy --only firestore:rules
 ```
@@ -84,21 +90,23 @@ firebase deploy --only firestore:rules
 **Changes:**
 
 #### Added Event Callback Holders (line ~108)
+
 ```javascript
 window.agoraWeb.onRemoteUserPublished = null;
 window.agoraWeb.onRemoteUserUnpublished = null;
 ```
 
 #### Added Event Listeners in joinChannel() Success (line ~175)
+
 ```javascript
-client.on('user-published', async (remoteUser, mediaType) => {
+client.on("user-published", async (remoteUser, mediaType) => {
   // Fire callback to Dart
   if (window.agoraWeb.onRemoteUserPublished) {
     window.agoraWeb.onRemoteUserPublished({
       uid: remoteUser.uid,
       mediaType: mediaType,
       hasVideo: !!remoteUser.videoTrack,
-      hasAudio: !!remoteUser.audioTrack
+      hasAudio: !!remoteUser.audioTrack,
     });
   }
 
@@ -106,36 +114,38 @@ client.on('user-published', async (remoteUser, mediaType) => {
   await client.subscribe(remoteUser, mediaType);
 
   // Play video if available
-  if (mediaType === 'video' && remoteUser.videoTrack) {
-    const container = document.createElement('div');
-    container.id = 'remote-video-' + remoteUser.uid;
+  if (mediaType === "video" && remoteUser.videoTrack) {
+    const container = document.createElement("div");
+    container.id = "remote-video-" + remoteUser.uid;
     document.body.appendChild(container);
     await remoteUser.videoTrack.play(container);
   }
 });
 
-client.on('user-unpublished', (remoteUser, mediaType) => {
+client.on("user-unpublished", (remoteUser, mediaType) => {
   // Stop playing video and fire callback
-  if (mediaType === 'video' && remoteUser.videoTrack) {
+  if (mediaType === "video" && remoteUser.videoTrack) {
     remoteUser.videoTrack.stop();
   }
 
   if (window.agoraWeb.onRemoteUserUnpublished) {
     window.agoraWeb.onRemoteUserUnpublished({
       uid: remoteUser.uid,
-      mediaType: mediaType
+      mediaType: mediaType,
     });
   }
 });
 ```
 
 #### Added Cleanup in leaveChannel() (line ~232)
+
 ```javascript
-client.off('user-published');
-client.off('user-unpublished');
+client.off("user-published");
+client.off("user-unpublished");
 ```
 
 **Flow:**
+
 1. Two users join same room
 2. Second user's publish event fires
 3. JS bridge calls Dart callback with uid + media type
@@ -150,6 +160,7 @@ client.off('user-unpublished');
 **Changes:**
 
 #### Added Callback Setters (line ~160)
+
 ```dart
 static void setOnRemoteUserPublished(
   void Function(Map<String, dynamic> event)? callback
@@ -171,6 +182,7 @@ static void setOnRemoteUserUnpublished(
 **Changes:**
 
 #### Added Setup Method (line ~816)
+
 ```dart
 void _setupWebRemoteUserCallbacks() {
   AgoraWebBridgeV2.setOnRemoteUserPublished((event) {
@@ -201,6 +213,7 @@ void _setupWebRemoteUserCallbacks() {
 ```
 
 #### Integrated in initialize() (line ~159)
+
 ```dart
 if (kIsWeb) {
   await checkPermissions();
@@ -209,6 +222,7 @@ if (kIsWeb) {
 ```
 
 #### Added Cleanup in leaveRoom() (line ~645)
+
 ```dart
 if (kIsWeb) {
   AgoraWebBridgeV2.setOnRemoteUserPublished(null);
@@ -221,6 +235,7 @@ if (kIsWeb) {
 ## VERIFICATION RESULTS
 
 ### Flutter Analyze Output
+
 ```
 10 issues found (all info-level, no errors/warnings)
 - 'dart:js' deprecation warning (expected for web interop)
@@ -230,6 +245,7 @@ if (kIsWeb) {
 ```
 
 ### Web Build Output
+
 ```
 ✅ Built build\web
 - Font tree-shaking: 99.4% reduction (CupertinoIcons)
@@ -242,20 +258,21 @@ if (kIsWeb) {
 
 ## FILES MODIFIED / CREATED
 
-| File | Status | Changes |
-|------|--------|---------|
-| `lib/core/constants/firestore_collections.dart` | ✅ CREATED | 50+ constants + helpers |
-| `web/index.html` | ✅ MODIFIED | Added remote user events (70+ lines) |
-| `lib/services/agora_web_bridge_v2.dart` | ✅ MODIFIED | Added callback setters (90+ lines) |
-| `lib/services/agora_video_service.dart` | ✅ MODIFIED | Added setup + cleanup (80+ lines) |
-| `.vscode/settings.json` | ✅ MODIFIED | Disabled hot-reload-on-save, auto-save |
-| `.vscode/extensions.json` | ✅ MODIFIED | Cleaned to 5 essential extensions |
+| File                                            | Status      | Changes                                |
+| ----------------------------------------------- | ----------- | -------------------------------------- |
+| `lib/core/constants/firestore_collections.dart` | ✅ CREATED  | 50+ constants + helpers                |
+| `web/index.html`                                | ✅ MODIFIED | Added remote user events (70+ lines)   |
+| `lib/services/agora_web_bridge_v2.dart`         | ✅ MODIFIED | Added callback setters (90+ lines)     |
+| `lib/services/agora_video_service.dart`         | ✅ MODIFIED | Added setup + cleanup (80+ lines)      |
+| `.vscode/settings.json`                         | ✅ MODIFIED | Disabled hot-reload-on-save, auto-save |
+| `.vscode/extensions.json`                       | ✅ MODIFIED | Cleaned to 5 essential extensions      |
 
 ---
 
 ## ARCHITECTURE CHANGES
 
 ### Before PHASE 2B:
+
 ```
 Web Video Rooms:
   - Local join only
@@ -264,6 +281,7 @@ Web Video Rooms:
 ```
 
 ### After PHASE 2B:
+
 ```
 Web Video Rooms:
   - Local join ✅
@@ -281,10 +299,12 @@ Web Video Rooms:
 ### Manual Test: 2-User Video Call (Web)
 
 **Setup:**
+
 1. User A: Open browser to `localhost:3000` (web dev server)
 2. User B: Open second browser to same URL, different incognito window
 
 **Flow:**
+
 1. Both sign in to same room
 2. User A should see User B in participant list
 3. User B should see User A in participant list
@@ -295,6 +315,7 @@ Web Video Rooms:
 8. User B leaves
 
 **Expected Logs:**
+
 ```
 [BRIDGE] Remote user published: uid=12345, mediaType=video
 [BRIDGE] Subscribed to remote user: 12345, video
@@ -337,18 +358,21 @@ Web Video Rooms:
 ## NEXT STEPS (PHASE 2C+)
 
 ### Phase 2C: Social Features Hardening (5-8 hrs)
+
 - [ ] Implement missing room controls (remove user, mute user)
 - [ ] Add basic host/moderator UI
 - [ ] Test 5+ user rooms
 - [ ] Memory leak testing
 
 ### Phase 3: Polish & Branding (3-5 hrs)
+
 - [ ] MIX & MINGLE logo integration
 - [ ] Neon theme application
 - [ ] Loading states for video
 - [ ] Error messaging improvements
 
 ### Phase 4: Security & Compliance (4-6 hrs)
+
 - [ ] Deploy firestore.rules to production
 - [ ] Remove sensitive debugPrints
 - [ ] Token expiration handling
@@ -359,9 +383,11 @@ Web Video Rooms:
 ## DEPENDENCIES
 
 **New Imports Added:**
+
 - None (all used existing packages)
 
 **Deprecated But Functional:**
+
 - `dart:js` (deprecated in Dart 3.4, but web interop requires it)
 - Solution: Future migration to `dart:js_interop` (dart 3.4+)
 
@@ -369,13 +395,13 @@ Web Video Rooms:
 
 ## PRODUCTION READINESS SCORE
 
-| Component | Score | Notes |
-|-----------|-------|-------|
-| Web remote video | 7/10 | Works, needs UI polish |
-| Firestore schema | 9/10 | Complete, well-documented |
-| Security rules | 8/10 | Functional, needs real-world testing |
-| Code quality | 8/10 | All info-level warnings only |
-| Testing | 6/10 | Manual testing needed for 2+ users |
+| Component        | Score | Notes                                |
+| ---------------- | ----- | ------------------------------------ |
+| Web remote video | 7/10  | Works, needs UI polish               |
+| Firestore schema | 9/10  | Complete, well-documented            |
+| Security rules   | 8/10  | Functional, needs real-world testing |
+| Code quality     | 8/10  | All info-level warnings only         |
+| Testing          | 6/10  | Manual testing needed for 2+ users   |
 
 **Overall PHASE 2B Score: 8/10**
 
@@ -386,6 +412,7 @@ Web Video Rooms:
 ## SUMMARY
 
 PHASE 2B successfully:
+
 1. ✅ Consolidated Firestore schema into production-grade constants
 2. ✅ Implemented remote user event forwarding (JS → Dart)
 3. ✅ Integrated remote video rendering on web

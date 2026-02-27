@@ -42,6 +42,12 @@ external JSPromise _jsSetVideoMuted(JSBoolean muted);
 @JS('agoraWebBridge.getState')
 external JSAny? _jsGetState();
 
+@JS('agoraWebBridge.subscribeRemoteVideoTo')
+external JSBoolean _jsSubscribeRemoteVideoTo(JSString elementId);
+
+@JS('agoraWebBridge.renewToken')
+external JSBoolean _jsRenewToken(JSString newToken);
+
 @JS('agoraBridgeReady')
 external JSAny? get _jsBridgeReady;
 
@@ -112,8 +118,9 @@ class AgoraService {
 
   Future<void> initialize() async {
     final appId = _pendingAppId ?? _appId;
-    if (appId == null || appId.isEmpty)
+    if (appId == null || appId.isEmpty) {
       throw AgoraException('Agora App ID not provided');
+    }
     final ok = await init(appId);
     if (!ok) throw AgoraException('Failed to initialize Agora SDK');
   }
@@ -264,8 +271,9 @@ class AgoraService {
       {String? deviceId, int retries = 3}) async {
     for (int i = 0; i < retries; i++) {
       if (await startCamera(videoElementId, deviceId)) return true;
-      if (i < retries - 1)
+      if (i < retries - 1) {
         await Future.delayed(const Duration(milliseconds: 500));
+      }
     }
     return false;
   }
@@ -273,8 +281,9 @@ class AgoraService {
   Future<bool> startMicWithRetry({String? deviceId, int retries = 3}) async {
     for (int i = 0; i < retries; i++) {
       if (await startMic(deviceId)) return true;
-      if (i < retries - 1)
+      if (i < retries - 1) {
         await Future.delayed(const Duration(milliseconds: 500));
+      }
     }
     return false;
   }
@@ -292,12 +301,43 @@ class AgoraService {
   }) async {
     if (!kIsWeb) return false;
     if (!await init(appId)) return false;
-    if (!await joinChannel(channelId: channel, token: token, uid: uid))
+    if (!await joinChannel(channelId: channel, token: token, uid: uid)) {
       return false;
-    if (enableCamera)
+    }
+    if (enableCamera) {
       await startCameraWithRetry(videoElementId, deviceId: cameraDeviceId);
+    }
     if (enableMic) await startMicWithRetry(deviceId: micDeviceId);
     return true;
+  }
+
+  /// Register an HTML element (by ID) to receive the next remote video stream.
+  /// Call this after [joinChannel]. The bridge will play the first remote user's
+  /// video track into the element as soon as they publish (or immediately if they
+  /// already have a pending track).
+  Future<bool> subscribeRemoteVideoTo(String elementId) async {
+    if (!kIsWeb) return false;
+    try {
+      final result = _jsSubscribeRemoteVideoTo(elementId.toJS);
+      return _jsToBool(result);
+    } catch (e) {
+      debugPrint('[AgoraService] subscribeRemoteVideoTo failed: $e');
+      return false;
+    }
+  }
+
+  /// Renew the Agora token for the current channel session.
+  /// Call this when [onTokenPrivilegeWillExpire] fires or on a ~23h timer.
+  /// Returns true if the JS bridge accepted the new token.
+  Future<bool> renewToken(String newToken) async {
+    if (!kIsWeb) return false;
+    try {
+      final result = _jsRenewToken(newToken.toJS);
+      return _jsToBool(result);
+    } catch (e) {
+      debugPrint('[AgoraService] renewToken failed: $e');
+      return false;
+    }
   }
 
   Future<void> cleanup() async {

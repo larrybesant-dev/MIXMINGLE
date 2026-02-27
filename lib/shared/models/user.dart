@@ -35,6 +35,9 @@ class User {
   final String membershipTier;
   final List<String> badges;
 
+  // ONBOARDING
+  final bool onboardingComplete;
+
   User({
     required this.id,
     required this.email,
@@ -67,6 +70,7 @@ class User {
     this.lastSeen,
     required this.membershipTier,
     required this.badges,
+    this.onboardingComplete = false,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -111,6 +115,7 @@ class User {
           : null,
       membershipTier: json['membershipTier'] ?? 'free',
       badges: List<String>.from(json['badges'] ?? []),
+      onboardingComplete: json['onboardingComplete'] as bool? ?? false,
     );
   }
 
@@ -147,6 +152,7 @@ class User {
       'lastSeen': lastSeen?.toIso8601String(),
       'membershipTier': membershipTier,
       'badges': badges,
+      'onboardingComplete': onboardingComplete,
     };
   }
 

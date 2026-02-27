@@ -100,6 +100,10 @@ class AgoraService {
   /// IO stub
   Future<bool> switchMic(String deviceId) async => false;
 
+  /// IO stub — not applicable on native (web-only feature)
+  Future<bool> subscribeRemoteVideoTo(String elementId) async => false;
+  Future<bool> renewToken(String newToken) async => false;
+
   Future<void> startScreenShare() async {}
 
   Future<void> stopScreenShare() async {}

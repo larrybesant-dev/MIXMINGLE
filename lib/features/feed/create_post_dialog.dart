@@ -15,17 +15,27 @@ class CreatePostDialog extends StatefulWidget {
 
 class _CreatePostDialogState extends State<CreatePostDialog> {
   final TextEditingController _contentController = TextEditingController();
+  final TextEditingController _imageUrlController = TextEditingController();
   final SocialFeedService _feedService = SocialFeedService.instance;
 
   PostType _selectedType = PostType.text;
   bool _isSubmitting = false;
+  bool _imageUrlValid = false;
+
+  void _onImageUrlChanged(String url) {
+    final trimmed = url.trim();
+    setState(() {
+      _imageUrlValid = trimmed.isNotEmpty &&
+          (trimmed.startsWith('http://') || trimmed.startsWith('https://'));
+    });
+  }
 
   Future<void> _submitPost() async {
     final content = _contentController.text.trim();
-    if (content.isEmpty) {
+    if (content.isEmpty && !_imageUrlValid) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Please write something'),
+          content: Text('Add a caption or paste an image URL'),
           backgroundColor: DesignColors.error,
         ),
       );
@@ -34,10 +44,15 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
 
     setState(() => _isSubmitting = true);
 
+    final imageUrl = _selectedType == PostType.image && _imageUrlValid
+        ? _imageUrlController.text.trim()
+        : null;
+
     final postId = await _feedService.createPost(
       userId: widget.userId,
       content: content,
       type: _selectedType,
+      imageUrl: imageUrl,
     );
 
     if (mounted) {
@@ -45,7 +60,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content:
-              Text(postId != null ? 'Post created!' : 'Failed to create post'),
+              Text(postId != null ? 'Post shared!' : 'Failed to post'),
           backgroundColor:
               postId != null ? DesignColors.success : DesignColors.error,
         ),
@@ -56,6 +71,7 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
   @override
   void dispose() {
     _contentController.dispose();
+    _imageUrlController.dispose();
     super.dispose();
   }
 
@@ -132,6 +148,13 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                 ),
                 const SizedBox(width: 8),
                 _TypeChip(
+                  icon: Icons.image_outlined,
+                  label: 'Photo',
+                  isSelected: _selectedType == PostType.image,
+                  onTap: () => setState(() => _selectedType = PostType.image),
+                ),
+                const SizedBox(width: 8),
+                _TypeChip(
                   icon: Icons.emoji_events,
                   label: 'Achievement',
                   isSelected: _selectedType == PostType.achievement,
@@ -140,6 +163,74 @@ class _CreatePostDialogState extends State<CreatePostDialog> {
                 ),
               ],
             ),
+
+            // Image URL field (only shown for photo posts)
+            if (_selectedType == PostType.image) ...[
+              const SizedBox(height: 14),
+              TextField(
+                controller: _imageUrlController,
+                style: const TextStyle(
+                    color: DesignColors.white, fontSize: 13),
+                onChanged: _onImageUrlChanged,
+                decoration: InputDecoration(
+                  hintText: 'Paste image URL (https://...)',
+                  hintStyle: TextStyle(
+                      color: DesignColors.textGray.withValues(alpha: 0.5),
+                      fontSize: 13),
+                  prefixIcon: const Icon(Icons.link,
+                      color: DesignColors.accent, size: 18),
+                  suffixIcon: _imageUrlValid
+                      ? const Icon(Icons.check_circle,
+                          color: DesignColors.success, size: 18)
+                      : null,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: DesignColors.divider),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: DesignColors.divider),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide:
+                        const BorderSide(color: DesignColors.accent),
+                  ),
+                  filled: true,
+                  fillColor: DesignColors.surfaceDefault,
+                ),
+              ),
+              // Image preview
+              if (_imageUrlValid) ...[
+                const SizedBox(height: 10),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: Image.network(
+                    _imageUrlController.text.trim(),
+                    height: 160,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: DesignColors.surfaceDefault,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'Could not load image preview',
+                          style: TextStyle(
+                              color: DesignColors.textGray,
+                              fontSize: 12),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
             const SizedBox(height: 24),
 
             // Submit button

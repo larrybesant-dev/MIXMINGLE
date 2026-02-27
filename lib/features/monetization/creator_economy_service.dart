@@ -438,8 +438,9 @@ class CreatorEconomyService {
     bool autoUpgrade = true,
   }) async {
     final creatorDoc = await _creatorsCollection.doc(creatorId).get();
-    if (!creatorDoc.exists)
+    if (!creatorDoc.exists) {
       return {'success': false, 'error': 'Creator not found'};
+    }
 
     final creatorData = creatorDoc.data()!;
     final currentTierId = creatorData['tier'] as String? ?? 'starter';

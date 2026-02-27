@@ -21,6 +21,7 @@ flutter run -d chrome
 ### 1. Update Routing (app_routes.dart)
 
 Change import:
+
 ```dart
 // OLD
 import 'package:mixmingle/features/speed_dating/screens/speed_dating_lobby_page.dart';
@@ -30,6 +31,7 @@ import 'package:mixmingle/features/speed_dating/screens/speed_dating_lobby_cloud
 ```
 
 Change route:
+
 ```dart
 GoRoute(
   path: '/speed-dating-lobby',
@@ -42,6 +44,7 @@ GoRoute(
 Copy content from `firestore_speed_dating.rules` to your main `firestore.rules` file.
 
 OR deploy separately:
+
 ```powershell
 firebase deploy --only firestore:rules --config firestore_speed_dating.rules
 ```
@@ -96,15 +99,18 @@ Documentation:
 ## 🐛 If Something Breaks
 
 **No matches?**
+
 - Check Firebase Console > Firestore > speed_dating_queue (should see 2+ users)
 - Check Functions > Logs > matchSpeedDating (runs every 30s)
 
 **Token errors?**
+
 - Run: `firebase functions:config:get agora`
 - Should show appid + cert
 - If not: `firebase functions:config:set agora.appid="ec1b578586d24976a89d787d9ee4d5c7" agora.cert="79a3e92a657042d08c3c26a26d1e70b6"`
 
 **Video not loading?**
+
 - Check browser camera permissions
 - Check Agora App ID in Firebase config matches
 - Check token expiration in Cloud Function logs

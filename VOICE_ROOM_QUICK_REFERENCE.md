@@ -3,6 +3,7 @@
 ## 🎯 What's New
 
 ### 1. Text Chat Overlay 💬
+
 - Real-time messaging in voice rooms
 - System notifications (join/leave)
 - Scrollable chat history
@@ -12,17 +13,19 @@
 **Quick Access**: Tap "Chat" button in control bar
 
 ### 2. Room Roles 👥
+
 Three role levels with different permissions:
 
-| Role | Can Speak | Mute Others | Remove Members | Chat |
-|------|-----------|-------------|---|------|
-| Host 👑 | ✅ | ✅ | ✅ | ✅ |
-| Co-Host ⭐ | ✅ | ✅ | ❌ | ✅ |
-| Listener 👤 | ✅ | ❌ | ❌ | ✅ |
+| Role        | Can Speak | Mute Others | Remove Members | Chat |
+| ----------- | --------- | ----------- | -------------- | ---- |
+| Host 👑     | ✅        | ✅          | ✅             | ✅   |
+| Co-Host ⭐  | ✅        | ✅          | ❌             | ✅   |
+| Listener 👤 | ✅        | ❌          | ❌             | ✅   |
 
 **Backend Model**: `RoomRole` enum + `RoomParticipant` class
 
 ### 3. Smooth Animations ✨
+
 - **Join**: Fade-in + slide-up animation (500ms)
 - **Participants**: Scale transitions (300ms)
 - **Chat**: Bottom sheet slide-in (300ms)
@@ -35,6 +38,7 @@ All animations use `CurvedAnimation` for natural feel.
 ## 📁 New Files Created
 
 ### Models
+
 ```
 ✅ lib/shared/models/room_role.dart
    └─ RoomRole enum (host, coHost, listener)
@@ -46,6 +50,7 @@ All animations use `CurvedAnimation` for natural feel.
 ```
 
 ### Providers
+
 ```
 ✅ lib/features/room/providers/voice_room_providers.dart
    └─ voiceRoomChatProvider - State for chat messages
@@ -55,6 +60,7 @@ All animations use `CurvedAnimation` for natural feel.
 ```
 
 ### Widgets
+
 ```
 ✅ lib/features/room/widgets/voice_room_chat_overlay.dart
    └─ VoiceRoomChatOverlay - Main chat widget
@@ -63,6 +69,7 @@ All animations use `CurvedAnimation` for natural feel.
 ```
 
 ### Updated Files
+
 ```
 ✅ lib/features/room/screens/voice_room_page.dart
    └─ Added AnimationController for transitions
@@ -77,6 +84,7 @@ All animations use `CurvedAnimation` for natural feel.
 ## 🚀 Usage Examples
 
 ### Add Chat Message
+
 ```dart
 ref.read(voiceRoomChatProvider(roomId).notifier).addMessage(
   userId: 'user123',
@@ -87,18 +95,21 @@ ref.read(voiceRoomChatProvider(roomId).notifier).addMessage(
 ```
 
 ### Add System Message
+
 ```dart
 ref.read(voiceRoomChatProvider(roomId).notifier)
     .addSystemMessage('Alice joined the room');
 ```
 
 ### Update User Role
+
 ```dart
 ref.read(roomRolesProvider(roomId).notifier)
     .promoteToCoHost('user123');
 ```
 
 ### Show Chat UI
+
 ```dart
 showVoiceRoomChat(
   context,
@@ -109,6 +120,7 @@ showVoiceRoomChat(
 ```
 
 ### Get Role Info
+
 ```dart
 final participants = ref.watch(roomRolesProvider(roomId));
 final role = participants['user123']?.role;
@@ -138,22 +150,27 @@ if (role == RoomRole.host) {
 ## 🧪 Key Test Scenarios
 
 ### Test 1: Basic Chat
+
 1. Open room → Type message → Verify delivery ✅
 
 ### Test 2: System Messages
+
 1. Join room → Check "You joined" message ✅
 2. Leave room → Check "You left" message ✅
 
 ### Test 3: Animations
+
 1. Open room → Watch tile fade-in ✅
 2. Open chat → Watch slide animation ✅
 
 ### Test 4: Multiple Users
+
 1. Two devices, same room
 2. Send messages simultaneously
 3. Verify sync and no duplicates ✅
 
 ### Test 5: Role Permissions
+
 1. Promote user to co-host
 2. Verify UI reflects new role
 3. Check permission logic ✅
@@ -163,6 +180,7 @@ if (role == RoomRole.host) {
 ## 🎨 UI Components Added
 
 ### Chat Overlay
+
 - Header with close button
 - Scrollable message list
 - Input field with send button
@@ -170,6 +188,7 @@ if (role == RoomRole.host) {
 - Message bubbles (different colors for user vs others)
 
 ### Animations
+
 - `SlideTransition` for video tiles
 - `FadeTransition` for opacity
 - `ScaleTransition` for list items
@@ -180,6 +199,7 @@ if (role == RoomRole.host) {
 ## 📊 Data Structures
 
 ### VoiceRoomChatMessage
+
 ```dart
 {
   id: string,
@@ -193,6 +213,7 @@ if (role == RoomRole.host) {
 ```
 
 ### RoomParticipant
+
 ```dart
 {
   userId: string,
@@ -211,14 +232,17 @@ if (role == RoomRole.host) {
 ## 🔧 Provider Pattern Used
 
 **Chat**: `StateNotifierProvider.autoDispose.family`
+
 - Auto-disposes when room closes
 - Unique state per roomId
 
 **Roles**: `StateNotifierProvider.autoDispose.family`
+
 - Auto-disposes when room closes
 - Unique state per roomId
 
 **Pattern Benefits**:
+
 - ✅ No memory leaks
 - ✅ Isolated state per room
 - ✅ Easy to test
@@ -229,12 +253,14 @@ if (role == RoomRole.host) {
 ## 💡 Tips & Tricks
 
 ### For Large Message Lists
+
 ```dart
 // Show only recent 50 messages
 final recentMessages = notifier.getRecentMessages(limit: 50);
 ```
 
 ### For Role-Based UI
+
 ```dart
 // Check permissions before showing action
 if (role.canRemoveParticipants) {
@@ -243,6 +269,7 @@ if (role.canRemoveParticipants) {
 ```
 
 ### For Smooth Animations
+
 ```dart
 // Use proper curve for natural feel
 CurvedAnimation(
@@ -252,6 +279,7 @@ CurvedAnimation(
 ```
 
 ### For Performance
+
 ```dart
 // Dispose animations properly
 @override
@@ -266,18 +294,21 @@ void dispose() {
 ## 🐛 Debugging
 
 ### Check Chat Provider State
+
 ```dart
 final messages = ref.watch(voiceRoomChatProvider(roomId));
 print('Messages: ${messages.length}');
 ```
 
 ### Check Role State
+
 ```dart
 final roles = ref.watch(roomRolesProvider(roomId));
 print('Participants: ${roles.length}');
 ```
 
 ### Watch Animations
+
 ```dart
 // In build method, add:
 print('Animation value: ${_fadeAnimation.value}');

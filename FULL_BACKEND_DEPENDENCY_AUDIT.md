@@ -1,12 +1,14 @@
 # 🔥 FULL BACKEND DEPENDENCY AUDIT
+
 **Mix & Mingle - Feature to Backend Mapping**
-*Generated: January 27, 2026*
+_Generated: January 27, 2026_
 
 ---
 
 ## 📊 EXECUTIVE SUMMARY
 
 ### ✅ Backend Components Deployed:
+
 - **Cloud Functions**: 9 functions
   - `generateAgoraToken` ✅
   - `checkRateLimit` ✅
@@ -24,6 +26,7 @@
 - **Agora Video**: ✅ Native + Web SDK integrated
 
 ### ⚠️ Critical Findings:
+
 1. **40+ Services** defined in `lib/services/` but unclear which have full backend support
 2. **25+ Providers** defined but not all may have working backends
 3. **30+ Feature Screens** - need to verify each has complete backend chain
@@ -35,22 +38,26 @@
 ### 1️⃣ **VIDEO ROOMS** (CRITICAL - PRODUCTION)
 
 #### UI Components:
+
 - `lib/features/room/screens/voice_room_page.dart` ✅
 - `lib/features/room/screens/room_page.dart` ✅
 - `lib/features/room/screens/room_by_id_page.dart` ✅
 
 #### Providers:
+
 - `room_providers.dart` ✅
 - `agora_participant_provider.dart` ✅
 - `agora_video_tile_provider.dart` ✅
 
 #### Services:
+
 - `agora_video_service.dart` ✅
 - `agora_platform_service.dart` ✅ (NEW - Web/Native router)
 - `agora_web_service.dart` ✅ (NEW - Web SDK bridge)
 - `room_service.dart` ✅
 
 #### Backend Dependencies:
+
 - **Firestore**:
   - `/rooms/{roomId}` ✅
   - `/rooms/{roomId}/participants` ✅
@@ -72,20 +79,24 @@
 ### 2️⃣ **CHAT SYSTEM**
 
 #### UI Components:
+
 - `lib/features/chat_room_page.dart` ✅
 - `lib/features/chat_list_page.dart` ✅
 - `lib/features/room/screens/message_bubble.dart` ✅
 
 #### Providers:
+
 - `chat_providers.dart` ✅
 - `messaging_providers.dart` ✅
 
 #### Services:
+
 - `chat_service.dart` ✅
 - `messaging_service.dart` ✅
 - `typing_service.dart` ✅
 
 #### Backend Dependencies:
+
 - **Firestore**:
   - `/chats/{chatId}` - Status: ❓ VERIFY
   - `/chats/{chatId}/messages` - Status: ❓ VERIFY
@@ -98,6 +109,7 @@
 
 **Status**: ⚠️ **NEEDS VERIFICATION**
 **Action Required**:
+
 1. Verify Firestore paths exist and have correct security rules
 2. Consider adding `sendChatMessage` Cloud Function for:
    - Push notifications
@@ -110,6 +122,7 @@
 ### 3️⃣ **USER PROFILE**
 
 #### UI Components:
+
 - `lib/features/profile/screens/profile_page.dart` ✅
 - `lib/features/profile/screens/edit_profile_page.dart` ✅
 - `lib/features/profile/screens/user_profile_page.dart` ✅
@@ -117,15 +130,18 @@
 - `lib/features/app/screens/profile_edit_page.dart` ✅
 
 #### Providers:
+
 - `user_providers.dart` ✅
 - `profile_completion_providers.dart` ✅
 
 #### Services:
+
 - `profile_service.dart` ✅
 - `photo_upload_service.dart` ✅
 - `image_optimization_service.dart` ✅
 
 #### Backend Dependencies:
+
 - **Firestore**:
   - `/users/{uid}` ✅
   - `/users/{uid}/profile` - Status: ❓ VERIFY if separate subcollection exists
@@ -140,6 +156,7 @@
 
 **Status**: ⚠️ **PARTIALLY COMPLETE**
 **Action Required**:
+
 1. Verify profile photo upload works to Cloud Storage
 2. Add image optimization function (or use client-side compression)
 3. Verify Firestore security rules allow user to update own profile only
@@ -149,18 +166,22 @@
 ### 4️⃣ **AUTHENTICATION**
 
 #### UI Components:
+
 - `lib/features/auth/` (multiple screens)
 - `lib/auth_gate.dart` ✅
 - `lib/features/onboarding/screens/onboarding_page.dart` ✅
 
 #### Providers:
+
 - `auth_providers.dart` ✅
 
 #### Services:
+
 - `auth_service.dart` ✅
 - `email_verification_service.dart` ✅
 
 #### Backend Dependencies:
+
 - **Firebase Auth**: ✅ VERIFIED WORKING
 - **Firestore**:
   - `/users/{uid}` ✅ (created on signup)
@@ -178,18 +199,22 @@
 ### 5️⃣ **MATCHES & DISCOVERY**
 
 #### UI Components:
+
 - `lib/features/app/screens/matches_page.dart` ✅
 - `lib/features/discover_users/` ✅
 - `lib/features/matching/` ✅
 
 #### Providers:
+
 - `match_providers.dart` ✅
 
 #### Services:
+
 - `match_service.dart` ✅
 - `social_graph_service.dart` ✅
 
 #### Backend Dependencies:
+
 - **Firestore**:
   - `/users/{uid}/matches` - Status: ❓ VERIFY
   - `/users/{uid}/likes` - Status: ❓ VERIFY
@@ -204,6 +229,7 @@
 
 **Status**: ⚠️ **NEEDS BACKEND LOGIC**
 **Action Required**:
+
 1. Implement `calculateMatches` Cloud Function with algorithm
 2. Implement `onLikeCreated` Firestore trigger
 3. Verify Firestore paths and security rules
@@ -213,6 +239,7 @@
 ### 6️⃣ **EVENTS SYSTEM**
 
 #### UI Components:
+
 - `lib/features/events/screens/events_page.dart` ✅
 - `lib/features/events/screens/events_list_page.dart` ✅
 - `lib/features/events/screens/events_list_paginated_page.dart` ✅
@@ -221,15 +248,18 @@
 - `lib/features/event_details_page.dart` ✅
 
 #### Providers:
+
 - `events_providers.dart` ✅
 - `event_chat_providers.dart` ✅
 - `event_dating_providers.dart` ✅
 
 #### Services:
+
 - `events_service.dart` ✅
 - `event_chat_service.dart` ✅
 
 #### Backend Dependencies:
+
 - **Firestore**:
   - `/events/{eventId}` - Status: ❓ VERIFY
   - `/events/{eventId}/participants` - Status: ❓ VERIFY
@@ -245,6 +275,7 @@
 
 **Status**: ⚠️ **NEEDS BACKEND FUNCTIONS**
 **Action Required**:
+
 1. Implement `sendEventReminders` scheduled function
 2. Implement `joinEvent` callable with capacity check
 3. Verify Firestore security rules
@@ -254,17 +285,21 @@
 ### 7️⃣ **SPEED DATING**
 
 #### UI Components:
+
 - `lib/features/speed_dating/screens/speed_dating_lobby_page.dart` ✅
 - `lib/features/speed_dating/screens/speed_dating_decision_page.dart` ✅
 - `lib/features/speed_dating_page.dart` ✅
 
 #### Providers:
+
 - `event_dating_providers.dart` ✅
 
 #### Services:
+
 - `speed_dating_service.dart` ✅
 
 #### Backend Dependencies:
+
 - **Firestore**:
   - `/speed_dating_sessions/{sessionId}` - Status: ❓ VERIFY
   - `/speed_dating_sessions/{sessionId}/rounds` - Status: ❓ VERIFY
@@ -279,6 +314,7 @@
 
 **Status**: ⚠️ **NEEDS BACKEND ORCHESTRATION**
 **Action Required**:
+
 1. **CRITICAL**: Implement speed dating round timer Cloud Function
 2. Implement participant rotation logic
 3. Implement mutual match detection
@@ -288,16 +324,20 @@
 ### 8️⃣ **SETTINGS & PREFERENCES**
 
 #### UI Components:
+
 - `lib/features/settings/screens/settings_page.dart` ✅
 - `lib/features/match_preferences_page.dart` ✅
 
 #### Providers:
+
 - Various (auth, user, profile)
 
 #### Services:
+
 - Various
 
 #### Backend Dependencies:
+
 - **Firestore**:
   - `/users/{uid}/preferences` - Status: ❓ VERIFY
   - `/users/{uid}/settings` - Status: ❓ VERIFY
@@ -313,16 +353,20 @@
 ### 9️⃣ **NOTIFICATIONS**
 
 #### UI Components:
+
 - `lib/features/notifications/screens/notifications_page.dart` ✅
 - `lib/features/notifications/screens/notifications_paginated_page.dart` ✅
 
 #### Providers:
+
 - `notification_social_providers.dart.disabled` ⚠️ DISABLED?
 
 #### Services:
+
 - `notification_service.dart` ✅
 
 #### Backend Dependencies:
+
 - **Firestore**:
   - `/users/{uid}/notifications` - Status: ❓ VERIFY
 - **Cloud Function**: ⚠️ **MISSING**
@@ -333,6 +377,7 @@
 
 **Status**: ⚠️ **NEEDS FCM INTEGRATION**
 **Action Required**:
+
 1. Implement `onNotificationCreated` trigger to send FCM
 2. Verify FCM tokens are being saved to `/users/{uid}/fcmTokens`
 3. Enable `notification_social_providers.dart`
@@ -342,13 +387,16 @@
 ### 🔟 **MONETIZATION**
 
 #### UI Components:
+
 - `lib/features/payment/` ✅
 - `lib/features/withdrawal/` ✅
 
 #### Providers:
+
 - `gamification_payment_providers.dart` ✅
 
 #### Services:
+
 - `payment_service.dart` ✅
 - `subscription_service.dart` ✅
 - `tipping_service.dart` ✅
@@ -357,6 +405,7 @@
 - `monetization_analytics_service.dart` ✅
 
 #### Backend Dependencies:
+
 - **Firestore**:
   - `/users/{uid}/balance` - Status: ❓ VERIFY
   - `/users/{uid}/transactions` - Status: ❓ VERIFY
@@ -374,6 +423,7 @@
 
 **Status**: ⚠️ **HIGH PRIORITY - NEEDS PAYMENT INTEGRATION**
 **Action Required**:
+
 1. **CRITICAL**: Integrate Stripe or PayPal SDK
 2. Implement `processPayment` callable function
 3. Implement `sendGift` and `processTip` with server-side validation
@@ -384,17 +434,21 @@
 ### 1️⃣1️⃣ **MODERATION**
 
 #### UI Components:
+
 - `lib/features/moderation/screens/moderator_dashboard_page.dart` ✅
 - `lib/shared/widgets/block_report_dialog.dart` ✅
 
 #### Providers:
+
 - Various
 
 #### Services:
+
 - `moderation_service.dart` ✅
 - `auto_moderation_service.dart` ✅
 
 #### Backend Dependencies:
+
 - **Firestore**:
   - `/users/{uid}/blocked` - Status: ❓ VERIFY
   - `/reports/{reportId}` - Status: ❓ VERIFY
@@ -408,6 +462,7 @@
 
 **Status**: ⚠️ **NEEDS BACKEND ENFORCEMENT**
 **Action Required**:
+
 1. Implement `onReportCreated` Firestore trigger
 2. Implement `banUser` callable (requires admin SDK)
 3. Set up Firebase custom claims for moderator role
@@ -417,17 +472,21 @@
 ### 1️⃣2️⃣ **LEADERBOARDS & GAMIFICATION**
 
 #### UI Components:
+
 - `lib/features/leaderboards/` ✅
 - `lib/features/achievements/` ✅
 
 #### Providers:
+
 - `gamification_payment_providers.dart` ✅
 
 #### Services:
+
 - `gamification_service.dart` ✅
 - `badge_service.dart` ✅
 
 #### Backend Dependencies:
+
 - **Firestore**:
   - `/leaderboards/{type}` - Status: ❓ VERIFY
   - `/users/{uid}/achievements` - Status: ❓ VERIFY
@@ -440,6 +499,7 @@
 
 **Status**: ⚠️ **NEEDS SCHEDULED FUNCTIONS**
 **Action Required**:
+
 1. Implement `updateLeaderboard` scheduled function (daily/weekly)
 2. Implement `awardBadge` triggered by stat updates
 
@@ -448,15 +508,19 @@
 ### 1️⃣3️⃣ **BROADCASTER MODE**
 
 #### UI Components:
+
 - `lib/features/go_live/` ✅
 
 #### Providers:
+
 - `broadcaster_providers.dart` ✅
 
 #### Services:
+
 - `broadcaster_service.dart` ✅
 
 #### Backend Dependencies:
+
 - **Firestore**:
   - `/broadcasters/{uid}` - Status: ❓ VERIFY
   - `/live_streams/{streamId}` - Status: ❓ VERIFY
@@ -475,11 +539,13 @@
 ### 1️⃣4️⃣ **ANALYTICS**
 
 #### Services:
+
 - `analytics_service.dart` ✅
 - `analytics_tracking.dart` ✅
 - `monetization_analytics_service.dart` ✅
 
 #### Backend Dependencies:
+
 - **Firebase Analytics**: ✅ INTEGRATED
 - **Cloud Function**: ✅ **EXISTS**
   - `monitorCrashRate` ✅
@@ -495,17 +561,20 @@
 ## 🚨 CRITICAL MISSING BACKEND COMPONENTS
 
 ### Priority 1 - BLOCKING LAUNCH:
+
 1. **Payment Integration** (`processPayment`, `sendGift`, `processTip`)
 2. **Speed Dating Orchestration** (`startSpeedDatingRound`, `endSpeedDatingRound`)
 3. **Push Notifications** (`onNotificationCreated`, FCM setup)
 
 ### Priority 2 - NEEDED FOR FULL FUNCTIONALITY:
+
 4. **Match Algorithm** (`calculateMatches`, `onLikeCreated`)
 5. **Event Reminders** (`sendEventReminders`)
 6. **Moderation Enforcement** (`onReportCreated`, `banUser`)
 7. **Chat Notifications** (`onChatMessageCreated`)
 
 ### Priority 3 - NICE TO HAVE:
+
 8. **Image Optimization** (`generateProfileThumbnail`)
 9. **Leaderboard Updates** (`updateLeaderboard`)
 10. **Auto Moderation** (`onMessageCreated` with profanity filter)
@@ -515,6 +584,7 @@
 ## 📋 FIRESTORE SCHEMA VERIFICATION NEEDED
 
 ### Collections to Verify Exist:
+
 - [ ] `/chats/{chatId}`
 - [ ] `/chats/{chatId}/messages`
 - [ ] `/users/{uid}/chats`
@@ -536,6 +606,7 @@
 - [ ] `/moderation/queue`
 
 ### Security Rules to Verify:
+
 - [ ] Users can only read/write own data
 - [ ] Moderators have elevated permissions
 - [ ] Sensitive operations (payments, bans) are server-only
@@ -547,18 +618,21 @@
 ## 🎯 RECOMMENDED ACTION PLAN
 
 ### Week 1 - Critical Path:
+
 1. ✅ **Video Rooms** - DONE (just deployed)
 2. Implement **Payment Functions** (Stripe integration)
 3. Set up **FCM Push Notifications**
 4. Implement **Match Algorithm**
 
 ### Week 2 - Core Features:
+
 5. Implement **Speed Dating Orchestration**
 6. Implement **Event Reminders**
 7. Implement **Chat Notifications**
 8. Add **Moderation Enforcement**
 
 ### Week 3 - Polish & Testing:
+
 9. Implement **Leaderboard Updates**
 10. Add **Image Optimization**
 11. Full security rules audit
@@ -569,12 +643,14 @@
 ## 📊 PLATFORM-SPECIFIC CONSIDERATIONS
 
 ### Web-Specific:
+
 - ✅ Agora Web SDK integrated
 - ✅ Auth null-safety fixed for web
 - ⚠️ Verify payment gateway works on web
 - ⚠️ Verify file uploads work on web
 
 ### Mobile-Specific:
+
 - ✅ Agora Native SDK working
 - ✅ Push notifications setup needed (APNs/FCM)
 - ⚠️ Verify app permissions (camera, mic, storage)
@@ -605,9 +681,9 @@ Larry, this audit reveals:
 5. **Security rules need audit**
 
 Let me know which priority you want to tackle first:
+
 - A. Payment integration (monetization)
 - B. Match algorithm (core feature)
 - C. Push notifications (user engagement)
 - D. Speed dating orchestration (unique feature)
 - E. Full Firestore schema verification
-

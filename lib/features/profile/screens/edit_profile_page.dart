@@ -106,6 +106,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   // ─── Section 5 – What You're Into ───────────────────────────
   List<String> _selectedInterests = [];
   List<String> _selectedMusicTastes = [];
+  String? _selectedVibeTag;
+  List<String> _selectedMusicGenres = [];
 
   // ─── Section 6 – What You're Looking For ────────────────────
   List<String> _lookingFor = [];
@@ -269,6 +271,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
     _selectedInterests = List<String>.from(profile.interests ?? []);
     _selectedMusicTastes = List<String>.from(profile.musicTastes ?? []);
+    _selectedVibeTag = profile.vibeTag;
+    _selectedMusicGenres = List<String>.from(profile.musicGenres ?? []);
 
     _lookingFor = List<String>.from(profile.lookingFor ?? []);
     _relationshipType = profile.relationshipType;
@@ -375,14 +379,18 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       }
 
       final Map<String, String> links = {};
-      if (_instagramController.text.trim().isNotEmpty)
+      if (_instagramController.text.trim().isNotEmpty) {
         links['instagram'] = _instagramController.text.trim();
-      if (_tiktokController.text.trim().isNotEmpty)
+      }
+      if (_tiktokController.text.trim().isNotEmpty) {
         links['tiktok'] = _tiktokController.text.trim();
-      if (_snapchatController.text.trim().isNotEmpty)
+      }
+      if (_snapchatController.text.trim().isNotEmpty) {
         links['snapchat'] = _snapchatController.text.trim();
-      if (_twitterController.text.trim().isNotEmpty)
+      }
+      if (_twitterController.text.trim().isNotEmpty) {
         links['twitter'] = _twitterController.text.trim();
+      }
 
       final updatedProfile = UserProfile(
         id: currentProfile.id,
@@ -415,6 +423,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         interests: _selectedInterests.isNotEmpty ? _selectedInterests : null,
         musicTastes:
             _selectedMusicTastes.isNotEmpty ? _selectedMusicTastes : null,
+        vibeTag: _selectedVibeTag,
+        musicGenres:
+            _selectedMusicGenres.isNotEmpty ? _selectedMusicGenres : null,
         personalityPrompts: prompts.isNotEmpty ? prompts : null,
         lifestylePrompts:
             _lifestylePrompts.isNotEmpty ? _lifestylePrompts : null,
@@ -645,6 +656,36 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     _selectedMusicTastes.contains(v)
                         ? _selectedMusicTastes.remove(v)
                         : _selectedMusicTastes.add(v);
+                  }),
+                ),
+                const SizedBox(height: 16),
+                // ── Energy Vibe (single-select) ──
+                _buildChipSelector(
+                  label: 'Your Energy Vibe',
+                  options: const [
+                    'Chill', 'Hype', 'Deep Talk', 'Romantic',
+                    'Funny', 'Creative', 'Adventurous', 'Spiritual'
+                  ],
+                  selected:
+                      _selectedVibeTag != null ? [_selectedVibeTag!] : [],
+                  onTap: (v) => setState(
+                      () => _selectedVibeTag =
+                          (_selectedVibeTag == v) ? null : v),
+                ),
+                const SizedBox(height: 16),
+                // ── Music Genres (multi-select) ──
+                _buildChipSelectorMulti(
+                  label: 'Favourite Genres',
+                  options: const [
+                    'Hip-Hop', 'R&B', 'Pop', 'Afrobeats', 'Dancehall',
+                    'House', 'Techno', 'Reggae', 'Jazz', 'Soul',
+                    'Lo-Fi', 'Drill', 'Amapiano', 'Gospel', 'Country'
+                  ],
+                  selected: _selectedMusicGenres,
+                  onToggle: (v) => setState(() {
+                    _selectedMusicGenres.contains(v)
+                        ? _selectedMusicGenres.remove(v)
+                        : _selectedMusicGenres.add(v);
                   }),
                 ),
               ],

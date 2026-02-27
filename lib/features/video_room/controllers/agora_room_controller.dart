@@ -152,8 +152,9 @@ class AgoraRoomNotifier extends Notifier<AgoraRoomState> {
           uid: _userId, name: _userName, isSpeaking: false, isPresent: true);
       await _firestore.updateParticipant(_roomId, selfParticipant);
       state = state.copyWith(isInRoom: true);
-      if (kDebugMode)
+      if (kDebugMode) {
         print('[RoomNotifier] Joined room: $_roomId as $_userName');
+      }
     } catch (e) {
       ref.read(joinFlowProvider.notifier).setError(e.toString());
       if (kDebugMode) print('[RoomNotifier] Join failed: $e');
@@ -179,8 +180,9 @@ class AgoraRoomNotifier extends Notifier<AgoraRoomState> {
       final newMicMuted = !state.isMicMuted;
       await _agora.setMicrophoneMuted(newMicMuted);
       state = state.copyWith(isMicMuted: newMicMuted);
-      if (kDebugMode)
+      if (kDebugMode) {
         print('[RoomNotifier] Mic: ${newMicMuted ? "MUTED" : "ACTIVE"}');
+      }
     } catch (e) {
       if (kDebugMode) print('[RoomNotifier] Mic toggle failed: $e');
       throw RoomControllerException('Failed to toggle microphone', e);
@@ -192,8 +194,9 @@ class AgoraRoomNotifier extends Notifier<AgoraRoomState> {
       final newVideoMuted = !state.isVideoMuted;
       await _agora.setVideoCameraMuted(newVideoMuted);
       state = state.copyWith(isVideoMuted: newVideoMuted);
-      if (kDebugMode)
+      if (kDebugMode) {
         print('[RoomNotifier] Video: ${newVideoMuted ? "DISABLED" : "ACTIVE"}');
+      }
     } catch (e) {
       if (kDebugMode) print('[RoomNotifier] Video toggle failed: $e');
       throw RoomControllerException('Failed to toggle video', e);

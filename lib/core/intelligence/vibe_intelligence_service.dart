@@ -88,13 +88,17 @@ class VibeIntelligenceService {
     final tags = <String>[];
 
     // Activity tiers
-    if (p.roomsHostedCount >= 10)
+    if (p.roomsHostedCount >= 10) {
       tags.add('Super Host');
-    else if (p.roomsHostedCount >= 3) tags.add('Rising Host');
+    } else if (p.roomsHostedCount >= 3) {
+      tags.add('Rising Host');
+    }
 
-    if (p.totalRoomsJoined >= 50)
+    if (p.totalRoomsJoined >= 50) {
       tags.add('Room Regular');
-    else if (p.totalRoomsJoined >= 20) tags.add('Social Butterfly');
+    } else if (p.totalRoomsJoined >= 20) {
+      tags.add('Social Butterfly');
+    }
 
     if (p.eventsAttended >= 10) tags.add('Event Lover');
 
@@ -106,7 +110,7 @@ class VibeIntelligenceService {
     // Vibe-based
     final top = p.topVibe;
     if (top != null && p.topVibeCount >= 5) {
-      tags.add('${top} Enthusiast');
+      tags.add('$top Enthusiast');
     }
     if (p.vibeHistory.length >= 4) tags.add('Vibe Explorer');
 
@@ -115,9 +119,11 @@ class VibeIntelligenceService {
     if (p.followersCount >= 100) tags.add('Influencer');
 
     // Energy
-    if (p.energyScore >= 90)
+    if (p.energyScore >= 90) {
       tags.add('High Energy');
-    else if (p.energyScore >= 50) tags.add('Active Member');
+    } else if (p.energyScore >= 50) {
+      tags.add('Active Member');
+    }
 
     return tags.take(5).toList(); // cap at 5 tags
   }

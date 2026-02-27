@@ -1,4 +1,5 @@
 # 🧩 COMPLETE PALTALK + MIX & MINGLE ROOM SYSTEM
+
 ## Full Architecture Blueprint (7 Modules)
 
 **Status**: Architecture Phase
@@ -9,15 +10,15 @@
 
 ## 📋 MODULE BREAKDOWN
 
-| Module | Status | LOC | Features | Priority |
-|--------|--------|-----|----------|----------|
-| **A** | 🔵 Planning | 2K | Multi-Cam, Spotlight, Cam Quality | P0 |
-| **B** | 🔵 Planning | 1.5K | Mic Queue, Noise Filter, Gain Control | P1 |
-| **C** | 🔵 Planning | 2K | Chat, Whispers, Emojis, Pinned Messages | P1 |
-| **D** | 🔵 Planning | 1.5K | Moderation, Bans, Shadow Ban, Admin Tools | P1 |
-| **E** | 🔵 Planning | 1.2K | Room Management, Themes, Capacity, MOTD | P2 |
-| **F** | 🔵 Planning | 800 | Presence, Status, Idle Detection | P2 |
-| **G** | 🔵 Planning | 1.5K | Gifts, XP, Badges, VIP, Room Coins | P3 |
+| Module | Status      | LOC  | Features                                  | Priority |
+| ------ | ----------- | ---- | ----------------------------------------- | -------- |
+| **A**  | 🔵 Planning | 2K   | Multi-Cam, Spotlight, Cam Quality         | P0       |
+| **B**  | 🔵 Planning | 1.5K | Mic Queue, Noise Filter, Gain Control     | P1       |
+| **C**  | 🔵 Planning | 2K   | Chat, Whispers, Emojis, Pinned Messages   | P1       |
+| **D**  | 🔵 Planning | 1.5K | Moderation, Bans, Shadow Ban, Admin Tools | P1       |
+| **E**  | 🔵 Planning | 1.2K | Room Management, Themes, Capacity, MOTD   | P2       |
+| **F**  | 🔵 Planning | 800  | Presence, Status, Idle Detection          | P2       |
+| **G**  | 🔵 Planning | 1.5K | Gifts, XP, Badges, VIP, Room Coins        | P3       |
 
 **Total**: ~10,500 LOC (production-ready)
 
@@ -26,24 +27,28 @@
 ## 🎯 EXECUTION PLAN
 
 ### **Phase 1: Foundation (Weeks 1-2)**
+
 - Module A: Multi-Cam System
 - Module B: Advanced Mic Control
 - Database schema updates
 - Test & Deploy
 
 ### **Phase 2: Communication (Weeks 3-4)**
+
 - Module C: Enhanced Chat
 - Module D: Moderation Tools
 - Admin dashboard
 - Test & Deploy
 
 ### **Phase 3: Polish (Weeks 5-6)**
+
 - Module E: Room Management
 - Module F: Presence System
 - UI refinement
 - Performance optimization
 
 ### **Phase 4: Growth (Weeks 7+)**
+
 - Module G: Gamification
 - Analytics
 - Monetization features
@@ -54,6 +59,7 @@
 ## 📂 FIRESTORE SCHEMA UPDATES
 
 ### Current Structure ✅
+
 ```
 users/
   {uid}/
@@ -231,6 +237,7 @@ rooms/
 ## 🏗️ SERVICE LAYER ARCHITECTURE
 
 ### Existing Services ✅
+
 - `AgoraVideoService` - Video/Audio
 - `BroadcasterService` - Broadcasting
 - `ProfileService` - User profiles
@@ -510,13 +517,13 @@ match /users/{userId}/gamification/{document=**} {
 
 ## 📈 PERFORMANCE TARGETS
 
-| Metric | Target | Current |
-|--------|--------|---------|
-| Multi-cam rendering (20 cams) | <60ms | TBD |
-| Presence update latency | <500ms | TBD |
-| Chat message delivery | <1s | ✅ |
-| Mod action execution | <100ms | TBD |
-| XP sync latency | <2s | TBD |
+| Metric                        | Target | Current |
+| ----------------------------- | ------ | ------- |
+| Multi-cam rendering (20 cams) | <60ms  | TBD     |
+| Presence update latency       | <500ms | TBD     |
+| Chat message delivery         | <1s    | ✅      |
+| Mod action execution          | <100ms | TBD     |
+| XP sync latency               | <2s    | TBD     |
 
 ---
 

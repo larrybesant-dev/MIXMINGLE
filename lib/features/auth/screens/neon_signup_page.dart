@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../app/app_routes.dart';
 import '../../../core/theme/neon_colors.dart';
 import '../../../shared/widgets/neon_components.dart';
 
@@ -78,10 +79,10 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
         'isVerified': false,
       });
 
-      debugPrint('âœ… [Signup] Account created. Navigating to /app...');
+      debugPrint('✅ [Signup] Account created. Navigating to /create-profile...');
       if (mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil(
-          '/app',
+          AppRoutes.createProfile,
           (route) => false,
         );
       }
@@ -199,6 +200,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
                                 label: 'Username',
                                 prefixIcon: Icons.person_outline,
                                 focusGlowColor: NeonColors.neonBlue,
+                                maxLength: 30,
                               ),
                               const SizedBox(height: 16),
 
@@ -210,6 +212,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
                                 prefixIcon: Icons.email_outlined,
                                 focusGlowColor: NeonColors.neonBlue,
                                 keyboardType: TextInputType.emailAddress,
+                                maxLength: 254,
                               ),
                               const SizedBox(height: 16),
 

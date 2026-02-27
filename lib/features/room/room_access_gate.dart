@@ -37,7 +37,7 @@ Future<bool> canAccessRoom({
   try {
     // Check auth status
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null || !user.emailVerified) {
+    if (user == null) {
       throw RoomAccessDeniedException(
         state: RoomAccessState.unauthenticated,
         message: 'You must be authenticated to access this room',

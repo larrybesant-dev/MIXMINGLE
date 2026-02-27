@@ -1,237 +1,252 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Agora Iris Minimal Join Test</title>
+    <style>
+      body {
+        font-family: monospace;
+        background: #222;
+        color: #0f0;
+        padding: 20px;
+      }
 
-<head>
-  <meta charset="utf-8">
-  <title>Agora Iris Minimal Join Test</title>
-  <style>
-    body {
-      font-family: monospace;
-      background: #222;
-      color: #0f0;
-      padding: 20px;
-    }
+      pre {
+        background: #000;
+        padding: 15px;
+        border-radius: 5px;
+        overflow-x: auto;
+        max-height: 500px;
+        overflow-y: auto;
+      }
 
-    pre {
-      background: #000;
-      padding: 15px;
-      border-radius: 5px;
-      overflow-x: auto;
-      max-height: 500px;
-      overflow-y: auto;
-    }
+      button {
+        padding: 10px 20px;
+        background: #0f0;
+        color: #000;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-weight: bold;
+        margin-bottom: 15px;
+      }
 
-    button {
-      padding: 10px 20px;
-      background: #0f0;
-      color: #000;
-      border: none;
-      border-radius: 3px;
-      cursor: pointer;
-      font-weight: bold;
-      margin-bottom: 15px;
-    }
+      button:hover {
+        background: #0a0;
+      }
 
-    button:hover {
-      background: #0a0;
-    }
+      h1 {
+        color: #0f0;
+      }
+    </style>
+  </head>
 
-    h1 {
-      color: #0f0;
-    }
-  </style>
-</head>
+  <body>
+    <h1>Agora Iris Minimal Join Test</h1>
+    <p><strong>Steps:</strong></p>
+    <ol>
+      <li>Replace credentials below (appId, channel, token, uid)</li>
+      <li>Click "Run Join Test"</li>
+      <li>Watch console and log below</li>
+      <li>Share the output</li>
+    </ol>
 
-<body>
-  <h1>Agora Iris Minimal Join Test</h1>
-  <p><strong>Steps:</strong></p>
-  <ol>
-    <li>Replace credentials below (appId, channel, token, uid)</li>
-    <li>Click "Run Join Test"</li>
-    <li>Watch console and log below</li>
-    <li>Share the output</li>
-  </ol>
-
-  <!-- REPLACE THESE WITH VALID CREDENTIALS -->
-  <div style="background: #333; padding: 10px; margin-bottom: 15px; border-left: 3px solid #f00;">
-    <strong>⚠️ EDIT THESE VALUES:</strong>
-    <pre id="config">const APP_ID = 'ec1b578586d24976a89d787d9ee4d5c7';  // Your App ID
+    <!-- REPLACE THESE WITH VALID CREDENTIALS -->
+    <div style="background: #333; padding: 10px; margin-bottom: 15px; border-left: 3px solid #f00">
+      <strong>⚠️ EDIT THESE VALUES:</strong>
+      <pre id="config">
+const APP_ID = 'ec1b578586d24976a89d787d9ee4d5c7';  // Your App ID
 const CHANNEL = 'test-minimal-iris';                   // Channel name
 const TOKEN = null;                                    // null or valid token
-const UID = 12345;                                     // Numeric UID</pre>
-  </div>
+const UID = 12345;                                     // Numeric UID</pre
+      >
+    </div>
 
-  <button onclick="clearLog()">Clear Log</button>
-  <button onclick="runTest()">Run Join Test</button>
+    <button onclick="clearLog()">Clear Log</button>
+    <button onclick="runTest()">Run Join Test</button>
 
-  <pre id="log"></pre>
+    <pre id="log"></pre>
 
-  <script>
-    // CONFIG - REPLACE WITH VALID CREDENTIALS
-    const APP_ID = 'ec1b578586d24976a89d787d9ee4d5c7';
-    const CHANNEL = 'test-minimal-iris';
-    const TOKEN = null;  // null if using app certificate disabled
-    const UID = 12345;
+    <script>
+      // CONFIG - REPLACE WITH VALID CREDENTIALS
+      const APP_ID = "ec1b578586d24976a89d787d9ee4d5c7";
+      const CHANNEL = "test-minimal-iris";
+      const TOKEN = null; // null if using app certificate disabled
+      const UID = 12345;
 
-    const logEl = document.getElementById('log');
+      const logEl = document.getElementById("log");
 
-    function L(msg) {
-      console.log(msg);
-      logEl.textContent += msg + '\n';
-      logEl.parentElement.scrollTop = logEl.parentElement.scrollHeight;
-    }
+      function L(msg) {
+        console.log(msg);
+        logEl.textContent += msg + "\n";
+        logEl.parentElement.scrollTop = logEl.parentElement.scrollHeight;
+      }
 
-    function clearLog() {
-      logEl.textContent = '';
-    }
+      function clearLog() {
+        logEl.textContent = "";
+      }
 
-    async function runTest() {
-      clearLog();
-      L('═══════════════════════════════════════');
-      L('IRIS MINIMAL JOIN TEST');
-      L('═══════════════════════════════════════');
-      L('');
+      async function runTest() {
+        clearLog();
+        L("═══════════════════════════════════════");
+        L("IRIS MINIMAL JOIN TEST");
+        L("═══════════════════════════════════════");
+        L("");
 
-      try {
-        // Step 1: Check SDK availability
-        L('Step 1: Checking SDK availability...');
-        const hasIris = typeof window.IrisRtcEngine !== 'undefined';
-        const hasClassic = typeof window.AgoraRTC !== 'undefined';
-        L('  IrisRtcEngine: ' + (hasIris ? '✅ YES' : '❌ NO'));
-        L('  AgoraRTC: ' + (hasClassic ? '✅ YES' : '❌ NO'));
-        L('');
+        try {
+          // Step 1: Check SDK availability
+          L("Step 1: Checking SDK availability...");
+          const hasIris = typeof window.IrisRtcEngine !== "undefined";
+          const hasClassic = typeof window.AgoraRTC !== "undefined";
+          L("  IrisRtcEngine: " + (hasIris ? "✅ YES" : "❌ NO"));
+          L("  AgoraRTC: " + (hasClassic ? "✅ YES" : "❌ NO"));
+          L("");
 
-        if (!hasIris && !hasClassic) {
-          L('❌ ERROR: No Agora SDK found. Check CDN script loaded in Network tab.');
-          return;
-        }
-
-        // Step 2: Create client
-        L('Step 2: Creating client...');
-        let client;
-
-        if (hasIris) {
-          L('  Using IrisRtcEngine path');
-          try {
-            client = new window.IrisRtcEngine();
-            L('  ✅ Client created via: new IrisRtcEngine()');
-          } catch (e) {
-            L('  ❌ Failed to instantiate IrisRtcEngine: ' + e.message);
+          if (!hasIris && !hasClassic) {
+            L("❌ ERROR: No Agora SDK found. Check CDN script loaded in Network tab.");
             return;
           }
-        } else {
-          L('  Using AgoraRTC.createClient path');
-          try {
-            client = window.AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
-            L('  ✅ Client created via: AgoraRTC.createClient()');
-          } catch (e) {
-            L('  ❌ Failed to createClient: ' + e.message);
-            return;
-          }
-        }
-        L('');
 
-        // Step 3: Log available methods
-        L('Step 3: Available methods on client:');
-        const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(client) || {});
-        L('  Methods: ' + (methods.length > 0 ? methods.join(', ') : 'none'));
-        const hasJoin = typeof client.join === 'function';
-        const hasJoinChannel = typeof client.joinChannel === 'function';
-        const hasCallIrisApiAsync = typeof client.callIrisApiAsync === 'function';
-        L('  .join(): ' + (hasJoin ? '✅ YES' : '❌ NO'));
-        L('  .joinChannel(): ' + (hasJoinChannel ? '✅ YES' : '❌ NO'));
-        L('  .callIrisApiAsync(): ' + (hasCallIrisApiAsync ? '✅ YES' : '❌ NO'));
-        L('');
+          // Step 2: Create client
+          L("Step 2: Creating client...");
+          let client;
 
-        // Step 4: Prepare join params
-        L('Step 4: Preparing join params:');
-        const joinParams = {
-          token: TOKEN,
-          channelId: CHANNEL,
-          uid: UID
-        };
-        L('  appId: ' + APP_ID + ' (type: ' + typeof APP_ID + ', length: ' + APP_ID.length + ')');
-        L('  channelId: ' + CHANNEL + ' (type: ' + typeof CHANNEL + ', length: ' + CHANNEL.length + ')');
-        L('  token: ' + (TOKEN ? TOKEN.substring(0, 20) + '...' : 'null') + ' (type: ' + typeof TOKEN + ', length: ' + (TOKEN ? TOKEN.length : 'N/A') + ')');
-        L('  uid: ' + UID + ' (type: ' + typeof UID + ')');
-        L('');
-
-        // Step 5: Attempt join
-        L('Step 5: Attempting join...');
-        let result;
-        let joinSuccess = false;
-
-        if (hasCallIrisApiAsync) {
-          L('  Trying callIrisApiAsync("JoinChannelV2", params)...');
-          // CRITICAL: Iris API expects JSON string, not object
-          const joinParamsJson = JSON.stringify(joinParams);
-          try {
-            result = await client.callIrisApiAsync('JoinChannelV2', joinParamsJson);
-            L('  ✅ JoinChannelV2 SUCCESS');
-            L('  Result: ' + JSON.stringify(result));
-            joinSuccess = true;
-          } catch (err) {
-            L('  ⚠️ JoinChannelV2 failed: ' + err.message);
-            L('  Trying fallback: callIrisApiAsync("JoinChannel", params)...');
+          if (hasIris) {
+            L("  Using IrisRtcEngine path");
             try {
-              result = await client.callIrisApiAsync('JoinChannel', joinParamsJson);
-              L('  ✅ JoinChannel SUCCESS');
-              L('  Result: ' + JSON.stringify(result));
-              joinSuccess = true;
-            } catch (err2) {
-              L('  ❌ JoinChannel also failed: ' + err2.message);
+              client = new window.IrisRtcEngine();
+              L("  ✅ Client created via: new IrisRtcEngine()");
+            } catch (e) {
+              L("  ❌ Failed to instantiate IrisRtcEngine: " + e.message);
+              return;
+            }
+          } else {
+            L("  Using AgoraRTC.createClient path");
+            try {
+              client = window.AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+              L("  ✅ Client created via: AgoraRTC.createClient()");
+            } catch (e) {
+              L("  ❌ Failed to createClient: " + e.message);
+              return;
             }
           }
-        } else if (hasJoinChannel) {
-          L('  Trying joinChannel()...');
-          try {
-            result = await client.joinChannel(joinParams.token, CHANNEL, '', joinParams.uid);
-            L('  ✅ joinChannel SUCCESS');
-            L('  Result: ' + JSON.stringify(result));
-            joinSuccess = true;
-          } catch (err) {
-            L('  ❌ joinChannel failed: ' + err.message);
-          }
-        } else if (hasJoin) {
-          L('  Trying join()...');
-          try {
-            result = await client.join(APP_ID, CHANNEL, TOKEN, UID);
-            L('  ✅ join SUCCESS');
-            L('  Result: ' + JSON.stringify(result));
-            joinSuccess = true;
-          } catch (err) {
-            L('  ❌ join failed: ' + err.message);
-          }
-        } else {
-          L('  ❌ No supported join method found on client');
-        }
-        L('');
+          L("");
 
-        // Step 6: Summary
-        L('═══════════════════════════════════════');
-        if (joinSuccess) {
-          L('✅ TEST PASSED: Join successful!');
-          L('   Use these same params and SDK URL in your Flutter app.');
-        } else {
-          L('❌ TEST FAILED: Join did not succeed.');
-          L('   Check params and token validity above.');
-        }
-        L('═══════════════════════════════════════');
+          // Step 3: Log available methods
+          L("Step 3: Available methods on client:");
+          const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(client) || {});
+          L("  Methods: " + (methods.length > 0 ? methods.join(", ") : "none"));
+          const hasJoin = typeof client.join === "function";
+          const hasJoinChannel = typeof client.joinChannel === "function";
+          const hasCallIrisApiAsync = typeof client.callIrisApiAsync === "function";
+          L("  .join(): " + (hasJoin ? "✅ YES" : "❌ NO"));
+          L("  .joinChannel(): " + (hasJoinChannel ? "✅ YES" : "❌ NO"));
+          L("  .callIrisApiAsync(): " + (hasCallIrisApiAsync ? "✅ YES" : "❌ NO"));
+          L("");
 
-      } catch (err) {
-        L('❌ UNEXPECTED ERROR: ' + err.message);
-        console.error(err);
+          // Step 4: Prepare join params
+          L("Step 4: Preparing join params:");
+          const joinParams = {
+            token: TOKEN,
+            channelId: CHANNEL,
+            uid: UID,
+          };
+          L("  appId: " + APP_ID + " (type: " + typeof APP_ID + ", length: " + APP_ID.length + ")");
+          L(
+            "  channelId: " +
+              CHANNEL +
+              " (type: " +
+              typeof CHANNEL +
+              ", length: " +
+              CHANNEL.length +
+              ")",
+          );
+          L(
+            "  token: " +
+              (TOKEN ? TOKEN.substring(0, 20) + "..." : "null") +
+              " (type: " +
+              typeof TOKEN +
+              ", length: " +
+              (TOKEN ? TOKEN.length : "N/A") +
+              ")",
+          );
+          L("  uid: " + UID + " (type: " + typeof UID + ")");
+          L("");
+
+          // Step 5: Attempt join
+          L("Step 5: Attempting join...");
+          let result;
+          let joinSuccess = false;
+
+          if (hasCallIrisApiAsync) {
+            L('  Trying callIrisApiAsync("JoinChannelV2", params)...');
+            // CRITICAL: Iris API expects JSON string, not object
+            const joinParamsJson = JSON.stringify(joinParams);
+            try {
+              result = await client.callIrisApiAsync("JoinChannelV2", joinParamsJson);
+              L("  ✅ JoinChannelV2 SUCCESS");
+              L("  Result: " + JSON.stringify(result));
+              joinSuccess = true;
+            } catch (err) {
+              L("  ⚠️ JoinChannelV2 failed: " + err.message);
+              L('  Trying fallback: callIrisApiAsync("JoinChannel", params)...');
+              try {
+                result = await client.callIrisApiAsync("JoinChannel", joinParamsJson);
+                L("  ✅ JoinChannel SUCCESS");
+                L("  Result: " + JSON.stringify(result));
+                joinSuccess = true;
+              } catch (err2) {
+                L("  ❌ JoinChannel also failed: " + err2.message);
+              }
+            }
+          } else if (hasJoinChannel) {
+            L("  Trying joinChannel()...");
+            try {
+              result = await client.joinChannel(joinParams.token, CHANNEL, "", joinParams.uid);
+              L("  ✅ joinChannel SUCCESS");
+              L("  Result: " + JSON.stringify(result));
+              joinSuccess = true;
+            } catch (err) {
+              L("  ❌ joinChannel failed: " + err.message);
+            }
+          } else if (hasJoin) {
+            L("  Trying join()...");
+            try {
+              result = await client.join(APP_ID, CHANNEL, TOKEN, UID);
+              L("  ✅ join SUCCESS");
+              L("  Result: " + JSON.stringify(result));
+              joinSuccess = true;
+            } catch (err) {
+              L("  ❌ join failed: " + err.message);
+            }
+          } else {
+            L("  ❌ No supported join method found on client");
+          }
+          L("");
+
+          // Step 6: Summary
+          L("═══════════════════════════════════════");
+          if (joinSuccess) {
+            L("✅ TEST PASSED: Join successful!");
+            L("   Use these same params and SDK URL in your Flutter app.");
+          } else {
+            L("❌ TEST FAILED: Join did not succeed.");
+            L("   Check params and token validity above.");
+          }
+          L("═══════════════════════════════════════");
+        } catch (err) {
+          L("❌ UNEXPECTED ERROR: " + err.message);
+          console.error(err);
+        }
       }
-    }
 
-    // Auto-run on page load
-    window.addEventListener('load', () => {
-      L('Page loaded. Click "Run Join Test" to start.');
-    });
-  </script>
+      // Auto-run on page load
+      window.addEventListener("load", () => {
+        L('Page loaded. Click "Run Join Test" to start.');
+      });
+    </script>
 
-  <!-- Iris Web RTC SDK - Same URL as main app -->
-  <script src="https://download.agora.io/iris/web/iris-web-rtc_n450_w4220_0.8.6.js"></script>
-</body>
-
+    <!-- Iris Web RTC SDK - Same URL as main app -->
+    <script src="https://download.agora.io/iris/web/iris-web-rtc_n450_w4220_0.8.6.js"></script>
+  </body>
 </html>

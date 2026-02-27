@@ -23,6 +23,7 @@ flutter run -d chrome --release
 ### 1. RESPONSIVE VIDEO GRID
 
 #### Test Case 1.1: Display Participants
+
 - **Expected**: See 3 mock participants in grid
 - **Verify**:
   - ✅ Alex Johnson card visible
@@ -32,6 +33,7 @@ flutter run -d chrome --release
   - ✅ All avatars loaded
 
 #### Test Case 1.2: Grid Responsiveness
+
 - **Desktop (1200px+)**:
   - [ ] 3 videos should fit in row
   - [ ] 16:9 aspect ratio maintained
@@ -48,6 +50,7 @@ flutter run -d chrome --release
   - [ ] Accessible controls
 
 #### Test Case 1.3: Video Status Indicators
+
 - **Each tile shows**:
   - [ ] Participant name at bottom
   - [ ] Mute/Unmute icon (green if on, red if off)
@@ -56,6 +59,7 @@ flutter run -d chrome --release
   - [ ] Avatar when camera is off
 
 #### Test Case 1.4: Pin Functionality
+
 - **Action**: Long-press on a video tile
 - **Expected**:
   - [ ] Border changes to pink
@@ -64,6 +68,7 @@ flutter run -d chrome --release
   - [ ] Can unpin by long-pressing again
 
 #### Test Case 1.5: Screen Share Indicator
+
 - **Expected**: Blue "Sharing" badge appears when detected
   - [ ] Badge positioned at top-left
   - [ ] Badge shows screen share icon
@@ -74,6 +79,7 @@ flutter run -d chrome --release
 ### 2. FRIENDS SIDEBAR
 
 #### Test Case 2.1: Display Friends List
+
 - **Expected**: See all 6 mock friends
 - **Verify**:
   - [ ] Alex Johnson (Online, green dot)
@@ -84,6 +90,7 @@ flutter run -d chrome --release
   - [ ] Riley Davis (Online)
 
 #### Test Case 2.2: Online Status Indicator
+
 - **Green Dot** (Online friends):
   - [ ] Visible at bottom-right of avatar
   - [ ] Positioned correctly with white border
@@ -95,6 +102,7 @@ flutter run -d chrome --release
   - [ ] Shows relative time: "Offline" or "Active 2h ago"
 
 #### Test Case 2.3: Search Functionality
+
 - **Action**: Type "alex" in search
 - **Expected**:
   - [ ] List filters to show only Alex Johnson
@@ -102,6 +110,7 @@ flutter run -d chrome --release
   - [ ] Clear search shows all friends again
 
 #### Test Case 2.4: Filter by Online
+
 - **Action**: Click "Online" chip
 - **Expected**:
   - [ ] Shows only 4 online friends (Alex, Sarah, Morgan, Riley)
@@ -109,6 +118,7 @@ flutter run -d chrome --release
   - [ ] Chip shows highlighted/selected state
 
 #### Test Case 2.5: Filter by Favorites
+
 - **Action**: Click "⭐ Favorites" chip
 - **Expected**:
   - [ ] Shows only 2 starred friends (Alex, Casey)
@@ -116,6 +126,7 @@ flutter run -d chrome --release
   - [ ] Can combine with other filters
 
 #### Test Case 2.6: Star Toggle
+
 - **Action**: Click star icon on a friend
 - **Expected**:
   - [ ] Star fills in (yellow color)
@@ -124,6 +135,7 @@ flutter run -d chrome --release
   - [ ] Star becomes outline (empty)
 
 #### Test Case 2.7: Unread Badge
+
 - **Verify**:
   - [ ] Orange badge shows unread count
   - [ ] Sarah Chen shows "2"
@@ -132,6 +144,7 @@ flutter run -d chrome --release
   - [ ] Total shows in sidebar header
 
 #### Test Case 2.8: Friend Click Action
+
 - **Action**: Click on a friend item
 - **Expected**:
   - [ ] Toast/snackbar shows "Opening chat with [name]"
@@ -139,6 +152,7 @@ flutter run -d chrome --release
   - [ ] Cursor changes to pointer
 
 #### Test Case 2.9: Sidebar Collapse
+
 - **Action**: Click "X" button in header
 - **Expected**:
   - [ ] Sidebar slides out smoothly
@@ -146,6 +160,7 @@ flutter run -d chrome --release
   - [ ] Can't see friends list
 
 #### Test Case 2.10: Sidebar Expand (if collapsed)
+
 - **Note**: After collapsing, would need expand button (future feature)
 
 ---
@@ -153,6 +168,7 @@ flutter run -d chrome --release
 ### 3. GROUPS SIDEBAR
 
 #### Test Case 3.1: Display Groups List
+
 - **Expected**: See all 5 mock groups
 - **Verify**:
   - [ ] Daily Standup (4 participants)
@@ -162,6 +178,7 @@ flutter run -d chrome --release
   - [ ] Fitness Buddies (5 participants, unread "2")
 
 #### Test Case 3.2: Group Info Display
+
 - **Each group tile shows**:
   - [ ] Group avatar/image
   - [ ] Group name
@@ -171,6 +188,7 @@ flutter run -d chrome --release
   - [ ] Unread count badge (if any)
 
 #### Test Case 3.3: Join Group
+
 - **Action**: Click "Join" button on a group
 - **Expected**:
   - [ ] Button changes to "Exit"
@@ -179,6 +197,7 @@ flutter run -d chrome --release
   - [ ] Participant count increases by 1
 
 #### Test Case 3.4: Leave Group
+
 - **Action**: Click "Exit" button on joined group
 - **Expected**:
   - [ ] Button changes to "Join"
@@ -186,6 +205,7 @@ flutter run -d chrome --release
   - [ ] Participant count decreases by 1
 
 #### Test Case 3.5: Create Group
+
 - **Action**: Click "+" button in header
 - **Expected**:
   - [ ] Dialog appears with "Create New Group"
@@ -194,6 +214,7 @@ flutter run -d chrome --release
   - [ ] "Create" and "Cancel" buttons
 
 #### Test Case 3.6: Create Group (Submit)
+
 - **Action**: Fill name "Test Group", description "Test", click Create
 - **Expected**:
   - [ ] Dialog closes
@@ -202,6 +223,7 @@ flutter run -d chrome --release
   - [ ] Shows as "joined" with Exit button
 
 #### Test Case 3.7: Group Search
+
 - **Action**: Type "game" in search
 - **Expected**:
   - [ ] Shows only "Game Night"
@@ -209,6 +231,7 @@ flutter run -d chrome --release
   - [ ] Search is case-insensitive
 
 #### Test Case 3.8: Filter "My Groups"
+
 - **Action**: Click "My Groups" chip
 - **Expected**:
   - [ ] Shows only groups you've joined
@@ -216,6 +239,7 @@ flutter run -d chrome --release
   - [ ] Can toggle back to "All"
 
 #### Test Case 3.9: Unread Badge
+
 - **Verify**:
   - [ ] Game Night shows "3"
   - [ ] Creative Studio shows "5"
@@ -223,6 +247,7 @@ flutter run -d chrome --release
   - [ ] Total shown in header
 
 #### Test Case 3.10: Open Group
+
 - **Action**: Click on a joined group
 - **Expected**:
   - [ ] Toast shows "Opening group: [name]"
@@ -233,6 +258,7 @@ flutter run -d chrome --release
 ### 4. TOP NAVIGATION BAR
 
 #### Test Case 4.1: Live Indicator
+
 - **Expected**: Shows "LIVE • 3 participants"
 - **Verify**:
   - [ ] Pink pulsing dot
@@ -240,6 +266,7 @@ flutter run -d chrome --release
   - [ ] Text updates if participants change
 
 #### Test Case 4.2: Logo/Title
+
 - **Expected**: "Mix & Mingle" text visible
 - **Verify**:
   - [ ] Pink color
@@ -247,6 +274,7 @@ flutter run -d chrome --release
   - [ ] Left-aligned
 
 #### Test Case 4.3: Notifications Bell
+
 - **Expected**: Bell icon with badge
 - **Verify**:
   - [ ] Icon visible
@@ -254,6 +282,7 @@ flutter run -d chrome --release
   - [ ] Badge is red with white number
 
 #### Test Case 4.4: Notifications Panel
+
 - **Action**: Click bell icon
 - **Expected**:
   - [ ] Dialog opens
@@ -262,6 +291,7 @@ flutter run -d chrome --release
   - [ ] Can close dialog
 
 #### Test Case 4.5: Video Quality Menu
+
 - **Action**: Click video camera icon
 - **Expected**:
   - [ ] Menu appears with 3 options:
@@ -272,6 +302,7 @@ flutter run -d chrome --release
   - [ ] Setting changes (in provider)
 
 #### Test Case 4.6: Dark/Light Mode Toggle
+
 - **Action**: Click moon/sun icon
 - **Expected**:
   - [ ] Theme toggles immediately
@@ -280,6 +311,7 @@ flutter run -d chrome --release
   - [ ] Persistence across navigation
 
 #### Test Case 4.7: Settings Menu
+
 - **Action**: Click three-dot menu
 - **Expected**:
   - [ ] Menu appears with 2 options:
@@ -288,6 +320,7 @@ flutter run -d chrome --release
   - [ ] Can select camera settings
 
 #### Test Case 4.8: Camera Settings Dialog
+
 - **Action**: Click "Camera Settings" from menu
 - **Expected**:
   - [ ] Dialog opens
@@ -304,6 +337,7 @@ flutter run -d chrome --release
 ### 5. CHAT BOX
 
 #### Test Case 5.1: Send Text Message
+
 - **Action**: Type "Hello!" and click send
 - **Expected**:
   - [ ] Message appears in chat above input
@@ -312,6 +346,7 @@ flutter run -d chrome --release
   - [ ] Message bubble is pink (sent)
 
 #### Test Case 5.2: Message Timestamp
+
 - **Expected**: Each message shows relative time
 - **Verify**:
   - [ ] "now" for very recent
@@ -319,6 +354,7 @@ flutter run -d chrome --release
   - [ ] "5h ago" format for older
 
 #### Test Case 5.3: Emoji Picker
+
 - **Action**: Click emoji button (😊 icon)
 - **Expected**:
   - [ ] Emoji grid appears above input
@@ -327,6 +363,7 @@ flutter run -d chrome --release
   - [ ] 200px height
 
 #### Test Case 5.4: Send Emoji
+
 - **Action**: Click an emoji in picker
 - **Expected**:
   - [ ] Emoji inserted into input field
@@ -334,6 +371,7 @@ flutter run -d chrome --release
   - [ ] Can send emoji as message
 
 #### Test Case 5.5: Sticker Picker
+
 - **Action**: Click sticker button (🎨)
 - **Expected**:
   - [ ] Sticker grid appears
@@ -342,6 +380,7 @@ flutter run -d chrome --release
   - [ ] 8 columns layout
 
 #### Test Case 5.6: Send Sticker
+
 - **Action**: Click a sticker
 - **Expected**:
   - [ ] Sticker inserted into input
@@ -349,6 +388,7 @@ flutter run -d chrome --release
   - [ ] Can send as message
 
 #### Test Case 5.7: File Upload Menu
+
 - **Action**: Click attachment icon
 - **Expected**:
   - [ ] Menu appears with 2 options:
@@ -357,6 +397,7 @@ flutter run -d chrome --release
   - [ ] Can select (shows toast for now)
 
 #### Test Case 5.8: Multi-line Input
+
 - **Action**: Type message spanning multiple lines
 - **Expected**:
   - [ ] Input expands up to 3 lines
@@ -364,6 +405,7 @@ flutter run -d chrome --release
   - [ ] Send button still accessible
 
 #### Test Case 5.9: Empty Message Prevention
+
 - **Action**: Click send with empty input
 - **Expected**:
   - [ ] Nothing happens
@@ -371,6 +413,7 @@ flutter run -d chrome --release
   - [ ] Input stays empty
 
 #### Test Case 5.10: Message History
+
 - **Expected**: Chat shows previous messages
 - **Verify**:
   - [ ] 5+ mock messages visible
@@ -380,6 +423,7 @@ flutter run -d chrome --release
   - [ ] Scrollable if many messages
 
 #### Test Case 5.11: Message Scrolling
+
 - **Action**: Scroll in chat area
 - **Expected**:
   - [ ] Can scroll up to see older messages
@@ -391,6 +435,7 @@ flutter run -d chrome --release
 ### 6. NOTIFICATIONS
 
 #### Test Case 6.1: Display in Floating ActionButton Area
+
 - **Expected**: Notifications show in top-right corner
 - **Verify**:
   - [ ] Stack visible with up to 3 notifications
@@ -398,6 +443,7 @@ flutter run -d chrome --release
   - [ ] Close button on each notification
 
 #### Test Case 6.2: Friend Request Notification
+
 - **Color**: Blue
 - **Icon**: Person with plus
 - **Verify**:
@@ -406,6 +452,7 @@ flutter run -d chrome --release
   - [ ] Has "View" action button
 
 #### Test Case 6.3: Message Notification
+
 - **Color**: Green
 - **Icon**: Mail envelope
 - **Verify**:
@@ -413,6 +460,7 @@ flutter run -d chrome --release
   - [ ] Shows "[Name] sent you a message"
 
 #### Test Case 6.4: Video Request Notification
+
 - **Color**: Purple
 - **Icon**: Video camera
 - **Verify**:
@@ -420,6 +468,7 @@ flutter run -d chrome --release
   - [ ] Shows "[Name] is calling you"
 
 #### Test Case 6.5: Room Invite Notification
+
 - **Color**: Orange
 - **Icon**: People group
 - **Verify**:
@@ -427,6 +476,7 @@ flutter run -d chrome --release
   - [ ] Shows "[Name] invited you to join a room"
 
 #### Test Case 6.6: Auto-dismiss Notification
+
 - **Expected**: Notification disappears after 5 seconds
 - **Verify**:
   - [ ] Timer starts immediately
@@ -438,6 +488,7 @@ flutter run -d chrome --release
 ### 7. DARK/LIGHT MODE
 
 #### Test Case 7.1: Dark Mode (Default)
+
 - **Expected**: App starts in dark mode
 - **Verify**:
   - [ ] Background is dark gray (#1a1a1a area)
@@ -446,6 +497,7 @@ flutter run -d chrome --release
   - [ ] Icons are light colored
 
 #### Test Case 7.2: Toggle to Light Mode
+
 - **Action**: Click sun/moon icon in top bar
 - **Expected**:
   - [ ] All backgrounds become light
@@ -454,6 +506,7 @@ flutter run -d chrome --release
   - [ ] Transitions smoothly
 
 #### Test Case 7.3: Toggle Back to Dark
+
 - **Action**: Click icon again
 - **Expected**:
   - [ ] Returns to dark mode
@@ -461,6 +514,7 @@ flutter run -d chrome --release
   - [ ] Smooth transition
 
 #### Test Case 7.4: Persistence
+
 - **Expected**: Mode remembered across page reloads
   - [ ] Close and reopen browser
   - [ ] Should remain in selected mode
@@ -470,12 +524,14 @@ flutter run -d chrome --release
 ### 8. CAMERA APPROVAL
 
 #### Test Case 8.1: Default Mode
+
 - **Expected**: "Ask each time" is default
 - **Verify**:
   - [ ] Radio button selected
   - [ ] All other options unselected
 
 #### Test Case 8.2: Allow All
+
 - **Action**: Select "Allow all" radio button
 - **Expected**:
   - [ ] Selection updates
@@ -483,16 +539,19 @@ flutter run -d chrome --release
   - [ ] Setting persists in provider state
 
 #### Test Case 8.3: Deny All
+
 - **Action**: Select "Deny all"
 - **Expected**:
   - [ ] Selection updates
   - [ ] Persists in provider
 
 #### Test Case 8.4: Pending Badge
+
 - **Verify**: Video tiles show "Camera Pending" orange badge
 - **When**: cameraApprovalStatus is 'pending'
 
 #### Test Case 8.5: Approval Status Display
+
 - **In participants tile**:
   - [ ] Shows approval badge
   - [ ] Updates when status changes
@@ -503,6 +562,7 @@ flutter run -d chrome --release
 ### 9. RESPONSIVE DESIGN
 
 #### Test Case 9.1: Desktop (1400px+)
+
 ```
 ┌─────────────────────────────────────────┐
 │ Top Bar (logo, live, buttons)           │
@@ -519,6 +579,7 @@ flutter run -d chrome --release
 ```
 
 #### Test Case 9.2: Tablet (800-1200px)
+
 ```
 ┌─────────────────────────────┐
 │ Top Bar                     │
@@ -531,6 +592,7 @@ flutter run -d chrome --release
 ```
 
 #### Test Case 9.3: Mobile (<800px)
+
 ```
 ┌──────────────────┐
 │ Compact Top Bar  │
@@ -545,6 +607,7 @@ flutter run -d chrome --release
 ```
 
 #### Test Case 9.4: Sidebar Collapse on Mobile
+
 - **Expected**: Sidebars may collapse automatically on small screens
 - **Or**: Tabs to switch between Friends/Groups/Video
 
@@ -553,6 +616,7 @@ flutter run -d chrome --release
 ### 10. PERFORMANCE TESTS
 
 #### Test Case 10.1: Initial Load Time
+
 - **Expected**: < 2 seconds to interactive
 - **Measure**:
   ```bash
@@ -561,6 +625,7 @@ flutter run -d chrome --release
   ```
 
 #### Test Case 10.2: Smooth Animations
+
 - **Expected**: No jank/stuttering
 - **Test**:
   - [ ] Sidebar collapse/expand smooth
@@ -569,10 +634,12 @@ flutter run -d chrome --release
   - [ ] Video grid layout changes smooth
 
 #### Test Case 10.3: Memory Usage
+
 - **Expected**: No memory leaks
 - **Check**: DevTools → Performance → Memory usage over time
 
 #### Test Case 10.4: Large Member List
+
 - **Action**: Scroll through friends list of 50+ friends
 - **Expected**:
   - [ ] Smooth scrolling
@@ -580,6 +647,7 @@ flutter run -d chrome --release
   - [ ] All items render correctly
 
 #### Test Case 10.5: Many Messages
+
 - **Action**: Scroll through 100+ messages in chat
 - **Expected**:
   - [ ] Smooth scrolling
@@ -591,6 +659,7 @@ flutter run -d chrome --release
 ### 11. INTERACTION TESTS
 
 #### Test Case 11.1: Hover Effects
+
 - **Expected**: Hover highlights on all clickable items
 - **Test**:
   - [ ] Friend tiles highlight on hover
@@ -599,6 +668,7 @@ flutter run -d chrome --release
   - [ ] Proper cursor (pointer) on hover
 
 #### Test Case 11.2: Focus States (Keyboard)
+
 - **Expected**: All elements keyboard accessible
 - **Test**:
   - [ ] Tab through all buttons
@@ -607,6 +677,7 @@ flutter run -d chrome --release
   - [ ] Escape closes dialogs
 
 #### Test Case 11.3: Click Outside to Close
+
 - **Expected**: Dialogs close when clicking outside
 - **Test**:
   - [ ] Notifications panel
@@ -618,22 +689,27 @@ flutter run -d chrome --release
 ### 12. ERROR STATES
 
 #### Test Case 12.1: Empty Friend List
+
 - **If**: No friends loaded
 - **Expected**: "No friends found" message centered
 
 #### Test Case 12.2: Empty Group List
+
 - **If**: No groups loaded
 - **Expected**: "No groups found" message
 
 #### Test Case 12.3: No Participants
+
 - **If**: No one in video room
 - **Expected**: "No active video calls" message with icon
 
 #### Test Case 12.4: Network Image Failure
+
 - **If**: Avatar URL fails to load
 - **Expected**: Fallback icon (person icon) shown
 
 #### Test Case 12.5: Invalid Search Query
+
 - **Expected**: No results shown, message displayed
 
 ---
@@ -641,6 +717,7 @@ flutter run -d chrome --release
 ## 🎬 End-to-End User Flows
 
 ### Flow 1: Join Video Call & Chat
+
 1. [ ] Navigate to /video-chat
 2. [ ] See video grid with 3 participants
 3. [ ] Click on a message input field
@@ -650,6 +727,7 @@ flutter run -d chrome --release
 7. [ ] Click on friend to open chat
 
 ### Flow 2: Manage Friends
+
 1. [ ] Open friends sidebar
 2. [ ] Search for "alex"
 3. [ ] See only Alex Johnson
@@ -660,6 +738,7 @@ flutter run -d chrome --release
 8. [ ] See all friends again
 
 ### Flow 3: Create & Join Group
+
 1. [ ] Open groups sidebar
 2. [ ] Click "+" button
 3. [ ] Fill name "My Group"
@@ -671,6 +750,7 @@ flutter run -d chrome --release
 9. [ ] See participant count increase
 
 ### Flow 4: Manage Permissions
+
 1. [ ] Click three-dot menu in top bar
 2. [ ] Select "Camera Settings"
 3. [ ] Select "Allow all"

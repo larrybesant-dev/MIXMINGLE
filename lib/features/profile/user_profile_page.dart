@@ -6,6 +6,7 @@ import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../shared/neon_button.dart';
 import '../messages/chat_screen.dart';
+import '../profile/widgets/friend_request_button.dart';
 
 class UserProfilePage extends ConsumerWidget {
   final String userId;
@@ -173,6 +174,16 @@ class UserProfilePage extends ConsumerWidget {
 
         // Follow Button (only show if not own profile)
         if (!isOwnProfile) _buildFollowButton(user, ref),
+
+        // Friend Button (only show if not own profile)
+        if (!isOwnProfile) ...[
+          const SizedBox(height: 12),
+          FriendRequestButton(
+            targetUserId: user.id,
+            targetUserName: user.displayName,
+            targetUserAvatarUrl: user.avatarUrl.isNotEmpty ? user.avatarUrl : null,
+          ),
+        ],
       ],
     );
   }

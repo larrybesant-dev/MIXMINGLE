@@ -1,6 +1,7 @@
 # Pagination Quick Reference
 
 ## Import Statements
+
 ```dart
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../core/pagination/pagination_controller.dart';
@@ -10,6 +11,7 @@ import '../../shared/widgets/paginated_list_view.dart';
 ## Basic Setup (3 Steps)
 
 ### Step 1: Create Controller
+
 ```dart
 late PaginationController<MyModel> _controller;
 
@@ -33,6 +35,7 @@ void initState() {
 ```
 
 ### Step 2: Dispose Controller
+
 ```dart
 @override
 void dispose() {
@@ -42,6 +45,7 @@ void dispose() {
 ```
 
 ### Step 3: Use PaginatedListView
+
 ```dart
 @override
 Widget build(BuildContext context) {
@@ -55,6 +59,7 @@ Widget build(BuildContext context) {
 ## Real-Time Updates (Streams)
 
 Replace `PaginationController` with `StreamPaginationController`:
+
 ```dart
 _controller = StreamPaginationController<MyModel>(
   pageSize: 20,
@@ -95,6 +100,7 @@ PaginatedListView<T>(
 ## Grid Layout
 
 Use `PaginatedGridView` instead:
+
 ```dart
 PaginatedGridView<T>(
   controller: _controller,
@@ -107,6 +113,7 @@ PaginatedGridView<T>(
 ## Common Patterns
 
 ### With Filters
+
 ```dart
 fetchPage: (cursor) async {
   Query query = FirebaseFirestore.instance
@@ -118,6 +125,7 @@ fetchPage: (cursor) async {
 ```
 
 ### With Search
+
 ```dart
 fetchPage: (cursor) async {
   Query query = FirebaseFirestore.instance
@@ -129,6 +137,7 @@ fetchPage: (cursor) async {
 ```
 
 ### Manual Refresh
+
 ```dart
 ElevatedButton(
   onPressed: () => _controller.refresh(),  // Reload from beginning
@@ -138,17 +147,18 @@ ElevatedButton(
 
 ## Page Size Guidelines
 
-| Collection | Page Size | Reason |
-|------------|-----------|--------|
-| Notifications | 20 | Frequent updates, small items |
-| Messages | 50 | Need more context for conversation |
-| Events | 30 | Medium-sized cards |
-| Rooms | 20 | Large cards with images |
-| Search Results | 20-30 | Balance between UX and performance |
+| Collection     | Page Size | Reason                             |
+| -------------- | --------- | ---------------------------------- |
+| Notifications  | 20        | Frequent updates, small items      |
+| Messages       | 50        | Need more context for conversation |
+| Events         | 30        | Medium-sized cards                 |
+| Rooms          | 20        | Large cards with images            |
+| Search Results | 20-30     | Balance between UX and performance |
 
 ## Debugging
 
 ### Enable Logging
+
 ```dart
 _controller = PaginationController<T>(
   fetchPage: (cursor) async {
@@ -161,6 +171,7 @@ _controller = PaginationController<T>(
 ```
 
 ### Check State
+
 ```dart
 print('Loading: ${_controller.isLoading}');
 print('Items: ${_controller.items.length}');
@@ -171,6 +182,7 @@ print('Error: ${_controller.error}');
 ## Firestore Rules
 
 Ensure your rules allow pagination queries:
+
 ```javascript
 match /items/{itemId} {
   allow read: if request.auth != null

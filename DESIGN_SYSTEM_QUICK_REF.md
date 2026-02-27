@@ -40,6 +40,7 @@ DesignTypography.button       // 14pt w600, white - Button text only
 ```
 
 **Example:**
+
 ```dart
 Text('Room Name', style: DesignTypography.heading)
 Text('3 people', style: DesignTypography.caption)
@@ -66,6 +67,7 @@ DesignSpacing.avatarMedium      // 40px (participant avatars)
 ```
 
 **Example:**
+
 ```dart
 Padding(
   padding: EdgeInsets.all(DesignSpacing.lg),  // 16px
@@ -103,6 +105,7 @@ DesignAnimations.easeInOut
 ```
 
 **Example:**
+
 ```dart
 AnimationController(
   duration: DesignAnimations.joinStage1Duration,
@@ -129,6 +132,7 @@ DesignShadows.error             // Error state glow
 ```
 
 **Example:**
+
 ```dart
 Container(
   decoration: BoxDecoration(
@@ -143,6 +147,7 @@ Container(
 ## BUILDING A CARD (MOST COMMON)
 
 **Template:**
+
 ```dart
 Container(
   padding: EdgeInsets.all(DesignSpacing.cardPadding),        // 16px
@@ -168,6 +173,7 @@ Container(
 ## BUILDING A BUTTON
 
 **Template:**
+
 ```dart
 GestureDetector(
   onTap: onPressed,
@@ -264,6 +270,7 @@ flutter test
 ## COMMON MISTAKES
 
 ❌ **DON'T:**
+
 ```dart
 Container(color: Color(0xFFFF4C4C))  // Magic number
 TextStyle(fontSize: 18)               // Magic number
@@ -272,6 +279,7 @@ Duration(milliseconds: 150)           // Magic number
 ```
 
 ✅ **DO:**
+
 ```dart
 Container(color: DesignColors.accent)
 TextStyle(fontSize: DesignTypography.heading.fontSize)

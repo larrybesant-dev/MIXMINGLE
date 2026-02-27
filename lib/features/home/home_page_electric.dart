@@ -3,6 +3,7 @@
 /// Shows: Live Rooms, Speed Dating, Discovery, Chats
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design_system/design_constants.dart';
@@ -12,12 +13,21 @@ import '../../shared/models/room.dart';
 import '../../shared/widgets/club_background.dart';
 import '../../shared/providers/all_providers.dart';
 import '../../core/intelligence/vibe_intelligence_service.dart';
-import '../events/screens/events_page.dart';
 import '../onboarding/widgets/onboarding_welcome_overlay.dart';
-import '../discover/room_discovery_page_complete.dart';
+import '../discover/room_discovery_page.dart';
 import '../chat/screens/chat_list_page.dart';
 import '../profile/screens/profile_page.dart';
+import '../match_inbox/screens/match_inbox_page.dart';
+import '../match_inbox/providers/match_inbox_providers.dart';
 import '../room/providers/room_providers.dart';
+import '../../core/web/web_window_service.dart';
+import '../feed/social_feed_page.dart';
+import '../../shared/providers/notification_providers.dart';
+import '../../shared/widgets/offline_banner.dart';
+import '../../services/analytics/analytics_service.dart';
+import '../../core/analytics/analytics_service.dart' as core_analytics;
+import 'widgets/active_friends_row.dart';
+import '../discover_users/providers/active_friends_provider.dart';
 
 /// Home Page with Electric theme - main post-onboarding landing
 class HomePageElectric extends ConsumerStatefulWidget {
@@ -51,6 +61,12 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   };
   Color _vc(String? v) => _kVibeColors[v] ?? DesignColors.accent;
   IconData _vi(String? v) => _kVibeIcons[v] ?? Icons.graphic_eq;
+
+  @override
+  void initState() {
+    super.initState();
+    core_analytics.AnalyticsService.instance.logScreenView(screenName: 'screen_home');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -146,10 +162,54 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
         ],
       ]),
       actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_outlined,
-              color: DesignColors.textGray),
-          onPressed: () => Navigator.pushNamed(context, '/notifications'),
+        // Friends pop-out button (web only — Yahoo Messenger style)
+        if (kIsWeb)
+          const IconButton(
+            icon: Icon(Icons.people_outlined, color: DesignColors.accent),
+            tooltip: 'Friends List',
+            onPressed: WebWindowService.openBuddyList,
+          ),
+        // Notification bell with live unread badge
+        Consumer(
+          builder: (_, ref2, __) {
+            final unread =
+                ref2.watch(unreadNotificationCountProvider).value ?? 0;
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined,
+                      color: DesignColors.textGray),
+                  onPressed: () =>
+                      Navigator.pushNamed(context, '/notifications'),
+                ),
+                if (unread > 0)
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Container(
+                      width: 17,
+                      height: 17,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF4D8B),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: DesignColors.background, width: 1.5),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        unread > 9 ? '9+' : '$unread',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
         ),
         GestureDetector(
           onTap: () => Navigator.pushNamed(context, '/settings'),
@@ -176,12 +236,17 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   Widget _buildNeonNavBar() {
     const items = [
       _NavItem(Icons.home_outlined, Icons.home, 'Home'),
+      _NavItem(Icons.favorite_border, Icons.favorite, 'Matches'),
       _NavItem(Icons.bolt_outlined, Icons.bolt, 'Speed'),
       _NavItem(Icons.video_call_outlined, Icons.video_call, 'Rooms'),
-      _NavItem(Icons.event_outlined, Icons.event, 'Events'),
+      _NavItem(Icons.dynamic_feed_outlined, Icons.dynamic_feed, 'Feed'),
       _NavItem(Icons.chat_bubble_outline, Icons.chat_bubble, 'Chats'),
       _NavItem(Icons.person_outline, Icons.person, 'Profile'),
     ];
+
+    // Badge count for Matches tab (index 1)
+    final newMatchCount = ref.watch(newMatchCountProvider);
+
     return Container(
       decoration: BoxDecoration(
         color: DesignColors.background,
@@ -203,11 +268,21 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
             children: List.generate(items.length, (i) {
               final item = items[i];
               final selected = _selectedIndex == i;
+              // Matches tab badge (index 1)
+              final showBadge = i == 1 && newMatchCount > 0;
               return GestureDetector(
-                onTap: () => setState(() => _selectedIndex = i),
+                onTap: () {
+                  setState(() => _selectedIndex = i);
+                  final tabNames = [
+                    'home', 'matches', 'speed_dating', 'rooms', 'feed', 'chats', 'profile'
+                  ];
+                  if (i < tabNames.length) {
+                    AnalyticsService().trackScreenView(tabNames[i]);
+                  }
+                },
                 behavior: HitTestBehavior.opaque,
                 child: SizedBox(
-                  width: 56,
+                  width: 48,
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -216,31 +291,72 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                           padding: const EdgeInsets.all(AppSpacing.spaceSM - 2),
                           decoration: BoxDecoration(
                             color: selected
-                                ? DesignColors.accent.withValues(alpha: 0.15)
+                                ? (i == 1
+                                    ? const Color(0xFFFF4D8B)
+                                        .withValues(alpha: 0.15)
+                                    : DesignColors.accent
+                                        .withValues(alpha: 0.15))
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(10),
                             boxShadow: selected
                                 ? [
                                     BoxShadow(
-                                        color: DesignColors.accent
+                                        color: (i == 1
+                                                ? const Color(0xFFFF4D8B)
+                                                : DesignColors.accent)
                                             .withValues(alpha: 0.3),
                                         blurRadius: 8)
                                   ]
                                 : null,
                           ),
-                          child: Icon(
-                            selected ? item.activeIcon : item.icon,
-                            size: AppSizes.iconNav,
-                            color: selected
-                                ? DesignColors.accent
-                                : DesignColors.textGray,
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Icon(
+                                selected ? item.activeIcon : item.icon,
+                                size: AppSizes.iconNav,
+                                color: selected
+                                    ? (i == 1
+                                        ? const Color(0xFFFF4D8B)
+                                        : DesignColors.accent)
+                                    : DesignColors.textGray,
+                              ),
+                              if (showBadge)
+                                Positioned(
+                                  top: -5,
+                                  right: -5,
+                                  child: Container(
+                                    constraints: const BoxConstraints(
+                                        minWidth: 16, minHeight: 16),
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFFF4D8B),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Text(
+                                      newMatchCount > 9
+                                          ? '9+'
+                                          : '$newMatchCount',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
+                                        height: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                         const SizedBox(height: AppSpacing.spaceXS - 2),
                         Text(item.label,
                             style: AppTypography.navLabel.copyWith(
                               color: selected
-                                  ? DesignColors.accent
+                                  ? (i == 1
+                                      ? const Color(0xFFFF4D8B)
+                                      : DesignColors.accent)
                                   : DesignColors.textGray,
                               fontWeight:
                                   selected ? FontWeight.w700 : FontWeight.w400,
@@ -256,22 +372,31 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   }
 
   Widget _buildBody() {
+    final Widget body;
     switch (_selectedIndex) {
       case 0:
-        return _buildHomeTab();
+        body = _buildHomeTab();
       case 1:
-        return _buildSpeedDatingTab();
+        body = _buildMatchInboxTab();
       case 2:
-        return _buildRoomsTab();
+        body = _buildSpeedDatingTab();
       case 3:
-        return _buildEventsTab();
+        body = _buildRoomsTab();
       case 4:
-        return _buildChatsTab();
+        body = _buildFeedTab();
       case 5:
-        return _buildProfileTab();
+        body = _buildChatsTab();
+      case 6:
+        body = _buildProfileTab();
       default:
-        return _buildHomeTab();
+        body = _buildHomeTab();
     }
+    return Column(
+      children: [
+        const OfflineBanner(),
+        Expanded(child: body),
+      ],
+    );
   }
 
   /// Home Tab — personalized vibe greeting + heating-up rooms
@@ -306,6 +431,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
 
     final sw = MediaQuery.sizeOf(context).width;
     final hPad = AppLayout.responsivePaddingH(sw);
+    final activeFriends = ref.watch(activeFriendsProvider).value ?? [];
 
     return CustomScrollView(
       slivers: [
@@ -344,6 +470,23 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
             ]),
           ),
         ),
+        // ── Active Friends row ──────────────────────────────────────────
+        if (activeFriends.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding:
+                  const EdgeInsets.fromLTRB(0, AppSpacing.spaceLG, 0, 0),
+              child: ActiveFriendsRow(
+                presenceList: activeFriends,
+                onAvatarTap: (p) => Navigator.pushNamed(
+                  context,
+                  '/profile/user',
+                  arguments: p.userId,
+                ),
+              ),
+            ),
+          ),
+        // ── CTA cards ─────────────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
             padding: EdgeInsets.fromLTRB(hPad, AppSpacing.spaceXL, hPad, 0),
@@ -363,7 +506,17 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                 label: 'Speed Dating',
                 sublabel: '5-min video dates',
                 color: DesignColors.gold,
-                onTap: () => setState(() => _selectedIndex = 1),
+                onTap: () => setState(() => _selectedIndex = 2),
+              )),
+              const SizedBox(width: AppSpacing.spaceMD),
+              Expanded(
+                  child: _ctaCard(
+                icon: Icons.people_alt_outlined,
+                label: 'Find People',
+                sublabel: 'Discover others',
+                color: DesignColors.tertiary,
+                onTap: () =>
+                    Navigator.pushNamed(context, '/discover-users'),
               )),
             ]),
           ),
@@ -377,9 +530,9 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('🔥 Heating Up', style: AppTypography.sectionTitle),
+                const Text('🔥 Heating Up', style: AppTypography.sectionTitle),
                 TextButton(
-                  onPressed: () => setState(() => _selectedIndex = 2),
+                  onPressed: () => setState(() => _selectedIndex = 3),
                   child: Text('See All',
                       style: AppTypography.caption
                           .copyWith(color: DesignColors.accent)),
@@ -596,6 +749,11 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     );
   }
 
+  /// Match Inbox Tab
+  Widget _buildMatchInboxTab() {
+    return const MatchInboxPage();
+  }
+
   Widget _buildSpeedDatingTab() {
     return Center(
       child: Padding(
@@ -629,14 +787,14 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                   shadows: DesignColors.secondaryGlow),
             ),
             const SizedBox(height: AppSpacing.spaceSM + 2),
-            Text(
+            const Text(
               'Match. Connect. Vibe. — 5-minute video dates.',
               textAlign: TextAlign.center,
               style: AppTypography.bodySm,
             ),
             const SizedBox(height: AppSpacing.spaceXXL + 8),
             GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/discover-rooms'),
+              onTap: () => Navigator.pushNamed(context, '/speed-dating'),
               child: Container(
                 width: double.infinity,
                 height: AppSizes.buttonHeight,
@@ -666,12 +824,12 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   }
 
   Widget _buildRoomsTab() {
-    return const RoomDiscoveryPageComplete();
+    return const RoomDiscoveryPage();
   }
 
-  /// Events Tab
-  Widget _buildEventsTab() {
-    return const EventsPage();
+  /// Feed Tab — Facebook-style social news feed
+  Widget _buildFeedTab() {
+    return const SocialFeedPage();
   }
 
   /// Chats Tab

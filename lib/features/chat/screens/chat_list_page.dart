@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
+import 'package:mixmingle/shared/widgets/skeleton_loaders.dart';
+import 'package:mixmingle/shared/widgets/empty_states.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
 import 'package:mixmingle/app/app_routes.dart';
 
@@ -30,11 +32,13 @@ class ChatListPage extends ConsumerWidget {
             return conversationListAsync.when(
               data: (chatRooms) {
                 if (chatRooms.isEmpty) {
-                  return const Center(
-                    child: Text(
-                      'No conversations yet',
-                      style: TextStyle(fontSize: 16, color: Colors.white70),
-                    ),
+                  return EmptyState(
+                    icon: Icons.chat_bubble_outline_rounded,
+                    title: 'No conversations yet',
+                    message: 'Match with someone to start a chat!',
+                    actionLabel: 'Find People',
+                    onAction: () => Navigator.pushNamed(
+                        context, AppRoutes.discoverUsers),
                   );
                 }
 
@@ -275,7 +279,14 @@ class ChatListPage extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => ListView.builder(
+                itemCount: 6,
+                itemBuilder: (_, __) => const SkeletonTile(
+                  showAvatar: true,
+                  textLines: 2,
+                  padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                ),
+              ),
               error: (error, stack) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -293,7 +304,14 @@ class ChatListPage extends ConsumerWidget {
               ),
             );
           },
-          loading: () => const Center(child: CircularProgressIndicator()),
+          loading: () => ListView.builder(
+            itemCount: 6,
+            itemBuilder: (_, __) => const SkeletonTile(
+              showAvatar: true,
+              textLines: 2,
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            ),
+          ),
           error: (error, stack) => const Center(
             child: Text('Error loading user',
                 style: TextStyle(color: Colors.white70)),

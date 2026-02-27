@@ -84,8 +84,9 @@ class FriendsInRoomBanner extends StatelessWidget {
   }
 
   String _label(int overflow, int total) {
-    if (total == 1)
+    if (total == 1) {
       return '${friends.first.displayName.split(' ').first} is here';
+    }
     if (overflow > 0) return '$total friends here';
     final names = friends.take(2).map((p) => p.displayName.split(' ').first);
     return '${names.join(', ')} ${friends.length == 1 ? "is" : "are"} here';

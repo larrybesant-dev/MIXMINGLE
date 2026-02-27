@@ -67,6 +67,20 @@ service cloud.firestore {
              request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.hostId;
     }
 
+    // Check if the current update only touches fields safe for any participant
+    // (joining/leaving increments participantCount; setVideoChannelLive; heartbeat)
+    function isRoomJoinUpdate() {
+      let affected = request.resource.data.diff(resource.data).affectedKeys();
+      return affected.hasOnly(['participantCount', 'updatedAt', 'videoChannelLive', 'isLive']);
+    }
+
+    // Null-safe moderators check
+    function isModerator(roomData) {
+      return roomData.keys().hasAll(['moderators']) &&
+             roomData.moderators is list &&
+             request.auth.uid in roomData.moderators;
+    }
+
     // ========================================
     // USERS COLLECTION
     // ========================================
@@ -116,6 +130,100 @@ service cloud.firestore {
         allow read: if isOwner(userId);
         allow write: if isOwner(userId);
       }
+
+      // ════════════════════════════════════════
+      // FRIEND REQUESTS SUBCOLLECTION (inbox/outbox)
+      // ════════════════════════════════════════
+      match /friendRequests/{requestId} {
+        // Owner can read their own inbox/outbox
+        allow read: if isOwner(userId);
+        // Sender can create a request addressed to this user
+        allow create: if isSignedIn() &&
+                         (request.auth.uid == request.resource.data.senderId ||
+                          request.auth.uid == request.resource.data.receiverId);
+        // Sender can cancel; receiver can accept/decline
+        allow update: if isSignedIn() &&
+                         (request.auth.uid == resource.data.senderId ||
+                          request.auth.uid == resource.data.receiverId);
+        allow delete: if isSignedIn() &&
+                         (request.auth.uid == resource.data.senderId ||
+                          request.auth.uid == resource.data.receiverId);
+      }
+
+      // ════════════════════════════════════════
+      // FRIENDS SUBCOLLECTION
+      // ════════════════════════════════════════
+      match /friends/{friendUid} {
+        // Owner can read their own friends list; other authenticated
+        // users can read to check mutual-friend status
+        allow read: if isSignedIn();
+        // Only the system (batch writes from friend accept) may write.
+        // We allow owner writes here — the service enforces bidirectional
+        // consistency in a batch; direct client writes are also acceptable
+        // because the security model uses the accepter's identity.
+        allow write: if isSignedIn() &&
+                        (isOwner(userId) || request.auth.uid == friendUid);
+      }
+
+      // ════════════════════════════════════════
+      // NOTIFICATIONS SUBCOLLECTION
+      // ════════════════════════════════════════
+      match /notifications/{notificationId} {
+        // Only the owner can read their notifications
+        allow read: if isOwner(userId);
+        // Any authenticated user can create a notification for another user
+        // (e.g. sending a friend request creates a notification)
+        allow create: if isSignedIn() &&
+                         request.resource.data.receiverId == userId;
+        // Only the owner can update (mark as read) or delete their own notifications
+        allow update, delete: if isOwner(userId);
+      }
+
+      // ════════════════════════════════════════
+      // MATCH INBOX SUBCOLLECTION
+      // /users/{userId}/matches/{matchId}
+      // ════════════════════════════════════════
+      match /matches/{matchId} {
+        // Only the owner can read their own match inbox
+        allow read: if isOwner(userId);
+
+        // Any signed-in user can create a match entry for another user
+        // (MatchInboxService writes to both users in a batch)
+        allow create: if isSignedIn() &&
+                         request.resource.data.matchedUserId is string &&
+                         request.resource.data.matchedUserId.size() > 0;
+
+        // Only the owner can update (mark as seen) or delete (remove match)
+        // their own match inbox entries
+        allow update: if isOwner(userId) &&
+                         request.resource.data.keys().hasOnly([
+                           'matchedUserId', 'timestamp', 'lastInteraction',
+                           'isNew', 'source', 'metadata'
+                         ]);
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    // ========================================
+    // FRIEND REQUESTS (top-level, for cross-user queries)
+    // ========================================
+    match /friendRequests/{requestId} {
+      // Sender or receiver can read
+      allow read: if isSignedIn() &&
+                     (request.auth.uid == resource.data.senderId ||
+                      request.auth.uid == resource.data.receiverId);
+      // Sender creates
+      allow create: if isSignedIn() &&
+                       request.auth.uid == request.resource.data.senderId &&
+                       request.resource.data.senderId != request.resource.data.receiverId;
+      // Either party can update status (accept / decline / cancel)
+      allow update: if isSignedIn() &&
+                       (request.auth.uid == resource.data.senderId ||
+                        request.auth.uid == resource.data.receiverId);
+      // Either party can delete (cancel)
+      allow delete: if isSignedIn() &&
+                       (request.auth.uid == resource.data.senderId ||
+                        request.auth.uid == resource.data.receiverId);
     }
 
     // ========================================
@@ -160,12 +268,16 @@ service cloud.firestore {
                        request.resource.data.title.size() <= 100;
 
       // ✅ Only room creator/host/moderators can update or delete room
-      allow update: if isSignedIn() &&
-                       (request.auth.uid == resource.data.hostId ||
-                        request.auth.uid in resource.data.moderators);
+      // Exception: any authenticated user may update join-safe fields
+      // (participantCount, videoChannelLive, updatedAt, isLive) so that
+      // audience members can register their presence.
+      allow update: if isSignedIn() && (
+                       isRoomJoinUpdate() ||
+                       request.auth.uid == resource.data.hostId ||
+                       isModerator(resource.data));
       allow delete: if isSignedIn() &&
                        (request.auth.uid == resource.data.hostId ||
-                        request.auth.uid in resource.data.moderators);
+                        isModerator(resource.data));
 
       // ✅ ROOM PARTICIPANTS SUBCOLLECTION - Critical for room joins
       match /participants/{participantId} {
@@ -185,7 +297,11 @@ service cloud.firestore {
         allow read: if isSignedIn();
         allow create: if isSignedIn() &&
                          request.resource.data.senderId == request.auth.uid &&
-                         request.resource.data.text.size() <= 2000;
+                         // Support both 'content' (new model) and 'text' (legacy)
+                         (('content' in request.resource.data &&
+                           request.resource.data.content.size() <= 5000) ||
+                          ('text' in request.resource.data &&
+                           request.resource.data.text.size() <= 5000));
         allow update, delete: if isSignedIn() &&
                                  resource.data.senderId == request.auth.uid;
       }
@@ -597,6 +713,60 @@ service cloud.firestore {
 
     match /admin/{document=**} {
       allow read, write: if isAdmin();
+    }
+
+    // ========================================
+    // ADS MONETIZATION SYSTEM
+    // ========================================
+
+    // Advertisers — only admins can create/modify billing fields.
+    // Any authenticated user can read active advertisers (for ad serving).
+    match /advertisers/{advertiserId} {
+      allow read: if isSignedIn();
+      allow create: if isAdmin();
+
+      // Admins can update anything.
+      // Non-admins cannot touch billing-sensitive fields.
+      allow update: if isAdmin() ||
+                       (isSignedIn() &&
+                        !request.resource.data.diff(resource.data)
+                          .affectedKeys()
+                          .hasAny(['impressionsRemaining', 'clicksRemaining',
+                                   'billingStatus', 'promoCode']));
+
+      allow delete: if isAdmin();
+    }
+
+    // Ads (creatives) — admins manage; authenticated users can read active ads.
+    match /ads/{adId} {
+      allow read: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+
+      // Allow impression/click counter increments by authenticated users.
+      // Only impressionCount and clickCount may be incremented by non-admins.
+      allow update: if isSignedIn() &&
+                       request.resource.data.diff(resource.data)
+                         .affectedKeys()
+                         .hasOnly(['impressionCount', 'clickCount', 'updatedAt']);
+    }
+
+    // Promo codes — admins manage; authenticated users can read to validate.
+    // Only admins can mark a promo as active/inactive.
+    // A user can redeem (set redeemedAt) if the code is active and not yet redeemed.
+    match /promoCodes/{code} {
+      allow read: if isSignedIn();
+      allow create, delete: if isAdmin();
+
+      // Admin: full update
+      allow update: if isAdmin();
+
+      // Any signed-in user may set redeemedAt once (redemption).
+      allow update: if isSignedIn() &&
+                       resource.data.active == true &&
+                       resource.data.redeemedAt == null &&
+                       request.resource.data.diff(resource.data)
+                         .affectedKeys()
+                         .hasOnly(['redeemedAt']);
     }
 
     // ========================================

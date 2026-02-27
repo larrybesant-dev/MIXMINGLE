@@ -7,6 +7,7 @@ library;
 
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'analytics_events.dart';
 
 /// Singleton service for analytics tracking
@@ -613,5 +614,346 @@ class AnalyticsService {
         if (stackTrace != null) 'stack_trace': stackTrace.substring(0, 100),
       },
     );
+  }
+
+  // ============================================================
+  // TYPED HELPERS (Phase 7)
+  // ============================================================
+
+  /// Simple named funnel milestone helper: logFunnelMilestone('first_room_join')
+  Future<void> logFunnelMilestone(String name, {Map<String, Object>? params}) async {
+    await logEvent(name: name, parameters: params);
+  }
+
+  /// Generic engagement event wrapper
+  Future<void> logEngagement(
+    String name, {
+    Map<String, Object>? params,
+  }) async {
+    await logEvent(name: name, parameters: params);
+  }
+
+  /// Typed ad event helper
+  Future<void> logAdEvent({
+    required String type,
+    required String adId,
+    required String advertiserId,
+    required String placement,
+    Map<String, Object>? extra,
+  }) async {
+    await logEvent(
+      name: type,
+      parameters: {
+        AnalyticsParams.adId: adId,
+        AnalyticsParams.advertiserId: advertiserId,
+        AnalyticsParams.placement: placement,
+        ...?extra,
+      },
+    );
+  }
+
+  // ============================================================
+  // AD ANALYTICS
+  // ============================================================
+
+  Future<void> logAdImpression({
+    required String adId,
+    required String advertiserId,
+    required String placement,
+  }) async {
+    await logAdEvent(
+      type: AnalyticsEvents.adImpression,
+      adId: adId,
+      advertiserId: advertiserId,
+      placement: placement,
+    );
+  }
+
+  Future<void> logAdClick({
+    required String adId,
+    required String advertiserId,
+    required String placement,
+  }) async {
+    await logAdEvent(
+      type: AnalyticsEvents.adClick,
+      adId: adId,
+      advertiserId: advertiserId,
+      placement: placement,
+    );
+  }
+
+  Future<void> logAdSkipped({
+    required String adId,
+    required String advertiserId,
+    required String placement,
+  }) async {
+    await logAdEvent(
+      type: AnalyticsEvents.adSkipped,
+      adId: adId,
+      advertiserId: advertiserId,
+      placement: placement,
+    );
+  }
+
+  // ============================================================
+  // FEED ENGAGEMENT
+  // ============================================================
+
+  Future<void> logFeedPostLiked({required String postId}) async {
+    await logEvent(
+      name: AnalyticsEvents.feedPostLiked,
+      parameters: {AnalyticsParams.postId: postId},
+    );
+  }
+
+  Future<void> logFeedPostViewed({required String postId}) async {
+    await logEvent(
+      name: AnalyticsEvents.feedPostViewed,
+      parameters: {AnalyticsParams.postId: postId},
+    );
+  }
+
+  Future<void> logFeedPostCommented({required String postId}) async {
+    await logEvent(
+      name: AnalyticsEvents.feedPostCommented,
+      parameters: {AnalyticsParams.postId: postId},
+    );
+  }
+
+  // ============================================================
+  // MATCH / INBOX ENGAGEMENT
+  // ============================================================
+
+  Future<void> logMatchTileOpened({required String matchId}) async {
+    await logEvent(
+      name: AnalyticsEvents.matchTileOpened,
+      parameters: {AnalyticsParams.matchId: matchId},
+    );
+  }
+
+  Future<void> logMatchMessageButtonTapped({required String matchId}) async {
+    await logEvent(
+      name: AnalyticsEvents.matchMessageButtonTapped,
+      parameters: {AnalyticsParams.matchId: matchId},
+    );
+  }
+
+  // ============================================================
+  // SOCIAL / FRIENDS
+  // ============================================================
+
+  Future<void> logFriendRequestSent({required String targetUserId}) async {
+    await logEvent(
+      name: AnalyticsEvents.friendRequestSent,
+      parameters: {AnalyticsParams.targetUserId: targetUserId},
+    );
+  }
+
+  Future<void> logFriendRequestAccepted({required String targetUserId}) async {
+    await logEvent(
+      name: AnalyticsEvents.friendRequestAccepted,
+      parameters: {AnalyticsParams.targetUserId: targetUserId},
+    );
+  }
+
+  // ============================================================
+  // DISCOVER ENGAGEMENT
+  // ============================================================
+
+  Future<void> logDiscoverUserViewed({required String userId}) async {
+    await logEvent(
+      name: AnalyticsEvents.discoverUserViewed,
+      parameters: {AnalyticsParams.targetUserId: userId},
+    );
+  }
+
+  Future<void> logDiscoverUserLiked({required String userId}) async {
+    await logEvent(
+      name: AnalyticsEvents.discoverUserLiked,
+      parameters: {AnalyticsParams.targetUserId: userId},
+    );
+  }
+
+  Future<void> logDiscoverUserSuperliked({required String userId}) async {
+    await logEvent(
+      name: AnalyticsEvents.discoverUserSuperliked,
+      parameters: {AnalyticsParams.targetUserId: userId},
+    );
+  }
+
+  // ============================================================
+  // SPEED DATING
+  // ============================================================
+
+  Future<void> logSpeedDatingRoundStarted({required String sessionId}) async {
+    await logEvent(
+      name: AnalyticsEvents.speedDatingRoundStarted,
+      parameters: {'session_id': sessionId},
+    );
+  }
+
+  Future<void> logSpeedDatingMatchCreated({
+    required String sessionId,
+    required String partnerId,
+  }) async {
+    await logEvent(
+      name: AnalyticsEvents.speedDatingMatchCreated,
+      parameters: {
+        'session_id': sessionId,
+        AnalyticsParams.targetUserId: partnerId,
+      },
+    );
+  }
+
+  // ============================================================
+  // CHAT
+  // ============================================================
+
+  Future<void> logChatMessageSent({required String chatId}) async {
+    await logEvent(
+      name: AnalyticsEvents.chatMessageSent,
+      parameters: {AnalyticsParams.chatId: chatId},
+    );
+  }
+
+  Future<void> logChatReactionAdded({required String chatId}) async {
+    await logEvent(
+      name: AnalyticsEvents.chatReactionAdded,
+      parameters: {AnalyticsParams.chatId: chatId},
+    );
+  }
+
+  // ============================================================
+  // ERROR & RETRY ANALYTICS
+  // ============================================================
+
+  Future<void> logFirestoreWriteError({String? context}) async {
+    await logEvent(
+      name: AnalyticsEvents.errorFirestoreWrite,
+      parameters: {if (context != null) 'context': context},
+    );
+  }
+
+  Future<void> logFirestoreReadError({String? context}) async {
+    await logEvent(
+      name: AnalyticsEvents.errorFirestoreRead,
+      parameters: {if (context != null) 'context': context},
+    );
+  }
+
+  Future<void> logNetworkError({String? context}) async {
+    await logEvent(
+      name: AnalyticsEvents.networkError,
+      parameters: {if (context != null) 'context': context},
+    );
+  }
+
+  Future<void> logRetryTapped({required String screen}) async {
+    await logEvent(
+      name: AnalyticsEvents.retryTapped,
+      parameters: {'screen': screen},
+    );
+  }
+
+  Future<void> logOfflineModeEntered() async {
+    await logEvent(name: AnalyticsEvents.offlineModeEntered);
+  }
+
+  Future<void> logOfflineModeExited() async {
+    await logEvent(name: AnalyticsEvents.offlineModeExited);
+  }
+
+  // ============================================================
+  // FIRST-TIME / FUNNEL MILESTONES
+  // ============================================================
+
+  Future<void> logFirstRoomJoin({required String roomId}) async {
+    await logEvent(
+      name: AnalyticsEvents.firstRoomJoin,
+      parameters: {AnalyticsParams.roomId: roomId},
+    );
+  }
+
+  Future<void> logFirstChatSent({required String chatId}) async {
+    await logEvent(
+      name: AnalyticsEvents.firstChatSent,
+      parameters: {AnalyticsParams.chatId: chatId},
+    );
+  }
+
+  Future<void> logFirstMatch({required String matchId}) async {
+    await logEvent(
+      name: AnalyticsEvents.firstMatch,
+      parameters: {AnalyticsParams.matchId: matchId},
+    );
+  }
+
+  Future<void> logFirstFriendAdded({required String userId}) async {
+    await logEvent(
+      name: AnalyticsEvents.firstFriendAdded,
+      parameters: {AnalyticsParams.targetUserId: userId},
+    );
+  }
+
+  Future<void> logActivationCompleted() async {
+    await logEvent(name: AnalyticsEvents.activationCompleted);
+  }
+
+  // ============================================================
+  // ONCE-ONLY FUNNEL MILESTONES (guarded by SharedPreferences)
+  // ============================================================
+
+  static const _kPrefFirstRoomJoin = 'analytics_first_room_join_done';
+  static const _kPrefFirstChatSent = 'analytics_first_chat_sent_done';
+  static const _kPrefFirstFriendAdded = 'analytics_first_friend_added_done';
+  static const _kPrefActivation = 'analytics_activation_completed_done';
+
+  /// Fire first_room_join exactly once per install.
+  Future<void> logFirstRoomJoinOnce({required String roomId}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool(_kPrefFirstRoomJoin) == true) return;
+      await prefs.setBool(_kPrefFirstRoomJoin, true);
+      await logFirstRoomJoin(roomId: roomId);
+      await _checkActivationOnce(prefs);
+    } catch (e) {
+      debugPrint('[Analytics] logFirstRoomJoinOnce error: $e');
+    }
+  }
+
+  /// Fire first_chat_sent exactly once per install.
+  Future<void> logFirstChatSentOnce({required String chatId}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool(_kPrefFirstChatSent) == true) return;
+      await prefs.setBool(_kPrefFirstChatSent, true);
+      await logFirstChatSent(chatId: chatId);
+      await _checkActivationOnce(prefs);
+    } catch (e) {
+      debugPrint('[Analytics] logFirstChatSentOnce error: $e');
+    }
+  }
+
+  /// Fire first_friend_added exactly once per install.
+  Future<void> logFirstFriendAddedOnce({required String userId}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (prefs.getBool(_kPrefFirstFriendAdded) == true) return;
+      await prefs.setBool(_kPrefFirstFriendAdded, true);
+      await logFirstFriendAdded(userId: userId);
+    } catch (e) {
+      debugPrint('[Analytics] logFirstFriendAddedOnce error: $e');
+    }
+  }
+
+  /// Auto-fire activation_completed when onboarding + first_room + first_chat all done.
+  Future<void> _checkActivationOnce(SharedPreferences prefs) async {
+    if (prefs.getBool(_kPrefActivation) == true) return;
+    final roomDone = prefs.getBool(_kPrefFirstRoomJoin) == true;
+    final chatDone = prefs.getBool(_kPrefFirstChatSent) == true;
+    if (roomDone && chatDone) {
+      await prefs.setBool(_kPrefActivation, true);
+      await logActivationCompleted();
+    }
   }
 }

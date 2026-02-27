@@ -9,6 +9,7 @@
 ## ✅ WHAT'S BEEN FIXED (PHASES 1-3)
 
 ### Phase 1: SECURITY ✅
+
 - [x] Removed hardcoded Agora credentials from `constants.dart`
 - [x] Migrated to environment variables using `flutter_dotenv`
 - [x] Added `.env` file loading in `main.dart`
@@ -16,6 +17,7 @@
 - **Impact:** No more credential exposure in source code or binaries
 
 ### Phase 2: LOGGING (CRITICAL PRODUCTION FILES) ✅
+
 - [x] Replaced print() with AppLogger in `agora_platform_service.dart` (4 calls)
 - [x] Replaced print() with AppLogger in `image_optimization_service.dart` (3 calls)
 - [x] Replaced print() with AppLogger in `agora_web_service.dart` (17 calls)
@@ -26,12 +28,14 @@
 - **Impact:** Clean production logging, no console spam
 
 ### Phase 3: DUPLICATE FILE CLEANUP ✅
+
 - [x] Removed `lib/features/auth/screens/login_page.dart` (duplicate)
 - [x] Removed `lib/splash_page.dart` (duplicate)
 - [x] Fixed imports in `auth_gate.dart`, `app_routes.dart`, `app.dart`
 - **Impact:** No more import confusion, cleaner file structure
 
 ### Phase 4 (PARTIAL): LINTING & ANALYSIS ✅
+
 - [x] Enabled production linting rules in `analysis_options.yaml`
 - [x] `avoid_print: true` enforced
 - [x] `prefer_const_constructors` enabled
@@ -42,6 +46,7 @@
   - ⚠️ 77 other info-level suggestions (code quality)
 
 ### Phase 5 (PARTIAL): CODE MODERNIZATION
+
 - [x] Removed broken `test/widget_tests.dart` (515 lines)
 - [x] Identified 80+ StatefulWidget files (NOT converted yet — optional optimization)
 - [ ] Fixed deprecated API patterns (voice_room_controls.dart ignores)
@@ -55,11 +60,14 @@
 ### CRITICAL PATH (BLOCKING RELEASE)
 
 #### 1. FIX TEST IMPORTS (HIGH PRIORITY)
+
 **Files:**
+
 - `test/login_flow_test.dart` - imports deleted `features/auth/screens/login_page.dart`
 - `test/widgets/login_page_test.dart` - imports deleted file
 
 **Action:**
+
 ```bash
 # Delete broken test files
 rm test/login_flow_test.dart test/widgets/login_page_test.dart
@@ -70,14 +78,17 @@ rm test/login_flow_test.dart test/widgets/login_page_test.dart
 ---
 
 #### 2. REGENERATE MOCKS (HIGH PRIORITY)
+
 **Current Status:** Some mocks may be out of sync after file cleanup
 
 **Action:**
+
 ```bash
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
 **Expected:**
+
 - Auto-generates mocks in `test/helpers/mock_firebase.mocks.dart`
 - Fixes import errors in test files
 
@@ -86,12 +97,15 @@ flutter pub run build_runner build --delete-conflicting-outputs
 ---
 
 #### 3. RUN FULL TEST SUITE (HIGH PRIORITY)
+
 **Action:**
+
 ```bash
 flutter test
 ```
 
 **Expected Status:**
+
 - Core tests should pass
 - Some auth mock tests may have assertion issues (non-blocking)
 
@@ -100,12 +114,15 @@ flutter test
 ---
 
 #### 4. VALIDATE ON WEB (MEDIUM PRIORITY)
+
 **Action:**
+
 ```bash
 flutter run -d chrome --no-hot
 ```
 
 **Test Flows:**
+
 - [ ] Splash screen loads
 - [ ] Login (Google OAuth)
 - [ ] Room creation
@@ -119,12 +136,15 @@ flutter run -d chrome --no-hot
 ---
 
 #### 5. PREPARE FOR iOS BUILD (MEDIUM PRIORITY)
+
 **Prerequisites:**
+
 - Xcode 15+ on macOS
 - Apple Developer Account
 - Provisioning profiles configured
 
 **Action:**
+
 ```bash
 # Clean and build
 flutter clean
@@ -137,12 +157,15 @@ flutter build ipa --release --obfuscate --split-debug-info
 ---
 
 #### 6. PREPARE FOR Android Build (MEDIUM PRIORITY)
+
 **Prerequisites:**
+
 - Android SDK 35+
 - Java 17+
 - Keystore configured for signing
 
 **Action:**
+
 ```bash
 flutter build appbundle --release --obfuscate --split-debug-info
 ```
@@ -154,6 +177,7 @@ flutter build appbundle --release --obfuscate --split-debug-info
 ### OPTIONAL BUT RECOMMENDED
 
 #### 7. FIX PACKAGE IMPORTS (926 LINT WARNINGS)
+
 **Issue:** Relative imports instead of `package:mix_and_mingle/...`
 
 **Impact:** Non-blocking but improves IDE support
@@ -161,6 +185,7 @@ flutter build appbundle --release --obfuscate --split-debug-info
 **Time:** 4–6 hours (can automate with dart fix)
 
 **Command:**
+
 ```bash
 dart fix --apply
 ```
@@ -168,6 +193,7 @@ dart fix --apply
 ---
 
 #### 8. CONVERT StatefulWidget → Riverpod (80 FILES)
+
 **Rationale:** Consistency with existing Riverpod infrastructure
 
 **Impact:** Better state management, easier testing
@@ -179,7 +205,9 @@ dart fix --apply
 ---
 
 #### 9. ADDRESS TODOs/FIXMEs (20 ITEMS)
+
 **Examples:**
+
 - Location-based events (event_dating_providers.dart:256)
 - Stripe integration (payment_service.dart:87)
 - Mention parsing (messaging_service.dart:582)
@@ -193,7 +221,9 @@ dart fix --apply
 ### CI/CD & DEPLOYMENT (NON-CRITICAL FOR FIRST RELEASE)
 
 #### 10. GITHUB ACTIONS WORKFLOW
+
 Create `.github/workflows/ci.yml`:
+
 - Trigger: on every push to `main` and `develop`
 - Steps: analyze → test → build → deploy
 - Artifacts: APK, IPA, Web
@@ -203,6 +233,7 @@ Create `.github/workflows/ci.yml`:
 ---
 
 #### 11. FIREBASE HOSTING SETUP
+
 - Configure `firebase.json` (caching, redirects, headers)
 - Deploy web build to `https://mixandmingle.app`
 - CDN configuration
@@ -212,7 +243,9 @@ Create `.github/workflows/ci.yml`:
 ---
 
 #### 12. APP STORE SUBMISSION
+
 **iOS (TestFlight → App Store):**
+
 - Create provisioning profiles
 - Configure code signing
 - Archive build in Xcode
@@ -224,7 +257,9 @@ Create `.github/workflows/ci.yml`:
 ---
 
 #### 13. PLAY STORE SUBMISSION
+
 **Android:**
+
 - Configure app signing
 - Upload AAB to Google Play Console
 - Create closed testing link
@@ -237,12 +272,14 @@ Create `.github/workflows/ci.yml`:
 ## 🎯 RECOMMENDED NEXT STEPS (TODAY)
 
 ### IMMEDIATE (NEXT 2 HOURS)
+
 1. ✅ Delete broken test files (`login_flow_test.dart`, `login_page_test.dart`)
 2. ✅ Regenerate mocks (`flutter pub run build_runner build`)
 3. ✅ Run test suite (`flutter test`)
 4. ✅ Run on Web (`flutter run -d chrome`)
 
 ### TODAY (NEXT 4 HOURS)
+
 5. ✅ Test all user flows on Web:
    - Login / Signup
    - Room creation / joining
@@ -254,12 +291,14 @@ Create `.github/workflows/ci.yml`:
 6. ✅ Validate Crashlytics + Analytics are active
 
 ### THIS WEEK (3–5 DAYS)
+
 7. ✅ Build for iOS + test on iPhone (if macOS available)
 8. ✅ Build for Android + test on device/emulator
 9. ✅ Set up Firebase Hosting + deploy web build
 10. ✅ Create release notes + metadata for app stores
 
 ### NEXT WEEK (5–7 DAYS)
+
 11. ✅ Submit to App Store (TestFlight)
 12. ✅ Submit to Play Store (Internal Testing)
 13. ✅ Monitor crashes + feedback
@@ -270,6 +309,7 @@ Create `.github/workflows/ci.yml`:
 ## 📈 FINAL VALIDATION CHECKLIST
 
 ### Pre-Launch (72 hours before)
+
 - [ ] App compiles with 0 errors
 - [ ] All tests pass
 - [ ] No secrets in `.git/` history
@@ -281,6 +321,7 @@ Create `.github/workflows/ci.yml`:
 - [ ] Firebase Hosting live + working
 
 ### Launch Day
+
 - [ ] Privacy Policy + ToS deployed
 - [ ] Community Guidelines published
 - [ ] Support email functional
@@ -293,17 +334,17 @@ Create `.github/workflows/ci.yml`:
 
 ## ⏱️ TIMELINE TO PUBLIC RELEASE
 
-| Task | Duration | Blocker | Status |
-|------|----------|---------|--------|
-| Delete test files + regenerate mocks | 30 min | YES | 🔄 TODAY |
-| Run test suite | 15 min | YES | 🔄 TODAY |
-| Test all flows on Web | 45 min | YES | 🔄 TODAY |
-| Build + test on iOS | 1 hour | NO | ⏳ THIS WEEK |
-| Build + test on Android | 45 min | NO | ⏳ THIS WEEK |
-| Deploy Firebase Hosting | 1 hour | NO | ⏳ THIS WEEK |
-| Submit to App Store | 2 hours | NO | ⏳ NEXT WEEK |
-| Submit to Play Store | 1 hour | NO | ⏳ NEXT WEEK |
-| **TOTAL TO PRODUCTION** | **5.5 hours + waiting** | | **🚀 1-2 WEEKS** |
+| Task                                 | Duration                | Blocker | Status           |
+| ------------------------------------ | ----------------------- | ------- | ---------------- |
+| Delete test files + regenerate mocks | 30 min                  | YES     | 🔄 TODAY         |
+| Run test suite                       | 15 min                  | YES     | 🔄 TODAY         |
+| Test all flows on Web                | 45 min                  | YES     | 🔄 TODAY         |
+| Build + test on iOS                  | 1 hour                  | NO      | ⏳ THIS WEEK     |
+| Build + test on Android              | 45 min                  | NO      | ⏳ THIS WEEK     |
+| Deploy Firebase Hosting              | 1 hour                  | NO      | ⏳ THIS WEEK     |
+| Submit to App Store                  | 2 hours                 | NO      | ⏳ NEXT WEEK     |
+| Submit to Play Store                 | 1 hour                  | NO      | ⏳ NEXT WEEK     |
+| **TOTAL TO PRODUCTION**              | **5.5 hours + waiting** |         | **🚀 1-2 WEEKS** |
 
 ---
 

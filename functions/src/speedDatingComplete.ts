@@ -15,13 +15,16 @@ import { onDocumentCreated, onDocumentUpdated } from "firebase-functions/v2/fire
 import * as logger from "firebase-functions/logger";
 import * as admin from "firebase-admin";
 import { RtcTokenBuilder, RtcRole } from "agora-token";
+import { defineSecret } from "firebase-functions/params";
+
+// Define secrets at the top
+const AGORA_APP_ID = defineSecret("AGORA_APP_ID");
+const AGORA_APP_CERTIFICATE = defineSecret("AGORA_APP_CERTIFICATE");
 
 const firestore = admin.firestore();
 
 // Configuration
 const SESSION_DURATION_MS = 5 * 60 * 1000; // 5 minutes
-const AGORA_APP_ID = process.env.AGORA_APPID || "";
-const AGORA_CERTIFICATE = process.env.AGORA_CERT || "";
 const TOKEN_EXPIRATION = 3600; // 1 hour
 
 // ============================================================
@@ -29,7 +32,7 @@ const TOKEN_EXPIRATION = 3600; // 1 hour
 // ============================================================
 export const matchSpeedDating = onSchedule(
   {
-    schedule: "every 30 seconds",
+    schedule: "every 1 minutes",
     region: "us-central1",
     timeoutSeconds: 60,
   },
@@ -50,7 +53,11 @@ export const matchSpeedDating = onSchedule(
         return;
       }
 
-      const queuedUsers = queueSnapshot.docs.map((doc) => ({
+      const queuedUsers: Array<{
+        id: string;
+        preferences?: Record<string, any>;
+        [key: string]: any;
+      }> = queueSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
@@ -90,18 +97,13 @@ export const matchSpeedDating = onSchedule(
     } catch (error) {
       logger.error("[SpeedDating] ❌ Error in matching:", error);
     }
-  }
+  },
 );
 
 // ============================================================
 // COMPATIBILITY CHECK
 // ============================================================
-function areCompatible(
-  user1: any,
-  prefs1: any,
-  user2: any,
-  prefs2: any
-): boolean {
+function areCompatible(user1: any, prefs1: any, user2: any, prefs2: any): boolean {
   // Age compatibility
   const age1 = user1.age || 0;
   const age2 = user2.age || 0;
@@ -156,9 +158,7 @@ async function createSpeedDatingSession(user1: any, user2: any): Promise<void> {
   const sessionId = firestore.collection("speed_dating_sessions").doc().id;
   const channelName = `speed_dating_${sessionId}`;
   const startedAt = admin.firestore.Timestamp.now();
-  const endsAt = admin.firestore.Timestamp.fromMillis(
-    startedAt.toMillis() + SESSION_DURATION_MS
-  );
+  const endsAt = admin.firestore.Timestamp.fromMillis(startedAt.toMillis() + SESSION_DURATION_MS);
 
   const batch = firestore.batch();
 
@@ -210,10 +210,11 @@ async function createSpeedDatingSession(user1: any, user2: any): Promise<void> {
 // ============================================================
 // GENERATE AGORA TOKEN
 // ============================================================
-export const generateSpeedDatingToken = onCall(
+export const generateSpeedDatingAgoraToken = onCall(
   {
     region: "us-central1",
     cors: true,
+    secrets: [AGORA_APP_ID, AGORA_APP_CERTIFICATE],
   },
   async (request) => {
     const userId = request.auth?.uid;
@@ -224,18 +225,12 @@ export const generateSpeedDatingToken = onCall(
     const { sessionId, uid } = request.data;
 
     if (!sessionId || uid === undefined) {
-      throw new HttpsError(
-        "invalid-argument",
-        "sessionId and uid are required"
-      );
+      throw new HttpsError("invalid-argument", "sessionId and uid are required");
     }
 
     try {
       // Verify session exists and user is a participant
-      const sessionDoc = await firestore
-        .collection("speed_dating_sessions")
-        .doc(sessionId)
-        .get();
+      const sessionDoc = await firestore.collection("speed_dating_sessions").doc(sessionId).get();
 
       if (!sessionDoc.exists) {
         throw new HttpsError("not-found", "Session not found");
@@ -248,37 +243,34 @@ export const generateSpeedDatingToken = onCall(
 
       // Verify user is a participant
       if (sessionData.user1Id !== userId && sessionData.user2Id !== userId) {
-        throw new HttpsError(
-          "permission-denied",
-          "User is not a participant in this session"
-        );
+        throw new HttpsError("permission-denied", "User is not a participant in this session");
       }
 
       // Verify session is active
       if (sessionData.status !== "active") {
-        throw new HttpsError(
-          "failed-precondition",
-          `Session is ${sessionData.status}`
-        );
+        throw new HttpsError("failed-precondition", `Session is ${sessionData.status}`);
       }
 
       // Generate Agora token
       const channelName = sessionData.agoraChannel;
       const expirationTime = Math.floor(Date.now() / 1000) + TOKEN_EXPIRATION;
 
+      const appId = AGORA_APP_ID.value();
+      const appCertificate = AGORA_APP_CERTIFICATE.value();
+      if (!appId || !appCertificate) {
+        throw new HttpsError("internal", "Agora credentials not configured.");
+      }
       const token = RtcTokenBuilder.buildTokenWithUid(
-        AGORA_APP_ID,
-        AGORA_CERTIFICATE,
+        appId,
+        appCertificate,
         channelName,
         uid,
         RtcRole.PUBLISHER,
         expirationTime,
-        expirationTime
+        expirationTime,
       );
 
-      logger.info(
-        `[SpeedDating] 🎫 Generated token for user ${userId} in session ${sessionId}`
-      );
+      logger.info(`[SpeedDating] 🎫 Generated token for user ${userId} in session ${sessionId}`);
 
       return {
         token,
@@ -291,7 +283,7 @@ export const generateSpeedDatingToken = onCall(
       logger.error("[SpeedDating] Error generating token:", error);
       throw error;
     }
-  }
+  },
 );
 
 // ============================================================
@@ -311,24 +303,16 @@ export const submitSpeedDatingDecision = onCall(
     const { sessionId, decision } = request.data;
 
     if (!sessionId || !decision) {
-      throw new HttpsError(
-        "invalid-argument",
-        "sessionId and decision are required"
-      );
+      throw new HttpsError("invalid-argument", "sessionId and decision are required");
     }
 
     // Validate decision
     if (!["like", "pass"].includes(decision)) {
-      throw new HttpsError(
-        "invalid-argument",
-        "decision must be 'like' or 'pass'"
-      );
+      throw new HttpsError("invalid-argument", "decision must be 'like' or 'pass'");
     }
 
     try {
-      const sessionRef = firestore
-        .collection("speed_dating_sessions")
-        .doc(sessionId);
+      const sessionRef = firestore.collection("speed_dating_sessions").doc(sessionId);
 
       const sessionDoc = await sessionRef.get();
       if (!sessionDoc.exists) {
@@ -344,16 +328,13 @@ export const submitSpeedDatingDecision = onCall(
       if (sessionData.status !== "active") {
         throw new HttpsError(
           "failed-precondition",
-          `Cannot submit decision: session is ${sessionData.status}`
+          `Cannot submit decision: session is ${sessionData.status}`,
         );
       }
 
       // Verify user is a participant
       if (sessionData.user1Id !== userId && sessionData.user2Id !== userId) {
-        throw new HttpsError(
-          "permission-denied",
-          "User is not a participant in this session"
-        );
+        throw new HttpsError("permission-denied", "User is not a participant in this session");
       }
 
       // Record decision
@@ -379,9 +360,7 @@ export const submitSpeedDatingDecision = onCall(
       const user2Decision = decisions[sessionData.user2Id];
 
       if (user1Decision && user2Decision) {
-        logger.info(
-          `[SpeedDating] 🎯 Both users decided in session ${sessionId}`
-        );
+        logger.info(`[SpeedDating] 🎯 Both users decided in session ${sessionId}`);
 
         // Check for mutual match
         if (user1Decision === "like" && user2Decision === "like") {
@@ -398,26 +377,20 @@ export const submitSpeedDatingDecision = onCall(
         });
       }
 
-      logger.info(
-        `[SpeedDating] ✅ Decision recorded for user ${userId} in session ${sessionId}`
-      );
+      logger.info(`[SpeedDating] ✅ Decision recorded for user ${userId} in session ${sessionId}`);
 
       return { success: true };
     } catch (error) {
       logger.error("[SpeedDating] Error submitting decision:", error);
       throw error;
     }
-  }
+  },
 );
 
 // ============================================================
 // CREATE MATCH
 // ============================================================
-async function createMatch(
-  user1Id: string,
-  user2Id: string,
-  sessionData: any
-): Promise<void> {
+async function createMatch(user1Id: string, user2Id: string, sessionData: any): Promise<void> {
   const chatId = firestore.collection("chats").doc().id;
 
   const batch = firestore.batch();
@@ -505,7 +478,7 @@ export const endSpeedDatingSession = onDocumentUpdated(
 
       logger.info(`[SpeedDating] ✅ Cleaned up session ${sessionId}`);
     }
-  }
+  },
 );
 
 // ============================================================
@@ -529,9 +502,7 @@ export const leaveSpeedDatingSession = onCall(
     }
 
     try {
-      const sessionRef = firestore
-        .collection("speed_dating_sessions")
-        .doc(sessionId);
+      const sessionRef = firestore.collection("speed_dating_sessions").doc(sessionId);
 
       const sessionDoc = await sessionRef.get();
       if (!sessionDoc.exists) {
@@ -545,10 +516,7 @@ export const leaveSpeedDatingSession = onCall(
 
       // Verify user is a participant
       if (sessionData.user1Id !== userId && sessionData.user2Id !== userId) {
-        throw new HttpsError(
-          "permission-denied",
-          "User is not a participant in this session"
-        );
+        throw new HttpsError("permission-denied", "User is not a participant in this session");
       }
 
       // Mark session as cancelled
@@ -565,7 +533,7 @@ export const leaveSpeedDatingSession = onCall(
       logger.error("[SpeedDating] Error leaving session:", error);
       throw error;
     }
-  }
+  },
 );
 
 // ============================================================
@@ -598,17 +566,11 @@ export const joinSpeedDatingQueue = onCall(
 
       // Verify user has completed onboarding
       if (!userData.hasCompletedOnboarding) {
-        throw new HttpsError(
-          "failed-precondition",
-          "Please complete onboarding first"
-        );
+        throw new HttpsError("failed-precondition", "Please complete onboarding first");
       }
 
       // Check if already in queue
-      const existingQueue = await firestore
-        .collection("speed_dating_queue")
-        .doc(userId)
-        .get();
+      const existingQueue = await firestore.collection("speed_dating_queue").doc(userId).get();
 
       if (existingQueue.exists) {
         throw new HttpsError("already-exists", "Already in queue");
@@ -633,12 +595,9 @@ export const joinSpeedDatingQueue = onCall(
 
       // Update user's speed dating preferences
       if (preferences) {
-        await firestore
-          .collection("users")
-          .doc(userId)
-          .update({
-            speedDatingPreferences: preferences,
-          });
+        await firestore.collection("users").doc(userId).update({
+          speedDatingPreferences: preferences,
+        });
       }
 
       logger.info(`[SpeedDating] ✅ User ${userId} joined queue`);
@@ -648,7 +607,7 @@ export const joinSpeedDatingQueue = onCall(
       logger.error("[SpeedDating] Error joining queue:", error);
       throw error;
     }
-  }
+  },
 );
 
 // ============================================================
@@ -675,7 +634,7 @@ export const leaveSpeedDatingQueue = onCall(
       logger.error("[SpeedDating] Error leaving queue:", error);
       throw error;
     }
-  }
+  },
 );
 
 // ============================================================
@@ -701,9 +660,7 @@ export const autoExpireSpeedDatingSessions = onSchedule(
         return;
       }
 
-      logger.info(
-        `[SpeedDating] ⏰ Found ${expiredSessions.size} expired sessions`
-      );
+      logger.info(`[SpeedDating] ⏰ Found ${expiredSessions.size} expired sessions`);
 
       const batch = firestore.batch();
 
@@ -729,11 +686,9 @@ export const autoExpireSpeedDatingSessions = onSchedule(
 
       await batch.commit();
 
-      logger.info(
-        `[SpeedDating] ✅ Expired ${expiredSessions.size} sessions`
-      );
+      logger.info(`[SpeedDating] ✅ Expired ${expiredSessions.size} sessions`);
     } catch (error) {
       logger.error("[SpeedDating] Error expiring sessions:", error);
     }
-  }
+  },
 );

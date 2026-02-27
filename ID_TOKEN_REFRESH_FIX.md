@@ -1,7 +1,9 @@
 # ID Token Refresh Fix — Final Auth Propagation
 
 ## The Issue
+
 Firebase Web SDK was not attaching the ID token to the callable envelope, even though:
+
 - Auth state was verified
 - Callable API was correct
 - Region was configured
@@ -12,6 +14,7 @@ Result: Cloud Run rejected requests as "unauthenticated"
 ---
 
 ## Root Cause
+
 Flutter Web auth state becomes "ready" (currentUser exists) before the ID token is fully refreshed and available for SDK attachment.
 
 When you call `httpsCallable()` immediately after verifying `currentUser`, the Firebase Web SDK may be using a stale or expired token, or one that hasn't been properly staged for attachment.
@@ -19,6 +22,7 @@ When you call `httpsCallable()` immediately after verifying `currentUser`, the F
 ---
 
 ## The Fix
+
 **Force-refresh the ID token BEFORE invoking the callable:**
 
 ```dart
@@ -34,6 +38,7 @@ final result = await _functions.httpsCallable('generateAgoraToken').call({...});
 ```
 
 ### What `getIdToken(true)` does:
+
 - `true` parameter forces a refresh from server
 - Guarantees a fresh, valid token
 - Makes token immediately available for SDK attachment
@@ -48,6 +53,7 @@ final result = await _functions.httpsCallable('generateAgoraToken').call({...});
 **Changes**: Added token refresh before callable invocation
 
 ### Sequence:
+
 ```
 1. Auth verified (authStateChanges().first passed) ✅
 2. Force refresh ID token (getIdToken(true)) ← NEW
@@ -63,6 +69,7 @@ final result = await _functions.httpsCallable('generateAgoraToken').call({...});
 ---
 
 ## Debug Logging Added
+
 New log points to track auth propagation:
 
 ```
@@ -73,6 +80,7 @@ New log points to track auth propagation:
 ```
 
 This creates a clear audit trail showing:
+
 1. Token refresh initiated
 2. Token obtained successfully
 3. Callable invoked with authenticated context
@@ -83,6 +91,7 @@ This creates a clear audit trail showing:
 ## Why This Works
 
 ### Yesterday (WebRTC mode):
+
 - No tokens needed
 - No auth pipeline
 - No Cloud Functions
@@ -90,6 +99,7 @@ This creates a clear audit trail showing:
 - ✅ Just worked
 
 ### Today (Token-protected mode):
+
 - Tokens required ← NEW REQUIREMENT
 - Auth pipeline must be perfect ← CRITICAL
 - Firebase callable requires fresh token ← ESSENTIAL
@@ -100,6 +110,7 @@ This creates a clear audit trail showing:
 ## Expected Behavior After Fix
 
 ### Frontend Logs:
+
 ```
 ✓ Step 2: Joining room: [roomId]
 ✓ Verifying authentication state...
@@ -114,6 +125,7 @@ This creates a clear audit trail showing:
 ```
 
 ### Backend Logs (Cloud Functions):
+
 ```
 ✓ Callable request verification passed
 ✓ Auth context - UID: [uid], Token: PRESENT          ← Now populated
@@ -122,6 +134,7 @@ This creates a clear audit trail showing:
 ```
 
 ### Success:
+
 - ✅ No "request was not authenticated" warnings
 - ✅ `request.auth.uid` is populated
 - ✅ Token generated successfully
@@ -133,6 +146,7 @@ This creates a clear audit trail showing:
 ## Technical Guarantee
 
 The sequence:
+
 ```
 getIdToken(true) → guarantees fresh token →
   httpsCallable() receives token →
@@ -154,6 +168,7 @@ Is now **atomic and guaranteed**.
 ---
 
 ## Next Step
+
 ```bash
 flutter clean
 flutter pub get
@@ -167,6 +182,7 @@ Monitor logs for "ID token refreshed" confirming the fix is active.
 **Status: Ready for Final Test**
 
 All three layers now have guaranteed auth propagation:
+
 - Web: Firebase Functions JS SDK ✅
 - Frontend: Fresh ID token before callable ✅
 - Backend: request.auth.uid populated ✅

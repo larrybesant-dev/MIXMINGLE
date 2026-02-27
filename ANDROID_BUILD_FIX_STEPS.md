@@ -4,6 +4,7 @@
 
 ✅ Diagnostic script has been run
 ✅ Logs generated:
+
 - `android_apk_build_verbose.log` — APK build details
 - `android_diagnostics_report.txt` — Summary
 - `flutter_doctor_report.txt` — System health
@@ -21,6 +22,7 @@ notepad android_apk_build_verbose.log
 ```
 
 **Search for** (Ctrl+F):
+
 - `ERROR:`
 - `FAILED`
 - `error:`
@@ -244,6 +246,7 @@ flutter build apk --release --no-shrink
 ```
 
 This:
+
 - ✅ Skips ProGuard/R8 minification
 - ✅ Faster build
 - ✅ Larger APK size
@@ -276,11 +279,13 @@ flutter build apk --release
 ```
 
 **If APK succeeds:**
+
 - ✅ Your Gradle/plugin config is correct
 - ✅ Signing works
 - ✅ Next: Test AAB
 
 **If APK fails:**
+
 - ❌ Check error again
 - ❌ Review Step 2 fixes
 - ❌ Try `--no-shrink` to isolate minification issue
@@ -294,9 +299,11 @@ flutter build appbundle --release
 ```
 
 **If AAB succeeds:**
+
 - ✅ Ready to upload to Play Store
 
 **If AAB fails:**
+
 - ❌ Usually signing/bundling issue
 - ❌ Review Fix D (signing config)
 
@@ -333,16 +340,16 @@ This works independently and Web should already be live.
 
 ## Reference: Common Error Messages
 
-| Error | Cause | Fix |
-|-------|-------|-----|
-| `Gradle 7.x not compatible` | Gradle version too old | Update to `gradle-8.2-all.zip` |
-| `Android Gradle plugin version X incompatible` | Plugin version too old | Update to `gradle:8.2.0` |
-| `compileSdkVersion too low` | SDK version too old | Update to `compileSdkVersion 34` |
-| `Failed to resolve io.agora` | Agora plugin issue | `flutter pub upgrade agora_rtc_engine` |
-| `Failed to resolve com.stripe` | Stripe plugin issue | `flutter pub upgrade flutter_stripe` |
-| `Duplicate class com.google.android.gms` | Plugin conflict | Usually fixed by updating Firebase |
-| `cannot find symbol` | Java/Kotlin compile error | Check ProGuard rules |
-| `Keystore not found` | Signing config issue | Create `key.properties` & verify path |
+| Error                                          | Cause                     | Fix                                    |
+| ---------------------------------------------- | ------------------------- | -------------------------------------- |
+| `Gradle 7.x not compatible`                    | Gradle version too old    | Update to `gradle-8.2-all.zip`         |
+| `Android Gradle plugin version X incompatible` | Plugin version too old    | Update to `gradle:8.2.0`               |
+| `compileSdkVersion too low`                    | SDK version too old       | Update to `compileSdkVersion 34`       |
+| `Failed to resolve io.agora`                   | Agora plugin issue        | `flutter pub upgrade agora_rtc_engine` |
+| `Failed to resolve com.stripe`                 | Stripe plugin issue       | `flutter pub upgrade flutter_stripe`   |
+| `Duplicate class com.google.android.gms`       | Plugin conflict           | Usually fixed by updating Firebase     |
+| `cannot find symbol`                           | Java/Kotlin compile error | Check ProGuard rules                   |
+| `Keystore not found`                           | Signing config issue      | Create `key.properties` & verify path  |
 
 ---
 
@@ -382,6 +389,7 @@ flutter build ios --release
 ---
 
 **Need detailed reference?** Check:
+
 - [ANDROID_BUILD_TROUBLESHOOTING.md](ANDROID_BUILD_TROUBLESHOOTING.md) — Comprehensive guide
 - [ANDROID_BUILD_FIXES.md](ANDROID_BUILD_FIXES.md) — Quick reference
 

@@ -1,0 +1,28 @@
+name: Autofix and PR
+on:
+  schedule: [{ cron: "0 3 * * *" }]
+jobs:
+  autofix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install
+        run: npm ci
+      - name: ESLint fix
+        run: npx eslint 'src/**/*.{js,ts,tsx}' --fix
+      - name: Prettier
+        run: npx prettier --write .
+      - name: Codemods
+        run: npx jscodeshift -t codemods/fix-pattern.js src
+      - name: Commit fixes
+        run: |
+          git config user.name "autofix-bot"
+          git checkout -b autofix/${{ github.run_id }}
+          git add -A && git commit -m "autofix: lint & codemods" || echo "no changes"
+          git push origin HEAD
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v5
+        with:
+          branch: autofix/${{ github.run_id }}
+          title: "autofix: lint & codemods"
+          body: "Automated fixes. CI will run on this branch."

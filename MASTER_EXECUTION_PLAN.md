@@ -9,6 +9,7 @@
 ## 📊 CURRENT STATE (PRE-EXECUTION)
 
 ### Completed Phases ✅
+
 - [x] **Phase 1: SECURITY** - Hardcoded credentials removed, dotenv configured
 - [x] **Phase 2: LOGGING** - print() → AppLogger in critical files
 - [x] **Phase 5 (partial): CODE MODERNIZATION** - Duplicate files removed
@@ -16,6 +17,7 @@
 - [x] **Phase 8 (partial): BEST PRACTICES** - Linting rules enabled
 
 ### Remaining Phases (IN PROGRESS)
+
 - **Phase 3: STATE MANAGEMENT** - 80+ StatefulWidget files to convert to Riverpod
 - **Phase 4: DEPENDENCIES** - All direct deps up-to-date (no action needed)
 - **Phase 5 (complete): CODE MODERNIZATION** - Fix deprecated APIs, TODO comments, dead code
@@ -33,12 +35,14 @@
 
 **Files identified:** 80+ files
 **Strategy:**
+
 1. Group by priority:
    - **Tier 1 (Critical):** Pages, routes, high-state widgets (20 files)
    - **Tier 2 (Important):** Dialogs, overlays, intermediate state (30 files)
    - **Tier 3 (Nice-to-Have):** Animations, decorative widgets (30 files)
 
 2. Conversion pattern:
+
    ```dart
    // OLD: StatefulWidget + setState()
    class MyWidget extends StatefulWidget {
@@ -68,6 +72,7 @@
    ```
 
 **High-priority files (Tier 1):**
+
 - [ ] `lib/features/home_page.dart` (HomePage)
 - [ ] `lib/features/app/screens/home_page.dart` (HomePage variant)
 - [ ] `lib/features/app/screens/splash_page.dart` (SplashPage)
@@ -84,7 +89,7 @@
 - [ ] `lib/shared/widgets/skeleton_loaders.dart` (ShimmerSkeleton)
 - [ ] `lib/shared/gift_selector.dart` (GiftSelector)
 - [ ] `lib/shared/live_room_card.dart` (LiveRoomCard)
-- [ ] `lib/shared/club_background.dart` (_AnimatedParticles)
+- [ ] `lib/shared/club_background.dart` (\_AnimatedParticles)
 - [ ] `lib/shared/debug_wrapper.dart` (DebugWrapper)
 - [ ] `lib/shared/error_boundary.dart` (ErrorBoundary)
 - [ ] `lib/core/error/error_boundary.dart` (ErrorBoundary variant)
@@ -107,6 +112,7 @@
 ### PHASE 5: CODE MODERNIZATION (continued)
 
 **Remaining work:**
+
 1. Fix deprecated APIs:
    - `ignore: deprecated_member_use` comments in voice_room_controls.dart
    - Radio/RadioGroup patterns
@@ -134,7 +140,9 @@
 ### PHASE 6: TEST SUITE (continued)
 
 **Remaining work:**
+
 1. Regenerate mocks:
+
    ```bash
    flutter pub run build_runner build --delete-conflicting-outputs
    ```
@@ -155,6 +163,7 @@
 ### PHASE 7: RUNTIME VALIDATION
 
 **Validation checklist:**
+
 - [ ] **WEB:**
   - [ ] Login (Google OAuth)
   - [ ] Create room
@@ -187,6 +196,7 @@
 ### PHASE 8: BEST PRACTICES (continued)
 
 **Remaining work:**
+
 1. Add health check endpoint:
    - `lib/api/health_check.dart`
    - Firebase Cloud Functions trigger
@@ -208,6 +218,7 @@
 ### PHASE 9: CI/CD & DEPLOYMENT
 
 **Remaining work:**
+
 1. GitHub Actions workflow:
    - Trigger: on every push to `main` and `develop`
    - Steps: analyze → test → build → deploy
@@ -241,6 +252,7 @@
 ### PHASE 10: FINALIZE FOR PUBLIC RELEASE
 
 **Pre-launch validation:**
+
 - [ ] `flutter analyze` → 0 errors
 - [ ] `flutter test` → all tests pass
 - [ ] No secrets in `.git/` (verify with `git log -p`)
@@ -253,6 +265,7 @@
 - [ ] Monitoring alerts set up
 
 **Launch checklist:**
+
 - [ ] Privacy policy + Terms of Service deployed
 - [ ] Community guidelines published
 - [ ] Support email functional (`support@mixandmingle.app`)
@@ -266,19 +279,19 @@
 
 ## ⏱️ TOTAL TIMELINE
 
-| Phase | Hours | Days | Status |
-|-------|-------|------|--------|
-| Phase 1: Security | 4 | 1 | ✅ DONE |
-| Phase 2: Logging | 6 | 1 | ✅ DONE |
-| Phase 3: State Management | 40 | 5 | 🔄 IN PROGRESS |
-| Phase 4: Dependencies | 2 | 0.5 | ✅ DONE |
-| Phase 5: Code Modernization | 16 | 2 | 🔄 IN PROGRESS |
-| Phase 6: Test Suite | 8 | 1 | 🔄 IN PROGRESS |
-| Phase 7: Runtime Validation | 24 | 3 | ⏳ PENDING |
-| Phase 8: Best Practices | 8 | 1 | 🔄 IN PROGRESS |
-| Phase 9: CI/CD & Deployment | 32 | 4 | ⏳ PENDING |
-| Phase 10: Finalize | 16 | 2 | ⏳ PENDING |
-| **TOTAL** | **156 hours** | **21 days** | 🚀 IN PROGRESS |
+| Phase                       | Hours         | Days        | Status         |
+| --------------------------- | ------------- | ----------- | -------------- |
+| Phase 1: Security           | 4             | 1           | ✅ DONE        |
+| Phase 2: Logging            | 6             | 1           | ✅ DONE        |
+| Phase 3: State Management   | 40            | 5           | 🔄 IN PROGRESS |
+| Phase 4: Dependencies       | 2             | 0.5         | ✅ DONE        |
+| Phase 5: Code Modernization | 16            | 2           | 🔄 IN PROGRESS |
+| Phase 6: Test Suite         | 8             | 1           | 🔄 IN PROGRESS |
+| Phase 7: Runtime Validation | 24            | 3           | ⏳ PENDING     |
+| Phase 8: Best Practices     | 8             | 1           | 🔄 IN PROGRESS |
+| Phase 9: CI/CD & Deployment | 32            | 4           | ⏳ PENDING     |
+| Phase 10: Finalize          | 16            | 2           | ⏳ PENDING     |
+| **TOTAL**                   | **156 hours** | **21 days** | 🚀 IN PROGRESS |
 
 **With aggressive Copilot automation:** 10–14 days of focused work
 **Realistic single-developer timeline:** 3–4 weeks

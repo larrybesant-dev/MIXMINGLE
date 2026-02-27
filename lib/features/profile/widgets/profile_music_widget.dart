@@ -254,12 +254,12 @@ class ProfileMusicEditor extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
-          Row(
+          const Row(
             children: [
-              const Icon(Icons.music_note,
+              Icon(Icons.music_note,
                   color: NeonColors.neonPurple, size: 18),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 'Profile Music',
                 style: TextStyle(
                   color: Colors.white,
@@ -473,7 +473,7 @@ class _TrackPickerSheetState extends State<_TrackPickerSheet> {
           const SizedBox(height: 10),
           // Source picker
           DropdownButtonFormField<TrackSource>(
-            value: _source,
+            initialValue: _source,
             dropdownColor: const Color(0xFF1A1F3A),
             style: const TextStyle(color: Colors.white),
             decoration: InputDecoration(

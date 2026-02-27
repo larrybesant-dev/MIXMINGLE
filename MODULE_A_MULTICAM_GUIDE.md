@@ -1,4 +1,5 @@
 # 🎥 MODULE A: MULTI-CAM SYSTEM
+
 ## Complete Implementation Guide
 
 **Status**: Ready to Build
@@ -11,6 +12,7 @@
 ## 🎯 FEATURES
 
 ### Core Features
+
 - ✅ Multi-camera grid (4-20 simultaneous cams)
 - ✅ Dynamic responsive layout
 - ✅ Spotlight mode (pin 1 camera)
@@ -22,6 +24,7 @@
 - ✅ Camera "on-air" indicators
 
 ### User Experience
+
 - Toggle between grid view and spotlight
 - Pinch-to-zoom in spotlight
 - Camera preview before going live
@@ -64,6 +67,7 @@ lib/
 ## 1️⃣ MODELS
 
 ### `camera_state.dart`
+
 ```dart
 enum CameraQuality {
   low,      // 360p, 500 kbps
@@ -130,6 +134,7 @@ class CameraState {
 ```
 
 ### `camera_quality.dart`
+
 ```dart
 class CameraQualitySettings {
   final CameraQuality quality;
@@ -185,6 +190,7 @@ class CameraQualitySettings {
 ## 2️⃣ SERVICE
 
 ### `camera_service.dart`
+
 ```dart
 class CameraService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -442,6 +448,7 @@ class CameraService {
 ## 3️⃣ PROVIDERS
 
 ### `camera_providers.dart`
+
 ```dart
 final cameraServiceProvider = Provider((ref) => CameraService());
 

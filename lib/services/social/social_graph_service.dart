@@ -10,8 +10,9 @@ class SocialGraphService {
   Future<void> followUser(String targetUserId) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) throw Exception('User not authenticated');
-    if (currentUser.uid == targetUserId)
+    if (currentUser.uid == targetUserId) {
       throw Exception('Cannot follow yourself');
+    }
 
     final batch = _firestore.batch();
 

@@ -39,8 +39,9 @@ class FollowingListPage extends StatelessWidget {
                     .doc(followedId)
                     .get(),
                 builder: (context, userSnap) {
-                  if (!userSnap.hasData)
+                  if (!userSnap.hasData) {
                     return const ListTile(title: Text('Loading...'));
+                  }
                   final user = userSnap.data!.data() as Map<String, dynamic>?;
                   final name =
                       user?['displayName'] ?? user?['username'] ?? followedId;

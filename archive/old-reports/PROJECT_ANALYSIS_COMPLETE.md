@@ -365,6 +365,7 @@ functions/src/
 **Problem:** Trying to pass `DocumentSnapshot` to functions expecting `Room` model
 
 **Fix Required:**
+
 ```dart
 // CURRENT (BROKEN):
 children: rooms.map((room) => _buildRoomCard(room)).toList()
@@ -377,6 +378,7 @@ children: rooms.map((doc) {
 ```
 
 **Also Missing:**
+
 - `LoadingSpinner` widget not imported
 - `room.participantCount` doesn't exist (use `room.participantIds.length`)
 - `room.type` doesn't exist (use `room.roomType`)
@@ -390,6 +392,7 @@ children: rooms.map((doc) {
 **Problem:** Using `FilePicker` without importing package
 
 **Fix Required:**
+
 ```yaml
 # pubspec.yaml - ADD:
 dependencies:
@@ -402,6 +405,7 @@ import 'package:file_picker/file_picker.dart';
 ```
 
 **Also Fix Method Signature:**
+
 ```dart
 // CURRENT (BROKEN):
 final sharedFile = await fileShareService.uploadFileFromBytes(
@@ -430,6 +434,7 @@ final sharedFile = await fileShareService.uploadFileFromBytes(
 **Problem:** `reviewReport()` expects 3 arguments but only 2 provided
 
 **Fix Required:**
+
 ```dart
 // CURRENT:
 await moderationService.reviewReport(report.id, status);
@@ -447,12 +452,14 @@ await moderationService.reviewReport(
 ### **4. HMS Video Service Web Import** ❗LOW PRIORITY
 
 **Files:**
+
 - `lib/services/hms_video_service_web.dart`
 - `lib/services/hms_video_service_stub.dart`
 
 **Problem:** Using deprecated `dart:js_util` (removed in Dart 3.3+)
 
 **Solution:** Either:
+
 1. **Delete these files** (HMS is disabled, Agora is active)
 2. **Or update to** `package:web` for JS interop
 
@@ -469,6 +476,7 @@ await moderationService.reviewReport(
 **Diagnosis:** This might be a **false positive** from the analyzer. `StateProvider` is part of Riverpod 2.x
 
 **Fix Options:**
+
 1. Clean build: `flutter clean && flutter pub get`
 2. If issue persists, replace with `NotifierProvider`:
 
@@ -496,9 +504,11 @@ class MatchFilterNotifier extends Notifier<MatchesFilter> {
 ## ⚠️ **MISSING FEATURES (Not Broken, Just Incomplete)**
 
 ### **1. Room Deletion Cascade**
+
 **Status:** UI exists, but no Firestore cleanup
 
 **What's Missing:**
+
 ```dart
 // When room is deleted, need to also delete:
 - All messages in /messages where roomId == deletedRoomId
@@ -507,25 +517,28 @@ class MatchFilterNotifier extends Notifier<MatchesFilter> {
 ```
 
 **Recommended:** Create Cloud Function:
+
 ```typescript
 // functions/src/cleanup.ts
 export const onRoomDelete = functions.firestore
-  .document('rooms/{roomId}')
+  .document("rooms/{roomId}")
   .onDelete(async (snap, context) => {
     const roomId = context.params.roomId;
 
     // Delete all messages
-    const messages = await admin.firestore()
-      .collection('messages')
-      .where('roomId', '==', roomId)
+    const messages = await admin
+      .firestore()
+      .collection("messages")
+      .where("roomId", "==", roomId)
       .get();
 
     const batch = admin.firestore().batch();
-    messages.docs.forEach(doc => batch.delete(doc.ref));
+    messages.docs.forEach((doc) => batch.delete(doc.ref));
     await batch.commit();
 
     // Delete storage folder
-    await admin.storage()
+    await admin
+      .storage()
       .bucket()
       .deleteFiles({ prefix: `room_media/${roomId}/` });
   });
@@ -534,9 +547,11 @@ export const onRoomDelete = functions.firestore
 ---
 
 ### **2. Speed Dating Rotation Logic**
+
 **Status:** Basic matching works, but no automatic rotation
 
 **What's Missing:**
+
 - Timer-based automatic partner switching
 - Round completion notifications
 - Session history tracking
@@ -546,9 +561,11 @@ export const onRoomDelete = functions.firestore
 ---
 
 ### **3. Timeline Posts**
+
 **Status:** Not implemented
 
 **What's Missing:**
+
 - Create post UI
 - Feed algorithm
 - Post model and Firestore collection
@@ -559,9 +576,11 @@ export const onRoomDelete = functions.firestore
 ---
 
 ### **4. Real-time Viewer Counts**
+
 **Status:** Field exists but not updating in real-time
 
 **Fix:** Use Firestore `FieldValue.increment()`:
+
 ```dart
 // When user joins room:
 await roomsRef.doc(roomId).update({
@@ -581,6 +600,7 @@ await roomsRef.doc(roomId).update({
 ## 📋 **NON-CRITICAL ISSUES (115)**
 
 These are mostly linter warnings:
+
 - **Unused imports:** ~30 files
 - **Unused variables:** ~20 instances
 - **Unnecessary casts:** ~10 instances
@@ -594,6 +614,7 @@ These are mostly linter warnings:
 ## ✅ **WHAT'S ALREADY WORKING (95% of app)**
 
 ### **Authentication**
+
 - ✅ Phone authentication with OTP
 - ✅ Google Sign-In
 - ✅ Email/password auth
@@ -602,6 +623,7 @@ These are mostly linter warnings:
 - ✅ Auth guards on routes
 
 ### **Video Calling**
+
 - ✅ Agora RTC Engine integrated
 - ✅ Token generation via Cloud Function
 - ✅ Video room UI with controls
@@ -610,6 +632,7 @@ These are mostly linter warnings:
 - ✅ High-quality audio profile for karaoke
 
 ### **Messaging**
+
 - ✅ Room chat with real-time updates
 - ✅ Direct messages (1-on-1)
 - ✅ Typing indicators
@@ -620,6 +643,7 @@ These are mostly linter warnings:
 - ✅ Presence indicators (online/offline)
 
 ### **Rooms**
+
 - ✅ Room creation (public/private)
 - ✅ Room browsing with categories
 - ✅ Room search and filters
@@ -629,6 +653,7 @@ These are mostly linter warnings:
 - ✅ Room settings
 
 ### **Social Features**
+
 - ✅ User profiles
 - ✅ Follow/unfollow
 - ✅ Follower/following lists
@@ -638,6 +663,7 @@ These are mostly linter warnings:
 - ✅ Mutual matches
 
 ### **Monetization**
+
 - ✅ Virtual coin system
 - ✅ Coin purchases (Stripe)
 - ✅ Tipping in rooms
@@ -647,6 +673,7 @@ These are mostly linter warnings:
 - ✅ Revenue analytics
 
 ### **Gamification**
+
 - ✅ Badge system (20+ badges)
 - ✅ Achievement tracking
 - ✅ User levels and XP
@@ -655,6 +682,7 @@ These are mostly linter warnings:
 - ✅ Activity tracking
 
 ### **Speed Dating**
+
 - ✅ Session creation
 - ✅ Partner matching
 - ✅ Like/pass decisions
@@ -662,6 +690,7 @@ These are mostly linter warnings:
 - ✅ Chat unlocking
 
 ### **Events**
+
 - ✅ Event creation
 - ✅ Event browsing
 - ✅ Event categories
@@ -669,6 +698,7 @@ These are mostly linter warnings:
 - ✅ Attendee lists
 
 ### **Moderation**
+
 - ✅ Report users
 - ✅ Block users
 - ✅ Admin dashboard
@@ -676,6 +706,7 @@ These are mostly linter warnings:
 - ✅ Ban/warning system
 
 ### **Notifications**
+
 - ✅ In-app notifications
 - ✅ Notification center
 - ✅ Push notifications (Firebase Messaging)
@@ -686,6 +717,7 @@ These are mostly linter warnings:
 ## 🚀 **DEPLOYMENT CHECKLIST**
 
 ### **Pre-Production**
+
 - [ ] Fix 15 critical compilation errors
 - [ ] Run `flutter analyze` - resolve all errors
 - [ ] Run `dart fix --apply` - auto-fix warnings
@@ -701,6 +733,7 @@ These are mostly linter warnings:
 - [ ] Test on Desktop browsers
 
 ### **Performance**
+
 - [ ] Enable WASM compilation (already dry-run tested)
 - [ ] Optimize images (compression)
 - [ ] Enable Firestore offline persistence
@@ -709,6 +742,7 @@ These are mostly linter warnings:
 - [ ] Add loading skeletons for better UX
 
 ### **Security**
+
 - [ ] Review all Firestore rules
 - [ ] Enable App Check
 - [ ] Add rate limiting on Cloud Functions
@@ -720,20 +754,20 @@ These are mostly linter warnings:
 
 ## 📈 **FEATURE COMPLETENESS**
 
-| Feature Category | Completion | Notes |
-|---|---|---|
-| Authentication | 100% | Phone, Google, Email working |
-| Video Calling | 100% | Agora fully integrated |
-| Messaging | 95% | Missing file picker import |
-| Rooms | 98% | Missing deletion cascade |
-| Social | 100% | Follow/unfollow working |
-| Speed Dating | 90% | Missing auto-rotation |
-| Monetization | 100% | Stripe, tips, subscriptions |
-| Gamification | 100% | Badges, levels, streaks |
-| Events | 95% | Core functionality complete |
-| Moderation | 98% | Minor method signature fix |
-| Notifications | 100% | Push & in-app working |
-| Profile | 100% | Editing, avatar upload working |
+| Feature Category | Completion | Notes                          |
+| ---------------- | ---------- | ------------------------------ |
+| Authentication   | 100%       | Phone, Google, Email working   |
+| Video Calling    | 100%       | Agora fully integrated         |
+| Messaging        | 95%        | Missing file picker import     |
+| Rooms            | 98%        | Missing deletion cascade       |
+| Social           | 100%       | Follow/unfollow working        |
+| Speed Dating     | 90%        | Missing auto-rotation          |
+| Monetization     | 100%       | Stripe, tips, subscriptions    |
+| Gamification     | 100%       | Badges, levels, streaks        |
+| Events           | 95%        | Core functionality complete    |
+| Moderation       | 98%        | Minor method signature fix     |
+| Notifications    | 100%       | Push & in-app working          |
+| Profile          | 100%       | Editing, avatar upload working |
 
 **Overall: 97% Complete**
 
@@ -742,6 +776,7 @@ These are mostly linter warnings:
 ## 🎯 **RECOMMENDED ACTION PLAN**
 
 ### **Phase 1: Critical Fixes (1-2 hours)**
+
 1. Fix room discovery type mismatches
 2. Add FilePicker dependency
 3. Fix admin dashboard method signature
@@ -749,18 +784,21 @@ These are mostly linter warnings:
 5. Run `flutter clean && flutter pub get`
 
 ### **Phase 2: Feature Completion (2-3 hours)**
+
 1. Add room deletion Cloud Function
 2. Add subscription Firestore rules
 3. Fix room viewer count updates
 4. Test all critical paths
 
 ### **Phase 3: Polish (1-2 hours)**
+
 1. Run `dart fix --apply`
 2. Clean up unused imports
 3. Add missing Firestore indexes
 4. Test on multiple browsers
 
 ### **Phase 4: Documentation (1 hour)**
+
 1. Update README.md
 2. Create deployment guide
 3. Document API endpoints
@@ -775,6 +813,7 @@ These are mostly linter warnings:
 Your Mix & Mingle app is **exceptionally well-built** with 97% feature completeness. The architecture is solid, the code is clean, and most features are production-ready. The remaining 15 critical errors are minor type mismatches and missing imports that can be fixed in 1-2 hours.
 
 The app has:
+
 - ✅ 33 service classes (all functional)
 - ✅ 30+ data models
 - ✅ 60+ Riverpod providers
@@ -791,4 +830,3 @@ The app has:
 **Generated:** January 24, 2026
 **Last Updated:** After subscription service creation
 **Status:** Ready for final bug fixes
-

@@ -2,12 +2,12 @@ name: CI - Quality Checks
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
 
 env:
-  FLUTTER_VERSION: '3.41.1'
+  FLUTTER_VERSION: "3.41.1"
 
 jobs:
   analyze:
@@ -23,7 +23,7 @@ jobs:
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: 'stable'
+          channel: "stable"
           cache: true
 
       - name: 📦 Get dependencies
@@ -96,12 +96,12 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: '17'
+          java-version: "17"
 
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: 🔥 Install Firebase CLI
         run: npm install -g firebase-tools
@@ -130,7 +130,7 @@ jobs:
   deploy-firestore-rules:
     name: 🚀 Deploy Firestore Rules
     runs-on: ubuntu-latest
-    needs: [ analyze, firestore-rules ]
+    needs: [analyze, firestore-rules]
     if: ${{ github.ref == 'refs/heads/main' && github.event_name == 'push' }}
 
     steps:
@@ -140,7 +140,7 @@ jobs:
       - name: 🟢 Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: 🔥 Install Firebase CLI
         run: npm install -g firebase-tools

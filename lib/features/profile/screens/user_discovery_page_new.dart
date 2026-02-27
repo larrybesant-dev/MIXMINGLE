@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/design_system/design_constants.dart';
 import '../../../shared/widgets/club_background.dart';
 import '../../../shared/widgets/neon_components.dart';
+import '../../../shared/widgets/skeleton_loaders.dart';
 import '../../../shared/providers/auth_providers.dart';
 import '../../../shared/models/discovery_filters.dart';
 
@@ -100,7 +101,21 @@ class _UserDiscoveryPageState extends ConsumerState<UserDiscoveryPage> {
           ],
         ),
         body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
+            ? GridView.builder(
+                padding: const EdgeInsets.all(16),
+                gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.75,
+                  crossAxisSpacing: 12,
+                  mainAxisSpacing: 12,
+                ),
+                itemCount: 6,
+                itemBuilder: (_, __) => const SkeletonCard(
+                  borderRadius: 12,
+                  padding: EdgeInsets.zero,
+                ),
+              )
             : _users.isEmpty
                 ? _buildEmptyState()
                 : GridView.builder(
@@ -237,23 +252,22 @@ class _UserDiscoveryPageState extends ConsumerState<UserDiscoveryPage> {
           Icon(
             Icons.search_off,
             size: 80,
-            color: DesignColors.white
-                .withValues(alpha: 255, red: 255, green: 255, blue: 255),
+            color: DesignColors.textGray.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 16),
-          Text(
+          const Text(
             'No users found',
             style: TextStyle(
-              color: DesignColors.white
-                  .withValues(alpha: 255, red: 255, green: 255, blue: 255),
+              color: DesignColors.textPrimary,
               fontSize: 18,
+              fontWeight: FontWeight.bold,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Try adjusting your filters',
             style: TextStyle(
-              color: DesignColors.white,
+              color: DesignColors.textGray.withValues(alpha: 0.7),
               fontSize: 14,
             ),
           ),

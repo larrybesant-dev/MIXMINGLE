@@ -9,6 +9,7 @@
 ## 🎯 IMMEDIATE ACTIONS (Next 2 Hours)
 
 ### 1. DELETE BROKEN TEST FILES (5 minutes)
+
 ```bash
 # Remove files that import deleted login_page.dart
 rm test/login_flow_test.dart
@@ -20,16 +21,19 @@ rm test/widgets/login_page_test.dart
 ---
 
 ### 2. REGENERATE TEST MOCKS (10 minutes)
+
 ```bash
 # Rebuild mocks after file cleanup
 flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
 **Expected output:**
+
 - Regenerates `test/helpers/mock_firebase.mocks.dart`
 - Fixes import errors
 
 **What to check:**
+
 ```
 ✅ "Build complete" message
 ✅ No "unresolved symbol" errors
@@ -38,6 +42,7 @@ flutter pub run build_runner build --delete-conflicting-outputs
 ---
 
 ### 3. RUN FULL TEST SUITE (15 minutes)
+
 ```bash
 # Run all tests
 flutter test
@@ -48,11 +53,13 @@ flutter test test/services/auth_service_test.dart
 ```
 
 **Expected:**
+
 - Most tests pass (some auth mock assertions may fail — that's OK for MVP)
 - No compilation errors
 - No missing imports
 
 **What to check:**
+
 ```
 ✅ No "undefined class" errors
 ✅ No "missing import" errors
@@ -62,12 +69,14 @@ flutter test test/services/auth_service_test.dart
 ---
 
 ### 4. TEST ON WEB PLATFORM (45 minutes)
+
 ```bash
 # Launch app on Chrome
 flutter run -d chrome --no-hot
 ```
 
 **Test checklist:**
+
 - [ ] Splash screen loads (3 seconds)
 - [ ] Login page appears
 - [ ] Google sign-in works (or test account login)
@@ -80,6 +89,7 @@ flutter run -d chrome --no-hot
 - [ ] No crashes in Crashlytics (check Firebase Console)
 
 **If something fails:**
+
 ```
 Take note of error message
 Check Crashlytics for stack trace
@@ -118,6 +128,7 @@ After completing all 4 items above, verify:
 **Troubleshooting guide:**
 
 ### Test file deletion fails
+
 ```bash
 # Check if files exist
 ls test/login_flow_test.dart
@@ -127,6 +138,7 @@ ls test/widgets/login_page_test.dart
 ```
 
 ### Mock regeneration fails
+
 ```bash
 # Clean build_runner cache
 flutter clean
@@ -137,6 +149,7 @@ flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
 ### Tests won't compile
+
 ```bash
 # Check for import errors
 flutter analyze
@@ -147,6 +160,7 @@ flutter test
 ```
 
 ### Web app crashes
+
 ```bash
 # Check browser console (F12 → Console)
 # Check Crashlytics in Firebase Console
@@ -163,6 +177,7 @@ flutter run -d chrome --no-hot
 ## 📞 WHEN TO REACH OUT
 
 If any of these happen:
+
 - ❌ Multiple test failures (more than 3–4)
 - ❌ Web app crashes on every flow
 - ❌ "undefined symbol" or "missing import" errors
@@ -174,13 +189,13 @@ If any of these happen:
 
 ## ⏰ TIME ESTIMATE
 
-| Task | Time | Notes |
-|------|------|-------|
-| Delete test files | 5 min | Quick |
-| Regenerate mocks | 10 min | Automated |
-| Run test suite | 15 min | Compile + run |
-| Test on Web | 45 min | Manual testing all flows |
-| **TOTAL** | **75 min** | ~1.5 hours |
+| Task              | Time       | Notes                    |
+| ----------------- | ---------- | ------------------------ |
+| Delete test files | 5 min      | Quick                    |
+| Regenerate mocks  | 10 min     | Automated                |
+| Run test suite    | 15 min     | Compile + run            |
+| Test on Web       | 45 min     | Manual testing all flows |
+| **TOTAL**         | **75 min** | ~1.5 hours               |
 
 **Add 30 min buffer for troubleshooting if needed.**
 
@@ -206,16 +221,19 @@ You're READY FOR NEXT PHASE when:
 Once today's actions complete:
 
 ### iOS Build (45 min)
+
 ```bash
 flutter build ipa --release --obfuscate --split-debug-info
 ```
 
 ### Android Build (30 min)
+
 ```bash
 flutter build appbundle --release --obfuscate --split-debug-info
 ```
 
 ### Firebase Hosting Deploy (1 hour)
+
 ```bash
 flutter build web --release
 firebase deploy --only hosting
@@ -228,6 +246,7 @@ firebase deploy --only hosting
 ---
 
 **Questions?** Refer to:
+
 - `MVP_LAUNCH_ROADMAP.md` — Full launch plan
 - `MASTER_EXECUTION_PLAN.md` — Phase breakdown
 - `LAUNCH_STATUS_TODAY.md` — Current progress

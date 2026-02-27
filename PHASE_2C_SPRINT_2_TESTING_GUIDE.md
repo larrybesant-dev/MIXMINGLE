@@ -9,6 +9,7 @@
 ## Overview
 
 Phase 2C Sprint 2 implements four sequential host/moderator control stages:
+
 1. **Stage 1**: Remove User - Force-eject participants
 2. **Stage 2**: Mute User - Silent audio without ejection
 3. **Stage 3**: Lock Room - Prevent new joins
@@ -19,6 +20,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
 ## Architecture Summary
 
 ### Backend (Service Layer)
+
 - **RoomManagerService**: Business logic with authorization checks (host/moderator required)
   - `removeUser(roomId, userId)` - Adds user to removedUsers list
   - `muteUser(roomId, userId, bool muted)` - Toggles mutedUsers list
@@ -27,6 +29,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
   - `canUserJoinRoom(roomId, userId)` - Pre-join validation
 
 ### State Management (Firestore)
+
 - **Room fields** added for Sprint 2 control:
   - `removedUsers: List<String>` - Force-removed user IDs
   - `mutedUsers: List<String>` - Muted user IDs
@@ -34,6 +37,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
   - `isRoomEnded: bool` - Room closure flag
 
 ### UI Layer
+
 - **RoomPage**:
   - Listeners for removed/locked/ended state
   - Shows dialogs informing users when control actions affect them
@@ -55,6 +59,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
 ## Testing Procedure
 
 ### Prerequisites
+
 - Two browser tabs/windows open, logged in as different users
 - One user should be the host/moderator, one should be a regular participant
 - Both in the same room (Stage 0)
@@ -64,6 +69,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
 **Goal**: Verify force-ejection works and user gets feedback
 
 **Test Steps**:
+
 1. Host opens ParticipantListSidebar (click "Show Panel" button bottom-right)
 2. Host clicks menu button (⋮) on participant entry
 3. Host selects "❌ Remove from Room"
@@ -80,6 +86,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
    - Menu shows "❌ Removed" (disabled option)
 
 **Verification Checklist**:
+
 - [ ] Removed user sees dialog and cannot dismiss it (barrierDismissible: false)
 - [ ] Removed user is auto-navigated out of room
 - [ ] Removed user cannot re-join (test by joining another room from list)
@@ -87,6 +94,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
 - [ ] Other participants don't see removed user in their sidebar
 
 **Common Issues & Fixes**:
+
 - If removed user isn't redirected: Check `popUntil(isFirst)` logic
 - If user can re-join: Verify `canUserJoinRoom` checks `removedUsers` list
 - If host can't see removed indicator: Check `room.removedUsers.contains(uid)`
@@ -98,6 +106,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
 **Goal**: Verify audio muting works without removing user
 
 **Test Steps**:
+
 1. Host clicks menu button (⋮) on participant
 2. Choose "🔇 Mute Audio" (or "🔊 Unmute" if already muted)
 3. **Expected Result (Technical)**:
@@ -112,6 +121,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
    - Muted user's own audio still works in their tab (only others can't hear them)
 
 **Verification Checklist**:
+
 - [ ] Muted user's tile shows 🔇 icon
 - [ ] Muted user's tile role doesn't change (still Speaker/Listener, not removed)
 - [ ] Host can toggle mute on/off
@@ -120,6 +130,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
 - [ ] Audio muting works for audience (web: verify JavaScript bridge called)
 
 **Common Issues & Fixes**:
+
 - If 🔇 icon doesn't appear: Check `room.mutedUsers.contains(uid)`
 - If toggle doesn't work: Check RoomManagerService has proper async/await
 - If web audio not muting: Verify agora_web.js function is called correctly
@@ -131,6 +142,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
 **Goal**: Verify new join attempts are prevented
 
 **Test Steps**:
+
 1. Host clicks 🔒 icon in RoomControls
 2. Icon changes to indicate locked state (highlighted in amber)
 3. Open third browser tab, try to join the room
@@ -144,6 +156,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
 7. **Expected Result**: User can join successfully
 
 **Verification Checklist**:
+
 - [ ] Lock icon highlights when locked (amber color)
 - [ ] Lock icon is unhighlighted when unlocked
 - [ ] New users are blocked from joining when locked
@@ -152,6 +165,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
 - [ ] Lock status syncs across host's sidebar show/hide
 
 **Common Issues & Fixes**:
+
 - If lock icon doesn't change: Verify `current.isRoomLocked` binding in RoomControls
 - If new users can still join: Check `canUserJoinRoom` pre-join validation
 - If lock button doesn't respond: Ensure `onLockRoom` handler calls properly
@@ -163,6 +177,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
 **Goal**: Verify room closure and user feedback
 
 **Test Steps**:
+
 1. All participants in room
 2. Host clicks "End Room" button
 3. **Expected Result (All Users)**:
@@ -184,6 +199,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
    - Room shows as "Ended" in room list
 
 **Verification Checklist**:
+
 - [ ] All participants see "Room Ended" dialog simultaneously
 - [ ] All can't dismiss dialog without clicking OK
 - [ ] All are navigated to home after acknowledging
@@ -192,6 +208,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
 - [ ] Ending room is a one-way operation (can't restart)
 
 **Common Issues & Fixes**:
+
 - If only host sees dialog: Check Riverpod listener for `isRoomEnded`
 - If users don't get redirected: Verify `popUntil(isFirst)` context
 - If room can be rejoined: Check `canUserJoinRoom` includes `isRoomEnded` check
@@ -201,6 +218,7 @@ Phase 2C Sprint 2 implements four sequential host/moderator control stages:
 ## Integration Tests
 
 ### Cross-User Synchronization 🔄
+
 Test that controls sync properly between multiple users:
 
 1. **Setup**: Three tabs open (Host, User A, User B)
@@ -222,6 +240,7 @@ Test that controls sync properly between multiple users:
    - [ ] Menu shows "Unmute" option
 
 ### Authorization Tests 🔐
+
 Verify only authorized users can perform actions:
 
 1. **Non-Host/Moderator tries actions**:
@@ -245,12 +264,14 @@ Verify only authorized users can perform actions:
 ## Performance Testing
 
 ### Network Load 📊
+
 - **Scenario**: Remove 10 users in rapid succession
   - [ ] Firestore updates complete within 2 seconds each
   - [ ] UI updates propagate within 1 second
   - [ ] No lag or freezing in sidebar
 
 ### Concurrent Operations 🔄
+
 - **Scenario**: Mute User A, lock room, remove User B simultaneously
   - [ ] All operations succeed
   - [ ] No race conditions in Firestore
@@ -275,30 +296,35 @@ Ensure existing features still work:
 
 ```markdown
 ### Stage 1: Remove User
+
 - [ ] PASS: Removed user sees dialog
 - [ ] PASS: Host sees removed indicator
 - [ ] PASS: User cannot re-join
 - Status: ✅ PASS / ⚠️ ISSUES / ❌ FAIL
 
 ### Stage 2: Mute User
+
 - [ ] PASS: Audio is muted
 - [ ] PASS: Icon shows 🔇
 - [ ] PASS: Can toggle mute
 - Status: ✅ PASS / ⚠️ ISSUES / ❌ FAIL
 
 ### Stage 3: Lock Room
+
 - [ ] PASS: New users blocked
 - [ ] PASS: Icon indicates lock
 - [ ] PASS: Can unlock
 - Status: ✅ PASS / ⚠️ ISSUES / ❌ FAIL
 
 ### Stage 4: End Room
+
 - [ ] PASS: All see dialog
 - [ ] PASS: All redirected
 - [ ] PASS: Room shows ended
 - Status: ✅ PASS / ⚠️ ISSUES / ❌ FAIL
 
 ### Integration Tests
+
 - [ ] Cross-user sync works
 - [ ] Authorization enforced
 - [ ] No regressions
@@ -312,6 +338,7 @@ Ensure existing features still work:
 ## Debugging Tips
 
 ### Firestore State Inspection
+
 ```
 1. Open Firebase Console → Firestore
 2. Navigate to rooms/{roomId}
@@ -320,6 +347,7 @@ Ensure existing features still work:
 ```
 
 ### Browser Console
+
 ```
 1. Open DevTools (F12)
 2. Look for DebugLog messages with emoji prefixes:
@@ -330,6 +358,7 @@ Ensure existing features still work:
 ```
 
 ### Riverpod Provider State
+
 ```
 1. Install Riverpod DevTools (VSCode extension)
 2. Watch agoraParticipantsProvider for participant updates
@@ -360,6 +389,7 @@ Ensure existing features still work:
 ## Questions & Support
 
 For test failures or issues:
+
 1. Check browser console for error messages
 2. Verify Firestore state matches expected
 3. Confirm authorization checks in RoomManagerService
@@ -370,4 +400,3 @@ For test failures or issues:
 **Testing Responsibility**: QA Test Team
 **Expected Duration**: 2-3 hours for full coverage
 **Blocker Severity**: High (host controls are critical for production)
-

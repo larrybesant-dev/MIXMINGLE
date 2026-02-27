@@ -213,28 +213,33 @@ Thanks for testing! Your input matters. 🙏
 **Create a Google Form with these questions:**
 
 ### Section 1: About You
+
 1. What device are you using? (Web PC, Android phone, Android tablet, iOS)
 2. What's your operating system? (Windows, Mac, Linux, Android version, iOS version)
 3. What's your internet speed? (Fast, Medium, Slow, Not sure)
 
 ### Section 2: First Impressions
+
 4. How easy was it to sign up? (Very easy → Very difficult)
 5. How easy was it to complete your profile? (Very easy → Very difficult)
 6. How long did it take to understand what Mix & Mingle does? (Immediately, Few minutes, Still confused)
 7. What was your first impression? (Open-ended)
 
 ### Section 3: Feature Testing
+
 8. Which features did you try? (Check all: Profile setup, Join room, Create room, RSVP event, Speed dating, Messaging, etc.)
 9. Which feature worked best? (Open-ended)
 10. Which feature was most confusing? (Open-ended)
 11. Which feature had bugs? (Open-ended)
 
 ### Section 4: Video/Audio Quality
+
 12. How was video quality? (Excellent → Poor → Didn't work)
 13. How was audio quality? (Excellent → Poor → Didn't work)
 14. Any connection issues? (Yes/No + details)
 
 ### Section 5: Overall Experience
+
 15. Would you use this regularly? (Definitely → Definitely not)
 16. Would you recommend to friends? (Definitely → Definitely not)
 17. What's the ONE thing we should improve? (Open-ended)
@@ -257,6 +262,7 @@ Thanks for testing! Your input matters. 🙏
 Short description of the issue
 
 **Platform:**
+
 - [ ] Web (Chrome)
 - [ ] Web (Firefox)
 - [ ] Web (Safari)
@@ -266,6 +272,7 @@ Short description of the issue
 E.g., Samsung Galaxy S21, Windows PC, etc.
 
 **Steps to Reproduce:**
+
 1. Go to...
 2. Click on...
 3. See error...
@@ -283,6 +290,7 @@ What actually happened?
 [If on web, check browser console]
 
 **Severity:**
+
 - [ ] Critical (App crashes or unusable)
 - [ ] High (Major feature broken)
 - [ ] Medium (Feature works but with issues)
@@ -299,6 +307,7 @@ Any other relevant information
 **How to know if testers are engaged:**
 
 ### Week 1 Metrics
+
 - ✅ 80%+ of invited testers sign up
 - ✅ 60%+ complete their profile
 - ✅ 40%+ join at least one room
@@ -306,6 +315,7 @@ Any other relevant information
 - ✅ 10%+ use the app 3+ times
 
 ### Engagement Indicators
+
 - Active in Discord/Slack
 - Submitting detailed bug reports
 - Asking questions about features
@@ -314,6 +324,7 @@ Any other relevant information
 - Creating their own events/rooms
 
 ### Red Flags
+
 - ⚠️ Low sign-up rate → Invitation unclear
 - ⚠️ High bounce rate → Onboarding confusing
 - ⚠️ No feedback → Testers not engaged
@@ -326,18 +337,21 @@ Any other relevant information
 **Ways to thank your testers:**
 
 ### Free Tier
+
 - Early adopter badge in app
 - Listed in "Founding Testers" page
 - Shoutout on social media
 - Free premium features for 6 months
 
 ### Paid Tier
+
 - $25 Amazon gift card for detailed feedback
 - $50 for finding critical bugs
 - $100 for most active tester
 - Swag (t-shirts, stickers)
 
 ### Community Tier
+
 - Featured user of the month
 - Invitation to virtual launch party
 - Direct line to founder/dev team
@@ -348,6 +362,7 @@ Any other relevant information
 ## 📞 Support Response Templates
 
 ### Response to Bug Report
+
 ```
 Hi [Name],
 
@@ -366,6 +381,7 @@ Best,
 ```
 
 ### Response to Feature Request
+
 ```
 Hi [Name],
 
@@ -383,6 +399,7 @@ Best,
 ```
 
 ### Response to Praise
+
 ```
 Hi [Name],
 
@@ -402,29 +419,34 @@ Best,
 ## 📈 Tester Engagement Plan
 
 ### Day 1
+
 - Send welcome email
 - Post Discord announcement
 - Monitor sign-ups
 - Respond to initial questions
 
 ### Day 3
+
 - Send "How's it going?" check-in
 - Share quick tip or feature highlight
 - Ask for first impressions
 
 ### Day 7
+
 - Send feedback survey
 - Thank active testers publicly
 - Share week 1 metrics
 - Preview upcoming features
 
 ### Day 14
+
 - Send "What we fixed" update
 - Show impact of their feedback
 - Invite to next testing phase
 - Ask who wants to stay involved
 
 ### Day 30
+
 - Send "1 month milestone" celebration
 - Share launch roadmap
 - Offer premium beta access
@@ -435,6 +457,7 @@ Best,
 ## 🚀 Ready to Invite Testers?
 
 **Checklist before sending invitations:**
+
 - [ ] App deployed and tested
 - [ ] Links work (web and Android)
 - [ ] Support channels ready
@@ -444,6 +467,7 @@ Best,
 - [ ] Monitoring dashboards open
 
 **Then:**
+
 1. Send invitations in batches (10-20 at a time)
 2. Monitor initial feedback
 3. Fix critical issues immediately
