@@ -296,25 +296,42 @@
         state.remoteUsers.set(String(user.uid), user);
         try {
           await state.client.subscribe(user, mediaType);
+          log('SUCCESS', `subscribe done uid=${user.uid} mediaType=${mediaType} hasVideo=${!!user.videoTrack} hasAudio=${!!user.audioTrack}`);
           if (mediaType === 'audio' && user.audioTrack) {
             user.audioTrack.play();
-            log('SUCCESS', `▶️ Playing remote audio uid=${user.uid}`);
           } else if (mediaType === 'video' && user.videoTrack) {
             const videoElementId = `mm_remote_video_el_${user.uid}`;
             const el = findElementByIdDeep(videoElementId);
             if (el) {
               user.videoTrack.play(el);
-              log('SUCCESS', `▶️ Playing remote video uid=${user.uid} into #${videoElementId}`);
+              log('SUCCESS', `▶️ Remote video attached uid=${user.uid} elementId=${videoElementId}`);
             } else {
-              log('WARNING', `Remote video element not ready yet uid=${user.uid} id=${videoElementId} — Flutter retry will attach`);
+              log('INFO', `Remote video element not ready uid=${user.uid} — Dart retry loop will attach`);
+              // 5-second safety watchdog: if the Dart retry loop missed this uid
+              // for any reason (DOM timing, brief unmount), force one last attempt.
+              setTimeout(() => {
+                const trackUser = state.remoteUsers.get(String(user.uid));
+                if (trackUser && trackUser.videoTrack) {
+                  const watchEl = findElementByIdDeep(videoElementId);
+                  if (watchEl) {
+                    trackUser.videoTrack.play(watchEl);
+                    log('SUCCESS', `▶️ Watchdog: remote video attached uid=${user.uid}`);
+                  } else {
+                    log('WARNING', `Watchdog: element still not found after 5s uid=${user.uid}`);
+                  }
+                }
+              }, 5000);
             }
           }
         } catch (subErr) {
-          log('ERROR', `Failed to subscribe uid=${user.uid}`, subErr);
+          log('ERROR', `Failed to subscribe uid=${user.uid} mediaType=${mediaType}`, subErr);
         }
-        // Notify Flutter
+        // Notify Flutter — MUST pass two separate string args to match
+        // Dart's allowInterop((String uid, String mediaType) {...}) signature.
+        // Passing a JS object as the first arg causes a Dart type-error that is
+        // silently swallowed by the catch below, making the callback a no-op.
         if (typeof window.agoraWeb.onRemoteUserPublished === 'function') {
-          try { window.agoraWeb.onRemoteUserPublished({ uid: String(user.uid), mediaType }); } catch (_) {}
+          try { window.agoraWeb.onRemoteUserPublished(String(user.uid), String(mediaType)); } catch (_) {}
         }
       });
 
@@ -637,14 +654,17 @@
 
     try {
       if (!state.localTracks.video && muted === false) {
-        log('WARNING', 'No local video track while enabling video; creating track now');
+        log('INFO', 'No local video track while enabling video; creating and publishing now');
         state.localTracks.video = await window.AgoraRTC.createCameraVideoTrack({
           encoderConfig: '720p_auto'
         });
+        log('SUCCESS', `Camera video track created uid=${state.currentUid}`);
 
         if (state.client && state.currentChannel) {
           await state.client.publish([state.localTracks.video]);
-          log('SUCCESS', 'Video track created and published from unmute request');
+          log('SUCCESS', `client.publish() done — remote peers will receive user-published(video) uid=${state.currentUid}`);
+        } else {
+          log('WARNING', `client.publish skipped — client=${!!state.client} channel=${state.currentChannel}`);
         }
       }
 
@@ -657,6 +677,7 @@
         log('SUCCESS', `Video ${muted ? 'disabled' : 'enabled'}`);
         return true;
       }
+      log('WARNING', 'agoraWebSetVideoMuted: no video track after all steps');
       return false;
     } catch (err) {
       log('ERROR', 'Failed to set video mute state', err);
@@ -705,21 +726,17 @@
   window.agoraWebPlayRemoteVideo = async function(uidStr, videoElementId) {
     try {
       const user = state.remoteUsers.get(String(uidStr));
-      if (!user) {
-        log('WARNING', `agoraWebPlayRemoteVideo: no remote user for uid=${uidStr}`);
-        return false;
-      }
-      if (!user.videoTrack) {
-        log('WARNING', `agoraWebPlayRemoteVideo: uid=${uidStr} has no video track yet`);
+      if (!user || !user.videoTrack) {
+        // user-published / subscribe not complete yet — Dart retry loop will retry
         return false;
       }
       const el = findElementByIdDeep(videoElementId);
       if (!el) {
-        log('WARNING', 'agoraWebPlayRemoteVideo target element not found', { videoElementId });
+        // HtmlElementView not yet in DOM — Dart retry loop will retry
         return false;
       }
-      user.videoTrack.play(el);
-      log('SUCCESS', 'Remote video attached to DOM element', { uid: uidStr, videoElementId });
+      await user.videoTrack.play(el);
+      log('SUCCESS', `Remote video attached uid=${uidStr} elementId=${videoElementId}`);
       return true;
     } catch (err) {
       log('ERROR', 'Failed to attach remote video to DOM element', err);

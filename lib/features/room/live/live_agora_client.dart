@@ -18,6 +18,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
 import 'live_room_schema.dart';
+import '../../../core/platform/web_platform_view_helper.dart';
+import '../../../services/agora/agora_platform_service.dart';
 
 // ── Events emitted to the controller ──────────────────────────────────────
 
@@ -58,6 +60,12 @@ final class ActiveSpeakerEvent extends VideoEngineEvent {
 final class EngineErrorEvent extends VideoEngineEvent {
   final String message;
   const EngineErrorEvent(this.message);
+}
+
+final class EngineConnectionStateEvent extends VideoEngineEvent {
+  final ConnectionStateType state;
+  final ConnectionChangedReasonType reason;
+  const EngineConnectionStateEvent(this.state, this.reason);
 }
 
 // ── Client ─────────────────────────────────────────────────────────────────
@@ -153,14 +161,41 @@ class LiveAgoraClient {
     if (!_initialized) throw StateError('Call initialize() first.');
     if (_inChannel) return;
 
-    final token = await _fetchToken(channelId: channelId, userId: userId);
+    final auth = await _fetchToken(channelId: channelId, userId: userId);
+    final token = auth.token;
+    final agoraUid = auth.uid;
     _channelId = channelId;
 
     if (kIsWeb) {
-      // Web path delegates to the existing platform service / web bridge
+      // Web path: actually initialize+join via the platform bridge.
       debugPrint('[VIDEO_ENGINE] Web join — using web bridge');
+      final appId = await _loadAppId();
+
+      final webInitialized = await AgoraPlatformService.initializeWeb(appId);
+      if (!webInitialized) {
+        final bridgeState = AgoraPlatformService.getWebBridgeState();
+        throw Exception('Web bridge failed to initialize. state=$bridgeState');
+      }
+
+      final joined = await AgoraPlatformService.joinChannel(
+        appId: appId,
+        channelName: channelId,
+        token: token,
+        uid: agoraUid.toString(),
+      );
+      if (!joined) {
+        final bridgeState = AgoraPlatformService.getWebBridgeState();
+        throw Exception(
+          'Web bridge failed to join channel. channel=$channelId uid=$agoraUid state=$bridgeState',
+        );
+      }
       _inChannel = true;
-      _emit(const EngineJoinedEvent(0));
+      _localUid = agoraUid;
+      debugPrint('[VIDEO_ENGINE-WEB] joinChannel done: agoraUid=$agoraUid \u2014 emitting EngineJoinedEvent (triggers Firestore agoraUid write)');
+      _emit(EngineJoinedEvent(agoraUid));
+
+      // Register JS→Dart callback for remote user publish events (diagnostic)
+      _registerWebRemoteUserCallback();
       return;
     }
 
@@ -177,7 +212,7 @@ class LiveAgoraClient {
     await _engine!.joinChannel(
       token:     token,
       channelId: channelId,
-      uid:       0, // 0 = server-assigned uid
+      uid:       agoraUid,
       options:   ChannelMediaOptions(
         channelProfile:       ChannelProfileType.channelProfileLiveBroadcasting,
         clientRoleType:       role,
@@ -196,9 +231,13 @@ class LiveAgoraClient {
   Future<void> leaveChannel() async {
     if (!_inChannel) return;
     if (kIsWeb) {
+      await AgoraPlatformService.leaveChannel();
       _inChannel = false;
+      _localUid = null;
       _channelUids.clear();
       _subscribedUids.clear();
+      _publishingVideo = false;
+      _publishingAudio = false;
       _emit(const EngineLeftEvent());
       return;
     }
@@ -248,7 +287,27 @@ class LiveAgoraClient {
   // ── Publishing ─────────────────────────────────────────────────────────────
 
   Future<void> startPublishingVideo() async {
-    if (_publishingVideo || kIsWeb || !_inChannel) return;
+    if (_publishingVideo || !_inChannel) return;
+    if (kIsWeb) {
+      debugPrint('[VIDEO_ENGINE-WEB] startPublishingVideo: calling AgoraPlatformService.setVideoMuted(false)');
+      final appId = await _loadAppId();
+      final webInitialized = await AgoraPlatformService.initializeWeb(appId);
+      if (!webInitialized) {
+        final bridgeState = AgoraPlatformService.getWebBridgeState();
+        throw Exception('Web bridge failed to initialize before video publish. state=$bridgeState');
+      }
+      final videoEnabled = await AgoraPlatformService.setVideoMuted(false);
+      debugPrint('[VIDEO_ENGINE-WEB] startPublishingVideo: setVideoMuted(false) → $videoEnabled');
+      if (!videoEnabled) {
+        final bridgeState = AgoraPlatformService.getWebBridgeState();
+        throw Exception(
+          'Web camera permission denied or unavailable. Please allow camera access in the browser and retry. state=$bridgeState',
+        );
+      }
+      _publishingVideo = true;
+      debugPrint('[VIDEO_ENGINE-WEB] startPublishingVideo: done, _publishingVideo=true');
+      return;
+    }
     await _engine?.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
     await _engine?.enableLocalVideo(true);
     await _engine?.muteLocalVideoStream(false);
@@ -259,7 +318,12 @@ class LiveAgoraClient {
   }
 
   Future<void> stopPublishingVideo() async {
-    if (!_publishingVideo || kIsWeb) return;
+    if (!_publishingVideo) return;
+    if (kIsWeb) {
+      await AgoraPlatformService.setVideoMuted(true);
+      _publishingVideo = false;
+      return;
+    }
     await _engine?.muteLocalVideoStream(true);
     await _engine?.enableLocalVideo(false);
     await _engine?.updateChannelMediaOptions(
@@ -272,7 +336,18 @@ class LiveAgoraClient {
   }
 
   Future<void> startPublishingAudio() async {
-    if (_publishingAudio || kIsWeb || !_inChannel) return;
+    if (_publishingAudio || !_inChannel) return;
+    if (kIsWeb) {
+      final micEnabled = await AgoraPlatformService.setMicMuted(false);
+      if (!micEnabled) {
+        final bridgeState = AgoraPlatformService.getWebBridgeState();
+        throw Exception(
+          'Web microphone permission denied or unavailable. Please allow microphone access in the browser and retry. state=$bridgeState',
+        );
+      }
+      _publishingAudio = true;
+      return;
+    }
     await _engine?.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
     await _engine?.enableLocalAudio(true);
     await _engine?.muteLocalAudioStream(false);
@@ -283,7 +358,12 @@ class LiveAgoraClient {
   }
 
   Future<void> stopPublishingAudio() async {
-    if (!_publishingAudio || kIsWeb) return;
+    if (!_publishingAudio) return;
+    if (kIsWeb) {
+      await AgoraPlatformService.setMicMuted(true);
+      _publishingAudio = false;
+      return;
+    }
     await _engine?.muteLocalAudioStream(true);
     await _engine?.enableLocalAudio(false);
     await _engine?.updateChannelMediaOptions(
@@ -311,6 +391,40 @@ class LiveAgoraClient {
       _engine = null;
     }
     _initialized = false;
+  }
+
+  // ── Web diagnostic callback ───────────────────────────────────────────────
+
+  /// Registers window.agoraWeb.onRemoteUserPublished so JS can notify Dart
+  /// when user-published fires.  Pure diagnostic — does not change state.
+  void _registerWebRemoteUserCallback() {
+    if (!kIsWeb) return;
+    try {
+      AgoraPlatformService.registerRemotePublishedCallback((uid, mediaType) {
+        debugPrint('[VIDEO_ENGINE-WEB] ★ JS user-published callback: uid=$uid mediaType=$mediaType');
+        final parsedUid = int.tryParse(uid);
+        if (parsedUid != null && parsedUid != 0) {
+          _channelUids.add(parsedUid);
+          if (mediaType == 'video') {
+            _emit(RemoteUserJoinedEvent(parsedUid));
+            // ~300ms optimisation: pre-register the platform view factory as
+            // soon as the Agora network delivers user-published — before Firestore
+            // propagates the remote participant's agoraUid.  When
+            // _WebRemoteVideoView mounts (Firestore-gated), its registerVideoViewFactory
+            // call becomes a no-op and the HtmlElementView creates the element
+            // instantly.  The speculative playRemoteVideo call resolves in <1
+            // retry if the element already exists (Firestore was fast); otherwise
+            // the widget's own retry loop picks it up within 250 ms.
+            final elementId = 'mm_remote_video_el_$parsedUid';
+            registerVideoViewFactory('mm_remote_video_view_$parsedUid', elementId);
+            AgoraPlatformService.playRemoteVideo(uid, elementId);
+          }
+        }
+      });
+      debugPrint('[VIDEO_ENGINE-WEB] onRemoteUserPublished callback registered');
+    } catch (e) {
+      debugPrint('[VIDEO_ENGINE-WEB] Could not register onRemoteUserPublished: $e');
+    }
   }
 
   // ── Private helpers ───────────────────────────────────────────────────────
@@ -390,6 +504,14 @@ class LiveAgoraClient {
           debugPrint('[VIDEO_ENGINE] Error $err: $msg');
           _emit(EngineErrorEvent('$err: $msg'));
         },
+        onConnectionStateChanged: (
+          RtcConnection conn,
+          ConnectionStateType state,
+          ConnectionChangedReasonType reason,
+        ) {
+          debugPrint('[VIDEO_ENGINE] Connection state: $state reason=$reason');
+          _emit(EngineConnectionStateEvent(state, reason));
+        },
       ),
     );
   }
@@ -412,18 +534,43 @@ class LiveAgoraClient {
     return id;
   }
 
-  Future<String> _fetchToken({
+  Future<({String token, int uid})> _fetchToken({
     required String channelId,
     required String userId,
   }) async {
-    final result = await FirebaseFunctions.instanceFor(region: 'us-central1')
-        .httpsCallable('generateAgoraToken')
-        .call({'channelName': channelId, 'uid': userId, 'role': 'publisher'});
-    final token = (result.data as Map<String, dynamic>)['token'] as String?;
-    if (token == null || token.isEmpty) {
-      throw Exception('generateAgoraToken returned an empty token.');
+    for (var attempt = 1; attempt <= 2; attempt++) {
+      try {
+        final result = await FirebaseFunctions.instanceFor(region: 'us-central1')
+            .httpsCallable('generateAgoraToken')
+            .call({'roomId': channelId, 'userId': userId});
+        final payload = result.data as Map<String, dynamic>;
+        final token = payload['token'] as String?;
+        final uidRaw = payload['uid'];
+        final normalized = token?.trim() ?? '';
+        final uid = uidRaw is int
+            ? uidRaw
+            : uidRaw is String
+                ? int.tryParse(uidRaw)
+                : null;
+
+        if (normalized.isNotEmpty && uid != null && uid > 0) {
+          return (token: normalized, uid: uid);
+        }
+
+        if (attempt == 1) {
+          // A short retry smooths over transient rollout/cold-start edge cases.
+          await Future<void>.delayed(const Duration(milliseconds: 350));
+          continue;
+        }
+
+        throw Exception('generateAgoraToken returned invalid token/uid after retry.');
+      } on FirebaseFunctionsException catch (e) {
+        final details = e.details == null ? '' : ' (${e.details})';
+        throw Exception('generateAgoraToken failed [${e.code}]: ${e.message ?? 'Unknown backend error'}$details');
+      }
     }
-    return token;
+
+    throw Exception('generateAgoraToken failed after retry.');
   }
 
   // ── Encoder quality helpers ───────────────────────────────────────────────
