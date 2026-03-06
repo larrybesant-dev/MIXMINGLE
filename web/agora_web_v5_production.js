@@ -83,6 +83,59 @@
     }
   }
 
+  function findElementByIdDeep(id) {
+    if (!id || typeof document === 'undefined') return null;
+
+    function walk(root) {
+      if (!root) return null;
+
+      // Document and ShadowRoot both support getElementById in modern browsers.
+      if (typeof root.getElementById === 'function') {
+        const byId = root.getElementById(id);
+        if (byId) return byId;
+      }
+
+      if (typeof root.querySelectorAll !== 'function') return null;
+      const nodes = root.querySelectorAll('*');
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        if (node && node.id === id) return node;
+        if (node && node.shadowRoot) {
+          const fromShadow = walk(node.shadowRoot);
+          if (fromShadow) return fromShadow;
+        }
+      }
+
+      return null;
+    }
+
+    return walk(document);
+  }
+
+  function findAnyLocalVideoContainer() {
+    if (typeof document === 'undefined') return null;
+
+    function walk(root) {
+      if (!root || typeof root.querySelectorAll !== 'function') return null;
+
+      const direct = root.querySelector('[id^="mm_local_video_el_"]');
+      if (direct) return direct;
+
+      const nodes = root.querySelectorAll('*');
+      for (let i = 0; i < nodes.length; i++) {
+        const node = nodes[i];
+        if (node && node.shadowRoot) {
+          const fromShadow = walk(node.shadowRoot);
+          if (fromShadow) return fromShadow;
+        }
+      }
+
+      return null;
+    }
+
+    return walk(document);
+  }
+
   // ========== PERMISSION HANDLING ==========
   async function requestPermissions() {
     log('INFO', 'Requesting camera and microphone permissions...');
@@ -224,11 +277,8 @@
         codec: 'vp8',
       });
 
-      log('DEBUG', 'Client created, setting role to host...');
-
-      // Set client role to host (broadcaster)
-      await state.client.setClientRole('host');
-
+      // NOTE: Do not call setClientRole in rtc mode.
+      // Agora Web SDK rejects this with INVALID_OPERATION, which causes a false join failure.
       log('SUCCESS', 'Agora client created and configured');
 
       // ---- REMOTE USER EVENT LISTENERS ----
@@ -242,6 +292,15 @@
           if (mediaType === 'audio' && user.audioTrack) {
             user.audioTrack.play();
             log('SUCCESS', `▶️ Playing remote audio uid=${user.uid}`);
+          } else if (mediaType === 'video' && user.videoTrack) {
+            const videoElementId = `mm_remote_video_el_${user.uid}`;
+            const el = findElementByIdDeep(videoElementId);
+            if (el) {
+              user.videoTrack.play(el);
+              log('SUCCESS', `▶️ Playing remote video uid=${user.uid} into #${videoElementId}`);
+            } else {
+              log('WARNING', `Remote video element not ready yet uid=${user.uid} id=${videoElementId} — Flutter retry will attach`);
+            }
           }
         } catch (subErr) {
           log('ERROR', `Failed to subscribe uid=${user.uid}`, subErr);
@@ -375,24 +434,9 @@
           requestedUid: uid
         });
 
-        // Create local tracks after join
-        const tracksCreated = await createLocalTracks();
-        if (!tracksCreated) {
-          log('WARNING', 'Could not create local tracks, but channel join succeeded');
-        }
-
-        // Publish tracks if created
-        if (state.localTracks.audio || state.localTracks.video) {
-          const tracks = [];
-          if (state.localTracks.audio) tracks.push(state.localTracks.audio);
-          if (state.localTracks.video) tracks.push(state.localTracks.video);
-
-          if (tracks.length > 0) {
-            log('DEBUG', 'Publishing local tracks...');
-            await state.client.publish(tracks);
-            log('SUCCESS', 'Local tracks published');
-          }
-        }
+        // Join should not auto-request media permissions or auto-publish.
+        // Tracks are created/published only when the user explicitly toggles cam/mic.
+        log('INFO', 'Joined as listener; awaiting explicit cam/mic enable actions');
 
         state.currentChannel = channelName;
         state.currentUid = uid;
@@ -467,8 +511,12 @@
     });
 
     if (!state.initialized) {
-      log('ERROR', 'Not initialized. Call agoraWebInit first');
-      return false;
+      log('WARNING', 'Join called before init; auto-initializing now');
+      const initOk = await window.agoraWebInit(appId);
+      if (!initOk) {
+        log('ERROR', 'Auto-init failed before join');
+        return false;
+      }
     }
 
     if (!state.sdkLoaded) {
@@ -542,6 +590,20 @@
     log('DEBUG', `agoraWebSetMicMuted called (${muted ? 'muting' : 'unmuting'})`);
 
     try {
+      if (!state.localTracks.audio && muted === false) {
+        log('WARNING', 'No local audio track while unmuting; creating track now');
+        state.localTracks.audio = await window.AgoraRTC.createMicrophoneAudioTrack({
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        });
+
+        if (state.client && state.currentChannel) {
+          await state.client.publish([state.localTracks.audio]);
+          log('SUCCESS', 'Audio track created and published from unmute request');
+        }
+      }
+
       if (state.localTracks.audio) {
         if (muted) {
           await state.localTracks.audio.setMuted(true);
@@ -567,6 +629,18 @@
     log('DEBUG', `agoraWebSetVideoMuted called (${muted ? 'disabling' : 'enabling'})`);
 
     try {
+      if (!state.localTracks.video && muted === false) {
+        log('WARNING', 'No local video track while enabling video; creating track now');
+        state.localTracks.video = await window.AgoraRTC.createCameraVideoTrack({
+          encoderConfig: '720p_auto'
+        });
+
+        if (state.client && state.currentChannel) {
+          await state.client.publish([state.localTracks.video]);
+          log('SUCCESS', 'Video track created and published from unmute request');
+        }
+      }
+
       if (state.localTracks.video) {
         if (muted) {
           await state.localTracks.video.setMuted(true);
@@ -579,6 +653,69 @@
       return false;
     } catch (err) {
       log('ERROR', 'Failed to set video mute state', err);
+      return false;
+    }
+  };
+
+  /**
+   * Attach local camera track to a target video container element.
+   * @param {string} videoElementId - DOM id of the container element
+   * @returns {Promise<boolean>}
+   */
+  window.agoraWebPlayCamera = async function(videoElementId) {
+    try {
+      if (!state.localTracks.video) {
+        log('WARNING', 'agoraWebPlayCamera called with no local video track');
+        return false;
+      }
+
+      let el = findElementByIdDeep(videoElementId);
+      if (!el) {
+        el = findAnyLocalVideoContainer();
+      }
+
+      if (!el) {
+        log('WARNING', 'agoraWebPlayCamera target element not found', { videoElementId });
+        return false;
+      }
+
+      state.localTracks.video.play(el);
+      log('SUCCESS', 'Local camera attached to DOM element', { videoElementId });
+      return true;
+    } catch (err) {
+      log('ERROR', 'Failed to attach local camera to DOM element', err);
+      return false;
+    }
+  };
+
+  /**
+   * Attach a remote user's video track to a target DOM element.
+   * Called by Flutter after the HtmlElementView div is rendered in the DOM.
+   * @param {string} uidStr - Remote user UID as string
+   * @param {string} videoElementId - DOM id of the container element
+   * @returns {Promise<boolean>}
+   */
+  window.agoraWebPlayRemoteVideo = async function(uidStr, videoElementId) {
+    try {
+      const user = state.remoteUsers.get(String(uidStr));
+      if (!user) {
+        log('WARNING', `agoraWebPlayRemoteVideo: no remote user for uid=${uidStr}`);
+        return false;
+      }
+      if (!user.videoTrack) {
+        log('WARNING', `agoraWebPlayRemoteVideo: uid=${uidStr} has no video track yet`);
+        return false;
+      }
+      const el = findElementByIdDeep(videoElementId);
+      if (!el) {
+        log('WARNING', 'agoraWebPlayRemoteVideo target element not found', { videoElementId });
+        return false;
+      }
+      user.videoTrack.play(el);
+      log('SUCCESS', 'Remote video attached to DOM element', { uid: uidStr, videoElementId });
+      return true;
+    } catch (err) {
+      log('ERROR', 'Failed to attach remote video to DOM element', err);
       return false;
     }
   };
