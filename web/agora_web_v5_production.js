@@ -86,6 +86,13 @@
   function findElementByIdDeep(id) {
     if (!id || typeof document === 'undefined') return null;
 
+    // Fast path: Dart registers each platform-view element in a global map so
+    // we never need to pierce Flutter's shadow DOM at all.
+    if (typeof window.__getAgoraVideoElement === 'function') {
+      const registered = window.__getAgoraVideoElement(id);
+      if (registered) return registered;
+    }
+
     function walk(root) {
       if (!root) return null;
 
