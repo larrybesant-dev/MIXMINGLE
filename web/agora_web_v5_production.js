@@ -174,10 +174,19 @@
 
   // ========== SDK LOADING ==========
   async function loadAgoraSDK() {
+    // Accept the pre-loaded SDK only if it is v5.x.  A mismatch (e.g. the
+    // page loaded the unversioned AgoraRTC_N.js which resolved to v4.x) would
+    // leave window.AgoraRTC defined but with a different API shape, causing
+    // internal SDK eval errors ("Unexpected identifier 'subscribe'" etc.).
     if (window.AgoraRTC) {
-      log('SUCCESS', 'Agora SDK already loaded');
-      state.sdkLoaded = true;
-      return true;
+      const ver = window.AgoraRTC.VERSION || '';
+      if (ver.startsWith('5.')) {
+        log('SUCCESS', `Agora SDK v${ver} already loaded`);
+        state.sdkLoaded = true;
+        return true;
+      }
+      // Wrong version — fall through and load the pinned v5.3.1 URL.
+      log('WARNING', `AgoraRTC v${ver || '?'} already on page but expected v5.x — loading pinned version`);
     }
 
     log('INFO', 'Loading Agora SDK v5.x...');

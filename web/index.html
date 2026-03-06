@@ -5,12 +5,14 @@
   <base href="/">
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="description" content="Connect and mingle with people in real-time video rooms.">
   <!-- CSP header to allow external resources and scripts -->
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'self' https: blob:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https: blob:; style-src 'self' 'unsafe-inline' https: fonts.googleapis.com; font-src 'self' https: fonts.gstatic.com; img-src 'self' https: data: blob:; connect-src 'self' https: wss: blob:; frame-src; media-src 'self' https: blob:; object-src 'none'; base-uri 'self';">
   <title>Mix & Mingle</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;700&family=Noto+Sans+Symbols+2&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="icon" type="image/png" href="favicon.png">
@@ -20,7 +22,7 @@
       margin: 0;
       padding: 0;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: 'Noto Sans', 'Noto Sans Symbols 2', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
     }
 
     #loading {
@@ -74,51 +76,27 @@
     <div class="loading-text">Loading Mix & Mingle...</div>
   </div>
 
-  <!-- ========== AGORA WEB SDK v5 - PRODUCTION ==========
-       This loads the production-ready Agora Web bridge with:
-       - SDK v5.x (latest stable)
-       - Automatic token validation
-       - Permission handling
-       - Comprehensive error handling
-
-       The bridge script (agora_web_v5_production.js) loads the Agora SDK
-       dynamically and provides Flutter with a clean async interface.
-       ========== -->
-
-  <!-- Load Agora Web Bridge v5 - Production Ready -->
-  <script src="agora_web_v5_production.js"></script>
-
-  <!-- Production Bridge Validation - Verify bridge loaded successfully -->
-  <script>
-    (function() {
-      const startTime = Date.now();
-      const checkInterval = setInterval(() => {
-        const required = [
-          'agoraWebInit',
-          'agoraWebJoinChannel',
-          'agoraWebLeaveChannel',
-          'agoraWebSetMicMuted',
-          'agoraWebSetVideoMuted',
-          'agoraWebGetState'
-        ];
-
-        const missing = required.filter(fn => typeof window[fn] !== 'function');
-
-        if (missing.length === 0) {
-          console.log('%c[AGORA] ✅ Production bridge ready with all functions',
-                      'color: #4CAF50; font-weight: bold;');
-          clearInterval(checkInterval);
-        } else if (Date.now() - startTime > 15000) { // 15 second timeout
-          console.warn('%c[AGORA] ⚠️  Missing functions after 15s: ' + missing.join(', '),
-                       'color: #FF9800; font-weight: bold;');
-          clearInterval(checkInterval);
-        }
-      }, 100);
-    })();
-  </script>
-
   <!-- Handle performance optimizations -->
   <script>
+    // Force clear stale service-worker caches so production matches current code.
+    (function () {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+          regs.forEach(function (reg) {
+            reg.unregister();
+          });
+        }).catch(function () {});
+      }
+
+      if ('caches' in window) {
+        caches.keys().then(function (keys) {
+          keys.forEach(function (key) {
+            caches.delete(key);
+          });
+        }).catch(function () {});
+      }
+    })();
+
     // Fix non-passive event listener warnings by patching addEventListener
     (function () {
       const originalAddEventListener = EventTarget.prototype.addEventListener;
@@ -227,6 +205,13 @@
       });
     })();
   </script>
+
+  <!-- Pinned to v5.3.1 — must match CONFIG.sdk.url in agora_web_v5_production.js.
+       Using the unversioned AgoraRTC_N.js would short-circuit loadAgoraSDK()
+       and load a mismatched version, causing internal SDK eval errors. -->
+  <script src="https://download.agora.io/sdk/release/AgoraRTC_N-5.3.1.js"></script>
+  <script src="agora_web_bridge.js"></script>
+  <script src="window_manager.js"></script>
 </body>
 
 </html>
