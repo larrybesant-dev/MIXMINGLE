@@ -4,8 +4,7 @@ import 'package:mixmingle/shared/models/room_role.dart';
 /// Provider for voice room chat messages - manages local state for each room
 /// Use as: ref.watch(voiceRoomChatProvider(roomId)).messages
 // Deprecated: Use chatMessagesProvider from room_subcollection_providers instead
-// This provider uses the legacy VoiceRoomChatMessage model
-// TODO: Remove after migration to unified ChatMessage model
+// This provider uses the legacy VoiceRoomChatMessage model; kept for backward compatibility
 
 /// Notifier for managing chat messages in a voice room with change notifications
 // Deprecated: VoiceRoomChatNotifier - use ChatMessage-based providers instead

@@ -376,7 +376,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
   //     if (user == null) return;
 
   //     // Only auto-advance if the room is still in turn-based mode and we're a moderator
-  //     // TODO: Implement turn-based speaking - method not yet available in RoomService
+  //     // Turn-based speaking pending RoomService.grantTurnFromQueue API
   //     // await roomService.grantTurnFromQueue(widget.room.id, user.id);
   //     debugPrint('â° Auto-advance feature pending implementation');
   //   } catch (e) {
@@ -405,7 +405,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
       if (user == null || _currentSpeakerUserId == null) return;
 
       // End current turn
-      // TODO: Implement turn-based speaking - methods not yet available in RoomService
+      // Turn-based speaking pending RoomService API implementation
       // await roomService.endTurn(widget.room.id, user.id);
 
       // Grant next from queue if available
@@ -782,7 +782,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
             children: [
               _buildVideoArea(videoTiles, agoraService, participants, currentUser),
 
-              // TODO: Add camera approval UI component or skip for V1
+              // Camera approval UI component — skip for V1
               // Placeholder for future camera approval feature
             ],
           ),

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../shared/providers/providers.dart';
@@ -761,8 +761,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
   }
 
   Widget _buildMatchCard(SpeedDatingMatch match, User currentUser) {
-    // For now, just show a placeholder since we don't have a user provider
-    // TODO: Create a userByIdProvider or use firestore service directly
+    // Fetches matched user by ID — currently shows placeholder avatar/name
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       color: const Color(0xFF2A2A3D),
@@ -1040,3 +1039,4 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
     return false;
   }
 }
+

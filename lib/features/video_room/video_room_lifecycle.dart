@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:permission_handler/permission_handler.dart';
 import '../../core/utils/app_logger.dart';
 import '../../services/agora/agora_platform_service.dart';
 /// Manages video room lifecycle: init â†’ join â†’ leave â†’ cleanup
@@ -48,11 +49,13 @@ class VideoRoomLifecycle {
 
     try {
       debugPrint('[VIDEO_ROOM] Requesting camera and microphone permissions...');
-      AppLogger.info('ðŸ” Requesting camera & microphone permissions...');
+      AppLogger.info('Requesting camera & microphone permissions...');
 
-      // TODO: Implement mobile permission requests
-      // For now, assume permissions are granted
-      return true;
+      final cameraStatus = await Permission.camera.request();
+      final micStatus = await Permission.microphone.request();
+      final granted = cameraStatus.isGranted && micStatus.isGranted;
+      debugPrint('[VIDEO_ROOM] Permissions granted: $granted');
+      return granted;
     } catch (e) {
       debugPrint('[VIDEO_ROOM] Permission request failed: $e');
       AppLogger.error('âŒ Permission request failed: $e');

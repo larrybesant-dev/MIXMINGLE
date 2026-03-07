@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'dart:async';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -249,14 +250,26 @@ class EventsController extends Notifier<AsyncValue<Event?>> {
     }
   }
 
-  /// Get nearby events (not implemented yet)
+  /// Get nearby events using equirectangular approximation
   Future<List<Event>> getNearbyEvents(
     double latitude,
     double longitude,
     double radiusKm,
   ) async {
-    // TODO: Implement location-based events
-    return [];
+    final snap = await FirebaseFirestore.instance
+        .collection('events')
+        .where('startTime',
+            isGreaterThanOrEqualTo: DateTime.now().toIso8601String())
+        .limit(100)
+        .get();
+    return snap.docs.map((d) => Event.fromMap(d.data())).where((e) {
+      final dLat = (e.latitude - latitude) * math.pi / 180.0;
+      final dLon = (e.longitude - longitude) * math.pi / 180.0;
+      final avgLat = (latitude + e.latitude) / 2.0 * math.pi / 180.0;
+      final x = dLon * math.cos(avgLat) * 6371.0;
+      final y = dLat * 6371.0;
+      return math.sqrt(x * x + y * y) <= radiusKm;
+    }).toList();
   }
 }
 

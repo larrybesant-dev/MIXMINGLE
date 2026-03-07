@@ -261,13 +261,28 @@ class FirestoreService {
     await _firestore.collection('users').doc(userId).update(fields);
   }
 
-  // TEMP STUBS: Notification methods (not yet implemented)
+  // Notification methods
   Future<void> sendFriendOnlineNotification(
     String recipientUserId,
     String friendUserId,
     String friendName,
   ) async {
-    // TODO: Implement friend online notification
+    final docRef = _firestore
+        .collection('users')
+        .doc(recipientUserId)
+        .collection('notifications')
+        .doc();
+    await docRef.set({
+      'id': docRef.id,
+      'userId': recipientUserId,
+      'type': 2, // NotificationType.newFollower index as proxy for online alert
+      'title': '$friendName is online',
+      'message': 'Your friend $friendName just came online.',
+      'senderId': friendUserId,
+      'senderName': friendName,
+      'isRead': false,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> sendFriendOfflineNotification(
@@ -275,7 +290,7 @@ class FirestoreService {
     String friendUserId,
     String friendName,
   ) async {
-    // TODO: Implement friend offline notification
+    // Offline notifications are silently dropped — avoid notification spam
   }
 
   Future<void> sendRoomInvitation(
@@ -285,7 +300,24 @@ class FirestoreService {
     String roomId,
     String roomName,
   ) async {
-    // TODO: Implement room invitation notification
+    final docRef = _firestore
+        .collection('users')
+        .doc(recipientUserId)
+        .collection('notifications')
+        .doc();
+    await docRef.set({
+      'id': docRef.id,
+      'userId': recipientUserId,
+      'type': 0, // NotificationType.roomInvite
+      'title': '$invitedByName invited you to a room',
+      'message': 'Join "$roomName" now!',
+      'senderId': invitedByUserId,
+      'senderName': invitedByName,
+      'roomId': roomId,
+      'roomName': roomName,
+      'isRead': false,
+      'timestamp': FieldValue.serverTimestamp(),
+    });
   }
 }
 

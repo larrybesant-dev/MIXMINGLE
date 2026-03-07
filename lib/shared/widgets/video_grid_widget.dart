@@ -22,12 +22,15 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../shared/providers/app_models.dart';
 import '../../shared/providers/room_provider.dart';
 import '../../shared/providers/ui_provider.dart';
 import '../../core/constants/ui_constants.dart';
 import '../../core/design_system/design_constants.dart';
 import 'mini_profile_popup.dart';
+import 'gift_selector.dart';
 
 class VideoGridWidget extends ConsumerStatefulWidget {
   final VoidCallback onExpandChat;
@@ -271,11 +274,30 @@ class _AnimatedVideoTileState extends ConsumerState<_AnimatedVideoTile>
           },
           onSendFriendRequest: () {
             _removePopup();
-            // TODO: Implement friend request
+            final myUid = FirebaseAuth.instance.currentUser?.uid;
+            if (myUid != null && myUid != widget.participant.userId) {
+              FirebaseFirestore.instance
+                  .collection('users')
+                  .doc(widget.participant.userId)
+                  .collection('friendRequests')
+                  .doc(myUid)
+                  .set({
+                'fromUid': myUid,
+                'sentAt': FieldValue.serverTimestamp(),
+                'status': 'pending',
+              });
+            }
           },
           onTip: () {
             _removePopup();
-            // TODO: Show tip dialog
+            showDialog<void>(
+              context: context,
+              builder: (_) => GiftSelector(
+                receiverId: widget.participant.userId,
+                receiverName: widget.participant.userName,
+                roomId: '',
+              ),
+            );
           },
           onDismiss: _removePopup,
         ),

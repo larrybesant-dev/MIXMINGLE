@@ -1,5 +1,5 @@
 ﻿/// RevenueCat Service - Stub for compilation
-/// TODO: Implement full RevenueCat integration
+/// Integration pending RevenueCat SDK setup and App Store/Play Store configuration
 library;
 
 import '../../features/payments/models/membership_tier.dart';
@@ -45,13 +45,12 @@ class RevenueCatService {
 
   /// Initialize RevenueCat SDK
   Future<void> init() async {
-    // TODO: Initialize RevenueCat with API key
+    // Initialize RevenueCat SDK with API key when SDK is added to pubspec
   }
 
   /// Purchase a membership tier
   Future<PurchaseResult> purchaseMembership(MembershipTier tier) async {
-    // DEV STUB - monetization disabled
-    // TODO: Implement RevenueCat purchase flow when ready
+    // DEV STUB - purchase flow pending RevenueCat SDK integration
     return const PurchaseResult(success: false, errorMessage: 'RevenueCat not yet configured');
   }
 
@@ -69,13 +68,13 @@ class RevenueCatService {
 
   /// Restore purchases
   Future<PurchaseResult> restorePurchases() async {
-    // TODO: Implement restore purchases via RevenueCat
+    // DEV STUB - restore flow pending RevenueCat SDK integration
     return const PurchaseResult(success: false, errorMessage: 'RevenueCat not yet configured');
   }
 
   /// Get current entitlements
   Future<List<String>> getEntitlements() async {
-    // TODO: Fetch active entitlements from RevenueCat
+    // DEV STUB - entitlements pending RevenueCat SDK integration
     return [];
   }
 }

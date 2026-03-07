@@ -1,6 +1,8 @@
 
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/event.dart';
 import '../../services/events/events_service.dart';
@@ -44,16 +46,45 @@ final upcomingEventsProvider = StreamProvider<List<Event>>((ref) {
   return eventsService.watchUpcomingEvents();
 });
 
-// Nearby events provider (returns empty list for now - location feature not implemented)
-final nearbyEventsProvider = FutureProvider.family<List<Event>, Map<String, dynamic>>((ref, params) async {
-  // TODO: Implement location-based events when location feature is ready
-  return [];
+// Nearby events provider — fetches all future events and filters by distance client-side
+final nearbyEventsProvider =
+    FutureProvider.family<List<Event>, Map<String, dynamic>>((ref, params) async {
+  final lat = (params['latitude'] as num?)?.toDouble() ?? 0.0;
+  final lon = (params['longitude'] as num?)?.toDouble() ?? 0.0;
+  final radiusKm = (params['radiusKm'] as num?)?.toDouble() ?? 50.0;
+  final snap = await FirebaseFirestore.instance
+      .collection('events')
+      .where('startTime', isGreaterThanOrEqualTo: DateTime.now().toIso8601String())
+      .limit(100)
+      .get();
+  final events = snap.docs.map((d) => Event.fromMap(d.data())).toList();
+  return events.where((e) {
+    final dist = _haversineKm(lat, lon, e.latitude, e.longitude);
+    return dist <= radiusKm;
+  }).toList();
 });
 
-// Events by category provider (returns empty list for now - categories not implemented)
-final eventsByCategoryProvider = FutureProvider.family<List<Event>, String>((ref, category) async {
-  // TODO: Implement category filtering when categories are added to Event model
-  return [];
+// Equirectangular approximation — accurate enough for nearby events (< 200 km)
+double _haversineKm(double lat1, double lon1, double lat2, double lon2) {
+  const r = 6371.0;
+  final dLat = (lat2 - lat1) * math.pi / 180.0;
+  final dLon = (lon2 - lon1) * math.pi / 180.0;
+  final avgLat = (lat1 + lat2) / 2.0 * math.pi / 180.0;
+  final x = dLon * math.cos(avgLat) * r;
+  final y = dLat * r;
+  return math.sqrt(x * x + y * y);
+}
+
+// Events by category provider
+final eventsByCategoryProvider =
+    FutureProvider.family<List<Event>, String>((ref, category) async {
+  final snap = await FirebaseFirestore.instance
+      .collection('events')
+      .where('category', isEqualTo: category)
+      .orderBy('startTime')
+      .limit(50)
+      .get();
+  return snap.docs.map((d) => Event.fromMap(d.data())).toList();
 });
 
 // Events controller for mutations

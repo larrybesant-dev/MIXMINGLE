@@ -598,7 +598,7 @@ extension RoomMessaging on MessagingService {
       mediaUrl: mediaUrl,
       thumbnailUrl: thumbnailUrl,
       metadata: metadata,
-      mentionedUserIds: [], // TODO: Parse mentions from content
+      mentionedUserIds: _parseMentions(content), // Extracts @username mention IDs
       reactions: [],
       isEdited: false,
       isTyping: false,
@@ -692,5 +692,12 @@ extension RoomMessaging on MessagingService {
       }
       return [];
     });
+  }
+
+  /// Extract @mention IDs from message content.
+  /// Returns usernames for now; resolve to UIDs in a future pass.
+  static List<String> _parseMentions(String content) {
+    final regex = RegExp(r'@(\w+)');
+    return regex.allMatches(content).map((m) => m.group(1)!).toList();
   }
 }

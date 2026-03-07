@@ -12,22 +12,35 @@ class NotificationsState {
   final String? fcmToken;
   final bool isInitialized;
   final bool notificationsEnabled;
+  final String? pendingNavigationRoute;
+  final Map<String, String>? pendingNavigationArgs;
 
   const NotificationsState({
     this.fcmToken,
     this.isInitialized = false,
     this.notificationsEnabled = false,
+    this.pendingNavigationRoute,
+    this.pendingNavigationArgs,
   });
 
   NotificationsState copyWith({
     String? fcmToken,
     bool? isInitialized,
     bool? notificationsEnabled,
+    String? pendingNavigationRoute,
+    Map<String, String>? pendingNavigationArgs,
+    bool clearPendingNavigation = false,
   }) {
     return NotificationsState(
       fcmToken: fcmToken ?? this.fcmToken,
       isInitialized: isInitialized ?? this.isInitialized,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
+      pendingNavigationRoute: clearPendingNavigation
+          ? null
+          : (pendingNavigationRoute ?? this.pendingNavigationRoute),
+      pendingNavigationArgs: clearPendingNavigation
+          ? null
+          : (pendingNavigationArgs ?? this.pendingNavigationArgs),
     );
   }
 }
@@ -115,10 +128,29 @@ class NotificationsController extends Notifier<NotificationsState> {
   /// Handle foreground messages
   void _handleForegroundMessage(RemoteMessage message) {
     debugPrint('ðŸ“¨ Foreground message: ${message.notification?.title}');
-
-    // TODO: Show in-app notification
-    // You can use a package like flutter_local_notifications
-    // or display a custom banner/snackbar
+    final data = message.data;
+    if (data.containsKey('type')) {
+      String? route;
+      Map<String, String>? args;
+      switch (data['type']) {
+        case 'message':
+          route = '/chats';
+          if (data['chatId'] != null) args = {'chatId': data['chatId']};
+        case 'room_invite':
+          route = '/rooms';
+          if (data['roomId'] != null) args = {'roomId': data['roomId']};
+        case 'match':
+          route = '/discover';
+        default:
+          break;
+      }
+      if (route != null) {
+        state = state.copyWith(
+          pendingNavigationRoute: route,
+          pendingNavigationArgs: args,
+        );
+      }
+    }
   }
 
   /// Handle background/terminated messages
@@ -131,12 +163,12 @@ class NotificationsController extends Notifier<NotificationsState> {
     if (data.containsKey('type')) {
       switch (data['type']) {
         case 'message':
-          // Navigate to chat
           final chatId = data['chatId'];
-          if (chatId != null) {
-            // TODO: Navigate to /chat/$chatId
-            debugPrint('Navigate to chat: $chatId');
-          }
+          state = state.copyWith(
+            pendingNavigationRoute: '/chats',
+            pendingNavigationArgs:
+                chatId != null ? {'chatId': chatId} : null,
+          );
           break;
 
         case 'match':

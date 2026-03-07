@@ -5,6 +5,7 @@ import '../../shared/providers/auth_providers.dart';
 import '../../core/utils/app_logger.dart';
 import 'room_access_gate.dart';
 import '../../core/design_system/design_constants.dart';
+import '../../core/routing/app_routes.dart';
 import 'live/live_room_screen.dart';
 
 /// Wrapper that enforces room access gating
@@ -80,9 +81,20 @@ class RoomAccessWrapper extends ConsumerWidget {
 
         if (error is RoomAccessDeniedException) {
           errorMessage = error.message;
-          // TODO: Handle redirects based on error.state
-          // - RoomAccessState.profileIncomplete -> redirect to profile completion
-          // - RoomAccessState.unauthenticated -> redirect to login
+          // Perform state-based redirect after the frame
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!context.mounted) return;
+            switch (error.state) {
+              case RoomAccessState.unauthenticated:
+                Navigator.of(context)
+                    .pushReplacementNamed(AppRoutes.login);
+              case RoomAccessState.profileIncomplete:
+                Navigator.of(context)
+                    .pushReplacementNamed(AppRoutes.editProfile);
+              default:
+                break;
+            }
+          });
         } else {
           AppLogger.error('Room access error: $error');
         }
