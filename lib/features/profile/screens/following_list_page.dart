@@ -166,7 +166,7 @@ class FollowingListPage extends ConsumerWidget {
         children: [
           Icon(Icons.person_search, size: 80, color: DesignColors.accent.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
-          NeonText(
+          const NeonText(
             'NOT FOLLOWING ANYONE YET',
             fontSize: 18,
             fontWeight: FontWeight.w900,

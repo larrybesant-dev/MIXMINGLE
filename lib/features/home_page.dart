@@ -19,9 +19,9 @@ class HomePage extends ConsumerWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: Text('Welcome, '),
+            title: const Text('Welcome, '),
           ),
-          body: Center(
+          body: const Center(
             child: Text(
               'User ID: \n'
               'Vibe: \n'

@@ -77,10 +77,10 @@ class _RoomPageState extends ConsumerState<RoomPage> {
       await agoraService.joinRoom(widget.room.id);
 
       // #1 Record vibe join for intelligence layer
-      final _vibeUid = FirebaseAuth.instance.currentUser?.uid;
-      if (_vibeUid != null && widget.room.vibeTag != null) {
+      final vibeUid = FirebaseAuth.instance.currentUser?.uid;
+      if (vibeUid != null && widget.room.vibeTag != null) {
         ref.read(vibeIntelligenceServiceProvider)
-            .recordVibeJoin(userId: _vibeUid, vibeTag: widget.room.vibeTag!);
+            .recordVibeJoin(userId: vibeUid, vibeTag: widget.room.vibeTag!);
       }
 
       if (mounted) {

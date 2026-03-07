@@ -1,4 +1,4 @@
-﻿import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/app_logger.dart';
@@ -37,12 +37,10 @@ Future<bool> canAccessRoom({
     // Check auth status. On web, currentUser can be briefly null while auth
     // state settles after route transitions.
     var user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      user = await FirebaseAuth.instance
+    user ??= await FirebaseAuth.instance
           .authStateChanges()
           .first
           .timeout(const Duration(seconds: 3), onTimeout: () => null);
-    }
 
     if (user == null) {
       throw RoomAccessDeniedException(
@@ -99,12 +97,10 @@ Future<RoomAccessState> getRoomAccessState({
   try {
     var user = FirebaseAuth.instance.currentUser;
 
-    if (user == null) {
-      user = await FirebaseAuth.instance
+    user ??= await FirebaseAuth.instance
           .authStateChanges()
           .first
           .timeout(const Duration(seconds: 3), onTimeout: () => null);
-    }
 
     if (user == null) {
       return RoomAccessState.unauthenticated;

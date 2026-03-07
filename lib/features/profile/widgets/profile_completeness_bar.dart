@@ -52,7 +52,7 @@ class ProfileCompletenessBar extends ConsumerWidget {
                 ),
                 Text(
                   '$score%',
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: DesignColors.accent,
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -67,7 +67,7 @@ class ProfileCompletenessBar extends ConsumerWidget {
                 value: pct,
                 minHeight: 6,
                 backgroundColor: DesignColors.surfaceDefault,
-                valueColor: AlwaysStoppedAnimation<Color>(DesignColors.accent),
+                valueColor: const AlwaysStoppedAnimation<Color>(DesignColors.accent),
               ),
             ),
             const SizedBox(height: 6),

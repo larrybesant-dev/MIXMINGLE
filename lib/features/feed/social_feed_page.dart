@@ -220,14 +220,14 @@ class _TrendingRail extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16),
                 child: Row(
                   children: [
-                    const Icon(Icons.trending_up,
+                    Icon(Icons.trending_up,
                         size: 15, color: DesignColors.secondary),
-                    const SizedBox(width: 6),
-                    const Text(
+                    SizedBox(width: 6),
+                    Text(
                       'TRENDING',
                       style: TextStyle(
                         color: DesignColors.secondary,
@@ -392,7 +392,7 @@ class _ForYouTab extends ConsumerWidget {
           ref.read(globalFeedNotifierProvider.notifier).refresh(),
       color: DesignColors.accent,
       child: feedState.posts.isEmpty
-          ? _EmptyState(
+          ? const _EmptyState(
               icon: Icons.feed_outlined,
               title: 'No posts yet',
               subtitle: 'Be the first to share something!',

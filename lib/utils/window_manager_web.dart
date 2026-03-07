@@ -1,5 +1,5 @@
 @JS()
-library window_manager_web;
+library;
 
 import 'dart:js_interop';
 

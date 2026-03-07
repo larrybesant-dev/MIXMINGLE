@@ -77,7 +77,7 @@ class MutualFollowersRow extends ConsumerWidget {
               Flexible(
                 child: Text(
                   _buildLabel(mutuals.length, overflow, shown),
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: DesignColors.textGray,
                     fontSize: 11,
                   ),

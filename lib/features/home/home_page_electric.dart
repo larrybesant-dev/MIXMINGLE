@@ -1,4 +1,4 @@
-﻿/// Home Page Electric
+/// Home Page Electric
 /// Main landing page after onboarding completion
 /// Shows: Live Rooms, Speed Dating, Discovery, Chats
 library;
@@ -366,7 +366,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                         fontWeight: FontWeight.w800)),
                 TextButton(
                   onPressed: () => setState(() => _selectedIndex = 2),
-                  child: Text('See All',
+                  child: const Text('See All',
                       style: TextStyle(color: DesignColors.accent, fontSize: 13)),
                 ),
                 const SizedBox(width: 8),
@@ -421,7 +421,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                     fontWeight: FontWeight.w800)),
             TextButton(
               onPressed: onSeeAll,
-              child: Text('See All',
+              child: const Text('See All',
                   style:
                       TextStyle(color: DesignColors.accent, fontSize: 13)),
             ),

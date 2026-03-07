@@ -314,7 +314,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 AppRoutes.profileMedia,
                 arguments: {'userId': p.id, 'isOwner': _isOwner},
               ),
-              child: Text(
+              child: const Text(
                 'See all',
                 style: TextStyle(
                     color: DesignColors.accent,
@@ -624,11 +624,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            _statBadge('${_formatCount(p.followersCount)}', 'Followers'),
+            _statBadge(_formatCount(p.followersCount), 'Followers'),
             const SizedBox(width: 12),
             Container(width: 1, height: 28, color: DesignColors.divider),
             const SizedBox(width: 12),
-            _statBadge('${_formatCount(p.followingCount)}', 'Following'),
+            _statBadge(_formatCount(p.followingCount), 'Following'),
             if (p.roomsHostedCount > 0) ...[
               const SizedBox(width: 12),
               Container(width: 1, height: 28, color: DesignColors.divider),
@@ -821,33 +821,40 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Widget _buildBadgesSection(UserProfile p) {
     final badges = <_BadgeItem>[];
 
-    if (p.isPremium || p.isVip)
-      badges.add(_BadgeItem(Icons.workspace_premium, 'VIP', _kAmber));
-    if (p.isCreatorBadge || p.isCreatorEnabled)
-      badges.add(_BadgeItem(Icons.movie_creation_outlined, 'Creator', _kPink));
-    if (p.isPhotoVerified == true || p.isIdVerified == true)
-      badges.add(_BadgeItem(Icons.verified_outlined, 'Verified', _kBlue));
-    if (p.isBoosted)
-      badges.add(_BadgeItem(Icons.rocket_launch_outlined, 'Boosted', _kCyan));
-    if (p.communityRating >= 4.5 && p.totalRoomsJoined >= 10)
-      badges.add(_BadgeItem(Icons.star_outline, 'Top Host', _kAmber));
-    if (p.twoFactorEnabled)
-      badges.add(_BadgeItem(Icons.security_outlined, '2FA Active', DesignColors.success));
+    if (p.isPremium || p.isVip) {
+      badges.add(const _BadgeItem(Icons.workspace_premium, 'VIP', _kAmber));
+    }
+    if (p.isCreatorBadge || p.isCreatorEnabled) {
+      badges.add(const _BadgeItem(Icons.movie_creation_outlined, 'Creator', _kPink));
+    }
+    if (p.isPhotoVerified == true || p.isIdVerified == true) {
+      badges.add(const _BadgeItem(Icons.verified_outlined, 'Verified', _kBlue));
+    }
+    if (p.isBoosted) {
+      badges.add(const _BadgeItem(Icons.rocket_launch_outlined, 'Boosted', _kCyan));
+    }
+    if (p.communityRating >= 4.5 && p.totalRoomsJoined >= 10) {
+      badges.add(const _BadgeItem(Icons.star_outline, 'Top Host', _kAmber));
+    }
+    if (p.twoFactorEnabled) {
+      badges.add(const _BadgeItem(Icons.security_outlined, '2FA Active', DesignColors.success));
+    }
     // Stored badge IDs from Firestore
     for (final id in p.badgeIds ?? []) {
       switch (id) {
         case 'active_today':
-          badges.add(_BadgeItem(Icons.bolt, 'Active Today', _kCyan));
+          badges.add(const _BadgeItem(Icons.bolt, 'Active Today', _kCyan));
           break;
         case 'top_creator':
-          badges.add(_BadgeItem(Icons.emoji_events_outlined, 'Top Creator', _kAmber));
+          badges.add(const _BadgeItem(Icons.emoji_events_outlined, 'Top Creator', _kAmber));
           break;
         case 'rising_star':
-          badges.add(_BadgeItem(Icons.star_half_outlined, 'Rising Star', _kPink));
+          badges.add(const _BadgeItem(Icons.star_half_outlined, 'Rising Star', _kPink));
           break;
         case 'verified':
-          if (!badges.any((b) => b.label == 'Verified'))
-            badges.add(_BadgeItem(Icons.verified_outlined, 'Verified', _kBlue));
+          if (!badges.any((b) => b.label == 'Verified')) {
+            badges.add(const _BadgeItem(Icons.verified_outlined, 'Verified', _kBlue));
+          }
           break;
         default:
           badges.add(_BadgeItem(Icons.military_tech_outlined, id, _kPurple));
@@ -990,14 +997,18 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   Widget _buildActivityStatsSection(UserProfile p) {
     final stats = <_StatItem>[];
 
-    if (p.roomsHostedCount > 0)
+    if (p.roomsHostedCount > 0) {
       stats.add(_StatItem('${p.roomsHostedCount}', 'Rooms Hosted', Icons.mic_none_outlined, _kBlue));
-    if (p.eventsAttended > 0)
+    }
+    if (p.eventsAttended > 0) {
       stats.add(_StatItem('${p.eventsAttended}', 'Events', Icons.event_outlined, _kCyan));
-    if (p.communityRating > 0)
+    }
+    if (p.communityRating > 0) {
       stats.add(_StatItem(p.communityRating.toStringAsFixed(1), 'Rating', Icons.star_outline, _kAmber));
-    if (p.mutualsCount > 0)
+    }
+    if (p.mutualsCount > 0) {
       stats.add(_StatItem('${p.mutualsCount}', 'Mutuals', Icons.people_outline, _kPurple));
+    }
 
     if (stats.isEmpty) return const SizedBox.shrink();
 
@@ -1049,9 +1060,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             BoxShadow(color: _kBlue.withValues(alpha: 0.35), blurRadius: 14, offset: const Offset(0, 4)),
           ],
         ),
-        child: Row(
+        child: const Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
+          children: [
             Icon(Icons.edit_outlined, color: Colors.white, size: 18),
             SizedBox(width: 8),
             Text('Edit Profile',

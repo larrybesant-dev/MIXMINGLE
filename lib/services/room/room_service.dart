@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -22,11 +22,11 @@ class RoomService {
     }
 
     Future<void> transferHostRole(String roomId, String newHostId) async {
-      final _doc = await _firestore.collection('rooms').doc(roomId).get();
-      if (!_doc.exists) throw Exception('Room not found');
-      final _d = _doc.data()!;
-      final _ownerId = _d['ownerId'] as String? ?? _d['hostId'] as String? ?? '';
-      if (_currentUserId != _ownerId) throw Exception('Only the owner can transfer host role');
+      final doc = await _firestore.collection('rooms').doc(roomId).get();
+      if (!doc.exists) throw Exception('Room not found');
+      final d = doc.data()!;
+      final ownerId = d['ownerId'] as String? ?? d['hostId'] as String? ?? '';
+      if (_currentUserId != ownerId) throw Exception('Only the owner can transfer host role');
       await _firestore.collection('rooms').doc(roomId).update({
         'hostId': newHostId,
         'roleMap.$newHostId': 'host',

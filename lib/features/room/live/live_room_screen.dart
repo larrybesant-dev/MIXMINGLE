@@ -1565,7 +1565,7 @@ void _showDjPanel(BuildContext context, WidgetRef ref, LiveRoomState state) {
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     builder: (_) => ProviderScope(
-      overrides: [],
+      overrides: const [],
       child: _DjPanel(passedRef: ref, state: state),
     ),
   );
@@ -1672,10 +1672,10 @@ class _DjPanelState extends ConsumerState<_DjPanel> {
             ),
 
             // Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 4),
               child: Row(
-                children: const [
+                children: [
                   Icon(Icons.queue_music, color: Color(0xFFFF6EC7), size: 22),
                   SizedBox(width: 8),
                   Text(
@@ -1774,7 +1774,7 @@ class _DjPanelState extends ConsumerState<_DjPanel> {
                   children: [
                     Switch(
                       value: state.djIsLooping,
-                      activeColor: const Color(0xFFFF6EC7),
+                      activeThumbColor: const Color(0xFFFF6EC7),
                       onChanged: ctrl.djSetLooping,
                     ),
                     const Text('Loop track',

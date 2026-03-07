@@ -50,7 +50,7 @@ class ConversationListPage extends ConsumerWidget {
               final unread = convo['unread'][currentUser.id] ?? 0;
 
               return ListTile(
-                title: Text('Chat with '),
+                title: const Text('Chat with '),
                 subtitle: Text(lastMessage),
                 trailing: unread > 0
                     ? CircleAvatar(
