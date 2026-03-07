@@ -74,6 +74,12 @@ class LiveRoomState {
     this.agoraViewerCount   = 0,
     this.error,
     this.statusMessage,
+    // ── DJ audio mixing ─────────────────────────────────────────────────
+    this.djTrackTitle  = '',
+    this.djIsPlaying   = false,
+    this.djIsPaused    = false,
+    this.djVolume      = 80,
+    this.djIsLooping   = false,
   });
 
   final String roomId;
@@ -110,6 +116,13 @@ class LiveRoomState {
 
   // ── Agora live viewer count (web only, 0 when not on web or not in channel)
   final int agoraViewerCount;
+
+  // ── DJ audio mixing ──────────────────────────────────────────────────────
+  final String djTrackTitle;
+  final bool   djIsPlaying;
+  final bool   djIsPaused;
+  final int    djVolume;     // 0–100
+  final bool   djIsLooping;
 
   // ── Errors / progress messages ————————————————————————————————
   final String? error;
@@ -191,6 +204,13 @@ class LiveRoomState {
     bool clearError         = false,
     bool clearActiveSpeaker = false,
     bool clearStatus        = false,
+    // DJ
+    String? djTrackTitle,
+    bool?   djIsPlaying,
+    bool?   djIsPaused,
+    int?    djVolume,
+    bool?   djIsLooping,
+    bool    clearDj = false,
   }) =>
       LiveRoomState(
         roomId:              roomId,
@@ -211,6 +231,11 @@ class LiveRoomState {
         agoraViewerCount:    agoraViewerCount     ?? this.agoraViewerCount,
         error:               clearError           ? null : (error            ?? this.error),
         statusMessage:       clearStatus          ? null : (statusMessage    ?? this.statusMessage),
+        djTrackTitle:  clearDj ? '' : (djTrackTitle ?? this.djTrackTitle),
+        djIsPlaying:   clearDj ? false : (djIsPlaying  ?? this.djIsPlaying),
+        djIsPaused:    clearDj ? false : (djIsPaused   ?? this.djIsPaused),
+        djVolume:      djVolume     ?? this.djVolume,
+        djIsLooping:   djIsLooping  ?? this.djIsLooping,
       );
 
   @override

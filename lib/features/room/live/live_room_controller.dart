@@ -791,10 +791,70 @@ class LiveRoomController extends Notifier<LiveRoomState> {
         debugPrint('[ROOM_CTRL] Video engine error: $message');
         // Non-fatal — log and surface to UI but don't kill the room
         state = state.copyWith(error: 'Video: $message');
+
+      case AudioMixingStateEvent(:final mixingState):
+        switch (mixingState) {
+          case AudioMixingStateType.audioMixingStatePlaying:
+            state = state.copyWith(djIsPlaying: true, djIsPaused: false);
+          case AudioMixingStateType.audioMixingStatePaused:
+            state = state.copyWith(djIsPlaying: false, djIsPaused: true);
+          case AudioMixingStateType.audioMixingStateStopped:
+            if (!state.djIsLooping) state = state.copyWith(clearDj: true);
+          case AudioMixingStateType.audioMixingStateFailed:
+            state = state.copyWith(djIsPlaying: false, djIsPaused: false);
+        }
     }
   }
 
-  // ── Cleanup ───────────────────────────────────────────────────────────────
+  // ── DJ controls ───────────────────────────────────────────────────────
+
+  /// Returns an error string on failure, null on success.
+  Future<String?> djPlay(String url, String title) async {
+    if (kIsWeb) return 'DJ not available on web — use the iOS or Android app.';
+    if (!state.isActive) return 'Not in an active room.';
+    if (!state.isHost && !state.isBroadcaster) {
+      return 'Only hosts and broadcasters can use DJ.';
+    }
+    try {
+      await _video.startAudioMixing(url, looping: state.djIsLooping);
+      state = state.copyWith(djTrackTitle: title, djIsPlaying: true, djIsPaused: false);
+      return null;
+    } catch (e) {
+      return 'Could not play track: $e';
+    }
+  }
+
+  Future<void> djStop() async {
+    if (kIsWeb || !state.isActive) return;
+    try {
+      await _video.stopAudioMixing();
+      state = state.copyWith(clearDj: true);
+    } catch (_) {}
+  }
+
+  Future<void> djTogglePause() async {
+    if (kIsWeb || !state.isActive) return;
+    try {
+      if (state.djIsPlaying) {
+        await _video.pauseAudioMixing();
+      } else if (state.djIsPaused) {
+        await _video.resumeAudioMixing();
+      }
+    } catch (_) {}
+  }
+
+  Future<void> djSetVolume(int volume) async {
+    if (kIsWeb || !state.isActive) return;
+    final v = volume.clamp(0, 100);
+    try {
+      await _video.setAudioMixingVolume(v);
+      state = state.copyWith(djVolume: v);
+    } catch (_) {}
+  }
+
+  void djSetLooping(bool v) => state = state.copyWith(djIsLooping: v);
+
+  // ── Cleanup ───────────────────────────────────────────────────────────
 
   void _cleanup() {
     _countSyncTimer?.cancel();

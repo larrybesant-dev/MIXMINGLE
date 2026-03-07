@@ -68,6 +68,12 @@ final class EngineConnectionStateEvent extends VideoEngineEvent {
   const EngineConnectionStateEvent(this.state, this.reason);
 }
 
+final class AudioMixingStateEvent extends VideoEngineEvent {
+  final AudioMixingStateType mixingState;
+  final AudioMixingReasonType reason;
+  const AudioMixingStateEvent(this.mixingState, this.reason);
+}
+
 // ── Client ─────────────────────────────────────────────────────────────────
 
 class LiveAgoraClient {
@@ -381,6 +387,38 @@ class LiveAgoraClient {
     await stopPublishingAudio();
   }
 
+  // ── DJ Audio Mixing ──────────────────────────────────────────────────
+
+  Future<void> startAudioMixing(String url, {bool looping = false}) async {
+    if (kIsWeb || _engine == null) return;
+    await _engine!.startAudioMixing(
+      filePath: url,
+      loopback: false,
+      cycle: looping ? -1 : 1,
+      startPos: 0,
+    );
+  }
+
+  Future<void> stopAudioMixing() async {
+    if (kIsWeb || _engine == null) return;
+    await _engine!.stopAudioMixing();
+  }
+
+  Future<void> pauseAudioMixing() async {
+    if (kIsWeb || _engine == null) return;
+    await _engine!.pauseAudioMixing();
+  }
+
+  Future<void> resumeAudioMixing() async {
+    if (kIsWeb || _engine == null) return;
+    await _engine!.resumeAudioMixing();
+  }
+
+  Future<void> setAudioMixingVolume(int volume) async {
+    if (kIsWeb || _engine == null) return;
+    await _engine!.adjustAudioMixingVolume(volume);
+  }
+
   // ── Dispose ────────────────────────────────────────────────────────────────
 
   Future<void> dispose() async {
@@ -511,6 +549,9 @@ class LiveAgoraClient {
         ) {
           debugPrint('[VIDEO_ENGINE] Connection state: $state reason=$reason');
           _emit(EngineConnectionStateEvent(state, reason));
+        },
+        onAudioMixingStateChanged: (AudioMixingStateType state, AudioMixingReasonType reason) {
+          _emit(AudioMixingStateEvent(state, reason));
         },
       ),
     );

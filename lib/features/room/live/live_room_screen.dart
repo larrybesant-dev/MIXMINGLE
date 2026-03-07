@@ -13,7 +13,7 @@ import 'dart:async';
 import 'dart:developer' show log;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/providers/auth_providers.dart';
@@ -27,6 +27,7 @@ import 'live_room_schema.dart';
 import 'live_room_state.dart';
 import 'live_room_controller.dart';
 import 'live_tile_grid.dart';
+import 'live_room_dj.dart';
 import '../widgets/reaction_bar.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
@@ -592,6 +593,16 @@ class _ControlBar extends ConsumerWidget {
               style: const TextStyle(color: Colors.white70, fontSize: 11),
             ),
           ),
+
+          // DJ button — host/broadcasters only
+          if (state.isHost || state.isBroadcaster)
+            _ControlButton(
+              icon: state.djIsPlaying ? Icons.music_note : Icons.queue_music,
+              label: state.djIsPlaying ? 'DJ Live' : 'DJ',
+              active: state.djIsPlaying || state.djIsPaused,
+              activeColor: const Color(0xFFFF6EC7),
+              onTap: () => _showDjPanel(context, ref, state),
+            ),
 
           // Leave button
           _ControlButton(
@@ -1541,3 +1552,285 @@ class _ChatInputBarState extends State<_ChatInputBar> {
     );
   }
 }
+
+// ── DJ Panel helpers ────────────────────────────────────────────────────────
+
+void _showDjPanel(BuildContext context, WidgetRef ref, LiveRoomState state) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) => ProviderScope(
+      overrides: [],
+      child: _DjPanel(passedRef: ref, state: state),
+    ),
+  );
+}
+
+// ── _DjPanel ────────────────────────────────────────────────────────────────
+
+class _DjPanel extends ConsumerStatefulWidget {
+  const _DjPanel({required this.passedRef, required this.state});
+  final WidgetRef      passedRef;
+  final LiveRoomState  state;
+
+  @override
+  ConsumerState<_DjPanel> createState() => _DjPanelState();
+}
+
+class _DjPanelState extends ConsumerState<_DjPanel> {
+  final _urlController = TextEditingController();
+
+  @override
+  void dispose() {
+    _urlController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _playTrack(String url, String title) async {
+    final ctrl = widget.passedRef.read(liveRoomControllerProvider.notifier);
+    final err  = await ctrl.djPlay(url, title);
+    if (err != null && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(err), backgroundColor: const Color(0xFFFF4C4C)),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // Watch live state so transport buttons reflect engine callbacks.
+    final state = ref.watch(liveRoomControllerProvider);
+    final ctrl  = ref.read(liveRoomControllerProvider.notifier);
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.6,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      builder: (_, scrollController) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF12082A),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        child: Column(
+          children: [
+            // Drag handle
+            Container(
+              margin: const EdgeInsets.symmetric(vertical: 10),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: const Color(0xFF5A3A7E),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+
+            // Header
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Row(
+                children: const [
+                  Icon(Icons.queue_music, color: Color(0xFFFF6EC7), size: 22),
+                  SizedBox(width: 8),
+                  Text(
+                    'DJ Panel',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 4),
+
+            // Web notice
+            if (kIsWeb)
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'Audio mixing is not available in the web browser.\n'
+                  'Use the iOS or Android app to play music into the room.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.white60, fontSize: 14),
+                ),
+              )
+            else ...[
+              // Now Playing banner
+              if (state.djIsPlaying || state.djIsPaused)
+                Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A1A3E),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: const Color(0xFFFF6EC7)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        state.djIsPlaying ? Icons.equalizer : Icons.pause_circle_outline,
+                        color: const Color(0xFFFF6EC7),
+                        size: 18,
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${state.djIsPlaying ? "Now Playing" : "Paused"}: ${state.djTrackTitle}',
+                          style: const TextStyle(color: Colors.white, fontSize: 13),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // Transport controls (only while playing or paused)
+              if (state.djIsPlaying || state.djIsPaused)
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          state.djIsPlaying ? Icons.pause_circle : Icons.play_circle,
+                          color: const Color(0xFFFF6EC7),
+                          size: 44,
+                        ),
+                        onPressed: () => ctrl.djTogglePause(),
+                      ),
+                      const SizedBox(width: 16),
+                      IconButton(
+                        icon: const Icon(Icons.stop_circle, color: Colors.white54, size: 44),
+                        onPressed: () => ctrl.djStop(),
+                      ),
+                    ],
+                  ),
+                ),
+
+              // Volume
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
+                child: Row(
+                  children: [
+                    const Icon(Icons.volume_down, color: Colors.white54, size: 18),
+                    Expanded(
+                      child: Slider(
+                        value: state.djVolume.toDouble(),
+                        min: 0,
+                        max: 100,
+                        divisions: 20,
+                        activeColor: const Color(0xFFFF6EC7),
+                        inactiveColor: const Color(0xFF5A3A7E),
+                        onChanged: (v) => ctrl.djSetVolume(v.round()),
+                      ),
+                    ),
+                    const Icon(Icons.volume_up, color: Colors.white54, size: 18),
+                  ],
+                ),
+              ),
+
+              // Loop
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 16, 4),
+                child: Row(
+                  children: [
+                    Switch(
+                      value: state.djIsLooping,
+                      activeColor: const Color(0xFFFF6EC7),
+                      onChanged: ctrl.djSetLooping,
+                    ),
+                    const Text('Loop track',
+                        style: TextStyle(color: Colors.white70, fontSize: 13)),
+                  ],
+                ),
+              ),
+
+              const Divider(color: Color(0xFF2A1A3E), height: 8),
+
+              // Scrollable track list + custom URL
+              Expanded(
+                child: ListView(
+                  controller: scrollController,
+                  padding: const EdgeInsets.only(bottom: 24),
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 8, 16, 4),
+                      child: Text(
+                        'PRESET TRACKS',
+                        style: TextStyle(
+                          color: Colors.white38,
+                          fontSize: 11,
+                          letterSpacing: 1.4,
+                        ),
+                      ),
+                    ),
+                    ...kDjPresetTracks.map(
+                      (track) => ListTile(
+                        leading: const Icon(Icons.music_note,
+                            color: Color(0xFFFF6EC7), size: 20),
+                        title: Text(
+                          track.title,
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                        ),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.play_arrow, color: Colors.white70),
+                          onPressed: () => _playTrack(track.url, track.title),
+                        ),
+                        onTap: () => _playTrack(track.url, track.title),
+                      ),
+                    ),
+                    const Divider(color: Color(0xFF2A1A3E), height: 16),
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 4, 16, 4),
+                      child: Text(
+                        'CUSTOM URL',
+                        style: TextStyle(
+                          color: Colors.white38,
+                          fontSize: 11,
+                          letterSpacing: 1.4,
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                      child: TextField(
+                        controller: _urlController,
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: 'https://example.com/track.mp3',
+                          hintStyle: const TextStyle(color: Colors.white38),
+                          filled: true,
+                          fillColor: const Color(0xFF1E0E3A),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 10),
+                          suffixIcon: IconButton(
+                            icon: const Icon(Icons.play_arrow,
+                                color: Color(0xFFFF6EC7)),
+                            onPressed: () {
+                              final url = _urlController.text.trim();
+                              if (url.isNotEmpty) {
+                                _playTrack(url, 'Custom Track');
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
