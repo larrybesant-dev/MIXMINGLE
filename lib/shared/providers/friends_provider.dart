@@ -163,7 +163,7 @@ final friendsWithUnreadProvider = Provider<List<Friend>>((ref) {
 /// Total unread messages count
 final totalUnreadMessagesProvider = Provider<int>((ref) {
   final friends = ref.watch(friendsProvider);
-  return friends.fold<int>(0, (sum, friend) => sum + friend.unreadMessages);
+  return friends.fold<int>(0, (acc, friend) => acc + friend.unreadMessages);
 });
 
 

@@ -16,12 +16,14 @@ class FcmNotificationService {
 
     // Handle notification tap when app is in background
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      if (!context.mounted) return;
       _handleNavigation(context, message.data);
     });
 
     // Handle notification tap when app is terminated
     final initialMessage = await _fcm.getInitialMessage();
     if (initialMessage != null) {
+      if (!context.mounted) return;
       _handleNavigation(context, initialMessage.data);
     }
   }

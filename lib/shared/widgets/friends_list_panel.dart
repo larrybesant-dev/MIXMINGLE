@@ -491,7 +491,7 @@ class _FriendsListPanelState extends State<FriendsListPanel>
                 if (currentUid == null) return;
                 final convoId = await MessagingService()
                     .getOrCreateConversationId(currentUid, friendId);
-                if (!context.mounted) return;
+                if (!mounted) return;
                 Navigator.push(
                   context,
                   MaterialPageRoute(
