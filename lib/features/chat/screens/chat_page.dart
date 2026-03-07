@@ -34,12 +34,29 @@ class _ChatPageState extends ConsumerState<ChatPage> {
   DocumentSnapshot? _oldestDoc;
   bool _isLoadingMore = false;
   bool _hasMore = true;
+  String? _resolvedChatId;
+  bool _resolvingChat = false;
 
   @override
   void initState() {
     super.initState();
     controller.addListener(_onTextChanged);
     _scrollController.addListener(_onScroll);
+    if (widget.chatId == null && widget.userId != null) {
+      _resolveChat();
+    }
+  }
+
+  Future<void> _resolveChat() async {
+    setState(() => _resolvingChat = true);
+    try {
+      final room = await _cs.getOrCreateChatRoom(widget.userId!);
+      if (mounted) setState(() => _resolvedChatId = room.id);
+    } catch (_) {
+      // Fall back to temp id silently
+    } finally {
+      if (mounted) setState(() => _resolvingChat = false);
+    }
   }
 
   void _onScroll() {
@@ -108,8 +125,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
       );
     }
 
-    // TODO: If userId is provided but no chatId, create or find chat with that user
-    final effectiveChatId = widget.chatId ?? 'temp_${widget.userId}';
+    if (_resolvingChat) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final effectiveChatId = _resolvedChatId ?? widget.chatId ?? 'temp_${widget.userId}';
 
     return ClubBackground(
       child: Scaffold(

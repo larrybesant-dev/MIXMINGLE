@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import '../../shared/providers/all_providers.dart';
 import '../../shared/widgets/async_value_view_enhanced.dart';
@@ -21,6 +22,122 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
   bool _isDeleting = false;
   bool _isLinking = false;
   bool _isExporting = false;
+
+  Future<void> _showChangeEmailDialog() async {
+    final emailCtrl = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Change Email'),
+        content: TextField(
+          controller: emailCtrl,
+          keyboardType: TextInputType.emailAddress,
+          decoration: const InputDecoration(
+            labelText: 'New email address',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final email = emailCtrl.text.trim();
+              if (email.isEmpty) return;
+              Navigator.of(ctx).pop();
+              try {
+                await FirebaseAuth.instance.currentUser
+                    ?.verifyBeforeUpdateEmail(email);
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                      content: Text(
+                          'Verification email sent. Check your inbox to confirm the change.')),
+                );
+              } on FirebaseAuthException catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(e.message ?? 'Failed to update email')),
+                );
+              }
+            },
+            child: const Text('Send Verification'),
+          ),
+        ],
+      ),
+    );
+    emailCtrl.dispose();
+  }
+
+  Future<void> _showChangePasswordDialog() async {
+    final currentCtrl = TextEditingController();
+    final newCtrl = TextEditingController();
+    await showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Change Password'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: currentCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Current password',
+                border: OutlineInputBorder(),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: newCtrl,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'New password (min 6 chars)',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final current = currentCtrl.text;
+              final newPwd = newCtrl.text;
+              if (current.isEmpty || newPwd.length < 6) return;
+              Navigator.of(ctx).pop();
+              try {
+                final user = FirebaseAuth.instance.currentUser;
+                if (user?.email == null) return;
+                final cred = EmailAuthProvider.credential(
+                    email: user!.email!, password: current);
+                await user.reauthenticateWithCredential(cred);
+                await user.updatePassword(newPwd);
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Password updated successfully')),
+                );
+              } on FirebaseAuthException catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content: Text(e.message ?? 'Failed to update password')),
+                );
+              }
+            },
+            child: const Text('Update Password'),
+          ),
+        ],
+      ),
+    );
+    currentCtrl.dispose();
+    newCtrl.dispose();
+  }
 
   Future<void> _deleteAccount() async {
     // First, get validation warnings
@@ -437,24 +554,14 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
                     leading: const Icon(Icons.email),
                     title: const Text('Change Email'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // TODO: Navigate to change email page
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Feature coming soon')),
-                      );
-                    },
+                    onTap: () => _showChangeEmailDialog(),
                   ),
                   const Divider(height: 1),
                   ListTile(
                     leading: const Icon(Icons.lock),
                     title: const Text('Change Password'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      // TODO: Navigate to change password page
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Feature coming soon')),
-                      );
-                    },
+                    onTap: () => _showChangePasswordDialog(),
                   ),
                 ],
               ),
@@ -494,7 +601,10 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
                     subtitle: const Text('Not connected'),
                     trailing: TextButton(
                       onPressed: () {
-                        // TODO: Implement Facebook linking
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Facebook linking coming soon')),
+                        );
                       },
                       child: const Text('Connect'),
                     ),
@@ -506,7 +616,10 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
                     subtitle: const Text('Not connected'),
                     trailing: TextButton(
                       onPressed: () {
-                        // TODO: Implement Google linking
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                              content: Text('Google linking coming soon')),
+                        );
                       },
                       child: const Text('Connect'),
                     ),

@@ -16,22 +16,38 @@ class BrowseRoomsPaginatedPage extends ConsumerStatefulWidget {
 
 class _BrowseRoomsPaginatedPageState extends ConsumerState<BrowseRoomsPaginatedPage> {
   late PaginationController<Room> _controller;
+  String? _selectedCategory;
+
+  static const _categories = [
+    'Music',
+    'Gaming',
+    'Talk',
+    'Events',
+    'Chill',
+    'Business',
+  ];
 
   @override
   void initState() {
     super.initState();
+    _buildController();
+    _controller.loadInitial();
+  }
 
-    // Initialize the pagination controller with Firestore query
+  void _buildController([String? category]) {
     _controller = PaginationController<Room>(
       pageSize: 20,
       queryBuilder: () {
-        return FirebaseFirestore.instance.collection('rooms').orderBy('createdAt', descending: true);
+        var query = FirebaseFirestore.instance
+            .collection('rooms')
+            .orderBy('createdAt', descending: true);
+        if (category != null) {
+          query = query.where('category', isEqualTo: category);
+        }
+        return query;
       },
       fromDocument: (doc) => Room.fromMap(doc.data() as Map<String, dynamic>),
     );
-
-    // Load initial page
-    _controller.loadInitial();
   }
 
   @override
@@ -40,17 +56,67 @@ class _BrowseRoomsPaginatedPageState extends ConsumerState<BrowseRoomsPaginatedP
     super.dispose();
   }
 
+  void _showFilterSheet() {
+    showModalBottomSheet(
+      context: context,
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ListTile(
+              title: Text('Filter by Category',
+                  style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+            const Divider(height: 1),
+            ListTile(
+              leading: const Icon(Icons.clear_all),
+              title: const Text('All Categories'),
+              selected: _selectedCategory == null,
+              onTap: () {
+                Navigator.of(ctx).pop();
+                _applyCategory(null);
+              },
+            ),
+            ..._categories.map((cat) => ListTile(
+                  title: Text(cat),
+                  selected: _selectedCategory == cat,
+                  onTap: () {
+                    Navigator.of(ctx).pop();
+                    _applyCategory(cat);
+                  },
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _applyCategory(String? category) {
+    setState(() {
+      _selectedCategory = category;
+      _controller.dispose();
+      _buildController(category);
+    });
+    _controller.loadInitial();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Browse Rooms'),
         actions: [
+          if (_selectedCategory != null)
+            Chip(
+              label: Text(_selectedCategory!),
+              onDeleted: () => _applyCategory(null),
+            ),
           IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              // TODO: Show filter options
-            },
+            icon: Icon(
+              Icons.filter_list,
+              color: _selectedCategory != null ? Colors.amber : null,
+            ),
+            onPressed: _showFilterSheet,
           ),
         ],
       ),
