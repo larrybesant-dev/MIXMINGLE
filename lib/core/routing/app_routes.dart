@@ -21,6 +21,7 @@ import '../../features/chat/screens/chat_conversation_page.dart';
 
 // Profile & Social
 import '../../features/profile/screens/following_list_page.dart';
+import '../../features/friends/friend_list_page.dart';
 
 // Guards
 import '../routing/guards/age_verified_guard.dart';
@@ -69,6 +70,7 @@ class AppRoutes {
   static const String reportUser          = '/report/user';
   static const String blockedUsers        = '/blocked-users';
   static const String adminDashboard      = '/admin/dashboard';
+  static const String friends              = '/friends';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     debugPrint('Navigating to: ${settings.name}');
@@ -118,6 +120,12 @@ class AppRoutes {
         final userId = settings.arguments as String? ?? '';
         return MaterialPageRoute(
           builder: (_) => FollowingListPage(userId: userId, displayName: ''),
+        );
+      case friends:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: FriendListPage()),
+          ),
         );
       default:
         return _errorRoute('No route defined for ${settings.name}');

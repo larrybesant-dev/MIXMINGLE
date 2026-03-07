@@ -1,4 +1,5 @@
 ﻿// ignore_for_file: unused_element
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/report.dart' show ReportType;
@@ -22,7 +23,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 4, vsync: this);
+    _tabs = TabController(length: 6, vsync: this);
   }
 
   @override
@@ -57,6 +58,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
               Tab(icon: Icon(Icons.people, size: 18), text: 'Users'),
               Tab(icon: Icon(Icons.discount, size: 18), text: 'Promos'),
               Tab(icon: Icon(Icons.meeting_room, size: 18), text: 'Rooms'),
+              Tab(icon: Icon(Icons.flag, size: 18), text: 'Reports'),
+              Tab(icon: Icon(Icons.block, size: 18), text: 'Bans'),
             ],
           ),
         ),
@@ -67,6 +70,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
             _UserModerationTab(),
             _PromoCodesTab(),
             _RoomModerationTab(),
+            _ReportsTab(),
+            _GlobalBansTab(),
           ],
         ),
       ),
@@ -703,5 +708,316 @@ class _Btn extends StatelessWidget {
       icon: Icon(icon, size: 15),
       label: Text(label, style: const TextStyle(fontSize: 12)),
     );
+  }
+}
+
+// ===========================================================================
+// Reports Tab
+// ===========================================================================
+
+class _ReportsTab extends ConsumerWidget {
+  const _ReportsTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('reports')
+          .orderBy('createdAt', descending: true)
+          .limit(100)
+          .snapshots(),
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snap.hasError) {
+          return Center(
+              child: Text('Error: ${snap.error}',
+                  style: const TextStyle(color: Colors.red)));
+        }
+        final docs = snap.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return const Center(
+              child: Text('No reports found',
+                  style: TextStyle(color: Colors.white54)));
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: docs.length,
+          itemBuilder: (context, i) {
+            final data = docs[i].data() as Map<String, dynamic>;
+            final reportId = docs[i].id;
+            return _ReportItemTile(
+              reportId: reportId,
+              data: data,
+              onAction: (action) => _handleReportAction(
+                  context, ref, reportId, data, action),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _handleReportAction(
+    BuildContext context,
+    WidgetRef ref,
+    String reportId,
+    Map<String, dynamic> data,
+    String action,
+  ) async {
+    try {
+      if (action == 'ban') {
+        final reportedId = data['reportedUserId'] as String?;
+        if (reportedId != null) {
+          await ref.read(adminServiceProvider).banUser(reportedId, 'Banned via report', duration: null);
+        }
+      }
+      await FirebaseFirestore.instance
+          .collection('reports')
+          .doc(reportId)
+          .update({'status': action, 'reviewedAt': FieldValue.serverTimestamp()});
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Report $action')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+}
+
+class _ReportItemTile extends StatelessWidget {
+  final String reportId;
+  final Map<String, dynamic> data;
+  final void Function(String action) onAction;
+
+  const _ReportItemTile({
+    required this.reportId,
+    required this.data,
+    required this.onAction,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final status = data['status'] as String? ?? 'pending';
+    final reportedId = data['reportedUserId'] as String? ?? '';
+    final reporterId = data['reporterId'] as String? ?? '';
+    final reason = data['reason'] as String? ?? data['description'] as String? ?? '';
+    final type = data['type'] as String? ?? 'other';
+    final isPending = status == 'pending';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isPending
+            ? Colors.red.withValues(alpha: 0.06)
+            : Colors.white.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isPending
+              ? Colors.red.withValues(alpha: 0.3)
+              : Colors.white12,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: Colors.redAccent.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(type.toUpperCase(),
+                  style: const TextStyle(
+                      color: Colors.redAccent,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold)),
+            ),
+            const Spacer(),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: isPending
+                    ? Colors.orange.withValues(alpha: 0.2)
+                    : Colors.green.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                status.toUpperCase(),
+                style: TextStyle(
+                    color: isPending ? Colors.orange : Colors.green,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 8),
+          Text('Reporter: $reporterId',
+              style: const TextStyle(color: Colors.white60, fontSize: 12)),
+          Text('Reported: $reportedId',
+              style: const TextStyle(color: Colors.white70, fontSize: 13)),
+          if (reason.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(reason,
+                style: const TextStyle(color: Colors.white, fontSize: 12)),
+          ],
+          if (isPending) ...[
+            const SizedBox(height: 10),
+            Row(children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => onAction('resolved'),
+                  icon: const Icon(Icons.check, size: 14),
+                  label: const Text('Resolve'),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 8)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => onAction('dismissed'),
+                  icon: const Icon(Icons.close, size: 14),
+                  label: const Text('Dismiss'),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.grey.shade700,
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 8)),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: () => onAction('ban'),
+                  icon: const Icon(Icons.block, size: 14),
+                  label: const Text('Ban User'),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 8)),
+                ),
+              ),
+            ]),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ===========================================================================
+// Global Bans Tab
+// ===========================================================================
+
+class _GlobalBansTab extends ConsumerWidget {
+  const _GlobalBansTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('global_bans')
+          .orderBy('bannedAt', descending: true)
+          .limit(200)
+          .snapshots(),
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final docs = snap.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return const Center(
+              child: Text('No global bans',
+                  style: TextStyle(color: Colors.white54)));
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: docs.length,
+          itemBuilder: (context, i) {
+            final data = docs[i].data() as Map<String, dynamic>;
+            final userId = docs[i].id;
+            final reason = data['reason'] as String? ?? 'No reason';
+            final expiresAt = data['expiresAt'];
+            final isPermanent = expiresAt == null;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(10),
+                border:
+                    Border.all(color: Colors.red.withValues(alpha: 0.25)),
+              ),
+              child: Row(children: [
+                const Icon(Icons.block, color: Colors.redAccent, size: 20),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(userId,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13)),
+                      Text(reason,
+                          style: const TextStyle(
+                              color: Colors.white54, fontSize: 12)),
+                      Text(
+                        isPermanent ? 'Permanent ban' : 'Temporary ban',
+                        style: TextStyle(
+                            color: isPermanent
+                                ? Colors.redAccent
+                                : Colors.orange,
+                            fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  onPressed: () =>
+                      _unban(context, ref, userId),
+                  child: const Text('Unban',
+                      style: TextStyle(color: Colors.greenAccent)),
+                ),
+              ]),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _unban(
+      BuildContext context, WidgetRef ref, String userId) async {
+    try {
+      await ref.read(adminServiceProvider).unbanUser(userId);
+      // Also remove from global_bans collection
+      await FirebaseFirestore.instance
+          .collection('global_bans')
+          .doc(userId)
+          .delete();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('User unbanned')));
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
   }
 }

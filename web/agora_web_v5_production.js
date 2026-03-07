@@ -1008,4 +1008,130 @@
   // ========== STARTUP ==========
   log('SUCCESS', 'Agora Web production bridge initialized and ready');
 
+  // ========== DJ AUDIO MIXING ==========
+  // Plays a remote audio URL as a background music track alongside the live mic.
+  // Uses Agora SDK v5 BufferSourceAudioTrack so the mix is published to the channel.
+
+  let djAudioTrack = null;   // Agora BufferSourceAudioTrack
+  let djGainNode = null;     // Web Audio GainNode for volume control (fallback path)
+
+  /**
+   * Start playing an audio URL as background music in the channel.
+   * @param {string} url - HTTP/HTTPS URL of the audio file
+   * @param {boolean} loop - Whether to loop the track
+   */
+  window.agoraWebStartAudioMixing = async function(url, loop) {
+    try {
+      if (!state.client || !state.currentChannel) {
+        log('WARNING', 'DJ startAudioMixing called but not in a channel');
+        return false;
+      }
+      // Stop any existing mix first
+      await window.agoraWebStopAudioMixing();
+
+      if (window.AgoraRTC && typeof window.AgoraRTC.createBufferSourceAudioTrack === 'function') {
+        // Preferred: Agora's BufferSourceAudioTrack (published to channel)
+        djAudioTrack = await window.AgoraRTC.createBufferSourceAudioTrack({ source: url });
+        djAudioTrack.startProcessAudioBuffer({ loop: !!loop });
+        await state.client.publish([djAudioTrack]);
+        log('SUCCESS', 'DJ audio mixing started via BufferSourceAudioTrack', { url, loop });
+      } else {
+        // Fallback: Web Audio API (only audible locally)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const response = await fetch(url);
+        const arrayBuffer = await response.arrayBuffer();
+        const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+        const source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.loop = !!loop;
+        djGainNode = audioCtx.createGain();
+        djGainNode.gain.value = 0.5;
+        source.connect(djGainNode);
+        djGainNode.connect(audioCtx.destination);
+        source.start(0);
+        djAudioTrack = { _source: source, _ctx: audioCtx, _fallback: true };
+        log('WARNING', 'DJ audio mixing started via Web Audio fallback (local only)', { url });
+      }
+      return true;
+    } catch (err) {
+      log('ERROR', 'DJ startAudioMixing failed', err);
+      return false;
+    }
+  };
+
+  /** Stop audio mixing and unpublish the track. */
+  window.agoraWebStopAudioMixing = async function() {
+    try {
+      if (!djAudioTrack) return true;
+      if (djAudioTrack._fallback) {
+        try { djAudioTrack._source.stop(); } catch (_) {}
+        try { djAudioTrack._ctx.close(); } catch (_) {}
+      } else {
+        djAudioTrack.stopProcessAudioBuffer();
+        if (state.client) {
+          try { await state.client.unpublish([djAudioTrack]); } catch (_) {}
+        }
+        djAudioTrack.close();
+      }
+      djAudioTrack = null;
+      djGainNode = null;
+      log('SUCCESS', 'DJ audio mixing stopped');
+      return true;
+    } catch (err) {
+      log('ERROR', 'DJ stopAudioMixing failed', err);
+      return false;
+    }
+  };
+
+  /** Pause audio mixing. */
+  window.agoraWebPauseAudioMixing = async function() {
+    try {
+      if (!djAudioTrack) return false;
+      if (!djAudioTrack._fallback) {
+        djAudioTrack.pauseProcessAudioBuffer();
+      }
+      log('INFO', 'DJ audio mixing paused');
+      return true;
+    } catch (err) {
+      log('ERROR', 'DJ pauseAudioMixing failed', err);
+      return false;
+    }
+  };
+
+  /** Resume paused audio mixing. */
+  window.agoraWebResumeAudioMixing = async function() {
+    try {
+      if (!djAudioTrack) return false;
+      if (!djAudioTrack._fallback) {
+        djAudioTrack.resumeProcessAudioBuffer();
+      }
+      log('INFO', 'DJ audio mixing resumed');
+      return true;
+    } catch (err) {
+      log('ERROR', 'DJ resumeAudioMixing failed', err);
+      return false;
+    }
+  };
+
+  /**
+   * Set audio mixing volume.
+   * @param {number} volume - 0 to 100
+   */
+  window.agoraWebSetAudioMixingVolume = async function(volume) {
+    try {
+      const v = Math.max(0, Math.min(100, volume));
+      if (!djAudioTrack) return false;
+      if (djAudioTrack._fallback) {
+        if (djGainNode) djGainNode.gain.value = v / 100;
+      } else {
+        djAudioTrack.setVolume(v);
+      }
+      log('INFO', 'DJ volume set', { volume: v });
+      return true;
+    } catch (err) {
+      log('ERROR', 'DJ setAudioMixingVolume failed', err);
+      return false;
+    }
+  };
+
 })(window);

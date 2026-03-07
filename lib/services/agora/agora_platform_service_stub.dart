@@ -28,6 +28,11 @@ class AgoraPlatformService {
       false;
 
   static Future<bool> initializeWeb(String appId) async => false;
+  static Future<bool> startAudioMixing(String url, {bool loop = false}) async => false;
+  static Future<bool> stopAudioMixing() async => false;
+  static Future<bool> pauseAudioMixing() async => false;
+  static Future<bool> resumeAudioMixing() async => false;
+  static Future<bool> setAudioMixingVolume(int volume) async => false;
 
   static Map<String, dynamic> getWebBridgeState() => {};
 

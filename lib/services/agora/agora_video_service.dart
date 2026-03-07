@@ -1074,6 +1074,30 @@ class AgoraVideoService extends ChangeNotifier {
   }
 
   // ============================================================================
+  // DJ AUDIO MIXING
+  // ============================================================================
+
+  Future<bool> startAudioMixing(String url, {bool loop = false}) async {
+    return AgoraPlatformService.startAudioMixing(url, loop: loop);
+  }
+
+  Future<bool> stopAudioMixing() async {
+    return AgoraPlatformService.stopAudioMixing();
+  }
+
+  Future<bool> pauseAudioMixing() async {
+    return AgoraPlatformService.pauseAudioMixing();
+  }
+
+  Future<bool> resumeAudioMixing() async {
+    return AgoraPlatformService.resumeAudioMixing();
+  }
+
+  Future<bool> setAudioMixingVolume(int volume) async {
+    return AgoraPlatformService.setAudioMixingVolume(volume);
+  }
+
+  // ============================================================================
   // CLEANUP
   // ============================================================================
 

@@ -10,6 +10,8 @@ import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/core/routing/app_routes.dart';
 import 'package:mixmingle/core/design_system/design_constants.dart';
 import 'package:mixmingle/core/intelligence/vibe_intelligence_service.dart';
+import 'package:mixmingle/shared/providers/friend_request_provider.dart';
+import 'package:mixmingle/services/social/friend_service.dart';
 
 import '../widgets/profile_mode_selector.dart';
 import '../widgets/layer_attraction.dart';
@@ -65,7 +67,10 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final profileAsync = ref.watch(currentUserProfileProvider);
+    // When viewing another user's profile, watch their data via family provider.
+    final profileAsync = !_isOwner
+        ? ref.watch(userProfileProvider(widget.targetUserId!))
+        : ref.watch(currentUserProfileProvider);
 
     // Seed computed tags once per page load without waiting for nightly CF.
     ref.listen(currentUserProfileProvider, (_, next) {
@@ -117,6 +122,145 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             .update({'computedTags': freshTags});
       }
     } catch (_) {}
+  }
+
+  // ══════════════════════════════════════════════════════════
+  //  SOCIAL ACTIONS (non-owner)
+  // ══════════════════════════════════════════════════════════
+
+  /// Handles the Follow/Add Friend button in LayerAttraction.
+  Future<void> _handleFriendAction(UserProfile p) async {
+    final svc = ref.read(friendServiceProvider);
+    final statusAsync = ref.read(friendStatusProvider(p.id));
+    final status = statusAsync.asData?.value ?? FriendRequestStatus.none;
+    try {
+      switch (status) {
+        case FriendRequestStatus.none:
+          await svc.sendFriendRequest(p.id);
+          _toast('Friend request sent');
+        case FriendRequestStatus.sent:
+          await svc.cancelFriendRequest(p.id);
+          _toast('Request cancelled');
+        case FriendRequestStatus.received:
+          await svc.acceptFriendRequest(p.id);
+          _toast('${p.displayName ?? 'User'} added as friend!');
+        case FriendRequestStatus.friends:
+          await svc.removeFriend(p.id);
+          _toast('Friend removed');
+      }
+    } catch (e) {
+      _toast('Action failed: $e');
+    }
+  }
+
+  /// Navigates to DM conversation with target user.
+  void _handleMessage(UserProfile p) {
+    // Navigate to chats list; in a full impl this would create/find a DM thread
+    Navigator.pushNamed(context, AppRoutes.chats);
+  }
+
+  /// Builds the Block + Report + (Decline if received) extra row.
+  Widget _buildSocialActionsExtra(UserProfile p) {
+    final status = ref
+        .watch(friendStatusProvider(p.id))
+        .asData
+        ?.value ?? FriendRequestStatus.none;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 0),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 6,
+        children: [
+          if (status == FriendRequestStatus.received) ...[
+            _socialChip(
+              label: 'Accept Request',
+              icon: Icons.check_circle_outline,
+              color: const Color(0xFF00C853),
+              onTap: () async {
+                await ref.read(friendServiceProvider).acceptFriendRequest(p.id);
+                _toast('Friend added!');
+              },
+            ),
+            _socialChip(
+              label: 'Decline',
+              icon: Icons.cancel_outlined,
+              color: Colors.grey,
+              onTap: () async {
+                await ref.read(friendServiceProvider).rejectFriendRequest(p.id);
+                _toast('Request declined');
+              },
+            ),
+          ],
+          _socialChip(
+            label: 'Block',
+            icon: Icons.block_outlined,
+            color: const Color(0xFFFF6B35),
+            onTap: () => _confirmBlock(p),
+          ),
+          _socialChip(
+            label: 'Report',
+            icon: Icons.flag_outlined,
+            color: const Color(0xFFFF4D8B),
+            onTap: () => Navigator.pushNamed(
+              context,
+              AppRoutes.reportUser,
+              arguments: {'userId': p.id, 'displayName': p.displayName},
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _socialChip({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withValues(alpha: 0.45)),
+        ),
+        child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(label, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600)),
+        ]),
+      ),
+    );
+  }
+
+  Future<void> _confirmBlock(UserProfile p) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1F2E),
+        title: const Text('Block User', style: TextStyle(color: Colors.white)),
+        content: Text(
+          'Block ${p.displayName ?? 'this user'}? They will no longer be able to see your profile or contact you.',
+          style: const TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF6B35)),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Block'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      await ref.read(friendServiceProvider).blockUser(p.id);
+      if (mounted) Navigator.pop(context);
+      _toast('User blocked');
+    }
   }
 
   // ══════════════════════════════════════════════════════════
@@ -192,9 +336,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       LayerAttraction(
         p: p,
         isOwner: _isOwner,
-        onFollow: _isOwner ? null : () => _toast('Follow'),
-        onMessage: _isOwner ? null : () => _toast('Message'),
+        onFollow: _isOwner ? null : () => _handleFriendAction(p),
+        onMessage: _isOwner ? null : () => _handleMessage(p),
       ),
+      if (!_isOwner) ...[
+        const SizedBox(height: 8),
+        _buildSocialActionsExtra(p),
+      ],
       const SizedBox(height: 24),
     ];
 
@@ -202,8 +350,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         ? [
             LayerLivePresence(
               p: p,
-              onJoinRoom: () => _toast('Join Room'),
-              onViewEvents: () => _toast('View Events'),
+              onJoinRoom: () {
+                if (p.presenceStatus == 'in_room' && p.activeRoomId != null) {
+                  Navigator.pushNamed(context, AppRoutes.room, arguments: p.activeRoomId);
+                } else {
+                  _toast('No active room');
+                }
+              },
+              onViewEvents: () => Navigator.pushNamed(context, AppRoutes.events),
             ),
             const SizedBox(height: 24),
           ]

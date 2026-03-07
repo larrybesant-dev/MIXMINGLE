@@ -116,6 +116,28 @@ service cloud.firestore {
         allow read: if isOwner(userId);
         allow write: if isOwner(userId);
       }
+
+      // FRIEND REQUESTS SUBCOLLECTION (incoming)
+      match /friend_requests/{fromUid} {
+        // Owner can read their own incoming requests
+        allow read: if isOwner(userId);
+        // Sender can create (fromUid == sender) and delete (cancel)
+        allow create: if isSignedIn() && request.auth.uid == fromUid && fromUid != userId;
+        allow delete: if isOwner(userId) || request.auth.uid == fromUid;
+      }
+
+      // SENT REQUESTS SUBCOLLECTION (outgoing tracker)
+      match /sent_requests/{toUid} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // FRIENDS SUBCOLLECTION
+      match /friends/{friendUid} {
+        // Both parties can read
+        allow read: if isOwner(userId) || request.auth.uid == friendUid;
+        // Owner manages their own friend list
+        allow write: if isOwner(userId);
+      }
     }
 
     // ========================================
@@ -242,6 +264,13 @@ service cloud.firestore {
                          request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
                          request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins ||
                          isAdmin();
+      }
+
+      // DJ STATE SUBCOLLECTION
+      match /djState/{docId} {
+        allow read: if isSignedIn();
+        // Only room owner can write DJ state
+        allow write: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId;
       }
 
       // REACTIONS SUBCOLLECTION
@@ -417,15 +446,24 @@ service cloud.firestore {
     // ========================================
 
     match /reports/{reportId} {
-      allow read: if false; // Server-side only
+      // Admins can read all reports; reporters can read their own
+      allow read: if isAdmin() ||
+                     (isSignedIn() && resource.data.reporterId == request.auth.uid);
       allow create: if isSignedIn() &&
-                       hasValidString('reporterId') &&
-                       hasValidString('reportedId') &&
-                       hasValidString('reason') &&
                        request.resource.data.reporterId == request.auth.uid &&
-                       request.resource.data.reporterId != request.resource.data.reportedId &&
-                       request.resource.data.reason.size() <= 1000;
-      allow update, delete: if false;
+                       request.resource.data.reportedUserId != request.auth.uid;
+      // Only admins can update (resolve/dismiss) or delete reports
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // ========================================
+    // GLOBAL BANS COLLECTION
+    // ========================================
+
+    match /global_bans/{userId} {
+      allow read: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin();
     }
 
     // ========================================

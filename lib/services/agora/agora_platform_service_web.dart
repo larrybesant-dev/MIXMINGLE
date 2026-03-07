@@ -179,4 +179,30 @@ class AgoraPlatformService {
       void Function(String uid, String mediaType) callback) {
     AgoraWebBridgeV3.registerRemotePublishedCallback(callback);
   }
+
+  // ── Audio mixing ─────────────────────────────────────────────────────────
+  static Future<bool> startAudioMixing(String url, {bool loop = false}) async {
+    if (AGORA_WEB_DISABLED) return false;
+    return AgoraWebBridgeV3.startAudioMixing(url, loop);
+  }
+
+  static Future<bool> stopAudioMixing() async {
+    if (AGORA_WEB_DISABLED) return false;
+    return AgoraWebBridgeV3.stopAudioMixing();
+  }
+
+  static Future<bool> pauseAudioMixing() async {
+    if (AGORA_WEB_DISABLED) return false;
+    return AgoraWebBridgeV3.pauseAudioMixing();
+  }
+
+  static Future<bool> resumeAudioMixing() async {
+    if (AGORA_WEB_DISABLED) return false;
+    return AgoraWebBridgeV3.resumeAudioMixing();
+  }
+
+  static Future<bool> setAudioMixingVolume(int volume) async {
+    if (AGORA_WEB_DISABLED) return false;
+    return AgoraWebBridgeV3.setAudioMixingVolume(volume);
+  }
 }
