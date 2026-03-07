@@ -317,8 +317,20 @@ class EventSearchController extends Notifier<AsyncValue<List<Event>>> {
   Future<void> _performSearch() async {
     state = const AsyncValue.loading();
     try {
-      // For now, just return empty list. TODO: Implement proper event search
-      var events = <Event>[];
+      // Fetch upcoming public events from Firestore
+      final now = Timestamp.now();
+      final snap = await FirebaseFirestore.instance
+          .collection('events')
+          .where('isPublic', isEqualTo: true)
+          .where('startTime', isGreaterThan: now)
+          .orderBy('startTime', descending: false)
+          .limit(100)
+          .get();
+      var events = snap.docs.map((doc) {
+        final data = doc.data();
+        data['id'] = doc.id;
+        return Event.fromMap(data);
+      }).toList();
 
       // Apply search query
       if (_searchQuery.isNotEmpty) {

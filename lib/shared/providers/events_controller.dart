@@ -22,8 +22,9 @@ final allEventsProvider = StreamProvider<List<Event>>((ref) {
 // My events provider - REAL-TIME STREAM (user's created events)
 final myEventsProvider = StreamProvider<List<Event>>((ref) {
   final eventsService = ref.watch(eventsServiceProvider);
-  // For now, return upcoming events. TODO: Add separate method for user's created events
-  return eventsService.watchUpcomingEvents();
+  final userId = ref.watch(currentUserProvider).value?.id;
+  if (userId == null) return Stream.value([]);
+  return eventsService.watchUserCreatedEvents(userId);
 });
 
 // Attending events provider - REAL-TIME STREAM
