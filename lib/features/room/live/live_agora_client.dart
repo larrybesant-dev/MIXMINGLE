@@ -20,6 +20,7 @@ import 'package:flutter/foundation.dart';
 import 'live_room_schema.dart';
 import '../../../core/platform/web_platform_view_helper.dart';
 import '../../../services/agora/agora_platform_service.dart';
+import '../../../services/agora/agora_web_bridge_v3.dart';
 
 // ── Events emitted to the controller ──────────────────────────────────────
 
@@ -390,7 +391,11 @@ class LiveAgoraClient {
   // ── DJ Audio Mixing ──────────────────────────────────────────────────
 
   Future<void> startAudioMixing(String url, {bool looping = false}) async {
-    if (kIsWeb || _engine == null) return;
+    if (kIsWeb) {
+      await AgoraWebBridgeV3.startAudioMixing(url, looping);
+      return;
+    }
+    if (_engine == null) return;
     await _engine!.startAudioMixing(
       filePath: url,
       loopback: false,
@@ -400,22 +405,26 @@ class LiveAgoraClient {
   }
 
   Future<void> stopAudioMixing() async {
-    if (kIsWeb || _engine == null) return;
+    if (kIsWeb) { await AgoraWebBridgeV3.stopAudioMixing(); return; }
+    if (_engine == null) return;
     await _engine!.stopAudioMixing();
   }
 
   Future<void> pauseAudioMixing() async {
-    if (kIsWeb || _engine == null) return;
+    if (kIsWeb) { await AgoraWebBridgeV3.pauseAudioMixing(); return; }
+    if (_engine == null) return;
     await _engine!.pauseAudioMixing();
   }
 
   Future<void> resumeAudioMixing() async {
-    if (kIsWeb || _engine == null) return;
+    if (kIsWeb) { await AgoraWebBridgeV3.resumeAudioMixing(); return; }
+    if (_engine == null) return;
     await _engine!.resumeAudioMixing();
   }
 
   Future<void> setAudioMixingVolume(int volume) async {
-    if (kIsWeb || _engine == null) return;
+    if (kIsWeb) { await AgoraWebBridgeV3.setAudioMixingVolume(volume); return; }
+    if (_engine == null) return;
     await _engine!.adjustAudioMixingVolume(volume);
   }
 

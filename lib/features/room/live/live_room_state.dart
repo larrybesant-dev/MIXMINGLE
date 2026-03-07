@@ -79,8 +79,7 @@ class LiveRoomState {
     this.djIsPlaying   = false,
     this.djIsPaused    = false,
     this.djVolume      = 80,
-    this.djIsLooping   = false,
-  });
+    this.djIsLooping   = false,    this.djUserId,  });
 
   final String roomId;
   final String localUserId;
@@ -118,11 +117,13 @@ class LiveRoomState {
   final int agoraViewerCount;
 
   // ── DJ audio mixing ──────────────────────────────────────────────────────
-  final String djTrackTitle;
-  final bool   djIsPlaying;
-  final bool   djIsPaused;
-  final int    djVolume;     // 0–100
-  final bool   djIsLooping;
+  final String  djTrackTitle;
+  final bool    djIsPlaying;
+  final bool    djIsPaused;
+  final int     djVolume;     // 0–100
+  final bool    djIsLooping;
+  /// uid of the participant currently acting as DJ (null when nobody is).
+  final String? djUserId;
 
   // ── Errors / progress messages ————————————————————————————————
   final String? error;
@@ -146,6 +147,19 @@ class LiveRoomState {
 
   int get onCamCount      => participants.where((p) => p.isOnCam).length;
   int get activeMicCount  => participants.where((p) => p.isMicActive).length;
+
+  /// True when music is playing (local engine or Firestore-reflected).
+  bool get isMusicActive =>
+      djIsPlaying || djIsPaused || (roomMeta?.isMusicPlaying ?? false);
+
+  /// Display title for the currently active track.
+  String get activeDjTrackTitle =>
+      djTrackTitle.isNotEmpty
+          ? djTrackTitle
+          : (roomMeta?.currentTrackUrl ?? '');
+
+  /// The userId currently acting as DJ (local or Firestore-reflected).
+  String? get activeDjUserId => djUserId ?? roomMeta?.djUserId;
 
   /// Accurate in-room viewer count from the heartbeat-filtered Firestore
   /// participant list.  The Agora bridge's `activeAgoraUsers` set only tracks
@@ -210,6 +224,7 @@ class LiveRoomState {
     bool?   djIsPaused,
     int?    djVolume,
     bool?   djIsLooping,
+    String? djUserId,
     bool    clearDj = false,
   }) =>
       LiveRoomState(
@@ -236,6 +251,7 @@ class LiveRoomState {
         djIsPaused:    clearDj ? false : (djIsPaused   ?? this.djIsPaused),
         djVolume:      djVolume     ?? this.djVolume,
         djIsLooping:   djIsLooping  ?? this.djIsLooping,
+        djUserId:      clearDj ? null : (djUserId ?? this.djUserId),
       );
 
   @override

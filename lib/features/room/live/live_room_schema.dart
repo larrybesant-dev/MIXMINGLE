@@ -103,6 +103,10 @@ class RoomFields {
   static const participantCount = 'participantCount';
   static const createdAt        = 'createdAt';
   static const updatedAt        = 'updatedAt';
+  // ── DJ music metadata ───────────────────────────────────────────────────────────
+  static const isMusicPlaying   = 'isMusicPlaying';
+  static const currentTrackUrl  = 'currentTrackUrl';
+  static const djUserId         = 'djUserId';
 }
 
 class ParticipantFields {
@@ -148,6 +152,10 @@ class RoomMeta {
   final bool isActive;
   final bool videoChannelLive;
   final int participantCount;
+  // ── DJ music ────────────────────────────────────────────────────────────────
+  final bool isMusicPlaying;
+  final String? currentTrackUrl;
+  final String? djUserId;
 
   const RoomMeta({
     required this.id,
@@ -162,6 +170,9 @@ class RoomMeta {
     required this.isActive,
     required this.videoChannelLive,
     required this.participantCount,
+    this.isMusicPlaying  = false,
+    this.currentTrackUrl,
+    this.djUserId,
   });
 
   factory RoomMeta.fromFirestore(DocumentSnapshot doc) {
@@ -194,6 +205,9 @@ class RoomMeta {
       isActive:         (d[RoomFields.isActive]         as bool?)   ?? true,
       videoChannelLive: (d[RoomFields.videoChannelLive] as bool?)   ?? false,
       participantCount: (d[RoomFields.participantCount] as int?)    ?? 0,
+      isMusicPlaying:   (d[RoomFields.isMusicPlaying]   as bool?)   ?? false,
+      currentTrackUrl:   d[RoomFields.currentTrackUrl]  as String?,
+      djUserId:          d[RoomFields.djUserId]          as String?,
     );
   }
 
@@ -210,6 +224,9 @@ class RoomMeta {
     RoomFields.isActive:         isActive,
     RoomFields.videoChannelLive: videoChannelLive,
     RoomFields.participantCount: participantCount,
+    RoomFields.isMusicPlaying:   isMusicPlaying,
+    RoomFields.currentTrackUrl:  currentTrackUrl,
+    RoomFields.djUserId:         djUserId,
     RoomFields.updatedAt:        FieldValue.serverTimestamp(),
   };
 
@@ -217,6 +234,10 @@ class RoomMeta {
     bool? videoChannelLive,
     int?  participantCount,
     bool? isActive,
+    bool? isMusicPlaying,
+    String? currentTrackUrl,
+    String? djUserId,
+    bool clearMusic = false,
   }) =>
       RoomMeta(
         id:               id,
@@ -231,6 +252,9 @@ class RoomMeta {
         isActive:         isActive          ?? this.isActive,
         videoChannelLive: videoChannelLive  ?? this.videoChannelLive,
         participantCount: participantCount  ?? this.participantCount,
+        isMusicPlaying:   clearMusic ? false : (isMusicPlaying  ?? this.isMusicPlaying),
+        currentTrackUrl:  clearMusic ? null  : (currentTrackUrl ?? this.currentTrackUrl),
+        djUserId:         clearMusic ? null  : (djUserId         ?? this.djUserId),
       );
 }
 

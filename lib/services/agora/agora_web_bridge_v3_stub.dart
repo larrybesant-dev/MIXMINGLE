@@ -37,4 +37,11 @@ class AgoraWebBridgeV3 {
 
   static void registerTokenWillExpireCallback(
       void Function(String channelName, String uid) callback) {}
+
+  // ── Audio mixing stubs ────────────────────────────────────────────────────
+  static Future<bool> startAudioMixing(String url, bool looping) async => false;
+  static Future<bool> stopAudioMixing() async => false;
+  static Future<bool> pauseAudioMixing() async => false;
+  static Future<bool> resumeAudioMixing() async => false;
+  static Future<bool> setAudioMixingVolume(int volume) async => false;
 }

@@ -13,7 +13,7 @@ import 'dart:async';
 import 'dart:developer' show log;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../shared/providers/auth_providers.dart';
@@ -301,6 +301,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               if (s.audienceParticipants.isNotEmpty)
                 _AudienceRow(participants: s.audienceParticipants),
 
+              // ── Now playing banner (all participants) ─────────────────
+              _NowPlayingBanner(state: s),
+
               // ── Controls ──────────────────────────────────────────────
               _ControlBar(args: _args, state: s),
 
@@ -378,6 +381,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               ),
             ),
             ReactionBarWidget(onReact: _sendReaction),
+            _NowPlayingBanner(state: s),
             SizedBox(height: 92, child: _ControlBar(args: _args, state: s)),
           ],
         );
@@ -597,9 +601,9 @@ class _ControlBar extends ConsumerWidget {
           // DJ button — host/broadcasters only
           if (state.isHost || state.isBroadcaster)
             _ControlButton(
-              icon: state.djIsPlaying ? Icons.music_note : Icons.queue_music,
-              label: state.djIsPlaying ? 'DJ Live' : 'DJ',
-              active: state.djIsPlaying || state.djIsPaused,
+              icon: state.isMusicActive ? Icons.music_note : Icons.queue_music,
+              label: state.isMusicActive ? 'DJ Live' : 'DJ',
+              active: state.isMusicActive,
               activeColor: const Color(0xFFFF6EC7),
               onTap: () => _showDjPanel(context, ref, state),
             ),
@@ -1567,6 +1571,48 @@ void _showDjPanel(BuildContext context, WidgetRef ref, LiveRoomState state) {
   );
 }
 
+// ── _NowPlayingBanner ───────────────────────────────────────────────────────
+
+class _NowPlayingBanner extends StatelessWidget {
+  const _NowPlayingBanner({required this.state});
+  final LiveRoomState state;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!state.isMusicActive) return const SizedBox.shrink();
+    final title = state.activeDjTrackTitle;
+    final djUid  = state.activeDjUserId;
+    final djParticipant = djUid == null
+        ? null
+        : state.participants
+            .where((p) => p.userId == djUid)
+            .firstOrNull;
+    final djName = djParticipant?.displayName ?? djUid ?? 'DJ';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+      color: const Color(0xFF1E0530),
+      child: Row(
+        children: [
+          const Icon(Icons.music_note, color: Color(0xFFFF6EC7), size: 14),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              title.isNotEmpty ? '\u{1F3B5} $title' : '\u{1F3B5} Music playing',
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          Text(
+            'by $djName',
+            style: const TextStyle(color: Color(0xFFFF6EC7), fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ── _DjPanel ────────────────────────────────────────────────────────────────
 
 class _DjPanel extends ConsumerStatefulWidget {
@@ -1645,20 +1691,9 @@ class _DjPanelState extends ConsumerState<_DjPanel> {
             ),
             const SizedBox(height: 4),
 
-            // Web notice
-            if (kIsWeb)
-              const Padding(
-                padding: EdgeInsets.all(24),
-                child: Text(
-                  'Audio mixing is not available in the web browser.\n'
-                  'Use the iOS or Android app to play music into the room.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white60, fontSize: 14),
-                ),
-              )
-            else ...[
+            ...[
               // Now Playing banner
-              if (state.djIsPlaying || state.djIsPaused)
+              if (state.isMusicActive)
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
@@ -1677,7 +1712,7 @@ class _DjPanelState extends ConsumerState<_DjPanel> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          '${state.djIsPlaying ? "Now Playing" : "Paused"}: ${state.djTrackTitle}',
+                          '${state.djIsPlaying ? "Now Playing" : "Paused"}: ${state.activeDjTrackTitle}',
                           style: const TextStyle(color: Colors.white, fontSize: 13),
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1687,7 +1722,7 @@ class _DjPanelState extends ConsumerState<_DjPanel> {
                 ),
 
               // Transport controls (only while playing or paused)
-              if (state.djIsPlaying || state.djIsPaused)
+              if (state.isMusicActive)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 6),
                   child: Row(

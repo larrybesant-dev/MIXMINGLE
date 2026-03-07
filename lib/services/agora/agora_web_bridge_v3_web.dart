@@ -339,6 +339,93 @@ class AgoraWebBridgeV3 {
     }
   }
 
+  // ── Audio mixing ───────────────────────────────────────────────────────────
+
+  /// Start playing an audio file into the channel mix.
+  /// [url] must be an HTTP(S) URL reachable from the browser.
+  /// [looping] — true to loop indefinitely.
+  static Future<bool> startAudioMixing(String url, bool looping) async {
+    if (!kIsWeb) return false;
+    try {
+      final result = await _promiseToFuture(
+        _invokeBridgeMethod(
+          objectMethod: 'startAudioMixing',
+          flatMethod:   'agoraWebStartAudioMixing',
+          args: [url, looping],
+        ),
+      );
+      return _isSuccessResult(result);
+    } catch (e) {
+      debugPrint('[BRIDGE] startAudioMixing error: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> stopAudioMixing() async {
+    if (!kIsWeb) return false;
+    try {
+      final result = await _promiseToFuture(
+        _invokeBridgeMethod(
+          objectMethod: 'stopAudioMixing',
+          flatMethod:   'agoraWebStopAudioMixing',
+        ),
+      );
+      return _isSuccessResult(result);
+    } catch (e) {
+      debugPrint('[BRIDGE] stopAudioMixing error: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> pauseAudioMixing() async {
+    if (!kIsWeb) return false;
+    try {
+      final result = await _promiseToFuture(
+        _invokeBridgeMethod(
+          objectMethod: 'pauseAudioMixing',
+          flatMethod:   'agoraWebPauseAudioMixing',
+        ),
+      );
+      return _isSuccessResult(result);
+    } catch (e) {
+      debugPrint('[BRIDGE] pauseAudioMixing error: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> resumeAudioMixing() async {
+    if (!kIsWeb) return false;
+    try {
+      final result = await _promiseToFuture(
+        _invokeBridgeMethod(
+          objectMethod: 'resumeAudioMixing',
+          flatMethod:   'agoraWebResumeAudioMixing',
+        ),
+      );
+      return _isSuccessResult(result);
+    } catch (e) {
+      debugPrint('[BRIDGE] resumeAudioMixing error: $e');
+      return false;
+    }
+  }
+
+  static Future<bool> setAudioMixingVolume(int volume) async {
+    if (!kIsWeb) return false;
+    try {
+      final result = await _promiseToFuture(
+        _invokeBridgeMethod(
+          objectMethod: 'setAudioMixingVolume',
+          flatMethod:   'agoraWebSetAudioMixingVolume',
+          args: [volume],
+        ),
+      );
+      return _isSuccessResult(result);
+    } catch (e) {
+      debugPrint('[BRIDGE] setAudioMixingVolume error: $e');
+      return false;
+    }
+  }
+
   // ========== INTERNAL UTILITIES ==========
 
   /// Convert JavaScript Promise to Dart Future

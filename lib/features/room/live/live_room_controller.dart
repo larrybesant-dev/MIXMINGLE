@@ -810,14 +810,31 @@ class LiveRoomController extends Notifier<LiveRoomState> {
 
   /// Returns an error string on failure, null on success.
   Future<String?> djPlay(String url, String title) async {
-    if (kIsWeb) return 'DJ not available on web — use the iOS or Android app.';
     if (!state.isActive) return 'Not in an active room.';
     if (!state.isHost && !state.isBroadcaster) {
       return 'Only hosts and broadcasters can use DJ.';
     }
     try {
       await _video.startAudioMixing(url, looping: state.djIsLooping);
-      state = state.copyWith(djTrackTitle: title, djIsPlaying: true, djIsPaused: false);
+      final uid = _uid;
+      state = state.copyWith(
+        djTrackTitle: title,
+        djIsPlaying:  true,
+        djIsPaused:   false,
+        djUserId:     uid,
+      );
+      // Sync music state to Firestore so all participants see the banner.
+      FirebaseFirestore.instance
+          .collection('rooms')
+          .doc(state.roomId)
+          .update({
+            RoomFields.isMusicPlaying:  true,
+            RoomFields.currentTrackUrl: url,
+            RoomFields.djUserId:        uid,
+            RoomFields.updatedAt:       FieldValue.serverTimestamp(),
+          }).catchError((Object e) {
+            debugPrint('[ROOM_CTRL] djPlay Firestore sync error: $e');
+          });
       return null;
     } catch (e) {
       return 'Could not play track: $e';
@@ -825,15 +842,27 @@ class LiveRoomController extends Notifier<LiveRoomState> {
   }
 
   Future<void> djStop() async {
-    if (kIsWeb || !state.isActive) return;
+    if (!state.isActive) return;
     try {
       await _video.stopAudioMixing();
       state = state.copyWith(clearDj: true);
+      // Clear music state from Firestore.
+      FirebaseFirestore.instance
+          .collection('rooms')
+          .doc(state.roomId)
+          .update({
+            RoomFields.isMusicPlaying:  false,
+            RoomFields.currentTrackUrl: null,
+            RoomFields.djUserId:        null,
+            RoomFields.updatedAt:       FieldValue.serverTimestamp(),
+          }).catchError((Object e) {
+            debugPrint('[ROOM_CTRL] djStop Firestore sync error: $e');
+          });
     } catch (_) {}
   }
 
   Future<void> djTogglePause() async {
-    if (kIsWeb || !state.isActive) return;
+    if (!state.isActive) return;
     try {
       if (state.djIsPlaying) {
         await _video.pauseAudioMixing();
@@ -844,7 +873,7 @@ class LiveRoomController extends Notifier<LiveRoomState> {
   }
 
   Future<void> djSetVolume(int volume) async {
-    if (kIsWeb || !state.isActive) return;
+    if (!state.isActive) return;
     final v = volume.clamp(0, 100);
     try {
       await _video.setAudioMixingVolume(v);
