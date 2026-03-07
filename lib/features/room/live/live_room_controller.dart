@@ -21,9 +21,15 @@ import 'dart:async';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../services/agora/agora_platform_service.dart';
+import '../../../services/chat/messaging_service.dart';
+import '../../../shared/providers/auth_providers.dart';
+import '../../../shared/providers/messaging_providers.dart';
+import '../../../utils/window_sync_service.dart';
 import 'live_room_schema.dart';
 import 'live_room_state.dart';
 import 'live_room_presence.dart';
@@ -67,6 +73,15 @@ class LiveRoomController extends Notifier<LiveRoomState> {
   StreamSubscription<VideoEngineEvent>?      _videoEventSub;
   StreamSubscription<DocumentSnapshot>?      _roomMetaSub;
 
+  bool _isSuspending = false;
+  bool _isResuming = false;
+  bool _isReconnecting = false;
+  int _reconnectAttempts = 0;
+  static const int _maxReconnectAttempts = 3;
+
+  // Chat input controller is owned by the active room controller instance.
+  final TextEditingController chatTextController = TextEditingController();
+
   String get _uid => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   /// Exposes the underlying Agora engine for use in video rendering widgets.
@@ -87,7 +102,28 @@ class LiveRoomController extends Notifier<LiveRoomState> {
 
   /// Call once when the room screen mounts (after authentication is confirmed).
   Future<void> enterRoom(LiveRoomArgs args) async {
-    if (!state.isIdle) return;
+    if (state.isJoining || state.isLeaving) return;
+    if (_uid.isEmpty) {
+      state = state.copyWith(
+        phase: LiveRoomPhase.error,
+        error: 'You must be signed in to join this room.',
+      );
+      return;
+    }
+
+    // Allow clean re-entry after a prior leave/error by resetting to idle first.
+    if (state.isLeft || state.hasError) {
+      state = LiveRoomState(roomId: '', localUserId: _uid);
+    }
+
+    // If a stale active/suspended state remains, force a best-effort leave first.
+    if (state.isActive || state.isSuspended) {
+      try {
+        await leaveRoom();
+      } catch (_) {}
+      state = LiveRoomState(roomId: '', localUserId: _uid);
+    }
+
     _args = args;
 
     // Reset state with the correct roomId now that args are known
@@ -116,7 +152,14 @@ class LiveRoomController extends Notifier<LiveRoomState> {
       final meta = RoomMeta.fromFirestore(roomSnap);
 
       // ── 2. Assign local role ──────────────────────────────────────────
-      final role     = meta.ownerId == _uid ? ParticipantRole.host : ParticipantRole.audience;
+        final isHost = meta.ownerId == _uid || meta.hostId == _uid;
+        final isModerator = meta.moderators.contains(_uid);
+        final isSpeaker = meta.speakers.contains(_uid);
+        final role = isHost
+          ? ParticipantRole.host
+          : (isModerator || isSpeaker)
+            ? ParticipantRole.broadcaster
+            : ParticipantRole.audience;
       final gridPos  = role == ParticipantRole.host ? 0 : -1;
 
       state = state.copyWith(
@@ -169,7 +212,7 @@ class LiveRoomController extends Notifier<LiveRoomState> {
       await _video.joinChannel(
         channelId:     _args!.roomId,
         userId:        _uid,
-        isBroadcaster: role == ParticipantRole.host,
+        isBroadcaster: role == ParticipantRole.host || role == ParticipantRole.broadcaster,
       );
 
       // Flip videoChannelLive = true on the room doc (first user in)
@@ -186,6 +229,21 @@ class LiveRoomController extends Notifier<LiveRoomState> {
         clearError:  true,
         clearStatus: true,
       );
+
+      // Enforce publish rules immediately: the host auto-cam path sets
+      // isCamOn=true in state but never calls _enforcePublishRules(), so the
+      // Agora video track is never created and never published.  Without this
+      // call, remote browsers receive user-published(audio) but NOT
+      // user-published(video) — making the host's tile permanently blank.
+      if (state.isCamOn) {
+        debugPrint('[ROOM_CTRL] enterRoom: isCamOn=true → enforcing publish rules');
+        await _enforcePublishRules();
+      }
+
+      WindowSyncService.send('room.joined', {
+        'roomId': _args!.roomId,
+        'userId': _uid,
+      });
     } catch (e, st) {
       debugPrint('[ROOM_CTRL] enterRoom error: $e\n$st');
       state = state.copyWith(
@@ -201,8 +259,20 @@ class LiveRoomController extends Notifier<LiveRoomState> {
   /// This is the sole mechanism that drives video subscriptions.
   Future<void> setVisibleEngineUids(List<int> uids) async {
     if (!state.isActive) return;
-    state = state.copyWith(visibleEngineUids: uids);
-    await _video.setVisibleUids(uids);
+
+    // Only approved broadcasters/host can be subscribed as remote video sources.
+    final approvedRemoteUids = state.participants
+        .where((p) =>
+            p.agoraUid != null &&
+            p.isGridVisible &&
+            (p.role == ParticipantRole.host || p.role == ParticipantRole.broadcaster))
+        .map((p) => p.agoraUid!)
+        .toSet();
+
+    final filteredUids = uids.where(approvedRemoteUids.contains).toList();
+
+    state = state.copyWith(visibleEngineUids: filteredUids);
+    await _video.setVisibleUids(filteredUids);
     state = state.copyWith(
       subscribedEngineUids: _video.subscribedUids.toList(),
     );
@@ -214,14 +284,40 @@ class LiveRoomController extends Notifier<LiveRoomState> {
   /// Returns null on success, or a user-facing error string on failure.
   Future<String?> toggleCam() async {
     if (!state.isActive) return 'Not in an active room.';
-    // Audience members must go through the requestCam() flow instead.
-    if (!state.isBroadcaster) return 'Request to go live first.';
     final meta = state.roomMeta;
     if (meta == null) return 'Room data not loaded.';
 
     final wantOn = !state.isCamOn;
 
     if (wantOn) {
+      // If audience toggles cam on, move them into an available broadcaster slot.
+      if (!state.isBroadcaster) {
+        final occupied = state.participants
+            .where((p) => p.gridPosition >= 0)
+            .map((p) => p.gridPosition)
+            .toSet();
+
+        int? freeSlot;
+        for (int i = 1; i < meta.maxBroadcasters; i++) {
+          if (!occupied.contains(i)) {
+            freeSlot = i;
+            break;
+          }
+        }
+
+        if (freeSlot == null) {
+          return 'All ${meta.maxBroadcasters} camera slot(s) are taken.';
+        }
+
+        await _presence.promoteParticipant(
+          _uid,
+          gridPosition: freeSlot,
+          role: ParticipantRole.broadcaster,
+        );
+
+        state = state.copyWith(localRole: ParticipantRole.broadcaster);
+      }
+
       final decision = _audio.canTurnCamOn(
         userId:          _uid,
         currentCamCount: state.onCamCount,
@@ -230,10 +326,29 @@ class LiveRoomController extends Notifier<LiveRoomState> {
       if (!decision.allowed) return decision.reason;
     }
 
-    await _presence.setCamOn(wantOn);
-    state = state.copyWith(isCamOn: wantOn);
-    await _enforcePublishRules();
-    return null;
+    try {
+      await _presence.setCamOn(wantOn);
+      state = state.copyWith(isCamOn: wantOn);
+      await _enforcePublishRules();
+
+      WindowSyncService.send('room.camToggled', {
+        'roomId': state.roomId,
+        'userId': _uid,
+        'isCamOn': wantOn,
+      });
+      return null;
+    } catch (e) {
+      debugPrint('[ROOM_CTRL] toggleCam failed: $e');
+
+      if (wantOn) {
+        try {
+          await _presence.setCamOn(false);
+        } catch (_) {}
+        state = state.copyWith(isCamOn: false, isPublishingVideo: false);
+      }
+
+      return _friendlyMediaError(e, media: 'camera');
+    }
   }
 
   // ── Mic toggle ────────────────────────────────────────────────────────────
@@ -249,19 +364,52 @@ class LiveRoomController extends Notifier<LiveRoomState> {
       if (!decision.allowed) return decision.reason;
     }
 
-    await _presence.setMicActive(wantOn);
-    state = state.copyWith(isMicOn: wantOn);
+    try {
+      await _presence.setMicActive(wantOn);
+      state = state.copyWith(isMicOn: wantOn);
 
-    if (wantOn) {
-      await _video.startPublishingAudio();
-      _audio.markMicActive(_uid);
-      state = state.copyWith(isPublishingAudio: true);
-    } else {
-      await _video.stopPublishingAudio();
-      _audio.markMicInactive(_uid);
-      state = state.copyWith(isPublishingAudio: false);
+      if (wantOn) {
+        await _video.startPublishingAudio();
+        _audio.markMicActive(_uid);
+        state = state.copyWith(isPublishingAudio: true);
+      } else {
+        await _video.stopPublishingAudio();
+        _audio.markMicInactive(_uid);
+        state = state.copyWith(isPublishingAudio: false);
+      }
+
+      WindowSyncService.send('room.micToggled', {
+        'roomId': state.roomId,
+        'userId': _uid,
+        'isMicOn': wantOn,
+      });
+      return null;
+    } catch (e) {
+      debugPrint('[ROOM_CTRL] toggleMic failed: $e');
+
+      if (wantOn) {
+        try {
+          await _presence.setMicActive(false);
+        } catch (_) {}
+        _audio.markMicInactive(_uid);
+        state = state.copyWith(isMicOn: false, isPublishingAudio: false);
+      }
+
+      return _friendlyMediaError(e, media: 'microphone');
     }
-    return null;
+  }
+
+  String _friendlyMediaError(Object error, {required String media}) {
+    final raw = error.toString().toLowerCase();
+    if (raw.contains('permission denied') ||
+        raw.contains('permission') && raw.contains('denied') ||
+        raw.contains('notallowederror')) {
+      return 'Browser $media permission denied. Allow access in the address bar and try again.';
+    }
+    if (raw.contains('unavailable') || raw.contains('not found')) {
+      return 'No $media device is available. Connect a device and try again.';
+    }
+    return 'Could not enable $media right now. Please try again.';
   }
 
   // ── Cam request (audience ↔ broadcaster promotion) ──────────────────────
@@ -330,39 +478,120 @@ class LiveRoomController extends Notifier<LiveRoomState> {
     return null;
   }
 
+  // ── Chat send ─────────────────────────────────────────────────────────────
+
+  Future<void> sendMessage(String rawText, {String? roomId}) async {
+    final text = rawText.trim();
+    if (text.isEmpty) return;
+
+    try {
+      final providerUser = ref.read(currentUserProvider).value;
+      final authUser = FirebaseAuth.instance.currentUser;
+
+      // Firestore rules require senderId == request.auth.uid.
+      final senderId = authUser?.uid ?? providerUser?.id ?? _uid;
+      if (senderId.isEmpty) return;
+
+      final profileDisplayName = providerUser?.displayName?.trim() ?? '';
+      final profileUsername = providerUser?.username.trim() ?? '';
+      final argsDisplayName = _args?.displayName.trim() ?? '';
+      final senderName = profileDisplayName.isNotEmpty
+          ? profileDisplayName
+          : profileUsername.isNotEmpty
+              ? profileUsername
+              : argsDisplayName.isNotEmpty
+                  ? argsDisplayName
+                  : 'Guest';
+
+      final senderAvatar = providerUser?.avatarUrl ?? authUser?.photoURL ?? '';
+
+      final targetRoomId = (roomId ?? '').trim().isNotEmpty
+          ? roomId!.trim()
+          : state.roomId;
+      if (targetRoomId.isEmpty) {
+        debugPrint('[ROOM_CTRL] sendMessage skipped: roomId is empty');
+        return;
+      }
+
+      await ref.read(messagingServiceProvider).sendRoomMessage(
+        senderId: senderId,
+        senderName: senderName,
+        senderAvatarUrl: senderAvatar,
+        roomId: targetRoomId,
+        content: text,
+      );
+
+      if (chatTextController.text.trim() == text) {
+        chatTextController.clear();
+      }
+
+      WindowSyncService.send('room.messageSent', {
+        'roomId': targetRoomId,
+        'senderId': senderId,
+        'content': text,
+      });
+    } catch (e) {
+      debugPrint('[ROOM_CTRL] sendMessage error: $e');
+      state = state.copyWith(error: 'Failed to send message: $e');
+      rethrow;
+    }
+  }
+
   // ── App lifecycle ─────────────────────────────────────────────────────────
   /// Call when the app is backgrounded / minimised / screen switches away.
   Future<void> onSuspended() async {
+    if (_isSuspending) return;
     if (!state.isActive && !state.isSuspended) return;
-    state = state.copyWith(isForegrounded: false, phase: LiveRoomPhase.suspended);
+    _isSuspending = true;
+    try {
+      state = state.copyWith(isForegrounded: false, phase: LiveRoomPhase.suspended);
 
-    // Drop video subscriptions (stay in channel, just stop receiving)
-    await _video.dropAllSubscriptions();
-    // Stop publishing (save bandwidth + battery)
-    await _video.dropPublishing();
-    // Notify Firestore
-    await _presence.setStreaming(false);
-    await _presence.setForegrounded(false);
+      // Drop video subscriptions (stay in channel, just stop receiving)
+      await _video.dropAllSubscriptions();
+      // Stop publishing (save bandwidth + battery)
+      await _video.dropPublishing();
+      // Notify Firestore
+      await _presence.setStreaming(false);
+      await _presence.setForegrounded(false);
 
-    state = state.copyWith(
-      isPublishingVideo:    false,
-      isPublishingAudio:    false,
-      subscribedEngineUids: [],
-    );
+      state = state.copyWith(
+        isPublishingVideo:    false,
+        isPublishingAudio:    false,
+        subscribedEngineUids: [],
+      );
+
+      WindowSyncService.send('room.suspended', {
+        'roomId': state.roomId,
+        'userId': _uid,
+      });
+    } finally {
+      _isSuspending = false;
+    }
   }
 
   /// Call when the app returns to the foreground.
   Future<void> onResumed() async {
+    if (_isResuming) return;
     if (!state.isSuspended) return;
-    state = state.copyWith(isForegrounded: true, phase: LiveRoomPhase.active);
-    await _presence.setForegrounded(true);
+    _isResuming = true;
+    try {
+      state = state.copyWith(isForegrounded: true, phase: LiveRoomPhase.active);
+      await _presence.setForegrounded(true);
 
-    // Restore subscriptions for currently visible tiles
-    await _video.setVisibleUids(state.visibleEngineUids);
-    state = state.copyWith(
-      subscribedEngineUids: _video.subscribedUids.toList(),
-    );
-    await _enforcePublishRules();
+      // Restore subscriptions for currently visible tiles
+      await _video.setVisibleUids(state.visibleEngineUids);
+      state = state.copyWith(
+        subscribedEngineUids: _video.subscribedUids.toList(),
+      );
+      await _enforcePublishRules();
+
+      WindowSyncService.send('room.resumed', {
+        'roomId': state.roomId,
+        'userId': _uid,
+      });
+    } finally {
+      _isResuming = false;
+    }
   }
 
   // ── Leave room ────────────────────────────────────────────────────────────
@@ -371,20 +600,33 @@ class LiveRoomController extends Notifier<LiveRoomState> {
     if (state.isLeaving || state.isLeft) return;
     state = state.copyWith(phase: LiveRoomPhase.leaving, statusMessage: 'Leaving…');
 
-    // Stop video first
-    await _video.dropPublishing();
-    await _video.leaveChannel();
+    String? leaveError;
+    try {
+      // Stop video first
+      await _video.dropPublishing();
+      await _video.leaveChannel();
 
-    // Flip videoChannelLive = false if this was the last participant
-    await _presence.deactivateVideoChannelIfLast();
+      // Flip videoChannelLive = false if this was the last participant
+      await _presence.deactivateVideoChannelIfLast();
 
-    // Remove Firestore presence
-    await _presence.leave();
+      // Remove Firestore presence
+      await _presence.leave();
+    } catch (e) {
+      leaveError = 'Leave encountered an error: $e';
+      debugPrint('[ROOM_CTRL] leaveRoom error: $e');
+    }
 
     state = state.copyWith(
       phase:       LiveRoomPhase.left,
       clearStatus: true,
+      error:       leaveError,
+      clearError:  leaveError == null,
     );
+
+    WindowSyncService.send('room.left', {
+      'roomId': _args?.roomId ?? state.roomId,
+      'userId': _uid,
+    });
   }
 
   // ── Publish rule enforcement ──────────────────────────────────────────────
@@ -394,18 +636,27 @@ class LiveRoomController extends Notifier<LiveRoomState> {
   Future<void> _enforcePublishRules() async {
     if (!state.isActive) return;
 
-    final shouldPublish = state.isForegrounded &&
-        state.isCamOn &&
-        state.subscribedEngineUids.isNotEmpty;
+    final shouldPublish = state.isForegrounded && state.isCamOn;
+
+    debugPrint('[ROOM_CTRL] _enforcePublishRules: '
+        'isForegrounded=${state.isForegrounded} '
+        'isCamOn=${state.isCamOn} '
+        'isPublishingVideo=${state.isPublishingVideo} '
+        'shouldPublish=$shouldPublish');
 
     if (shouldPublish && !state.isPublishingVideo) {
+      debugPrint('[ROOM_CTRL] _enforcePublishRules: STARTING video publish');
       await _video.startPublishingVideo();
       await _presence.setStreaming(true);
       state = state.copyWith(isPublishingVideo: true);
+      debugPrint('[ROOM_CTRL] _enforcePublishRules: video publish DONE, isPublishingVideo=true');
     } else if (!shouldPublish && state.isPublishingVideo) {
+      debugPrint('[ROOM_CTRL] _enforcePublishRules: STOPPING video publish (shouldPublish=false)');
       await _video.stopPublishingVideo();
       await _presence.setStreaming(false);
       state = state.copyWith(isPublishingVideo: false);
+    } else {
+      debugPrint('[ROOM_CTRL] _enforcePublishRules: no-op (shouldPublish=$shouldPublish isPublishingVideo=${state.isPublishingVideo})');
     }
   }
 
@@ -414,13 +665,31 @@ class LiveRoomController extends Notifier<LiveRoomState> {
   void _onParticipantsUpdated(List<RoomParticipant> participants) {
     _audio.syncFromParticipants(participants);
 
+    final gridCount = participants.where((p) => p.isGridVisible).length;
+    debugPrint('[ROOM_CTRL] _onParticipantsUpdated: total=${participants.length} inGrid=$gridCount '
+        'uids=${participants.where((p) => p.isGridVisible).map((p) => "${p.userId.substring(0, 6)}:uid=${p.agoraUid}:onCam=${p.isOnCam}").join(", ")}');
+
+    // Read the Agora bridge viewer count for reference only — it is stored in
+    // state but the viewerCount getter in LiveRoomState now always returns
+    // participants.length (the heartbeat-filtered Firestore fact), because
+    // activeAgoraUsers in the JS bridge only tracks broadcasters publishing
+    // tracks, NOT pure-audience listeners, which caused an under-count.
+    int agoraCount = 0;
+    if (kIsWeb) {
+      try {
+        final bridgeState = AgoraPlatformService.getWebBridgeState();
+        final raw = bridgeState['viewerCount'];
+        if (raw is int && raw > 0) agoraCount = raw;
+      } catch (_) {}
+    }
+
     // Detect whether the local user's role or cam state changed in Firestore
     // (e.g. host promoted this user while they were audience).
     final localP = participants
         .where((p) => p.userId == _uid)
         .firstOrNull;
 
-    var updated = state.copyWith(participants: participants);
+    var updated = state.copyWith(participants: participants, agoraViewerCount: agoraCount);
 
     if (localP != null) {
       final roleChanged = localP.role != state.localRole;
@@ -431,10 +700,12 @@ class LiveRoomController extends Notifier<LiveRoomState> {
 
       state = updated;
 
-      // When this user is freshly promoted, enforce publish rules so the
-      // video engine switch from audience → broadcaster role happens
-      // immediately the next time the user turns their cam on.
-      if (roleChanged) _enforcePublishRules();
+      // Enforce publish rules on role change (audience→broadcaster) AND on
+      // cam change (isOnCam flipped via Firestore).  Previously only
+      // roleChanged triggered this, so any cam-on transition driven by an
+      // external Firestore write — including the host auto-cam in enterRoom —
+      // silently left the video track unpublished.
+      if (roleChanged || camChanged) _enforcePublishRules();
     } else {
       state = updated;
     }
@@ -465,8 +736,11 @@ class LiveRoomController extends Notifier<LiveRoomState> {
     switch (event) {
       case EngineJoinedEvent(:final localUid):
         if (localUid != 0) {
+          debugPrint('[ROOM_CTRL] EngineJoinedEvent: localUid=$localUid — writing agoraUid to Firestore');
           state = state.copyWith(localEngineUid: localUid);
           _presence.setVideoEngineUid(localUid);
+        } else {
+          debugPrint('[ROOM_CTRL] EngineJoinedEvent: localUid=0 — skipping Firestore agoraUid write');
         }
 
       case EngineLeftEvent():
@@ -490,6 +764,15 @@ class LiveRoomController extends Notifier<LiveRoomState> {
           clearActiveSpeaker:  speakerUid == null,
         );
 
+      case EngineConnectionStateEvent(:final state, :final reason):
+        final shouldReconnect =
+            state == ConnectionStateType.connectionStateReconnecting ||
+            (state == ConnectionStateType.connectionStateFailed &&
+                reason != ConnectionChangedReasonType.connectionChangedLeaveChannel);
+        if (shouldReconnect && this.state.isActive) {
+          _attemptReconnect();
+        }
+
       case EngineErrorEvent(:final message):
         debugPrint('[ROOM_CTRL] Video engine error: $message');
         // Non-fatal — log and surface to UI but don't kill the room
@@ -503,7 +786,43 @@ class LiveRoomController extends Notifier<LiveRoomState> {
     _participantSub?.cancel();
     _videoEventSub?.cancel();
     _roomMetaSub?.cancel();
+    chatTextController.dispose();
     try { _presence.dispose(); } catch (_) {}
     try { _video.dispose();    } catch (_) {}
+  }
+
+  Future<void> _attemptReconnect() async {
+    if (_isReconnecting || _args == null || _reconnectAttempts >= _maxReconnectAttempts) {
+      return;
+    }
+
+    _isReconnecting = true;
+    _reconnectAttempts += 1;
+
+    try {
+      await _video.leaveChannel();
+      await Future<void>.delayed(Duration(milliseconds: 600 * _reconnectAttempts));
+      await _video.joinChannel(
+        channelId: _args!.roomId,
+        userId: _uid,
+        isBroadcaster: state.isBroadcaster,
+      );
+      await _video.setVisibleUids(state.visibleEngineUids);
+      state = state.copyWith(subscribedEngineUids: _video.subscribedUids.toList());
+      await _enforcePublishRules();
+      // Refresh presence heartbeat immediately — prevents ghost classification
+      // during the reconnect window when the heartbeat timer may have missed beats.
+      _presence.forceHeartbeat();
+      _reconnectAttempts = 0;
+    } catch (e) {
+      debugPrint('[ROOM_CTRL] reconnect failed attempt=$_reconnectAttempts error=$e');
+      if (_reconnectAttempts >= _maxReconnectAttempts) {
+        state = state.copyWith(
+          error: 'Video reconnection failed. Please leave and rejoin.',
+        );
+      }
+    } finally {
+      _isReconnecting = false;
+    }
   }
 }

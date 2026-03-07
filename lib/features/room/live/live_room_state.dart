@@ -71,6 +71,7 @@ class LiveRoomState {
     this.isPublishingAudio  = false,
     this.isForegrounded     = true,
     this.activeSpeakerUid,
+    this.agoraViewerCount   = 0,
     this.error,
     this.statusMessage,
   });
@@ -104,10 +105,13 @@ class LiveRoomState {
   /// Engine uids we are actively receiving video from.
   final List<int> subscribedEngineUids;
 
-  // ── Speaker detection ─────────────────────────────────────────────────────
+  // ── Speaker detection —————————————————————————————————————————————
   final int? activeSpeakerUid;
 
-  // ── Errors / progress messages ───────────────────────────────────────────
+  // ── Agora live viewer count (web only, 0 when not on web or not in channel)
+  final int agoraViewerCount;
+
+  // ── Errors / progress messages ————————————————————————————————
   final String? error;
   final String? statusMessage;
 
@@ -130,6 +134,13 @@ class LiveRoomState {
   int get onCamCount      => participants.where((p) => p.isOnCam).length;
   int get activeMicCount  => participants.where((p) => p.isMicActive).length;
 
+  /// Accurate in-room viewer count from the heartbeat-filtered Firestore
+  /// participant list.  The Agora bridge's `activeAgoraUsers` set only tracks
+  /// RTC channel members who publish tracks (broadcasters), so it under-counts
+  /// in any room that has pure-audience listeners — using it as a substitute
+  /// for the total head-count produces an incorrect display.
+  int get viewerCount => participants.length;
+
   /// Participants in the broadcaster grid (gridPosition ≥ 0).
   List<RoomParticipant> get gridParticipants =>
       participants
@@ -150,14 +161,13 @@ class LiveRoomState {
   String get roomType        => roomMeta?.type            ?? RoomType.social;
 
   /// Video publishing is allowed only when all three conditions are true:
-  ///   1. App is foregrounded
-  ///   2. User has cam on
-  ///   3. At least one subscriber exists (someone is watching)
+    ///   1. App is foregrounded
+    ///   2. User has cam on
+    ///   3. Room is active
   bool get canPublishVideo =>
       isForegrounded &&
       isCamOn &&
-      isActive &&
-      subscribedEngineUids.isNotEmpty;
+      isActive;
 
   // ── copyWith ──────────────────────────────────────────────────────────────
 
@@ -175,6 +185,7 @@ class LiveRoomState {
     List<int>?            visibleEngineUids,
     List<int>?            subscribedEngineUids,
     int?                  activeSpeakerUid,
+    int?                  agoraViewerCount,
     String?               error,
     String?               statusMessage,
     bool clearError         = false,
@@ -197,6 +208,7 @@ class LiveRoomState {
         visibleEngineUids:   visibleEngineUids    ?? this.visibleEngineUids,
         subscribedEngineUids: subscribedEngineUids ?? this.subscribedEngineUids,
         activeSpeakerUid:    clearActiveSpeaker   ? null : (activeSpeakerUid ?? this.activeSpeakerUid),
+        agoraViewerCount:    agoraViewerCount     ?? this.agoraViewerCount,
         error:               clearError           ? null : (error            ?? this.error),
         statusMessage:       clearStatus          ? null : (statusMessage    ?? this.statusMessage),
       );
