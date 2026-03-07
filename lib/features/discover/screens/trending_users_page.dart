@@ -10,7 +10,7 @@ import '../../../shared/widgets/club_background.dart';
 import '../../../shared/widgets/neon_components.dart';
 import '../../../shared/widgets/social_graph_widgets.dart';
 import '../../../shared/providers/discovery_providers.dart';
-import '../../../app/app_routes.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 
 /// Full-page screen showing the top users by follower count.
 class TrendingUsersPage extends ConsumerWidget {

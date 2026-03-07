@@ -13,7 +13,7 @@ final unreadCountProvider = StreamProvider<int>((ref) {
   return messaging.streamConversations(currentUser.id).map((convos) {
     int total = 0;
     for (final c in convos) {
-      final unread = c['unread'][currentUser.id] ?? 0;
+      final unread = ((c['unread'][currentUser.id] ?? 0) as num).toInt();
       total += unread;
     }
     return total;

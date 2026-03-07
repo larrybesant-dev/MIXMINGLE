@@ -1,0 +1,35 @@
+
+[1m[37m===[39m Deploying to 'mix-and-mingle-v2'...[22m
+
+[36m[1mi [22m[39m deploying [1mfirestore[22m
+[36m[1mi  firestore:[22m[39m ensuring required API [1mfirestore.googleapis.com[22m is enabled...
+[36m[1mi  firestore:[22m[39m ensuring required API [1mfirestore.googleapis.com[22m is enabled...
+[36m[1mi [22m[39m [1m[36mfirestore:[39m[22m reading indexes from [1mfirestore.indexes.json[22m...
+[36m[1mi  cloud.firestore:[22m[39m checking [1mfirestore.rules[22m for compilation errors...
+[33m[1m! [22m[39m [W] 20:14 - Unused function: isVerified.
+[33m[1m! [22m[39m [W] 21:30 - Invalid variable name: request.
+[33m[1m! [22m[39m [W] 37:14 - Unused function: hasValidNumber.
+[33m[1m! [22m[39m [W] 38:23 - Invalid variable name: request.
+[33m[1m! [22m[39m [W] 39:14 - Invalid variable name: request.
+[33m[1m! [22m[39m [W] 43:14 - Unused function: isBlocked.
+[33m[1m! [22m[39m [W] 44:14 - Invalid function name: exists.
+[33m[1m! [22m[39m [W] 44:80 - Invalid variable name: request.
+[33m[1m! [22m[39m [W] 48:14 - Unused function: hasBlocked.
+[33m[1m! [22m[39m [W] 49:14 - Invalid function name: exists.
+[33m[1m! [22m[39m [W] 49:62 - Invalid variable name: request.
+[33m[1m! [22m[39m [W] 53:14 - Unused function: notTooFrequent.
+[33m[1m! [22m[39m [W] 54:35 - Invalid variable name: resource.
+[33m[1m! [22m[39m [W] 55:14 - Invalid variable name: request.
+[33m[1m! [22m[39m [W] 55:29 - Invalid variable name: resource.
+[33m[1m! [22m[39m [W] 59:14 - Unused function: isChatParticipant.
+[33m[1m! [22m[39m [W] 61:14 - Invalid variable name: request.
+[33m[1m! [22m[39m [W] 61:34 - Invalid function name: get.
+[32m[1m+  cloud.firestore:[22m[39m rules file [1mfirestore.rules[22m compiled successfully
+[36m[1mi  firestore:[22m[39m uploading rules [1mfirestore.rules[22m...
+[36m[1mi [22m[39m [1m[36mfirestore: [39m[22mdeploying indexes...
+[32m[1m+ [22m[39m [1m[32mfirestore:[39m[22m deployed indexes in [1mfirestore.indexes.json[22m successfully for (default) database
+[32m[1m+  firestore:[22m[39m released rules [1mfirestore.rules[22m to [1mcloud.firestore[22m
+
+[32m[1m+ [22m[39m [1m[4mDeploy complete![24m[22m
+
+[1mProject Console:[22m https://console.firebase.google.com/project/mix-and-mingle-v2/overview

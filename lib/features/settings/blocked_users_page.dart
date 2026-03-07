@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../shared/providers/all_providers.dart';
 import '../../services/moderation/moderation_service.dart';
 import '../../shared/widgets/async_value_view_enhanced.dart';
-import '../../app/app_routes.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 
 /// Blocked users provider
 final blockedUsersProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {

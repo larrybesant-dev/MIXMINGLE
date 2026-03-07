@@ -1,6 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
-import '../app/app_routes.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 import '../features/chat_room_page.dart';
 
 class FcmNotificationService {

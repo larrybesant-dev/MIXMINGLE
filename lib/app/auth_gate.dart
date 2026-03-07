@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/user_providers.dart';
-import 'app_routes.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
@@ -17,7 +17,16 @@ class AuthGate extends ConsumerWidget {
             body: Center(child: Text('Not signed in')),
           );
         }
-        return const AppRoutes();
+        // User is authenticated — redirect to the home screen
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.home,
+            (_) => false,
+          );
+        });
+        return const Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
       },
       loading: () => const Scaffold(
         body: Center(child: CircularProgressIndicator()),

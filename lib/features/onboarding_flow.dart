@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/responsive/responsive_utils.dart';
 import '../core/theme/enhanced_theme.dart';
 import '../core/animations/app_animations.dart';
-import '../app/app_routes.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 import '../shared/widgets/club_background.dart';
 import '../shared/widgets/glow_text.dart';
 

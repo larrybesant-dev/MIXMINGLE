@@ -7,7 +7,7 @@ import 'package:mixmingle/shared/providers/providers.dart';
 import 'package:mixmingle/shared/models/user_profile.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
-import 'package:mixmingle/app/app_routes.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 import 'package:mixmingle/core/design_system/design_constants.dart';
 import 'package:mixmingle/core/intelligence/vibe_intelligence_service.dart';
 

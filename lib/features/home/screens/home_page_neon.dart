@@ -1,8 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
-import 'package:mixmingle/app/app_routes.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 import 'package:mixmingle/shared/providers/profile_completion_providers.dart';
 import 'package:mixmingle/core/theme/neon_widgets.dart';
 import 'package:mixmingle/core/theme/colors.dart';

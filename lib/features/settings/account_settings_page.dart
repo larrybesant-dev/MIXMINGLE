@@ -1,9 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../shared/providers/all_providers.dart';
 import '../../shared/widgets/async_value_view_enhanced.dart';
-import '../../app/app_routes.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
