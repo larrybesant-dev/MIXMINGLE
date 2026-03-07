@@ -52,8 +52,16 @@
     remoteUsers: new Map(),
     currentChannel: null,
     currentUid: null,
+    appId: null,
+    currentToken: null,
     isJoining: false,
-    errorLog: []
+    connectionState: 'DISCONNECTED',
+    reconnecting: false,
+    reconnectAttempts: 0,
+    networkQuality: { uplink: 0, downlink: 0 },
+    activeAgoraUsers: new Set(),
+    errorLog: [],
+    videoEnabling: false
   };
 
   // ========== LOGGING ==========
@@ -303,6 +311,7 @@
       state.client.on('user-published', async (user, mediaType) => {
         log('INFO', `Remote user published uid=${user.uid} mediaType=${mediaType}`);
         state.remoteUsers.set(String(user.uid), user);
+        state.activeAgoraUsers.add(String(user.uid));
         try {
           await state.client.subscribe(user, mediaType);
           log('SUCCESS', `subscribe done uid=${user.uid} mediaType=${mediaType} hasVideo=${!!user.videoTrack} hasAudio=${!!user.audioTrack}`);
@@ -346,6 +355,10 @@
 
       state.client.on('user-unpublished', (user, mediaType) => {
         log('INFO', `Remote user unpublished uid=${user.uid} mediaType=${mediaType}`);
+        // Only remove from active set when ALL tracks are gone (user still present until user-left).
+        if (!user.videoTrack && !user.audioTrack) {
+          state.activeAgoraUsers.delete(String(user.uid));
+        }
         // Notify Flutter
         if (typeof window.agoraWeb.onRemoteUserUnpublished === 'function') {
           try { window.agoraWeb.onRemoteUserUnpublished({ uid: String(user.uid), mediaType }); } catch (_) {}
@@ -355,12 +368,73 @@
       state.client.on('user-left', (user) => {
         log('INFO', `Remote user left uid=${user.uid}`);
         state.remoteUsers.delete(String(user.uid));
-        // Notify Flutter
+        state.activeAgoraUsers.delete(String(user.uid));
         if (typeof window.agoraWeb.onRemoteUserLeft === 'function') {
           try { window.agoraWeb.onRemoteUserLeft({ uid: String(user.uid) }); } catch (_) {}
         }
       });
-      // ---- END REMOTE USER LISTENERS ----
+
+      // ---- RESILIENCE LISTENERS ----
+
+      state.client.on('user-joined', (user) => {
+        state.activeAgoraUsers.add(String(user.uid));
+        const totalCount = state.activeAgoraUsers.size + 1; // +1 for local user
+        log('INFO', `Remote user joined uid=${user.uid} room_total=${totalCount}`);
+        if (totalCount > 6) {
+          log('WARNING', `Beta room-size limit (6) reached — ${totalCount} participants detected`);
+          if (typeof window.agoraWeb.onRoomFull === 'function') {
+            try { window.agoraWeb.onRoomFull({ count: totalCount }); } catch (_) {}
+          }
+        }
+        if (typeof window.agoraWeb.onRemoteUserJoined === 'function') {
+          try { window.agoraWeb.onRemoteUserJoined(String(user.uid)); } catch (_) {}
+        }
+      });
+
+      state.client.on('connection-state-change', async (curState, prevState) => {
+        log('INFO', `Connection: ${prevState} → ${curState}`);
+        state.connectionState = curState;
+        if (typeof window.agoraWeb.onConnectionStateChange === 'function') {
+          try { window.agoraWeb.onConnectionStateChange(curState, prevState); } catch (_) {}
+        }
+        if (curState === 'CONNECTED') {
+          state.reconnecting = false;
+          state.reconnectAttempts = 0;
+        }
+        // SDK exhausted its own reconnect attempts — manually rejoin
+        if (curState === 'DISCONNECTED' && prevState === 'RECONNECTING' && state.currentChannel && !state.reconnecting) {
+          log('WARNING', 'SDK reconnect failed — triggering manual rejoin');
+          reconnectToChannel();
+        }
+      });
+
+      state.client.on('token-privilege-will-expire', async () => {
+        log('INFO', 'Token expiring soon — requesting renewal');
+        fetchNewAgoraToken();
+      });
+
+      state.client.on('token-privilege-did-expire', async () => {
+        log('WARNING', 'Token expired — requesting renewal and rejoining');
+        fetchNewAgoraToken();
+        // Allow 3 s for Flutter to push new token via agoraWebRenewToken()
+        await new Promise(r => setTimeout(r, 3000));
+        if (state.currentChannel && state.appId && !state.reconnecting) {
+          reconnectToChannel();
+        }
+      });
+
+      state.client.on('network-quality', (stats) => {
+        state.networkQuality = { uplink: stats.uplinkNetworkQuality, downlink: stats.downlinkNetworkQuality };
+        // 0=unknown 1=excellent 2=good 3=poor 4=bad 5=very_bad 6=disconnected
+        if (stats.uplinkNetworkQuality >= 4 || stats.downlinkNetworkQuality >= 4) {
+          log('WARNING', `Weak network — uplink=${stats.uplinkNetworkQuality} downlink=${stats.downlinkNetworkQuality}`);
+          if (typeof window.agoraWeb.onNetworkQuality === 'function') {
+            try { window.agoraWeb.onNetworkQuality({ uplink: stats.uplinkNetworkQuality, downlink: stats.downlinkNetworkQuality }); } catch (_) {}
+          }
+        }
+      });
+
+      // ---- END EVENT LISTENERS ----
 
       return state.client;
     } catch (err) {
@@ -473,6 +547,10 @@
 
         state.currentChannel = channelName;
         state.currentUid = uid;
+        state.appId = appId;
+        state.currentToken = token || null;
+        state.connectionState = 'CONNECTED';
+        state.reconnectAttempts = 0;
         state.isJoining = false;
 
         return true;
@@ -495,6 +573,54 @@
 
     log('ERROR', 'Failed to join after all retry attempts', lastError);
     return false;
+  }
+
+  // ========== RECONNECT HELPER ==========
+  async function reconnectToChannel() {
+    if (state.reconnecting || !state.currentChannel || !state.appId) return;
+    const MAX_ATTEMPTS = 3;
+    if (state.reconnectAttempts >= MAX_ATTEMPTS) {
+      log('ERROR', 'Max reconnect attempts reached — giving up');
+      if (typeof window.agoraWeb.onConnectionFailed === 'function') {
+        try { window.agoraWeb.onConnectionFailed(); } catch (_) {}
+      }
+      return;
+    }
+    state.reconnecting = true;
+    state.reconnectAttempts += 1;
+    const delay = state.reconnectAttempts * 2000;
+    log('INFO', `Reconnect attempt ${state.reconnectAttempts}/${MAX_ATTEMPTS} in ${delay}ms...`);
+    await new Promise(r => setTimeout(r, delay));
+    if (!state.currentChannel) { state.reconnecting = false; return; } // user left intentionally
+    try {
+      await state.client.join(state.appId, state.currentChannel, state.currentToken || null, state.currentUid);
+      log('SUCCESS', 'Reconnected to channel');
+      // Re-publish any active local tracks
+      const tracks = [];
+      if (state.localTracks.audio) tracks.push(state.localTracks.audio);
+      if (state.localTracks.video) tracks.push(state.localTracks.video);
+      if (tracks.length > 0) {
+        try { await state.client.publish(tracks); log('SUCCESS', 'Local tracks re-published after reconnect'); }
+        catch (e) { log('ERROR', 'Failed to re-publish tracks after reconnect', e.message); }
+      }
+      state.reconnecting = false;
+      state.reconnectAttempts = 0;
+    } catch (err) {
+      log('ERROR', `Reconnect attempt ${state.reconnectAttempts} failed`, err.message);
+      state.reconnecting = false;
+      reconnectToChannel(); // schedule next attempt
+    }
+  }
+
+  // ========== TOKEN RENEWAL HELPER ==========
+  // Flutter registers window.agoraWeb.onTokenWillExpire; it fetches a new token
+  // and calls window.agoraWebRenewToken(newToken) to push it back to the bridge.
+  function fetchNewAgoraToken() {
+    if (typeof window.agoraWeb.onTokenWillExpire === 'function') {
+      try { window.agoraWeb.onTokenWillExpire(state.currentChannel, String(state.currentUid)); } catch (_) {}
+    } else {
+      log('WARNING', 'onTokenWillExpire callback not registered — token renewal will not happen automatically');
+    }
   }
 
   // ========== PUBLIC API - FLUTTER CALLABLE ==========
@@ -572,38 +698,30 @@
 
     try {
       if (state.client) {
-        log('DEBUG', 'Unpublishing local tracks...');
+        // Null out channel first so connection-state-change DISCONNECTED
+        // does NOT trigger an automatic reconnect during intentional leave.
+        const channel = state.currentChannel;
+        state.currentChannel = null;
+        state.currentUid = null;
+        state.connectionState = 'DISCONNECTED';
+        state.activeAgoraUsers.clear();
 
-        // Unpublish local tracks
-        if (state.localTracks.audio || state.localTracks.video) {
-          const tracks = [];
-          if (state.localTracks.audio) tracks.push(state.localTracks.audio);
-          if (state.localTracks.video) tracks.push(state.localTracks.video);
-
-          if (tracks.length > 0) {
-            await state.client.unpublish(tracks);
-          }
-        }
-
-        log('DEBUG', 'Stopping local tracks...');
-
-        // Stop local tracks
+        // Stop local tracks before unpublishing
         if (state.localTracks.audio) {
           state.localTracks.audio.close();
           state.localTracks.audio = null;
         }
         if (state.localTracks.video) {
+          state.localTracks.video.stop();
           state.localTracks.video.close();
           state.localTracks.video = null;
         }
 
-        log('DEBUG', 'Leaving channel...');
-
         // Leave channel
-        await state.client.leave();
-
-        state.currentChannel = null;
-        state.currentUid = null;
+        if (channel) {
+          try { await state.client.leave(); }
+          catch (leaveErr) { log('WARNING', 'client.leave() error (ignored)', leaveErr.message); }
+        }
 
         log('SUCCESS', 'Left channel successfully');
       }
@@ -662,32 +780,77 @@
     log('DEBUG', `agoraWebSetVideoMuted called (${muted ? 'disabling' : 'enabling'})`);
 
     try {
-      if (!state.localTracks.video && muted === false) {
-        log('INFO', 'No local video track while enabling video; creating and publishing now');
-        state.localTracks.video = await window.AgoraRTC.createCameraVideoTrack({
-          encoderConfig: '720p_auto'
-        });
-        log('SUCCESS', `Camera video track created uid=${state.currentUid}`);
-
+      if (muted) {
+        // Camera OFF: unpublish ALL published video tracks (including orphans from
+        // any previous concurrent enable calls), then stop/close to release the webcam.
         if (state.client && state.currentChannel) {
-          await state.client.publish([state.localTracks.video]);
-          log('SUCCESS', `client.publish() done — remote peers will receive user-published(video) uid=${state.currentUid}`);
-        } else {
-          log('WARNING', `client.publish skipped — client=${!!state.client} channel=${state.currentChannel}`);
+          const publishedVideoTracks = Array.isArray(state.client.localTracks)
+            ? state.client.localTracks.filter(t => t.trackMediaType === 'video')
+            : [];
+          if (publishedVideoTracks.length > 0) {
+            try { await state.client.unpublish(publishedVideoTracks); } catch (e) {}
+          }
+          // Stop and close every published video track so the webcam light goes off
+          for (const t of publishedVideoTracks) {
+            try { t.stop(); } catch (e) {}
+            try { t.close(); } catch (e) {}
+          }
         }
-      }
+        // Also close the state-tracked track in case it was created but never published
+        if (state.localTracks.video) {
+          try { state.localTracks.video.stop(); } catch (e) {}
+          try { state.localTracks.video.close(); } catch (e) {}
+        }
+        state.localTracks.video = null;
+        log('SUCCESS', 'Camera track released — webcam light OFF');
+        return true;
+      } else {
+        // Camera ON: if a track already exists, nothing to do
+        if (state.localTracks.video) {
+          log('INFO', 'Camera track already active, skipping recreate');
+          return true;
+        }
+        // Guard against concurrent enables (race condition from Flutter render loop)
+        if (state.videoEnabling) {
+          log('INFO', 'Video enable already in progress, skipping duplicate call');
+          return true;
+        }
+        state.videoEnabling = true;
+        try {
+          // Recreate and publish a fresh camera track
+          log('INFO', 'No local video track while enabling video; creating and publishing now');
+          state.localTracks.video = await window.AgoraRTC.createCameraVideoTrack({
+            encoderConfig: '720p_auto'
+          });
+          log('SUCCESS', `Camera video track created uid=${state.currentUid}`);
 
-      if (state.localTracks.video) {
-        if (muted) {
-          await state.localTracks.video.setMuted(true);
-        } else {
-          await state.localTracks.video.setMuted(false);
+          if (state.client && state.currentChannel) {
+            // Guard against double-publish: check if client already has a published video track
+            const alreadyPublishedVideo = Array.isArray(state.client.localTracks) &&
+              state.client.localTracks.some(t => t.trackMediaType === 'video');
+            if (alreadyPublishedVideo) {
+              log('WARNING', 'Client already has a published video track — skipping duplicate publish');
+            } else {
+              await state.client.publish([state.localTracks.video]);
+              log('SUCCESS', `client.publish() done — remote peers will receive user-published(video) uid=${state.currentUid}`);
+            }
+          } else {
+            log('WARNING', `client.publish skipped — client=${!!state.client} channel=${state.currentChannel}`);
+          }
+
+          // Best-effort: play in local video container if already mounted in DOM
+          const localEl = findAnyLocalVideoContainer();
+          if (localEl) {
+            state.localTracks.video.play(localEl);
+            log('SUCCESS', 'Local camera replayed in DOM container after re-enable');
+          } else {
+            log('WARNING', 'No local video container found yet — Flutter _startAttachRetries will handle playback');
+          }
+        } finally {
+          state.videoEnabling = false;
         }
-        log('SUCCESS', `Video ${muted ? 'disabled' : 'enabled'}`);
         return true;
       }
-      log('WARNING', 'agoraWebSetVideoMuted: no video track after all steps');
-      return false;
     } catch (err) {
       log('ERROR', 'Failed to set video mute state', err);
       return false;
@@ -767,9 +930,35 @@
       hasAudio: !!state.localTracks.audio,
       hasVideo: !!state.localTracks.video,
       remoteUserCount: state.remoteUsers.size,
+      viewerCount: state.activeAgoraUsers.size + 1,
+      connectionState: state.connectionState,
+      reconnecting: state.reconnecting,
+      networkQuality: state.networkQuality,
       errorCount: state.errorLog.length,
       lastErrors: state.errorLog.slice(-5)
     };
+  };
+
+  /**
+   * Renew the Agora token. Flutter calls this after fetching a fresh token
+   * from the Firebase generateAgoraToken Cloud Function.
+   * @param {string} newToken
+   * @returns {Promise<boolean>}
+   */
+  window.agoraWebRenewToken = async function(newToken) {
+    try {
+      if (!state.client || !state.currentChannel) {
+        log('WARNING', 'agoraWebRenewToken: not in channel, ignoring');
+        return false;
+      }
+      await state.client.renewToken(newToken);
+      state.currentToken = newToken;
+      log('SUCCESS', 'Agora token renewed successfully');
+      return true;
+    } catch (err) {
+      log('ERROR', 'Failed to renew token', err.message);
+      return false;
+    }
   };
 
   // ========== WEB TAB VISIBILITY HANDLING ==========
@@ -781,18 +970,16 @@
       if (!state.currentChannel) return; // Not in a channel
 
       if (document.hidden) {
-        log('INFO', 'Tab hidden — muting local tracks to save bandwidth');
         try {
           if (state.localTracks.audio) await state.localTracks.audio.setMuted(true);
+          // Note: video track may be null if user turned camera off; that is intentional
           if (state.localTracks.video) await state.localTracks.video.setMuted(true);
         } catch (e) {
           log('WARNING', 'Failed to mute tracks on tab hidden', e.message);
         }
       } else {
-        log('INFO', 'Tab visible — unmuting local tracks');
         try {
-          // Only unmute if they were previously active; rely on Flutter state
-          // for whether audio/video was actually enabled by the user.
+          // Only unmute tracks that are still active — do NOT recreate a released video track
           if (state.localTracks.audio) await state.localTracks.audio.setMuted(false);
           if (state.localTracks.video) await state.localTracks.video.setMuted(false);
         } catch (e) {
@@ -802,15 +989,23 @@
     });
   }
 
+  // ========== BROWSER UNLOAD HANDLING ==========
+  // Fires both on tab close and page navigation so the local user's Agora
+  // slot is released promptly instead of waiting for token expiry.
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeunload', function () {
+      if (state.currentChannel) {
+        state.activeAgoraUsers.clear();
+        // Best-effort synchronous track release (no await available in beforeunload)
+        try { if (state.localTracks.audio) { state.localTracks.audio.close(); state.localTracks.audio = null; } } catch (_) {}
+        try { if (state.localTracks.video) { state.localTracks.video.stop(); state.localTracks.video.close(); state.localTracks.video = null; } } catch (_) {}
+        try { state.client.leave(); } catch (_) {}
+        state.currentChannel = null;
+      }
+    });
+  }
+
   // ========== STARTUP ==========
-  log('INFO', 'Agora Web v5 bridge loaded and ready');
-
-  // Make available globally
-  window.agoraWebDebug = function() {
-    console.table(window.agoraWebGetState());
-    console.table(state.errorLog.slice(-10));
-  };
-
-  log('SUCCESS', 'Agora Web production bridge initialized');
+  log('SUCCESS', 'Agora Web production bridge initialized and ready');
 
 })(window);
