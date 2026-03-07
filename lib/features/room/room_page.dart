@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import '../../shared/providers/all_providers.dart';
@@ -348,7 +349,34 @@ class _RoomPageState extends ConsumerState<RoomPage> {
             title: const Text('View Participants'),
             onTap: () {
               Navigator.of(context).pop();
-              // TODO: Show participants list
+              showDialog(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Participants'),
+                  content: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                          '${widget.room.participantIds.length} participant(s) in this room'),
+                      const SizedBox(height: 8),
+                      ...widget.room.participantIds.map(
+                        (id) => Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Text('• $id',
+                              style: const TextStyle(fontSize: 13)),
+                        ),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(),
+                      child: const Text('Close'),
+                    ),
+                  ],
+                ),
+              );
             },
           ),
           ListTile(
@@ -356,7 +384,15 @@ class _RoomPageState extends ConsumerState<RoomPage> {
             title: const Text('Share Room'),
             onTap: () {
               Navigator.of(context).pop();
-              // TODO: Share room link
+              Clipboard.setData(
+                ClipboardData(
+                    text:
+                        'Join me in "${widget.room.title}" on Mix & Mingle! Room ID: ${widget.room.id}'),
+              );
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                    content: Text('Room link copied to clipboard!')),
+              );
             },
           ),
           ListTile(

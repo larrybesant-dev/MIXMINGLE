@@ -1,4 +1,5 @@
-﻿import 'package:flutter/material.dart';
+﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/providers/providers.dart';
 import '../../shared/models/notification.dart' as model;
@@ -6,6 +7,7 @@ import '../../features/error/error_page.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../shared/loading_widgets.dart';
+import '../../core/routing/app_routes.dart';
 
 class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
@@ -72,7 +74,8 @@ class NotificationsPage extends ConsumerWidget {
                   itemCount: notifications.length,
                   itemBuilder: (context, index) {
                     final notification = notifications[index];
-                    return _buildNotificationTile(notification);
+                    return _buildNotificationTile(
+                        context, ref, notification, user.id);
                   },
                 );
               },
@@ -121,7 +124,12 @@ class NotificationsPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildNotificationTile(model.Notification notification) {
+  Widget _buildNotificationTile(
+    BuildContext context,
+    WidgetRef ref,
+    model.Notification notification,
+    String userId,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
@@ -175,7 +183,34 @@ class NotificationsPage extends ConsumerWidget {
                 ),
               ),
         onTap: () {
-          // TODO: Mark as read and navigate if needed
+          if (!notification.isRead) {
+            FirebaseFirestore.instance
+                .collection('users')
+                .doc(userId)
+                .collection('notifications')
+                .doc(notification.id)
+                .update({'isRead': true}).catchError((_) {});
+          }
+          switch (notification.type) {
+            case model.NotificationType.message:
+              Navigator.pushNamed(context, AppRoutes.chats);
+            case model.NotificationType.roomInvite:
+              if (notification.roomId != null) {
+                Navigator.pushNamed(context, AppRoutes.rooms);
+              }
+            case model.NotificationType.newFollower:
+            case model.NotificationType.match:
+            case model.NotificationType.like:
+              if (notification.senderId != null) {
+                Navigator.pushNamed(
+                  context,
+                  AppRoutes.userProfile,
+                  arguments: notification.senderId,
+                );
+              }
+            default:
+              break;
+          }
         },
       ),
     );
