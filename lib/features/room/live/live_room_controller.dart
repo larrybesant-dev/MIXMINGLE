@@ -79,6 +79,12 @@ class LiveRoomController extends Notifier<LiveRoomState> {
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 3;
 
+  // ── Count-sync ────────────────────────────────────────────────────────────
+  // The host debounces a Firestore write that sets viewerCount / participantCount
+  // to the real heartbeat-filtered participant count.  This repairs drift caused
+  // by users who crash or close the tab without a clean leave().
+  Timer? _countSyncTimer;
+
   // Chat input controller is owned by the active room controller instance.
   final TextEditingController chatTextController = TextEditingController();
 
@@ -691,6 +697,14 @@ class LiveRoomController extends Notifier<LiveRoomState> {
 
     var updated = state.copyWith(participants: participants, agoraViewerCount: agoraCount);
 
+    // Host: debounce-sync the accurate participant count back to Firestore so
+    // home-page cards don't show stale inflated counts from ghost users.
+    final isHostUser = _uid == (state.roomMeta?.ownerId ?? '') ||
+        _uid == (state.roomMeta?.hostId ?? '');
+    if (isHostUser && updated.isActive) {
+      _scheduleCountSync(participants.length);
+    }
+
     if (localP != null) {
       final roleChanged = localP.role != state.localRole;
       final camChanged  = localP.isOnCam != state.isCamOn;
@@ -783,12 +797,29 @@ class LiveRoomController extends Notifier<LiveRoomState> {
   // ── Cleanup ───────────────────────────────────────────────────────────────
 
   void _cleanup() {
+    _countSyncTimer?.cancel();
     _participantSub?.cancel();
     _videoEventSub?.cancel();
     _roomMetaSub?.cancel();
     chatTextController.dispose();
     try { _presence.dispose(); } catch (_) {}
     try { _video.dispose();    } catch (_) {}
+  }
+
+  /// Debounced write that keeps Firestore viewerCount accurate.
+  /// Only the host calls this — runs 5 s after the last participant change.
+  void _scheduleCountSync(int accurateCount) {
+    _countSyncTimer?.cancel();
+    _countSyncTimer = Timer(const Duration(seconds: 5), () {
+      if (_args == null) return;
+      FirebaseFirestore.instance.collection('rooms').doc(_args!.roomId).update({
+        'viewerCount':               accurateCount,
+        RoomFields.participantCount: accurateCount,
+        RoomFields.updatedAt:        FieldValue.serverTimestamp(),
+      }).catchError((Object e) {
+        debugPrint('[ROOM_CTRL] countSync error: $e');
+      });
+    });
   }
 
   Future<void> _attemptReconnect() async {
