@@ -1,12 +1,14 @@
 {{flutter_js}}
 {{flutter_build_config}}
 
-// Use HTML renderer so the browser handles text natively —
-// correct emoji rendering, system font fallbacks, no CanvasKit overhead.
+// Use CanvasKit renderer for consistent cross-browser rendering.
+// HTML renderer hangs on complex layouts in Safari (WebKit).
+// The Safari WebGL2 shim in index.html makes CanvasKit fall back to
+// WebGL1 on WebKit, which is the stable rendering path there.
 _flutter.loader.load({
   onEntrypointLoaded: async function(engineInitializer) {
     let appRunner = await engineInitializer.initializeEngine({
-      renderer: "html",
+      renderer: "canvaskit",
     });
     await appRunner.runApp();
   }
