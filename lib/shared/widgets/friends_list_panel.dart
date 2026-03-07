@@ -315,7 +315,7 @@ class _FriendsListPanelState extends State<FriendsListPanel>
           TextButton.icon(
             onPressed: () {
               widget.onClose();
-              Navigator.pushNamed(context, AppRoutes.discoverUsers);
+              Navigator.pushNamed(context, AppRoutes.discovery);
             },
             icon: const Icon(Icons.person_add),
             label: const Text('Find Friends'),
@@ -608,10 +608,10 @@ class _FriendsListPanelState extends State<FriendsListPanel>
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildNavButton(Icons.home, 'Home', AppRoutes.home),
-            _buildNavButton(Icons.video_camera_front, 'Rooms', AppRoutes.browseRooms),
+            _buildNavButton(Icons.video_camera_front, 'Rooms', AppRoutes.discoverRooms),
             // Speed Dating removed - feature disabled
             // _buildNavButton(Icons.casino, 'Dating', AppRoutes.speedDatingLobby),
-            _buildNavButton(Icons.account_balance_wallet, 'Wallet', AppRoutes.wallet),
+            _buildNavButton(Icons.account_balance_wallet, 'Wallet', AppRoutes.coins),
             _buildNavButton(Icons.person, 'Profile', AppRoutes.profile),
           ],
         ),

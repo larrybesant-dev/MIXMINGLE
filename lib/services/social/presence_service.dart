@@ -266,11 +266,6 @@ class PresenceService {
     }
   }
 
-  /// Setup app lifecycle listener — implemented in PresenceLifecycleObserver
-  /// (lib/core/widgets/presence_lifecycle_observer.dart). This stub is intentionally
-  /// empty: the observer widget calls goOnline/goAway/goOffline directly.
-  void _setupLifecycleListener() {}
-
   /// Cleanup with proper resource disposal
   void dispose() {
     debugPrint('ðŸ§¹ Disposing PresenceService...');

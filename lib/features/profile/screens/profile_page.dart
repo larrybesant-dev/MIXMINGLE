@@ -1095,28 +1095,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   // ══════════════════════════════════════════════════════════
   //  SUPPORTING CONTENT SUB-WIDGETS  (Gallery, Lifestyle, Socials)
   // ══════════════════════════════════════════════════════════
-  void _openPhotoViewer(List<String> photos, int index) {
-    showDialog(
-      context: context,
-      builder: (_) => Dialog(
-        backgroundColor: Colors.black,
-        insetPadding: EdgeInsets.zero,
-        child: Stack(
-          alignment: Alignment.topRight,
-          children: [
-            InteractiveViewer(child: Image.network(photos[index], fit: BoxFit.contain)),
-            Padding(
-              padding: const EdgeInsets.all(8),
-              child: IconButton(
-                icon: const Icon(Icons.close, color: Colors.white),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 
   static const Map<String, String> _lifestyleLabels = {
     'smoking': 'Smoking', 'drinking': 'Drinking', 'fitness': 'Fitness',
