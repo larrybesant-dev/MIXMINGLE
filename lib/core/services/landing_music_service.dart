@@ -28,12 +28,14 @@ class LandingMusicService {
   static const Duration _fadeDuration = Duration(milliseconds: 500);
 
   bool _started = false;
+  bool _disposed = false;
+  StreamSubscription<void>? _stingCompleteSub;
 
   // ── Public API ─────────────────────────────────────────────────
 
   /// Call once on landing page initState.
   Future<void> start() async {
-    if (_started) return;
+    if (_disposed || _started) return;
     if (!_settings.canPlay(AudioFeature.landing)) return;
     _started = true;
 
@@ -43,7 +45,10 @@ class LandingMusicService {
       await _stingPlayer.play(AssetSource('audio/intro_sting.mp3'));
 
       // Wait for the sting to finish, then start ambient loop.
-      _stingPlayer.onPlayerComplete.listen((_) => _startAmbient());
+      _stingCompleteSub?.cancel();
+      _stingCompleteSub = _stingPlayer.onPlayerComplete.listen((_) {
+        unawaited(_startAmbient());
+      });
     } catch (e) {
       debugPrint('[LandingMusic] Sting failed: $e – trying ambient directly.');
       await _startAmbient();
@@ -51,6 +56,7 @@ class LandingMusicService {
   }
 
   Future<void> _startAmbient() async {
+    if (_disposed) return;
     if (!_settings.canPlay(AudioFeature.landing)) return;
     try {
       await _ambientPlayer.setReleaseMode(ReleaseMode.loop);
@@ -64,18 +70,25 @@ class LandingMusicService {
 
   /// Fade out and stop all playback (call on navigation away).
   Future<void> fadeOut() async {
+    if (_disposed) return;
     await Future.wait([
       _fadePlayerTo(_stingPlayer, 0.0),
       _fadeAmbientTo(0.0),
     ]);
-    await _stingPlayer.stop();
-    await _ambientPlayer.stop();
+    await _safeStop(_stingPlayer, 'sting');
+    await _safeStop(_ambientPlayer, 'ambient');
     _started = false;
   }
 
   Future<void> dispose() async {
-    await _stingPlayer.dispose();
-    await _ambientPlayer.dispose();
+    if (_disposed) return;
+    _disposed = true;
+    await _stingCompleteSub?.cancel();
+    _stingCompleteSub = null;
+    await _safeStop(_stingPlayer, 'sting');
+    await _safeStop(_ambientPlayer, 'ambient');
+    await _safeDispose(_stingPlayer, 'sting');
+    await _safeDispose(_ambientPlayer, 'ambient');
   }
 
   // ── Volume fade helpers ────────────────────────────────────────
@@ -102,6 +115,22 @@ class LandingMusicService {
       } catch (_) {
         break;
       }
+    }
+  }
+
+  Future<void> _safeStop(AudioPlayer player, String label) async {
+    try {
+      await player.stop();
+    } catch (e) {
+      debugPrint('[LandingMusic] Ignored $label stop error: $e');
+    }
+  }
+
+  Future<void> _safeDispose(AudioPlayer player, String label) async {
+    try {
+      await player.dispose();
+    } catch (e) {
+      debugPrint('[LandingMusic] Ignored $label dispose error: $e');
     }
   }
 }

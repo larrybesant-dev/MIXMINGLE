@@ -17,6 +17,11 @@ import '../discover/room_discovery_page_complete.dart';
 import '../chat/screens/chat_list_page.dart';
 import '../profile/screens/profile_page.dart';
 import '../room/providers/room_providers.dart';
+import '../../shared/providers/room_discovery_providers.dart';
+import '../../shared/widgets/room_discovery_card.dart';
+import '../rooms/pages/trending_rooms_page.dart';
+import '../rooms/pages/recommended_rooms_page.dart';
+import '../rooms/pages/new_rooms_page.dart';
 
 /// Home Page with Electric theme - main post-onboarding landing
 class HomePageElectric extends ConsumerStatefulWidget {
@@ -262,7 +267,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
         final bScore = (b.joinVelocity * 2) + b.viewerCount;
         return bScore.compareTo(aScore);
       });
-    final heatingUp = liveRooms.take(6).toList();
+    final heatingUp = List<Room>.from(liveRooms.take(6));
 
     final hour = DateTime.now().hour;
     final greeting = hour < 12
@@ -370,8 +375,114 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           ),
         ),
         SliverToBoxAdapter(child: _buildHeatingUpRail(heatingUp)),
+        // ── Phase 10: Discovery Rails ──────────────────────────
+        _buildRailHeader(
+          '🔥 Trending Rooms',
+          onSeeAll: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const TrendingRoomsPage()),
+          ),
+        ),
+        SliverToBoxAdapter(child: _buildTrendingRail()),
+        _buildRailHeader(
+          '⭐ Recommended',
+          onSeeAll: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const RecommendedRoomsPage()),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: _buildRecommendedRail(p?.id ?? ''),
+        ),
+        _buildRailHeader(
+          '✨ New Rooms',
+          onSeeAll: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const NewRoomsPage()),
+          ),
+        ),
+        SliverToBoxAdapter(child: _buildNewRoomsRail()),
         const SliverToBoxAdapter(child: SizedBox(height: 30)),
       ],
+    );
+  }
+
+  Widget _buildRailHeader(String title, {required VoidCallback onSeeAll}) {
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 24, 8, 0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(title,
+                style: const TextStyle(
+                    color: DesignColors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800)),
+            TextButton(
+              onPressed: onSeeAll,
+              child: Text('See All',
+                  style:
+                      TextStyle(color: DesignColors.accent, fontSize: 13)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTrendingRail() {
+    final roomsAsync = ref.watch(trendingRoomsProvider);
+    return _buildDiscoveryRail(roomsAsync);
+  }
+
+  Widget _buildRecommendedRail(String userId) {
+    final roomsAsync = ref.watch(recommendedRoomsProvider(userId));
+    return _buildDiscoveryRail(roomsAsync);
+  }
+
+  Widget _buildNewRoomsRail() {
+    final roomsAsync = ref.watch(newRoomsProvider);
+    return _buildDiscoveryRail(roomsAsync);
+  }
+
+  Widget _buildDiscoveryRail(
+      AsyncValue<List<Room>> roomsAsync) {
+    return roomsAsync.when(
+      data: (rooms) {
+        if (rooms.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+            child: Text('Nothing here yet',
+                style: TextStyle(
+                    color: DesignColors.textGray, fontSize: 13)),
+          );
+        }
+        return SizedBox(
+          height: 210,
+          child: ListView.builder(
+            padding:
+                const EdgeInsets.only(left: 20, right: 8, top: 8, bottom: 8),
+            scrollDirection: Axis.horizontal,
+            itemCount: rooms.length,
+            itemBuilder: (_, i) => RoomDiscoveryCard(
+              room: rooms[i],
+              onTap: () => Navigator.pushNamed(
+                context,
+                '/room',
+                arguments: rooms[i].id,
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () => const Padding(
+        padding: EdgeInsets.all(16),
+        child: Center(
+            child:
+                CircularProgressIndicator(color: DesignColors.accent)),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 
@@ -595,7 +706,14 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
             ),
             const SizedBox(height: 40),
             GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/discover-rooms'),
+              onTap: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Speed Dating is coming soon! 🔥'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
               child: Container(
                 width: double.infinity,
                 height: 52,

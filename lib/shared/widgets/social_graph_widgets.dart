@@ -2,6 +2,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/providers/social_graph_providers.dart';
 import '../../shared/providers/auth_providers.dart';
+import '../../shared/providers/user_providers.dart';
 import '../models/user_presence.dart';
 import '../models/user_profile.dart';
 

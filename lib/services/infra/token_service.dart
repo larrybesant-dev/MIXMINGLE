@@ -23,8 +23,15 @@ class TokenService {
         'userId': userId,
       });
 
-      final token = result.data['token'] as String;
+      final response = result.data as Map<String, dynamic>;
+      final token = response['token'] as String?;
+      if (token == null || token.isEmpty) {
+        throw Exception('generateAgoraToken response missing token');
+      }
       return token;
+    } on FirebaseFunctionsException catch (e) {
+      final details = e.details == null ? '' : ' (${e.details})';
+      throw Exception('Token request failed [${e.code}]: ${e.message ?? 'Unknown backend error'}$details');
     } catch (e) {
       throw Exception('Failed to generate Agora token: $e');
     }

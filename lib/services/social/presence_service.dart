@@ -27,46 +27,33 @@ class PresenceService {
 
     _currentUserId = user.uid;
 
-    // Set user as online
+    // Set user as online immediately
     await _setPresence(PresenceStatus.online);
 
-    // Update presence every 30 seconds
-    _presenceTimer = Timer.periodic(
-      const Duration(seconds: 30),
-      (_) => _updateHeartbeat(),
-    );
-
-    // Listen for app lifecycle changes
-    _setupLifecycleListener();
+    // NOTE: App lifecycle transitions (background/foreground/close) are handled
+    // by PresenceLifecycleObserver (lib/core/widgets/presence_lifecycle_observer.dart)
+    // which calls goOnline/goAway/goOffline based on AppLifecycleState.
+    // No periodic heartbeat timer is used — presence is event-driven.
   }
 
   /// Set user presence status
+  /// Writes to presence/{userId} with canonical field names:
+  ///   state     — "online" | "away" | "offline" | "busy"
+  ///   lastActive — server timestamp of last activity
+  ///   updatedAt  — server timestamp of this write
   Future<void> _setPresence(PresenceStatus status, {String? roomId, String? message}) async {
     if (_currentUserId == null) return;
 
     try {
       await _firestore.collection('presence').doc(_currentUserId).set({
-        'userId': _currentUserId,
-        'status': status.toString().split('.').last,
-        'lastSeen': FieldValue.serverTimestamp(),
-        'currentRoomId': roomId,
-        'statusMessage': message,
+        'state': status.name,
+        'lastActive': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+        if (roomId != null) 'roomId': roomId,
+        if (message != null) 'statusMessage': message,
       }, SetOptions(merge: true));
     } catch (e) {
       debugPrint('Error setting presence: $e');
-    }
-  }
-
-  /// Update heartbeat to keep user online
-  Future<void> _updateHeartbeat() async {
-    if (_currentUserId == null) return;
-
-    try {
-      await _firestore.collection('presence').doc(_currentUserId).update({
-        'lastSeen': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      debugPrint('Error updating heartbeat: $e');
     }
   }
 
@@ -218,10 +205,11 @@ class PresenceService {
     if (isOnline == null) return;
 
     try {
-      await _firestore.collection('presence').doc(userId).update({
-        'status': isOnline ? 'online' : 'offline',
-        'lastSeen': FieldValue.serverTimestamp(),
-      });
+      await _firestore.collection('presence').doc(userId).set({
+        'state': isOnline ? 'online' : 'offline',
+        'lastActive': FieldValue.serverTimestamp(),
+        'updatedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
     } catch (e) {
       debugPrint('Error updating presence: $e');
     }
@@ -233,7 +221,7 @@ class PresenceService {
 
     return _firestore
         .collection('presence')
-        .where('userId', whereIn: userIds.take(10).toList()) // Firestore limit
+        .where(FieldPath.documentId, whereIn: userIds.take(30).toList())
         .snapshots()
         .map((snapshot) {
       try {
@@ -278,11 +266,10 @@ class PresenceService {
     }
   }
 
-  /// Setup app lifecycle listener
-  void _setupLifecycleListener() {
-    // This would be called from the app's main widget
-    // For now, we'll handle it in the service initialization
-  }
+  /// Setup app lifecycle listener — implemented in PresenceLifecycleObserver
+  /// (lib/core/widgets/presence_lifecycle_observer.dart). This stub is intentionally
+  /// empty: the observer widget calls goOnline/goAway/goOffline directly.
+  void _setupLifecycleListener() {}
 
   /// Cleanup with proper resource disposal
   void dispose() {

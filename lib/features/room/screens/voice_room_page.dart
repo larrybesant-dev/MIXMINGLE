@@ -575,8 +575,11 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
   /// App bar with room name, participant count, and action buttons
   PreferredSizeWidget _buildAppBar(
       BuildContext context, int participantCount, firebase_auth.User? currentUser, Room room) {
-    final isHostOrCoHost =
-        currentUser != null && (currentUser.uid == room.hostId || room.moderators.contains(currentUser.uid));
+    final isHostOrCoHost = currentUser != null &&
+        (currentUser.uid == room.ownerId ||
+            currentUser.uid == room.hostId ||
+            room.admins.contains(currentUser.uid) ||
+            room.moderators.contains(currentUser.uid));
 
     return AppBar(
       backgroundColor: Colors.black87,
@@ -628,8 +631,11 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
             ),
           ),
 
-        // Moderation panel (only for host/co-host)
-        if (currentUser != null && currentUser.uid == _currentRoom.hostId)
+        // Moderation panel (for owner, host, or admins)
+        if (currentUser != null &&
+            (currentUser.uid == _currentRoom.ownerId ||
+                currentUser.uid == _currentRoom.hostId ||
+                _currentRoom.admins.contains(currentUser.uid)))
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Center(
@@ -1308,7 +1314,10 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
   }
 
   void _showHostSettingsSheet(BuildContext context, firebase_auth.User currentUser, int participantCount, Room room) {
-    final isHostOrCoHost = currentUser.uid == room.hostId || room.moderators.contains(currentUser.uid);
+    final isHostOrCoHost = currentUser.uid == room.ownerId ||
+        currentUser.uid == room.hostId ||
+        room.admins.contains(currentUser.uid) ||
+        room.moderators.contains(currentUser.uid);
 
     showModalBottomSheet(
       context: context,
@@ -1777,8 +1786,10 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
                 tooltip: 'Moderation actions',
                 onSelected: (action) => _handleModerationAction(action, participant),
                 itemBuilder: (context) => [
-                  // Promote/Demote moderator
-                  if (!participant.isHost)
+                  // Promote/Demote admin — owner only
+                  if (!participant.isHost &&
+                      currentUser != null &&
+                      currentUser!.uid == _currentRoom.ownerId)
                     PopupMenuItem(
                       value: participant.isModerator ? 'demote' : 'promote',
                       child: Row(
@@ -1789,7 +1800,7 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
                             color: participant.isModerator ? Colors.orange : Colors.blue,
                           ),
                           const SizedBox(width: 8),
-                          Text(participant.isModerator ? 'Demote moderator' : 'Promote to moderator'),
+                          Text(participant.isModerator ? 'Remove Admin' : 'Add Admin'),
                         ],
                       ),
                     ),
@@ -1831,8 +1842,9 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
                       ],
                     ),
                   ),
-                  // Ban
-                  if (!participant.isHost)
+                  // Ban — not for host or owner
+                  if (!participant.isHost &&
+                      participant.userId != _currentRoom.ownerId)
                     PopupMenuItem(
                       value: 'ban',
                       child: Row(
@@ -1855,7 +1867,10 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
   bool _isCurrentUserModerator() {
     final user = currentUser;
     if (user == null) return false;
-    return user.uid == _currentRoom.hostId || _currentRoom.moderators.contains(user.uid);
+    return user.uid == _currentRoom.ownerId ||
+        user.uid == _currentRoom.hostId ||
+        _currentRoom.admins.contains(user.uid) ||
+        _currentRoom.moderators.contains(user.uid);
   }
 
   bool _isOwnProfile(String userId) {
@@ -1941,17 +1956,17 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
     try {
       switch (action) {
         case 'promote':
-          await roomService.makeModerator(widget.room.id, user.uid, participant.userId);
+          await roomService.makeAdmin(widget.room.id, participant.userId);
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${participant.displayName} promoted to moderator')),
+              SnackBar(content: Text('${participant.displayName} added as admin')),
             );
           }
         case 'demote':
-          await roomService.removeModerator(widget.room.id, user.uid, participant.userId);
+          await roomService.removeAdmin(widget.room.id, participant.userId);
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('${participant.displayName} removed as moderator')),
+              SnackBar(content: Text('${participant.displayName} removed as admin')),
             );
           }
         case 'mute':
@@ -2070,8 +2085,12 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
 
   /// Control bar at bottom (mic, camera, flip, chat, leave)
   Widget _buildControlBar(AgoraVideoService agoraService, firebase_auth.User? currentUser, dynamic currentUserProfile) {
-    final isHost = currentUser?.uid == _currentRoom.hostId;
-    final isModerator = currentUser != null && (isHost || _currentRoom.moderators.contains(currentUser.uid));
+    final isHost = currentUser?.uid == _currentRoom.hostId ||
+        currentUser?.uid == _currentRoom.ownerId;
+    final isModerator = currentUser != null &&
+        (isHost ||
+            _currentRoom.admins.contains(currentUser.uid) ||
+            _currentRoom.moderators.contains(currentUser.uid));
     final isCurrentSpeaker = currentUser != null && _currentSpeakerUserId == currentUser.uid;
     final canSpeak = !_turnBased || isCurrentSpeaker || isHost;
     final hasRaisedHand = currentUser != null && _raisedHands.contains(currentUser.uid);

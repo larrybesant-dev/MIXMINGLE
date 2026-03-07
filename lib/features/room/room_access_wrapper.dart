@@ -1,7 +1,7 @@
-import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/models/room.dart';
+import '../../shared/providers/auth_providers.dart';
 import '../../core/utils/app_logger.dart';
 import 'room_access_gate.dart';
 import '../../core/design_system/design_constants.dart';
@@ -21,9 +21,34 @@ class RoomAccessWrapper extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final appUser = ref.watch(currentUserProvider).asData?.value;
+    final effectiveUserId =
+        (appUser?.id.trim().isNotEmpty == true) ? appUser!.id : userId.trim();
+
+    final profileDisplayName = appUser?.displayName?.trim() ?? '';
+    final profileUsername = appUser?.username.trim() ?? '';
+    final displayName = profileDisplayName.isNotEmpty
+      ? profileDisplayName
+      : profileUsername.isNotEmpty
+        ? profileUsername
+        : 'Guest';
+    final avatarUrl =
+        (appUser?.avatarUrl.trim().isNotEmpty == true)
+            ? appUser!.avatarUrl
+            : null;
+
+    // Hosts should always be able to enter their own room immediately.
+    if (room.hostId == effectiveUserId && effectiveUserId.isNotEmpty) {
+      return LiveRoomScreen(
+        roomId: room.id,
+        displayName: displayName,
+        avatarUrl: avatarUrl,
+      );
+    }
+
     final accessCheck = ref.watch(roomAccessCheckProvider((
       roomId: room.id,
-      userId: userId,
+      userId: effectiveUserId,
     )));
 
     return accessCheck.when(
@@ -43,14 +68,6 @@ class RoomAccessWrapper extends ConsumerWidget {
         ),
       ),
       data: (hasAccess) {
-        // Build display name from FirebaseAuth (already authenticated at this point)
-        final fbUser = fb_auth.FirebaseAuth.instance.currentUser;
-        final displayName =
-            fbUser?.displayName?.trim().isNotEmpty == true
-                ? fbUser!.displayName!
-                : fbUser?.email?.split('@').first ?? userId;
-        final avatarUrl = fbUser?.photoURL;
-
         return LiveRoomScreen(
           roomId:      room.id,
           displayName: displayName,

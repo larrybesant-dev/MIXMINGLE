@@ -9,7 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import '../../../core/design_system/design_constants.dart';
 import '../../../shared/providers/auth_providers.dart';
+import '../../../shared/providers/all_providers.dart';
 import '../../../shared/widgets/club_background.dart';
+import '../../../shared/widgets/presence_indicator.dart';
+import '../../../utils/window_manager.dart';
+import '../../../utils/window_sync_service.dart';
 
 class ChatConversationPage extends ConsumerStatefulWidget {
   final String chatId;
@@ -102,14 +106,19 @@ class _ChatConversationPageState
                 color: DesignColors.white, size: 20),
             onPressed: () => Navigator.of(context).maybePop(),
           ),
-          title: Text(
-            'Chat',
-            style: DesignTypography.heading.copyWith(
-              color: DesignColors.white,
-              fontSize: 18,
-              shadows: DesignColors.primaryGlow,
+          title: _ChatAppBarTitle(chatId: widget.chatId),
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.open_in_new_rounded),
+              tooltip: 'Pop Out Chat',
+              onPressed: () {
+                WindowSyncService.send('chat.popoutRequested', {
+                  'chatId': widget.chatId,
+                });
+                WindowManager.openPrivateChat(widget.chatId);
+              },
             ),
-          ),
+          ],
         ),
         body: Column(
           children: [
@@ -350,6 +359,68 @@ class _MessageBubble extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Chat AppBar title: other user's name + real-time presence dot
+// ─────────────────────────────────────────────────────────────────
+class _ChatAppBarTitle extends ConsumerWidget {
+  final String chatId;
+
+  const _ChatAppBarTitle({required this.chatId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final currentUser = ref.watch(currentUserProvider).value;
+
+    return StreamBuilder<DocumentSnapshot>(
+      stream: FirebaseFirestore.instance.collection('chats').doc(chatId).snapshots(),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData || !snapshot.data!.exists) {
+          return Text('Chat',
+              style: DesignTypography.heading.copyWith(
+                  color: DesignColors.white, fontSize: 18));
+        }
+
+        final data = snapshot.data!.data() as Map<String, dynamic>;
+        final participants = List<String>.from(data['participants'] ?? []);
+        final otherUserId = participants.firstWhere(
+          (id) => id != currentUser?.id,
+          orElse: () => participants.isNotEmpty ? participants.first : '',
+        );
+
+        if (otherUserId.isEmpty) {
+          return Text('Chat',
+              style: DesignTypography.heading.copyWith(
+                  color: DesignColors.white, fontSize: 18));
+        }
+
+        final otherUserAsync = ref.watch(userProfileProvider(otherUserId));
+        final displayName = otherUserAsync.value?.displayName ??
+            otherUserAsync.value?.username ??
+            'Chat';
+
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                displayName,
+                style: DesignTypography.heading.copyWith(
+                  color: DesignColors.white,
+                  fontSize: 18,
+                  shadows: DesignColors.primaryGlow,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(width: 8),
+            PresenceIndicatorWithLabel(userId: otherUserId),
+          ],
+        );
+      },
     );
   }
 }

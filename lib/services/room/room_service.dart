@@ -1,11 +1,13 @@
 ﻿import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mixmingle/shared/models/room.dart';
 
 class RoomService {
     // Advanced role management
     Future<void> promoteToCoHost(String roomId, String userId) async {
+      await _assertAdminOrOwner(roomId, _currentUserId);
       await _firestore.collection('rooms').doc(roomId).update({
         'moderators': FieldValue.arrayUnion([userId]),
         'roleMap.$userId': 'coHost',
@@ -20,6 +22,11 @@ class RoomService {
     }
 
     Future<void> transferHostRole(String roomId, String newHostId) async {
+      final _doc = await _firestore.collection('rooms').doc(roomId).get();
+      if (!_doc.exists) throw Exception('Room not found');
+      final _d = _doc.data()!;
+      final _ownerId = _d['ownerId'] as String? ?? _d['hostId'] as String? ?? '';
+      if (_currentUserId != _ownerId) throw Exception('Only the owner can transfer host role');
       await _firestore.collection('rooms').doc(roomId).update({
         'hostId': newHostId,
         'roleMap.$newHostId': 'host',
@@ -69,6 +76,7 @@ class RoomService {
     }
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Create a new voice room
   Future<Room> createVoiceRoom({
@@ -95,6 +103,7 @@ class RoomService {
       id: roomId,
       name: title,
       hostId: hostId,
+      ownerId: hostId,
       participantIds: [hostId], // Host is automatically a participant
       isActive: true,
       createdAt: DateTime.now(),
@@ -114,16 +123,24 @@ class RoomService {
       agoraChannelName: agoraChannelName,
       speakers: [hostId], // Host starts as speaker
       listeners: [],
+      admins: [hostId],
     );
 
     // Add creatorId for Firestore security rules
     final roomData = room.toMap();
     roomData['creatorId'] = hostId;
+    roomData['ownerId'] = hostId;
+    if (!(roomData['admins'] as List).contains(hostId)) {
+      (roomData['admins'] as List).add(hostId);
+    }
+    roomData['createdAt'] = FieldValue.serverTimestamp();
     // Ensure LiveRoom schema fields are initialized on creation
     roomData['videoChannelLive']  = false;  // set to true by controller when first user enters
     roomData['participantCount']  = 0;
     roomData['maxBroadcasters']   ??= 4;
     roomData['maxActiveMics']     ??= 4;
+    // URL-safe slug: lowercase title, non-alphanumeric → hyphens, trim leading/trailing hyphens, + 8-char roomId suffix
+    roomData['slug'] = '${title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-+|-+$'), '')}-${roomId.substring(0, 8)}';
 
     await _firestore.collection('rooms').doc(roomId).set(roomData);
     return room;
@@ -150,15 +167,30 @@ class RoomService {
 
         final roomData = roomDoc.data()!;
         final bannedUsers = List<String>.from(roomData['bannedUsers'] ?? []);
+        final ownerId = roomData['ownerId'] as String? ?? roomData['hostId'] as String? ?? '';
+        final admins = List<String>.from(roomData['admins'] ?? []);
+        final isPrivileged = userId == ownerId || admins.contains(userId);
 
-        // Check if user is banned
-        if (bannedUsers.contains(userId)) {
+        // Check if user is banned (privileged users bypass)
+        if (!isPrivileged && bannedUsers.contains(userId)) {
           throw Exception('You are banned from this room');
+        }
+
+        // Check if room is locked (privileged users bypass)
+        final isLocked = (roomData['isLocked'] as bool? ?? false) ||
+            (roomData['isRoomLocked'] as bool? ?? false);
+        if (!isPrivileged && isLocked) {
+          throw Exception('This room is locked. Only admins can join.');
         }
 
         // Add user to participants
         final updatedParticipants = List<String>.from(roomData['participantIds'] ?? []);
         if (!updatedParticipants.contains(userId)) {
+          // Capacity check: enforce maxUsers limit for non-privileged users
+          final maxUsers = (roomData['maxUsers'] as int?) ?? 200;
+          if (!isPrivileged && updatedParticipants.length >= maxUsers) {
+            throw Exception('Room is at capacity ($maxUsers). Try again later.');
+          }
           updatedParticipants.add(userId);
         }
 
@@ -197,12 +229,16 @@ class RoomService {
 
         final roomData = roomDoc.data()!;
         hostId = roomData['hostId'] as String?;
+        final admins = List<String>.from(roomData['admins'] ?? []);
 
         // Remove user from all role lists
         final updatedParticipants = List<String>.from(roomData['participantIds'] ?? [])..remove(userId);
-        final updatedSpeakers = List<String>.from(roomData['speakers'] ?? [])..remove(userId);
-        final updatedListeners = List<String>.from(roomData['listeners'] ?? [])..remove(userId);
-        final updatedModerators = List<String>.from(roomData['moderators'] ?? [])..remove(userId);
+        final updatedSpeakers    = List<String>.from(roomData['speakers'] ?? [])..remove(userId);
+        final updatedListeners   = List<String>.from(roomData['listeners'] ?? [])..remove(userId);
+        // Admins retain their moderator slot so re-join is seamless
+        final updatedModerators  = admins.contains(userId)
+            ? List<String>.from(roomData['moderators'] ?? [])
+            : List<String>.from(roomData['moderators'] ?? [])..remove(userId);
 
         transaction.update(roomRef, {
           'participantIds': updatedParticipants,
@@ -213,8 +249,10 @@ class RoomService {
           'lastActivity': FieldValue.serverTimestamp(),
         });
 
-        // Check if host left and no moderators remain
-        if (hostId == userId && updatedModerators.isEmpty) {
+        // Only auto-end if host left AND no other admin or moderator remains
+        final hasRemainingPrivileged = updatedModerators.any((id) => id != userId) ||
+            admins.any((id) => id != userId);
+        if (hostId == userId && !hasRemainingPrivileged) {
           shouldEndRoom = true;
         }
       });
@@ -316,8 +354,11 @@ class RoomService {
 
         final room = Room.fromDocument(roomDoc);
 
-        // Check if requester is a moderator
-        if (!room.moderators.contains(moderatorId)) {
+        // Check if requester is owner, admin, or moderator
+        final isPrivilegedMod = moderatorId == room.ownerId ||
+            room.admins.contains(moderatorId) ||
+            room.moderators.contains(moderatorId);
+        if (!isPrivilegedMod) {
           throw Exception('You are not authorized to perform this action');
         }
 
@@ -346,13 +387,13 @@ class RoomService {
 
         final room = Room.fromDocument(roomDoc);
 
-        // Check if requester is a moderator and target is not the host
-        if (!room.moderators.contains(moderatorId)) {
-          throw Exception('You are not authorized to perform this action');
+        // Only owner can remove moderators
+        if (moderatorId != room.ownerId && moderatorId != room.hostId) {
+          throw Exception('Only the room owner can remove moderators');
         }
 
-        if (targetUserId == room.hostId) {
-          throw Exception('Cannot remove the room host as moderator');
+        if (targetUserId == room.ownerId || targetUserId == room.hostId) {
+          throw Exception('Cannot remove the room owner as moderator');
         }
 
         final updatedModerators = List<String>.from(room.moderators)..remove(targetUserId);
@@ -379,12 +420,15 @@ class RoomService {
 
         final room = Room.fromDocument(roomDoc);
 
-        // Check if requester is a moderator
-        if (!room.moderators.contains(moderatorId)) {
+        // Check if requester is owner, admin, or moderator
+        final isPrivileged = moderatorId == room.ownerId ||
+            room.admins.contains(moderatorId) ||
+            room.moderators.contains(moderatorId);
+        if (!isPrivileged) {
           throw Exception('You are not authorized to perform this action');
         }
 
-        if (targetUserId == room.hostId) {
+        if (targetUserId == room.ownerId || targetUserId == room.hostId) {
           throw Exception('Cannot kick the room host');
         }
 
@@ -410,35 +454,47 @@ class RoomService {
 
   Future<void> banUser(String roomId, String moderatorId, String targetUserId) async {
     final roomRef = _firestore.collection('rooms').doc(roomId);
-    final roomDoc = await roomRef.get();
 
-    if (!roomDoc.exists) {
-      throw Exception('Room not found');
-    }
+    // Single transaction: auth check + kick + ban array — no race window between kick and ban
+    await _firestore.runTransaction((transaction) async {
+      final roomDoc = await transaction.get(roomRef);
+      if (!roomDoc.exists) throw Exception('Room not found');
 
-    final room = Room.fromDocument(roomDoc);
+      final room = Room.fromDocument(roomDoc);
 
-    // Check if requester is a moderator
-    if (!room.moderators.contains(moderatorId)) {
-      throw Exception('You are not authorized to perform this action');
-    }
+      final isPrivileged = moderatorId == room.ownerId ||
+          room.admins.contains(moderatorId) ||
+          room.moderators.contains(moderatorId);
+      if (!isPrivileged) throw Exception('You are not authorized to perform this action');
+      if (targetUserId == room.ownerId || targetUserId == room.hostId) {
+        throw Exception('Cannot ban the room host');
+      }
 
-    if (targetUserId == room.hostId) {
-      throw Exception('Cannot ban the room host');
-    }
+      final updatedParticipants = List<String>.from(room.participantIds)..remove(targetUserId);
+      final updatedSpeakers    = List<String>.from(room.speakers)..remove(targetUserId);
+      final updatedListeners   = List<String>.from(room.listeners)..remove(targetUserId);
+      final updatedModerators  = List<String>.from(room.moderators)..remove(targetUserId);
+      final updatedBanned      = List<String>.from(room.bannedUsers);
+      if (!updatedBanned.contains(targetUserId)) updatedBanned.add(targetUserId);
 
-    // First kick the user
-    await kickUser(roomId, moderatorId, targetUserId);
-
-    // Add to banned list
-    final updatedBannedUsers = List<String>.from(room.bannedUsers);
-    if (!updatedBannedUsers.contains(targetUserId)) {
-      updatedBannedUsers.add(targetUserId);
-    }
-
-    await roomRef.update({
-      'bannedUsers': updatedBannedUsers,
+      transaction.update(roomRef, {
+        'participantIds': updatedParticipants,
+        'speakers': updatedSpeakers,
+        'listeners': updatedListeners,
+        'moderators': updatedModerators,
+        'viewerCount': updatedParticipants.length,
+        'bannedUsers': updatedBanned,
+      });
     });
+
+    // Remove participant subcollection doc outside transaction to stay within 20-op limit
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(targetUserId)
+        .delete()
+        .catchError((_) {});
   }
 
   // ============================================================================
@@ -598,6 +654,8 @@ class RoomService {
       'status': 'ended',
       'isActive': false,
       'isLive': false,
+      'viewerCount': 0,
+      'participantCount': 0,
     });
   }
 
@@ -1213,5 +1271,173 @@ class RoomService {
       debugPrint('Rate limit function unavailable: $e');
       // Proceed if function unavailable to avoid hard dependency
     }
+  }
+
+  // ============================================================================
+  // ADMIN ACTIONS — owner / admin only
+  // ============================================================================
+
+  Future<void> _assertAdminOrOwner(String roomId, String callerId) async {
+    final doc = await _firestore.collection('rooms').doc(roomId).get();
+    if (!doc.exists) throw Exception('Room not found');
+    final data = doc.data()!;
+    final ownerId = data['ownerId'] as String? ?? data['hostId'] as String? ?? '';
+    final admins = List<String>.from(data['admins'] ?? []);
+    if (callerId != ownerId && !admins.contains(callerId)) {
+      throw Exception('Unauthorized: you are not an owner or admin of this room');
+    }
+  }
+
+  Future<void> adminKickUser(String roomId, String targetUserId) async {
+    final currentUserId = _currentUserId;
+    await _assertAdminOrOwner(roomId, currentUserId);
+
+    final roomRef = _firestore.collection('rooms').doc(roomId);
+    await _firestore.runTransaction((tx) async {
+      final snap = await tx.get(roomRef);
+      if (!snap.exists) throw Exception('Room not found');
+      final data = snap.data()!;
+      final ownerId = data['ownerId'] as String? ?? data['hostId'] as String? ?? '';
+      if (targetUserId == ownerId) throw Exception('Cannot kick the room owner');
+
+      final participants = List<String>.from(data['participantIds'] ?? [])..remove(targetUserId);
+      final speakers = List<String>.from(data['speakers'] ?? [])..remove(targetUserId);
+      final listeners = List<String>.from(data['listeners'] ?? [])..remove(targetUserId);
+      final mods = List<String>.from(data['moderators'] ?? [])..remove(targetUserId);
+      tx.update(roomRef, {
+        'participantIds': participants,
+        'speakers': speakers,
+        'listeners': listeners,
+        'moderators': mods,
+        'viewerCount': participants.length,
+        'kickedUsers': FieldValue.arrayUnion([targetUserId]),
+      });
+    });
+
+    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(targetUserId).delete();
+  }
+
+  Future<void> unbanUser(String roomId, String targetUserId) async {
+    final currentUserId = _currentUserId;
+    await _assertAdminOrOwner(roomId, currentUserId);
+
+    await _firestore.collection('rooms').doc(roomId).update({
+      'bannedUsers': FieldValue.arrayRemove([targetUserId]),
+    });
+
+    // Remove from both canonical 'bans' subcollection and legacy 'banned_users' subcollection
+    final roomRef = _firestore.collection('rooms').doc(roomId);
+    await Future.wait([
+      roomRef.collection('bans').doc(targetUserId).delete().catchError((_) {}),
+      roomRef.collection('banned_users').doc(targetUserId).delete().catchError((_) {}),
+    ]);
+  }
+
+  Future<void> adminBanUser(String roomId, String targetUserId) async {
+    final currentUserId = _currentUserId;
+    await _assertAdminOrOwner(roomId, currentUserId);
+
+    final doc = await _firestore.collection('rooms').doc(roomId).get();
+    if (!doc.exists) throw Exception('Room not found');
+    final data = doc.data()!;
+    final ownerId = data['ownerId'] as String? ?? data['hostId'] as String? ?? '';
+    if (targetUserId == ownerId) throw Exception('Cannot ban the room owner');
+
+    await adminKickUser(roomId, targetUserId);
+
+    await _firestore.collection('rooms').doc(roomId).update({
+      'bannedUsers': FieldValue.arrayUnion([targetUserId]),
+    });
+
+    await _firestore.collection('rooms').doc(roomId).collection('bans').doc(targetUserId).set({
+      'bannedAt': FieldValue.serverTimestamp(),
+      'bannedBy': currentUserId,
+    });
+  }
+
+  Future<void> makeAdmin(String roomId, String targetUserId) async {
+    final currentUserId = _currentUserId;
+    // Only the owner may add admins — admins cannot self-escalate or promote others
+    final doc = await _firestore.collection('rooms').doc(roomId).get();
+    if (!doc.exists) throw Exception('Room not found');
+    final data = doc.data()!;
+    final ownerId = data['ownerId'] as String? ?? data['hostId'] as String? ?? '';
+    if (currentUserId != ownerId) throw Exception('Only the owner can add admins');
+
+    await _firestore.collection('rooms').doc(roomId).update({
+      'admins': FieldValue.arrayUnion([targetUserId]),
+      'moderators': FieldValue.arrayUnion([targetUserId]),
+    });
+  }
+
+  Future<void> removeAdmin(String roomId, String targetUserId) async {
+    final currentUserId = _currentUserId;
+
+    final doc = await _firestore.collection('rooms').doc(roomId).get();
+    if (!doc.exists) throw Exception('Room not found');
+    final data = doc.data()!;
+    final ownerId = data['ownerId'] as String? ?? data['hostId'] as String? ?? '';
+    if (currentUserId != ownerId) throw Exception('Only the owner can remove admins');
+    if (targetUserId == ownerId) throw Exception('Cannot remove the owner from admins');
+
+    await _firestore.collection('rooms').doc(roomId).update({
+      'admins': FieldValue.arrayRemove([targetUserId]),
+      'moderators': FieldValue.arrayRemove([targetUserId]),
+    });
+  }
+
+  Future<void> updateRoomName(String roomId, String newName) async {
+    final currentUserId = _currentUserId;
+    await _assertAdminOrOwner(roomId, currentUserId);
+    final trimmedName = newName.trim();
+    if (trimmedName.isEmpty) throw Exception('Room name cannot be empty');
+    if (trimmedName.length > 100) throw Exception('Room name cannot exceed 100 characters');
+
+    await _firestore.collection('rooms').doc(roomId).update({
+      'title': trimmedName,
+      'name': trimmedName,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> updateRoomHeader(String roomId, String newHeader) async {
+    final currentUserId = _currentUserId;
+    await _assertAdminOrOwner(roomId, currentUserId);
+    final trimmedHeader = newHeader.trim();
+    if (trimmedHeader.isEmpty) throw Exception('Room header cannot be empty');
+    if (trimmedHeader.length > 100) throw Exception('Room header cannot exceed 100 characters');
+
+    await _firestore.collection('rooms').doc(roomId).update({
+      'header': trimmedHeader,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> lockRoom(String roomId) async {
+    final currentUserId = _currentUserId;
+    await _assertAdminOrOwner(roomId, currentUserId);
+
+    await _firestore.collection('rooms').doc(roomId).update({
+      'isLocked': true,
+      'isRoomLocked': true,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> unlockRoom(String roomId) async {
+    final currentUserId = _currentUserId;
+    await _assertAdminOrOwner(roomId, currentUserId);
+
+    await _firestore.collection('rooms').doc(roomId).update({
+      'isLocked': false,
+      'isRoomLocked': false,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  String get _currentUserId {
+    final uid = _auth.currentUser?.uid;
+    if (uid == null || uid.isEmpty) throw Exception('No authenticated user');
+    return uid;
   }
 }

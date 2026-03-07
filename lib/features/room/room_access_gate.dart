@@ -34,9 +34,17 @@ Future<bool> canAccessRoom({
   required String userId,
 }) async {
   try {
-    // Check auth status
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null || !user.emailVerified) {
+    // Check auth status. On web, currentUser can be briefly null while auth
+    // state settles after route transitions.
+    var user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      user = await FirebaseAuth.instance
+          .authStateChanges()
+          .first
+          .timeout(const Duration(seconds: 3), onTimeout: () => null);
+    }
+
+    if (user == null) {
       throw RoomAccessDeniedException(
         state: RoomAccessState.unauthenticated,
         message: 'You must be authenticated to access this room',
@@ -89,13 +97,16 @@ Future<RoomAccessState> getRoomAccessState({
   required String userId,
 }) async {
   try {
-    final user = FirebaseAuth.instance.currentUser;
+    var user = FirebaseAuth.instance.currentUser;
 
     if (user == null) {
-      return RoomAccessState.unauthenticated;
+      user = await FirebaseAuth.instance
+          .authStateChanges()
+          .first
+          .timeout(const Duration(seconds: 3), onTimeout: () => null);
     }
 
-    if (!user.emailVerified) {
+    if (user == null) {
       return RoomAccessState.unauthenticated;
     }
 

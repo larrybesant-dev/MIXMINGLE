@@ -532,11 +532,21 @@ class AgoraVideoService extends ChangeNotifier {
         DebugLog.info(_safeLog(' Callable returned successfully'));
 
         DebugLog.info(_safeLog(' Token response received'));
-        final tokenValue = result.data['token'] as String?;
-        final tokenUid = result.data['uid'] as int?;
+        final payload = result.data as Map<String, dynamic>?;
+        final tokenValue = (payload?['token'] as String?)?.trim() ?? '';
+        final uidValue = payload?['uid'];
+        final tokenUid = uidValue is int
+            ? uidValue
+            : uidValue is String
+                ? int.tryParse(uidValue)
+                : null;
 
-        if (tokenValue == null) throw Exception('Response missing token field');
-        if (tokenUid == null) throw Exception('Response missing uid field');
+        if (tokenValue.isEmpty) {
+          throw Exception('Response missing token field');
+        }
+        if (tokenUid == null || tokenUid <= 0) {
+          throw Exception('Response missing or invalid uid field');
+        }
 
         token = tokenValue;
         _localUid = tokenUid;
@@ -545,6 +555,12 @@ class AgoraVideoService extends ChangeNotifier {
         DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ Length: ${token.length}'));
         DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ UID: $tokenUid'));
         DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ Channel: $roomId'));
+      } on FirebaseFunctionsException catch (e, st) {
+        final details = e.details == null ? '' : ' (${e.details})';
+        final backendMessage = 'Token generation failed [${e.code}]: ${e.message ?? 'Unknown backend error'}$details';
+        DebugLog.info(_safeLog(' Agora token generation failed: $backendMessage'));
+        DebugLog.info(_safeLog('Stack trace: $st'));
+        throw Exception(backendMessage);
       } catch (e, st) {
         DebugLog.info(_safeLog(' Agora token generation failed: $e'));
         DebugLog.info(_safeLog('Stack trace: $st'));

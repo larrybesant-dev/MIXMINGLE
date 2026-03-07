@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -25,37 +27,71 @@ class ChatPage extends ConsumerStatefulWidget {
 class _ChatPageState extends ConsumerState<ChatPage> {
   final _cs = ChatService();
   final controller = TextEditingController();
+  final _scrollController = ScrollController();
+  Timer? _typingTimer;
   bool _isUploading = false;
+  List<ChatMessage> _olderMessages = [];
+  DocumentSnapshot? _oldestDoc;
+  bool _isLoadingMore = false;
+  bool _hasMore = true;
 
   @override
   void initState() {
     super.initState();
     controller.addListener(_onTextChanged);
+    _scrollController.addListener(_onScroll);
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200 &&
+        !_isLoadingMore &&
+        _hasMore) {
+      _loadOlderMessages();
+    }
+  }
+
+  Future<void> _loadOlderMessages() async {
+    if (widget.chatId == null) return;
+    setState(() => _isLoadingMore = true);
+    try {
+      final (msgs, cursor) =
+          await _cs.getMessagesPage(widget.chatId!, lastDoc: _oldestDoc);
+      if (mounted) {
+        setState(() {
+          _olderMessages = [...msgs, ..._olderMessages];
+          _oldestDoc = cursor;
+          _hasMore = msgs.length == 25;
+          _isLoadingMore = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingMore = false);
+    }
   }
 
   void _onTextChanged() {
     if (controller.text.isNotEmpty && widget.chatId != null) {
       final currentUser = FirebaseAuth.instance.currentUser;
       if (currentUser != null) {
-        final typingService = ref.read(typingServiceProvider);
-        typingService.startTyping(
-          widget.chatId!,
-          currentUser.uid,
-          currentUser.displayName ?? 'User',
-        );
+        _cs.setTyping(widget.chatId!, currentUser.uid,
+            currentUser.displayName ?? 'User', true);
+        _typingTimer?.cancel();
+        _typingTimer = Timer(const Duration(seconds: 4), () {
+          _cs.setTyping(widget.chatId!, currentUser.uid, '', false).ignore();
+        });
       }
     }
   }
 
   @override
   void dispose() {
+    _typingTimer?.cancel();
+    _scrollController.dispose();
     controller.dispose();
-    if (widget.chatId != null) {
-      final currentUser = FirebaseAuth.instance.currentUser;
-      if (currentUser != null) {
-        final typingService = ref.read(typingServiceProvider);
-        typingService.stopTyping(widget.chatId!, currentUser.uid);
-      }
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (widget.chatId != null && currentUser != null) {
+      _cs.setTyping(widget.chatId!, currentUser.uid, '', false).ignore();
     }
     super.dispose();
   }
@@ -88,44 +124,100 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   final messages = snap.data!;
+                  final allMsgs = _mergeMessages(_olderMessages, messages);
                   return ListView.builder(
+                    controller: _scrollController,
                     reverse: true,
-                    itemCount: messages.length,
+                    itemCount: allMsgs.length + (_hasMore ? 1 : 0),
                     itemBuilder: (ctx, i) {
-                      final msg = messages[messages.length - 1 - i];
+                      if (i == allMsgs.length) {
+                        return _isLoadingMore
+                            ? const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(8),
+                                  child: CircularProgressIndicator(
+                                      strokeWidth: 2),
+                                ))
+                            : const SizedBox.shrink();
+                      }
+                      final msg = allMsgs[allMsgs.length - 1 - i];
                       final senderId = msg.senderId;
                       final currentUser = FirebaseAuth.instance.currentUser;
                       final isCurrentUser = senderId == currentUser?.uid;
+                      final effectiveRoom = widget.chatId ?? '';
 
-                      return Align(
-                        alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
-                        child: Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          padding: const EdgeInsets.all(12),
-                          constraints: BoxConstraints(
-                            maxWidth: MediaQuery.of(context).size.width * 0.7,
-                          ),
-                          decoration: BoxDecoration(
-                            color: isCurrentUser
-                                ? Theme.of(context).primaryColor.withValues(alpha: 0.8)
-                                : Colors.grey[800],
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (!isCurrentUser)
-                                _SenderNameWidget(
-                                  senderId: senderId,
-                                  ref: ref,
-                                ),
-                              if (!isCurrentUser) const SizedBox(height: 4),
-                              Text(
-                                msg.content,
-                                style: const TextStyle(color: Colors.white),
-                              ),
-                            ],
+                      return GestureDetector(
+                        onLongPress: () => _showReactionPicker(context, msg,
+                            effectiveRoom, currentUser?.uid ?? ''),
+                        child: Align(
+                          alignment: isCurrentUser
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.all(12),
+                            constraints: BoxConstraints(
+                              maxWidth:
+                                  MediaQuery.of(context).size.width * 0.7,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isCurrentUser
+                                  ? Theme.of(context)
+                                      .primaryColor
+                                      .withValues(alpha: 0.8)
+                                  : Colors.grey[800],
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (!isCurrentUser) ...[
+                                  _SenderNameWidget(
+                                      senderId: senderId, ref: ref),
+                                  const SizedBox(height: 4),
+                                ],
+                                if (msg.imageUrl != null)
+                                  ClipRRect(
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: Image.network(
+                                      msg.imageUrl!,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, __, ___) =>
+                                          const Icon(Icons.broken_image,
+                                              color: Colors.white54),
+                                    ),
+                                  )
+                                else
+                                  Text(msg.content,
+                                      style: const TextStyle(
+                                          color: Colors.white)),
+                                if (isCurrentUser && msg.isRead) ...[
+                                  const SizedBox(height: 4),
+                                  const Icon(Icons.done_all,
+                                      size: 14,
+                                      color: Colors.lightBlueAccent),
+                                ],
+                                if ((msg.reactionsMap?.isNotEmpty) == true) ...[
+                                  const SizedBox(height: 6),
+                                  _ReactionStrip(
+                                    reactionsMap: msg.reactionsMap!,
+                                    currentUserId: currentUser?.uid ?? '',
+                                    onTap: (emoji) {
+                                      final uid = currentUser?.uid ?? '';
+                                      if (msg.reactionsMap?[uid] == emoji) {
+                                        _cs.removeReaction(
+                                            effectiveRoom, msg.id, uid);
+                                      } else {
+                                        _cs.addReaction(
+                                            effectiveRoom, msg.id, uid, emoji);
+                                      }
+                                    },
+                                  ),
+                                ],
+                              ],
+                            ),
                           ),
                         ),
                       );
@@ -171,6 +263,52 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         ),
       ),
     );
+  }
+
+  /// Merge paginated older messages with the live stream messages,
+  /// de-duplicating by id and sorting by timestamp.
+  List<ChatMessage> _mergeMessages(
+      List<ChatMessage> older, List<ChatMessage> live) {
+    final seen = <String>{};
+    final merged = <ChatMessage>[];
+    for (final m in [...live, ...older]) {
+      if (seen.add(m.id)) merged.add(m);
+    }
+    merged.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+    return merged;
+  }
+
+  /// Shows an emoji reaction picker for [msg].
+  Future<void> _showReactionPicker(
+      BuildContext context,
+      ChatMessage msg,
+      String chatId,
+      String userId) async {
+    const emojis = ['❤️', '😂', '😮', '😢', '👍', '🔥'];
+    final chosen = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: const Color(0xFF1A1A3A),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: emojis
+              .map((e) => GestureDetector(
+                    onTap: () => Navigator.pop(context, e),
+                    child: Text(e, style: const TextStyle(fontSize: 30)),
+                  ))
+              .toList(),
+        ),
+      ),
+    );
+    if (chosen == null) return;
+    if (msg.reactionsMap?[userId] == chosen) {
+      await _cs.removeReaction(chatId, msg.id, userId);
+    } else {
+      await _cs.addReaction(chatId, msg.id, userId, chosen);
+    }
   }
 
   Future<void> _pickAndUploadFile() async {
@@ -268,6 +406,57 @@ class _SenderNameWidget extends ConsumerWidget {
           color: Theme.of(context).colorScheme.secondary,
         ),
       ),
+    );
+  }
+}
+
+/// Horizontal strip that shows emoji reactions on a message bubble.
+class _ReactionStrip extends StatelessWidget {
+  final Map<String, String> reactionsMap; // userId → emoji
+  final String currentUserId;
+  final void Function(String emoji) onTap;
+
+  const _ReactionStrip({
+    required this.reactionsMap,
+    required this.currentUserId,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Aggregate: emoji → count
+    final counts = <String, int>{};
+    for (final e in reactionsMap.values) {
+      counts[e] = (counts[e] ?? 0) + 1;
+    }
+    final myReaction = reactionsMap[currentUserId];
+
+    return Wrap(
+      spacing: 4,
+      children: counts.entries.map((entry) {
+        final selected = entry.key == myReaction;
+        return GestureDetector(
+          onTap: () => onTap(entry.key),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: selected
+                  ? Colors.purpleAccent.withValues(alpha: 0.25)
+                  : Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: selected
+                    ? Colors.purpleAccent.withValues(alpha: 0.6)
+                    : Colors.white24,
+              ),
+            ),
+            child: Text(
+              '${entry.key} ${entry.value}',
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 }

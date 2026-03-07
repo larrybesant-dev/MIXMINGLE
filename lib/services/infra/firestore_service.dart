@@ -54,6 +54,8 @@ class FirestoreService {
   Stream<List<Room>> getRoomsStream() {
     return _firestore
         .collection('rooms')
+        .where('isActive', isEqualTo: true)
+        .limit(100)
         .snapshots()
         .map((snapshot) => snapshot.docs.map((doc) => Room.fromDocument(doc)).toList());
   }

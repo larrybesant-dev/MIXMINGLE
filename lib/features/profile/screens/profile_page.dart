@@ -17,6 +17,9 @@ import '../widgets/layer_live_presence.dart';
 import '../widgets/layer_social_proof.dart';
 import '../widgets/layer_creator.dart';
 import '../widgets/layer_safety.dart';
+import '../widgets/media_gallery_widget.dart';
+import '../widgets/profile_completeness_bar.dart';
+import '../widgets/mutual_followers_row.dart';
 
 // ─── Neon palette shortcuts ───────────────────────────────────────────────────
 const _kPink    = Color(0xFFFF4D8B);   // live / dating
@@ -165,9 +168,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               ),
               const SizedBox(height: 20),
               ..._buildOrderedLayers(p, mode),
-              // ── Edit Profile button (owner) ───────────────────────
+              // ── Profile completeness + Edit Profile button (owner) ─
               if (_isOwner) ...[
                 const SizedBox(height: 24),
+                ProfileCompletenessBar(userId: p.id),
+                const SizedBox(height: 8),
                 _buildEditProfileButton(),
                 const SizedBox(height: 8),
               ],
@@ -293,11 +298,52 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   // ── Supporting Content ─────────────────────────────────────
   List<Widget> _buildSupportingContent(UserProfile p) {
     final widgets = <Widget>[];
-    if (p.galleryPhotos != null && p.galleryPhotos!.isNotEmpty) {
+    final hasPhotos = p.galleryPhotos != null && p.galleryPhotos!.isNotEmpty;
+    final hasVideos = p.galleryVideos != null && p.galleryVideos!.isNotEmpty;
+    if (hasPhotos || hasVideos || _isOwner) {
       widgets.addAll([
-        _sectionHeader(Icons.photo_library_outlined, 'Gallery', DesignColors.accent),
+        Row(
+          children: [
+            Expanded(
+              child: _sectionHeader(
+                  Icons.photo_library_outlined, 'Gallery', DesignColors.accent),
+            ),
+            GestureDetector(
+              onTap: () => Navigator.pushNamed(
+                context,
+                AppRoutes.profileMedia,
+                arguments: {'userId': p.id, 'isOwner': _isOwner},
+              ),
+              child: Text(
+                'See all',
+                style: TextStyle(
+                    color: DesignColors.accent,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 10),
-        _buildGalleryGrid(p.galleryPhotos!),
+        MediaGallery(
+          photos: p.galleryPhotos ?? [],
+          videos: p.galleryVideos ?? [],
+          isOwner: _isOwner,
+          onAddPhoto: _isOwner
+              ? () => Navigator.pushNamed(
+                    context,
+                    AppRoutes.profileMedia,
+                    arguments: {'userId': p.id, 'isOwner': true},
+                  )
+              : null,
+          onAddVideo: _isOwner
+              ? () => Navigator.pushNamed(
+                    context,
+                    AppRoutes.profileMedia,
+                    arguments: {'userId': p.id, 'isOwner': true},
+                  )
+              : null,
+        ),
         const SizedBox(height: 20),
       ]);
     }
@@ -591,6 +637,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             ],
           ],
         ),
+        // Mutual followers row (only when viewing someone else's profile)
+        if (!_isOwner && widget.targetUserId != null)
+          MutualFollowersRow(
+            currentUserId:
+                FirebaseAuth.instance.currentUser?.uid ?? '',
+            profileUserId: widget.targetUserId!,
+          ),
       ],
     );
   }
@@ -780,6 +833,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       badges.add(_BadgeItem(Icons.star_outline, 'Top Host', _kAmber));
     if (p.twoFactorEnabled)
       badges.add(_BadgeItem(Icons.security_outlined, '2FA Active', DesignColors.success));
+    // Stored badge IDs from Firestore
+    for (final id in p.badgeIds ?? []) {
+      switch (id) {
+        case 'active_today':
+          badges.add(_BadgeItem(Icons.bolt, 'Active Today', _kCyan));
+          break;
+        case 'top_creator':
+          badges.add(_BadgeItem(Icons.emoji_events_outlined, 'Top Creator', _kAmber));
+          break;
+        case 'rising_star':
+          badges.add(_BadgeItem(Icons.star_half_outlined, 'Rising Star', _kPink));
+          break;
+        case 'verified':
+          if (!badges.any((b) => b.label == 'Verified'))
+            badges.add(_BadgeItem(Icons.verified_outlined, 'Verified', _kBlue));
+          break;
+        default:
+          badges.add(_BadgeItem(Icons.military_tech_outlined, id, _kPurple));
+      }
+    }
 
     // Always show at least placeholder row so space is reserved
     if (badges.isEmpty && p.computedTags.isEmpty) {
@@ -1022,24 +1095,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   // ══════════════════════════════════════════════════════════
   //  SUPPORTING CONTENT SUB-WIDGETS  (Gallery, Lifestyle, Socials)
   // ══════════════════════════════════════════════════════════
-  Widget _buildGalleryGrid(List<String> photos) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3, crossAxisSpacing: 6, mainAxisSpacing: 6, childAspectRatio: 1,
-      ),
-      itemCount: photos.length,
-      itemBuilder: (ctx, i) => GestureDetector(
-        onTap: () => _openPhotoViewer(photos, i),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(10),
-          child: Image.network(photos[i], fit: BoxFit.cover),
-        ),
-      ),
-    );
-  }
-
   void _openPhotoViewer(List<String> photos, int index) {
     showDialog(
       context: context,

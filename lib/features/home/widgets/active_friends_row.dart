@@ -3,35 +3,48 @@
 // ActiveFriendsRow – horizontal scrollable row of friend avatars that
 // are currently online or recently active, shown on the home screen.
 //
-// Avatar ring states:
-//   - online     : solid neon green ring
-//   - recent     : dashed/dimmer cyan ring with pulse
-//   - inRoom     : orange ring with neon pulse
-//   - offline    : grey ring (no pulse)
+// Data source: activeFriendsProvider (social_graph_providers.dart)
+//   → follows users/{uid}/following subcollection + presence/{uid} Firestore
 //
-// Usage:
-//   ActiveFriendsRow(presenceList: friends)
+// Avatar ring states:
+//   - online   : solid neon green ring
+//   - away     : cyan ring with pulse
+//   - offline  : not shown (filtered before reaching this widget)
+//
+// Usage (Consumer):
+//   ActiveFriendsRow()  ← self-contained, no props required
 // ─────────────────────────────────────────────────────────────────
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/motion/app_motion.dart';
 import '../../../core/theme/neon_colors.dart';
-import '../../../features/room/services/user_presence_service.dart';
+import '../../../shared/models/user_presence.dart';
+import '../../../shared/providers/friends_presence_provider.dart';
+import '../../../shared/providers/social_graph_providers.dart';
 
-class ActiveFriendsRow extends StatelessWidget {
-  final List<UserPresence> presenceList;
-  final void Function(UserPresence)? onAvatarTap;
+/// Self-contained active friends row driven by [activeFriendsProvider].
+class ActiveFriendsRow extends ConsumerWidget {
+  /// Optional tap callback. Receives the userId of the tapped friend.
+  final void Function(String userId)? onAvatarTap;
 
-  const ActiveFriendsRow({
-    super.key,
-    required this.presenceList,
-    this.onAvatarTap,
-  });
+  const ActiveFriendsRow({super.key, this.onAvatarTap});
 
   @override
-  Widget build(BuildContext context) {
-    if (presenceList.isEmpty) return const SizedBox.shrink();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final activeFriendsAsync = ref.watch(activeFriendsProvider);
 
+    return activeFriendsAsync.when(
+      data: (presences) {
+        if (presences.isEmpty) return const SizedBox.shrink();
+        return _buildRow(context, ref, presences);
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildRow(BuildContext context, WidgetRef ref, List<UserPresence> presences) {
     return AppMotion.slideFadeIn(
       beginOffset: const Offset(0, 16),
       child: Column(
@@ -61,7 +74,7 @@ class ActiveFriendsRow extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  '(${presenceList.length})',
+                  '(${presences.length})',
                   style: TextStyle(
                     color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 12,
@@ -76,11 +89,11 @@ class ActiveFriendsRow extends StatelessWidget {
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 16),
-              itemCount: presenceList.length,
+              itemCount: presences.length,
               separatorBuilder: (_, __) => const SizedBox(width: 14),
               itemBuilder: (ctx, i) => _FriendAvatar(
-                presence: presenceList[i],
-                onTap: () => onAvatarTap?.call(presenceList[i]),
+                presence: presences[i],
+                onTap: () => onAvatarTap?.call(presences[i].userId),
               ),
             ),
           ),
@@ -91,19 +104,19 @@ class ActiveFriendsRow extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────
-// Single friend avatar with animated ring
+// Single friend avatar with animated ring (driven by UserPresence)
 // ─────────────────────────────────────────────────────────────────
-class _FriendAvatar extends StatefulWidget {
+class _FriendAvatar extends ConsumerStatefulWidget {
   final UserPresence presence;
   final VoidCallback? onTap;
 
   const _FriendAvatar({required this.presence, this.onTap});
 
   @override
-  State<_FriendAvatar> createState() => _FriendAvatarState();
+  ConsumerState<_FriendAvatar> createState() => _FriendAvatarState();
 }
 
-class _FriendAvatarState extends State<_FriendAvatar>
+class _FriendAvatarState extends ConsumerState<_FriendAvatar>
     with SingleTickerProviderStateMixin {
   late AnimationController _ctrl;
 
@@ -115,9 +128,8 @@ class _FriendAvatarState extends State<_FriendAvatar>
     if (_shouldPulse) _ctrl.repeat(reverse: true);
   }
 
-  bool get _shouldPulse =>
-      widget.presence.status == PresenceStatus.online ||
-      widget.presence.status == PresenceStatus.away;
+  bool get _shouldPulse => widget.presence.state == PresenceState.online ||
+      widget.presence.state == PresenceState.away;
 
   @override
   void dispose() {
@@ -127,20 +139,24 @@ class _FriendAvatarState extends State<_FriendAvatar>
 
   @override
   Widget build(BuildContext context) {
-    final ringColor = _ringColor(widget.presence.status);
+    // Watch friend profile for avatar / display name
+    final friendDataAsync = ref.watch(friendDataProvider(widget.presence.userId));
+    final displayName = friendDataAsync.value?['displayName'] as String? ?? '?';
+    final avatarUrl = friendDataAsync.value?['avatarUrl'] as String?;
+
+    final ringColor = _ringColor(widget.presence.state);
 
     return GestureDetector(
       onTap: widget.onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Avatar + ring
           AnimatedBuilder(
             animation: _ctrl,
             builder: (_, child) {
               final t = AppMotion.pulse.transform(_ctrl.value);
               final alpha = _shouldPulse ? 0.55 + t * 0.45 : 0.4;
-              final blur  = _shouldPulse ? 4.0 + t * 6.0  : 0.0;
+              final blur = _shouldPulse ? 4.0 + t * 6.0 : 0.0;
 
               return Container(
                 width: 52,
@@ -164,16 +180,13 @@ class _FriendAvatarState extends State<_FriendAvatar>
                 child: ClipOval(child: child),
               );
             },
-            child: _buildAvatar(),
+            child: _buildAvatar(avatarUrl, displayName, ringColor),
           ),
-
           const SizedBox(height: 4),
-
-          // Name
           SizedBox(
             width: 52,
             child: Text(
-              widget.presence.displayName.split(' ').first,
+              displayName.split(' ').first,
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -188,22 +201,19 @@ class _FriendAvatarState extends State<_FriendAvatar>
     );
   }
 
-  Widget _buildAvatar() {
-    if (widget.presence.avatarUrl.isNotEmpty) {
+  Widget _buildAvatar(String? avatarUrl, String displayName, Color ringColor) {
+    if (avatarUrl != null && avatarUrl.isNotEmpty) {
       return Image.network(
-        widget.presence.avatarUrl,
+        avatarUrl,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _initialsAvatar(),
+        errorBuilder: (_, __, ___) => _initialsAvatar(displayName, ringColor),
       );
     }
-    return _initialsAvatar();
+    return _initialsAvatar(displayName, ringColor);
   }
 
-  Widget _initialsAvatar() {
-    final ringColor = _ringColor(widget.presence.status);
-    final initials = widget.presence.displayName.isNotEmpty
-        ? widget.presence.displayName[0].toUpperCase()
-        : '?';
+  Widget _initialsAvatar(String displayName, Color ringColor) {
+    final initials = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
     return Container(
       color: ringColor.withValues(alpha: 0.2),
       alignment: Alignment.center,
@@ -218,16 +228,16 @@ class _FriendAvatarState extends State<_FriendAvatar>
     );
   }
 
-  Color _ringColor(PresenceStatus status) {
-    switch (status) {
-      case PresenceStatus.online:
+  Color _ringColor(PresenceState state) {
+    switch (state) {
+      case PresenceState.online:
         return NeonColors.successGreen;
-      case PresenceStatus.away:
+      case PresenceState.away:
+      case PresenceState.idle:
         return NeonColors.neonBlue;
-      case PresenceStatus.doNotDisturb:
-        return NeonColors.errorRed;
-      case PresenceStatus.offline:
+      case PresenceState.offline:
         return Colors.grey.shade600;
     }
   }
 }
+

@@ -8,8 +8,10 @@ import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/shared/widgets/skeleton_loaders.dart';
 import 'package:mixmingle/shared/widgets/follow_button.dart';
+import 'package:mixmingle/shared/widgets/presence_indicator.dart';
 import 'package:mixmingle/services/events/reporting_service.dart' as reporting;
 import 'package:mixmingle/features/reporting/report_dialog.dart';
+import 'package:mixmingle/features/start_conversation.dart';
 
 class UserProfilePage extends ConsumerWidget {
   final String userId;
@@ -110,17 +112,9 @@ class UserProfilePage extends ConsumerWidget {
                                     Positioned(
                                       bottom: 0,
                                       right: 0,
-                                      child: Container(
-                                        width: 20,
-                                        height: 20,
-                                        decoration: BoxDecoration(
-                                          color: Colors.green,
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: Theme.of(context).cardColor,
-                                            width: 3,
-                                          ),
-                                        ),
+                                      child: PresenceIndicator(
+                                        userId: profile.id,
+                                        size: 20,
                                       ),
                                     ),
                                 ],
@@ -152,13 +146,15 @@ class UserProfilePage extends ConsumerWidget {
                                 [
                                   if (profile.age != null) '${profile.age} years old',
                                   if (profile.location != null) profile.location,
-                                ].join(' â€¢ '),
+                                ].join(' • '),
                                 style: TextStyle(
                                   fontSize: Responsive.responsiveFontSize(context, 16),
                                   color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
                             ),
+                            const SizedBox(height: 8),
+                            PresenceIndicatorWithLabel(userId: profile.id),
                           ],
                         ),
                       ],
@@ -283,18 +279,55 @@ class UserProfilePage extends ConsumerWidget {
   }
 
   Widget _buildStatsCard(BuildContext context, WidgetRef ref, String userId) {
-    return Card(
-      child: Padding(
-        padding: Responsive.responsivePadding(context),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildStatItem(context, 'Matches', '0'),
-            _buildStatItem(context, 'Events', '0'),
-            _buildStatItem(context, 'Rooms', '0'),
-          ],
+    final profileAsync = ref.watch(userProfileProvider(userId));
+    return profileAsync.when(
+      data: (profile) {
+        final followersCount = profile?.followersCount ?? 0;
+        final followingCount = profile?.followingCount ?? 0;
+        return Card(
+          child: Padding(
+            padding: Responsive.responsivePadding(context),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pushNamed(
+                    AppRoutes.followers,
+                    arguments: {
+                      'userId': userId,
+                      'displayName': profile?.displayName ?? profile?.username ?? 'User',
+                    },
+                  ),
+                  child: _buildStatItem(context, 'Followers', followersCount.toString()),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.of(context).pushNamed(
+                    AppRoutes.following,
+                    arguments: {
+                      'userId': userId,
+                      'displayName': profile?.displayName ?? profile?.username ?? 'User',
+                    },
+                  ),
+                  child: _buildStatItem(context, 'Following', followingCount.toString()),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => Card(
+        child: Padding(
+          padding: Responsive.responsivePadding(context),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildStatItem(context, 'Followers', '—'),
+              _buildStatItem(context, 'Following', '—'),
+            ],
+          ),
         ),
       ),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 
@@ -357,12 +390,7 @@ class UserProfilePage extends ConsumerWidget {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.of(context).pushNamed(
-                        AppRoutes.chat,
-                        arguments: {'userId': userId},
-                      );
-                    },
+                    onPressed: () => startConversation(context, ref, userId),
                     icon: const Icon(Icons.message),
                     label: const Text('Message'),
                   ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/user_presence.dart';
-import 'package:mixmingle/core/stubs/dev_stubs.dart';
+import '../providers/user_providers.dart';
 
 /// Widget that shows user presence status as a colored dot
 class PresenceIndicator extends ConsumerWidget {
@@ -24,14 +24,17 @@ class PresenceIndicator extends ConsumerWidget {
       stream: presenceService.getUserPresence(userId),
       builder: (context, snapshot) {
         final presence = snapshot.data;
-        final status = presence?.status ?? PresenceStatus.offline;
+        // Use stale-aware status: if lastActive > 10 min old, treat as offline
+        final effectiveStatus = (presence != null && presence.isStale)
+            ? PresenceStatus.offline
+            : (presence?.status ?? PresenceStatus.offline);
 
         return Container(
           width: size,
           height: size,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: _getStatusColor(status),
+            color: _getStatusColor(effectiveStatus),
             border: showBorder
                 ? Border.all(
                     color: Colors.white,

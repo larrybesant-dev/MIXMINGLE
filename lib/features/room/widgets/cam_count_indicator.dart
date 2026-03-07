@@ -45,7 +45,7 @@ class CamCountIndicator extends ConsumerWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'ðŸŽ¥ Cameras: $count/$maxCameras',
+                    'Cameras: $count/$maxCameras',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: isAtCapacity ? Colors.red[700] : Colors.blue[700],
@@ -74,7 +74,7 @@ class CamCountIndicator extends ConsumerWidget {
 
               // Status message
               Text(
-                isAtCapacity ? 'ðŸ”´ Room at camera capacity' : 'ðŸ“Š $percentFull% full',
+                isAtCapacity ? 'Room at camera capacity' : '$percentFull% full',
                 style: TextStyle(
                   fontSize: 12,
                   color: isAtCapacity ? Colors.red[600] : Colors.blue[600],

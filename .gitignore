@@ -132,3 +132,5 @@ libapp.so*
 windows/flutter/ephemeral/
 windows/flutter/ephemeral-backup-*/
 
+
+.vscode/templates

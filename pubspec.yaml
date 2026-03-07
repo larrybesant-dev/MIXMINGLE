@@ -24,7 +24,8 @@ dependencies:
   flutter_local_notifications: ^20.1.0
 
   # State Management
-  flutter_riverpod: ^3.2.1
+  flutter_riverpod: ^3.0.3
+  riverpod_annotation: ^3.0.3
   provider: ^6.1.5+1
 
   # Network
@@ -74,9 +75,12 @@ dev_dependencies:
   flutter_launcher_icons: ^0.14.3
   mockito: ^5.4.4
   build_runner: ^2.4.8
+  riverpod_generator: ^3.0.3
+  custom_lint: ^0.8.1
+  riverpod_lint: ^3.0.3
   fake_cloud_firestore: ^4.0.1
   firebase_auth_mocks: ^0.15.1
-  analyzer: ^10.0.1
+  analyzer: ^8.0.0
   args: ^2.5.0
 
 

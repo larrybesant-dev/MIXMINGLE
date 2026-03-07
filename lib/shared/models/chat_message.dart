@@ -48,6 +48,7 @@ class ChatMessage {
   final DateTime? editedAt;
   final String? replyToId;
   final List<String> reactions;
+  final Map<String, String>? reactionsMap; // userId → emoji
   final List<String> mentionedUserIds;
   final Map<String, dynamic>? metadata;
 
@@ -76,6 +77,7 @@ class ChatMessage {
     this.editedAt,
     this.replyToId,
     this.reactions = const [],
+    this.reactionsMap,
     this.mentionedUserIds = const [],
     this.metadata,
     this.imageUrl,
@@ -126,6 +128,9 @@ class ChatMessage {
       editedAt: map['editedAt'] != null ? _parseTimestamp(map['editedAt']) : null,
       replyToId: map['replyToId'] as String? ?? map['replyToMessageId'] as String?,
       reactions: List<String>.from(map['reactions'] ?? []),
+      reactionsMap: (map['reactionsMap'] as Map<String, dynamic>?)?.map(
+        (k, v) => MapEntry(k, v as String),
+      ),
       mentionedUserIds: List<String>.from(map['mentionedUserIds'] ?? []),
       metadata: map['metadata'] as Map<String, dynamic>?,
       imageUrl: map['imageUrl'] as String?,
@@ -163,6 +168,7 @@ class ChatMessage {
       'editedAt': editedAt != null ? Timestamp.fromDate(editedAt!) : null,
       'replyToId': replyToId,
       'reactions': reactions,
+      if (reactionsMap != null) 'reactionsMap': reactionsMap,
       'mentionedUserIds': mentionedUserIds,
       'metadata': metadata,
       'imageUrl': imageUrl,
@@ -203,6 +209,7 @@ class ChatMessage {
     DateTime? editedAt,
     String? replyToId,
     List<String>? reactions,
+    Map<String, String>? reactionsMap,
     List<String>? mentionedUserIds,
     Map<String, dynamic>? metadata,
     String? imageUrl,
@@ -229,6 +236,7 @@ class ChatMessage {
       editedAt: editedAt ?? this.editedAt,
       replyToId: replyToId ?? this.replyToId,
       reactions: reactions ?? this.reactions,
+      reactionsMap: reactionsMap ?? this.reactionsMap,
       mentionedUserIds: mentionedUserIds ?? this.mentionedUserIds,
       metadata: metadata ?? this.metadata,
       imageUrl: imageUrl ?? this.imageUrl,

@@ -20,9 +20,21 @@ class AgoraWebBridgeV3 {
 
   static Future<bool> setVideoMuted(bool muted) async => false;
 
+  static Future<bool> playCamera(String videoElementId) async => false;
+
+  static Future<bool> playRemoteVideo(String uid, String elementId) async => false;
+
   static Map<String, dynamic> getState() => {};
 
   static void enableDebugLogging() {}
 
   static void printDebugInfo() {}
+
+  static void registerRemotePublishedCallback(
+      void Function(String uid, String mediaType) callback) {}
+
+  static Future<bool> renewToken(String newToken) async => false;
+
+  static void registerTokenWillExpireCallback(
+      void Function(String channelName, String uid) callback) {}
 }

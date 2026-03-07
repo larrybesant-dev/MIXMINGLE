@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../../shared/models/moderation.dart';
+import '../../shared/models/room.dart';
 
 /// Service for room categories and discovery
 class RoomDiscoveryService {
@@ -258,5 +259,113 @@ class RoomDiscoveryService {
       debugPrint('Error getting popular rooms: $e');
       return [];
     }
+  }
+
+  // ── Phase 10: Stream-based discovery ────────────────────────────────────
+
+  /// Live stream of trending rooms — public rooms ordered by viewerCount desc.
+  Stream<List<Room>> getTrendingRoomsStream({int limit = 20}) {
+    return _firestore
+        .collection('rooms')
+        .where('privacy', isEqualTo: 'public')
+        .where('isActive', isEqualTo: true)
+        .orderBy('viewerCount', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((doc) {
+              try {
+                return Room.fromDocument(doc);
+              } catch (e) {
+                debugPrint('getTrendingRoomsStream parse error: $e');
+                return null;
+              }
+            })
+            .whereType<Room>()
+            .toList())
+        .handleError((e) {
+      debugPrint('getTrendingRoomsStream error: $e');
+    });
+  }
+
+  /// Live stream of rooms recommended for [userId].
+  /// Surfaces rooms hosted by followed users first; falls back to popular
+  /// public rooms when the following list is empty.
+  Stream<List<Room>> getRecommendedRoomsStream(String userId,
+      {int limit = 20}) async* {
+    try {
+      // Fetch the IDs of users that [userId] follows (capped to avoid
+      // Firestore whereIn limit of 30).
+      final followingSnap = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('following')
+          .limit(25)
+          .get();
+
+      final followedIds =
+          followingSnap.docs.map((d) => d.id).toList();
+
+      Query<Map<String, dynamic>> query;
+
+      if (followedIds.isNotEmpty) {
+        // Rooms whose host is someone the user follows.
+        query = _firestore
+            .collection('rooms')
+            .where('privacy', isEqualTo: 'public')
+            .where('isActive', isEqualTo: true)
+            .where('hostId', whereIn: followedIds)
+            .orderBy('viewerCount', descending: true)
+            .limit(limit);
+      } else {
+        // Fallback: most popular public rooms.
+        query = _firestore
+            .collection('rooms')
+            .where('privacy', isEqualTo: 'public')
+            .where('isActive', isEqualTo: true)
+            .orderBy('viewerCount', descending: true)
+            .limit(limit);
+      }
+
+      yield* query.snapshots().map((snap) => snap.docs
+          .map((doc) {
+            try {
+              return Room.fromDocument(doc);
+            } catch (e) {
+              debugPrint('getRecommendedRoomsStream parse error: $e');
+              return null;
+            }
+          })
+          .whereType<Room>()
+          .toList());
+    } catch (e) {
+      debugPrint('getRecommendedRoomsStream error: $e');
+      yield [];
+    }
+  }
+
+  /// Live stream of newest public rooms ordered by createdAt desc.
+  Stream<List<Room>> getNewRoomsStream({int limit = 20}) {
+    return _firestore
+        .collection('rooms')
+        .where('privacy', isEqualTo: 'public')
+        .where('isActive', isEqualTo: true)
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .snapshots()
+        .map((snap) => snap.docs
+            .map((doc) {
+              try {
+                return Room.fromDocument(doc);
+              } catch (e) {
+                debugPrint('getNewRoomsStream parse error: $e');
+                return null;
+              }
+            })
+            .whereType<Room>()
+            .toList())
+        .handleError((e) {
+      debugPrint('getNewRoomsStream error: $e');
+    });
   }
 }

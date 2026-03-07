@@ -1,0 +1,50 @@
+# MixMingle — Live Audio Rooms & Social Discovery
+
+## Long Description (Google Play / App Store)
+
+**MixMingle** is the live social platform where real conversations happen. Jump into live audio rooms, discover new people, and build your community — all in one app.
+
+---
+
+### 🎙️ Live Audio Rooms
+- Start or join live voice rooms on any topic: music, dating, debate, gaming, and more.
+- High-quality Agora-powered audio with audience participation controls.
+- React in real time with on-screen emoji bursts and gift animations.
+
+### 🎁 Gifts & Coins
+- Send virtual gifts (roses, diamonds, crowns, unicorns…) to your favourite hosts.
+- Earn coins by hosting popular rooms and being tipped by fans.
+- Spend coins on profile boosts, room boosts, and rare gifts.
+
+### 🔥 Profile & Room Boosts
+- Boost your profile to appear at the top of discovery for 24 hours.
+- Boost your room to trending for 12 hours and grow your audience fast.
+
+### 💬 Messaging
+- One-on-one chat with emoji reactions, image sharing, and read receipts.
+- Typing indicators and real-time delivery — like a real conversation.
+
+### ✨ Premium Membership
+- Unlock exclusive profile frames, premium badges, and unlimited room creation.
+- Remove ads, access analytics, and grow your creator brand.
+
+### 🧭 Discovery
+- Swipe through nearby users with shared interests.
+- Browse live rooms by genre: chill, hot, music, trending.
+- AI-powered "Vibe Match" suggestions updated in real time.
+
+### 🎉 Events
+- RSVP to scheduled community events and get calendar reminders.
+- Create your own events with ticket links, descriptions, and flyers.
+
+### 🛡️ Safety First
+- Robust reporting and moderation tools.
+- Block, mute, and report any user with one tap.
+- Admin dashboard for platform-level moderation and analytics.
+
+---
+
+**Supported Platforms:** Android, Web, Windows
+**Age Requirement:** 18+
+**Privacy Policy:** Available in-app
+**Terms of Service:** Available in-app

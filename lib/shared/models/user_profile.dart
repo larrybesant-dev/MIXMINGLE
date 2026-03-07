@@ -15,6 +15,8 @@ class UserProfile {
   final String? photoUrl;
   final String? coverPhotoUrl;
   final List<String>? galleryPhotos;
+  final List<String>? galleryVideos;    // video URLs or thumbnail URLs for profile media
+  final List<String>? badgeIds;         // stored badges: 'active_today', 'top_creator', 'rising_star', 'verified'
   final List<String>? interests;
   final String? location;
   final double? latitude;
@@ -146,6 +148,8 @@ class UserProfile {
     this.photoUrl,
     this.coverPhotoUrl,
     this.galleryPhotos,
+    this.galleryVideos,
+    this.badgeIds,
     this.interests,
     this.location,
     this.latitude,
@@ -287,6 +291,8 @@ class UserProfile {
       photoUrl: map['photoUrl'] as String?,
       coverPhotoUrl: map['coverPhotoUrl'] as String?,
       galleryPhotos: (map['galleryPhotos'] as List<dynamic>?)?.cast<String>(),
+      galleryVideos: (map['galleryVideos'] as List<dynamic>?)?.cast<String>(),
+      badgeIds: (map['badgeIds'] as List<dynamic>?)?.cast<String>(),
       interests: (map['interests'] as List<dynamic>?)?.cast<String>(),
       location: map['location'] as String?,
       latitude: map['latitude'] as double?,
@@ -392,6 +398,8 @@ class UserProfile {
       'photoUrl': photoUrl,
       'coverPhotoUrl': coverPhotoUrl,
       'galleryPhotos': galleryPhotos,
+      'galleryVideos': galleryVideos,
+      'badgeIds': badgeIds,
       'interests': interests,
       'location': location,           // city-level only, no lat/lng
       'gender': gender,
@@ -482,6 +490,8 @@ class UserProfile {
       'photoUrl': photoUrl,
       'coverPhotoUrl': coverPhotoUrl,
       'galleryPhotos': galleryPhotos,
+      'galleryVideos': galleryVideos,
+      'badgeIds': badgeIds,
       'interests': interests,
       'location': location,
       'latitude': latitude,
@@ -565,6 +575,8 @@ class UserProfile {
     String? photoUrl,
     String? coverPhotoUrl,
     List<String>? galleryPhotos,
+    List<String>? galleryVideos,
+    List<String>? badgeIds,
     List<String>? interests,
     String? location,
     double? latitude,
@@ -627,6 +639,8 @@ class UserProfile {
       photoUrl: photoUrl ?? this.photoUrl,
       coverPhotoUrl: coverPhotoUrl ?? this.coverPhotoUrl,
       galleryPhotos: galleryPhotos ?? this.galleryPhotos,
+      galleryVideos: galleryVideos ?? this.galleryVideos,
+      badgeIds: badgeIds ?? this.badgeIds,
       interests: interests ?? this.interests,
       location: location ?? this.location,
       latitude: latitude ?? this.latitude,

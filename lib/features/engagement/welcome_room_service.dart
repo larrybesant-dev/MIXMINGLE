@@ -166,6 +166,8 @@ class WelcomeRoomService {
         'speakers': [],
         'listeners': [],
         'moderators': ['system'],
+        'ownerId': 'system',
+        'admins': ['system'],
         'bannedUsers': [],
         'viewerCount': 0,
         'isLive': true,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -54,7 +56,14 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
   void dispose() {
     _pulseController.dispose();
     // Fade out music when landing page leaves the tree.
-    _music?.fadeOut();
+    final music = _music;
+    if (music != null) {
+      unawaited(
+        music.fadeOut().catchError((Object error, StackTrace stackTrace) {
+          debugPrint('[LandingPage] Ignored fadeOut error: $error');
+        }),
+      );
+    }
     super.dispose();
   }
 
@@ -87,7 +96,9 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('ðŸ  LANDING PAGE IS BUILDING');
+    if (kDebugMode) {
+      debugPrint('[LandingPage] build');
+    }
     final textTheme = ElectricTypography.textTheme;
 
     return Scaffold(
@@ -118,22 +129,6 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                   _buildCTA(textTheme),
                   _buildFooter(textTheme),
                 ],
-              ),
-            ),
-          ),
-          // Debug indicator - top left
-          Positioned(
-            top: 40,
-            left: 10,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.red,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              child: const Text(
-                'LANDING PAGE',
-                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
               ),
             ),
           ),
@@ -172,7 +167,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
               ],
             ),
             child: Text(
-              '🔥 NEW: Live Video Speed Dating',
+              'NEW: Live Video Speed Dating',
               style: textTheme.labelLarge?.copyWith(
                 color: ElectricColors.onSurfacePrimary,
                 fontWeight: FontWeight.bold,
@@ -495,10 +490,10 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
   }
 
   Widget _buildHowItWorks(TextTheme textTheme) {
-    final steps = [
-      {'step': '1', 'emoji': '🎧', 'title': 'Join a room', 'desc': 'Browse live rooms and drop in instantly.'},
-      {'step': '2', 'emoji': '🎤', 'title': 'Go live', 'desc': 'Start your own stream with zero setup friction.'},
-      {'step': '3', 'emoji': '💰', 'title': 'Tip & connect', 'desc': 'Support creators and build connections.'},
+    final steps = <Map<String, dynamic>>[
+      {'step': '1', 'icon': Icons.headset_mic, 'title': 'Join a room', 'desc': 'Browse live rooms and drop in instantly.'},
+      {'step': '2', 'icon': Icons.videocam, 'title': 'Go live', 'desc': 'Start your own stream with zero setup friction.'},
+      {'step': '3', 'icon': Icons.volunteer_activism, 'title': 'Tip & connect', 'desc': 'Support creators and build connections.'},
     ];
 
     return Padding(
@@ -527,7 +522,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                       ),
                       child: Center(
                         child: Text(
-                          step['step']!,
+                          step['step'] as String,
                           style: textTheme.titleLarge?.copyWith(color: ElectricColors.onSurfacePrimary),
                         ),
                       ),
@@ -539,14 +534,14 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                         children: [
                           Row(
                             children: [
-                              Text(step['emoji']!, style: const TextStyle(fontSize: 20)),
+                              Icon(step['icon'] as IconData, size: 18, color: ElectricColors.neonMagenta),
                               const SizedBox(width: Spacing.xs),
-                              Text(step['title']!, style: textTheme.titleMedium),
+                              Text(step['title'] as String, style: textTheme.titleMedium),
                             ],
                           ),
                           const SizedBox(height: Spacing.xs),
                           Text(
-                            step['desc']!,
+                            step['desc'] as String,
                             style: textTheme.bodyMedium?.copyWith(color: ElectricColors.onSurfaceSecondary),
                           ),
                         ],
@@ -647,7 +642,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                             ],
                           ),
                           child: Text(
-                            '🔥 NEW',
+                            'NEW',
                             style: textTheme.labelLarge?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
@@ -658,7 +653,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                     ),
                     const SizedBox(height: Spacing.sm),
                     Text(
-                      '💘 Live Video Speed Dating',
+                      'Live Video Speed Dating',
                       style: textTheme.headlineSmall?.copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,

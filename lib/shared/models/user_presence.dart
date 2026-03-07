@@ -159,7 +159,8 @@ class UserPresence {
     String userId,
     Map<String, dynamic> data,
   ) {
-    final timestamp = data['lastUpdate'] as Timestamp?;
+    // Prefer lastActive (new canonical field), fall back to lastUpdate (legacy)
+    final timestamp = (data['lastActive'] as Timestamp?) ?? (data['lastUpdate'] as Timestamp?);
     return UserPresence(
       userId: userId,
       state: presenceStateFromString(data['state'] ?? 'offline'),
@@ -201,6 +202,12 @@ class UserPresence {
 
   /// Whether user is completely offline
   bool get isOffline => state == PresenceState.offline;
+
+  /// True if presence hasn't been updated in > 10 minutes (stale = treat as offline)
+  bool get isStale => DateTime.now().difference(lastUpdate) > const Duration(minutes: 10);
+
+  /// Online and not stale
+  bool get isActiveOnline => isOnline && !isStale;
 
   /// Time since last activity
   Duration get inactivityDuration => DateTime.now().difference(lastUpdate);

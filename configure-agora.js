@@ -7,12 +7,17 @@ admin.initializeApp({
 
 const db = admin.firestore();
 
-const APP_ID = 'ec1b578586d24976a89d787d9ee4d5c7';
-const APP_CERTIFICATE = '79a3e92a657042d08c3c26a26d1e70b6';
+const APP_ID = process.env.AGORA_APP_ID;
+const APP_CERTIFICATE = process.env.AGORA_APP_CERTIFICATE;
+
+if (!APP_ID || !APP_CERTIFICATE) {
+  console.error('Missing required env vars: AGORA_APP_ID and AGORA_APP_CERTIFICATE');
+  process.exit(1);
+}
 
 console.log('🔥 Configuring Agora in Firestore...');
 console.log(`App ID: ${APP_ID}`);
-console.log(`Certificate: ${APP_CERTIFICATE}`);
+console.log('Certificate: [REDACTED]');
 
 db.collection('config').doc('agora').set({
   appId: APP_ID,

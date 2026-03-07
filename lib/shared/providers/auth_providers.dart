@@ -47,9 +47,7 @@ final currentUserProvider = StreamProvider<shared_models.User?>((ref) {
             id: currentUser.uid,
             email: currentUser.email ?? '',
             displayName: currentUser.displayName ?? '',
-            username: currentUser.displayName != null
-                ? (currentUser.email?.split('@').first ?? '')
-                : '',
+            username: '',
             bio: '',
             interests: [],
             avatarUrl: currentUser.photoURL ?? '',
@@ -85,9 +83,7 @@ final currentUserProvider = StreamProvider<shared_models.User?>((ref) {
             id: currentUser.uid,
             email: currentUser.email ?? '',
             displayName: currentUser.displayName ?? '',
-            username: currentUser.displayName != null
-                ? (currentUser.email?.split('@').first ?? '')
-                : '',
+            username: '',
             bio: '',
             interests: [],
             avatarUrl: currentUser.photoURL ?? '',

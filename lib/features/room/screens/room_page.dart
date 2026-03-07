@@ -220,7 +220,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
       } else {
         await _roomManager.unlockRoom(widget.room.id);
       }
-      _showInfo(locked ? 'Room locked ðŸ”’' : 'Room unlocked ðŸ”“');
+      _showInfo(locked ? 'Room locked' : 'Room unlocked');
     } catch (e) {
       _showError('Failed to ${locked ? "lock" : "unlock"} room: $e');
     }
@@ -565,7 +565,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                                   return const Center(
                                     child: Text(
-                                      'No messages yet. Say hello! ðŸ‘‹',
+                                      'No messages yet. Say hello!',
                                       style: TextStyle(color: Colors.white54),
                                     ),
                                   );

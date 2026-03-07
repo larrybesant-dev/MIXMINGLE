@@ -4,9 +4,8 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Temporary stub for presence service
-/// TODO: Replace with actual implementation when presence feature is re-enabled
-final presenceServiceProvider = Provider((ref) => null);
+/// Presence service is now fully implemented — see lib/shared/providers/user_providers.dart
+/// presenceServiceProvider was removed from stubs.
 
 /// ------------------------------
 /// SPEED DATING (DISABLED STUBS)

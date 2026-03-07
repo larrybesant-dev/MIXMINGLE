@@ -99,7 +99,7 @@ class AppRoutes {
       case following:
         final userId = settings.arguments as String? ?? '';
         return MaterialPageRoute(
-          builder: (_) => FollowingListPage(userId: userId),
+          builder: (_) => FollowingListPage(userId: userId, displayName: ''),
         );
       default:
         return _errorRoute('No route defined for ${settings.name}');

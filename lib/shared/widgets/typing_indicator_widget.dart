@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/shared/providers/providers.dart';
+import 'package:mixmingle/shared/providers/chat_providers.dart';
 
 /// Widget that shows who is typing in a room/chat
 class TypingIndicatorWidget extends ConsumerWidget {
@@ -15,22 +15,14 @@ class TypingIndicatorWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final typingService = ref.watch(typingServiceProvider);
+    final chatService = ref.watch(chatServiceProvider);
     final userId = currentUserId ?? '';
 
-    return StreamBuilder(
-      stream: typingService.getTypingIndicators(roomId, userId),
+    return StreamBuilder<List<String>>(
+      stream: chatService.typingUsersStream(roomId,
+          excludeUserId: userId.isEmpty ? null : userId),
       builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data == null) {
-          return const SizedBox.shrink();
-        }
-
-        final data = snapshot.data;
-        if (data == null) {
-          return const SizedBox.shrink();
-        }
-
-        final typingUsers = data.map((indicator) => indicator.userName).take(3).toList();
+        final typingUsers = (snapshot.data ?? []).take(3).toList();
 
         if (typingUsers.isEmpty) {
           return const SizedBox.shrink();

@@ -4,7 +4,27 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
-/// Provider for notifications stream
+/// Maps a stored notification type (int index or legacy string) to the string
+/// key used by [NotificationCenterPage] icon/colour/navigation helpers.
+String _notifTypeToString(dynamic rawType) {
+  if (rawType is String) return rawType;
+  if (rawType is int) {
+    const map = {
+      0: 'roomInvite',
+      1: 'reaction',
+      2: 'follow',
+      3: 'tip',
+      4: 'message',
+      5: 'system',
+      6: 'match',
+      7: 'like',
+    };
+    return map[rawType] ?? 'system';
+  }
+  return 'system';
+}
+
+/// Provider for notifications stream — reads from user subcollection.
 final notificationsStreamProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) {
@@ -12,20 +32,23 @@ final notificationsStreamProvider = StreamProvider<List<Map<String, dynamic>>>((
   }
 
   return FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
       .collection('notifications')
-      .where('userId', isEqualTo: user.uid)
-      .orderBy('createdAt', descending: true)
+      .orderBy('timestamp', descending: true)
       .limit(50)
       .snapshots()
       .map((snapshot) => snapshot.docs
           .map((doc) => {
                 'id': doc.id,
                 ...doc.data(),
+                // Normalise type to a string so icon/navigation helpers work.
+                'typeString': _notifTypeToString(doc.data()['type']),
               })
           .toList());
 });
 
-/// Provider for unread notification count
+/// Provider for unread notification count — reads from user subcollection.
 final unreadCountProvider = StreamProvider<int>((ref) {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) {
@@ -33,8 +56,9 @@ final unreadCountProvider = StreamProvider<int>((ref) {
   }
 
   return FirebaseFirestore.instance
+      .collection('users')
+      .doc(user.uid)
       .collection('notifications')
-      .where('userId', isEqualTo: user.uid)
       .where('isRead', isEqualTo: false)
       .snapshots()
       .map((snapshot) => snapshot.docs.length);
@@ -187,9 +211,9 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
     final theme = Theme.of(context);
     final isRead = notification['isRead'] == true;
     final title = notification['title'] as String? ?? 'Notification';
-    final body = notification['body'] as String? ?? '';
-    final type = notification['type'] as String?;
-    final createdAt = (notification['createdAt'] as Timestamp?)?.toDate();
+    final body = notification['message'] as String? ?? '';
+    final type = notification['typeString'] as String?;
+    final createdAt = (notification['timestamp'] as Timestamp?)?.toDate();
     final notificationId = notification['id'] as String;
 
     return Card(
@@ -371,10 +395,11 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
 
   Future<void> _handleNotificationTap(Map<String, dynamic> notification) async {
     final notificationId = notification['id'] as String;
-    final type = notification['type'] as String?;
-    final data = notification['data'] as Map<String, dynamic>?;
+    final type = notification['typeString'] as String?;
+    final senderId = notification['senderId'] as String?;
+    final roomId = notification['roomId'] as String?;
 
-    // Mark as read
+    // Mark as read first
     await _markAsRead(notificationId, true);
 
     // Check if context is still mounted after async operation
@@ -383,13 +408,13 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
     // Navigate based on type
     switch (type) {
       case 'message':
-        final conversationId = data?['conversationId'] as String?;
-        if (conversationId != null && mounted) {
-          Navigator.pushNamed(context, '/chat', arguments: {'conversationId': conversationId});
+        if (roomId != null && mounted) {
+          Navigator.pushNamed(context, '/chat', arguments: {'conversationId': roomId});
         }
         break;
       case 'event':
       case 'eventInvite':
+        final data = notification['data'] as Map<String, dynamic>?;
         final eventId = data?['eventId'] as String?;
         if (eventId != null && mounted) {
           Navigator.pushNamed(context, '/events/details', arguments: {'eventId': eventId});
@@ -401,9 +426,13 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
         }
         break;
       case 'follow':
-        final userId = data?['userId'] as String?;
-        if (userId != null && mounted) {
-          Navigator.pushNamed(context, '/profile/user', arguments: {'userId': userId});
+        if (senderId != null && mounted) {
+          Navigator.pushNamed(context, '/profile/user', arguments: {'userId': senderId});
+        }
+        break;
+      case 'like':
+        if (senderId != null && mounted) {
+          Navigator.pushNamed(context, '/profile/user', arguments: {'userId': senderId});
         }
         break;
       default:
@@ -412,8 +441,15 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
   }
 
   Future<void> _markAsRead(String notificationId, bool isRead) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
     try {
-      await _firestore.collection('notifications').doc(notificationId).update({
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('notifications')
+          .doc(notificationId)
+          .update({
         'isRead': isRead,
         'readAt': isRead ? FieldValue.serverTimestamp() : null,
       });
@@ -428,8 +464,9 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
 
     try {
       final unreadDocs = await _firestore
+          .collection('users')
+          .doc(user.uid)
           .collection('notifications')
-          .where('userId', isEqualTo: user.uid)
           .where('isRead', isEqualTo: false)
           .get();
 
@@ -457,8 +494,15 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
   }
 
   Future<void> _deleteNotification(String notificationId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
     try {
-      await _firestore.collection('notifications').doc(notificationId).delete();
+      await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('notifications')
+          .doc(notificationId)
+          .delete();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Notification deleted')),
@@ -498,7 +542,11 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
     if (user == null) return;
 
     try {
-      final allDocs = await _firestore.collection('notifications').where('userId', isEqualTo: user.uid).get();
+      final allDocs = await _firestore
+          .collection('users')
+          .doc(user.uid)
+          .collection('notifications')
+          .get();
 
       final batch = _firestore.batch();
       for (final doc in allDocs.docs) {

@@ -21,7 +21,8 @@ import 'core/performance/performance_service.dart';
 import 'services/notifications/notification_service.dart';
 import 'services/agora/agora_service.dart';
 import 'services/room/room_firestore_service.dart';
-import 'app/app_routes.dart';
+import 'core/routing/app_routes.dart';
+import 'utils/window_sync_service.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -136,6 +137,9 @@ void main() {
 
       debugPrint('ðŸš€ Running app with Riverpod and Provider setup...');
 
+      // Start cross-window sync bridge (no-op on non-web).
+      WindowSyncService.ensureInitialized();
+
       runApp(
         riverpod.ProviderScope(
           child: MultiProvider(
@@ -186,9 +190,11 @@ class _AlwaysLandingApp extends riverpod.ConsumerWidget {
       title: 'Mix & Mingle - Vibes Around the World',
       debugShowCheckedModeBanner: false,
       theme: themedTheme,
-      home: const LandingPage(),
+      initialRoute: '/',
       onGenerateRoute: (settings) {
-        debugPrint('🌐 [AlwaysLanding] Route: ${settings.name}');
+        if (kDebugMode) {
+          debugPrint('🌐 [AlwaysLanding] Route: ${settings.name}');
+        }
         switch (settings.name) {
           case '/':
           case '/landing':
@@ -201,10 +207,10 @@ class _AlwaysLandingApp extends riverpod.ConsumerWidget {
             return MaterialPageRoute(builder: (_) => const ForgotPasswordPage());
           case '/app':
             // After login, go to the auth-protected app
-            return MaterialPageRoute(builder: (_) => const RootAuthGate());
+            return MaterialPageRoute(builder: (_) => const AuthGateRoot());
           default:
             // Delegate all authenticated-app routes to the full AppRoutes table
-            return AppRoutes.generateRoute(settings);
+            return AppRoutes.onGenerateRoute(settings);
         }
       },
     );

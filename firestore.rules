@@ -150,29 +150,45 @@ service cloud.firestore {
     // ========================================
 
     match /rooms/{roomId} {
-      // ✅ CRITICAL FIX: All authenticated users can read rooms (for discovery/joining)
-      allow read: if isSignedIn();
-
-      // ✅ Authenticated users can create rooms
+      allow read: if true;
       allow create: if isSignedIn() &&
                        hasValidString('title') &&
                        request.resource.data.title.size() >= 3 &&
-                       request.resource.data.title.size() <= 100;
-
-      // ✅ Only room creator/host/moderators can update or delete room
-      allow update: if isSignedIn() &&
-                       (request.auth.uid == resource.data.hostId ||
-                        request.auth.uid in resource.data.moderators);
-      allow delete: if isSignedIn() &&
-                       (request.auth.uid == resource.data.hostId ||
-                        request.auth.uid in resource.data.moderators);
+                       request.resource.data.title.size() <= 100 &&
+                       // ownerId must match caller, OR be 'system' (server-managed welcome rooms)
+                       (!('ownerId' in request.resource.data) ||
+                        request.resource.data.ownerId == request.auth.uid ||
+                        request.resource.data.ownerId == 'system');
+      allow update: if (request.auth.uid == resource.data.ownerId) ||
+                       (request.auth.uid in resource.data.admins &&
+                        !request.resource.data.diff(resource.data).affectedKeys()
+                          .hasAny(['ownerId', 'admins', 'slug'])) ||
+                       // Any signed-in user may update ONLY the presence/counter fields
+                       // (join increments participantCount, leave decrements, setVideoChannelLive, etc.)
+                       (isSignedIn() &&
+                        request.resource.data.diff(resource.data).affectedKeys()
+                          .hasOnly(['participantCount', 'viewerCount', 'videoChannelLive', 'updatedAt']));
+      allow delete: if request.auth.uid == resource.data.ownerId;
 
       // ✅ ROOM PARTICIPANTS SUBCOLLECTION - Critical for room joins
       match /participants/{participantId} {
         // All authenticated users can read participant list
         allow read: if isSignedIn();
-        // Users can write their own participant data (join/leave/status)
-        allow write: if isSignedIn() && request.auth.uid == participantId;
+        // Users can create their own participant doc (join), unless they are banned
+        allow create: if isSignedIn() && request.auth.uid == participantId &&
+          !get(/databases/$(database)/documents/rooms/$(roomId)).data.get('bannedUsers', []).hasAny([request.auth.uid]);
+        // Users can update their own doc; owner/admin can update any participant (role changes)
+        allow update: if isSignedIn() && (
+          request.auth.uid == participantId ||
+          request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+          request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins
+        );
+        // Users can delete their own participant doc (leave); owner/admin can delete any (kick)
+        allow delete: if isSignedIn() && (
+          request.auth.uid == participantId ||
+          request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+          request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins
+        );
       }
 
       // ROOM EVENTS SUBCOLLECTION (join/leave logs)
@@ -185,9 +201,19 @@ service cloud.firestore {
         allow read: if isSignedIn();
         allow create: if isSignedIn() &&
                          request.resource.data.senderId == request.auth.uid &&
-                         request.resource.data.text.size() <= 2000;
+                         ((request.resource.data.content is string && request.resource.data.content.size() <= 2000) ||
+                          (request.resource.data.text is string && request.resource.data.text.size() <= 2000));
         allow update, delete: if isSignedIn() &&
                                  resource.data.senderId == request.auth.uid;
+      }
+
+      // BANS SUBCOLLECTION
+      match /bans/{targetId} {
+        allow read: if isSignedIn();
+        allow create: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId
+                      || request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
+        allow delete: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId
+                      || request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
       }
 
       // BROADCASTER QUEUE SUBCOLLECTION
@@ -196,10 +222,12 @@ service cloud.firestore {
         // Users manage their own queue entry; host can update any entry
         allow create: if isOwner(userId);
         allow update: if isOwner(userId) ||
-                         request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.hostId ||
+                         request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                         request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins ||
                          isAdmin();
         allow delete: if isOwner(userId) ||
-                         request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.hostId ||
+                         request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                         request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins ||
                          isAdmin();
       }
 
@@ -207,10 +235,12 @@ service cloud.firestore {
       match /camera/{userId} {
         allow read: if isSignedIn();
         allow create, delete: if isOwner(userId) ||
-                                  request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.hostId ||
+                                  request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                                  request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins ||
                                   isAdmin();
         allow update: if isOwner(userId) ||
-                         request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.hostId ||
+                         request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                         request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins ||
                          isAdmin();
       }
 
@@ -220,6 +250,54 @@ service cloud.firestore {
         allow create: if isSignedIn() &&
                          request.resource.data.userId == request.auth.uid;
         allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+      }
+
+      // MIC QUEUE SUBCOLLECTION
+      match /micQueue/{userId} {
+        allow read: if isSignedIn();
+        allow create, update: if isOwner(userId) ||
+                                  request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                                  request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
+        allow delete: if isOwner(userId) ||
+                         request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                         request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
+      }
+
+      // MODERATION LOGS SUBCOLLECTION — admin read/write, append-only for signed-in users
+      match /moderation_logs/{logId} {
+        allow read: if isSignedIn() &&
+                       (request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                        request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins);
+        allow create: if isSignedIn();
+        allow update, delete: if false;
+      }
+
+      // MUTED USERS SUBCOLLECTION
+      match /muted_users/{userId} {
+        allow read: if isSignedIn();
+        allow write: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                        request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
+        allow delete: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                         request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
+      }
+
+      // BANNED USERS SUBCOLLECTION (legacy — mirrors bans/)
+      match /banned_users/{userId} {
+        allow read: if isSignedIn();
+        allow create: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                         request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
+        allow delete: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                         request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
+      }
+
+      // SPEAKER REQUESTS SUBCOLLECTION
+      match /requests/{requestId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && request.auth.uid == requestId;
+        allow update, delete: if isSignedIn() &&
+                                  (request.auth.uid == requestId ||
+                                   request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                                   request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins);
       }
     }
 
@@ -407,6 +485,43 @@ service cloud.firestore {
                          request.resource.data.text.size() <= 5000 &&
                          request.auth.uid in get(/databases/$(database)/documents/chats/$(chatId)).data.participants;
         allow delete: if isSignedIn() && resource.data.senderId == request.auth.uid;
+      }
+    }
+
+    // ========================================
+    // CONVERSATIONS (structured messaging)
+    // ========================================
+
+    match /conversations/{conversationId} {
+      // Only participants can read conversation metadata
+      allow read: if isSignedIn() &&
+                     request.auth.uid in resource.data.participants;
+
+      // Participants can update unread counts / lastMessage
+      allow update: if isSignedIn() &&
+                       request.auth.uid in resource.data.participants;
+
+      // Participants can create a new conversation
+      allow create: if isSignedIn() &&
+                       request.resource.data.participants is list &&
+                       request.auth.uid in request.resource.data.participants;
+
+      // Conversations are never deleted client-side
+      allow delete: if false;
+
+      // MESSAGES SUBCOLLECTION
+      match /messages/{messageId} {
+        // Only participants can read messages
+        allow read: if isSignedIn() &&
+                       request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants;
+
+        // Only participants can send messages; senderId must match caller
+        allow create: if isSignedIn() &&
+                         request.auth.uid in get(/databases/$(database)/documents/conversations/$(conversationId)).data.participants &&
+                         request.resource.data.senderId == request.auth.uid;
+
+        // Messages are immutable once sent
+        allow update, delete: if false;
       }
     }
 

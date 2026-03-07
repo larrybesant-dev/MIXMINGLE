@@ -112,7 +112,12 @@ class AgoraService {
   Future<bool> joinChannel({String? token, required String channelId, required String uid}) async {
     if (!kIsWeb) return false;
     try {
-      final result = await _jsJoinChannel((token ?? '').toJS, channelId.toJS, uid.toJS).toDart;
+      final normalizedUid = _normalizeUid(uid).toString();
+      final result = await _jsJoinChannel(
+        (token ?? '').toJS,
+        channelId.toJS,
+        normalizedUid.toJS,
+      ).toDart;
       final success = _jsToBool(result);
       if (success) { _inChannel = true; _currentChannelId = channelId; }
       return success;
@@ -120,6 +125,26 @@ class AgoraService {
       debugPrint('[AgoraService] Join failed: $e');
       return false;
     }
+  }
+
+  int _normalizeUid(String rawUid) {
+    final parsed = int.tryParse(rawUid);
+    if (parsed != null && parsed > 0) return parsed;
+
+    // Match backend uid derivation from hashCode(userId) for token compatibility.
+    var hash = 0;
+    for (var i = 0; i < rawUid.length; i++) {
+      final char = rawUid.codeUnitAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash &= 0xFFFFFFFF;
+    }
+
+    if (hash >= 0x80000000) {
+      hash -= 0x100000000;
+    }
+
+    final normalized = hash.abs();
+    return normalized == 0 ? 1 : normalized;
   }
 
   Future<bool> startCamera(String videoElementId, [String? deviceId]) async {

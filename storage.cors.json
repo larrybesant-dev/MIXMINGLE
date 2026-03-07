@@ -1,0 +1,15 @@
+[
+  {
+    "origin": [
+      "https://mix-and-mingle-v2.web.app",
+      "https://mix-and-mingle-v2.firebaseapp.com",
+      "https://mix-and-mingle-v2--localsync-0ugmbfcm.web.app",
+      "http://localhost:3000",
+      "http://localhost:5000",
+      "http://localhost:8080"
+    ],
+    "method": ["GET", "HEAD", "OPTIONS"],
+    "responseHeader": ["Content-Type", "x-goog-meta-*", "x-goog-resumable"],
+    "maxAgeSeconds": 3600
+  }
+]

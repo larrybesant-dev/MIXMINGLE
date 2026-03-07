@@ -3,7 +3,7 @@
 // import 'package:mixmingle/helpers/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'app_routes.dart';
+import '../core/routing/app_routes.dart';
 import '../core/theme/neon_theme.dart';
 
 class MixMingleApp extends StatelessWidget {
@@ -19,8 +19,8 @@ class MixMingleApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         theme: NeonTheme.darkTheme,
         // Use the app routing system
-        onGenerateRoute: AppRoutes.generateRoute,
-        initialRoute: AppRoutes.splash,
+        onGenerateRoute: AppRoutes.onGenerateRoute,
+        initialRoute: AppRoutes.landing,
         // Handle unknown routes
         onUnknownRoute: (settings) {
           debugPrint('âš ï¸ Unknown route: ${settings.name}');
@@ -39,7 +39,7 @@ class MixMingleApp extends StatelessWidget {
                     ElevatedButton(
                       onPressed: () =>
                           Navigator.of(ctx).pushNamedAndRemoveUntil(
-                            AppRoutes.splash,
+                            AppRoutes.landing,
                             (route) => false,
                           ),
                       child: const Text('Go to Home'),

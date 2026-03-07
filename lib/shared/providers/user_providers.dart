@@ -31,20 +31,8 @@ final currentUserProfileProvider = StreamProvider<UserProfile?>((ref) async* {
 });
 
 /// User profile by ID provider
-final userProfileProvider = StreamProvider.family<UserProfile?, String>((ref, userId) async* {
-  final profileService = ref.watch(profileServiceProvider);
-  try {
-    final profile = await profileService.getUserProfile(userId);
-    yield profile;
-
-    // Keep listening for updates (simplified - in production use Firestore stream)
-    await for (final _ in Stream.periodic(const Duration(seconds: 10))) {
-      final updated = await profileService.getUserProfile(userId);
-      yield updated;
-    }
-  } catch (e) {
-    yield null;
-  }
+final userProfileProvider = StreamProvider.family<UserProfile?, String>((ref, userId) {
+  return ref.watch(profileServiceProvider).getUserProfileStream(userId);
 });
 
 /// User presence provider - Phase 2 Hardened

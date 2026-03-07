@@ -44,12 +44,6 @@ final storageServiceProvider = Provider<StorageService>((ref) => StorageService(
 final tokenServiceProvider = Provider<TokenService>((ref) => TokenService());
 final notificationServiceProvider = Provider<NotificationService>((ref) => NotificationService());
 
-// Mark notification as read
-final markNotificationAsReadProvider = FutureProvider.family<void, String>((ref, notificationId) async {
-  final notificationService = ref.watch(notificationServiceProvider);
-  await notificationService.markAsRead(notificationId);
-});
-
 // Auth State
 final authStateProvider = StreamProvider<firebase_auth.User?>((ref) {
   return ref.watch(authServiceProvider).authStateChanges;
@@ -128,8 +122,7 @@ class DiscoverUsersNotifier extends Notifier<List<User>> {
 final conversationsProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) return Stream.value([]);
-  // Placeholder: Return empty list for now
-  return Stream.value([]);
+  return ref.watch(messagingServiceProvider).getUserConversations(currentUser.id);
 });
 
 // Settings
@@ -329,8 +322,7 @@ final privacySettingsProvider = StreamProvider<PrivacySettings?>((ref) {
 });
 
 final notificationsProvider = StreamProvider.family<List<app_notification.Notification>, String>((ref, userId) {
-  // Placeholder: Return empty list
-  return Stream.value([]);
+  return ref.watch(firestoreServiceProvider).getNotificationsStream(userId);
 });
 
 final userTipsProvider = StreamProvider.family<List<Map<String, dynamic>>, String>((ref, userId) {
@@ -409,8 +401,9 @@ final unfollowUserProvider = FutureProvider.family<void, String>((ref, targetUse
 });
 
 final userRoomsProvider = StreamProvider.family<List<Room>, String>((ref, userId) {
-  // Placeholder: Return empty list
-  return Stream.value([]);
+  return ref.watch(firestoreServiceProvider)
+      .getRoomsStream()
+      .map((rooms) => rooms.where((r) => r.participantIds.contains(userId)).toList());
 });
 
 final userActivityProvider = StreamProvider.family<List<Map<String, dynamic>>, String>((ref, userId) {

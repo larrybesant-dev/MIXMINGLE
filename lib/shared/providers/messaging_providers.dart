@@ -1,7 +1,6 @@
 
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/chat/chat_service.dart';
 import '../../services/chat/messaging_service.dart';
 import '../models/message.dart';
@@ -16,24 +15,8 @@ final messagingServiceProvider = Provider<MessagingService>((ref) => MessagingSe
 
 /// Room messages stream provider with pagination
 final roomMessagesProvider = StreamProvider.family<List<Message>, String>((ref, roomId) {
-  return FirebaseFirestore.instance
-      .collection('messages')
-      .where('roomId', isEqualTo: roomId)
-      .orderBy('timestamp', descending: true)
-      .limit(50) // Pagination: load last 50 messages
-      .snapshots()
-      .map((snapshot) => snapshot.docs
-          .map((doc) {
-            final data = doc.data();
-            data['id'] = doc.id;
-            return Message.fromMap(data);
-          })
-          .toList()
-          .reversed // Reverse to show oldest first
-          .toList())
-      .handleError((error) {
-    return <Message>[];
-  });
+  final messagingService = ref.watch(messagingServiceProvider);
+  return messagingService.getRoomMessages(roomId);
 });
 
 /// Paginated room messages with cursor

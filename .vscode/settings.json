@@ -163,5 +163,9 @@
       "disable": true
     }
   },
-  "java.configuration.updateBuildConfiguration": "automatic"
+  "java.configuration.updateBuildConfiguration": "automatic",
+  "flutterTools.displayGetxContextMenu": false,
+  "flutterTools.displayMobxContextMenu": false,
+  "flutterTools.displayRiverpodContextMenu": true,
+  "flutterTools.displayModularContextMenu": false
 }

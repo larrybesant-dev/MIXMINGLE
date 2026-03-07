@@ -224,10 +224,16 @@ class NotificationService {
     await _firebaseMessaging.deleteToken();
   }
 
-  /// Mark notification as read
-  Future<void> markAsRead(String notificationId) async {
+  /// Mark a notification as read. [userId] is required to reach the
+  /// users/{userId}/notifications subcollection.
+  Future<void> markAsRead(String userId, String notificationId) async {
     try {
-      await _firestore.collection('notifications').doc(notificationId).update({
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('notifications')
+          .doc(notificationId)
+          .update({
         'isRead': true,
         'readAt': FieldValue.serverTimestamp(),
       });

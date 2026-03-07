@@ -14,9 +14,68 @@ window.agoraBridgeState = {
   currentChannel: null,
   currentUid: null,
   appId: null,
+  currentToken: null,
   currentVideoDeviceId: null,
-  currentMicDeviceId: null
+  currentMicDeviceId: null,
+  connectionState: 'DISCONNECTED',
+  reconnecting: false,
+  reconnectAttempts: 0,
+  networkQuality: { uplink: 0, downlink: 0 },
+  activeAgoraUsers: new Set(),
+  lastError: null
 };
+
+function findElementByIdDeep(id) {
+  if (!id || typeof document === 'undefined') return null;
+
+  function walk(root) {
+    if (!root) return null;
+
+    if (typeof root.getElementById === 'function') {
+      const byId = root.getElementById(id);
+      if (byId) return byId;
+    }
+
+    if (typeof root.querySelectorAll !== 'function') return null;
+    const nodes = root.querySelectorAll('*');
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (node && node.id === id) return node;
+      if (node && node.shadowRoot) {
+        const fromShadow = walk(node.shadowRoot);
+        if (fromShadow) return fromShadow;
+      }
+    }
+
+    return null;
+  }
+
+  return walk(document);
+}
+
+function findAnyLocalVideoContainer() {
+  if (typeof document === 'undefined') return null;
+
+  function walk(root) {
+    if (!root || typeof root.querySelectorAll !== 'function') return null;
+
+    const direct = root.querySelector('[id^="mm_local_video_el_"]');
+    if (direct) return direct;
+
+    const nodes = root.querySelectorAll('*');
+    for (let i = 0; i < nodes.length; i++) {
+      const node = nodes[i];
+      if (node && node.shadowRoot) {
+        const fromShadow = walk(node.shadowRoot);
+        if (fromShadow) return fromShadow;
+      }
+    }
+
+    return null;
+  }
+
+  return walk(document);
+}
 
 // Logging helper
 window.agoraBridgeLog = function(level, msg, data) {
@@ -73,6 +132,7 @@ window.agoraWebBridge = {
     }
 
     try {
+      state.lastError = null;
       // Load SDK if needed
       if (!window.AgoraRTC) {
         window.agoraBridgeLog('INFO', 'Loading Agora SDK...');
@@ -93,20 +153,96 @@ window.agoraWebBridge = {
       // Set up event handlers
       state.client.on('user-published', async (user, mediaType) => {
         window.agoraBridgeLog('INFO', 'Remote user published', { uid: user.uid, mediaType });
-        await state.client.subscribe(user, mediaType);
-        if (mediaType === 'video') {
-          const remoteContainer = document.getElementById('remote-video-' + user.uid);
-          if (remoteContainer) user.videoTrack.play(remoteContainer);
+        state.activeAgoraUsers.add(String(user.uid));
+        try {
+          await state.client.subscribe(user, mediaType);
+          if (mediaType === 'video' && user.videoTrack) {
+            const remoteContainer = document.getElementById('remote-video-' + user.uid);
+            if (remoteContainer) user.videoTrack.play(remoteContainer);
+          }
+          if (mediaType === 'audio' && user.audioTrack) user.audioTrack.play();
+          window.agoraBridgeLog('SUCCESS', 'Subscribed to track', { uid: user.uid, mediaType });
+        } catch (e) {
+          window.agoraBridgeLog('ERROR', 'Subscribe failed', { uid: user.uid, mediaType, error: e.message });
         }
-        if (mediaType === 'audio') user.audioTrack.play();
+        if (typeof window.agoraWeb !== 'undefined' && typeof window.agoraWeb.onRemoteUserPublished === 'function') {
+          try { window.agoraWeb.onRemoteUserPublished(String(user.uid), String(mediaType)); } catch (_) {}
+        }
       });
 
       state.client.on('user-unpublished', (user, mediaType) => {
         window.agoraBridgeLog('INFO', 'Remote user unpublished', { uid: user.uid, mediaType });
+        if (!user.videoTrack && !user.audioTrack) {
+          state.activeAgoraUsers.delete(String(user.uid));
+        }
+        if (typeof window.agoraWeb !== 'undefined' && typeof window.agoraWeb.onRemoteUserUnpublished === 'function') {
+          try { window.agoraWeb.onRemoteUserUnpublished(String(user.uid), String(mediaType)); } catch (_) {}
+        }
       });
 
       state.client.on('user-left', (user) => {
         window.agoraBridgeLog('INFO', 'Remote user left', { uid: user.uid });
+        state.activeAgoraUsers.delete(String(user.uid));
+        if (typeof window.agoraWeb !== 'undefined' && typeof window.agoraWeb.onRemoteUserLeft === 'function') {
+          try { window.agoraWeb.onRemoteUserLeft({ uid: String(user.uid) }); } catch (_) {}
+        }
+      });
+
+      state.client.on('user-joined', (user) => {
+        state.activeAgoraUsers.add(String(user.uid));
+        const totalCount = state.activeAgoraUsers.size + 1;
+        window.agoraBridgeLog('INFO', `Remote user joined uid=${user.uid} room_total=${totalCount}`);
+        if (totalCount > 6) {
+          window.agoraBridgeLog('WARN', `Beta room-size limit (6) reached — ${totalCount} participants`);
+          if (typeof window.agoraWeb !== 'undefined' && typeof window.agoraWeb.onRoomFull === 'function') {
+            try { window.agoraWeb.onRoomFull({ count: totalCount }); } catch (_) {}
+          }
+        }
+        if (typeof window.agoraWeb !== 'undefined' && typeof window.agoraWeb.onRemoteUserJoined === 'function') {
+          try { window.agoraWeb.onRemoteUserJoined(String(user.uid)); } catch (_) {}
+        }
+      });
+
+      state.client.on('connection-state-change', async (curState, prevState) => {
+        window.agoraBridgeLog('INFO', `Connection: ${prevState} → ${curState}`);
+        state.connectionState = curState;
+        if (typeof window.agoraWeb !== 'undefined' && typeof window.agoraWeb.onConnectionStateChange === 'function') {
+          try { window.agoraWeb.onConnectionStateChange(curState, prevState); } catch (_) {}
+        }
+        if (curState === 'CONNECTED') {
+          state.reconnecting = false;
+          state.reconnectAttempts = 0;
+        }
+        if (curState === 'DISCONNECTED' && prevState === 'RECONNECTING' && state.currentChannel && !state.reconnecting) {
+          window.agoraBridgeLog('WARN', 'SDK reconnect failed — triggering manual rejoin');
+          agoraBridgeReconnect();
+        }
+      });
+
+      state.client.on('token-privilege-will-expire', () => {
+        window.agoraBridgeLog('INFO', 'Token expiring soon — requesting renewal');
+        if (typeof window.agoraWeb !== 'undefined' && typeof window.agoraWeb.onTokenWillExpire === 'function') {
+          try { window.agoraWeb.onTokenWillExpire(state.currentChannel, String(state.currentUid)); } catch (_) {}
+        }
+      });
+
+      state.client.on('token-privilege-did-expire', async () => {
+        window.agoraBridgeLog('WARN', 'Token expired — requesting renewal');
+        if (typeof window.agoraWeb !== 'undefined' && typeof window.agoraWeb.onTokenWillExpire === 'function') {
+          try { window.agoraWeb.onTokenWillExpire(state.currentChannel, String(state.currentUid)); } catch (_) {}
+        }
+        await new Promise(r => setTimeout(r, 3000));
+        if (state.currentChannel && !state.reconnecting) agoraBridgeReconnect();
+      });
+
+      state.client.on('network-quality', (stats) => {
+        state.networkQuality = { uplink: stats.uplinkNetworkQuality, downlink: stats.downlinkNetworkQuality };
+        if (stats.uplinkNetworkQuality >= 4 || stats.downlinkNetworkQuality >= 4) {
+          window.agoraBridgeLog('WARN', `Weak network — uplink=${stats.uplinkNetworkQuality} downlink=${stats.downlinkNetworkQuality}`);
+          if (typeof window.agoraWeb !== 'undefined' && typeof window.agoraWeb.onNetworkQuality === 'function') {
+            try { window.agoraWeb.onNetworkQuality({ uplink: stats.uplinkNetworkQuality, downlink: stats.downlinkNetworkQuality }); } catch (_) {}
+          }
+        }
       });
 
       state.appId = appId;
@@ -115,6 +251,7 @@ window.agoraWebBridge = {
       return true;
 
     } catch (error) {
+      state.lastError = error?.message || String(error);
       window.agoraBridgeLog('ERROR', 'Init failed', error);
       return false;
     }
@@ -131,13 +268,18 @@ window.agoraWebBridge = {
     }
 
     try {
+      state.lastError = null;
       const numericUid = parseInt(uid) || 0;
       await state.client.join(state.appId, channel, token || null, numericUid);
       state.currentChannel = channel;
       state.currentUid = numericUid;
+      state.currentToken = token || null;
+      state.connectionState = 'CONNECTED';
+      state.reconnectAttempts = 0;
       window.agoraBridgeLog('SUCCESS', 'Joined channel', { channel, uid: numericUid });
       return true;
     } catch (error) {
+      state.lastError = error?.message || String(error);
       window.agoraBridgeLog('ERROR', 'Join channel failed', error);
       return false;
     }
@@ -237,7 +379,10 @@ window.agoraWebBridge = {
   playCamera: function(videoElementId) {
     const state = window.agoraBridgeState;
     if (state.localTracks.video) {
-      const el = document.getElementById(videoElementId);
+      let el = findElementByIdDeep(videoElementId);
+      if (!el) {
+        el = findAnyLocalVideoContainer();
+      }
       if (el) {
         state.localTracks.video.play(el);
         el.style.display = 'block';
@@ -268,6 +413,7 @@ window.agoraWebBridge = {
     const state = window.agoraBridgeState;
 
     try {
+      state.lastError = null;
       // Stop and close local tracks
       if (state.localTracks.audio) {
         state.localTracks.audio.stop();
@@ -291,10 +437,12 @@ window.agoraWebBridge = {
 
       state.currentChannel = null;
       state.currentUid = null;
+      state.activeAgoraUsers.clear();
       window.agoraBridgeLog('SUCCESS', 'Left channel');
       return true;
 
     } catch (error) {
+      state.lastError = error?.message || String(error);
       window.agoraBridgeLog('ERROR', 'Leave channel failed', error);
       return false;
     }
@@ -324,23 +472,63 @@ window.agoraWebBridge = {
   // Mute/unmute mic
   setMicMuted: async function(muted) {
     const state = window.agoraBridgeState;
+    if (!state.localTracks.audio && muted === false) {
+      window.agoraBridgeLog('WARN', 'No mic track found while unmuting; creating one now');
+      const created = await this.createMicrophoneTrack(state.currentMicDeviceId);
+      if (!created) {
+        window.agoraBridgeLog('ERROR', 'Failed to create mic track during unmute request');
+        return false;
+      }
+    }
+
     if (state.localTracks.audio) {
       await state.localTracks.audio.setMuted(muted);
       window.agoraBridgeLog('SUCCESS', `Mic ${muted ? 'muted' : 'unmuted'}`);
       return true;
     }
+    window.agoraBridgeLog('WARN', 'Mic track unavailable');
     return false;
   },
 
-  // Mute/unmute video
+  // Toggle camera: fully release hardware when OFF, recreate track when ON
   setVideoMuted: async function(muted) {
     const state = window.agoraBridgeState;
-    if (state.localTracks.video) {
-      await state.localTracks.video.setMuted(muted);
-      window.agoraBridgeLog('SUCCESS', `Video ${muted ? 'muted' : 'unmuted'}`);
+
+    if (muted) {
+      // Camera OFF: unpublish, stop, close, and release the physical webcam
+      if (state.localTracks.video) {
+        if (state.client && state.currentChannel) {
+          try { await state.client.unpublish([state.localTracks.video]); } catch (e) {}
+        }
+        state.localTracks.video.stop();
+        state.localTracks.video.close();
+        state.localTracks.video = null;
+        window.agoraBridgeLog('SUCCESS', 'Camera track released — webcam light OFF');
+      }
+      return true;
+    } else {
+      // Camera ON: if a track already exists, nothing to do
+      if (state.localTracks.video) {
+        window.agoraBridgeLog('INFO', 'Camera track already active, skipping recreate');
+        return true;
+      }
+      // Recreate and publish a fresh camera track
+      window.agoraBridgeLog('INFO', 'Creating new camera track on enable request');
+      const created = await this.createCameraTrack(state.currentVideoDeviceId);
+      if (!created) {
+        window.agoraBridgeLog('ERROR', 'Failed to create camera track during enable request');
+        return false;
+      }
+      // Best-effort: play in local video container if already mounted in DOM
+      if (state.localTracks.video) {
+        const localEl = findAnyLocalVideoContainer();
+        if (localEl) {
+          state.localTracks.video.play(localEl);
+          window.agoraBridgeLog('SUCCESS', 'Local camera replayed in DOM container');
+        }
+      }
       return true;
     }
-    return false;
   },
 
   // Get state
@@ -356,8 +544,10 @@ window.agoraWebBridge = {
       hasVideo: !!state.localTracks.video,
       audioMuted: state.localTracks.audio?.muted ?? true,
       videoMuted: state.localTracks.video?.muted ?? true,
+      viewerCount: state.activeAgoraUsers.size + 1,
       currentVideoDeviceId: state.currentVideoDeviceId,
-      currentMicDeviceId: state.currentMicDeviceId
+      currentMicDeviceId: state.currentMicDeviceId,
+      lastError: state.lastError
     };
   }
 };
@@ -388,9 +578,80 @@ window.agoraWebSetVideoMuted = async function(muted) {
   return await window.agoraWebBridge.setVideoMuted(muted);
 };
 
+window.agoraWebPlayCamera = async function(videoElementId) {
+  return await window.agoraWebBridge.playCamera(videoElementId);
+};
+
 window.agoraWebGetState = function() {
   return window.agoraWebBridge.getState();
 };
+
+window.agoraWebRenewToken = async function(newToken) {
+  const state = window.agoraBridgeState;
+  try {
+    if (!state.client || !state.currentChannel) {
+      window.agoraBridgeLog('WARN', 'agoraWebRenewToken: not in channel');
+      return false;
+    }
+    await state.client.renewToken(newToken);
+    state.currentToken = newToken;
+    window.agoraBridgeLog('SUCCESS', 'Token renewed successfully');
+    return true;
+  } catch (err) {
+    window.agoraBridgeLog('ERROR', 'Failed to renew token', err.message);
+    return false;
+  }
+};
+
+// ========== RECONNECT HELPER ==========
+async function agoraBridgeReconnect() {
+  const state = window.agoraBridgeState;
+  if (state.reconnecting || !state.currentChannel || !state.appId) return;
+  const MAX_ATTEMPTS = 3;
+  if (state.reconnectAttempts >= MAX_ATTEMPTS) {
+    window.agoraBridgeLog('ERROR', 'Max reconnect attempts reached');
+    return;
+  }
+  state.reconnecting = true;
+  state.reconnectAttempts += 1;
+  const delay = state.reconnectAttempts * 2000;
+  window.agoraBridgeLog('INFO', `Reconnect attempt ${state.reconnectAttempts}/${MAX_ATTEMPTS} in ${delay}ms`);
+  await new Promise(r => setTimeout(r, delay));
+  if (!state.currentChannel) { state.reconnecting = false; return; }
+  try {
+    await state.client.join(state.appId, state.currentChannel, state.currentToken || null, state.currentUid);
+    window.agoraBridgeLog('SUCCESS', 'Reconnected to channel');
+    const tracks = [];
+    if (state.localTracks.audio) tracks.push(state.localTracks.audio);
+    if (state.localTracks.video) tracks.push(state.localTracks.video);
+    if (tracks.length > 0) {
+      try { await state.client.publish(tracks); }
+      catch (e) { window.agoraBridgeLog('ERROR', 'Re-publish after reconnect failed', e.message); }
+    }
+    state.reconnecting = false;
+    state.reconnectAttempts = 0;
+  } catch (err) {
+    window.agoraBridgeLog('ERROR', 'Reconnect failed', err.message);
+    state.reconnecting = false;
+    agoraBridgeReconnect();
+  }
+}
+
+// ========== BROWSER UNLOAD HANDLING ==========
+// Release the Agora slot on tab close / navigation so the server-side
+// participant count decrements promptly.
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeunload', function () {
+    const state = window.agoraBridgeState;
+    if (state.currentChannel) {
+      state.activeAgoraUsers.clear();
+      try { if (state.localTracks.audio) { state.localTracks.audio.close(); state.localTracks.audio = null; } } catch (_) {}
+      try { if (state.localTracks.video) { state.localTracks.video.stop(); state.localTracks.video.close(); state.localTracks.video = null; } } catch (_) {}
+      try { state.client.leave(); } catch (_) {}
+      state.currentChannel = null;
+    }
+  });
+}
 
 // ========== READY SIGNAL ==========
 

@@ -22,6 +22,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../core/design_system/design_constants.dart';
 import '../../app/app_routes.dart';
+import '../../services/messaging_service.dart';
+import '../../features/chat_room_page.dart';
 import 'gift_selector.dart';
 
 /// Sliding friends list panel
@@ -481,13 +483,23 @@ class _FriendsListPanelState extends State<FriendsListPanel>
               icon: Icons.message,
               label: 'Message',
               color: DesignColors.accent,
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(ctx);
                 widget.onClose();
-                Navigator.pushNamed(
+                final currentUid =
+                    FirebaseAuth.instance.currentUser?.uid;
+                if (currentUid == null) return;
+                final convoId = await MessagingService()
+                    .getOrCreateConversationId(currentUid, friendId);
+                if (!context.mounted) return;
+                Navigator.push(
                   context,
-                  AppRoutes.chat,
-                  arguments: {'recipientId': friendId},
+                  MaterialPageRoute(
+                    builder: (_) => ChatRoomPage(
+                      otherUserId: friendId,
+                      conversationId: convoId,
+                    ),
+                  ),
                 );
               },
             ),

@@ -8,6 +8,7 @@ import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/shared/widgets/skeleton_loaders.dart';
 import 'package:mixmingle/shared/models/match.dart';
+import 'package:mixmingle/shared/models/user_profile.dart';
 
 class MatchesPage extends ConsumerStatefulWidget {
   const MatchesPage({super.key});
@@ -22,7 +23,7 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
   }
 
   @override
@@ -44,7 +45,8 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
             controller: _tabController,
             tabs: const [
               Tab(text: 'Matches'),
-              Tab(text: 'Likes'),
+              Tab(text: 'Incoming'),
+              Tab(text: 'Outgoing'),
             ],
           ),
         ),
@@ -52,13 +54,14 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
           controller: _tabController,
           children: [
             _buildMatchesTab(),
-            _buildLikesTab(),
+            _buildIncomingTab(),
+            _buildOutgoingTab(),
           ],
         ),
         floatingActionButton: FloatingActionButton.extended(
           heroTag: 'discover_fab',
           onPressed: () {
-            Navigator.of(context).pushNamed(AppRoutes.discoverUsers);
+            Navigator.of(context).pushNamed(AppRoutes.matchDiscovery);
           },
           icon: const Icon(Icons.explore),
           label: const Text('Discover'),
@@ -67,22 +70,24 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
     );
   }
 
+  // ── Tab 1: Active Matches ────────────────────────────────────────────────
+
   Widget _buildMatchesTab() {
-    final matchesAsync = ref.watch(userMatchesProvider);
+    final matchesAsync = ref.watch(matchInboxProvider);
 
     return AsyncValueViewEnhanced(
       value: matchesAsync,
       maxRetries: 3,
       skeleton: const SkeletonGrid(itemCount: 6, crossAxisCount: 2),
       screenName: 'MatchesPage',
-      providerName: 'userMatchesProvider',
-      onRetry: () => ref.invalidate(userMatchesProvider),
+      providerName: 'matchInboxProvider',
+      onRetry: () => ref.invalidate(matchInboxProvider),
       data: (matches) {
         if (matches.isEmpty) {
           return _buildEmptyState(
             context,
             'No matches yet',
-            'Start swiping to find your perfect match!',
+            'Start discovering to find your perfect match!',
             Icons.favorite_border,
           );
         }
@@ -115,45 +120,19 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
     );
   }
 
-  Widget _buildLikesTab() {
-    final likesAsync = ref.watch(pendingMatchRequestsProvider);
-
-    return AsyncValueViewEnhanced(
-      value: likesAsync,
-      maxRetries: 3,
-      skeleton: const SkeletonList(itemCount: 5, showAvatar: true),
-      screenName: 'MatchesPage',
-      providerName: 'pendingMatchRequestsProvider',
-      onRetry: () => ref.invalidate(pendingMatchRequestsProvider),
-      data: (likes) {
-        if (likes.isEmpty) {
-          return _buildEmptyState(
-            context,
-            'No pending likes',
-            'People who like you will appear here',
-            Icons.thumb_up_outlined,
-          );
-        }
-
-        return ListView.builder(
-          padding: Responsive.responsivePadding(context),
-          itemCount: likes.length,
-          itemBuilder: (context, index) {
-            final like = likes[index];
-            return _buildLikeCard(context, like);
-          },
-        );
-      },
-    );
-  }
-
   Widget _buildMatchCard(BuildContext context, Match match) {
-    final otherUserId = match.user1Id == ref.read(currentUserProvider).value?.id ? match.user2Id : match.user1Id;
+    final currentUid = ref.read(currentUserProvider).value?.id;
+    final otherUserId =
+        match.user1Id == currentUid ? match.user2Id : match.user1Id;
     final userProfileAsync = ref.watch(userProfileProvider(otherUserId));
 
     return userProfileAsync.when(
       data: (profile) {
         if (profile == null) return const SizedBox.shrink();
+        final displayName =
+            profile.displayName ?? profile.nickname ?? 'Anonymous';
+        final photoUrl = profile.photoUrl;
+        final isOnline = profile.presenceStatus == 'online';
 
         return Card(
           clipBehavior: Clip.antiAlias,
@@ -163,7 +142,7 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                 AppRoutes.chat,
                 arguments: {
                   'userId': otherUserId,
-                  'username': profile.username,
+                  'username': displayName,
                 },
               );
             },
@@ -174,28 +153,28 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                   child: Stack(
                     fit: StackFit.expand,
                     children: [
-                      profile.profileImageUrl != null
-                          ? Image.network(
-                              profile.profileImageUrl!,
-                              fit: BoxFit.cover,
-                            )
+                      photoUrl != null
+                          ? Image.network(photoUrl, fit: BoxFit.cover)
                           : Container(
-                              color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.1),
                               child: Icon(
                                 Icons.person,
-                                size: Responsive.responsiveIconSize(context, 60),
-                                color: Theme.of(context).colorScheme.primary,
+                                size: Responsive.responsiveIconSize(
+                                    context, 60),
+                                color:
+                                    Theme.of(context).colorScheme.primary,
                               ),
                             ),
-                      if (profile.isOnline)
+                      if (isOnline)
                         Positioned(
                           top: 8,
                           right: 8,
                           child: Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
+                                horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: Colors.green,
                               borderRadius: BorderRadius.circular(12),
@@ -215,29 +194,15 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                 ),
                 Padding(
                   padding: const EdgeInsets.all(12),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        profile.username ?? 'User',
-                        style: TextStyle(
-                          fontSize: Responsive.responsiveFontSize(context, 16),
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      if (profile.age != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          '${profile.age} years old',
-                          style: TextStyle(
-                            fontSize: Responsive.responsiveFontSize(context, 12),
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                          ),
-                        ),
-                      ],
-                    ],
+                  child: Text(
+                    displayName,
+                    style: TextStyle(
+                      fontSize:
+                          Responsive.responsiveFontSize(context, 16),
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
@@ -245,104 +210,262 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
           ),
         );
       },
-      loading: () => const Card(
-        child: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Card(child: Center(child: CircularProgressIndicator())),
       error: (_, __) => const SizedBox.shrink(),
     );
   }
 
-  Widget _buildLikeCard(BuildContext context, Match like) {
-    final otherUserId = like.user1Id == ref.read(currentUserProvider).value?.id ? like.user2Id : like.user1Id;
-    final userProfileAsync = ref.watch(userProfileProvider(otherUserId));
+  // ── Tab 2: Incoming Likes ─────────────────────────────────────────────────
 
-    return userProfileAsync.when(
-      data: (profile) {
-        if (profile == null) return const SizedBox.shrink();
+  Widget _buildIncomingTab() {
+    final likesAsync = ref.watch(incomingLikesProvider);
 
-        return Card(
-          margin: EdgeInsets.only(
-            bottom: Responsive.responsiveSpacing(context, 12),
-          ),
-          child: Padding(
-            padding: Responsive.responsivePadding(context),
-            child: Row(
+    return AsyncValueViewEnhanced(
+      value: likesAsync,
+      maxRetries: 3,
+      skeleton: const SkeletonList(itemCount: 5, showAvatar: true),
+      screenName: 'MatchesPage',
+      providerName: 'incomingLikesProvider',
+      onRetry: () => ref.invalidate(incomingLikesProvider),
+      data: (profiles) {
+        if (profiles.isEmpty) {
+          return _buildEmptyState(
+            context,
+            'No incoming likes',
+            'People who like you will appear here',
+            Icons.thumb_up_outlined,
+          );
+        }
+
+        return ListView.builder(
+          padding: Responsive.responsivePadding(context),
+          itemCount: profiles.length,
+          itemBuilder: (context, index) =>
+              _buildIncomingLikeTile(context, profiles[index]),
+        );
+      },
+    );
+  }
+
+  Widget _buildIncomingLikeTile(BuildContext context, UserProfile profile) {
+    final displayName = profile.displayName ?? profile.nickname ?? 'Anonymous';
+    final photoUrl = profile.photoUrl;
+    final service = ref.read(matchServiceProvider);
+    final currentUid = ref.read(currentUserProvider).value?.id ?? '';
+
+    return Card(
+      margin: EdgeInsets.only(
+          bottom: Responsive.responsiveSpacing(context, 12)),
+      child: Padding(
+        padding: Responsive.responsivePadding(context),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: Responsive.responsiveValue(
+                  context: context,
+                  mobile: 28.0,
+                  tablet: 32.0,
+                  desktop: 36.0),
+              backgroundImage:
+                  photoUrl != null ? NetworkImage(photoUrl) : null,
+              child: photoUrl == null
+                  ? Icon(Icons.person,
+                      size: Responsive.responsiveIconSize(context, 28))
+                  : null,
+            ),
+            SizedBox(width: Responsive.responsiveSpacing(context, 12)),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    displayName,
+                    style: TextStyle(
+                      fontSize:
+                          Responsive.responsiveFontSize(context, 16),
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  if (profile.bio != null)
+                    Text(
+                      profile.bio!,
+                      style: TextStyle(
+                        fontSize:
+                            Responsive.responsiveFontSize(context, 13),
+                        color: Theme.of(context)
+                            .colorScheme
+                            .onSurface
+                            .withValues(alpha: 0.6),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                ],
+              ),
+            ),
+            SizedBox(width: Responsive.responsiveSpacing(context, 8)),
+            Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                CircleAvatar(
-                  radius: Responsive.responsiveValue(
-                    context: context,
-                    mobile: 30.0,
-                    tablet: 35.0,
-                    desktop: 40.0,
-                  ),
-                  backgroundImage: profile.profileImageUrl != null ? NetworkImage(profile.profileImageUrl!) : null,
-                  child: profile.profileImageUrl == null
-                      ? Icon(
-                          Icons.person,
-                          size: Responsive.responsiveIconSize(context, 30),
-                        )
-                      : null,
+                // Decline
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.redAccent),
+                  tooltip: 'Decline',
+                  onPressed: () async {
+                    try {
+                      await service.declineMatch(currentUid, profile.id);
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  'Could not decline: ${e.toString()}')),
+                        );
+                      }
+                    }
+                  },
                 ),
-                SizedBox(width: Responsive.responsiveSpacing(context, 16)),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        profile.username ?? 'User',
-                        style: TextStyle(
-                          fontSize: Responsive.responsiveFontSize(context, 16),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      if (profile.bio != null)
-                        Text(
-                          profile.bio!,
-                          style: TextStyle(
-                            fontSize: Responsive.responsiveFontSize(context, 14),
-                            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                    ],
-                  ),
-                ),
-                SizedBox(width: Responsive.responsiveSpacing(context, 16)),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.close, color: Colors.grey),
-                      onPressed: () async {
-                        await ref.read(matchControllerProvider.notifier).reject(otherUserId);
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(
-                        Icons.favorite,
-                        color: Theme.of(context).colorScheme.error,
-                      ),
-                      onPressed: () async {
-                        await ref.read(matchControllerProvider.notifier).accept(otherUserId);
-                      },
-                    ),
-                  ],
+                // Accept
+                IconButton(
+                  icon: Icon(Icons.favorite,
+                      color:
+                          Theme.of(context).colorScheme.primary),
+                  tooltip: 'Accept',
+                  onPressed: () async {
+                    try {
+                      await service.acceptMatch(currentUid, profile.id);
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  "🎉 Matched with $displayName!")),
+                        );
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                              content: Text(
+                                  'Could not accept: ${e.toString()}')),
+                        );
+                      }
+                    }
+                  },
                 ),
               ],
             ),
-          ),
-        );
-      },
-      loading: () => const Card(
-        child: ListTile(
-          leading: CircleAvatar(child: Icon(Icons.person)),
-          title: Text('Loading...'),
+          ],
         ),
       ),
-      error: (_, __) => const SizedBox.shrink(),
     );
   }
+
+  // ── Tab 3: Outgoing Likes ─────────────────────────────────────────────────
+
+  Widget _buildOutgoingTab() {
+    final outgoingAsync = ref.watch(outgoingLikesProvider);
+
+    return AsyncValueViewEnhanced(
+      value: outgoingAsync,
+      maxRetries: 3,
+      skeleton: const SkeletonList(itemCount: 5, showAvatar: true),
+      screenName: 'MatchesPage',
+      providerName: 'outgoingLikesProvider',
+      onRetry: () => ref.invalidate(outgoingLikesProvider),
+      data: (profiles) {
+        if (profiles.isEmpty) {
+          return _buildEmptyState(
+            context,
+            'No outgoing likes',
+            'Profiles you\'ve liked will appear here',
+            Icons.send_outlined,
+          );
+        }
+
+        return ListView.builder(
+          padding: Responsive.responsivePadding(context),
+          itemCount: profiles.length,
+          itemBuilder: (context, index) =>
+              _buildOutgoingLikeTile(context, profiles[index]),
+        );
+      },
+    );
+  }
+
+  Widget _buildOutgoingLikeTile(BuildContext context, UserProfile profile) {
+    final displayName = profile.displayName ?? profile.nickname ?? 'Anonymous';
+    final photoUrl = profile.photoUrl;
+    final service = ref.read(matchServiceProvider);
+    final currentUid = ref.read(currentUserProvider).value?.id ?? '';
+    final isOnline = profile.presenceStatus == 'online';
+
+    return Card(
+      margin: EdgeInsets.only(
+          bottom: Responsive.responsiveSpacing(context, 12)),
+      child: ListTile(
+        leading: Stack(
+          children: [
+            CircleAvatar(
+              radius: Responsive.responsiveValue(
+                  context: context,
+                  mobile: 24.0,
+                  tablet: 28.0,
+                  desktop: 32.0),
+              backgroundImage:
+                  photoUrl != null ? NetworkImage(photoUrl) : null,
+              child: photoUrl == null
+                  ? Icon(Icons.person,
+                      size: Responsive.responsiveIconSize(context, 24))
+                  : null,
+            ),
+            if (isOnline)
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: Colors.green,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white, width: 1.5),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        title: Text(displayName),
+        subtitle: profile.bio != null
+            ? Text(profile.bio!,
+                maxLines: 1, overflow: TextOverflow.ellipsis)
+            : null,
+        trailing: TextButton.icon(
+          icon: const Icon(Icons.close, size: 16),
+          label: const Text('Withdraw'),
+          style: TextButton.styleFrom(
+              foregroundColor: Colors.redAccent),
+          onPressed: () async {
+            try {
+              await service.unlikeUser(currentUid, profile.id);
+            } catch (e) {
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                      content:
+                          Text('Could not withdraw: ${e.toString()}')),
+                );
+              }
+            }
+          },
+        ),
+        onTap: () => Navigator.of(context)
+            .pushNamed(AppRoutes.userProfile, arguments: profile.id),
+      ),
+    );
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
 
   Widget _buildEmptyState(
     BuildContext context,
@@ -359,7 +482,10 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
             Icon(
               icon,
               size: Responsive.responsiveIconSize(context, 80),
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.3),
             ),
             SizedBox(height: Responsive.responsiveSpacing(context, 24)),
             Text(
@@ -375,13 +501,17 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: Responsive.responsiveFontSize(context, 16),
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.6),
               ),
             ),
             SizedBox(height: Responsive.responsiveSpacing(context, 32)),
             ElevatedButton.icon(
               onPressed: () {
-                Navigator.of(context).pushNamed(AppRoutes.discoverUsers);
+                Navigator.of(context)
+                    .pushNamed(AppRoutes.matchDiscovery);
               },
               icon: const Icon(Icons.explore),
               label: const Text('Start Discovering'),

@@ -6,6 +6,8 @@ import 'package:mixmingle/app/app_routes.dart';
 import 'package:mixmingle/shared/providers/profile_completion_providers.dart';
 import 'package:mixmingle/core/theme/neon_widgets.dart';
 import 'package:mixmingle/core/theme/colors.dart';
+import '../widgets/active_friends_row.dart';
+import '../widgets/discovery_section.dart';
 
 class HomePageNeon extends ConsumerWidget {
   const HomePageNeon({super.key});
@@ -64,10 +66,33 @@ class HomePageNeon extends ConsumerWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 20),
+
+                  // Active friends row — real-time presence-driven
+                  ActiveFriendsRow(
+                    onAvatarTap: (userId) => Navigator.pushNamed(
+                      context,
+                      AppRoutes.userProfile,
+                      arguments: userId,
+                    ),
+                  ),
+
+                  const SizedBox(height: 20),
 
                   // Main action buttons grid
                   _buildMainActionsGrid(context),
+
+                  const SizedBox(height: 28),
+
+                  // ── Discovery rails ────────────────────────────────────────
+                  const SuggestedForYouSection(),
+                  const SizedBox(height: 20),
+                  const TrendingNowSection(),
+                  const SizedBox(height: 20),
+                  const ActiveNowSection(),
+                  const SizedBox(height: 20),
+                  const DiscoverRoomsSection(),
+                  // ──────────────────────────────────────────────────────────
 
                   const SizedBox(height: 32),
 

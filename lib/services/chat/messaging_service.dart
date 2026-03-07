@@ -329,12 +329,31 @@ class MessagingService {
       final fcmToken = receiverData['fcmToken'] as String?;
 
       if (fcmToken != null && fcmToken.isNotEmpty) {
-        // Send notification via Firebase Cloud Messaging
-        // Note: In a production app, this would typically be done via Cloud Functions
-        // For now, we'll use the notification service for local notifications
+        // Send local push notification
         await _notificationService.notifyNewDirectMessage(
             conversationId, sender.displayName ?? 'Unknown User', content);
       }
+
+      // Write to Firestore notifications so the notifications page shows it
+      final notifRef = _firestore
+          .collection('users')
+          .doc(receiverId)
+          .collection('notifications')
+          .doc();
+      await notifRef.set({
+        'id': notifRef.id,
+        'userId': receiverId,
+        'type': 4, // NotificationType.message
+        'title': sender.displayName ?? 'New Message',
+        'message': content.length > 80 ? '${content.substring(0, 80)}...' : content,
+        'senderId': senderId,
+        'senderName': sender.displayName,
+        'roomId': conversationId,
+        'roomName': null,
+        'data': null,
+        'isRead': false,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
     } catch (e) {
       // Log error but don't fail the message sending
       debugPrint('Failed to send message notification: $e');
@@ -588,7 +607,9 @@ extension RoomMessaging on MessagingService {
     );
 
     // Add message to Firestore (using subcollection)
-    await _firestore.collection('rooms').doc(roomId).collection('messages').add(message.toMap());
+    final msgData = message.toMap();
+    msgData['timestamp'] = FieldValue.serverTimestamp();
+    await _firestore.collection('rooms').doc(roomId).collection('messages').add(msgData);
 
     // Track analytics
     _analytics.trackEngagement('room_message_sent', parameters: {
@@ -605,9 +626,16 @@ extension RoomMessaging on MessagingService {
         .doc(roomId)
         .collection('messages')
         .orderBy('timestamp', descending: false)
+        .limitToLast(100)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) => Message.fromMap(doc.data())).toList();
+    }).distinct((a, b) {
+      if (a.length != b.length) return false;
+      for (int i = 0; i < a.length; i++) {
+        if (a[i].id != b[i].id || a[i].content != b[i].content) return false;
+      }
+      return true;
     });
   }
 

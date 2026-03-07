@@ -149,6 +149,9 @@ class RoomModerationService {
       'timestamp': FieldValue.serverTimestamp(),
     });
 
+    // Kick user by removing their participant doc before writing the ban
+    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(targetUserId).delete();
+
     // Add to banned list
     await _firestore.collection('rooms').doc(roomId).collection('banned_users').doc(targetUserId).set({
       'banTime': FieldValue.serverTimestamp(),
@@ -159,7 +162,19 @@ class RoomModerationService {
 
   /// Unban a user
   Future<void> unbanUser(String roomId, String targetUserId) async {
-    await _firestore.collection('rooms').doc(roomId).collection('banned_users').doc(targetUserId).delete();
+    // Remove from both the subcollection and the root-doc bannedUsers array so
+    // joinVoiceRoom's ban check no longer blocks the user.
+    await Future.wait([
+      _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('banned_users')
+          .doc(targetUserId)
+          .delete(),
+      _firestore.collection('rooms').doc(roomId).update({
+        'bannedUsers': FieldValue.arrayRemove([targetUserId]),
+      }),
+    ]);
   }
 
   /// Get moderation logs for a room
@@ -216,14 +231,14 @@ class RoomModerationService {
 
   /// Get muted users in room
   Stream<List<String>> getMutedUsersStream(String roomId) {
-    return _firestore.collection('rooms').doc(roomId).collection('muted_users').snapshots().map((snapshot) {
+    return _firestore.collection('rooms').doc(roomId).collection('muted_users').limit(200).snapshots().map((snapshot) {
       return snapshot.docs.map((doc) => doc.id).toList();
     });
   }
 
   /// Get banned users in room
   Stream<List<String>> getBannedUsersStream(String roomId) {
-    return _firestore.collection('rooms').doc(roomId).collection('banned_users').snapshots().map((snapshot) {
+    return _firestore.collection('rooms').doc(roomId).collection('banned_users').limit(200).snapshots().map((snapshot) {
       return snapshot.docs.map((doc) => doc.id).toList();
     });
   }

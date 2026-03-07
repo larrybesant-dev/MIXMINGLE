@@ -1,8 +1,12 @@
-import { onCall } from "firebase-functions/v2/https";
+import { onCall, HttpsError } from "firebase-functions/v2/https";
 import { onSchedule } from "firebase-functions/v2/scheduler";
+import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import { RtcTokenBuilder, RtcRole } from "agora-token";
 import * as admin from "firebase-admin";
+
+const agoraAppIdSecret = defineSecret("AGORA_APP_ID");
+const agoraAppCertSecret = defineSecret("AGORA_APP_CERTIFICATE");
 
 // Initialize Firebase Admin
 admin.initializeApp();
@@ -11,7 +15,8 @@ admin.initializeApp();
 export const generateAgoraToken = onCall(
   {
     region: "us-central1",
-    cors: true
+    cors: true,
+    secrets: [agoraAppIdSecret, agoraAppCertSecret],
   },
   async (request) => {
     try {
@@ -19,33 +24,47 @@ export const generateAgoraToken = onCall(
       logger.debug('Callable request verification passed');
       logger.debug(`Auth context - UID: ${request.auth?.uid || 'NONE'}, Token: ${request.auth?.token ? 'PRESENT' : 'MISSING'}`);
 
-      const { roomId, userId } = request.data;
+      const requestData = (request.data ?? {}) as Record<string, unknown>;
+
+      // Support both callable payload shapes used in this codebase.
+      const roomIdRaw = requestData.roomId ?? requestData.channelName;
+      const userIdRaw = requestData.userId ?? requestData.uid ?? request.auth?.uid;
+
+      const roomId = typeof roomIdRaw === "string" ? roomIdRaw.trim() : "";
+      const userId = typeof userIdRaw === "string"
+        ? userIdRaw.trim()
+        : typeof userIdRaw === "number"
+          ? String(userIdRaw)
+          : "";
+
       logger.debug(`Request data - roomId: ${roomId}, userId: ${userId}`);
 
       if (!roomId || !userId) {
-        throw new Error("Missing required parameters: roomId and userId");
+        throw new HttpsError("invalid-argument", "Missing required parameters: roomId/channelName and userId/uid");
       }
 
-      // Verify authenticated user matches requested userId
+      // Enforce authenticated user matches requested userId.
       if (request.auth?.uid && request.auth.uid !== userId) {
         logger.warn(`Auth mismatch: request.auth.uid=${request.auth.uid} but data.userId=${userId}`);
-        // For now, just warn - don't enforce to maintain compatibility
+        throw new HttpsError("permission-denied", "Cannot generate a token for another user");
       }
 
       // Ensure user is authenticated via Firebase callable auth
       if (!request.auth?.uid) {
         logger.error('Request missing auth context - user not authenticated via Firebase SDK');
-        throw new Error('Authentication required. Please ensure you are signed in.');
+        throw new HttpsError('unauthenticated', 'Authentication required. Please ensure you are signed in.');
       }
 
       // Load room metadata for enforcement
       const roomSnap = await admin.firestore().collection('rooms').doc(roomId).get();
       if (!roomSnap.exists) {
-        throw new Error('Room not found');
+        throw new HttpsError('not-found', 'Room not found');
       }
 
       const roomData = roomSnap.data() || {};
       const isLive = roomData.isLive === true;
+      const isActive = roomData.isActive !== false;
+      const videoChannelLive = roomData.videoChannelLive === true;
       const status = roomData.status as string | undefined;
       const bannedUsers: string[] = roomData.bannedUsers ?? [];
       const kickedUsers: string[] = roomData.kickedUsers ?? [];
@@ -53,25 +72,46 @@ export const generateAgoraToken = onCall(
       const moderators: string[] = roomData.moderators ?? roomData.admins ?? [];
       const speakers: string[] = roomData.speakers ?? [];
 
-      if (!isLive || status === 'ended') {
-        throw new Error('Room has ended');
+      const roomEnded =
+        status === 'ended' ||
+        status === 'closed' ||
+        (isLive === false && isActive === false && videoChannelLive === false);
+
+      if (roomEnded) {
+        throw new HttpsError('failed-precondition', 'Room has ended');
       }
 
       if (bannedUsers.includes(userId)) {
-        throw new Error('User is banned from this room');
+        throw new HttpsError('permission-denied', 'User is banned from this room');
       }
 
       if (kickedUsers.includes(userId)) {
-        throw new Error('User was removed from this room');
+        throw new HttpsError('permission-denied', 'User was removed from this room');
       }
 
       // Get Agora credentials from environment variables
-      const appId = process.env.AGORA_APP_ID;
-      const appCertificate = process.env.AGORA_APP_CERTIFICATE;
+      const appId = agoraAppIdSecret.value() || process.env.AGORA_APP_ID;
+      const appCertificate =
+        agoraAppCertSecret.value() || process.env.AGORA_APP_CERTIFICATE;
+
+      const looksLikePlaceholder =
+        appId === 'your-agora-app-id' ||
+        appCertificate === 'your-agora-app-certificate';
 
       if (!appId || !appCertificate) {
         logger.error(`Agora credentials missing: appId=${!!appId}, certificate=${!!appCertificate}`);
-        throw new Error(`Agora credentials not configured. AppID: ${appId ? 'SET' : 'MISSING'}, Certificate: ${appCertificate ? 'SET' : 'MISSING'}`);
+        throw new HttpsError(
+          'failed-precondition',
+          `Agora credentials not configured. AppID: ${appId ? 'SET' : 'MISSING'}, Certificate: ${appCertificate ? 'SET' : 'MISSING'}`
+        );
+      }
+
+      if (looksLikePlaceholder) {
+        logger.error('Agora credentials are placeholders and must be replaced with real secret values');
+        throw new HttpsError(
+          'failed-precondition',
+          'Agora credentials are placeholders. Configure AGORA_APP_ID and AGORA_APP_CERTIFICATE secrets.'
+        );
       }
 
       // Generate UID from userId (convert string to number)
@@ -97,10 +137,22 @@ export const generateAgoraToken = onCall(
         privilegeExpiredTs
       );
 
+      const normalizedToken = typeof token === 'string' ? token.trim() : '';
+      if (!normalizedToken) {
+        logger.error('Agora SDK returned an empty token', {
+          roomId,
+          userId,
+          uid,
+          role: isBroadcaster ? 'broadcaster' : 'audience',
+        });
+        throw new HttpsError('internal', 'Agora token generation returned an empty token');
+      }
+
       logger.info(`✅ Generated Agora token for user ${userId} in room ${roomId}`);
+      console.log('Token generated for channel:', roomId);
 
       return {
-        token,
+        token: normalizedToken,
         uid,
         appId,
         channelName: roomId,
@@ -109,7 +161,15 @@ export const generateAgoraToken = onCall(
       };
     } catch (error) {
       logger.error('❌ Error generating Agora token:', error);
-      throw new Error(`Failed to generate Agora token: ${error instanceof Error ? error.message : String(error)}`);
+
+      if (error instanceof HttpsError) {
+        throw error;
+      }
+
+      throw new HttpsError(
+        'internal',
+        `Failed to generate Agora token: ${error instanceof Error ? error.message : String(error)}`
+      );
     }
   }
 );
@@ -129,6 +189,7 @@ function hashCode(str: string): number {
 
 // Export match functions
 export { generateUserMatches, handleLike, handlePass, refreshDailyMatches } from './matches';
+export { checkRateLimit } from './rateLimit';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ROOM CLEANUP — runs every hour, marks stale live rooms as 'ended'
@@ -186,6 +247,8 @@ export const cleanupStaleRooms = onSchedule(
         endedAt: now,
         endReason: "auto_cleanup_stale",
         updatedAt: now,
+        viewerCount: 0,
+        participantCount: 0,
       });
       count++;
     }

@@ -147,6 +147,28 @@ class StorageService {
       throw Exception('Failed to upload gallery photo: $e');
     }
   }
+
+  // Upload gallery video (stores to users/{uid}/gallery/videos/)
+  Future<String?> uploadGalleryVideo(XFile video, String userId) async {
+    try {
+      String resolvedId = userId;
+      if (resolvedId.isEmpty) {
+        resolvedId = FirebaseAuth.instance.currentUser?.uid ?? '';
+        if (resolvedId.isEmpty) throw Exception('Cannot upload gallery video: user not authenticated');
+      }
+      final timestamp = DateTime.now().millisecondsSinceEpoch;
+      final ref = _storage.ref().child('users/$resolvedId/gallery/videos/$timestamp.mp4');
+      if (kIsWeb) {
+        final bytes = await video.readAsBytes();
+        await ref.putData(bytes, SettableMetadata(contentType: 'video/mp4'));
+      } else {
+        await ref.putFile(File(video.path));
+      }
+      return await ref.getDownloadURL();
+    } catch (e) {
+      throw Exception('Failed to upload gallery video: $e');
+    }
+  }
 }
 
 

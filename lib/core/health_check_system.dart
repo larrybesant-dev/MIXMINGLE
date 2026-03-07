@@ -29,7 +29,7 @@ class HealthCheckResult {
 
   @override
   String toString() {
-    final status = isHealthy ? 'âœ…' : 'âŒ';
+    final status = isHealthy ? '[OK]' : '[FAIL]';
     final time = responseTime != null ? ' (${responseTime!.inMilliseconds}ms)' : '';
     return '$status $service$time${errorMessage != null ? ': $errorMessage' : ''}';
   }
@@ -56,7 +56,7 @@ class ProjectHealthChecker {
   /// Run all health checks
   Future<void> runAllChecks() async {
     _results.clear();
-    debugPrint('ðŸ¥ Starting Project Health Checks...');
+    debugPrint('[HealthCheck] Starting project health checks...');
 
     await _checkFirebaseCore();
     await _checkFirebaseAuth();
@@ -175,7 +175,6 @@ class ProjectHealthChecker {
           // Permission-denied errors are expected for restricted collections
           if (errorString.contains('permission-denied') ||
               errorString.contains('permission_denied')) {
-            debugPrint('âš ï¸ [HealthCheck] $collection: permission-denied (expected for restricted collections)');
             warnings.add(collection);
             results[collection] = true; // Don't fail for permission errors
           } else {
@@ -191,11 +190,11 @@ class ProjectHealthChecker {
           .toList();
 
       if (missingCollections.isNotEmpty) {
-        debugPrint('ðŸŒ± Collections missing, attempting to seed...');
+        debugPrint('[HealthCheck] Collections missing, attempting to seed...');
         final seedSuccess = await FirestoreSeedingService.seedCollections();
 
         if (seedSuccess) {
-          debugPrint('âœ… Seeding successful');
+          debugPrint('[HealthCheck] Seeding successful');
           _addResult('Firestore Collections', true, null, stopwatch.elapsed);
           return;
         }
@@ -205,10 +204,15 @@ class ProjectHealthChecker {
       final message = warnings.isNotEmpty
           ? 'Warning: ${warnings.join(', ')} have restricted access (OK)'
           : null;
+
+      if (warnings.isNotEmpty) {
+        debugPrint('[HealthCheck] Restricted collections detected (expected): ${warnings.join(', ')}');
+      }
+
       _addResult('Firestore Collections', true, message, stopwatch.elapsed);
     } catch (e) {
       // Log error but don't fail the health check - app should continue
-      debugPrint('âš ï¸ [HealthCheck] Firestore collection check failed (non-fatal): $e');
+      debugPrint('[HealthCheck] Firestore collection check failed (non-fatal): $e');
       _addResult('Firestore Collections', true, 'Check skipped: $e', stopwatch.elapsed);
     }
   }
@@ -226,15 +230,15 @@ class ProjectHealthChecker {
   }
 
   void _printHealthReport() {
-    debugPrint('\nâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
-    debugPrint('ðŸ¥ PROJECT HEALTH CHECK REPORT\n');
+    debugPrint('\n===================================================\n');
+    debugPrint('PROJECT HEALTH CHECK REPORT\n');
     debugPrint('DateTime: ${DateTime.now()}');
-    debugPrint('Overall Status: ${isHealthy ? 'âœ… HEALTHY' : 'âš ï¸ ISSUES DETECTED'}\n');
+    debugPrint('Overall Status: ${isHealthy ? 'HEALTHY' : 'ISSUES DETECTED'}\n');
     debugPrint('Services Checked:');
     for (final result in _results) {
       debugPrint('  ${result.toString()}');
     }
-    debugPrint('\nâ•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•\n');
+    debugPrint('\n===================================================\n');
   }
 }
 

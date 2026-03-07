@@ -21,10 +21,10 @@ class RoomModerationService {
     if (!room.exists) return false;
 
     final data = room.data()!;
-    final hostId = data['hostId'] as String;
+    final ownerId = data['ownerId'] as String? ?? data['hostId'] as String? ?? '';
     final admins = (data['admins'] as List<dynamic>?)?.cast<String>() ?? [];
 
-    return userId == hostId || admins.contains(userId);
+    return userId == ownerId || admins.contains(userId);
   }
 
   /// Check if a user is the room owner
@@ -36,9 +36,9 @@ class RoomModerationService {
     if (!room.exists) return false;
 
     final data = room.data()!;
-    final hostId = data['hostId'] as String;
+    final ownerId = data['ownerId'] as String? ?? data['hostId'] as String? ?? '';
 
-    return userId == hostId;
+    return userId == ownerId;
   }
 
   /// Kick a user from the room

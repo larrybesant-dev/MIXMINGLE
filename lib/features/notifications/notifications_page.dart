@@ -195,6 +195,10 @@ class NotificationsPage extends ConsumerWidget {
         return Icons.favorite;
       case model.NotificationType.system:
         return Icons.info;
+      case model.NotificationType.match:
+        return Icons.favorite_border;
+      case model.NotificationType.like:
+        return Icons.thumb_up;
     }
   }
 

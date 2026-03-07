@@ -9,7 +9,7 @@ interface CheckRateLimitParams {
   windowSeconds: number; // window size in seconds
 }
 
-export const checkRateLimit = functions.https.onCall(async (request) => {
+export const checkRateLimit = functions.https.onCall({ cors: true }, async (request) => {
   const uid = request.auth?.uid;
   if (!uid) {
     throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');

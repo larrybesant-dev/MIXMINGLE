@@ -140,6 +140,9 @@ class RoomMeta {
   final String name;
   final String type;
   final String ownerId;
+  final String hostId;
+  final List<String> moderators;
+  final List<String> speakers;
   final int maxBroadcasters;
   final int maxActiveMics;
   final bool isActive;
@@ -151,6 +154,9 @@ class RoomMeta {
     required this.name,
     required this.type,
     required this.ownerId,
+    required this.hostId,
+    required this.moderators,
+    required this.speakers,
     required this.maxBroadcasters,
     required this.maxActiveMics,
     required this.isActive,
@@ -161,11 +167,28 @@ class RoomMeta {
   factory RoomMeta.fromFirestore(DocumentSnapshot doc) {
     final d = doc.data() as Map<String, dynamic>;
     final t = (d[RoomFields.type] as String?) ?? RoomType.social;
+    final ownerId = (d[RoomFields.ownerId] as String?)?.trim();
+    final hostId = (d['hostId'] as String?)?.trim();
+    final creatorId = (d['creatorId'] as String?)?.trim();
+    final resolvedOwnerId = ownerId?.isNotEmpty == true
+        ? ownerId!
+        : hostId?.isNotEmpty == true
+            ? hostId!
+            : creatorId?.isNotEmpty == true
+                ? creatorId!
+                : '';
+    final name = (d[RoomFields.name] as String?)?.trim();
+    final title = (d['title'] as String?)?.trim();
+    final moderators = List<String>.from(d['moderators'] ?? d['admins'] ?? const []);
+    final speakers = List<String>.from(d['speakers'] ?? const []);
     return RoomMeta(
       id:               doc.id,
-      name:             (d[RoomFields.name]             as String?) ?? '',
+      name:             name?.isNotEmpty == true ? name! : (title ?? ''),
       type:             t,
-      ownerId:          (d[RoomFields.ownerId]          as String?) ?? '',
+      ownerId:          resolvedOwnerId,
+      hostId:           hostId?.isNotEmpty == true ? hostId! : resolvedOwnerId,
+      moderators:       moderators,
+      speakers:         speakers,
       maxBroadcasters:  (d[RoomFields.maxBroadcasters]  as int?)    ?? maxBroadcastersForRoomType(t),
       maxActiveMics:    (d[RoomFields.maxActiveMics]    as int?)    ?? maxMicsForRoomType(t),
       isActive:         (d[RoomFields.isActive]         as bool?)   ?? true,
@@ -179,6 +202,9 @@ class RoomMeta {
     RoomFields.name:             name,
     RoomFields.type:             type,
     RoomFields.ownerId:          ownerId,
+    'hostId':                    hostId,
+    'moderators':                moderators,
+    'speakers':                  speakers,
     RoomFields.maxBroadcasters:  maxBroadcasters,
     RoomFields.maxActiveMics:    maxActiveMics,
     RoomFields.isActive:         isActive,
@@ -197,6 +223,9 @@ class RoomMeta {
         name:             name,
         type:             type,
         ownerId:          ownerId,
+        hostId:           hostId,
+        moderators:       moderators,
+        speakers:         speakers,
         maxBroadcasters:  maxBroadcasters,
         maxActiveMics:    maxActiveMics,
         isActive:         isActive          ?? this.isActive,

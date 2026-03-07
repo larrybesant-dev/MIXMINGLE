@@ -265,3 +265,64 @@ exports.onRoomMemberJoin = onDocumentWritten('rooms/{roomId}', async (event) => 
   await Promise.all(tasks);
   logger.info(`onRoomMemberJoin: ${newJoins.length} new joins in room ${event.params.roomId}`);
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// cleanupStaleParticipants — runs every minute
+//
+// Deletes /rooms/{roomId}/participants/{userId} documents whose
+// lastHeartbeat is older than 60 seconds and resets the room counters
+// (participantCount + viewerCount) to the actual surviving document count.
+//
+// This self-heals ghost participants left behind when browsers crash, tabs
+// are force-closed, or the app is killed mid-session without a clean leave.
+// ─────────────────────────────────────────────────────────────────────────────
+exports.cleanupStaleParticipants = onSchedule('every 1 minutes', async (_event) => {
+  const db = admin.firestore();
+  const now = Date.now();
+  const staleCutoffMs = 60 * 1000; // 60 seconds
+
+  const roomsSnap = await db.collection('rooms').where('isActive', '==', true).get();
+  if (roomsSnap.empty) return;
+
+  const roomTasks = roomsSnap.docs.map(async (roomDoc) => {
+    const roomRef = roomDoc.ref;
+    const participantsSnap = await roomRef.collection('participants').get();
+    if (participantsSnap.empty) return;
+
+    const toDelete = [];
+    let activeCount = 0;
+
+    for (const pDoc of participantsSnap.docs) {
+      const hb = pDoc.data().lastHeartbeat;
+      const hbMs = hb && hb.toMillis ? hb.toMillis() : 0;
+      const ageMs = now - hbMs;
+
+      if (ageMs > staleCutoffMs) {
+        toDelete.push(pDoc.ref);
+      } else {
+        activeCount++;
+      }
+    }
+
+    if (toDelete.length === 0) return;
+
+    // Delete stale docs in batches of 400
+    const chunkSize = 400;
+    for (let i = 0; i < toDelete.length; i += chunkSize) {
+      const batch = db.batch();
+      toDelete.slice(i, i + chunkSize).forEach(ref => batch.delete(ref));
+      await batch.commit();
+    }
+
+    // Reconcile room counters to match surviving participants
+    await roomRef.update({
+      participantCount: activeCount,
+      viewerCount: activeCount,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    logger.info(`cleanupStaleParticipants: room=${roomDoc.id} removed=${toDelete.length} surviving=${activeCount}`);
+  });
+
+  await Promise.all(roomTasks);
+});
