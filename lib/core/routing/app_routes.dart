@@ -68,6 +68,7 @@ import '../routing/guards/profile_complete_guard.dart';
 // Legal pages
 import '../../features/legal/terms_of_service_page.dart';
 import '../../features/legal/privacy_policy_page.dart';
+import '../../features/settings/agora_test_page.dart';
 // Dev / QA screens
 import '../../dev/route_test_page.dart';
 import '../../dev/provider_debug_page.dart';
@@ -127,6 +128,7 @@ class AppRoutes {
   static const String terms                = '/terms';
   static const String privacy              = '/privacy';
   // Dev / QA routes (hidden screens)
+  static const String agoraTest            = '/agora-test';
   static const String routeTest            = '/dev/routes';
   static const String providerDebug        = '/dev/providers';
 
@@ -320,6 +322,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const TermsOfServicePage());
       case privacy:
         return MaterialPageRoute(builder: (_) => const PrivacyPolicyPage());
+      case agoraTest:
+        return MaterialPageRoute(builder: (_) => const AgoraTestPage());
       case routeTest:
         return MaterialPageRoute(builder: (_) => const RouteTestPage());
       case providerDebug:

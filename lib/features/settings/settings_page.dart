@@ -4,6 +4,7 @@ import '../../shared/providers/providers.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../core/services/music_settings_service.dart';
+import '../../core/routing/app_routes.dart';
 
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
@@ -33,7 +34,7 @@ class SettingsPage extends ConsumerWidget {
             _buildSettingTile(
               title: 'Privacy Settings',
               icon: Icons.lock,
-              onTap: () => Navigator.of(context).pushNamed('/privacy-settings'),
+              onTap: () => Navigator.of(context).pushNamed(AppRoutes.privacySettings),
             ),
             _buildSettingTile(
               title: 'Notification Settings',
@@ -48,7 +49,7 @@ class SettingsPage extends ConsumerWidget {
             _buildSettingTile(
               title: 'Agora Video Test',
               icon: Icons.videocam,
-              onTap: () => Navigator.of(context).pushNamed('/agora-test'),
+              onTap: () => Navigator.of(context).pushNamed(AppRoutes.agoraTest),
             ),
             const Divider(color: Colors.white24),
             _buildSectionHeader('Support'),
@@ -165,27 +166,41 @@ class SettingsPage extends ConsumerWidget {
   }
 
   void _showAboutDialog(BuildContext context) {
+    int _tapCount = 0;
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('About MIXVY'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Version: 1.0.0'),
-            SizedBox(height: 8),
-            Text('A social video chat platform'),
-            SizedBox(height: 8),
-            Text('Built with Flutter & Firebase'),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('About MIXVY'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                onTap: () {
+                  setState(() => _tapCount++);
+                  if (_tapCount >= 5) {
+                    Navigator.of(context).pop();
+                    Navigator.of(context).pushNamed(AppRoutes.routeTest);
+                  }
+                },
+                child: Text(
+                  'Version: 1.0.0${_tapCount > 0 && _tapCount < 5 ? ' ($_tapCount/5)' : ''}',
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text('A social video chat platform'),
+              const SizedBox(height: 8),
+              const Text('Built with Flutter \u0026 Firebase'),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
       ),
     );
   }
@@ -206,7 +221,7 @@ class SettingsPage extends ConsumerWidget {
               Navigator.of(context).pop();
               await ref.read(authServiceProvider).signOut();
               if (context.mounted) {
-                Navigator.of(context).pushReplacementNamed('/splash');
+                Navigator.of(context).pushReplacementNamed(AppRoutes.landing);
               }
             },
             child: const Text('Logout', style: TextStyle(color: Colors.red)),
