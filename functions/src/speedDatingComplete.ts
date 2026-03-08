@@ -29,7 +29,7 @@ const TOKEN_EXPIRATION = 3600; // 1 hour
 // ============================================================
 export const matchSpeedDating = onSchedule(
   {
-    schedule: "every 30 seconds",
+    schedule: "every 1 minutes",
     region: "us-central1",
     timeoutSeconds: 60,
   },
@@ -50,7 +50,7 @@ export const matchSpeedDating = onSchedule(
         return;
       }
 
-      const queuedUsers = queueSnapshot.docs.map((doc) => ({
+      const queuedUsers: any[] = queueSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));

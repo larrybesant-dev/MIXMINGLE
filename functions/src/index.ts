@@ -190,6 +190,7 @@ function hashCode(str: string): number {
 // Export match functions
 export { generateUserMatches, handleLike, handlePass, refreshDailyMatches } from './matches';
 export { checkRateLimit } from './rateLimit';
+export { storiesCleanup } from './storiesCleanup';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ROOM CLEANUP — runs every hour, marks stale live rooms as 'ended'
@@ -261,3 +262,20 @@ export const cleanupStaleRooms = onSchedule(
     }
   }
 );
+
+// ROLE GOVERNANCE — set Firebase Custom Claims + Firestore role
+// ─────────────────────────────────────────────────────────────────────────────
+export { setUserRole } from "./setUserRole";
+
+// SPEED DATING — queue management, automatic matching, session lifecycle
+// ─────────────────────────────────────────────────────────────────────────────
+export {
+  matchSpeedDating,
+  generateSpeedDatingToken,
+  submitSpeedDatingDecision,
+  endSpeedDatingSession,
+  leaveSpeedDatingSession,
+  joinSpeedDatingQueue,
+  leaveSpeedDatingQueue,
+  autoExpireSpeedDatingSessions,
+} from "./speedDatingComplete";
