@@ -65,6 +65,13 @@ import '../../shared/providers/auth_providers.dart';
 import '../routing/guards/age_verified_guard.dart';
 import '../routing/guards/profile_complete_guard.dart';
 
+// Legal pages
+import '../../features/legal/terms_of_service_page.dart';
+import '../../features/legal/privacy_policy_page.dart';
+// Dev / QA screens
+import '../../dev/route_test_page.dart';
+import '../../dev/provider_debug_page.dart';
+
 /// App Routes
 class AppRoutes {
   static const String landing             = '/';
@@ -110,6 +117,18 @@ class AppRoutes {
   static const String adminDashboard      = '/admin/dashboard';
   static const String friends              = '/friends';
   static const String messageRequests      = '/message-requests';
+  // ── New canonical aliases expected by lib/router/app_routes.dart ──────────
+  static const String friendRequests       = '/profile/friend-requests';
+  static const String chatList             = '/chats';
+  static const String messageThread        = '/chat/thread';
+  static const String liveRoom             = '/room/live';
+  static const String hostTools            = '/room/host-tools';
+  // Legal pages
+  static const String terms                = '/terms';
+  static const String privacy              = '/privacy';
+  // Dev / QA routes (hidden screens)
+  static const String routeTest            = '/dev/routes';
+  static const String providerDebug        = '/dev/providers';
 
   static Route<dynamic> onGenerateRoute(RouteSettings routeSettings) {
     debugPrint('Navigating to: ${routeSettings.name}');
@@ -282,6 +301,29 @@ class AppRoutes {
             ),
           ),
         );
+      case friendRequests:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: FriendListPage()),
+          ),
+        );
+      case liveRoom:
+        final liveRoomId = routeSettings.arguments as String? ?? '';
+        return MaterialPageRoute(
+          builder: (_) => AgeVerifiedGuard(
+            child: ProfileCompleteGuard(
+              child: _RoomLoaderPage(roomId: liveRoomId),
+            ),
+          ),
+        );
+      case terms:
+        return MaterialPageRoute(builder: (_) => const TermsOfServicePage());
+      case privacy:
+        return MaterialPageRoute(builder: (_) => const PrivacyPolicyPage());
+      case routeTest:
+        return MaterialPageRoute(builder: (_) => const RouteTestPage());
+      case providerDebug:
+        return MaterialPageRoute(builder: (_) => const ProviderDebugPage());
       default:
         return _errorRoute('No route defined for ${routeSettings.name}');
     }

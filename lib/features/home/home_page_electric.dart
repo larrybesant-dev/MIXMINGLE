@@ -4,6 +4,7 @@
 library;
 
 import 'package:flutter/material.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design_system/design_constants.dart';
 import '../../shared/models/user_profile.dart';
@@ -148,10 +149,10 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       actions: [
         IconButton(
           icon: const Icon(Icons.notifications_outlined, color: DesignColors.textGray),
-          onPressed: () => Navigator.pushNamed(context, '/notifications'),
+          onPressed: () => Navigator.pushNamed(context, AppRoutes.notifications),
         ),
         GestureDetector(
-          onTap: () => Navigator.pushNamed(context, '/settings'),
+          onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
           child: Padding(
             padding: const EdgeInsets.only(right: 16),
             child: profile?.photoUrl != null
@@ -341,7 +342,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                 label: 'Start a Room',
                 sublabel: 'Go live now',
                 color: const Color(0xFFFF4D8B),
-                onTap: () => Navigator.pushNamed(context, '/create-room'),
+                onTap: () => Navigator.pushNamed(context, AppRoutes.createRoom),
               )),
               const SizedBox(width: 12),
               Expanded(child: _ctaCard(
@@ -473,7 +474,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
               room: rooms[i],
               onTap: () => Navigator.pushNamed(
                 context,
-                '/room',
+                AppRoutes.room,
                 arguments: rooms[i].id,
               ),
             ),
@@ -583,7 +584,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                 style: TextStyle(color: DesignColors.textGray, fontSize: 14)),
             const SizedBox(height: 14),
             GestureDetector(
-              onTap: () => Navigator.pushNamed(context, '/create-room'),
+              onTap: () => Navigator.pushNamed(context, AppRoutes.createRoom),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
                 decoration: BoxDecoration(
@@ -610,7 +611,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           final room = rooms[i];
           final color = _vc(room.vibeTag);
           return GestureDetector(
-            onTap: () => Navigator.pushNamed(context, '/room', arguments: room.id),
+            onTap: () => Navigator.pushNamed(context, AppRoutes.room, arguments: room.id),
             child: Container(
               width: 160,
               margin: const EdgeInsets.only(right: 12),

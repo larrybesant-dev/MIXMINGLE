@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 
 class TermsOfServicePage extends StatelessWidget {
   const TermsOfServicePage({super.key});
@@ -197,7 +198,7 @@ class TermsOfServicePage extends StatelessWidget {
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
-                          Navigator.pushNamed(context, '/privacy');
+                          Navigator.pushNamed(context, AppRoutes.privacy);
                         },
                     ),
                   ],

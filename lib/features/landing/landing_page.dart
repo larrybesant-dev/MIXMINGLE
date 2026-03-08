@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -201,7 +202,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                 variant: ElectricButtonVariant.secondary,
                 onPressed: () {
                   debugPrint('ðŸ”˜ Sign Up button pressed');
-                  Navigator.pushNamed(context, '/signup');
+                  Navigator.pushNamed(context, AppRoutes.signup);
                 },
               ),
               ElectricButton(
@@ -210,7 +211,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                 variant: ElectricButtonVariant.secondary,
                 onPressed: () {
                   debugPrint('ðŸ”˜ Sign In button pressed');
-                  Navigator.pushNamed(context, '/login');
+                  Navigator.pushNamed(context, AppRoutes.login);
                 },
               ),
             ],
@@ -479,7 +480,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                 child: ElectricButton(
                   label: 'View all live sessions',
                   variant: ElectricButtonVariant.secondary,
-                  onPressed: () => Navigator.pushNamed(context, '/home'),
+                  onPressed: () => Navigator.pushNamed(context, AppRoutes.home),
                 ),
               ),
             ],
@@ -992,12 +993,12 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
               ElectricButton(
                 label: 'Join the community',
                 icon: const Icon(Icons.bolt, size: 18),
-                onPressed: () => Navigator.pushNamed(context, '/signup'),
+                onPressed: () => Navigator.pushNamed(context, AppRoutes.signup),
               ),
               ElectricButton(
                 label: 'Explore live sessions',
                 variant: ElectricButtonVariant.secondary,
-                onPressed: () => Navigator.pushNamed(context, '/home'),
+                onPressed: () => Navigator.pushNamed(context, AppRoutes.home),
               ),
             ],
           ),

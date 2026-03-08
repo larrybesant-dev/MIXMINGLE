@@ -1,5 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 
 class PrivacyPolicyPage extends StatelessWidget {
   const PrivacyPolicyPage({super.key});
@@ -143,7 +144,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                       ),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
-                          Navigator.pushNamed(context, '/terms');
+                          Navigator.pushNamed(context, AppRoutes.terms);
                         },
                     ),
                     const TextSpan(text: ' and '),

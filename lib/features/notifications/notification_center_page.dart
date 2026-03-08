@@ -1,4 +1,5 @@
 ﻿import 'package:flutter/material.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -110,7 +111,7 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
                   break;
                 case 'settings':
                   if (context.mounted) {
-                    Navigator.pushNamed(context, '/settings/notifications');
+                    Navigator.pushNamed(context, AppRoutes.notificationSettings);
                   }
                   break;
               }
@@ -409,7 +410,7 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
     switch (type) {
       case 'message':
         if (roomId != null && mounted) {
-          Navigator.pushNamed(context, '/chat', arguments: {'conversationId': roomId});
+          Navigator.pushNamed(context, AppRoutes.chat, arguments: {'conversationId': roomId});
         }
         break;
       case 'event':
@@ -417,22 +418,22 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
         final data = notification['data'] as Map<String, dynamic>?;
         final eventId = data?['eventId'] as String?;
         if (eventId != null && mounted) {
-          Navigator.pushNamed(context, '/events/details', arguments: {'eventId': eventId});
+          Navigator.pushNamed(context, AppRoutes.eventDetails, arguments: {'eventId': eventId});
         }
         break;
       case 'match':
         if (mounted) {
-          Navigator.pushNamed(context, '/matches');
+          Navigator.pushNamed(context, AppRoutes.matches);
         }
         break;
       case 'follow':
         if (senderId != null && mounted) {
-          Navigator.pushNamed(context, '/profile/user', arguments: {'userId': senderId});
+          Navigator.pushNamed(context, AppRoutes.userProfile, arguments: senderId);
         }
         break;
       case 'like':
         if (senderId != null && mounted) {
-          Navigator.pushNamed(context, '/profile/user', arguments: {'userId': senderId});
+          Navigator.pushNamed(context, AppRoutes.userProfile, arguments: senderId);
         }
         break;
       default:
