@@ -26,9 +26,7 @@ final moderationServiceProvider = Provider<ModerationService>((ref) => Moderatio
 /// ============================================================================
 
 /// Video connection state provider
-final videoConnectionStateProvider = NotifierProvider<VideoConnectionStateNotifier, VideoConnectionState>(() {
-  return VideoConnectionStateNotifier();
-});
+final videoConnectionStateProvider = NotifierProvider<VideoConnectionStateNotifier, VideoConnectionState>(VideoConnectionStateNotifier.new);
 
 enum VideoConnectionState {
   disconnected,

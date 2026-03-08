@@ -37,14 +37,12 @@ library;
 
 class ReloadSafetyTest {
   static void test() {
-    print('''
-    âœ… TEST: Reload Mid-Call
-    1. Start video room
-    2. Verify camera active
-    3. Hot reload (R)
-    4. Verify no crashes or errors
-    5. Verify camera still active
-    ''');
+    // âœ… TEST: Reload Mid-Call
+    // 1. Start video room
+    // 2. Verify camera active
+    // 3. Hot reload (R)
+    // 4. Verify no crashes or errors
+    // 5. Verify camera still active
   }
 }
 

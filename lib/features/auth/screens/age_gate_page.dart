@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../core/theme/neon_colors.dart';
 import '../../../core/analytics/analytics_events.dart';
@@ -129,7 +130,10 @@ class _AgeGatePageState extends ConsumerState<AgeGatePage> {
     setState(() => _isLoading = false);
 
     if (mounted) {
-      Navigator.of(context).pushReplacementNamed(AppRoutes.signup);
+      final user = FirebaseAuth.instance.currentUser;
+      Navigator.of(context).pushReplacementNamed(
+        user != null ? AppRoutes.home : AppRoutes.signup
+      );
     }
   }
 
@@ -438,7 +442,7 @@ class _DateField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
+          borderSide: const BorderSide(
             color: NeonColors.neonPink,
             width: 2,
           ),

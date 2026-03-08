@@ -134,84 +134,250 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
         final photoUrl = profile.photoUrl;
         final isOnline = profile.presenceStatus == 'online';
 
+        // Example fields: match.isUnread, match.isRead, match.lastMessage, match.lastMessageTimestamp
+        final isUnread = (match as dynamic).isUnread == true;
+        final isRead = (match as dynamic).isRead == true;
+        final lastMessage = (match as dynamic).lastMessage;
+        final lastMessageTimestamp = (match as dynamic).lastMessageTimestamp;
+        final now = DateTime.now();
+        String formattedTimestamp = '';
+        if (lastMessageTimestamp is DateTime) {
+          final diff = now.difference(lastMessageTimestamp);
+          if (diff.inMinutes < 60) {
+            formattedTimestamp = '${diff.inMinutes}m ago';
+          } else if (diff.inHours < 24) {
+            formattedTimestamp = '${diff.inHours}h ago';
+          } else if (diff.inDays == 1) {
+            formattedTimestamp = 'Yesterday';
+          } else if (diff.inDays < 7) {
+            formattedTimestamp = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"][lastMessageTimestamp.weekday-1];
+          } else {
+            formattedTimestamp = '${lastMessageTimestamp.month}/${lastMessageTimestamp.day}';
+          }
+        }
         return Card(
           clipBehavior: Clip.antiAlias,
-          child: InkWell(
-            onTap: () {
-              Navigator.of(context).pushNamed(
-                AppRoutes.chat,
-                arguments: {
-                  'userId': otherUserId,
-                  'username': displayName,
-                },
-              );
-            },
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      photoUrl != null
-                          ? Image.network(photoUrl, fit: BoxFit.cover)
-                          : Container(
-                              color: Theme.of(context)
-                                  .colorScheme
-                                  .primary
-                                  .withValues(alpha: 0.1),
-                              child: Icon(
-                                Icons.person,
-                                size: Responsive.responsiveIconSize(
-                                    context, 60),
-                                color:
-                                    Theme.of(context).colorScheme.primary,
-                              ),
+          color: isRead ? Theme.of(context).colorScheme.surface.withOpacity(0.7) : null,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // "It's a Match!" badge
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                color: Theme.of(context).colorScheme.secondary.withOpacity(0.15),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.favorite, color: Theme.of(context).colorScheme.secondary, size: 18),
+                    const SizedBox(width: 6),
+                    const Text(
+                      "It's a Match!",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    if (isUnread)
+                      Container(
+                        margin: const EdgeInsets.only(left: 12),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.primary,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: const Text(
+                          'New',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    photoUrl != null
+                        ? Image.network(photoUrl, fit: BoxFit.cover)
+                        : Container(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .primary
+                                .withValues(alpha: 0.1),
+                            child: Icon(
+                              Icons.person,
+                              size: Responsive.responsiveIconSize(context, 60),
+                              color: Theme.of(context).colorScheme.primary,
                             ),
-                      if (isOnline)
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.green,
-                              borderRadius: BorderRadius.circular(12),
+                          ),
+                    // Subtle neon 'Matched' badge (always available in this context)
+                    Positioned(
+                      top: 8,
+                      left: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.secondary.withOpacity(0.85),
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(context).colorScheme.secondary.withOpacity(0.4),
+                              blurRadius: 8,
+                              spreadRadius: 1,
                             ),
-                            child: const Text(
-                              'Online',
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.bolt, color: Colors.white, size: 16),
+                            const SizedBox(width: 4),
+                            Text(
+                              'Matched',
                               style: TextStyle(
                                 color: Colors.white,
-                                fontSize: 10,
                                 fontWeight: FontWeight.bold,
+                                fontSize: 11,
+                                letterSpacing: 0.5,
+                                shadows: [
+                                  Shadow(
+                                    color: Theme.of(context).colorScheme.secondary,
+                                    blurRadius: 6,
+                                  ),
+                                ],
                               ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (isOnline)
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Colors.green,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Text(
+                            'Online',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
                         ),
-                    ],
-                  ),
+                      ),
+                  ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Text(
-                    displayName,
-                    style: TextStyle(
-                      fontSize:
-                          Responsive.responsiveFontSize(context, 16),
-                      fontWeight: FontWeight.bold,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      displayName,
+                      style: TextStyle(
+                        fontSize: Responsive.responsiveFontSize(context, 16),
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                    const SizedBox(height: 8),
+                    // Last message or hint
+                    Row(
+                      children: [
+                        Expanded(
+                          child: lastMessage != null && lastMessage.toString().isNotEmpty
+                              ? Text(
+                                  lastMessage.toString(),
+                                  style: TextStyle(
+                                    color: isUnread
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                    fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                )
+                              : Text(
+                                  'Say hi 👋',
+                                  style: TextStyle(
+                                    color: Theme.of(context).colorScheme.secondary,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                        ),
+                        if (formattedTimestamp.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Text(
+                              formattedTimestamp,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    // Match prompt with actions
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        ElevatedButton.icon(
+                          icon: const Icon(Icons.chat_bubble_outline, size: 16),
+                          label: const Text('Start Chat'),
+                          style: ElevatedButton.styleFrom(
+                            minimumSize: const Size(90, 36),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pushNamed(
+                              AppRoutes.chat,
+                              arguments: {
+                                'userId': otherUserId,
+                                'username': displayName,
+                              },
+                            );
+                          },
+                        ),
+                        OutlinedButton.icon(
+                          icon: const Icon(Icons.person_outline, size: 16),
+                          label: const Text('View Profile'),
+                          style: OutlinedButton.styleFrom(
+                            minimumSize: const Size(90, 36),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                          onPressed: () {
+                            Navigator.of(context).pushNamed(
+                              AppRoutes.profile,
+                              arguments: {
+                                'userId': otherUserId,
+                              },
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         );
       },
-      loading: () =>
-          const Card(child: Center(child: CircularProgressIndicator())),
+      loading: () => const Card(child: Center(child: CircularProgressIndicator())),
       error: (_, __) => const SizedBox.shrink(),
     );
   }

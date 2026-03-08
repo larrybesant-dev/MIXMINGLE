@@ -14,7 +14,8 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import '../features/video_room/controllers/join_flow_controller.dart';
 import '../shared/models/participant.dart';
-import '../services/agora/agora_service.dart';
+import '../services/agora/agora_stub.dart'
+  if (dart.library.io) '../services/agora/agora_native.dart';
 import '../services/room/room_firestore_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../shared/providers/agora_provider.dart';
@@ -146,8 +147,10 @@ class AgoraRoomNotifier extends Notifier<AgoraRoomState> {
     if (state.isInRoom) return;
     try {
       await ref.read(joinFlowProvider.notifier).startJoinFlow();
-      if (!_agora.isInitialized) await _agora.initialize();
-      await _agora.joinChannel(token: agoraToken, channelId: _roomId, uid: _userId);
+      if (!kIsWeb) {
+        if (!_agora.isInitialized) await _agora.initialize();
+        await _agora.joinChannel(token: agoraToken, channelId: _roomId, uid: _userId);
+      }
       final selfParticipant = Participant(uid: _userId, name: _userName, isSpeaking: false, isPresent: true);
       await _firestore.updateParticipant(_roomId, selfParticipant);
       state = state.copyWith(isInRoom: true);
@@ -162,7 +165,9 @@ class AgoraRoomNotifier extends Notifier<AgoraRoomState> {
   Future<void> leaveRoom() async {
     if (!state.isInRoom) return;
     try {
-      await _agora.leaveChannel();
+      if (!kIsWeb) {
+        await _agora.leaveChannel();
+      }
       await _firestore.removeParticipant(_roomId, _userId);
       state = state.copyWith(isInRoom: false);
       ref.read(joinFlowProvider.notifier).reset();

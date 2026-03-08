@@ -39,7 +39,7 @@ class VybeSocialLogo extends StatelessWidget {
                 'assets/brand/png/app_icon/mixvy_icon_96x96.png',
                 fit: BoxFit.cover,
                 errorBuilder: (_, __, ___) => Container(
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: NeonColors.vybePulseGradient,
                   ),

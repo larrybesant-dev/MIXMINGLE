@@ -128,9 +128,7 @@ class MatchFilterNotifier extends Notifier<MatchesFilter> {
 }
 
 /// State provider for match filter settings
-final matchFilterProvider = NotifierProvider<MatchFilterNotifier, MatchesFilter>(
-  () => MatchFilterNotifier(),
-);
+final matchFilterProvider = NotifierProvider<MatchFilterNotifier, MatchesFilter>(MatchFilterNotifier.new);
 
 /// Provider for top matches (convenience provider)
 final topMatchesProvider = FutureProvider<List<RankedMatch>>((ref) async {

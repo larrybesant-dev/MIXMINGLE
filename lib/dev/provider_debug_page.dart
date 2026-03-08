@@ -5,6 +5,7 @@
 /// the hidden 5-tap gesture on the Settings page version number.
 ///
 /// Add more providers to _sections as the app grows.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -54,22 +55,22 @@ class ProviderDebugPage extends ConsumerWidget {
                 : '${v.displayName ?? v.id} (id: ${v.id})',
           ),
           const _SectionHeader('FollowButton Fix Validation'),
-          _InfoTile(
+          const _InfoTile(
             info: 'isFollowingProvider now uses String key (targetUserId) '
                 'via social_graph_providers.dart. Map<String,String> keys '
                 'have been removed. No more permanent loading state.',
           ),
           const _SectionHeader('Friend System'),
-          _InfoTile(
+          const _InfoTile(
             info: 'friendStatusProvider(userId) watches FriendService.'
                 'watchFriendStatus — returns none/sent/received/friends.',
           ),
           const _SectionHeader('Stability Notes'),
-          _InfoTile(
+          const _InfoTile(
             info: 'See lib/shared/providers/social_graph_providers.dart '
                 'for the stable isFollowingProvider(String targetUserId).',
           ),
-          _InfoTile(
+          const _InfoTile(
             info: 'See lib/shared/providers/friend_request_provider.dart '
                 'for friendStatusProvider, friendServiceProvider, etc.',
           ),
@@ -145,7 +146,6 @@ class _ProviderTile<T> extends StatelessWidget {
           'DATA',
           valueDisplay(value),
         ),
-      _ => (const Color(0xFF8A99B0), 'UNKNOWN', ''),
     };
 
     return Card(

@@ -1,0 +1,12 @@
+C:\Users\LARRY\MIXMINGLE\android\gradle
+C:\Users\LARRY\MIXMINGLE\windows\flutter\ephemeral-backup-20260218-074907\.plugin_symlinks\agora_rtc_engine\example\android\gradle
+C:\Users\LARRY\MIXMINGLE\windows\flutter\ephemeral-backup-20260218-074907\.plugin_symlinks\cloud_firestore\example\android\gradle
+C:\Users\LARRY\MIXMINGLE\windows\flutter\ephemeral-backup-20260218-074907\.plugin_symlinks\file_picker\android\gradle
+C:\Users\LARRY\MIXMINGLE\windows\flutter\ephemeral-backup-20260218-074907\.plugin_symlinks\file_picker\example\android\gradle
+C:\Users\LARRY\MIXMINGLE\windows\flutter\ephemeral-backup-20260218-074907\.plugin_symlinks\firebase_auth\android\gradle
+C:\Users\LARRY\MIXMINGLE\windows\flutter\ephemeral-backup-20260218-074907\.plugin_symlinks\firebase_auth\example\android\gradle
+C:\Users\LARRY\MIXMINGLE\windows\flutter\ephemeral-backup-20260218-074907\.plugin_symlinks\firebase_core\android\gradle
+C:\Users\LARRY\MIXMINGLE\windows\flutter\ephemeral-backup-20260218-074907\.plugin_symlinks\firebase_core\example\android\gradle
+C:\Users\LARRY\MIXMINGLE\windows\flutter\ephemeral-backup-20260218-074907\.plugin_symlinks\firebase_storage\example\android\gradle
+C:\Users\LARRY\MIXMINGLE\windows\flutter\ephemeral-backup-20260218-074907\.plugin_symlinks\iris_method_channel\example\android\gradle
+C:\Users\LARRY\MIXMINGLE\windows\flutter\ephemeral-backup-20260218-074907\.plugin_symlinks\share_plus\example\android\gradle

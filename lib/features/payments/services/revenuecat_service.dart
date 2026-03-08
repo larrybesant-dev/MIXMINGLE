@@ -5,10 +5,17 @@
 library;
 
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:purchases_flutter/purchases_flutter.dart';
 import '../models/membership_tier.dart';
 import '../models/coin_package.dart';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/// True when RevenueCat SDK can be used on this platform.
+bool get _rcSupported => !kIsWeb && (Platform.isAndroid || Platform.isIOS);
 
 /// RevenueCat configuration
 class RevenueCatConfig {
@@ -115,69 +122,75 @@ enum ProductType {
 }
 
 /// RevenueCat service for handling all purchases
-class RevenueCatService extends ChangeNotifier {
-  static RevenueCatService? _instance;
-  static RevenueCatService get instance => _instance ??= RevenueCatService._();
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-  RevenueCatService._();
+class RevenueCatState {
+  final bool isInitialized;
+  final bool isLoading;
+  final MembershipTier currentTier;
+  final List<StoreOffering> offerings;
+  final String? errorMessage;
+  const RevenueCatState({
+    this.isInitialized = false,
+    this.isLoading = false,
+    this.currentTier = MembershipTier.free,
+    this.offerings = const [],
+    this.errorMessage,
+  });
+  RevenueCatState copyWith({
+    bool? isInitialized,
+    bool? isLoading,
+    MembershipTier? currentTier,
+    List<StoreOffering>? offerings,
+    String? errorMessage,
+  }) {
+    return RevenueCatState(
+      isInitialized: isInitialized ?? this.isInitialized,
+      isLoading: isLoading ?? this.isLoading,
+      currentTier: currentTier ?? this.currentTier,
+      offerings: offerings ?? this.offerings,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
+}
 
-  bool _isInitialized = false;
-  bool _isLoading = false;
-  MembershipTier _currentTier = MembershipTier.free;
-  List<StoreOffering> _offerings = [];
-  String? _errorMessage;
+class RevenueCatService extends StateNotifier<RevenueCatState> {
+  RevenueCatService() : super(const RevenueCatState());
+
   StreamController<MembershipTier>? _tierStreamController;
-
-  // Getters
-  bool get isInitialized => _isInitialized;
-  bool get isLoading => _isLoading;
-  MembershipTier get currentTier => _currentTier;
-  List<StoreOffering> get offerings => _offerings;
-  String? get errorMessage => _errorMessage;
-
-  /// Stream of membership tier changes
   Stream<MembershipTier> get tierStream {
     _tierStreamController ??= StreamController<MembershipTier>.broadcast();
     return _tierStreamController!.stream;
   }
 
-  /// Initialize RevenueCat
   Future<void> initialize(String userId) async {
-    if (_isInitialized) return;
-
+    if (state.isInitialized) return;
     try {
-      _isLoading = true;
-      notifyListeners();
-
-      debugPrint('ðŸ›’ [RevenueCat] Initializing...');
-
-      // In production, you would initialize RevenueCat here:
-      // await Purchases.setDebugLogsEnabled(kDebugMode);
-      // PurchasesConfiguration configuration;
-      // if (Platform.isAndroid) {
-      //   configuration = PurchasesConfiguration(RevenueCatConfig.androidApiKey);
-      // } else if (Platform.isIOS) {
-      //   configuration = PurchasesConfiguration(RevenueCatConfig.iosApiKey);
-      // }
-      // await Purchases.configure(configuration);
-      // await Purchases.logIn(userId);
-
-      // Simulated initialization for development
-      await Future.delayed(const Duration(milliseconds: 500));
-
+      state = state.copyWith(isLoading: true);
+      debugPrint('[RevenueCat] Initializing...');
+      PurchasesConfiguration config =
+          Platform.isAndroid
+              ? PurchasesConfiguration(RevenueCatConfig.androidApiKey)
+              : PurchasesConfiguration(RevenueCatConfig.iosApiKey);
+      await Purchases.configure(config);
+      await Purchases.logIn(userId);
+      // Simulated initialization for Web / Desktop — SDK not supported.
+      if (!(_rcSupported)) {
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
       await _fetchOfferings();
       await _checkEntitlements();
-
-      _isInitialized = true;
-      debugPrint('âœ… [RevenueCat] Initialized successfully');
+      state = state.copyWith(isInitialized: true, isLoading: false, errorMessage: null);
+      debugPrint('[RevenueCat] Initialized successfully');
     } catch (e) {
-      _errorMessage = 'Failed to initialize purchases: $e';
-      debugPrint('âŒ [RevenueCat] Init error: $e');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      state = state.copyWith(isLoading: false, errorMessage: 'Failed to initialize purchases: $e');
+      debugPrint('[RevenueCat] Init error: $e');
     }
   }
+  }
+  // ...existing code...
+}
+  // ...existing code...
 
   /// Fetch available offerings
   Future<void> _fetchOfferings() async {

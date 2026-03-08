@@ -19,7 +19,8 @@ import 'core/health_check_system.dart';
 import 'core/crashlytics/crashlytics_service.dart';
 import 'core/performance/performance_service.dart';
 import 'services/notifications/notification_service.dart';
-import 'services/agora/agora_service.dart';
+import 'services/agora/agora_stub.dart'
+  if (dart.library.io) 'services/agora/agora_native.dart';
 import 'services/room/room_firestore_service.dart';
 import 'core/routing/app_routes.dart';
 import 'utils/window_sync_service.dart';

@@ -15,6 +15,7 @@
 ///
 /// Note: This file is the authoritative screen registry for routing QA.
 /// When you add/rename/remove a screen, update AppRoutes and this file.
+library;
 
 export 'package:mixmingle/core/routing/app_routes.dart' show AppRoutes;
 

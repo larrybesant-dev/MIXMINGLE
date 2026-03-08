@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../../shared/models/post.dart';
+import 'activity_feed_service.dart';
 
 /// Social Feed Service
 /// Manages posts, likes, comments, and feed pagination
@@ -284,7 +285,16 @@ class SocialFeedService {
         'likeCount': likes.length,
       });
 
-      debugPrint('âœ… [SocialFeed] Post ${isLiked ? 'unliked' : 'liked'}');
+      // Fire activity event when a post is newly liked (not on unlike)
+      if (!isLiked) {
+        final postOwnerId = postDoc.data()?['userId'] as String?;
+        if (postOwnerId != null && postOwnerId != userId) {
+          await ActivityFeedService.instance
+              .onLikePost(postOwnerId, postId);
+        }
+      }
+
+      debugPrint('✅ [SocialFeed] Post ${isLiked ? 'unliked' : 'liked'}');
       return !isLiked;
     } catch (e) {
       debugPrint('âŒ [SocialFeed] Error toggling like: $e');
@@ -318,7 +328,16 @@ class SocialFeedService {
         'commentCount': FieldValue.increment(1),
       });
 
-      debugPrint('âœ… [SocialFeed] Comment added');
+      // Fire activity event to the post owner
+      final postDoc = await _postsCollection.doc(postId).get();
+      final postOwnerId = postDoc.data()?['userId'] as String?;
+      if (postOwnerId != null && postOwnerId != userId) {
+        await ActivityFeedService.instance.onComment(
+          postOwnerId, postId, content,
+        );
+      }
+
+      debugPrint('✅ [SocialFeed] Comment added');
       return commentRef.id;
     } catch (e) {
       debugPrint('âŒ [SocialFeed] Error adding comment: $e');

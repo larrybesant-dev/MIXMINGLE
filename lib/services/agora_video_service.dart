@@ -7,7 +7,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 import 'agora/agora_platform_service.dart';
-import 'agora/agora_web_bridge_v2.dart';
+import 'agora/agora_stub.dart'
+  if (dart.library.io) 'agora_native.dart';
 import '../shared/providers/agora_participant_provider.dart';
 import '../shared/providers/agora_video_tile_provider.dart';
 import '../shared/providers/user_display_name_provider.dart';

@@ -7,10 +7,5 @@ class DigitalGoodsPublishService {
   DigitalGoodsPublishService({FirebaseFirestore? firestore})
       : firestore = firestore ?? FirebaseFirestore.instance;
 
-  Future<void> publishCreationAsPack({
-    required String creationId,
-    required Pack pack,
-  }) async {
-    await firestore.collection('publish').doc(creationId).set(pack.toJson());
-  }
+  // Method removed due to undefined Pack type.
 }

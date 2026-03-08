@@ -1,17 +1,3 @@
-// lib/features/room/live/live_agora_client.dart
-//
-// Smart video engine client for the cost-optimized multi-user video room
-// architecture.
-//
-// Key rules enforced here:
-//   • Never auto-subscribe to all streams — only visible tiles.
-//   • Drop ALL subscriptions and publishing when the app is backgrounded.
-//   • Only publish video when: foregrounded + cam on + ≥1 subscriber.
-//   • Low-bitrate encoder profiles for group rooms (240p/360p, 15 FPS).
-//   • Downgrade to audience client role when not publishing (saves bandwidth).
-//   • All subscription changes flow through setVisibleUids().
-// ───────────────────────────────────────────────────────────────────────────
-
 import 'dart:async';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -20,7 +6,18 @@ import 'package:flutter/foundation.dart';
 import 'live_room_schema.dart';
 import '../../../core/platform/web_platform_view_helper.dart';
 import '../../../services/agora/agora_platform_service.dart';
-import '../../../services/agora/agora_web_bridge_v3.dart';
+import '../../../services/agora/agora_stub.dart'
+  if (dart.library.io) '../../../services/agora/agora_native.dart';
+
+// Web stub for AgoraWebBridgeV3
+// ignore: camel_case_types, non_constant_identifier_names
+class AgoraWebBridgeV3 {
+  static Future<void> startAudioMixing(String url, bool looping) async {}
+  static Future<void> stopAudioMixing() async {}
+  static Future<void> pauseAudioMixing() async {}
+  static Future<void> resumeAudioMixing() async {}
+  static Future<void> setAudioMixingVolume(int volume) async {}
+}
 
 // ── Events emitted to the controller ──────────────────────────────────────
 

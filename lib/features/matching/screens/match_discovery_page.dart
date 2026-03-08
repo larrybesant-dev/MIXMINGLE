@@ -221,6 +221,8 @@ class _DiscoveryCard extends StatelessWidget {
     final displayName = profile.displayName ?? profile.nickname ?? 'Anonymous';
     final photoUrl = profile.photoUrl;
     final isOnline = profile.presenceStatus == 'online';
+    // Minimal match indicator: if profile.isMatch is available and true
+    final isMatch = (profile as dynamic).isMatch == true;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -238,6 +240,49 @@ class _DiscoveryCard extends StatelessWidget {
             )
           else
             _placeholder(context),
+
+          // Minimal neon match indicator (top left)
+          if (isMatch)
+            Positioned(
+              top: 16,
+              left: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondary.withOpacity(0.85),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Theme.of(context).colorScheme.secondary.withOpacity(0.4),
+                      blurRadius: 8,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.bolt, color: Colors.white, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Match',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 11,
+                        letterSpacing: 0.5,
+                        shadows: [
+                          Shadow(
+                            color: Theme.of(context).colorScheme.secondary,
+                            blurRadius: 6,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
           // Gradient overlay for text legibility
           Positioned.fill(

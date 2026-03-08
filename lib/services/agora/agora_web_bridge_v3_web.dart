@@ -1,9 +1,7 @@
 // Agora Web Bridge v3 - Production Ready
 // Interfaces with agora_web_v5_production.js
 // ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
-import 'dart:js' as js;
 import 'dart:async';
-import 'dart:js_util' as js_util;
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import '../../core/utils/app_logger.dart';
 

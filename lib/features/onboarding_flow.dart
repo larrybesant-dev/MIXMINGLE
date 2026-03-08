@@ -8,9 +8,7 @@ import '../shared/widgets/club_background.dart';
 import '../shared/widgets/glow_text.dart';
 
 /// Onboarding page provider using NotifierProvider instead of deprecated StateProvider
-final onboardingPageProvider = NotifierProvider<OnboardingPageNotifier, int>(() {
-  return OnboardingPageNotifier();
-});
+final onboardingPageProvider = NotifierProvider<OnboardingPageNotifier, int>(OnboardingPageNotifier.new);
 
 class OnboardingPageNotifier extends Notifier<int> {
   @override

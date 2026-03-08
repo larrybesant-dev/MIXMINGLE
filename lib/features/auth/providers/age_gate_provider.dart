@@ -31,6 +31,8 @@ class AgeGateState {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+  @override
+  AgeGateState build() => const AgeGateState();
 class AgeGateNotifier extends Notifier<AgeGateState> {
   @override
   AgeGateState build() => const AgeGateState();
@@ -64,5 +66,4 @@ class AgeGateNotifier extends Notifier<AgeGateState> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-final ageGateProvider =
-    NotifierProvider<AgeGateNotifier, AgeGateState>(AgeGateNotifier.new);
+final ageGateProvider = NotifierProvider<AgeGateNotifier, AgeGateState>(AgeGateNotifier.new);

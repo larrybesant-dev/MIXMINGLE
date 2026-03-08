@@ -29,6 +29,8 @@ import 'live_room_controller.dart';
 import 'live_tile_grid.dart';
 import 'live_room_dj.dart';
 import '../widgets/reaction_bar.dart';
+import '../widgets/moderation_panel_widget.dart';
+import '../../../core/services/room_permission_service.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   const LiveRoomScreen({
@@ -239,6 +241,47 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               'roomId': widget.roomId,
             });
             WindowManager.openRoom(widget.roomId);
+          },
+        ),
+        // ── Moderation button (owner / room admin / superadmin) ──────────────
+        Builder(
+          builder: (bCtx) {
+            final canMod = ref.watch(canModerateProvider(widget.roomId));
+            return canMod.maybeWhen(
+              data: (ok) => ok
+                  ? IconButton(
+                      icon: const Icon(Icons.shield,
+                          color: Color(0xFFFFD700)),
+                      tooltip: 'Moderation Panel',
+                      onPressed: () {
+                        final uid = ref
+                            .read(currentUserProvider)
+                            .value
+                            ?.id;
+                        if (uid == null) return;
+                        showModalBottomSheet(
+                          context: bCtx,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => DraggableScrollableSheet(
+                            initialChildSize: 0.55,
+                            minChildSize: 0.3,
+                            maxChildSize: 0.85,
+                            builder: (_, ctrl) =>
+                                SingleChildScrollView(
+                              controller: ctrl,
+                              child: ModerationPanelWidget(
+                                roomId: widget.roomId,
+                                moderatorId: uid,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    )
+                  : const SizedBox.shrink(),
+              orElse: () => const SizedBox.shrink(),
+            );
           },
         ),
         if (s.isActive || s.isSuspended)

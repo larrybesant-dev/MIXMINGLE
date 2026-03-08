@@ -2,7 +2,9 @@
 ///
 /// Stores participant data and state (speaking, present, join time)
 /// Used by: AgoraController, FirestoreService, ParticipantCard
+
 library;
+import '../../services/agora/agora_stub.dart';
 
 class Participant {
   /// Unique identifier from Agora or Firestore

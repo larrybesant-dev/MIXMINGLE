@@ -166,7 +166,7 @@ class SettingsPage extends ConsumerWidget {
   }
 
   void _showAboutDialog(BuildContext context) {
-    int _tapCount = 0;
+    int tapCount = 0;
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -178,14 +178,14 @@ class SettingsPage extends ConsumerWidget {
             children: [
               GestureDetector(
                 onTap: () {
-                  setState(() => _tapCount++);
-                  if (_tapCount >= 5) {
+                  setState(() => tapCount++);
+                  if (tapCount >= 5) {
                     Navigator.of(context).pop();
                     Navigator.of(context).pushNamed(AppRoutes.routeTest);
                   }
                 },
                 child: Text(
-                  'Version: 1.0.0${_tapCount > 0 && _tapCount < 5 ? ' ($_tapCount/5)' : ''}',
+                  'Version: 1.0.0${tapCount > 0 && tapCount < 5 ? ' ($tapCount/5)' : ''}',
                 ),
               ),
               const SizedBox(height: 8),

@@ -7,5 +7,6 @@
 ///   import 'package:mixmingle/router/app_routes.dart';
 ///   Navigator.pushNamed(context, AppRoutes.home);
 ///   Navigator.pushNamed(context, AppRoutes.room, arguments: roomId);
+library;
 
 export 'package:mixmingle/core/routing/app_routes.dart' show AppRoutes;

@@ -6,9 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/events/events_service.dart';
-// TEMP DISABLED: import '../../services/events/speed_dating_service.dart';
+import '../../services/events/speed_dating_service.dart';
 import '../models/event.dart';
-// TEMP DISABLED: import '../models/speed_dating.dart';
 import 'auth_providers.dart';
 
 /// Event filters model
@@ -62,8 +61,7 @@ class EventFiltersNotifier extends Notifier<EventFilters> {
 /// Service providers
 final eventsServiceProvider = Provider<EventsService>((ref) => EventsService());
 
-// TEMP DISABLED: Speed dating service
-// final speedDatingServiceProvider = Provider<SpeedDatingService>((ref) => SpeedDatingService());
+final speedDatingServiceProvider = Provider<SpeedDatingService>((ref) => SpeedDatingService());
 
 /// ============================================================================
 /// EVENT PROVIDERS

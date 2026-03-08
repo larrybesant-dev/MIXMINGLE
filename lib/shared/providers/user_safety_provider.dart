@@ -142,10 +142,7 @@ class UserSafetyController extends Notifier<UserSafetyState> {
 }
 
 /// Provider
-final userSafetyProvider =
-    NotifierProvider<UserSafetyController, UserSafetyState>(
-  UserSafetyController.new,
-);
+final userSafetyProvider = NotifierProvider<UserSafetyController, UserSafetyState>(UserSafetyController.new);
 
 /// Show report dialog
 Future<void> showReportDialog({

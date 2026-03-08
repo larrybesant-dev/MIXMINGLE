@@ -17,13 +17,17 @@ import '../onboarding/widgets/onboarding_welcome_overlay.dart';
 import '../discover/room_discovery_page_complete.dart';
 import '../discovery/discovery_page.dart';
 import '../chat/screens/chat_list_page.dart';
+import '../videos/short_video_feed_page.dart';
+import '../search/search_page.dart';
 import '../profile/screens/profile_page.dart';
 import '../room/providers/room_providers.dart';
 import '../../shared/providers/room_discovery_providers.dart';
 import '../../shared/widgets/room_discovery_card.dart';
+import '../feedback/widgets/floating_feedback_button.dart';
 import '../rooms/pages/trending_rooms_page.dart';
 import '../rooms/pages/recommended_rooms_page.dart';
 import '../rooms/pages/new_rooms_page.dart';
+import '../speed_dating/speed_dating_lobby_page.dart';
 
 /// Home Page with Electric theme - main post-onboarding landing
 class HomePageElectric extends ConsumerStatefulWidget {
@@ -84,16 +88,17 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     return Stack(
       children: [
         ClubBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: _buildAppBar(profile),
-        body: _buildBody(),
-        bottomNavigationBar: _buildNeonNavBar(),
-      ),
-    ),
-    if (showOverlay) const OnboardingWelcomeOverlay(),
-  ],
-);
+          child: Scaffold(
+            backgroundColor: Colors.transparent,
+            appBar: _buildAppBar(profile),
+            body: _buildBody(),
+            bottomNavigationBar: _buildNeonNavBar(),
+          ),
+        ),
+        if (showOverlay) const OnboardingWelcomeOverlay(),
+        const FloatingFeedbackButton(),
+      ],
+    );
   }
 
   // ══════════════════════════════════════════════════════════
@@ -148,6 +153,11 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       ]),
       actions: [
         IconButton(
+          icon: const Icon(Icons.search_outlined, color: DesignColors.textGray),
+          tooltip: 'Search',
+          onPressed: () => Navigator.pushNamed(context, AppRoutes.search),
+        ),
+        IconButton(
           icon: const Icon(Icons.notifications_outlined, color: DesignColors.textGray),
           onPressed: () => Navigator.pushNamed(context, AppRoutes.notifications),
         ),
@@ -178,6 +188,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       _NavItem(Icons.event_outlined, Icons.event, 'Events'),
       _NavItem(Icons.chat_bubble_outline, Icons.chat_bubble, 'Chats'),
       _NavItem(Icons.explore_outlined, Icons.explore, 'Discover'),
+      _NavItem(Icons.play_circle_outline, Icons.play_circle, 'Reels'),
+      _NavItem(Icons.search_outlined, Icons.search, 'Search'),
       _NavItem(Icons.person_outline, Icons.person, 'Profile'),
     ];
     return Container(
@@ -193,19 +205,17 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
         child: SizedBox(
           height: 60,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: List.generate(items.length, (i) {
               final item = items[i];
               final selected = _selectedIndex == i;
-              return GestureDetector(
-                onTap: () => setState(() => _selectedIndex = i),
-                behavior: HitTestBehavior.opaque,
-                child: SizedBox(
-                  width: 48,
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedIndex = i),
+                  behavior: HitTestBehavior.opaque,
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
                         color: selected
                             ? DesignColors.accent.withValues(alpha: 0.15)
@@ -218,14 +228,14 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                       ),
                       child: Icon(
                         selected ? item.activeIcon : item.icon,
-                        size: 22,
+                        size: 20,
                         color: selected ? DesignColors.accent : DesignColors.textGray,
                       ),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 1),
                     Text(item.label,
                         style: TextStyle(
-                          fontSize: 9,
+                          fontSize: 8,
                           fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                           color: selected ? DesignColors.accent : DesignColors.textGray,
                         )),
@@ -254,6 +264,10 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       case 5:
         return _buildDiscoveryTab();
       case 6:
+        return const ShortVideoFeedPage();
+      case 7:
+        return const SearchPage();
+      case 8:
         return _buildProfileTab();
       default:
         return _buildHomeTab();
@@ -672,82 +686,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   }
 
     Widget _buildSpeedDatingTab() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: DesignColors.gold.withValues(alpha: 0.12),
-                boxShadow: [
-                  BoxShadow(
-                      color: DesignColors.gold.withValues(alpha: 0.3),
-                      blurRadius: 30)
-                ],
-              ),
-              child: const Icon(Icons.bolt, size: 52, color: DesignColors.gold),
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'SPEED DATING',
-              style: TextStyle(
-                  color: DesignColors.white,
-                  fontSize: 32,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.5,
-                  shadows: DesignColors.secondaryGlow),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              'Match. Connect. Vibe. — 5-minute video dates.',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: DesignColors.textGray, fontSize: 14),
-            ),
-            const SizedBox(height: 40),
-            GestureDetector(
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Speed Dating is coming soon! 🔥'),
-                    duration: Duration(seconds: 2),
-                  ),
-                );
-              },
-              child: Container(
-                width: double.infinity,
-                height: 52,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [DesignColors.gold, Color(0xFFFF6B35)]),
-                  borderRadius: BorderRadius.circular(26),
-                  boxShadow: [
-                    BoxShadow(
-                        color: DesignColors.gold.withValues(alpha: 0.35),
-                        blurRadius: 18,
-                        offset: const Offset(0, 6))
-                  ],
-                ),
-                child: const Text(
-                  'START SPEED DATING',
-                  style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    return const SpeedDatingLobbyPage();
   }
 
   Widget _buildRoomsTab() {

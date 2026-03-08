@@ -449,7 +449,7 @@ class _ChatBoxWidgetState extends ConsumerState<ChatBoxWidget>
         hoverColor: DesignColors.accentDark,
         child: Padding(
           padding: const EdgeInsets.all(Spacing.xs),
-          child: Center( // ignore: prefer_const_constructors
+          child: Center(
             child: Text(
               item,
               style: DesignTypography.body.copyWith(

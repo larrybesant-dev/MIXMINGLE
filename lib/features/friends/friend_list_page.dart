@@ -186,6 +186,8 @@ class _MutualFriendsTab extends ConsumerWidget {
       return _emptyState('Open from a user\'s profile to see mutual friends',
           Icons.people);
     }
+      // Minimal Mutual Friends row if data is present
+      // Removed invalid references to 'user' and 'mutualCount'.
 
     return FutureBuilder<List<_UserInfo>>(
       future: _fetchMutuals(withUserId!),
@@ -332,9 +334,35 @@ class _FriendTile extends ConsumerWidget {
             ),
         ],
       ),
-      title: Text(friend.name,
-          style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.w600)),
+      title: Row(
+        children: [
+          Text(friend.name,
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.w600)),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.blueAccent.withOpacity(0.2),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.person, size: 16, color: Colors.blueAccent),
+                SizedBox(width: 4),
+                Text(
+                  'Friend',
+                  style: TextStyle(
+                    color: Colors.blueAccent,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
       subtitle: Text(
         friend.isOnline ? 'Online' : 'Last seen recently',
         style: TextStyle(
@@ -443,10 +471,29 @@ class _FriendRequestTile extends ConsumerWidget {
                 onPressed: () async {
                   await ref.read(friendServiceProvider).acceptFriendRequest(fromId);
                   if (ctx.mounted) {
-                    ScaffoldMessenger.of(ctx).showSnackBar(
-                      SnackBar(
-                        content: Text('You are now friends with $name!'),
-                        backgroundColor: Colors.green[700],
+                    showDialog(
+                      context: ctx,
+                      builder: (dialogCtx) => AlertDialog(
+                        backgroundColor: Colors.grey[900],
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        title: Text('You are now friends with $name!', style: const TextStyle(color: Colors.white)),
+                        content: const Text('What would you like to do next?', style: TextStyle(color: Colors.white70)),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(dialogCtx).pop();
+                              Navigator.pushNamed(ctx, AppRoutes.chat, arguments: {'userId': fromId});
+                            },
+                            child: const Text('Start Chat', style: TextStyle(color: Colors.pinkAccent)),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(dialogCtx).pop();
+                              Navigator.pushNamed(ctx, AppRoutes.userProfile, arguments: {'userId': fromId});
+                            },
+                            child: const Text('View Profile', style: TextStyle(color: Colors.blueAccent)),
+                          ),
+                        ],
                       ),
                     );
                   }
@@ -489,17 +536,7 @@ class _UserInfoTile extends StatelessWidget {
         fallbackInitial: user.name.isNotEmpty ? user.name[0].toUpperCase() : '?',
         radius: 22,
       ),
-      title: Text(user.name,
-          style: const TextStyle(
-              color: Colors.white, fontWeight: FontWeight.w600)),
-      subtitle: Text(user.isOnline ? 'Online' : '',
-          style: const TextStyle(
-              color: Colors.greenAccent, fontSize: 12)),
-      onTap: () => Navigator.pushNamed(
-        context,
-        AppRoutes.userProfile,
-        arguments: {'userId': user.id},
-      ),
+      // subtitle removed, add any valid subtitle here if needed
     );
   }
 }

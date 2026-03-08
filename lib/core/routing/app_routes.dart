@@ -44,6 +44,8 @@ import '../../features/settings/blocked_users_page.dart';
 
 // Admin
 import '../../features/admin/admin_dashboard_page.dart';
+import '../../features/admin/super_admin_dashboard_page.dart';
+import '../../features/control_center/control_center_dashboard.dart';
 
 // Notifications
 import '../../features/notifications/notification_center_page.dart';
@@ -72,6 +74,14 @@ import '../../features/settings/agora_test_page.dart';
 // Dev / QA screens
 import '../../dev/route_test_page.dart';
 import '../../dev/provider_debug_page.dart';
+
+// ── New platform features ──────────────────────────────────────────────────────
+import '../../features/feed/activity_feed_page.dart';
+import '../../features/search/search_page.dart';
+import '../../features/stories/stories_viewer_page.dart';
+import '../../features/stories/create_story_page.dart';
+import '../../features/videos/short_video_feed_page.dart';
+import '../../services/social/stories_service.dart';
 
 /// App Routes
 class AppRoutes {
@@ -117,6 +127,8 @@ class AppRoutes {
   static const String reportUser          = '/report/user';
   static const String blockedUsers        = '/blocked-users';
   static const String adminDashboard      = '/admin/dashboard';
+  static const String superAdminDashboard  = '/admin/super';
+  static const String controlCenter        = '/control-center';
   static const String friends              = '/friends';
   static const String messageRequests      = '/message-requests';
   // ── New canonical aliases expected by lib/router/app_routes.dart ──────────
@@ -132,6 +144,15 @@ class AppRoutes {
   static const String agoraTest            = '/agora-test';
   static const String routeTest            = '/dev/routes';
   static const String providerDebug        = '/dev/providers';
+  // ── New platform features ──────────────────────────────────────────────────
+  static const String activityFeed         = '/activity-feed';
+  static const String search               = '/search';
+  static const String stories              = '/stories';
+  static const String createStory          = '/stories/create';
+  static const String storyViewer          = '/stories/view';
+  static const String shortVideos          = '/reels';
+  static const String createShortVideo     = '/reels/create';
+  static const String eventDetail          = '/events/detail';
 
   static Route<dynamic> onGenerateRoute(RouteSettings routeSettings) {
     debugPrint('Navigating to: ${routeSettings.name}');
@@ -250,6 +271,18 @@ class AppRoutes {
             child: ProfileCompleteGuard(child: AdminDashboardPage()),
           ),
         );
+      case superAdminDashboard:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: SuperAdminDashboardPage()),
+          ),
+        );
+      case controlCenter:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: ControlCenterDashboard()),
+          ),
+        );
       case notifications:
         return MaterialPageRoute(
           builder: (_) => const AgeVerifiedGuard(
@@ -329,6 +362,47 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const RouteTestPage());
       case providerDebug:
         return MaterialPageRoute(builder: (_) => const ProviderDebugPage());
+      // ── New platform features ───────────────────────────────────────────────
+      case activityFeed:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: ActivityFeedPage()),
+          ),
+        );
+      case search:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: SearchPage()),
+          ),
+        );
+      case createStory:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: CreateStoryPage()),
+          ),
+        );
+      case storyViewer:
+        final group = routeSettings.arguments as StoryGroup?;
+        if (group == null) return _errorRoute('Story group required');
+        return MaterialPageRoute(
+          builder: (_) => StoriesViewerPage(group: group),
+          fullscreenDialog: true,
+        );
+      case shortVideos:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: ShortVideoFeedPage()),
+          ),
+        );
+      case eventDetail:
+        final eventId = routeSettings.arguments as String? ?? '';
+        return MaterialPageRoute(
+          builder: (_) => AgeVerifiedGuard(
+            child: ProfileCompleteGuard(
+              child: EventDetailsPage(eventId: eventId),
+            ),
+          ),
+        );
       default:
         return _errorRoute('No route defined for ${routeSettings.name}');
     }

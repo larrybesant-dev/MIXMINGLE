@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../shared/models/user_profile.dart';
+import 'activity_feed_service.dart';
 
 class SocialGraphService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -42,6 +43,9 @@ class SocialGraphService {
     );
 
     await batch.commit();
+
+    // Fire activity event so the followed user sees it in their feed
+    await ActivityFeedService.instance.onFollow(targetUserId);
 
     // Write new-follower notification to the followed user's subcollection
     final notifRef = _firestore

@@ -1,11 +1,37 @@
-﻿import 'package:flutter/material.dart';
+﻿
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart';
+// (Removed: import 'package:riverpod/riverpod.dart';)
 import '../../shared/providers/providers.dart';
 import '../../shared/models/user.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../shared/neon_button.dart';
 import '../messages/chat_screen.dart';
+
+// Provider for follow/unfollow feedback state
+final _followFeedbackProvider = Provider<_FollowFeedbackNotifier>(
+  (ref) => _FollowFeedbackNotifier(),
+);
+
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+class FollowFeedbackState {
+  final String? status;
+  const FollowFeedbackState({this.status});
+  FollowFeedbackState copyWith({String? status}) => FollowFeedbackState(status: status ?? this.status);
+}
+
+class FollowFeedbackNotifier extends StateNotifier<FollowFeedbackState> {
+  FollowFeedbackNotifier() : super(const FollowFeedbackState());
+  void show(String newStatus) {
+    state = state.copyWith(status: newStatus);
+    Future.delayed(const Duration(seconds: 2), () {
+      state = state.copyWith(status: null);
+    });
+  }
+}
 
 class UserProfilePage extends ConsumerWidget {
   final String userId;
@@ -115,6 +141,16 @@ class UserProfilePage extends ConsumerWidget {
   }
 
   Widget _buildProfileHeader(User user, bool isOwnProfile, WidgetRef ref) {
+    // Determine relationship type for label
+    final currentUser = ref.watch(currentUserProvider).value;
+    String? relationshipLabel;
+    IconData? relationshipIcon;
+    if (currentUser != null && currentUser.id != user.id) {
+      // Default to Follower label for non-own profile
+      relationshipLabel = 'Follower';
+      relationshipIcon = Icons.group;
+    }
+
     return Column(
       children: [
         // Avatar
@@ -152,19 +188,48 @@ class UserProfilePage extends ConsumerWidget {
 
         const SizedBox(height: 16),
 
-        // Name and Username
-        GlowText(
-          text: user.displayName ?? 'Unknown User',
-          fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-          glowColor: const Color(0xFFFF4C4C),
+        // Name and Username with relationship label
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            GlowText(
+              text: user.displayName ?? 'Unknown User',
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              glowColor: const Color(0xFFFF4C4C),
+            ),
+            if (relationshipLabel != null) ...[
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: relationshipLabel == 'Friend' ? Colors.blueAccent.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(relationshipIcon, size: 16, color: relationshipLabel == 'Friend' ? Colors.blueAccent : Colors.green),
+                    const SizedBox(width: 4),
+                    Text(
+                      relationshipLabel,
+                      style: TextStyle(
+                        color: relationshipLabel == 'Friend' ? Colors.blueAccent : Colors.green,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ],
         ),
 
         Text(
           '@${user.username}',
           style: TextStyle(
-            color: Colors.white.withValues(alpha: 0.7),
+            color: Colors.white.withOpacity(0.7),
             fontSize: 16,
           ),
         ),
@@ -183,25 +248,56 @@ class UserProfilePage extends ConsumerWidget {
       'followerId': currentUser.value?.id ?? '',
       'followingId': user.id,
     }));
+    final feedbackNotifier = ref.watch(_followFeedbackProvider);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        // Follow Button
+        // Follow Button with feedback
         Expanded(
           child: isFollowingAsync.when(
-            data: (isFollowing) => NeonButton(
-              onPressed: () {
-                if (isFollowing) {
-                  ref.read(unfollowUserProvider(user.id).future);
-                } else {
-                  ref.read(followUserProvider(user.id).future);
-                }
-              },
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Text(
-                isFollowing ? 'Following' : 'Follow',
-                style: const TextStyle(fontSize: 14),
+            data: (isFollowing) => AnimatedContainer(
+              duration: const Duration(milliseconds: 400),
+              curve: Curves.easeInOut,
+              decoration: BoxDecoration(
+                color: feedbackNotifier.status == null
+                    ? Colors.transparent
+                    : (feedbackNotifier.status == 'Following'
+                        ? Colors.green.withOpacity(0.2)
+                        : Colors.red.withOpacity(0.2)),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                children: [
+                  NeonButton(
+                    onPressed: () async {
+                      if (isFollowing) {
+                        await ref.read(unfollowUserProvider(user.id).future);
+                        feedbackNotifier.show('Unfollowed');
+                      } else {
+                        await ref.read(followUserProvider(user.id).future);
+                        feedbackNotifier.show('Following');
+                      }
+                    },
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    child: Text(
+                      isFollowing ? 'Following' : 'Follow',
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                  if (feedbackNotifier.status != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        feedbackNotifier.status!,
+                        style: TextStyle(
+                          color: feedbackNotifier.status == 'Following' ? Colors.green : Colors.red,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             loading: () => const SizedBox(
@@ -228,6 +324,7 @@ class UserProfilePage extends ConsumerWidget {
         // Message Button
         Expanded(
           child: NeonButton(
+            // (Removed misplaced provider code)
             onPressed: () => _startConversation(user, ref),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             child: const Text(

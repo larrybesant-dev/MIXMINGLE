@@ -95,7 +95,4 @@ class ProfileMusicNotifier extends Notifier<ProfileMusicState> {
 }
 
 // ── Riverpod provider ─────────────────────────────────────────────
-final profileMusicProvider =
-    NotifierProvider<ProfileMusicNotifier, ProfileMusicState>(
-  ProfileMusicNotifier.new,
-);
+final profileMusicProvider = NotifierProvider<ProfileMusicNotifier, ProfileMusicState>(ProfileMusicNotifier.new);

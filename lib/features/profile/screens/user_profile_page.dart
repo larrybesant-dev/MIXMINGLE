@@ -14,6 +14,16 @@ import 'package:mixmingle/features/reporting/report_dialog.dart';
 import 'package:mixmingle/features/start_conversation.dart';
 import 'package:mixmingle/shared/providers/friend_request_provider.dart';
 import 'package:mixmingle/services/social/friend_service.dart';
+import 'package:mixmingle/services/social/stories_service.dart';
+import 'package:mixmingle/core/design_system/design_constants.dart';
+
+// ── Stories provider ─────────────────────────────────────────────────────────
+
+/// Streams the active (non-expired) stories for a given user.
+final userStoriesProvider =
+    StreamProvider.autoDispose.family<List<StoryModel>, String>(
+  (ref, userId) => StoriesService.instance.watchUserStories(userId),
+);
 
 class UserProfilePage extends ConsumerWidget {
   final String userId;
@@ -161,6 +171,14 @@ class UserProfilePage extends ConsumerWidget {
                         ),
                       ],
                     ),
+                  ),
+                ),
+
+                // ── Stories strip ─────────────────────────────────────────────
+                SliverToBoxAdapter(
+                  child: _StoriesStrip(
+                    userId: profileUserId,
+                    isOwnProfile: isOwnProfile,
                   ),
                 ),
 
@@ -522,6 +540,128 @@ class UserProfilePage extends ConsumerWidget {
                   }
                 }
               },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+// ── Stories Strip ─────────────────────────────────────────────────────────────
+
+class _StoriesStrip extends ConsumerWidget {
+  const _StoriesStrip({required this.userId, required this.isOwnProfile});
+  final String userId;
+  final bool isOwnProfile;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final storiesAsync = ref.watch(userStoriesProvider(userId));
+    return storiesAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (stories) {
+        if (stories.isEmpty && !isOwnProfile) return const SizedBox.shrink();
+        return SizedBox(
+          height: 100,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            children: [
+              if (isOwnProfile)
+                _StoryBubble(
+                  label: 'Add Story',
+                  isAdd: true,
+                  onTap: () => Navigator.pushNamed(context, AppRoutes.createStory),
+                ),
+              ...stories.map((s) {
+                final group = StoryGroup(
+                  userId: s.userId,
+                  userName: s.userName,
+                  userAvatar: s.userAvatar,
+                  stories: stories,
+                  hasUnviewed: true,
+                );
+                return _StoryBubble(
+                  imageUrl: s.userAvatar,
+                  label: s.userName ?? 'Story',
+                  hasUnviewed: true,
+                  onTap: () => Navigator.pushNamed(
+                    context,
+                    AppRoutes.storyViewer,
+                    arguments: group,
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _StoryBubble extends StatelessWidget {
+  const _StoryBubble({
+    this.imageUrl,
+    required this.label,
+    this.isAdd = false,
+    this.hasUnviewed = false,
+    required this.onTap,
+  });
+  final String? imageUrl;
+  final String label;
+  final bool isAdd;
+  final bool hasUnviewed;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ringColor =
+        hasUnviewed ? DesignColors.accent : DesignColors.surfaceLight;
+    return GestureDetector(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.only(right: 12),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: isAdd
+                    ? const LinearGradient(
+                        colors: [DesignColors.accent, DesignColors.tertiary],
+                      )
+                    : null,
+                border: isAdd
+                    ? null
+                    : Border.all(color: ringColor, width: 2),
+              ),
+              child: isAdd
+                  ? const Icon(Icons.add, color: Colors.white, size: 28)
+                  : ClipOval(
+                      child: imageUrl != null
+                          ? Image.network(imageUrl!, fit: BoxFit.cover)
+                          : Container(
+                              color: DesignColors.surfaceLight,
+                              child: const Icon(Icons.person,
+                                  color: Colors.white),
+                            ),
+                    ),
+            ),
+            const SizedBox(height: 4),
+            SizedBox(
+              width: 64,
+              child: Text(
+                label,
+                style: const TextStyle(color: Colors.white, fontSize: 10),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+              ),
             ),
           ],
         ),

@@ -12,11 +12,17 @@ class RoomModerationService {
 
   RoomModerationService(this._repository, this._firestore);
 
-  /// Check if a user can moderate (owner or admin)
+  /// Check if a user can moderate (owner, room admin, or superadmin).
+  /// SuperAdmin check reads the user's Firestore role field.
   Future<bool> canModerate({
     required String roomId,
     required String userId,
   }) async {
+    // 1. SuperAdmin override
+    final userDoc = await _firestore.collection('users').doc(userId).get();
+    if (userDoc.data()?['role'] == 'superadmin') return true;
+
+    // 2. Room owner / room admin
     final room = await _firestore.collection('rooms').doc(roomId).get();
     if (!room.exists) return false;
 

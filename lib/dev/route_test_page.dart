@@ -5,6 +5,7 @@
 /// 5-tap hidden gesture on the settings page version number.
 ///
 /// Use this during QA to verify every screen loads without crashing.
+library;
 
 import 'package:flutter/material.dart';
 import 'package:mixmingle/core/routing/app_routes.dart';

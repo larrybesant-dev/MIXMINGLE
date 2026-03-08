@@ -75,9 +75,7 @@ final searchUsersByInterestsProvider = StreamProvider.family<List<UserProfile>, 
 });
 
 /// Profile controller for profile operations
-final userProfileControllerProvider = NotifierProvider<ProfileController, AsyncValue<UserProfile?>>(() {
-  return ProfileController();
-});
+final userProfileControllerProvider = NotifierProvider<ProfileController, AsyncValue<UserProfile?>>(ProfileController.new);
 
 class ProfileController extends Notifier<AsyncValue<UserProfile?>> {
   late final ProfileService _profileService;
