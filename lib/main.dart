@@ -187,7 +187,7 @@ class _AlwaysLandingApp extends riverpod.ConsumerWidget {
       ),
     );
     return MaterialApp(
-      title: 'Vybe Social',
+      title: 'MIXVY',
       debugShowCheckedModeBanner: false,
       theme: themedTheme,
       initialRoute: '/',

@@ -117,7 +117,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
         ),
         const SizedBox(width: 10),
         const Text(
-          'VYBE SOCIAL',
+          'MIXVY',
           style: TextStyle(
             color: DesignColors.white,
             fontSize: 20,

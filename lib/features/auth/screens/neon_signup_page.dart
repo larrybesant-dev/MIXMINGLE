@@ -142,7 +142,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Create your Vybe Social account',
+                          'Create your MIXVY account',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: NeonColors.textSecondary,
@@ -356,7 +356,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
         ),
         const SizedBox(height: 12),
         const NeonText(
-          'VYBE SOCIAL',
+          'MIXVY',
           fontSize: 24,
           fontWeight: FontWeight.w900,
           textColor: Colors.white,

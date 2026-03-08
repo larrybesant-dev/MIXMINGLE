@@ -153,7 +153,7 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Sign in to your Vybe Social account',
+                          'Sign in to your MIXVY account',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: NeonColors.textSecondary,
@@ -357,7 +357,7 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
         ),
         const SizedBox(height: 16),
         const NeonText(
-          'VYBE SOCIAL',
+          'MIXVY',
           fontSize: 26,
           fontWeight: FontWeight.w900,
           textColor: Colors.white,

@@ -105,7 +105,7 @@ class FullScreenLoader extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               const GlowText(
-                text: 'VYBE SOCIAL',
+                text: 'MIXVY',
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
                 color: Color(0xFF00D9FF),

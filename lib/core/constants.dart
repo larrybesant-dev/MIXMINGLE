@@ -4,7 +4,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class AppConstants {
   // App info
-  static const String appName = 'Vybe Social';
+  static const String appName = 'MIXVY';
   static const String appVersion = '1.0.0';
 
   // Agora configuration - loaded from .env file

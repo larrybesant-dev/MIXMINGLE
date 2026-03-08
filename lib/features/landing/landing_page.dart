@@ -1043,7 +1043,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
           ),
           const SizedBox(height: Spacing.sm),
           Text(
-            'Â© 2026 Vybe Social. All rights reserved.',
+            '© 2026 MIXVY. All rights reserved.',
             style: textTheme.labelSmall?.copyWith(color: ElectricColors.onSurfaceMuted),
           ),
         ],

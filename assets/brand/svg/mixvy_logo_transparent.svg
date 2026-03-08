@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 500" width="1200" height="500">
+  <defs>
+    <linearGradient id="textGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%"   stop-color="#8B5CF6"/>
+      <stop offset="50%"  stop-color="#6D28D9"/>
+      <stop offset="100%" stop-color="#3B82F6"/>
+    </linearGradient>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="50%">
+      <stop offset="0%"   stop-color="#3B82F6"/>
+      <stop offset="50%"  stop-color="#7C3AED"/>
+      <stop offset="100%" stop-color="#2563EB"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Transparent background — no rect -->
+
+  <!-- Ellipse ring -->
+  <ellipse cx="600" cy="250" rx="464" ry="182"
+           fill="none" stroke="url(#ringGrad)" stroke-width="9"/>
+  <ellipse cx="600" cy="250" rx="459" ry="177"
+           fill="none" stroke="rgba(120,80,220,0.3)" stroke-width="1.5"/>
+
+  <!-- MIXVY text -->
+  <text x="600" y="298"
+        font-family="'Arial Black', 'Impact', 'Arial', system-ui, sans-serif"
+        font-size="196" font-weight="900"
+        text-anchor="middle"
+        letter-spacing="14"
+        fill="url(#textGrad)">MIXVY</text>
+
+  <!-- Sparkles — left -->
+  <circle cx="118" cy="234" r="5"   fill="#60A5FA" opacity="0.80"/>
+  <circle cx="128" cy="272" r="3.5" fill="#A78BFA" opacity="0.70"/>
+  <!-- Sparkles — right -->
+  <circle cx="1082" cy="234" r="5"   fill="#60A5FA" opacity="0.80"/>
+  <circle cx="1072" cy="272" r="3.5" fill="#A78BFA" opacity="0.70"/>
+</svg>

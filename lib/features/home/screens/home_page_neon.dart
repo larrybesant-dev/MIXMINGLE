@@ -182,7 +182,7 @@ class HomePageNeon extends ConsumerWidget {
 
         // Brand name
         NeonText(
-          'VYBE SOCIAL',
+          'MIXVY',
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
             fontWeight: FontWeight.w900,
             letterSpacing: 3,

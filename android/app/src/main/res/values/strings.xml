@@ -2,7 +2,7 @@
 <!-- String resources for Vybe Social -->
 <resources>
     <!-- App Name - can be overridden by build flavors -->
-    <string name="app_name">Vybe Social</string>
+    <string name="app_name">MIXVY</string>
 
     <!-- Notification channel names -->
     <string name="notification_channel_default">General</string>

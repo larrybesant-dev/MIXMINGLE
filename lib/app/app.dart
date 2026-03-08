@@ -15,7 +15,7 @@ class VybeSocialApp extends StatelessWidget {
 
     return ProviderScope(
       child: MaterialApp(
-        title: 'Vybe Social',
+        title: 'MIXVY',
         debugShowCheckedModeBanner: false,
         theme: NeonTheme.darkTheme,
         // Use the app routing system
