@@ -113,6 +113,8 @@ flutter:
     - assets/animations/
     - assets/audio/
     - assets/data/interests.json
+    - assets/brand/png/app_icon/
+    - assets/brand/png/full_logo/
     - .env
 
 

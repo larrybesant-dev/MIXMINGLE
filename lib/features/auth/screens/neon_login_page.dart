@@ -330,7 +330,7 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
                 ),
               ),
               child: Image.asset(
-                'assets/images/app_logo.png',
+                'assets/brand/png/app_icon/mixvy_icon_96x96.png',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
@@ -344,10 +344,15 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
                         ],
                       ),
                     ),
-                    child: const Icon(
-                      Icons.music_note,
-                      size: 40,
-                      color: Colors.white,
+                    child: const Center(
+                      child: Text(
+                        'M',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 44,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
                   );
                 },

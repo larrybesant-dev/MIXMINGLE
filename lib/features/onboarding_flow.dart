@@ -104,7 +104,7 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> with SingleTick
   }
 
   void _completeOnboarding() {
-    Navigator.of(context).pushReplacementNamed(AppRoutes.signup);
+    Navigator.of(context).pushReplacementNamed(AppRoutes.ageGate);
   }
 
   @override

@@ -2,8 +2,10 @@
 // Allows users to report another user to platform moderators.
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:mixmingle/core/analytics/analytics_events.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 
 class ReportUserPage extends StatefulWidget {
@@ -27,9 +29,11 @@ class _ReportUserPageState extends State<ReportUserPage> {
     'Inappropriate Content',
     'Fake Profile or Impersonation',
     'Hate Speech',
-    'Underage User',
+    'Suspected Minor (Under 18)',
     'Other',
   ];
+
+  static const _suspectedMinorLabel = 'Suspected Minor (Under 18)';
 
   String? _selectedType;
   final _descController = TextEditingController();
@@ -59,6 +63,21 @@ class _ReportUserPageState extends State<ReportUserPage> {
         'createdAt': FieldValue.serverTimestamp(),
         'status': 'pending',
       });
+
+      // If reporting a suspected minor, flag the reported user's admin record.
+      if (_selectedType == _suspectedMinorLabel) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(widget.userId)
+            .set(
+              {'adminFlags': {'suspectedMinor': true}},
+              SetOptions(merge: true),
+            );
+        await FirebaseAnalytics.instance.logEvent(
+          name: AnalyticsEvents.userReportedSuspectedMinor,
+          parameters: {'reported_user_id': widget.userId},
+        );
+      }
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(

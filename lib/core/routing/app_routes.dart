@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Landing & Auth
 import '../../features/landing/landing_page.dart';
+import '../../features/auth/screens/age_gate_page.dart';
 import '../../features/auth/screens/neon_login_page.dart';
 import '../../features/auth/screens/neon_signup_page.dart';
 import '../../features/auth/forgot_password_page.dart';
@@ -122,6 +123,8 @@ class AppRoutes {
         return MaterialPageRoute(builder: (_) => const NeonSignupPage());
       case forgotPassword:
         return MaterialPageRoute(builder: (_) => const ForgotPasswordPage());
+      case ageGate:
+        return MaterialPageRoute(builder: (_) => const AgeGatePage());
       case home:
         return MaterialPageRoute(
           builder: (_) => const AgeVerifiedGuard(

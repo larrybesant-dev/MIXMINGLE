@@ -1,22 +1,27 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/neon_colors.dart';
+import '../../../core/analytics/analytics_events.dart';
+import '../../../core/routing/app_routes.dart';
 import '../../../shared/widgets/neon_components.dart';
+import '../providers/age_gate_provider.dart';
 
 /// ============================================================================
 /// NEON SIGNUP SCREEN - Electric Lounge Brand
 /// Dark theme with neon styling, logo branding
 /// ============================================================================
 
-class NeonSignupPage extends StatefulWidget {
+class NeonSignupPage extends ConsumerStatefulWidget {
   const NeonSignupPage({super.key});
 
   @override
-  State<NeonSignupPage> createState() => _NeonSignupPageState();
+  ConsumerState<NeonSignupPage> createState() => _NeonSignupPageState();
 }
 
-class _NeonSignupPageState extends State<NeonSignupPage> {
+class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -27,6 +32,21 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
   bool _hideConfirmPassword = true;
   bool _agreeToTerms = false;
   String? _errorMessage;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // If the age gate hasn't been passed (e.g. direct navigation attempt),
+    // redirect back to the age gate screen.
+    final ageGateState = ref.read(ageGateProvider);
+    if (!ageGateState.isVerified) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.ageGate);
+        }
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -62,6 +82,11 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
         password: _passwordController.text,
       );
 
+      // Retrieve verified birthdate from age gate provider
+      final ageGateState = ref.read(ageGateProvider);
+      final birthdate    = ageGateState.birthdate;
+      final ageAtSignup  = ageGateState.computedAge;
+
       // Create user profile in Firestore
       await FirebaseFirestore.instance
           .collection('users')
@@ -70,12 +95,27 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
         'uid': userCredential.user!.uid,
         'email': _emailController.text.trim(),
         'username': _usernameController.text.trim(),
-        'displayName': _usernameController.text.trim(), // Add displayName for auth gate
+        'displayName': _usernameController.text.trim(),
         'createdAt': FieldValue.serverTimestamp(),
         'profileImageUrl': '',
         'bio': '',
         'isVerified': false,
+        // ── 18+ AGE GATE ──────────────────────────────────────
+        'ageVerified': true,
+        if (birthdate != null) 'birthdate': Timestamp.fromDate(birthdate),
+        if (ageAtSignup != null) 'ageAtSignup': ageAtSignup,
       });
+
+      // Log analytics event
+      await FirebaseAnalytics.instance.logEvent(
+        name: AnalyticsEvents.userSignup18Plus,
+        parameters: {
+          if (ageAtSignup != null) 'age_at_signup': ageAtSignup,
+        },
+      );
+
+      // Reset age gate session state after successful account creation
+      ref.read(ageGateProvider.notifier).reset();
 
       debugPrint('âœ… [Signup] Account created. Navigating to /app...');
       if (mounted) {
@@ -329,7 +369,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
                 ),
               ),
               child: Image.asset(
-                'assets/images/app_logo.png',
+                'assets/brand/png/app_icon/mixvy_icon_96x96.png',
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
@@ -343,10 +383,15 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
                         ],
                       ),
                     ),
-                    child: const Icon(
-                      Icons.music_note,
-                      size: 35,
-                      color: Colors.white,
+                    child: const Center(
+                      child: Text(
+                        'M',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 40,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
                     ),
                   );
                 },

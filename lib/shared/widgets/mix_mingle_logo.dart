@@ -1,8 +1,8 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:mixmingle/core/theme/neon_colors.dart';
 
-/// Vybe Social logo widget — Neon Pulse brand identity
-/// Glowing "V" icon + "VYBE SOCIAL" text in electric blue/violet gradient
+/// MIXVY logo widget — Neon brand identity
+/// Glowing "M" icon + "MIXVY" gradient text
 class VybeSocialLogo extends StatelessWidget {
   final double fontSize;
   final bool showIcon;
@@ -20,29 +20,39 @@ class VybeSocialLogo extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         if (showIcon) ...[
-          // Glowing "V" neon icon
+          // MIXVY icon — try asset first, fall back to drawn "M" circle
           Container(
-            width: fontSize * 1.2,
-            height: fontSize * 1.2,
+            width: fontSize * 1.25,
+            height: fontSize * 1.25,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: NeonColors.vybePulseGradient,
               boxShadow: [
                 BoxShadow(
-                  color: NeonColors.neonBlue.withValues(alpha: 0.6),
-                  blurRadius: 12,
+                  color: NeonColors.neonPink.withValues(alpha: 0.6),
+                  blurRadius: 14,
                   spreadRadius: 2,
                 ),
               ],
             ),
-            child: Center(
-              child: Text(
-                'V',
-                style: TextStyle(
-                  fontSize: fontSize * 0.7,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                  letterSpacing: 0,
+            child: ClipOval(
+              child: Image.asset(
+                'assets/brand/png/app_icon/mixvy_icon_96x96.png',
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: NeonColors.vybePulseGradient,
+                  ),
+                  child: Center(
+                    child: Text(
+                      'M',
+                      style: TextStyle(
+                        fontSize: fontSize * 0.65,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -50,30 +60,18 @@ class VybeSocialLogo extends StatelessWidget {
           SizedBox(width: fontSize * 0.3),
         ],
 
-        // "VYBE" in electric blue
-        Text(
-          'VYBE',
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w900,
-            foreground: Paint()
-              ..shader = NeonColors.vybePulseGradient.createShader(
-                Rect.fromLTWH(0, 0, fontSize * 4, fontSize),
-              ),
-            letterSpacing: 2,
-          ),
-        ),
-
-        SizedBox(width: fontSize * 0.15),
-
-        // "SOCIAL" in violet
-        Text(
-          'SOCIAL',
-          style: TextStyle(
-            fontSize: fontSize,
-            fontWeight: FontWeight.w900,
-            color: NeonColors.neonViolet,
-            letterSpacing: 2,
+        // "MIXVY" gradient text
+        ShaderMask(
+          shaderCallback: (bounds) => NeonColors.vybePulseGradient
+              .createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
+          child: Text(
+            'MIXVY',
+            style: TextStyle(
+              fontSize: fontSize,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+              letterSpacing: 3,
+            ),
           ),
         ),
       ],

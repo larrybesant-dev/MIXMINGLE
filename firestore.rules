@@ -67,6 +67,14 @@ service cloud.firestore {
              request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.hostId;
     }
 
+    // Check if the signed-in user has a Firestore user doc with ageVerified == true.
+    // Used to enforce the 18+ platform-wide restriction.
+    function isAdultUser() {
+      return isSignedIn() &&
+             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('ageVerified', false) == true;
+    }
+
     // ========================================
     // USERS COLLECTION
     // ========================================
@@ -75,8 +83,11 @@ service cloud.firestore {
       // Anyone authenticated can read profiles
       allow read: if isSignedIn();
 
-      // Users can create their own profile
-      allow create: if isOwner(userId);
+      // Users can create their own profile (must include birthdate + ageVerified == true for 18+ enforcement)
+      allow create: if isOwner(userId) &&
+                       'birthdate' in request.resource.data &&
+                       'ageVerified' in request.resource.data &&
+                       request.resource.data.ageVerified == true;
 
       // Users can update their own profile (for FCM tokens, display name, etc)
       allow update: if isOwner(userId);
@@ -148,8 +159,8 @@ service cloud.firestore {
       // Anyone authenticated can read events
       allow read: if isSignedIn();
 
-      // Verified users can create events
-      allow create: if isSignedIn() &&
+      // Verified adult users can create events
+      allow create: if isAdultUser() &&
                        hasValidString('title') &&
                        hasValidString('description') &&
                        request.resource.data.title.size() >= 3 &&
@@ -173,7 +184,7 @@ service cloud.firestore {
 
     match /rooms/{roomId} {
       allow read: if true;
-      allow create: if isSignedIn() &&
+      allow create: if isAdultUser() &&
                        hasValidString('title') &&
                        request.resource.data.title.size() >= 3 &&
                        request.resource.data.title.size() <= 100 &&

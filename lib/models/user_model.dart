@@ -14,6 +14,11 @@ class UserModel {
   final DateTime? lastActive;
   final String onboardingState;
 
+  // ── 18+ AGE GATE ────────────────────────────────────────────
+  final DateTime? birthdate;
+  final bool ageVerified;
+  final int? ageAtSignup;
+
   UserModel({
     required this.id,
     required this.username,
@@ -27,6 +32,9 @@ class UserModel {
     required this.isOnline,
     required this.lastActive,
     required this.onboardingState,
+    this.birthdate,
+    this.ageVerified = false,
+    this.ageAtSignup,
   });
 
   factory UserModel.empty(String id) {
@@ -43,6 +51,7 @@ class UserModel {
       isOnline: false,
       lastActive: null,
       onboardingState: 'not_started',
+      ageVerified: false,
     );
   }
 
@@ -61,6 +70,9 @@ class UserModel {
       isOnline: data['isOnline'] ?? false,
       lastActive: (data['lastActive'] as Timestamp?)?.toDate(),
       onboardingState: data['onboardingState'] ?? 'not_started',
+      birthdate: (data['birthdate'] as Timestamp?)?.toDate(),
+      ageVerified: data['ageVerified'] as bool? ?? false,
+      ageAtSignup: data['ageAtSignup'] as int?,
     );
   }
 
@@ -77,6 +89,9 @@ class UserModel {
       'isOnline': isOnline,
       'lastActive': lastActive,
       'onboardingState': onboardingState,
+      if (birthdate != null) 'birthdate': Timestamp.fromDate(birthdate!),
+      'ageVerified': ageVerified,
+      if (ageAtSignup != null) 'ageAtSignup': ageAtSignup,
     };
   }
 

@@ -66,6 +66,16 @@ class AnalyticsEvents {
   static const String screenShareStopped = 'screen_share_stopped';
 
   // ============================================================
+  // AGE GATE EVENTS
+  // ============================================================
+  static const String ageGateViewed              = 'mixvy_age_gate_viewed';
+  static const String ageGateBlockedUnderage     = 'mixvy_age_gate_blocked_underage';
+  static const String ageGatePassedAdult         = 'mixvy_age_gate_passed_adult';
+  static const String userSignup18Plus           = 'mixvy_user_signup_18plus';
+  static const String loginBlockedNotAgeVerified = 'mixvy_login_blocked_not_age_verified';
+  static const String userReportedSuspectedMinor = 'mixvy_user_reported_suspected_minor';
+
+  // ============================================================
   // MODERATION EVENTS
   // ============================================================
   static const String reportSubmitted = 'report_submitted';

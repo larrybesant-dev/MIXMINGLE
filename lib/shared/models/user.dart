@@ -36,6 +36,14 @@ class User {
   final String membershipTier;
   final List<String> badges;
 
+  // ── 18+ AGE GATE ────────────────────────────────────────────
+  /// ISO-8601 birthdate stored at signup, immutable thereafter.
+  final DateTime? birthdate;
+  /// True only when computed age >= 18 at signup. Backend-enforced.
+  final bool ageVerified;
+  /// Age in full years at signup moment (defensive cache).
+  final int? ageAtSignup;
+
   User({
     required this.id,
     required this.email,
@@ -68,6 +76,9 @@ class User {
     this.lastSeen,
     required this.membershipTier,
     required this.badges,
+    this.birthdate,
+    this.ageVerified = false,
+    this.ageAtSignup,
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -112,6 +123,13 @@ class User {
           : null,
       membershipTier: json['membershipTier'] ?? 'free',
       badges: List<String>.from(json['badges'] ?? []),
+      birthdate: json['birthdate'] != null
+          ? (json['birthdate'] is Timestamp
+              ? (json['birthdate'] as Timestamp).toDate()
+              : DateTime.tryParse(json['birthdate'].toString()))
+          : null,
+      ageVerified: json['ageVerified'] as bool? ?? false,
+      ageAtSignup: json['ageAtSignup'] as int?,
     );
   }
 
@@ -148,6 +166,9 @@ class User {
       'lastSeen': lastSeen?.toIso8601String(),
       'membershipTier': membershipTier,
       'badges': badges,
+      if (birthdate != null) 'birthdate': Timestamp.fromDate(birthdate!),
+      'ageVerified': ageVerified,
+      if (ageAtSignup != null) 'ageAtSignup': ageAtSignup,
     };
   }
 

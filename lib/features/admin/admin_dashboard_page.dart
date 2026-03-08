@@ -228,6 +228,7 @@ class _ReportCard extends StatelessWidget {
         ReportType.hateSpeech => Colors.red[900]!,
         ReportType.violence => Colors.red[700]!,
         ReportType.scam => Colors.amber,
+        ReportType.suspectedMinor => Colors.pink,
         ReportType.other => Colors.grey,
       };
 
@@ -238,6 +239,7 @@ class _ReportCard extends StatelessWidget {
         ReportType.hateSpeech => 'HATE SPEECH',
         ReportType.violence => 'VIOLENCE',
         ReportType.scam => 'SCAM',
+        ReportType.suspectedMinor => 'SUSPECTED MINOR',
         ReportType.other => 'OTHER',
       };
 

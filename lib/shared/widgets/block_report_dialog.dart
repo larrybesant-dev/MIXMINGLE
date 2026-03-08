@@ -206,6 +206,8 @@ class _BlockReportDialogState extends ConsumerState<BlockReportDialog> {
         return 'Violence or Threats';
       case ReportType.scam:
         return 'Scam or Fraud';
+      case ReportType.suspectedMinor:
+        return 'Suspected Minor (Under 18)';
       case ReportType.other:
         return 'Other';
     }
