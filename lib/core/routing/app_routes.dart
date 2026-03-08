@@ -44,6 +44,22 @@ import '../../features/settings/blocked_users_page.dart';
 // Admin
 import '../../features/admin/admin_dashboard_page.dart';
 
+// Notifications
+import '../../features/notifications/notification_center_page.dart';
+
+// Payments / Coins
+import '../../features/payments/screens/coin_purchase_page.dart';
+
+// Events
+import '../../features/events/screens/events_page.dart';
+import '../../features/events/screens/event_details_page.dart';
+
+// Create Room
+import '../../features/room/screens/create_room_page_complete.dart';
+
+// Auth providers (for profile/me route)
+import '../../shared/providers/auth_providers.dart';
+
 // Guards
 import '../routing/guards/age_verified_guard.dart';
 import '../routing/guards/profile_complete_guard.dart';
@@ -209,6 +225,45 @@ class AppRoutes {
             child: ProfileCompleteGuard(child: AdminDashboardPage()),
           ),
         );
+      case notifications:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: NotificationCenterPage()),
+          ),
+        );
+      case coins:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: CoinPurchasePage()),
+          ),
+        );
+      case createRoom:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: CreateRoomPageComplete()),
+          ),
+        );
+      case events:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: EventsPage()),
+          ),
+        );
+      case eventDetails:
+        final eventId = routeSettings.arguments as String? ?? '';
+        return MaterialPageRoute(
+          builder: (_) => AgeVerifiedGuard(
+            child: ProfileCompleteGuard(
+              child: EventDetailsPage(eventId: eventId),
+            ),
+          ),
+        );
+      case profile:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: _CurrentUserProfilePage()),
+          ),
+        );
       case editProfile:
         return MaterialPageRoute(
           builder: (_) => const AgeVerifiedGuard(
@@ -269,5 +324,19 @@ class _RoomLoaderPage extends ConsumerWidget {
         return VoiceRoomPage(room: room);
       },
     );
+  }
+}
+
+/// Redirects /profile/me to the current user's UserProfilePage.
+class _CurrentUserProfilePage extends ConsumerWidget {
+  const _CurrentUserProfilePage();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(authStateProvider).asData?.value?.uid;
+    if (uid == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    return UserProfilePage(userId: uid);
   }
 }
