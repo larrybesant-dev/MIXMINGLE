@@ -23,7 +23,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
   @override
   void initState() {
     super.initState();
-    _tabs = TabController(length: 6, vsync: this);
+    _tabs = TabController(length: 8, vsync: this);
   }
 
   @override
@@ -60,6 +60,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
               Tab(icon: Icon(Icons.meeting_room, size: 18), text: 'Rooms'),
               Tab(icon: Icon(Icons.flag, size: 18), text: 'Reports'),
               Tab(icon: Icon(Icons.block, size: 18), text: 'Bans'),
+              Tab(icon: Icon(Icons.analytics, size: 18), text: 'Analytics'),
+              Tab(icon: Icon(Icons.history, size: 18), text: 'Logs'),
             ],
           ),
         ),
@@ -72,6 +74,8 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
             _RoomModerationTab(),
             _ReportsTab(),
             _GlobalBansTab(),
+            _AnalyticsTab(),
+            _AdminLogsTab(),
           ],
         ),
       ),
@@ -1021,3 +1025,301 @@ class _GlobalBansTab extends ConsumerWidget {
     }
   }
 }
+
+// ===========================================================================
+// Analytics Tab
+// ===========================================================================
+
+class _AnalyticsTab extends ConsumerWidget {
+  const _AnalyticsTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Platform Analytics',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 16),
+          _AnalyticsMetricCard(
+            title: 'Total Users',
+            icon: Icons.people,
+            color: Colors.blueAccent,
+            stream: FirebaseFirestore.instance
+                .collection('users')
+                .snapshots()
+                .map((s) => s.size),
+          ),
+          const SizedBox(height: 8),
+          _AnalyticsMetricCard(
+            title: 'Active Rooms Right Now',
+            icon: Icons.sensor_occupied,
+            color: Colors.greenAccent,
+            stream: FirebaseFirestore.instance
+                .collection('rooms')
+                .where('isActive', isEqualTo: true)
+                .snapshots()
+                .map((s) => s.size),
+          ),
+          const SizedBox(height: 8),
+          _AnalyticsMetricCard(
+            title: 'Pending Reports',
+            icon: Icons.flag,
+            color: Colors.redAccent,
+            stream: FirebaseFirestore.instance
+                .collection('reports')
+                .where('status', isEqualTo: 'pending')
+                .snapshots()
+                .map((s) => s.size),
+          ),
+          const SizedBox(height: 8),
+          _AnalyticsMetricCard(
+            title: 'Global Bans',
+            icon: Icons.block,
+            color: Colors.orange,
+            stream: FirebaseFirestore.instance
+                .collection('global_bans')
+                .snapshots()
+                .map((s) => s.size),
+          ),
+          const SizedBox(height: 24),
+          const Text(
+            'Recent Room Activity',
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 12),
+          StreamBuilder<QuerySnapshot>(
+            stream: FirebaseFirestore.instance
+                .collection('rooms')
+                .orderBy('createdAt', descending: true)
+                .limit(10)
+                .snapshots(),
+            builder: (context, snap) {
+              final docs = snap.data?.docs ?? [];
+              if (docs.isEmpty) {
+                return const Text('No room data',
+                    style: TextStyle(color: Colors.white54));
+              }
+              return Column(
+                children: docs.map((doc) {
+                  final d = doc.data() as Map<String, dynamic>;
+                  final name = d['name'] as String? ?? doc.id;
+                  final count = d['participantCount'] as int? ?? 0;
+                  final isActive = d['isActive'] as bool? ?? false;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 6),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.white12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.meeting_room,
+                          color: isActive ? Colors.greenAccent : Colors.white38,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            name,
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 13),
+                          ),
+                        ),
+                        Text(
+                          '$count listeners',
+                          style: const TextStyle(
+                              color: Colors.white54, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AnalyticsMetricCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final Stream<int> stream;
+
+  const _AnalyticsMetricCard({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.stream,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<int>(
+      stream: stream,
+      builder: (context, snap) {
+        final value = snap.data ?? 0;
+        return Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.35)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 28),
+              const SizedBox(width: 14),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '$value',
+                    style: TextStyle(
+                        color: color,
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                        color: Colors.white70, fontSize: 12),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ===========================================================================
+// Admin Logs Tab
+// ===========================================================================
+
+class _AdminLogsTab extends ConsumerWidget {
+  const _AdminLogsTab();
+
+  String _fmt(Timestamp? ts) {
+    if (ts == null) return '';
+    final d = ts.toDate();
+    return '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')} '
+        '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('admin_logs')
+          .orderBy('timestamp', descending: true)
+          .limit(100)
+          .snapshots(),
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final docs = snap.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return const Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.history, size: 60, color: Colors.white24),
+                SizedBox(height: 12),
+                Text('No admin logs yet',
+                    style: TextStyle(color: Colors.white54)),
+              ],
+            ),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: docs.length,
+          itemBuilder: (context, i) {
+            final data = docs[i].data() as Map<String, dynamic>;
+            final action = data['action'] as String? ?? 'action';
+            final adminId = data['adminId'] as String? ?? 'admin';
+            final subject = data['subject'] as String? ?? data['targetId'] as String? ?? '';
+            final ts = data['timestamp'] as Timestamp?;
+            final details = data['details'] as String? ?? '';
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.white12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.purpleAccent.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Text(
+                        action.toUpperCase(),
+                        style: const TextStyle(
+                            color: Colors.purpleAccent,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      _fmt(ts),
+                      style: const TextStyle(
+                          color: Colors.white38, fontSize: 11),
+                    ),
+                  ]),
+                  const SizedBox(height: 6),
+                  Text('Admin: $adminId',
+                      style: const TextStyle(
+                          color: Colors.white54, fontSize: 11)),
+                  if (subject.isNotEmpty)
+                    Text('Subject: $subject',
+                        style: const TextStyle(
+                            color: Colors.white70, fontSize: 12)),
+                  if (details.isNotEmpty) ...[
+                    const SizedBox(height: 4),
+                    Text(details,
+                        style: const TextStyle(
+                            color: Colors.white, fontSize: 12)),
+                  ],
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+

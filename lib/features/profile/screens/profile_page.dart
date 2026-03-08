@@ -52,7 +52,8 @@ class ProfilePage extends ConsumerStatefulWidget {
   ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends ConsumerState<ProfilePage> {
+class _ProfilePageState extends ConsumerState<ProfilePage>
+    with TickerProviderStateMixin {
   final _scaffoldKey = GlobalKey<ScaffoldMessengerState>();
 
   /// Local mode state — starts from what the profile says, owner can toggle.
@@ -61,9 +62,27 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   /// Guards one-time local tag refresh per page lifecycle.
   bool _tagsRefreshed = false;
 
+  late TabController _profileTabController;
+  int _profileTabIndex = 0;
+
   bool get _isOwner =>
       widget.targetUserId == null ||
       widget.targetUserId == FirebaseAuth.instance.currentUser?.uid;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileTabController = TabController(length: 4, vsync: this);
+    _profileTabController.addListener(() {
+      if (mounted) setState(() => _profileTabIndex = _profileTabController.index);
+    });
+  }
+
+  @override
+  void dispose() {
+    _profileTabController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -268,6 +287,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   // ══════════════════════════════════════════════════════════
   Widget _buildContent(UserProfile p) {
     final mode = _selectedMode ?? p.profileMode;
+    final isBlockedByMe = !_isOwner
+        ? (ref.watch(isBlockedByMeProvider(p.id)).asData?.value ?? false)
+        : false;
 
     return CustomScrollView(
       slivers: [
@@ -276,6 +298,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
+              // ── Blocked banner ────────────────────────────────────
+              if (isBlockedByMe) ...[
+                const SizedBox(height: 8),
+                _buildBlockedBanner(p),
+              ],
               // ── Hero: name + flag + presence ──────────────────────
               _buildHeroNameSection(p),
               const SizedBox(height: 16),
@@ -301,30 +328,241 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
               const SizedBox(height: 16),
               _buildActivityStatsSection(p),
               const SizedBox(height: 20),
-              // ── Neon divider ──────────────────────────────────────
-              _neonDivider(_modeAccent(mode)),
-              const SizedBox(height: 20),
-              // ── Mode Selector ─────────────────────────────────────
-              ProfileModeSelector(
-                selected: mode,
-                isOwner: _isOwner,
-                onChanged: (m) => setState(() => _selectedMode = m),
+              // ── Profile Tabs ──────────────────────────────────────
+              _buildProfileTabBar(mode),
+              const SizedBox(height: 16),
+              // ── Tab Content ───────────────────────────────────────
+              IndexedStack(
+                index: _profileTabIndex,
+                children: [
+                  // Tab 0 — About
+                  Column(children: [
+                    _neonDivider(_modeAccent(mode)),
+                    const SizedBox(height: 16),
+                    ProfileModeSelector(
+                      selected: mode,
+                      isOwner: _isOwner,
+                      onChanged: (m) => setState(() => _selectedMode = m),
+                    ),
+                    const SizedBox(height: 20),
+                    ..._buildOrderedLayers(p, mode),
+                    if (_isOwner) ...[
+                      const SizedBox(height: 24),
+                      ProfileCompletenessBar(userId: p.id),
+                      const SizedBox(height: 8),
+                      _buildEditProfileButton(),
+                      const SizedBox(height: 8),
+                    ],
+                    if (_isOwner) ..._buildOwnerFooter(p),
+                  ]),
+                  // Tab 1 — Friends
+                  _buildFriendsTab(p),
+                  // Tab 2 — Rooms
+                  _buildRoomsTab(p),
+                  // Tab 3 — Photos
+                  _buildPhotosTab(p),
+                ],
               ),
-              const SizedBox(height: 20),
-              ..._buildOrderedLayers(p, mode),
-              // ── Profile completeness + Edit Profile button (owner) ─
-              if (_isOwner) ...[
-                const SizedBox(height: 24),
-                ProfileCompletenessBar(userId: p.id),
-                const SizedBox(height: 8),
-                _buildEditProfileButton(),
-                const SizedBox(height: 8),
-              ],
-              if (_isOwner) ..._buildOwnerFooter(p),
             ]),
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildBlockedBanner(UserProfile p) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFF6B35).withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xFFFF6B35).withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.block, color: Color(0xFFFF6B35), size: 16),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'You have blocked this user.',
+              style: TextStyle(color: Color(0xFFFF6B35), fontSize: 13),
+            ),
+          ),
+          GestureDetector(
+            onTap: () async {
+              await ref.read(friendServiceProvider).unblockUser(p.id);
+              _toast('${p.displayName ?? 'User'} unblocked');
+            },
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF6B35).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: const Color(0xFFFF6B35).withValues(alpha: 0.5)),
+              ),
+              child: const Text(
+                'Unblock',
+                style: TextStyle(
+                  color: Color(0xFFFF6B35),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileTabBar(ProfileMode mode) {
+    final accent = _modeAccent(mode);
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color(0xFF1A1F2E),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
+      ),
+      child: TabBar(
+        controller: _profileTabController,
+        labelColor: accent,
+        unselectedLabelColor: Colors.white38,
+        indicatorColor: accent,
+        indicatorSize: TabBarIndicatorSize.label,
+        labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        unselectedLabelStyle: const TextStyle(fontSize: 12),
+        tabs: const [
+          Tab(text: 'About'),
+          Tab(text: 'Friends'),
+          Tab(text: 'Rooms'),
+          Tab(text: 'Photos'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFriendsTab(UserProfile p) {
+    final friendIds = ref.watch(friendIdsOfUserProvider(p.id));
+    return friendIds.when(
+      loading: () => const Padding(
+        padding: EdgeInsets.all(32),
+        child: Center(child: CircularProgressIndicator(color: Color(0xFF4A90FF))),
+      ),
+      error: (_, __) => const _TabEmptyState(
+        icon: Icons.people_outline,
+        message: 'Unable to load friends',
+      ),
+      data: (ids) {
+        if (ids.isEmpty) {
+          return _TabEmptyState(
+            icon: Icons.people_outline,
+            message: _isOwner ? 'No friends yet. Start connecting!' : 'No public friends.',
+          );
+        }
+        return Column(
+          children: ids
+              .take(30)
+              .map((uid) => _FriendTile(uid: uid))
+              .toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildRoomsTab(UserProfile p) {
+    return StreamBuilder<QuerySnapshot>(
+      stream: FirebaseFirestore.instance
+          .collection('rooms')
+          .where('hostId', isEqualTo: p.id)
+          .orderBy('createdAt', descending: true)
+          .limit(20)
+          .snapshots(),
+      builder: (context, snap) {
+        if (snap.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(32),
+            child: Center(child: CircularProgressIndicator(color: Color(0xFF00E5CC))),
+          );
+        }
+        final docs = snap.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return _TabEmptyState(
+            icon: Icons.mic_none_outlined,
+            message: _isOwner ? 'You haven\'t hosted any rooms yet.' : 'No rooms hosted yet.',
+          );
+        }
+        return Column(
+          children: docs
+              .map((doc) => _RoomTile(
+                    roomId: doc.id,
+                    data: doc.data() as Map<String, dynamic>,
+                  ))
+              .toList(),
+        );
+      },
+    );
+  }
+
+  Widget _buildPhotosTab(UserProfile p) {
+    final photos = p.galleryPhotos ?? [];
+    if (photos.isEmpty) {
+      return _TabEmptyState(
+        icon: Icons.photo_library_outlined,
+        message: _isOwner ? 'No photos yet. Add some to your gallery!' : 'No photos shared.',
+      );
+    }
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 3,
+        mainAxisSpacing: 4,
+        crossAxisSpacing: 4,
+      ),
+      itemCount: photos.length,
+      itemBuilder: (ctx, i) => GestureDetector(
+        onTap: () => _showPhotoViewer(ctx, photos, i),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(6),
+          child: Image.network(
+            photos[i],
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => Container(
+              color: const Color(0xFF1A1F2E),
+              child: const Icon(Icons.broken_image, color: Colors.white24),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showPhotoViewer(BuildContext ctx, List<String> photos, int initial) {
+    showDialog(
+      context: ctx,
+      builder: (_) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: PageController(initialPage: initial),
+              itemCount: photos.length,
+              itemBuilder: (_, i) => InteractiveViewer(
+                child: Image.network(photos[i], fit: BoxFit.contain),
+              ),
+            ),
+            Positioned(
+              top: 12,
+              right: 12,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.pop(ctx),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1527,4 +1765,131 @@ class _StatItem {
   final IconData icon;
   final Color color;
   const _StatItem(this.value, this.label, this.icon, this.color);
+}
+
+// ─── Profile tab helpers ──────────────────────────────────────────────────────
+
+class _TabEmptyState extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  const _TabEmptyState({required this.icon, required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 40),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 40, color: Colors.white12),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              style: const TextStyle(color: Colors.white38, fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _FriendTile extends ConsumerWidget {
+  final String uid;
+  const _FriendTile({required this.uid});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(userProfileProvider(uid));
+    return profileAsync.when(
+      loading: () => const ListTile(
+        leading: CircleAvatar(backgroundColor: Color(0xFF1A1F2E), radius: 22),
+        title: SizedBox(height: 12, width: 80, child: ColoredBox(color: Color(0xFF1A1F2E))),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (p) {
+        if (p == null) return const SizedBox.shrink();
+        return ListTile(
+          leading: CircleAvatar(
+            radius: 22,
+            backgroundImage: p.photoUrl != null ? NetworkImage(p.photoUrl!) : null,
+            backgroundColor: const Color(0xFF1A1F2E),
+            child: p.photoUrl == null
+                ? Text(
+                    (p.displayName ?? 'U').substring(0, 1).toUpperCase(),
+                    style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.w700),
+                  )
+                : null,
+          ),
+          title: Text(
+            p.displayName ?? 'Unknown',
+            style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+          subtitle: p.bio != null && p.bio!.isNotEmpty
+              ? Text(
+                  p.bio!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.white38, fontSize: 12),
+                )
+              : null,
+          onTap: () => Navigator.pushNamed(
+            context,
+            AppRoutes.userProfile,
+            arguments: uid,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RoomTile extends StatelessWidget {
+  final String roomId;
+  final Map<String, dynamic> data;
+  const _RoomTile({required this.roomId, required this.data});
+
+  @override
+  Widget build(BuildContext context) {
+    final name = data['name'] as String? ?? 'Unnamed Room';
+    final count = data['participantCount'] as int? ?? 0;
+    final isLive = data['isLive'] as bool? ?? false;
+    return ListTile(
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: const Color(0xFF00E5CC).withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: const Color(0xFF00E5CC).withValues(alpha: 0.3)),
+        ),
+        child: const Icon(Icons.mic_none_outlined, color: Color(0xFF00E5CC), size: 20),
+      ),
+      title: Text(
+        name,
+        style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+      ),
+      subtitle: Text(
+        '$count participants',
+        style: const TextStyle(color: Colors.white38, fontSize: 12),
+      ),
+      trailing: isLive
+          ? Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF4D8B).withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(6),
+                border: Border.all(color: const Color(0xFFFF4D8B).withValues(alpha: 0.4)),
+              ),
+              child: const Text(
+                'LIVE',
+                style: TextStyle(color: Color(0xFFFF4D8B), fontSize: 10, fontWeight: FontWeight.w800),
+              ),
+            )
+          : null,
+      onTap: () => Navigator.pushNamed(context, AppRoutes.room, arguments: roomId),
+    );
+  }
 }

@@ -161,11 +161,21 @@ class FriendService {
         .map((snap) => snap.docs.map((d) => <String, dynamic>{...d.data(), 'id': d.id}).toList());
   }
 
-  /// Confirmed friend IDs.
+  /// Confirmed friend IDs for the current user.
   Stream<List<String>> watchFriendIds() {
     return _db
         .collection('users')
         .doc(_uid)
+        .collection('friends')
+        .snapshots()
+        .map((snap) => snap.docs.map((d) => d.id).toList());
+  }
+
+  /// Confirmed friend IDs for any [userId] (used when viewing another profile).
+  Stream<List<String>> watchFriendIdsOf(String userId) {
+    return _db
+        .collection('users')
+        .doc(userId)
         .collection('friends')
         .snapshots()
         .map((snap) => snap.docs.map((d) => d.id).toList());
@@ -180,5 +190,26 @@ class FriendService {
         .doc(_uid)
         .get();
     return doc.exists;
+  }
+
+  /// Streams whether the current user has blocked [targetId].
+  Stream<bool> watchBlockedStatus(String targetId) {
+    return _db
+        .collection('users')
+        .doc(_uid)
+        .collection('blocked')
+        .doc(targetId)
+        .snapshots()
+        .map((doc) => doc.exists);
+  }
+
+  /// Fetches friend IDs for any user (for mutual-friends calculation).
+  Future<List<String>> getFriendIds(String userId) async {
+    final snap = await _db
+        .collection('users')
+        .doc(userId)
+        .collection('friends')
+        .get();
+    return snap.docs.map((d) => d.id).toList();
   }
 }

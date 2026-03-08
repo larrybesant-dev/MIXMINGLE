@@ -39,11 +39,22 @@ class _RoomSettingsPanelState extends ConsumerState<RoomSettingsPanel> {
   late final TextEditingController _nameCtrl;
   late final TextEditingController _descCtrl;
   late final TextEditingController _coverCtrl;
-  late final TextEditingController _maxCtrl;
   late bool _isPublic;
   bool _micLocked = false;
   bool _cameraLocked = false;
   bool _saving = false;
+  double _maxParticipants = 50;
+  String? _selectedCategory;
+
+  static const _categories = ['Music', 'Dating', 'Talk', 'Gaming', 'Study', 'News'];
+  static const _categoryIcons = {
+    'Music': Icons.music_note,
+    'Dating': Icons.favorite,
+    'Talk': Icons.chat_bubble,
+    'Gaming': Icons.sports_esports,
+    'Study': Icons.school,
+    'News': Icons.newspaper,
+  };
 
   @override
   void initState() {
@@ -51,9 +62,8 @@ class _RoomSettingsPanelState extends ConsumerState<RoomSettingsPanel> {
     _nameCtrl = TextEditingController(text: widget.roomData['name'] as String? ?? '');
     _descCtrl = TextEditingController(text: widget.roomData['description'] as String? ?? '');
     _coverCtrl = TextEditingController(text: widget.roomData['coverImageUrl'] as String? ?? '');
-    _maxCtrl = TextEditingController(
-      text: (widget.roomData['maxParticipants'] as int? ?? 50).toString(),
-    );
+    _maxParticipants = (widget.roomData['maxParticipants'] as int? ?? 50).toDouble().clamp(5, 200);
+    _selectedCategory = widget.roomData['category'] as String?;
     _isPublic = widget.roomData['isPublic'] as bool? ?? true;
     _micLocked = widget.roomData['micLocked'] as bool? ?? false;
     _cameraLocked = widget.roomData['cameraLocked'] as bool? ?? false;
@@ -64,7 +74,6 @@ class _RoomSettingsPanelState extends ConsumerState<RoomSettingsPanel> {
     _nameCtrl.dispose();
     _descCtrl.dispose();
     _coverCtrl.dispose();
-    _maxCtrl.dispose();
     super.dispose();
   }
 
@@ -140,18 +149,93 @@ class _RoomSettingsPanelState extends ConsumerState<RoomSettingsPanel> {
               ),
               const SizedBox(height: 14),
 
-              // Max participants
-              _label('Max Participants'),
-              const SizedBox(height: 6),
-              _field(
-                controller: _maxCtrl,
-                hint: '50',
-                keyboardType: TextInputType.number,
-                validator: (v) {
-                  final n = int.tryParse(v ?? '');
-                  if (n == null || n < 2 || n > 500) return 'Enter 2–500';
-                  return null;
-                },
+              // Category selector
+              _label('Category'),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _categories.map((cat) {
+                  final selected = _selectedCategory == cat;
+                  return GestureDetector(
+                    onTap: () => setState(() => _selectedCategory = selected ? null : cat),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 150),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: selected
+                            ? const Color(0xFF4A90FF).withValues(alpha: 0.25)
+                            : const Color(0xFF1E2D40),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: selected
+                              ? const Color(0xFF4A90FF)
+                              : const Color(0xFF2D3A50),
+                          width: selected ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            _categoryIcons[cat]!,
+                            size: 14,
+                            color: selected
+                                ? const Color(0xFF4A90FF)
+                                : Colors.white54,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            cat,
+                            style: TextStyle(
+                              color: selected
+                                  ? const Color(0xFF4A90FF)
+                                  : Colors.white70,
+                              fontSize: 13,
+                              fontWeight: selected
+                                  ? FontWeight.w600
+                                  : FontWeight.normal,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 18),
+
+              // Max participants slider
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _label('Max Participants'),
+                  Text(
+                    '${_maxParticipants.round()}',
+                    style: const TextStyle(
+                      color: Color(0xFF00E5CC),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  activeTrackColor: const Color(0xFF4A90FF),
+                  inactiveTrackColor: const Color(0xFF2D3A50),
+                  thumbColor: const Color(0xFF4A90FF),
+                  overlayColor: const Color(0xFF4A90FF).withValues(alpha: 0.2),
+                  thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+                ),
+                child: Slider(
+                  min: 5,
+                  max: 200,
+                  divisions: 39,
+                  value: _maxParticipants,
+                  label: '${_maxParticipants.round()}',
+                  onChanged: (v) => setState(() => _maxParticipants = v),
+                ),
               ),
               const SizedBox(height: 18),
 
@@ -272,7 +356,8 @@ class _RoomSettingsPanelState extends ConsumerState<RoomSettingsPanel> {
         'description': _descCtrl.text.trim(),
         if (_coverCtrl.text.trim().isNotEmpty)
           'coverImageUrl': _coverCtrl.text.trim(),
-        'maxParticipants': int.parse(_maxCtrl.text.trim()),
+        'maxParticipants': _maxParticipants.round(),
+        if (_selectedCategory != null) 'category': _selectedCategory,
         'isPublic': _isPublic,
         'updatedAt': FieldValue.serverTimestamp(),
       });

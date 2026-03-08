@@ -14,6 +14,7 @@ import '../../../shared/widgets/club_background.dart';
 import '../../../shared/widgets/presence_indicator.dart';
 import '../../../utils/window_manager.dart';
 import '../../../utils/window_sync_service.dart';
+import '../widgets/typing_indicator.dart';
 
 class ChatConversationPage extends ConsumerStatefulWidget {
   final String chatId;
@@ -29,6 +30,7 @@ class _ChatConversationPageState
   final TextEditingController _input = TextEditingController();
   final ScrollController _scroll = ScrollController();
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  bool _isTyping = false;
 
   // ── Send a message ─────────────────────────────────────────────────────
   Future<void> _send() async {
@@ -37,6 +39,7 @@ class _ChatConversationPageState
     final user = ref.read(currentUserProvider).value;
     if (user == null) return;
     _input.clear();
+    _stopTyping(user.id);
 
     final ref2 = _db
         .collection('chats')
@@ -59,6 +62,36 @@ class _ChatConversationPageState
 
     _scroll.animateTo(0,
         duration: const Duration(milliseconds: 280), curve: Curves.easeOut);
+  }
+
+  // ── Typing state ────────────────────────────────────────────────────────
+  void _onTextChanged(String value, String userId) {
+    if (value.isNotEmpty && !_isTyping) {
+      _isTyping = true;
+      _db.collection('chats').doc(widget.chatId).set({
+        'typing': {userId: true},
+      }, SetOptions(merge: true));
+    } else if (value.isEmpty && _isTyping) {
+      _stopTyping(userId);
+    }
+  }
+
+  void _stopTyping(String userId) {
+    if (!_isTyping) return;
+    _isTyping = false;
+    _db.collection('chats').doc(widget.chatId).set({
+      'typing': {userId: false},
+    }, SetOptions(merge: true));
+  }
+
+  Stream<bool> _otherTypingStream(String myId) {
+    return _db.collection('chats').doc(widget.chatId).snapshots().map((snap) {
+      final typing = snap.data()?['typing'] as Map<String, dynamic>?;
+      if (typing == null) return false;
+      return typing.entries
+          .where((e) => e.key != myId)
+          .any((e) => e.value == true);
+    });
   }
 
   // ── Mark messages as read ──────────────────────────────────────────────
@@ -86,6 +119,8 @@ class _ChatConversationPageState
 
   @override
   void dispose() {
+    final uid = ref.read(currentUserProvider).value?.id;
+    if (uid != null) _stopTyping(uid);
     _input.dispose();
     _scroll.dispose();
     super.dispose();
@@ -189,6 +224,24 @@ class _ChatConversationPageState
                 },
               ),
             ),
+            // Typing indicator (shows when the other person is typing)
+            if (user != null)
+              StreamBuilder<bool>(
+                stream: _otherTypingStream(user.id),
+                builder: (context, snap) {
+                  final isOtherTyping = snap.data ?? false;
+                  return AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: isOtherTyping
+                        ? const Padding(
+                            key: ValueKey('typing'),
+                            padding: EdgeInsets.only(left: 12, bottom: 4),
+                            child: TypingIndicator(),
+                          )
+                        : const SizedBox.shrink(key: ValueKey('not-typing')),
+                  );
+                },
+              ),
             _buildInputBar(),
           ],
         ),
@@ -209,6 +262,10 @@ class _ChatConversationPageState
                 style: DesignTypography.body,
                 textInputAction: TextInputAction.send,
                 onSubmitted: (_) => _send(),
+                onChanged: (v) {
+                  final uid = ref.read(currentUserProvider).value?.id;
+                  if (uid != null) _onTextChanged(v, uid);
+                },
                 maxLines: null,
                 decoration: InputDecoration(
                   hintText: 'Type a message...',

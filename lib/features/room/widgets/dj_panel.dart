@@ -5,6 +5,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mixmingle/shared/providers/video_media_providers.dart';
 
+/// Provider exposing the current DjState for a room (for Now Playing banner).
+final djStateProvider = StreamProvider.family<DjState, String>((ref, roomId) {
+  return FirebaseFirestore.instance
+      .collection('rooms')
+      .doc(roomId)
+      .snapshots()
+      .map((snap) {
+    final djMap = snap.data()?['djState'];
+    return djMap is Map<String, dynamic>
+        ? DjState.fromMap(djMap)
+        : const DjState();
+  });
+});
+
 // ── DJ State model ──────────────────────────────────────────────────────────
 class DjState {
   final bool isPlaying;
@@ -75,6 +89,28 @@ class _DjPanelState extends ConsumerState<DjPanel> {
   DjState _djState = const DjState();
   StreamSubscription<DocumentSnapshot>? _sub;
   bool _loading = false;
+  Duration _elapsed = Duration.zero;
+  Timer? _elapsedTimer;
+
+  void _startElapsedTimer() {
+    _elapsedTimer?.cancel();
+    _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() => _elapsed += const Duration(seconds: 1));
+    });
+  }
+
+  void _pauseElapsedTimer() => _elapsedTimer?.cancel();
+
+  void _resetElapsedTimer() {
+    _elapsedTimer?.cancel();
+    _elapsed = Duration.zero;
+  }
+
+  String get _elapsedLabel {
+    final m = _elapsed.inMinutes.remainder(60).toString().padLeft(2, '0');
+    final s = _elapsed.inSeconds.remainder(60).toString().padLeft(2, '0');
+    return '$m:$s';
+  }
 
   @override
   void initState() {
@@ -98,6 +134,7 @@ class _DjPanelState extends ConsumerState<DjPanel> {
   @override
   void dispose() {
     _sub?.cancel();
+    _elapsedTimer?.cancel();
     _urlCtrl.dispose();
     super.dispose();
   }
@@ -178,6 +215,48 @@ class _DjPanelState extends ConsumerState<DjPanel> {
                   color: Color(0xFF8B5CF6),
                   fontSize: 13,
                   fontWeight: FontWeight.w500),
+            ),
+            const SizedBox(height: 14),
+          ],
+
+          // Elapsed time indicator (visible when playing)
+          if (_djState.isPlaying) ...[
+            Row(
+              children: [
+                Icon(
+                  _djState.isPaused ? Icons.pause_circle_outline : Icons.play_circle_outline,
+                  size: 14,
+                  color: _djState.isPaused
+                      ? const Color(0xFFFFAB00)
+                      : const Color(0xFF00E5CC),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  _elapsedLabel,
+                  style: TextStyle(
+                    color: _djState.isPaused
+                        ? const Color(0xFFFFAB00)
+                        : const Color(0xFF00E5CC),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: LinearProgressIndicator(
+                    value: null, // indeterminate — we don't know track duration
+                    backgroundColor: Colors.white12,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      _djState.isPaused
+                          ? const Color(0xFFFFAB00)
+                          : const Color(0xFF8B5CF6),
+                    ),
+                    minHeight: 3,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 14),
           ],
@@ -345,6 +424,8 @@ class _DjPanelState extends ConsumerState<DjPanel> {
       final agora = ref.read(agoraVideoServiceProvider);
       final ok = await agora.startAudioMixing(url, loop: true);
       if (ok) {
+        setState(() => _elapsed = Duration.zero);
+        _startElapsedTimer();
         await _persistState(DjState(
           isPlaying: true,
           isPaused: false,
@@ -364,6 +445,7 @@ class _DjPanelState extends ConsumerState<DjPanel> {
     setState(() => _loading = true);
     try {
       await ref.read(agoraVideoServiceProvider).pauseAudioMixing();
+      _pauseElapsedTimer();
       await _persistState(DjState(
         isPlaying: true,
         isPaused: true,
@@ -380,6 +462,7 @@ class _DjPanelState extends ConsumerState<DjPanel> {
     setState(() => _loading = true);
     try {
       await ref.read(agoraVideoServiceProvider).resumeAudioMixing();
+      _startElapsedTimer();
       await _persistState(DjState(
         isPlaying: true,
         isPaused: false,
@@ -396,6 +479,7 @@ class _DjPanelState extends ConsumerState<DjPanel> {
     setState(() => _loading = true);
     try {
       await ref.read(agoraVideoServiceProvider).stopAudioMixing();
+      _resetElapsedTimer();
       await _persistState(const DjState());
     } finally {
       if (mounted) setState(() => _loading = false);

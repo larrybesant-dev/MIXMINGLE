@@ -9,6 +9,7 @@ import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../shared/neon_button.dart';
 import '../../shared/gift_selector.dart';
+import 'widgets/dj_panel.dart';
 
 class RoomPage extends ConsumerStatefulWidget {
   final Room room;
@@ -202,6 +203,65 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                         ),
                       ),
               ),
+            ),
+            // Messages area
+            // Now Playing banner (shown when DJ is active)
+            Consumer(
+              builder: (context, ref, _) {
+                final djAsync = ref.watch(djStateProvider(widget.room.id));
+                final dj = djAsync.asData?.value;
+                if (dj == null || !dj.isPlaying || dj.trackUrl == null) {
+                  return const SizedBox.shrink();
+                }
+                return Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(
+                      color: const Color(0xFF8B5CF6).withValues(alpha: 0.4),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.music_note, color: Color(0xFF8B5CF6), size: 16),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Now Playing · ',
+                        style: TextStyle(
+                          color: Color(0xFF8B5CF6),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Expanded(
+                        child: Text(
+                          dj.trackUrl!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      if (dj.isPaused)
+                        const Padding(
+                          padding: EdgeInsets.only(left: 8),
+                          child: Text(
+                            'PAUSED',
+                            style: TextStyle(
+                              color: Color(0xFFFFAB00),
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                );
+              },
             ),
             // Messages area
             Expanded(

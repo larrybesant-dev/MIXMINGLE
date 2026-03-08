@@ -18,9 +18,14 @@ import '../../features/room/screens/rooms_list_page.dart';
 // Chat
 import '../../features/chat/screens/chats_list_page.dart';
 import '../../features/chat/screens/chat_conversation_page.dart';
+import '../../features/chat/screens/message_requests_page.dart';
+
+// Discovery
+import '../../features/discovery/discovery_page.dart';
 
 // Profile & Social
 import '../../features/profile/screens/following_list_page.dart';
+import '../../features/profile/screens/report_user_page.dart';
 import '../../features/friends/friend_list_page.dart';
 
 // Guards
@@ -71,6 +76,7 @@ class AppRoutes {
   static const String blockedUsers        = '/blocked-users';
   static const String adminDashboard      = '/admin/dashboard';
   static const String friends              = '/friends';
+  static const String messageRequests      = '/message-requests';
 
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     debugPrint('Navigating to: ${settings.name}');
@@ -125,6 +131,26 @@ class AppRoutes {
         return MaterialPageRoute(
           builder: (_) => const AgeVerifiedGuard(
             child: ProfileCompleteGuard(child: FriendListPage()),
+          ),
+        );
+      case reportUser:
+        final args = settings.arguments as Map<String, dynamic>?;
+        return MaterialPageRoute(
+          builder: (_) => ReportUserPage(
+            userId: args?['userId'] as String? ?? '',
+            displayName: args?['displayName'] as String?,
+          ),
+        );
+      case messageRequests:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: MessageRequestsPage()),
+          ),
+        );
+      case discovery:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: DiscoveryPage()),
           ),
         );
       default:

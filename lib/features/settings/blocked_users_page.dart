@@ -2,37 +2,40 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../shared/providers/all_providers.dart';
-import '../../services/moderation/moderation_service.dart';
+import '../../shared/providers/friend_request_provider.dart';
 import '../../shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/core/routing/app_routes.dart';
 
-/// Blocked users provider
+/// Blocked users provider — reads from users/{uid}/blocked sub-collection
 final blockedUsersProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) return Stream.value([]);
 
   return FirebaseFirestore.instance
-      .collection('blocks')
-      .where('blockerId', isEqualTo: currentUser.id)
+      .collection('users')
+      .doc(currentUser.id)
+      .collection('blocked')
+      .orderBy('blockedAt', descending: true)
       .snapshots()
       .asyncMap((snapshot) async {
     final List<Map<String, dynamic>> blockedUsers = [];
 
     for (final doc in snapshot.docs) {
+      final blockedUserId = doc.id; // doc ID is the blocked user's UID
       final data = doc.data();
-      final blockedUserId = data['blockedUserId'] as String;
 
-      // Fetch user details
       try {
-        final userDoc = await FirebaseFirestore.instance.collection('users').doc(blockedUserId).get();
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(blockedUserId)
+            .get();
 
         if (userDoc.exists) {
           blockedUsers.add({
             'id': blockedUserId,
             'displayName': userDoc.data()?['displayName'] ?? 'Unknown',
-            'photoUrl': userDoc.data()?['photoUrl'],
+            'photoUrl': userDoc.data()?['photoUrl'] ?? userDoc.data()?['avatarUrl'],
             'blockedAt': (data['blockedAt'] as Timestamp?)?.toDate(),
-            'reason': data['reason'],
           });
         }
       } catch (e) {
@@ -52,7 +55,6 @@ class BlockedUsersPage extends ConsumerStatefulWidget {
 }
 
 class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
-  final _moderationService = ModerationService();
   bool _isUnblocking = false;
 
   Future<void> _unblockUser(String blockedUserId, String displayName) async {
@@ -79,10 +81,7 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
     setState(() => _isUnblocking = true);
 
     try {
-      final currentUser = ref.read(currentUserProvider).value;
-      if (currentUser == null) throw Exception('User not authenticated');
-
-      await _moderationService.unblockUser(currentUser.id, blockedUserId);
+      await ref.read(friendServiceProvider).unblockUser(blockedUserId);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -151,8 +150,6 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
               final displayName = user['displayName'] as String;
               final photoUrl = user['photoUrl'] as String?;
               final blockedAt = user['blockedAt'] as DateTime?;
-              final reason = user['reason'] as String?;
-
               return Card(
                 child: ListTile(
                   leading: CircleAvatar(
@@ -160,28 +157,15 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
                     child: photoUrl == null ? Text(displayName.substring(0, 1).toUpperCase()) : null,
                   ),
                   title: Text(displayName),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (blockedAt != null)
-                        Text(
+                  subtitle: blockedAt != null
+                      ? Text(
                           'Blocked ${_formatDate(blockedAt)}',
                           style: TextStyle(
                             fontSize: 12,
                             color: Colors.grey.shade600,
                           ),
-                        ),
-                      if (reason != null && reason.isNotEmpty)
-                        Text(
-                          'Reason: $reason',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey.shade600,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                    ],
-                  ),
+                        )
+                      : null,
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
