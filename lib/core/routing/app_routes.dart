@@ -81,6 +81,7 @@ class AppRoutes {
   static const String forgotPassword      = '/forgot-password';
   static const String ageGate             = '/age-gate';
   static const String onboarding          = '/onboarding';
+  static const String app                 = '/app';
   static const String home                = '/home';
   static const String rooms               = '/rooms';
   static const String room                = '/room';

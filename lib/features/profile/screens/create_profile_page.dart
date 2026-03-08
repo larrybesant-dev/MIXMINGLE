@@ -12,6 +12,7 @@ import '../../../shared/widgets/club_background.dart';
 import '../../../shared/widgets/glow_text.dart';
 import '../../../shared/models/user_profile.dart';
 import '../../../shared/models/vibe_genres.dart';
+import '../../../core/routing/app_routes.dart';
 
 class CreateProfilePage extends ConsumerStatefulWidget {
   const CreateProfilePage({super.key});
@@ -236,7 +237,7 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
         // Use pushNamedAndRemoveUntil('/app') so that the RootAuthGate
         // re-evaluates now that the profile exists; avoids being trapped
         // inside _ProfileIncompleteApp's locked navigator.
-        Navigator.of(context).pushNamedAndRemoveUntil('/app', (_) => false);
+        Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.app, (_) => false);
       }
     } catch (e) {
       if (mounted) {

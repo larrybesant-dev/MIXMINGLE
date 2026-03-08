@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'dart:async';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/glow_text.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -48,7 +49,7 @@ class _SplashPageState extends State<SplashPage> {
       if (mounted && !_hasNavigated) {
         debugPrint('âš ï¸ Splash timeout (15s) - forcing navigation to login');
         _hasNavigated = true;
-        Navigator.of(context).pushReplacementNamed('/login');
+        Navigator.of(context).pushReplacementNamed(AppRoutes.login);
       }
     });
   }
@@ -64,10 +65,10 @@ class _SplashPageState extends State<SplashPage> {
 
       if (user != null) {
         debugPrint('âœ… User authenticated - navigating to /home');
-        Navigator.of(context).pushReplacementNamed('/home');
+        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
       } else {
-        debugPrint('â„¹ï¸ No user - navigating to /login');
-        Navigator.of(context).pushReplacementNamed('/login');
+        debugPrint('ℹ️ No user - navigating to /login');
+        Navigator.of(context).pushReplacementNamed(AppRoutes.login);
       }
     }
   }

@@ -2,6 +2,7 @@
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../shared/neon_button.dart';
+import '../../core/routing/app_routes.dart';
 
 class ErrorPage extends StatelessWidget {
   final String? errorMessage;
@@ -72,7 +73,7 @@ class ErrorPage extends StatelessWidget {
                   ),
                 const SizedBox(height: 16),
                 TextButton(
-                  onPressed: () => Navigator.of(context).pushReplacementNamed('/home'),
+                  onPressed: () => Navigator.of(context).pushReplacementNamed(AppRoutes.home),
                   child: const GlowText(
                     text: 'Go Home',
                     fontSize: 16,
