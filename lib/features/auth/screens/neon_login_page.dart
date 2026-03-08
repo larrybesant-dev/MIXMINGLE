@@ -153,7 +153,7 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Sign in to your Mix & Mingle account',
+                          'Sign in to your Vybe Social account',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: NeonColors.textSecondary,
@@ -357,16 +357,16 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
         ),
         const SizedBox(height: 16),
         const NeonText(
-          'MIX & MINGLE',
+          'VYBE SOCIAL',
           fontSize: 26,
           fontWeight: FontWeight.w900,
           textColor: Colors.white,
-          glowColor: NeonColors.neonOrange,
+          glowColor: NeonColors.neonBlue,
           glowRadius: 12,
         ),
         const SizedBox(height: 4),
         const Text(
-          'Global DJ Vibes',
+          'Feel the Energy',
           style: TextStyle(
             fontSize: 12,
             color: NeonColors.textSecondary,

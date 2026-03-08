@@ -1,9 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/text_styles.dart';
 import '../../core/animations/custom_animations.dart';
 
-/// Mix & Mingle Branded Empty States
+/// Vybe Social Branded Empty States
 /// Consistent, engaging empty state UI across the app
 
 class EmptyState extends StatelessWidget {

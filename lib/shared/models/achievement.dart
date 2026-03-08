@@ -289,7 +289,7 @@ class Achievements {
     ),
     Achievement(
       id: 'level_25',
-      title: 'Mix & Mingle Legend',
+      title: 'Vybe Social Legend',
       description: 'Reach level 25',
       icon: 'ðŸ‘‘',
       xpReward: 500,

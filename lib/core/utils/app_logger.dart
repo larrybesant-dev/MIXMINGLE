@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/foundation.dart';
 
-/// Mix & Mingle App Logger
+/// Vybe Social App Logger
 /// Debug-only logging utility for tracking errors and unexpected states
 class AppLogger {
   static const String _prefix = 'ðŸŽµ Mix&Mingle';

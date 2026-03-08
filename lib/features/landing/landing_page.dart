@@ -151,7 +151,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const MixMingleLogo(fontSize: 48),
+          const VybeSocialLogo(fontSize: 48),
           const SizedBox(height: Spacing.sm),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.xs),
@@ -1013,7 +1013,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
       color: ElectricColors.surfaceMuted,
       child: Column(
         children: [
-          const MixMingleLogo(fontSize: 28),
+          const VybeSocialLogo(fontSize: 28),
           const SizedBox(height: Spacing.sm),
           Text(
             'Connect with live users and music lovers worldwide',
@@ -1043,7 +1043,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
           ),
           const SizedBox(height: Spacing.sm),
           Text(
-            'Â© 2026 Mix & Mingle. All rights reserved.',
+            'Â© 2026 Vybe Social. All rights reserved.',
             style: textTheme.labelSmall?.copyWith(color: ElectricColors.onSurfaceMuted),
           ),
         ],

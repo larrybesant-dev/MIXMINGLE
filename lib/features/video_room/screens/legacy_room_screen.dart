@@ -1,4 +1,4 @@
-﻿// lib/screens/room_screen.dart
+// lib/screens/room_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/providers/agora_provider.dart';
@@ -31,7 +31,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mix & Mingle Room', style: Theme.of(context).textTheme.titleLarge),
+        title: Text('Vybe Social Room', style: Theme.of(context).textTheme.titleLarge),
         backgroundColor: Colors.black87,
         elevation: 0,
         actions: [

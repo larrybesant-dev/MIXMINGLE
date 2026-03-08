@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 
-/// Mix & Mingle App-Wide Icon Constants
+/// Vybe Social App-Wide Icon Constants
 /// Centralized icon definitions for consistency across the app
 
 class AppIcons {

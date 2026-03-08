@@ -1,4 +1,4 @@
-﻿// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use
 /// Top Bar Widget - Navigation bar with animated participant count and theme toggle
 ///
 /// Features:
@@ -133,7 +133,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
   /// Builds the logo/title section
   Widget _buildLogo(bool darkMode) {
     return Text(
-      'ðŸŽ¬ Mix & Mingle',
+      'ðŸŽ¬ Vybe Social',
       style: AppTextStyles.h5.copyWith(
         color: DesignColors.accent,
         fontWeight: FontWeight.bold,

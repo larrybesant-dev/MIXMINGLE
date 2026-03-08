@@ -1,5 +1,5 @@
 
-/// Comprehensive provider exports for Mix & Mingle
+/// Comprehensive provider exports for Vybe Social
 ///
 /// This file consolidates all Riverpod providers and controllers
 /// organized by feature domain.

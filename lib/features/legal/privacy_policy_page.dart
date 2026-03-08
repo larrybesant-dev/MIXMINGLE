@@ -30,7 +30,7 @@ class PrivacyPolicyPage extends StatelessWidget {
             const SizedBox(height: 24),
             _buildSection(
               'Introduction',
-              'Mix & Mingle ("we," "our," or "us") respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application and services.',
+              'Vybe Social ("we," "our," or "us") respects your privacy and is committed to protecting your personal data. This privacy policy explains how we collect, use, disclose, and safeguard your information when you use our mobile application and services.',
             ),
             _buildSection(
               '1. Information We Collect',
@@ -134,7 +134,7 @@ class PrivacyPolicyPage extends StatelessWidget {
                 text: TextSpan(
                   style: TextStyle(color: Colors.grey.shade600),
                   children: [
-                    const TextSpan(text: 'By using Mix & Mingle, you agree to our\n'),
+                    const TextSpan(text: 'By using Vybe Social, you agree to our\n'),
                     TextSpan(
                       text: 'Terms of Service',
                       style: TextStyle(

@@ -1,6 +1,6 @@
-﻿/// Mix & Mingle SDK
+/// Vybe Social SDK
 ///
-/// Client SDK for integrating Mix & Mingle functionality
+/// Client SDK for integrating Vybe Social functionality
 /// into external applications.
 library;
 
@@ -21,7 +21,7 @@ class MMSDKConfig {
   const MMSDKConfig({
     required this.clientId,
     required this.clientSecret,
-    this.baseUrl = 'https://api.mixmingle.com',
+    this.baseUrl = 'https://api.Vybe Social.com',
     this.timeout = const Duration(seconds: 30),
     this.enableLogging = false,
   });
@@ -297,7 +297,7 @@ class SDKResponse<T> {
       );
 }
 
-/// Mix & Mingle SDK
+/// Vybe Social SDK
 class MMSDK {
   final MMSDKConfig config;
   String? _accessToken;
@@ -320,7 +320,7 @@ class MMSDK {
 
   /// Initialize the SDK and authenticate
   Future<bool> initialize() async {
-    _log('Initializing Mix & Mingle SDK...');
+    _log('Initializing Vybe Social SDK...');
 
     try {
       final response = await _httpClient.post(

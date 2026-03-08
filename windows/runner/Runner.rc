@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.mixandmingle" "\0"
-            VALUE "FileDescription", "mix_and_mingle" "\0"
+            VALUE "CompanyName", "Vybe Social" "\0"
+            VALUE "FileDescription", "Vybe Social" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "mix_and_mingle" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 com.mixandmingle. All rights reserved." "\0"
-            VALUE "OriginalFilename", "mix_and_mingle.exe" "\0"
-            VALUE "ProductName", "mix_and_mingle" "\0"
+            VALUE "InternalName", "vybe_social" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Vybe Social. All rights reserved." "\0"
+            VALUE "OriginalFilename", "vybe_social.exe" "\0"
+            VALUE "ProductName", "Vybe Social" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

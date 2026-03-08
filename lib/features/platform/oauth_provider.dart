@@ -1,6 +1,6 @@
 /// OAuth Provider
 ///
-/// Manages OAuth 2.0 authentication flows for the Mix & Mingle platform,
+/// Manages OAuth 2.0 authentication flows for the Vybe Social platform,
 /// including authorization code flow, token management, and provider integration.
 library;
 

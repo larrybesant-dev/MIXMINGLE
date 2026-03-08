@@ -1,11 +1,13 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
-/// Mix & Mingle Neon Club Color Palette
+/// Vybe Social Neon Club Color Palette
 /// Electric aesthetic with vibrant neon accents - based on official brand
 class NeonColors {
-  // Primary Brand Colors - Mix & Mingle Official
-  static const Color neonOrange = Color(0xFFFF7A3C);      // Mix & Mingle neon orange
-  static const Color neonBlue = Color(0xFF00D9FF);        // Neon cyan blue (Mingle)
+  // Primary Brand Colors - Vybe Social Official
+  static const Color neonOrange = Color(0xFFFF7A3C);      // Legacy accent (kept for compatibility)
+  static const Color neonBlue = Color(0xFF00D9FF);        // Electric blue (primary brand)
+  static const Color neonViolet = Color(0xFF7B2BFF);      // Violet (Neon Pulse mid)
+  static const Color neonMagenta = Color(0xFFFF2BD7);     // Magenta (Neon Pulse end)
   static const Color neonPurple = Color(0xFFBD00FF);      // Electric purple accent
   static const Color neonPink = Color(0xFFFF2BD7);        // Hot pink accent
 
@@ -32,10 +34,22 @@ class NeonColors {
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [
-      neonOrange,
-      neonPurple,
+      neonBlue,
+      neonViolet,
+      neonMagenta,
     ],
-    stops: [0.0, 1.0],
+    stops: [0.0, 0.5, 1.0],
+  );
+
+  static const LinearGradient vybePulseGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      neonBlue,
+      neonViolet,
+      neonMagenta,
+    ],
+    stops: [0.0, 0.5, 1.0],
   );
 
   static const LinearGradient neonBlueGradient = LinearGradient(

@@ -6,16 +6,16 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/routing/app_routes.dart';
 import '../core/theme/neon_theme.dart';
 
-class MixMingleApp extends StatelessWidget {
-  const MixMingleApp({super.key});
+class VybeSocialApp extends StatelessWidget {
+  const VybeSocialApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('ðŸ—ï¸ Building MixMingleApp...');
+    debugPrint('ðŸ—ï¸ Building VybeSocialApp...');
 
     return ProviderScope(
       child: MaterialApp(
-        title: 'Mix & Mingle - Global DJ Vibes',
+        title: 'Vybe Social',
         debugShowCheckedModeBanner: false,
         theme: NeonTheme.darkTheme,
         // Use the app routing system

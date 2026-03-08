@@ -1,7 +1,7 @@
 /// Webhook Handler
 ///
 /// Manages webhook registrations, deliveries, and event
-/// handling for the Mix & Mingle platform.
+/// handling for the Vybe Social platform.
 library;
 
 import 'dart:async';

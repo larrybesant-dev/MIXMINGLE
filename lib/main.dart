@@ -187,7 +187,7 @@ class _AlwaysLandingApp extends riverpod.ConsumerWidget {
       ),
     );
     return MaterialApp(
-      title: 'Mix & Mingle - Vibes Around the World',
+      title: 'Vybe Social',
       debugShowCheckedModeBanner: false,
       theme: themedTheme,
       initialRoute: '/',

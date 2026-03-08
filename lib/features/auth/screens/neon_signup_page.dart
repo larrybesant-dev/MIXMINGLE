@@ -142,7 +142,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
                         ),
                         const SizedBox(height: 8),
                         const Text(
-                          'Create your Mix & Mingle account',
+                          'Create your Vybe Social account',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: NeonColors.textSecondary,
@@ -356,7 +356,7 @@ class _NeonSignupPageState extends State<NeonSignupPage> {
         ),
         const SizedBox(height: 12),
         const NeonText(
-          'MIX & MINGLE',
+          'VYBE SOCIAL',
           fontSize: 24,
           fontWeight: FontWeight.w900,
           textColor: Colors.white,

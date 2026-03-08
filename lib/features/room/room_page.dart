@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
@@ -447,7 +447,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
               Clipboard.setData(
                 ClipboardData(
                     text:
-                        'Join me in "${widget.room.title}" on Mix & Mingle! Room ID: ${widget.room.id}'),
+                        'Join me in "${widget.room.title}" on Vybe Social! Room ID: ${widget.room.id}'),
               );
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

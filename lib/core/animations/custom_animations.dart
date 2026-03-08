@@ -1,6 +1,6 @@
 ﻿import 'package:flutter/material.dart';
 
-/// Mix & Mingle Custom Animations
+/// Vybe Social Custom Animations
 /// Smooth, energetic animations for nightclub aesthetic
 
 /// Fade in animation with slide from bottom

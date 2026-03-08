@@ -1,9 +1,9 @@
-﻿// App-wide constants for Mix & Mingle
+﻿// App-wide constants for Vybe Social
 import 'package:flutter/material.dart';
 
 class AppConstants {
   // App info
-  static const String appName = 'Mix & Mingle';
+  static const String appName = 'Vybe Social';
   static const String appVersion = '1.0.0';
 
   // Agora configuration

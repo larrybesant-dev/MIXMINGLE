@@ -3,7 +3,7 @@
 
 import 'package:flutter/material.dart';
 
-class MixMingleTheme {
+class MixMingleTheme {  // kept for legacy stub compatibility
     static TextStyle get body => const TextStyle(fontSize: 14);
   static ThemeData get light => ThemeData.light();
   static ThemeData get dark => ThemeData.dark();

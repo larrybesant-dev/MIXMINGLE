@@ -30,11 +30,11 @@ class TermsOfServicePage extends StatelessWidget {
             const SizedBox(height: 24),
             _buildSection(
               'Agreement to Terms',
-              'By accessing or using Mix & Mingle, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using this service.',
+              'By accessing or using Vybe Social, you agree to be bound by these Terms of Service and all applicable laws and regulations. If you do not agree with any of these terms, you are prohibited from using this service.',
             ),
             _buildSection(
               '1. Eligibility',
-              'You must be at least 18 years old to use this service. By using Mix & Mingle, you represent and warrant that:\n\n'
+              'You must be at least 18 years old to use this service. By using Vybe Social, you represent and warrant that:\n\n'
                   'â€¢ You are at least 18 years of age\n'
                   'â€¢ You have the legal capacity to enter into this agreement\n'
                   'â€¢ You will comply with these Terms and all applicable laws\n'
@@ -42,7 +42,7 @@ class TermsOfServicePage extends StatelessWidget {
             ),
             _buildSection(
               '2. Account Registration',
-              'To use Mix & Mingle, you must create an account. You agree to:\n\n'
+              'To use Vybe Social, you must create an account. You agree to:\n\n'
                   'â€¢ Provide accurate, current, and complete information\n'
                   'â€¢ Maintain and promptly update your account information\n'
                   'â€¢ Keep your password secure and confidential\n'
@@ -85,7 +85,7 @@ class TermsOfServicePage extends StatelessWidget {
             ),
             _buildSection(
               '6. Intellectual Property',
-              'Mix & Mingle and all related content, features, and functionality are owned by us and protected by copyright, trademark, and other intellectual property laws. You may not:\n\n'
+              'Vybe Social and all related content, features, and functionality are owned by us and protected by copyright, trademark, and other intellectual property laws. You may not:\n\n'
                   'â€¢ Copy, modify, or distribute our content\n'
                   'â€¢ Use our trademarks without permission\n'
                   'â€¢ Reverse engineer or decompile the app\n'
@@ -170,7 +170,7 @@ class TermsOfServicePage extends StatelessWidget {
             _buildSection(
               '16. Contact Information',
               'For questions about these Terms, contact us at:\n\n'
-                  'Email: legal@mixandmingle.com\n'
+                  'Email: legal@vybe.social\n'
                   'Address: [Your Company Address]\n',
             ),
             const SizedBox(height: 32),
@@ -180,7 +180,7 @@ class TermsOfServicePage extends StatelessWidget {
                 text: TextSpan(
                   style: TextStyle(color: Colors.grey.shade600),
                   children: [
-                    const TextSpan(text: 'By using Mix & Mingle, you agree to our\n'),
+                    const TextSpan(text: 'By using Vybe Social, you agree to our\n'),
                     TextSpan(
                       text: 'Terms of Service',
                       style: TextStyle(

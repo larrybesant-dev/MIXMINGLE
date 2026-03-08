@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:developer' as developer;
 
 /// Production-safe logging utilities
@@ -14,7 +14,7 @@ class DebugLog {
       developer.log(
         message,
         level: 800,
-        name: tag ?? 'MixMingle',
+        name: tag ?? 'VybeSocial',
       );
     }
   }
@@ -26,7 +26,7 @@ class DebugLog {
       developer.log(
         message,
         level: 500,
-        name: '${tag ?? "MixMingle"}.Debug',
+        name: '${tag ?? "VybeSocial"}.Debug',
       );
     }
   }
@@ -38,7 +38,7 @@ class DebugLog {
       developer.log(
         message,
         level: 900,
-        name: '${tag ?? "MixMingle"}.Warn',
+        name: '${tag ?? "VybeSocial"}.Warn',
       );
     }
   }
@@ -49,7 +49,7 @@ class DebugLog {
     developer.log(
       message,
       level: 1000,
-      name: '${tag ?? "MixMingle"}.Error',
+      name: '${tag ?? "VybeSocial"}.Error',
     );
   }
 

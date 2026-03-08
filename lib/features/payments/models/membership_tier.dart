@@ -1,4 +1,4 @@
-﻿/// Membership Tier Model
+/// Membership Tier Model
 ///
 /// Defines the three membership tiers: Free, VIP, VIP+
 /// with their associated benefits and identifiers.
@@ -54,11 +54,11 @@ enum MembershipTier {
   String get description {
     switch (this) {
       case MembershipTier.free:
-        return 'Basic access to Mix & Mingle';
+        return 'Basic access to Vybe Social';
       case MembershipTier.vip:
         return 'Unlock the VIP experience';
       case MembershipTier.vipPlus:
-        return 'The ultimate Mix & Mingle experience';
+        return 'The ultimate Vybe Social experience';
     }
   }
 

@@ -1,6 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
-/// Mix & Mingle Brand Colors
+/// Vybe Social Brand Colors
 /// Nightclub/social vibe with vibrant energy
 class ClubColors {
   // Primary Brand Colors

@@ -116,11 +116,11 @@ class _SplashPageState extends State<SplashPage> {
 
               // App Name
               const GlowText(
-                text: 'MIX & MINGLE',
+                text: 'VYBE SOCIAL',
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
-                color: Color(0xFFFFD700),
-                glowColor: Color(0xFFFF4C4C),
+                color: Color(0xFF00D9FF),
+                glowColor: Color(0xFF7B2BFF),
                 glowRadius: 12,
               ),
               const SizedBox(height: 8),

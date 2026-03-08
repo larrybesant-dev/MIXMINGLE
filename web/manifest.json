@@ -1,11 +1,11 @@
 {
-    "name": "Mix & Mingle",
-    "short_name": "Mix & Mingle",
+    "name": "Vybe Social",
+    "short_name": "Vybe Social",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#0A0A18",
-    "theme_color": "#1a1a2e",
-    "description": "Connect and mingle with people in real-time video rooms",
+    "background_color": "#0A0E27",
+    "theme_color": "#00D9FF",
+    "description": "Feel the energy — connect with people in real-time voice and video rooms",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

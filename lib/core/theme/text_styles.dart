@@ -1,8 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'colors.dart';
 
-/// Mix & Mingle Typography System
+/// Vybe Social Typography System
 /// Modern, bold, and energetic fonts for nightclub aesthetic
 class ClubTextStyles {
   // Font families

@@ -1,9 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../core/theme/colors.dart';
 import '../../core/theme/text_styles.dart';
 import '../../core/animations/custom_animations.dart';
 
-/// Mix & Mingle Branded Loading Indicators
+/// Vybe Social Branded Loading Indicators
 /// Consistent loading states with nightclub aesthetic
 
 /// Primary branded loading indicator

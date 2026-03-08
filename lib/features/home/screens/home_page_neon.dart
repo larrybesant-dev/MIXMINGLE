@@ -182,7 +182,7 @@ class HomePageNeon extends ConsumerWidget {
 
         // Brand name
         NeonText(
-          'MIX & MINGLE',
+          'VYBE SOCIAL',
           style: Theme.of(context).textTheme.displaySmall?.copyWith(
             fontWeight: FontWeight.w900,
             letterSpacing: 3,
@@ -194,7 +194,7 @@ class HomePageNeon extends ConsumerWidget {
         const SizedBox(height: 4),
 
         NeonText(
-          'GLOBAL DJ VIBES',
+          'FEEL THE ENERGY',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: ClubColors.secondary,
             letterSpacing: 2,
