@@ -7,7 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../../core/theme/neon_colors.dart';
 import '../../../core/analytics/analytics_events.dart';
@@ -131,9 +133,17 @@ class _AgeGatePageState extends ConsumerState<AgeGatePage> {
 
     if (mounted) {
       final user = FirebaseAuth.instance.currentUser;
-      Navigator.of(context).pushReplacementNamed(
-        user != null ? AppRoutes.home : AppRoutes.signup
-      );
+      if (user != null) {
+        // Check Firestore profile
+        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        if (doc.exists) {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        } else {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.signup);
+        }
+      } else {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.signup);
+      }
     }
   }
 

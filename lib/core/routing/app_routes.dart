@@ -156,256 +156,155 @@ class AppRoutes {
 
   static Route<dynamic> onGenerateRoute(RouteSettings routeSettings) {
     debugPrint('Navigating to: ${routeSettings.name}');
-
-    switch (routeSettings.name) {
-      case landing:
-        return MaterialPageRoute(builder: (_) => const LandingPage());
-      case login:
-        return MaterialPageRoute(builder: (_) => const NeonLoginPage());
-      case signup:
-        return MaterialPageRoute(builder: (_) => const NeonSignupPage());
-      case forgotPassword:
-        return MaterialPageRoute(builder: (_) => const ForgotPasswordPage());
-      case ageGate:
-        return MaterialPageRoute(builder: (_) => const AgeGatePage());
-      case home:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: HomePageElectric()),
-          ),
-        );
-      case rooms:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: RoomsListPage()),
-          ),
-        );
-      case room:
-        final roomId = routeSettings.arguments as String?;
-        if (roomId == null) return _errorRoute('Room ID required');
-        return MaterialPageRoute(
-          builder: (_) => AgeVerifiedGuard(
-            child: ProfileCompleteGuard(
-              child: _RoomLoaderPage(roomId: roomId),
-            ),
-          ),
-        );
-      case chats:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: ChatsListPage()),
-          ),
-        );
-      case chat:
-        final chatId = routeSettings.arguments as String?;
-        if (chatId == null) return _errorRoute('Chat ID required');
-        return MaterialPageRoute(
-          builder: (_) => AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: ChatConversationPage(chatId: chatId)),
-          ),
-        );
-      case following:
-        final userId = routeSettings.arguments as String? ?? '';
-        return MaterialPageRoute(
-          builder: (_) => FollowingListPage(userId: userId, displayName: ''),
-        );
-      case friends:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: FriendListPage()),
-          ),
-        );
-      case reportUser:
-        final args = routeSettings.arguments as Map<String, dynamic>?;
-        return MaterialPageRoute(
-          builder: (_) => ReportUserPage(
-            userId: args?['userId'] as String? ?? '',
-            displayName: args?['displayName'] as String?,
-          ),
-        );
-      case messageRequests:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: MessageRequestsPage()),
-          ),
-        );
-      case discovery:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: DiscoveryPage()),
-          ),
-        );
-      case settings:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: SettingsPage()),
-          ),
-        );
-      case accountSettings:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: AccountSettingsPage()),
-          ),
-        );
-      case privacySettings:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: PrivacySettingsPage()),
-          ),
-        );
-      case notificationSettings:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: NotificationSettingsPage()),
-          ),
-        );
-      case blockedUsers:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: BlockedUsersPage()),
-          ),
-        );
-      case adminDashboard:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: AdminDashboardPage()),
-          ),
-        );
-      case superAdminDashboard:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: SuperAdminDashboardPage()),
-          ),
-        );
-      case controlCenter:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: ControlCenterDashboard()),
-          ),
-        );
-      case notifications:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: NotificationCenterPage()),
-          ),
-        );
-      case coins:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: CoinPurchasePage()),
-          ),
-        );
-      case createRoom:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: CreateRoomPageComplete()),
-          ),
-        );
-      case events:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: EventsPage()),
-          ),
-        );
-      case eventDetails:
-        final eventId = routeSettings.arguments as String? ?? '';
-        return MaterialPageRoute(
-          builder: (_) => AgeVerifiedGuard(
-            child: ProfileCompleteGuard(
-              child: EventDetailsPage(eventId: eventId),
-            ),
-          ),
-        );
-      case profile:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: _CurrentUserProfilePage()),
-          ),
-        );
-      case editProfile:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: EditProfilePage()),
-          ),
-        );
-      case userProfile:
-        final userId = routeSettings.arguments as String? ?? '';
-        return MaterialPageRoute(
-          builder: (_) => AgeVerifiedGuard(
-            child: ProfileCompleteGuard(
-              child: UserProfilePage(userId: userId),
-            ),
-          ),
-        );
-      case friendRequests:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: FriendListPage()),
-          ),
-        );
-      case liveRoom:
-        final liveRoomId = routeSettings.arguments as String? ?? '';
-        return MaterialPageRoute(
-          builder: (_) => AgeVerifiedGuard(
-            child: ProfileCompleteGuard(
-              child: _RoomLoaderPage(roomId: liveRoomId),
-            ),
-          ),
-        );
-      case terms:
-        return MaterialPageRoute(builder: (_) => const TermsOfServicePage());
-      case privacy:
-        return MaterialPageRoute(builder: (_) => const PrivacyPolicyPage());
-      case agoraTest:
-        return MaterialPageRoute(builder: (_) => const AgoraTestPage());
-      case routeTest:
-        return MaterialPageRoute(builder: (_) => const RouteTestPage());
-      case providerDebug:
-        return MaterialPageRoute(builder: (_) => const ProviderDebugPage());
-      // ── New platform features ───────────────────────────────────────────────
-      case activityFeed:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: ActivityFeedPage()),
-          ),
-        );
-      case search:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: SearchPage()),
-          ),
-        );
-      case createStory:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: CreateStoryPage()),
-          ),
-        );
-      case storyViewer:
-        final group = routeSettings.arguments as StoryGroup?;
-        if (group == null) return _errorRoute('Story group required');
-        return MaterialPageRoute(
-          builder: (_) => StoriesViewerPage(group: group),
-          fullscreenDialog: true,
-        );
-      case shortVideos:
-        return MaterialPageRoute(
-          builder: (_) => const AgeVerifiedGuard(
-            child: ProfileCompleteGuard(child: ShortVideoFeedPage()),
-          ),
-        );
-      case eventDetail:
-        final eventId = routeSettings.arguments as String? ?? '';
-        return MaterialPageRoute(
-          builder: (_) => AgeVerifiedGuard(
-            child: ProfileCompleteGuard(
-              child: EventDetailsPage(eventId: eventId),
-            ),
-          ),
-        );
-      default:
-        return _errorRoute('No route defined for ${routeSettings.name}');
-    }
+    // Unified gate: checks auth, age, profile completion
+    return MaterialPageRoute(
+      builder: (context) {
+        return Consumer(builder: (context, ref, _) {
+          final authState = ref.watch(authStateProvider);
+          final userAsync = ref.watch(currentUserProvider);
+          // Loading states
+          if (authState.isLoading || userAsync.isLoading) {
+            return const Scaffold(body: Center(child: CircularProgressIndicator()));
+          }
+          // Auth error
+          if (authState.hasError || userAsync.hasError) {
+            return const Scaffold(body: Center(child: Text('Auth error')));
+          }
+          final user = userAsync.value;
+          // Unified gate logic
+          if (user == null) {
+            // Not signed in
+            if (routeSettings.name != login) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.of(context).pushReplacementNamed(login);
+              });
+              return const Scaffold(body: Center(child: CircularProgressIndicator()));
+            }
+            return const NeonLoginPage();
+          }
+          if (user.ageVerified != true) {
+            // Age not verified
+            if (routeSettings.name != ageGate) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.of(context).pushReplacementNamed(ageGate);
+              });
+              return const Scaffold(body: Center(child: CircularProgressIndicator()));
+            }
+            return const AgeGatePage();
+          }
+          // Profile completion check (example: user.profileComplete)
+          if (user.profileComplete != true) {
+            if (routeSettings.name != signup) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                Navigator.of(context).pushReplacementNamed(signup);
+              });
+              return const Scaffold(body: Center(child: CircularProgressIndicator()));
+            }
+            return const NeonSignupPage();
+          }
+          // All checks passed: show requested page
+          switch (routeSettings.name) {
+            case landing:
+              return const LandingPage();
+            case home:
+              return const HomePageElectric();
+            case rooms:
+              return const RoomsListPage();
+            case room:
+              final roomId = routeSettings.arguments as String?;
+              if (roomId == null) return _errorRoute('Room ID required');
+              return _RoomLoaderPage(roomId: roomId);
+            case chats:
+              return const ChatsListPage();
+            case chat:
+              final chatId = routeSettings.arguments as String?;
+              if (chatId == null) return _errorRoute('Chat ID required');
+              return ChatConversationPage(chatId: chatId);
+            case following:
+              final userId = routeSettings.arguments as String? ?? '';
+              return FollowingListPage(userId: userId, displayName: '');
+            case friends:
+              return const FriendListPage();
+            case reportUser:
+              final args = routeSettings.arguments as Map<String, dynamic>?;
+              return ReportUserPage(
+                userId: args?['userId'] as String? ?? '',
+                displayName: args?['displayName'] as String?,
+              );
+            case messageRequests:
+              return const MessageRequestsPage();
+            case discovery:
+              return const DiscoveryPage();
+            case settings:
+              return const SettingsPage();
+            case accountSettings:
+              return const AccountSettingsPage();
+            case privacySettings:
+              return const PrivacySettingsPage();
+            case notificationSettings:
+              return const NotificationSettingsPage();
+            case blockedUsers:
+              return const BlockedUsersPage();
+            case adminDashboard:
+              return const AdminDashboardPage();
+            case superAdminDashboard:
+              return const SuperAdminDashboardPage();
+            case controlCenter:
+              return const ControlCenterDashboard();
+            case notifications:
+              return const NotificationCenterPage();
+            case coins:
+              return const CoinPurchasePage();
+            case createRoom:
+              return const CreateRoomPageComplete();
+            case events:
+              return const EventsPage();
+            case eventDetails:
+              final eventId = routeSettings.arguments as String? ?? '';
+              return EventDetailsPage(eventId: eventId);
+            case profile:
+              return const _CurrentUserProfilePage();
+            case editProfile:
+              return const EditProfilePage();
+            case userProfile:
+              final userId = routeSettings.arguments as String? ?? '';
+              return UserProfilePage(userId: userId);
+            case friendRequests:
+              return const FriendListPage();
+            case liveRoom:
+              final liveRoomId = routeSettings.arguments as String? ?? '';
+              return _RoomLoaderPage(roomId: liveRoomId);
+            case terms:
+              return const TermsOfServicePage();
+            case privacy:
+              return const PrivacyPolicyPage();
+            case agoraTest:
+              return const AgoraTestPage();
+            case routeTest:
+              return const RouteTestPage();
+            case providerDebug:
+              return const ProviderDebugPage();
+            case activityFeed:
+              return const ActivityFeedPage();
+            case search:
+              return const SearchPage();
+            case createStory:
+              return const CreateStoryPage();
+            case storyViewer:
+              final group = routeSettings.arguments as StoryGroup?;
+              if (group == null) return _errorRoute('Story group required');
+              return StoriesViewerPage(group: group);
+            case shortVideos:
+              return const ShortVideoFeedPage();
+            case eventDetail:
+              final eventId = routeSettings.arguments as String? ?? '';
+              return EventDetailsPage(eventId: eventId);
+            default:
+              return _errorRoute('No route defined for ${routeSettings.name}');
+          }
+        });
+      },
+    );
   }
 
   static Route<dynamic> _errorRoute(String message) {
