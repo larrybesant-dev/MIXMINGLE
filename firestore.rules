@@ -2,115 +2,132 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ========================================
-    // HELPER FUNCTIONS
-    // ========================================
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
 
-    // Check if user is authenticated
-    function isSignedIn() {
-      return request.auth != null;
-    }
+        // -------------------------------
+        // Helper: Auth Required
+        // -------------------------------
+        function isSignedIn() {
+          return request.auth != null;
+        }
 
-    // Check if user is owner of document
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
+        // -------------------------------
+        // Helper: User Owns Document
+        // -------------------------------
+        function isOwner(userId) {
+          return isSignedIn() && request.auth.uid == userId;
+        }
 
-    // Check if user's email is verified
-    function isVerified() {
-      return isSignedIn() && request.auth.token.email_verified == true;
-    }
+        // -------------------------------
+        // Helper: Admin (for official packs)
+        // -------------------------------
+        function isAdmin() {
+          return isSignedIn() && request.auth.token.admin == true;
+        }
 
-    // Check if user has admin custom claim
-    function isAdmin() {
-      return isSignedIn() && request.auth.token.get('admin', false) == true;
-    }
+        // -------------------------------
+        // Helper: Creator Pro Tier
+        // -------------------------------
+        function isCreatorPro() {
+          return isSignedIn() && request.auth.token.tier == "creatorPro";
+        }
 
-    // Check if data field exists and is string
-    function hasValidString(field) {
-      return field in request.resource.data &&
-             request.resource.data[field] is string &&
-             request.resource.data[field].size() > 0;
-    }
+        // -------------------------------
+        // Helper: Premium Tier
+        // -------------------------------
+        function isPremiumOrAbove() {
+          return isSignedIn() &&
+            (request.auth.token.tier == "premium" ||
+             request.auth.token.tier == "creatorPro");
+        }
 
-    // Check if data field exists and is number
-    function hasValidNumber(field) {
-      return field in request.resource.data &&
-             request.resource.data[field] is number;
-    }
+        // ============================================================
+        // PACKS (Global Marketplace)
+        // ============================================================
+        match /packs/{packId} {
 
-    // Check if user is blocked by another user
-    function isBlocked(userId) {
-      return exists(/databases/$(database)/documents/users/$(userId)/blocked/$(request.auth.uid));
-    }
+          // Public read access for marketplace
+          allow get, list: if true;
 
-    // Check if user has blocked another user
-    function hasBlocked(userId) {
-      return exists(/databases/$(database)/documents/users/$(request.auth.uid)/blocked/$(userId));
-    }
+          // Create official packs (admin only)
+          allow create: if isAdmin();
 
-    // Rate limiting helper - check timestamp
-    function notTooFrequent(lastActionField, minIntervalSeconds) {
-      return !(lastActionField in resource.data) ||
-             request.time > resource.data[lastActionField] + duration.value(minIntervalSeconds, 's');
-    }
+          // Update official packs (admin only)
+          allow update: if isAdmin();
 
-    // Check if user is a participant of a chat room
-    function isChatParticipant(roomId) {
-      return isSignedIn() &&
-             request.auth.uid in get(/databases/$(database)/documents/chatRooms/$(roomId)).data.participants;
-    }
+          // Delete packs (admin only)
+          allow delete: if isAdmin();
+        }
 
-    // Check if user is host/moderator of a live room
-    function isRoomHost(roomId) {
-      return isSignedIn() &&
-             request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.hostId;
-    }
+        // ============================================================
+        // USER ROOT DOCUMENT (Tier + Profile)
+        // ============================================================
+        match /users/{userId} {
 
-    // Check if the signed-in user has a Firestore user doc with ageVerified == true.
-    // Used to enforce the 18+ platform-wide restriction.
-    function isAdultUser() {
-      return isSignedIn() &&
-             exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('ageVerified', false) == true;
-    }
+          // User can read their own profile
+          allow get: if isOwner(userId);
 
-    // ========================================
-    // USERS COLLECTION
-    // ========================================
+          // User can update non-tier fields
+          allow update: if isOwner(userId)
+                        && !( "tier" in request.resource.data.keys() );
 
-    match /users/{userId} {
-      // Anyone authenticated can read profiles
-      allow read: if isSignedIn();
+          // Backend (Stripe webhook) updates tier
+          allow update: if request.auth.token.backend == true;
 
-      // Users can create their own profile (must include birthdate + ageVerified == true for 18+ enforcement)
-      allow create: if isOwner(userId) &&
-                       'birthdate' in request.resource.data &&
-                       'ageVerified' in request.resource.data &&
-                       request.resource.data.ageVerified == true;
+          // Create user doc on signup
+          allow create: if isOwner(userId);
+        }
 
-      // Users can update their own profile (for FCM tokens, display name, etc)
-      allow update: if isOwner(userId);
+        // ============================================================
+        // USER PURCHASES (One-Time Pack Purchases)
+        // ============================================================
+        match /users/{userId}/purchases/{packId} {
 
-      // Users can delete their own profile
-      allow delete: if isOwner(userId);
+          // User can read their own purchases
+          allow get, list: if isOwner(userId);
 
-      // FCM TOKENS SUBCOLLECTION
-      match /fcmTokens/{tokenId} {
-        allow read: if isOwner(userId);
-        allow write: if isOwner(userId);
+          // User cannot create purchases directly
+          // Only backend (Stripe webhook) can write purchases
+          allow create: if request.auth.token.backend == true;
+
+          // Purchases are immutable
+          allow update, delete: if false;
+        }
+
+        // ============================================================
+        // USER CREATIONS (User-Made Overlays + Emoji Packs)
+        // ============================================================
+        match /users/{userId}/creations/{creationId} {
+
+          // User can read their own creations
+          allow get, list: if isOwner(userId);
+
+          // User can create new creations
+          allow create: if isOwner(userId);
+
+          // User can update their own creations
+          allow update: if isOwner(userId);
+
+          // User can delete their own creations
+          allow delete: if isOwner(userId);
+        }
+
+        // ============================================================
+        // PUBLISHING CREATIONS AS PACKS
+        // ============================================================
+        // Creator Pro users can publish their creations into global packs
+        match /publish/{creationId} {
+
+          // Only Creator Pro can publish
+          allow create: if isCreatorPro();
+
+          // No one can update or delete publish records
+          allow update, delete: if false;
+        }
       }
-
-      // FOLLOWERS SUBCOLLECTION
-      match /followers/{followerId} {
-        allow read: if isSignedIn();
-        allow create: if isOwner(followerId);
-        allow delete: if isOwner(followerId);
-      }
-
-      // FOLLOWING SUBCOLLECTION
-      match /following/{followingId} {
-        allow read: if isSignedIn();
+    }
         allow create: if isOwner(userId);
         allow delete: if isOwner(userId);
       }
@@ -295,19 +312,29 @@ service cloud.firestore {
       // MIC QUEUE SUBCOLLECTION
       match /micQueue/{userId} {
         allow read: if isSignedIn();
-        allow create, update: if isOwner(userId) ||
-                                  request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
-                                  request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
-        allow delete: if isOwner(userId) ||
+        // Any signed-in user can request mic for themselves
+        allow create: if isSignedIn() && request.auth.uid == userId;
+        // Owner/admin can grant/revoke mic
+        allow update: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                         request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
+        // User can delete their own request; owner/admin can remove any
+        allow delete: if request.auth.uid == userId ||
                          request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
                          request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
+      }
+
+      // SPEAKERS SUBCOLLECTION
+      match /speakers/{userId} {
+        allow read: if isSignedIn();
+        // Owner/admin can add/remove speakers
+        allow create, update, delete: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
+                                        request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
       }
 
       // MODERATION LOGS SUBCOLLECTION — admin read/write, append-only for signed-in users
       match /moderation_logs/{logId} {
         allow read: if isSignedIn() &&
-                       (request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
-                        request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins);
+                       (isRoomOwner(roomId) || isRoomAdmin(roomId) || isSuperAdmin());
         allow create: if isSignedIn();
         allow update, delete: if false;
       }
@@ -315,19 +342,15 @@ service cloud.firestore {
       // MUTED USERS SUBCOLLECTION
       match /muted_users/{userId} {
         allow read: if isSignedIn();
-        allow write: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
-                        request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
-        allow delete: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
-                         request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
+        allow write: if isRoomOwner(roomId) || isRoomAdmin(roomId) || isSuperAdmin();
+        allow delete: if isRoomOwner(roomId) || isRoomAdmin(roomId) || isSuperAdmin();
       }
 
       // BANNED USERS SUBCOLLECTION (legacy — mirrors bans/)
       match /banned_users/{userId} {
         allow read: if isSignedIn();
-        allow create: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
-                         request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
-        allow delete: if request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.ownerId ||
-                         request.auth.uid in get(/databases/$(database)/documents/rooms/$(roomId)).data.admins;
+        allow create: if isRoomOwner(roomId) || isRoomAdmin(roomId) || isSuperAdmin();
+        allow delete: if isRoomOwner(roomId) || isRoomAdmin(roomId) || isSuperAdmin();
       }
 
       // SPEAKER REQUESTS SUBCOLLECTION
@@ -426,7 +449,7 @@ service cloud.firestore {
     }
 
     // ========================================
-    // SPEED DATING SESSIONS
+    // SPEED DATING SESSIONS (camelCase — legacy model)
     // ========================================
 
     match /speedDatingSessions/{sessionId} {
@@ -438,7 +461,7 @@ service cloud.firestore {
     }
 
     // ========================================
-    // SPEED DATING MATCHES
+    // SPEED DATING MATCHES (camelCase — legacy model)
     // ========================================
 
     match /speedDatingMatches/{matchId} {
@@ -450,6 +473,71 @@ service cloud.firestore {
          request.resource.data.userId2 == request.auth.uid);
       allow update: if isSignedIn() &&
         (request.auth.uid == resource.data.userId1 || request.auth.uid == resource.data.userId2);
+    }
+
+    // ========================================
+    // SPEED DATING QUEUE (snake_case — production)
+    // Cloud Functions write; users manage their own entry.
+    // ========================================
+
+    match /speed_dating_queue/{docId} {
+      // User can read only their own queue entry
+      allow read: if isSignedIn() && request.auth.uid == docId;
+
+      // User can create their own entry (userId field must match caller)
+      allow create: if isSignedIn()
+                    && request.auth.uid == docId
+                    && request.resource.data.userId == request.auth.uid;
+
+      // User can delete (leave queue) their own entry;
+      // write updates come from Cloud Functions only
+      allow delete: if isSignedIn() && request.auth.uid == docId;
+
+      // No client-side updates — Cloud Functions own status transitions
+      allow update: if false;
+    }
+
+    // ========================================
+    // SPEED DATING SESSIONS (snake_case — production)
+    // Fully server-managed. Clients read only if participant.
+    // ========================================
+
+    match /speed_dating_sessions/{sessionId} {
+      // Only session participants may read the session document
+      allow read: if isSignedIn() &&
+        (request.auth.uid == resource.data.user1Id ||
+         request.auth.uid == resource.data.user2Id);
+
+      // All mutations are performed by Cloud Functions only
+      allow write: if false;
+    }
+
+    // ========================================
+    // SPEED DATING DECISIONS (snake_case — production)
+    // Audit trail written by Cloud Functions only.
+    // ========================================
+
+    match /speed_dating_decisions/{docId} {
+      // Participants can read their own decision records
+      allow read: if isSignedIn() && request.auth.uid == resource.data.userId;
+
+      // Cloud Functions only
+      allow write: if false;
+    }
+
+    // ========================================
+    // SPEED DATING RESULTS (snake_case — production)
+    // Mutual match records. Read by both matched users.
+    // ========================================
+
+    match /speed_dating_results/{docId} {
+      // Both matched users can read the result
+      allow read: if isSignedIn() &&
+        (request.auth.uid == resource.data.user1Id ||
+         request.auth.uid == resource.data.user2Id);
+
+      // Cloud Functions only
+      allow write: if false;
     }
 
     // ========================================
@@ -777,6 +865,67 @@ service cloud.firestore {
 
     match /analytics/{docId} {
       allow read, write: if isAdmin();
+    }
+
+    // ========================================
+    // ADMIN ACTIONS (immutable audit log)
+    // ========================================
+
+    match /admin_actions/{actionId} {
+      // Admins and superadmins can read and create; no one can update or delete.
+      allow read: if isAdmin() || isSuperAdmin();
+      allow create: if isAdmin() || isSuperAdmin();
+      allow update, delete: if false;
+    }
+
+    // ========================================
+    // ADMIN ROLES COLLECTION
+    // ========================================
+    match /admin_roles/{roleId} {
+      // Owner and admins can read roles
+      allow read: if isAdmin() || isSuperAdmin() || (isSignedIn() && request.auth.uid == resource.data.userId);
+      // Owner can create roles for any user; admins can create for themselves or assigned rooms
+      allow create: if isSuperAdmin() || (isAdmin() && request.resource.data.userId == request.auth.uid);
+      // Owner can update/delete any role; admins can update/delete their own
+      allow update, delete: if isSuperAdmin() || (isAdmin() && request.auth.uid == resource.data.userId);
+    }
+
+    // ========================================
+    // DIGITAL GOODS: PACKS, PURCHASES, CREATIONS
+    // ========================================
+
+    // Packs catalog (global)
+    match /packs/{packId} {
+      // Anyone signed in can read packs
+      allow read: if isSignedIn();
+      // Only admins, superadmins, or official creators can create/update official packs
+      allow create, update: if isAdmin() || isSuperAdmin() || (isSignedIn() && request.auth.uid == request.resource.data.creatorId && request.resource.data.isOfficial == false);
+      // Only creator or admin can delete unpublished packs
+      allow delete: if isAdmin() || isSuperAdmin() || (isSignedIn() && request.auth.uid == resource.data.creatorId && !resource.data.isPublished);
+    }
+
+    // User purchases (subcollection)
+    match /users/{userId}/purchases/{packId} {
+      // Only owner can read their purchases
+      allow read: if isOwner(userId);
+      // Only backend (admin/server) can create purchase records
+      allow create: if isAdmin() || isSuperAdmin();
+      // No client-side updates/deletes
+      allow update, delete: if false;
+    }
+
+    // User creations (subcollection)
+    match /users/{userId}/creations/{creationId} {
+      // Only owner can read/write their creations
+      allow read, create, update, delete: if isOwner(userId);
+    }
+
+    // User tier field (in users/{userId})
+    match /users/{userId} {
+      // Allow reading tier for self
+      allow read: if isOwner(userId);
+      // Allow updating tier only by backend/admin
+      allow update: if isAdmin() || isSuperAdmin();
     }
 
     // ========================================
