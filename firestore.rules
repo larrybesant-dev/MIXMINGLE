@@ -753,6 +753,22 @@ service cloud.firestore {
     }
 
     // ========================================
+    // ADMIN LOGS (admin-only read/write)
+    // ========================================
+
+    match /admin_logs/{logId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ========================================
+    // ANALYTICS (admin-only read/write)
+    // ========================================
+
+    match /analytics/{docId} {
+      allow read, write: if isAdmin();
+    }
+
+    // ========================================
     // DEFAULT: DENY ALL
     // ========================================
 

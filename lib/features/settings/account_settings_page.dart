@@ -682,11 +682,7 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
                     leading: const Icon(Icons.privacy_tip),
                     title: const Text('Privacy Settings'),
                     trailing: const Icon(Icons.chevron_right),
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Privacy settings coming soon')),
-                      );
-                    },
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.privacySettings),
                   ),
                 ],
               ),

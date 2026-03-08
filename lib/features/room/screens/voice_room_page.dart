@@ -13,6 +13,7 @@ import 'package:mixmingle/services/agora/agora_video_service.dart';
 import 'package:mixmingle/core/utils/app_logger.dart';
 import 'package:mixmingle/features/room/widgets/voice_room_chat_overlay.dart';
 import 'package:mixmingle/features/room/widgets/moderation_panel.dart';
+import 'package:mixmingle/features/room/widgets/dj_panel.dart';
 import 'package:mixmingle/core/platform/web_platform_view_helper.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -652,6 +653,25 @@ class _VoiceRoomPageState extends ConsumerState<VoiceRoomPage>
                     participants: participants,
                   );
                 },
+              ),
+            ),
+          ),
+        // DJ Panel (for owner, host, or admins)
+        if (currentUser != null &&
+            (currentUser.uid == _currentRoom.ownerId ||
+                currentUser.uid == _currentRoom.hostId ||
+                _currentRoom.admins.contains(currentUser.uid)))
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Center(
+              child: IconButton(
+                icon: const Icon(Icons.music_note, color: Colors.purpleAccent),
+                tooltip: 'DJ Controls',
+                onPressed: () => DjPanel.show(
+                  context,
+                  roomId: widget.room.id,
+                  canControl: true,
+                ),
               ),
             ),
           ),

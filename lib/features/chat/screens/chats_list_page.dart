@@ -10,6 +10,7 @@ import '../../../core/design_system/design_constants.dart';
 import '../../../shared/widgets/club_background.dart';
 import '../../../shared/widgets/neon_components.dart';
 import '../../../shared/providers/auth_providers.dart';
+import '../../../core/routing/app_routes.dart';
 
 /// Chats List - All conversations
 class ChatsListPage extends ConsumerWidget {
@@ -38,6 +39,13 @@ class ChatsListPage extends ConsumerWidget {
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.mark_email_unread_outlined, color: DesignColors.accent),
+              tooltip: 'Message Requests',
+              onPressed: () => Navigator.pushNamed(context, AppRoutes.messageRequests),
+            ),
+          ],
         ),
         body: StreamBuilder<QuerySnapshot>(
           stream: FirebaseFirestore.instance

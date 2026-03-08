@@ -2,6 +2,7 @@
 // Centralized route management for MixMingle
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Landing & Auth
 import '../../features/landing/landing_page.dart';
@@ -14,6 +15,9 @@ import '../../features/home/home_page_electric.dart';
 
 // Rooms
 import '../../features/room/screens/rooms_list_page.dart';
+import '../../features/room/screens/voice_room_page.dart';
+import '../../features/room/providers/room_providers.dart';
+import '../../shared/widgets/club_background.dart';
 
 // Chat
 import '../../features/chat/screens/chats_list_page.dart';
@@ -26,7 +30,19 @@ import '../../features/discovery/discovery_page.dart';
 // Profile & Social
 import '../../features/profile/screens/following_list_page.dart';
 import '../../features/profile/screens/report_user_page.dart';
+import '../../features/profile/screens/edit_profile_page.dart';
+import '../../features/profile/screens/user_profile_page.dart';
 import '../../features/friends/friend_list_page.dart';
+
+// Settings
+import '../../features/settings/screens/settings_page.dart';
+import '../../features/settings/account_settings_page.dart';
+import '../../features/settings/privacy_settings_page.dart';
+import '../../features/settings/notification_settings_page.dart';
+import '../../features/settings/blocked_users_page.dart';
+
+// Admin
+import '../../features/admin/admin_dashboard_page.dart';
 
 // Guards
 import '../routing/guards/age_verified_guard.dart';
@@ -78,10 +94,10 @@ class AppRoutes {
   static const String friends              = '/friends';
   static const String messageRequests      = '/message-requests';
 
-  static Route<dynamic> onGenerateRoute(RouteSettings settings) {
-    debugPrint('Navigating to: ${settings.name}');
+  static Route<dynamic> onGenerateRoute(RouteSettings routeSettings) {
+    debugPrint('Navigating to: ${routeSettings.name}');
 
-    switch (settings.name) {
+    switch (routeSettings.name) {
       case landing:
         return MaterialPageRoute(builder: (_) => const LandingPage());
       case login:
@@ -103,10 +119,14 @@ class AppRoutes {
           ),
         );
       case room:
-        final roomId = settings.arguments as String?;
+        final roomId = routeSettings.arguments as String?;
         if (roomId == null) return _errorRoute('Room ID required');
         return MaterialPageRoute(
-          builder: (_) => Scaffold(body: Center(child: Text('Room: $roomId'))),
+          builder: (_) => AgeVerifiedGuard(
+            child: ProfileCompleteGuard(
+              child: _RoomLoaderPage(roomId: roomId),
+            ),
+          ),
         );
       case chats:
         return MaterialPageRoute(
@@ -115,7 +135,7 @@ class AppRoutes {
           ),
         );
       case chat:
-        final chatId = settings.arguments as String?;
+        final chatId = routeSettings.arguments as String?;
         if (chatId == null) return _errorRoute('Chat ID required');
         return MaterialPageRoute(
           builder: (_) => AgeVerifiedGuard(
@@ -123,7 +143,7 @@ class AppRoutes {
           ),
         );
       case following:
-        final userId = settings.arguments as String? ?? '';
+        final userId = routeSettings.arguments as String? ?? '';
         return MaterialPageRoute(
           builder: (_) => FollowingListPage(userId: userId, displayName: ''),
         );
@@ -134,7 +154,7 @@ class AppRoutes {
           ),
         );
       case reportUser:
-        final args = settings.arguments as Map<String, dynamic>?;
+        final args = routeSettings.arguments as Map<String, dynamic>?;
         return MaterialPageRoute(
           builder: (_) => ReportUserPage(
             userId: args?['userId'] as String? ?? '',
@@ -153,8 +173,59 @@ class AppRoutes {
             child: ProfileCompleteGuard(child: DiscoveryPage()),
           ),
         );
+      case settings:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: SettingsPage()),
+          ),
+        );
+      case accountSettings:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: AccountSettingsPage()),
+          ),
+        );
+      case privacySettings:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: PrivacySettingsPage()),
+          ),
+        );
+      case notificationSettings:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: NotificationSettingsPage()),
+          ),
+        );
+      case blockedUsers:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: BlockedUsersPage()),
+          ),
+        );
+      case adminDashboard:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: AdminDashboardPage()),
+          ),
+        );
+      case editProfile:
+        return MaterialPageRoute(
+          builder: (_) => const AgeVerifiedGuard(
+            child: ProfileCompleteGuard(child: EditProfilePage()),
+          ),
+        );
+      case userProfile:
+        final userId = routeSettings.arguments as String? ?? '';
+        return MaterialPageRoute(
+          builder: (_) => AgeVerifiedGuard(
+            child: ProfileCompleteGuard(
+              child: UserProfilePage(userId: userId),
+            ),
+          ),
+        );
       default:
-        return _errorRoute('No route defined for ${settings.name}');
+        return _errorRoute('No route defined for ${routeSettings.name}');
     }
   }
 
@@ -164,6 +235,39 @@ class AppRoutes {
         appBar: AppBar(title: const Text('Error')),
         body: Center(child: Text(message)),
       ),
+    );
+  }
+}
+
+/// Loads a Room from Firestore by ID then hands off to VoiceRoomPage.
+/// Used by the /room route so callers only need to pass arguments: roomId.
+class _RoomLoaderPage extends ConsumerWidget {
+  final String roomId;
+  const _RoomLoaderPage({required this.roomId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final roomAsync = ref.watch(roomByIdProvider(roomId));
+    return roomAsync.when(
+      loading: () => const ClubBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          body: Center(child: CircularProgressIndicator()),
+        ),
+      ),
+      error: (e, _) => Scaffold(
+        appBar: AppBar(title: const Text('Room')),
+        body: Center(child: Text('Could not load room: $e')),
+      ),
+      data: (room) {
+        if (room == null) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Room')),
+            body: const Center(child: Text('Room not found.')),
+          );
+        }
+        return VoiceRoomPage(room: room);
+      },
     );
   }
 }

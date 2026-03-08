@@ -14,6 +14,7 @@ import '../../core/intelligence/vibe_intelligence_service.dart';
 import '../events/screens/events_page.dart';
 import '../onboarding/widgets/onboarding_welcome_overlay.dart';
 import '../discover/room_discovery_page_complete.dart';
+import '../discovery/discovery_page.dart';
 import '../chat/screens/chat_list_page.dart';
 import '../profile/screens/profile_page.dart';
 import '../room/providers/room_providers.dart';
@@ -175,6 +176,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       _NavItem(Icons.video_call_outlined, Icons.video_call, 'Rooms'),
       _NavItem(Icons.event_outlined, Icons.event, 'Events'),
       _NavItem(Icons.chat_bubble_outline, Icons.chat_bubble, 'Chats'),
+      _NavItem(Icons.explore_outlined, Icons.explore, 'Discover'),
       _NavItem(Icons.person_outline, Icons.person, 'Profile'),
     ];
     return Container(
@@ -198,7 +200,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                 onTap: () => setState(() => _selectedIndex = i),
                 behavior: HitTestBehavior.opaque,
                 child: SizedBox(
-                  width: 56,
+                  width: 48,
                   child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                     AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
@@ -249,6 +251,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       case 4:
         return _buildChatsTab();
       case 5:
+        return _buildDiscoveryTab();
+      case 6:
         return _buildProfileTab();
       default:
         return _buildHomeTab();
@@ -762,6 +766,11 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   /// Profile Tab
   Widget _buildProfileTab() {
     return const ProfilePage();
+  }
+
+  /// Discovery Tab
+  Widget _buildDiscoveryTab() {
+    return const DiscoveryPage();
   }
 }
 
