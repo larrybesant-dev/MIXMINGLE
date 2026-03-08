@@ -1,6 +1,7 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../shared/providers/profile_controller.dart';
+import '../../shared/providers/profile_controller.dart' hide isFollowingProvider;
+import '../../shared/providers/social_graph_providers.dart';
 
 class FollowButton extends ConsumerStatefulWidget {
   final String currentUserId;
@@ -63,10 +64,7 @@ class _FollowButtonState extends ConsumerState<FollowButton> {
 
   @override
   Widget build(BuildContext context) {
-    final isFollowingAsync = ref.watch(isFollowingProvider({
-      'followerId': widget.currentUserId,
-      'followingId': widget.targetUserId,
-    }));
+    final isFollowingAsync = ref.watch(isFollowingProvider(widget.targetUserId));
 
     return isFollowingAsync.when(
       data: (isFollowing) {

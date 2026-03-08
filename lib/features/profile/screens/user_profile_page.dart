@@ -12,6 +12,8 @@ import 'package:mixmingle/shared/widgets/presence_indicator.dart';
 import 'package:mixmingle/services/events/reporting_service.dart' as reporting;
 import 'package:mixmingle/features/reporting/report_dialog.dart';
 import 'package:mixmingle/features/start_conversation.dart';
+import 'package:mixmingle/shared/providers/friend_request_provider.dart';
+import 'package:mixmingle/services/social/friend_service.dart';
 
 class UserProfilePage extends ConsumerWidget {
   final String userId;
@@ -356,6 +358,7 @@ class UserProfilePage extends ConsumerWidget {
 
   Widget _buildActionButtons(BuildContext context, WidgetRef ref, String userId) {
     final currentUser = ref.watch(currentUserProvider).value;
+    final friendStatus = ref.watch(friendStatusProvider(userId)).value ?? FriendRequestStatus.none;
 
     return Container(
       padding: Responsive.responsivePadding(context),
@@ -385,6 +388,14 @@ class UserProfilePage extends ConsumerWidget {
                   ),
                 ),
               ),
+            // Friend request button row
+            Padding(
+              padding: EdgeInsets.only(bottom: Responsive.responsiveSpacing(context, 12)),
+              child: SizedBox(
+                width: double.infinity,
+                child: _buildFriendButton(context, ref, userId, friendStatus),
+              ),
+            ),
             // Action buttons row
             Row(
               children: [
@@ -416,6 +427,51 @@ class UserProfilePage extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  Widget _buildFriendButton(BuildContext context, WidgetRef ref, String userId, FriendRequestStatus status) {
+    switch (status) {
+      case FriendRequestStatus.friends:
+        return OutlinedButton.icon(
+          onPressed: null,
+          icon: const Icon(Icons.people),
+          label: const Text('Friends'),
+        );
+      case FriendRequestStatus.sent:
+        return OutlinedButton.icon(
+          onPressed: () async {
+            await ref.read(friendServiceProvider).cancelFriendRequest(userId);
+          },
+          icon: const Icon(Icons.schedule),
+          label: const Text('Request Sent — Tap to Cancel'),
+        );
+      case FriendRequestStatus.received:
+        return ElevatedButton.icon(
+          onPressed: () async {
+            await ref.read(friendServiceProvider).acceptFriendRequest(userId);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Friend request accepted!')),
+              );
+            }
+          },
+          icon: const Icon(Icons.check),
+          label: const Text('Accept Friend Request'),
+        );
+      case FriendRequestStatus.none:
+        return ElevatedButton.icon(
+          onPressed: () async {
+            await ref.read(friendServiceProvider).sendFriendRequest(userId);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Friend request sent!')),
+              );
+            }
+          },
+          icon: const Icon(Icons.person_add),
+          label: const Text('Add Friend'),
+        );
+    }
   }
 
   void _showOptionsMenu(BuildContext context, WidgetRef ref, String userId) {
