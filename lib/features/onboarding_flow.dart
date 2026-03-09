@@ -101,8 +101,12 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> with SingleTick
     _completeOnboarding();
   }
 
-  void _completeOnboarding() {
-    Navigator.of(context).pushReplacementNamed(AppRoutes.ageGate);
+  Future<void> _completeOnboarding() async {
+    // Invalidate profile provider after onboarding mutation (required for deterministic navigation)
+    await ref.invalidate(currentUserProfileProvider);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Navigator.pushReplacementNamed(context, AppRoutes.home);
+    });
   }
 
   @override

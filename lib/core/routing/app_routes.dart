@@ -2,6 +2,7 @@
 /// Centralized route constants for MixVy.
 /// Do NOT import UI widgets here.
 import 'package:flutter/material.dart';
+import 'package:mixmingle/app/auth_gate_root.dart';
 
 class AppRoutes {
   static const landing = '/';
@@ -16,7 +17,6 @@ class AppRoutes {
   static const followers = '/followers';
   static const following = '/following';
   static const friends = '/friends';
-  static const friendRequests = '/profile/friend-requests';
   static const chats = '/chats';
   static const chat = '/chat';
   static const chatList = '/chat-list';
@@ -92,11 +92,9 @@ class AppRoutes {
       case socialFeed:
       case agoraTest:
       case app:
-        // UI mapping handled in app_router.dart
+        // Map '/app' to the main authenticated app shell
         return MaterialPageRoute(
-          builder: (_) => const Scaffold(
-            body: Center(child: Text('Route not found or mapped externally')),
-          ),
+          builder: (_) => const AuthGateRoot(),
         );
       default:
         return MaterialPageRoute(

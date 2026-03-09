@@ -88,33 +88,26 @@ class LoadingOverlay extends StatelessWidget {
 /// Full screen loading widget for initial app loading
 class FullScreenLoader extends StatelessWidget {
   final String? message;
-
-  const FullScreenLoader({
-    super.key,
-    this.message,
-  });
+  const FullScreenLoader({super.key, this.message});
 
   @override
   Widget build(BuildContext context) {
-    return ClubBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const CircularProgressIndicator(
-                color: Color(0xFFFF4C4C),
-              ),
-              const SizedBox(height: 24),
-              GlowText(
-                text: message ?? 'Loading...',
-                fontSize: 18,
-                color: Colors.white,
-                glowColor: const Color(0xFFFF4C4C),
+    return Scaffold(
+      body: Container(
+        color: Colors.black.withOpacity(0.6),
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            if (message != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                message!,
+                style: const TextStyle(color: Colors.white, fontSize: 16),
               ),
             ],
-          ),
+          ],
         ),
       ),
     );

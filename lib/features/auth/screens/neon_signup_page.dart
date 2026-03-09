@@ -8,6 +8,8 @@
   import '../../../shared/providers/auth_providers.dart';
   import '../../../shared/widgets/neon_components.dart';
   import '../providers/age_gate_provider.dart';
+  import '../../../providers/all_providers.dart';
+  import '../../../shared/widgets/loading_widgets.dart';
 
   // Removed duplicate top-level variables
 
@@ -15,236 +17,215 @@
 /// NEON SIGNUP SCREEN - Electric Lounge Brand
 /// Dark theme with neon styling, logo branding
 /// ============================================================================
-
-class NeonSignupPage extends ConsumerStatefulWidget {
+class NeonSignupPage extends ConsumerWidget {
   const NeonSignupPage({super.key});
 
   @override
-  ConsumerState<NeonSignupPage> createState() => _NeonSignupPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(currentUserProfileProvider);
 
-class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
-  // Fields
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
-  bool _hidePassword = true;
-  bool _hideConfirmPassword = true;
-  bool _agreeToTerms = false;
-  String? _errorMessage;
-  final int _onboardingStep = 1;
-  bool _showWelcomeOverlay = false;
-
-  // Unnamed constructor
-  _NeonSignupPageState();
-
-  @override
-  Widget build(BuildContext context) {
-    final Widget progressBar = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: LinearProgressIndicator(
-        value: _onboardingStep / 3,
-        backgroundColor: NeonColors.darkBg2,
-        valueColor: const AlwaysStoppedAnimation(NeonColors.neonBlue),
-      ),
-    );
-    return Stack(
-      children: [
-        Scaffold(
-          backgroundColor: NeonColors.darkBg,
-          body: SingleChildScrollView(
-            child: Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    NeonColors.darkBg2.withValues(alpha: 0.8),
-                    NeonColors.darkBg,
-                  ],
-                ),
-              ),
-              child: SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    children: [
-                      SizedBox(height: 40),
-                      _buildLogoSection(),
-                      SizedBox(height: 40),
-                      progressBar,
-                      NeonGlowCard(
-                        glowColor: NeonColors.neonPurple,
-                        glowRadius: 20,
-                        borderRadius: 20,
-                        child: Column(
-                          children: [
-                            NeonText(
-                              'JOIN THE PARTY',
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                              textColor: Colors.white,
-                              glowColor: NeonColors.neonBlue,
-                              glowRadius: 10,
-                              textAlign: TextAlign.center,
-                            ),
-                            SizedBox(height: 8),
-                            Text(
-                              'Create your MIXVY account',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: NeonColors.textSecondary,
-                                fontSize: 14,
-                                letterSpacing: 0.3,
-                              ),
-                            ),
-                            SizedBox(height: 32),
-                            if (_errorMessage != null)
-                              Container(
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: NeonColors.errorRed.withValues(alpha: 0.1),
-                                  border: Border.all(
-                                    color: NeonColors.errorRed,
-                                    width: 1,
-                                  ),
-                                  borderRadius: BorderRadius.circular(8),
+    return profileAsync.when(
+      loading: () => const FullScreenLoader(message: 'Completing onboarding...'),
+      error: (_, __) => const FullScreenLoader(message: 'Onboarding error'),
+      data: (profile) {
+        return Stack(
+          children: [
+            Scaffold(
+              backgroundColor: NeonColors.darkBg,
+              body: SingleChildScrollView(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        NeonColors.darkBg2.withValues(alpha: 0.8),
+                        NeonColors.darkBg,
+                      ],
+                    ),
+                  ),
+                  child: SafeArea(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        children: [
+                          SizedBox(height: 40),
+                          _buildLogoSection(),
+                          SizedBox(height: 40),
+                          progressBar,
+                          NeonGlowCard(
+                            glowColor: NeonColors.neonPurple,
+                            glowRadius: 20,
+                            borderRadius: 20,
+                            child: Column(
+                              children: [
+                                NeonText(
+                                  'JOIN THE PARTY',
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.w900,
+                                  textColor: Colors.white,
+                                  glowColor: NeonColors.neonBlue,
+                                  glowRadius: 10,
+                                  textAlign: TextAlign.center,
                                 ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.error_outline,
-                                      color: NeonColors.errorRed,
-                                      size: 18,
+                                SizedBox(height: 8),
+                                Text(
+                                  'Create your MIXVY account',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    color: NeonColors.textSecondary,
+                                    fontSize: 14,
+                                    letterSpacing: 0.3,
+                                  ),
+                                ),
+                                SizedBox(height: 32),
+                                if (_errorMessage != null)
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: NeonColors.errorRed.withValues(alpha: 0.1),
+                                      border: Border.all(
+                                        color: NeonColors.errorRed,
+                                        width: 1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8),
                                     ),
-                                    SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        _errorMessage!,
-                                        style: TextStyle(
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.error_outline,
                                           color: NeonColors.errorRed,
-                                          fontSize: 12,
+                                          size: 18,
+                                        ),
+                                        SizedBox(width: 12),
+                                        Expanded(
+                                          child: Text(
+                                            _errorMessage!,
+                                            style: TextStyle(
+                                              color: NeonColors.errorRed,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                if (_errorMessage != null) SizedBox(height: 16),
+                                Form(
+                                  key: _formKey,
+                                  child: Column(
+                                    children: [
+                                      NeonInputField(
+                                        controller: _usernameController,
+                                        hint: 'Choose a username',
+                                        label: 'Username',
+                                        prefixIcon: Icons.person_outline,
+                                        focusGlowColor: NeonColors.neonBlue,
+                                      ),
+                                      SizedBox(height: 16),
+                                      NeonInputField(
+                                        controller: _emailController,
+                                        hint: 'Enter your email',
+                                        label: 'Email',
+                                        prefixIcon: Icons.email_outlined,
+                                        focusGlowColor: NeonColors.neonBlue,
+                                        keyboardType: TextInputType.emailAddress,
+                                      ),
+                                      SizedBox(height: 16),
+                                      _buildPasswordField(),
+                                      SizedBox(height: 16),
+                                      _buildConfirmPasswordField(),
+                                      SizedBox(height: 24),
+                                      NeonButton(
+                                        label:
+                                            _isLoading ? 'CREATING ACCOUNT...' : 'SIGN UP',
+                                        onPressed: _handleSignup,
+                                        glowColor: NeonColors.neonBlue,
+                                        isLoading: _isLoading,
+                                        height: 54,
+                                      ),
+                                      SizedBox(height: 20),
+                                      _buildTermsCheckbox(),
+                                    ],
+                                  ),
+                                ),
+                                SizedBox(height: 24),
+                                NeonDivider(
+                                  startColor:
+                                      NeonColors.neonBlue.withValues(alpha: 0.2),
+                                  endColor:
+                                      NeonColors.neonPurple.withValues(alpha: 0.2),
+                                  height: 1.5,
+                                ),
+                                SizedBox(height: 24),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Text(
+                                      'Already have an account? ',
+                                      style: TextStyle(
+                                        color: NeonColors.textSecondary,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                    GestureDetector(
+                                      onTap: () =>
+                                          Navigator.of(context).pushNamed('/login'),
+                                      child: Text(
+                                        'Sign in',
+                                        style: TextStyle(
+                                          color: NeonColors.neonOrange,
+                                          fontSize: 13,
+                                          fontWeight: FontWeight.bold,
+                                          decoration: TextDecoration.underline,
                                         ),
                                       ),
                                     ),
                                   ],
                                 ),
-                              ),
-                            if (_errorMessage != null) SizedBox(height: 16),
-                            Form(
-                              key: _formKey,
-                              child: Column(
-                                children: [
-                                  NeonInputField(
-                                    controller: _usernameController,
-                                    hint: 'Choose a username',
-                                    label: 'Username',
-                                    prefixIcon: Icons.person_outline,
-                                    focusGlowColor: NeonColors.neonBlue,
-                                  ),
-                                  SizedBox(height: 16),
-                                  NeonInputField(
-                                    controller: _emailController,
-                                    hint: 'Enter your email',
-                                    label: 'Email',
-                                    prefixIcon: Icons.email_outlined,
-                                    focusGlowColor: NeonColors.neonBlue,
-                                    keyboardType: TextInputType.emailAddress,
-                                  ),
-                                  SizedBox(height: 16),
-                                  _buildPasswordField(),
-                                  SizedBox(height: 16),
-                                  _buildConfirmPasswordField(),
-                                  SizedBox(height: 24),
-                                  NeonButton(
-                                    label:
-                                        _isLoading ? 'CREATING ACCOUNT...' : 'SIGN UP',
-                                    onPressed: _handleSignup,
-                                    glowColor: NeonColors.neonBlue,
-                                    isLoading: _isLoading,
-                                    height: 54,
-                                  ),
-                                  SizedBox(height: 20),
-                                  _buildTermsCheckbox(),
-                                ],
-                              ),
-                            ),
-                            SizedBox(height: 24),
-                            NeonDivider(
-                              startColor:
-                                  NeonColors.neonBlue.withValues(alpha: 0.2),
-                              endColor:
-                                  NeonColors.neonPurple.withValues(alpha: 0.2),
-                              height: 1.5,
-                            ),
-                            SizedBox(height: 24),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  'Already have an account? ',
-                                  style: TextStyle(
-                                    color: NeonColors.textSecondary,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                GestureDetector(
-                                  onTap: () =>
-                                      Navigator.of(context).pushNamed('/login'),
-                                  child: Text(
-                                    'Sign in',
-                                    style: TextStyle(
-                                      color: NeonColors.neonOrange,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.bold,
-                                      decoration: TextDecoration.underline,
-                                    ),
-                                  ),
-                                ),
                               ],
                             ),
-                          ],
-                        ),
+                          ),
+                          SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+                        ],
                       ),
-                      SizedBox(height: MediaQuery.of(context).size.height * 0.05),
-                    ],
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ),
-        if (_showWelcomeOverlay)
-          Positioned.fill(
-            child: Container(
-              color: Colors.black.withValues(alpha: 0.7),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    NeonText(
-                      'Welcome to MIXVY!',
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      textColor: NeonColors.neonBlue,
-                      glowColor: NeonColors.neonPurple,
-                      glowRadius: 16,
+            if (_showWelcomeOverlay)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NeonText(
+                          'Welcome to MIXVY!',
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          textColor: NeonColors.neonBlue,
+                          glowColor: NeonColors.neonPurple,
+                          glowRadius: 16,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Your account is ready. Let’s get started!',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 16),
-                    Text(
-                      'Your account is ready. Let’s get started!',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ),
-      ],
+            if (_isLoading)
+              const LoadingOverlay(isLoading: true, child: SizedBox.shrink()),
+          ],
+        );
+      },
     );
   }
 
@@ -520,16 +501,14 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
         setState(() {
           _showWelcomeOverlay = true;
         });
-      }).then((_) {
-        setState(() {
-          _isLoading = false;
-        });
-        Future.delayed(const Duration(seconds: 2), () {
-          setState(() {
-            _showWelcomeOverlay = false;
+      }).then((_) async {
+        // After onboarding completion:
+        await ref.invalidate(currentUserProfileProvider); // Invalidate after onboarding
+        if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.home, (route) => false);
           });
-          Navigator.of(context).pushReplacementNamed('/app');
-        });
+        }
       }).catchError((error) {
         setState(() {
           _isLoading = false;
@@ -552,35 +531,211 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
     final ageAtSignup = ageGateState.computedAge;
     await FirebaseFirestore.instance
       .collection('users')
-      .doc(userCredential.user!.uid)
-      .set({
-        'uid': userCredential.user!.uid,
-        'email': _emailController.text.trim(),
-        'username': _usernameController.text.trim(),
-        'displayName': _usernameController.text.trim(),
-        'createdAt': FieldValue.serverTimestamp(),
-        'profileImageUrl': '',
-        'bio': '',
-        'isVerified': false,
-        'ageVerified': true,
-        'profileComplete': false,
-        if (birthdate != null) 'birthdate': Timestamp.fromDate(birthdate),
-        if (ageAtSignup != null) 'ageAtSignup': ageAtSignup,
-      });
-    await FirebaseFirestore.instance
-      .collection('users')
-      .doc(userCredential.user!.uid)
-      .update({'profileComplete': true});
-    final _ = ref.refresh(currentUserProvider);
-    await FirebaseAnalytics.instance.logEvent(
-      name: AnalyticsEvents.userSignup18Plus,
-      parameters: {
-        if (ageAtSignup != null) 'age_at_signup': ageAtSignup,
-      },
-    );
-    ref.read(ageGateProvider.notifier).reset();
-    debugPrint('âœ… [Signup] Account created. Navigating to /app...');
-    showOverlay();
-    await Future.delayed(const Duration(seconds: 2));
+      return Stack(
+        children: [
+          Scaffold(
+            backgroundColor: NeonColors.darkBg,
+            body: SingleChildScrollView(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      NeonColors.darkBg2.withValues(alpha: 0.8),
+                      NeonColors.darkBg,
+                    ],
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        SizedBox(height: 40),
+                        _buildLogoSection(),
+                        SizedBox(height: 40),
+                        progressBar,
+                        NeonGlowCard(
+                          glowColor: NeonColors.neonPurple,
+                          glowRadius: 20,
+                          borderRadius: 20,
+                          child: Column(
+                            children: [
+                              NeonText(
+                                'JOIN THE PARTY',
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                textColor: Colors.white,
+                                glowColor: NeonColors.neonBlue,
+                                glowRadius: 10,
+                                textAlign: TextAlign.center,
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Create your MIXVY account',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  color: NeonColors.textSecondary,
+                                  fontSize: 14,
+                                  letterSpacing: 0.3,
+                                ),
+                              ),
+                              SizedBox(height: 32),
+                              if (_errorMessage != null)
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: NeonColors.errorRed.withValues(alpha: 0.1),
+                                    border: Border.all(
+                                      color: NeonColors.errorRed,
+                                      width: 1,
+                                    ),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline,
+                                        color: NeonColors.errorRed,
+                                        size: 18,
+                                      ),
+                                      SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          _errorMessage!,
+                                          style: TextStyle(
+                                            color: NeonColors.errorRed,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              if (_errorMessage != null) SizedBox(height: 16),
+                              Form(
+                                key: _formKey,
+                                child: Column(
+                                  children: [
+                                    NeonInputField(
+                                      controller: _usernameController,
+                                      hint: 'Choose a username',
+                                      label: 'Username',
+                                      prefixIcon: Icons.person_outline,
+                                      focusGlowColor: NeonColors.neonBlue,
+                                    ),
+                                    SizedBox(height: 16),
+                                    NeonInputField(
+                                      controller: _emailController,
+                                      hint: 'Enter your email',
+                                      label: 'Email',
+                                      prefixIcon: Icons.email_outlined,
+                                      focusGlowColor: NeonColors.neonBlue,
+                                      keyboardType: TextInputType.emailAddress,
+                                    ),
+                                    SizedBox(height: 16),
+                                    _buildPasswordField(),
+                                    SizedBox(height: 16),
+                                    _buildConfirmPasswordField(),
+                                    SizedBox(height: 24),
+                                    NeonButton(
+                                      label:
+                                          _isLoading ? 'CREATING ACCOUNT...' : 'SIGN UP',
+                                      onPressed: _handleSignup,
+                                      glowColor: NeonColors.neonBlue,
+                                      isLoading: _isLoading,
+                                      height: 54,
+                                    ),
+                                    SizedBox(height: 20),
+                                    _buildTermsCheckbox(),
+                                  ],
+                                ),
+                              ),
+                              SizedBox(height: 24),
+                              NeonDivider(
+                                startColor:
+                                    NeonColors.neonBlue.withValues(alpha: 0.2),
+                                endColor:
+                                    NeonColors.neonPurple.withValues(alpha: 0.2),
+                                height: 1.5,
+                              ),
+                              SizedBox(height: 24),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'Already have an account? ',
+                                    style: TextStyle(
+                                      color: NeonColors.textSecondary,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () =>
+                                        Navigator.of(context).pushNamed('/login'),
+                                    child: Text(
+                                      'Sign in',
+                                      style: TextStyle(
+                                        color: NeonColors.neonOrange,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.bold,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (_showWelcomeOverlay)
+              Positioned.fill(
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.7),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        NeonText(
+                          'Welcome to MIXVY!',
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          textColor: NeonColors.neonBlue,
+                          glowColor: NeonColors.neonPurple,
+                          glowRadius: 16,
+                        ),
+                        SizedBox(height: 16),
+                        Text(
+                          'Your account is ready. Let’s get started!',
+                          style: TextStyle(color: Colors.white, fontSize: 16),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            if (_isLoading)
+              const LoadingOverlay(isLoading: true, child: SizedBox.shrink()),
+        ],
+      );
+    }
+  }
+
+  Future<void> _completeOnboarding(WidgetRef ref) async {
+    // After onboarding mutation:
+    ref.invalidate(currentUserProfileProvider); // Force reload profile
+    final profile = await ref.read(currentUserProfileProvider.future);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Navigator.pushNamed(context, AppRoutes.home);
+    });
   }
 }

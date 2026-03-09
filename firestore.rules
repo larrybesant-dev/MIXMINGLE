@@ -1,48 +1,64 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // -------------------------------
-    // Helper: Auth Required
-    // -------------------------------
-    function isSignedIn() {
-      return request.auth != null;
+
+    // ===== Users Collection =====
+    match /users/{userId} {
+      allow read: if request.auth != null; // all signed-in users can read profiles
+      allow write: if request.auth.uid == userId; // only owner can edit own profile
+
+      // Subcollections: followers, following, notifications
+      match /followers/{followerId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth.uid == followerId;
+        allow delete: if request.auth.uid == followerId;
+      }
+      match /following/{followingId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth.uid == userId;
+        allow delete: if request.auth.uid == userId;
+      }
+      match /notifications/{notificationId} {
+        allow read: if request.auth.uid == userId;
+        allow write: if request.auth.uid == userId;
+      }
     }
 
-    // -------------------------------
-    // Helper: User Owns Document
-    // -------------------------------
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+    // ===== Rooms Collection =====
+    match /rooms/{roomId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth.uid == resource.data.creatorId;
+
+      // Subcollection: messages
+      match /messages/{messageId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth.uid == request.resource.data.senderId;
+        allow update, delete: if request.auth.uid == resource.data.senderId;
+      }
     }
 
-    // -------------------------------
-    // Helper: Admin (for official packs)
-    // -------------------------------
-    function isAdmin() {
-      return isSignedIn() && request.auth.token.admin == true;
+    // ===== Events Collection =====
+    match /events/{eventId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null;
+      allow update, delete: if request.auth.uid == resource.data.hostId;
     }
 
-    // -------------------------------
-    // Helper: Creator Pro Tier
-    // -------------------------------
-    function isCreatorPro() {
-      return isSignedIn() && request.auth.token.tier == "creatorPro";
+    // ===== Posts / Feed Collection =====
+    match /posts/{postId} {
+      allow read: if request.auth != null;
+      allow create: if request.auth.uid == request.resource.data.authorId;
+      allow update, delete: if request.auth.uid == resource.data.authorId;
     }
 
-    // -------------------------------
-    // Helper: Premium Tier
-    // -------------------------------
-    function isPremiumOrAbove() {
-      return isSignedIn() &&
-        (request.auth.token.tier == "premium" || request.auth.token.tier == "creatorPro");
+    // ===== Reports / Moderation =====
+    match /reports/{reportId} {
+      allow read, update, delete: if request.auth.token.admin == true;
+      allow create: if request.auth != null; // anyone can report
     }
 
-    // ...existing code...
-    // All collection and subcollection rules as consolidated previously
-    // ...existing code...
-    // ========================================
-    // DEFAULT: DENY ALL
-    // ========================================
+    // ===== Default Deny =====
     match /{document=**} {
       allow read, write: if false;
     }
