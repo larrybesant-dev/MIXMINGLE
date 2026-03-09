@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
-import 'package:mixmingle/core/routing/app_routes.dart';
+import 'package:mixmingle/router/app_routes.dart';
 
 class ChatListPage extends ConsumerWidget {
   const ChatListPage({super.key});

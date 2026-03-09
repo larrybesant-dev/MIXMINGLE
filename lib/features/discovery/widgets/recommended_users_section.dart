@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../core/design_system/design_constants.dart';
-import '../../../../core/routing/app_routes.dart';
+import 'package:mixvy/router/app_routes.dart';
 import '../../../../shared/providers/auth_providers.dart';
 
 /// Shows user suggestions based on matching interests/categories.

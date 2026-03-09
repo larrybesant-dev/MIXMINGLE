@@ -273,9 +273,8 @@ class _UserMiniCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final photos = user.photos as List? ?? [];
-    final displayName = (user.displayName as String?) ?? '?';
-    final userId = user.id as String;
+    final userId = user.uid;
+    final photos = user.galleryPhotos ?? [];
 
     return GestureDetector(
       onTap: onTap,
@@ -310,9 +309,9 @@ class _UserMiniCard extends StatelessWidget {
                             photos.first as String,
                             fit: BoxFit.cover,
                             errorBuilder: (_, __, ___) =>
-                                _initialsAvatar(displayName),
+                                _initialsAvatar(user.username ?? '?'),
                           )
-                        : _initialsAvatar(displayName),
+                        : _initialsAvatar(user.username ?? '?'),
                   ),
                 ),
                 if (showPresencePulse)
@@ -321,14 +320,14 @@ class _UserMiniCard extends StatelessWidget {
             ),
             const SizedBox(height: 5),
             Text(
-              displayName.split(' ').first,
+              (user.username ?? '?').split(' ').first,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: DesignColors.white.withValues(alpha: 0.85),
                 fontSize: 11,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ],

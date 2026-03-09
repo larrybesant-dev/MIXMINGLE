@@ -1,0 +1,51 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../shared/providers/user_providers.dart';
+import '../shared/models/user_profile.dart';
+
+void handleRouting(BuildContext context, AppUser? profile) {
+  final authUser = FirebaseAuth.instance.currentUser;
+
+  if (authUser == null) {
+    Navigator.pushReplacementNamed(context, AppRoutes.login);
+    return;
+  }
+
+  if (profile == null) {
+    // Wait for provider to finish loading
+    return;
+  }
+
+  if (!profile.onboardingComplete) {
+    Navigator.pushReplacementNamed(context, AppRoutes.signup);
+    return;
+  }
+
+  Navigator.pushReplacementNamed(context, AppRoutes.home);
+}
+
+class RootPage extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(currentUserProfileProvider);
+
+    return profileAsync.when(
+      data: (profile) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          handleRouting(context, profile);
+        });
+        return Scaffold(
+          body: Center(child: CircularProgressIndicator()),
+        );
+      },
+      loading: () => Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (e, st) => Scaffold(
+        body: Center(child: Text('Error loading profile: $e')),
+      ),
+    );
+  }
+}

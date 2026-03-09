@@ -10,7 +10,7 @@ import '../../../core/design_system/design_constants.dart';
 import '../../../shared/widgets/club_background.dart';
 import '../../../shared/widgets/neon_components.dart';
 import '../../../shared/providers/auth_providers.dart';
-import '../../../core/routing/app_routes.dart';
+import 'package:mixmingle/router/app_routes.dart';
 
 /// Chats List - All conversations
 class ChatsListPage extends ConsumerWidget {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/design_system/design_constants.dart';
-import '../../core/routing/app_routes.dart';
+import 'package:mixvy/router/app_routes.dart';
 import '../../services/social/activity_feed_service.dart';
 
 // ── Providers ───────────────────────────────────────────────────────────────

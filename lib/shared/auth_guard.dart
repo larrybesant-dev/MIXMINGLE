@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import './providers/providers.dart';
 import '../shared/club_background.dart';
 import '../shared/glow_text.dart';
-import '../core/routing/app_routes.dart';
+import 'package:mixvy/router/app_routes.dart';
 
 /// Authentication guard widget that checks if user is logged in
 /// before allowing access to protected routes

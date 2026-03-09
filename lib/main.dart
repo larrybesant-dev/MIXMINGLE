@@ -22,7 +22,7 @@ import 'services/notifications/notification_service.dart';
 import 'services/agora/agora_stub.dart'
   if (dart.library.io) 'services/agora/agora_native.dart';
 import 'services/room/room_firestore_service.dart';
-import 'core/routing/app_routes.dart' as core_routes;
+import 'router/app_routes.dart';
 import 'utils/window_sync_service.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -210,7 +210,7 @@ class _AlwaysLandingApp extends riverpod.ConsumerWidget {
             return MaterialPageRoute(builder: (_) => const AuthGateRoot());
           default:
             // Delegate all authenticated-app routes to the full AppRoutes table
-            return core_routes.AppRoutes.onGenerateRoute(settings);
+            return AppRoutes.onGenerateRoute(settings);
         }
       },
     );

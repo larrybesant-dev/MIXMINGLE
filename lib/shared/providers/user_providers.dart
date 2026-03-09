@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../services/user/profile_service.dart';
 import '../../services/social/presence_service.dart';
 import '../models/user_profile.dart';
@@ -14,26 +16,40 @@ final profileServiceProvider = Provider<ProfileService>((ref) => ProfileService(
 final presenceServiceProvider = Provider<PresenceService>((ref) => PresenceService());
 
 /// Current user profile provider
-final currentUserProfileProvider = StreamProvider<UserProfile?>((ref) async* {
-  final currentUser = ref.watch(currentUserProvider).value;
-  if (currentUser == null) {
-    yield null;
-    return;
-  }
 
-  final profileService = ref.watch(profileServiceProvider);
-  try {
-    final profile = await profileService.getUserProfile(currentUser.id);
-    yield profile;
-  } catch (e) {
-    yield null;
-  }
+
+final currentUserProfileProvider = StreamProvider<AppUser?>((ref) {
+  final auth = FirebaseAuth.instance;
+  final user = auth.currentUser;
+
+  if (user == null) return Stream.value(null);
+
+  final docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+
+  return docRef.snapshots().asyncMap((snapshot) async {
+    if (!snapshot.exists) {
+      final newUser = AppUser(
+        uid: user.uid,
+        username: '',
+        email: user.email ?? '',
+        createdAt: DateTime.now(),
+        onboardingComplete: true,
+      );
+      await docRef.set(newUser.toMap());
+      return newUser;
+    }
+
+    final data = snapshot.data()!;
+    if (!data.containsKey('onboardingComplete') || data['onboardingComplete'] == false) {
+      await docRef.update({'onboardingComplete': true});
+      data['onboardingComplete'] = true;
+    }
+
+    return AppUser.fromMap(user.uid, data);
+  });
 });
 
 /// User profile by ID provider
-final userProfileProvider = StreamProvider.family<UserProfile?, String>((ref, userId) {
-  return ref.watch(profileServiceProvider).getUserProfileStream(userId);
-});
 
 /// User presence provider - Phase 2 Hardened
 /// Uses error handling and prevents infinite retry loops
@@ -75,7 +91,7 @@ final searchUsersByInterestsProvider = StreamProvider.family<List<UserProfile>, 
 });
 
 /// Profile controller for profile operations
-final userProfileControllerProvider = NotifierProvider<ProfileController, AsyncValue<UserProfile?>>(ProfileController.new);
+// Removed legacy userProfileProvider and userProfileControllerProvider
 
 class ProfileController extends Notifier<AsyncValue<UserProfile?>> {
   late final ProfileService _profileService;

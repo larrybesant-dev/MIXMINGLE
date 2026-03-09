@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/user_providers.dart';
-import 'package:mixmingle/core/routing/app_routes.dart';
+import 'package:mixvy/router/app_routes.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});

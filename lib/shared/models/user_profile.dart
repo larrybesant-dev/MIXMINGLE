@@ -1,5 +1,40 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+// Unified AppUser model for onboarding/auth/profile
+class AppUser {
+  final String uid;
+  final String username;
+  final String email;
+  final DateTime createdAt;
+  final bool onboardingComplete;
+
+  AppUser({
+    required this.uid,
+    required this.username,
+    required this.email,
+    required this.createdAt,
+    required this.onboardingComplete,
+  });
+
+  factory AppUser.fromMap(String uid, Map<String, dynamic> data) {
+    return AppUser(
+      uid: uid,
+      username: data['username'] ?? '',
+      email: data['email'] ?? '',
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      onboardingComplete: data['onboardingComplete'] ?? false,
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'username': username,
+      'email': email,
+      'createdAt': createdAt,
+      'onboardingComplete': onboardingComplete,
+    };
+  }
+}
 
 /// The active mode displayed at top of profile.
 enum ProfileMode { social, dating, creator, eventHost }

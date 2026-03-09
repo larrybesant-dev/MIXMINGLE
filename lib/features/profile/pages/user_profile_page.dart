@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'package:mixvy/router/app_routes.dart';
 
 class UserProfilePage extends ConsumerWidget {
   final String userId;
