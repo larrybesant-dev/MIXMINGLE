@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../providers/social_providers.dart';
 
 class UserProfilePage extends ConsumerWidget {
   final String userId;
@@ -8,9 +7,6 @@ class UserProfilePage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final followers = ref.watch(followersProvider(userId));
-    final following = ref.watch(followingProvider(userId));
-    final friends = ref.watch(friendsProvider(userId));
     // TODO: Fetch user profile data from Firestore
     // TODO: Fetch interests, bio, join date, etc.
 
@@ -18,15 +14,36 @@ class UserProfilePage extends ConsumerWidget {
       appBar: AppBar(title: const Text('Profile')),
       body: Column(
         children: [
-          ProfileHeaderWidget(userId: userId),
-          ProfileStatsWidget(
-            followersCount: followers.maybeWhen(data: (d) => d.length, orElse: () => 0),
-            followingCount: following.maybeWhen(data: (d) => d.length, orElse: () => 0),
-            friendsCount: friends.maybeWhen(data: (d) => d.length, orElse: () => 0),
+          // Placeholder for ProfileHeaderWidget
+          Container(
+            height: 80,
+            color: Colors.grey[300],
+            child: Center(child: Text('ProfileHeaderWidget Placeholder')),
           ),
-          FollowButtonWidget(userId: userId),
-          ProfileRoomsWidget(userId: userId),
-          ProfileActivityWidget(userId: userId),
+          // Placeholder for ProfileStatsWidget
+          Container(
+            height: 60,
+            color: Colors.grey[200],
+            child: Center(child: Text('ProfileStatsWidget Placeholder')),
+          ),
+          // Placeholder for FollowButtonWidget
+          Container(
+            height: 40,
+            color: Colors.grey[100],
+            child: Center(child: Text('FollowButtonWidget Placeholder')),
+          ),
+          // Placeholder for ProfileRoomsWidget
+          Container(
+            height: 60,
+            color: Colors.grey[200],
+            child: Center(child: Text('ProfileRoomsWidget Placeholder')),
+          ),
+          // Placeholder for ProfileActivityWidget
+          Container(
+            height: 60,
+            color: Colors.grey[300],
+            child: Center(child: Text('ProfileActivityWidget Placeholder')),
+          ),
         ],
       ),
     );

@@ -23,7 +23,7 @@ class _MainShellPageState extends State<MainShellPage> {
     final pages = [
       FeedPage(userId: widget.userId),
       FriendsPage(userId: widget.userId),
-      SearchPage(userId: widget.userId),
+      const SearchPage(),
       NotificationsPage(userId: widget.userId),
       const DiscoveryPage(),
       UserProfilePage(userId: widget.userId),

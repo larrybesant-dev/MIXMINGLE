@@ -1,8 +1,5 @@
-import '../features/friends/providers/friends_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/social_graph_service.dart';
-import '../features/discovery/providers/discovery_provider.dart';
-import '../features/notifications/providers/notifications_provider.dart';
 
 final socialGraphServiceProvider = Provider<SocialGraphService>((ref) => SocialGraphService());
 

@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'features/navigation/routes/app_routes.dart';
-import 'features/navigation/pages/main_shell_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -24,7 +22,7 @@ import 'services/notifications/notification_service.dart';
 import 'services/agora/agora_stub.dart'
   if (dart.library.io) 'services/agora/agora_native.dart';
 import 'services/room/room_firestore_service.dart';
-import 'core/routing/app_routes.dart';
+import 'core/routing/app_routes.dart' as core_routes;
 import 'utils/window_sync_service.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -56,7 +54,7 @@ void main() {
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                  runApp(const MyApp());
+                children: [
                   const Icon(Icons.error_outline, color: Color(0xFFFF6B35), size: 64),
                   const SizedBox(height: 24),
                   const Text(
@@ -82,7 +80,6 @@ void main() {
         // Initialize Firebase ONCE - block on this
         debugPrint('ðŸ”¥ Initializing Firebase...');
         await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-                  home: MainShellPage(userId: 'demoUser'), // TODO: Replace with actual userId
         AppLogger.info('Firebase initialized successfully');
 
         // Initialize Crashlytics BEFORE anything else that might error
@@ -213,7 +210,7 @@ class _AlwaysLandingApp extends riverpod.ConsumerWidget {
             return MaterialPageRoute(builder: (_) => const AuthGateRoot());
           default:
             // Delegate all authenticated-app routes to the full AppRoutes table
-            return AppRoutes.onGenerateRoute(settings);
+            return core_routes.AppRoutes.onGenerateRoute(settings);
         }
       },
     );

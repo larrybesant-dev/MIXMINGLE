@@ -1,21 +1,22 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'search_service.dart';
+import 'search_service.dart' show UserProfile;
+final searchProvider = NotifierProvider<SearchNotifier, AsyncValue<List<UserProfile>>>(SearchNotifier.new);
 
-final searchProvider = StateNotifierProvider<SearchNotifier, AsyncValue<List<UserProfile>>>(
-  (ref) => SearchNotifier(ref.read(searchServiceProvider)),
-);
+class SearchNotifier extends Notifier<AsyncValue<List<UserProfile>>> {
+  @override
+  AsyncValue<List<UserProfile>> build() {
+    return const AsyncValue.data([]);
+  }
 
-class SearchNotifier extends StateNotifier<AsyncValue<List<UserProfile>>> {
-  final SearchService _service;
-  SearchNotifier(this._service) : super(const AsyncValue.data([]));
-
-  void search(String query) async {
+  Future<void> search(String query) async {
     state = const AsyncValue.loading();
+    final searchService = ref.read(searchServiceProvider);
     try {
-      final results = await _service.searchUsers(query);
+      final results = await searchService.searchUsers(query);
       state = AsyncValue.data(results);
-    } catch (e) {
-      state = AsyncValue.error(e);
+    } catch (e, stack) {
+      state = AsyncValue.error(e, stack);
     }
   }
 }
