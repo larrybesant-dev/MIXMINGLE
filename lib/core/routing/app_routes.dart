@@ -9,7 +9,7 @@ import '../../features/landing/landing_page.dart';
 import '../../features/auth/screens/age_gate_page.dart';
 import '../../features/auth/screens/neon_login_page.dart';
 import '../../features/auth/screens/neon_signup_page.dart';
-import '../../features/auth/forgot_password_page.dart';
+// Removed unused import for forgot_password_page
 
 // Home
 import '../../features/home/home_page_electric.dart';
@@ -64,8 +64,7 @@ import '../../features/room/screens/create_room_page_complete.dart';
 import '../../shared/providers/auth_providers.dart';
 
 // Guards
-import '../routing/guards/age_verified_guard.dart';
-import '../routing/guards/profile_complete_guard.dart';
+// Removed unused guard imports
 
 // Legal pages
 import '../../features/legal/terms_of_service_page.dart';
@@ -156,53 +155,27 @@ class AppRoutes {
 
   static Route<dynamic> onGenerateRoute(RouteSettings routeSettings) {
     debugPrint('Navigating to: ${routeSettings.name}');
-    // Unified gate: checks auth, age, profile completion
     return MaterialPageRoute(
       builder: (context) {
         return Consumer(builder: (context, ref, _) {
           final authState = ref.watch(authStateProvider);
           final userAsync = ref.watch(currentUserProvider);
-          // Loading states
           if (authState.isLoading || userAsync.isLoading) {
             return const Scaffold(body: Center(child: CircularProgressIndicator()));
           }
-          // Auth error
           if (authState.hasError || userAsync.hasError) {
             return const Scaffold(body: Center(child: Text('Auth error')));
           }
           final user = userAsync.value;
-          // Unified gate logic
           if (user == null) {
-            // Not signed in
-            if (routeSettings.name != login) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                Navigator.of(context).pushReplacementNamed(login);
-              });
-              return const Scaffold(body: Center(child: CircularProgressIndicator()));
-            }
             return const NeonLoginPage();
           }
           if (user.ageVerified != true) {
-            // Age not verified
-            if (routeSettings.name != ageGate) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                Navigator.of(context).pushReplacementNamed(ageGate);
-              });
-              return const Scaffold(body: Center(child: CircularProgressIndicator()));
-            }
             return const AgeGatePage();
           }
-          // Profile completion check (example: user.profileComplete)
           if (user.profileComplete != true) {
-            if (routeSettings.name != signup) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                Navigator.of(context).pushReplacementNamed(signup);
-              });
-              return const Scaffold(body: Center(child: CircularProgressIndicator()));
-            }
             return const NeonSignupPage();
           }
-          // All checks passed: show requested page
           switch (routeSettings.name) {
             case landing:
               return const LandingPage();
@@ -212,13 +185,23 @@ class AppRoutes {
               return const RoomsListPage();
             case room:
               final roomId = routeSettings.arguments as String?;
-              if (roomId == null) return _errorRoute('Room ID required');
+              if (roomId == null) {
+                return Scaffold(
+                  appBar: AppBar(title: const Text('Error')),
+                  body: const Center(child: Text('Room ID required')),
+                );
+              }
               return _RoomLoaderPage(roomId: roomId);
             case chats:
               return const ChatsListPage();
             case chat:
               final chatId = routeSettings.arguments as String?;
-              if (chatId == null) return _errorRoute('Chat ID required');
+              if (chatId == null) {
+                return Scaffold(
+                  appBar: AppBar(title: const Text('Error')),
+                  body: const Center(child: Text('Chat ID required')),
+                );
+              }
               return ChatConversationPage(chatId: chatId);
             case following:
               final userId = routeSettings.arguments as String? ?? '';
@@ -292,7 +275,12 @@ class AppRoutes {
               return const CreateStoryPage();
             case storyViewer:
               final group = routeSettings.arguments as StoryGroup?;
-              if (group == null) return _errorRoute('Story group required');
+              if (group == null) {
+                return Scaffold(
+                  appBar: AppBar(title: const Text('Error')),
+                  body: const Center(child: Text('Story group required')),
+                );
+              }
               return StoriesViewerPage(group: group);
             case shortVideos:
               return const ShortVideoFeedPage();
@@ -300,21 +288,17 @@ class AppRoutes {
               final eventId = routeSettings.arguments as String? ?? '';
               return EventDetailsPage(eventId: eventId);
             default:
-              return _errorRoute('No route defined for ${routeSettings.name}');
+              return Scaffold(
+                appBar: AppBar(title: const Text('Error')),
+                body: Center(child: Text('No route defined for \\${routeSettings.name}')),
+              );
           }
         });
       },
     );
   }
 
-  static Route<dynamic> _errorRoute(String message) {
-    return MaterialPageRoute(
-      builder: (_) => Scaffold(
-        appBar: AppBar(title: const Text('Error')),
-        body: Center(child: Text(message)),
-      ),
-    );
-  }
+  // Removed _errorRoute, replaced with inline Scaffold error handling
 }
 
 /// Loads a Room from Firestore by ID then hands off to VoiceRoomPage.

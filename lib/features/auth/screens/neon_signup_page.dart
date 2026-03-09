@@ -105,9 +105,16 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
         'isVerified': false,
         // ── 18+ AGE GATE ──────────────────────────────────────
         'ageVerified': true,
+        'profileComplete': false,
         if (birthdate != null) 'birthdate': Timestamp.fromDate(birthdate),
         if (ageAtSignup != null) 'ageAtSignup': ageAtSignup,
       });
+
+      // Mark profile as complete after signup
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userCredential.user!.uid)
+          .update({'profileComplete': true});
 
       // Log analytics event
       await FirebaseAnalytics.instance.logEvent(

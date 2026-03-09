@@ -10,7 +10,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import '../models/membership_tier.dart';
 import '../models/coin_package.dart';
-import 'revenuecat_service.dart';
+import '../../../services/payments/revenuecat_service.dart';
 import '../../../core/analytics/analytics_service.dart' as core_analytics;
 import '../../../core/crashlytics/crashlytics_service.dart';
 
@@ -52,24 +52,18 @@ class MembershipService {
   /// Initialize the membership service
   Future<void> initialize(String userId) async {
     _currentUserId = userId;
-
     try {
-      debugPrint('ðŸŽ« [Membership] Initializing for user: $userId');
-
-      // Initialize RevenueCat
-      await RevenueCatService.instance.initialize(userId);
-
-      // Listen to RevenueCat tier changes
-      _tierSubscription = RevenueCatService.instance.tierStream.listen((tier) {
-        _syncMembershipToFirestore(tier);
-      });
-
-      // Load current data from Firestore
+      debugPrint('[Membership] Initializing for user: $userId');
+      // Web-safe RevenueCat stub
+      await RevenueCatService().initialize(_currentUserId!);
+      // Listen to tier changes (stubbed for web)
+      // _tierSubscription = RevenueCatService.instance.tierStream.listen((tier) {
+      //   _syncMembershipToFirestore(tier);
+      // });
       await _loadUserMembershipData();
-
-      debugPrint('âœ… [Membership] Initialized successfully');
+      debugPrint('[Membership] Initialized successfully');
     } catch (e) {
-      debugPrint('âŒ [Membership] Init error: $e');
+      debugPrint('[Membership] Init error: $e');
     }
   }
 

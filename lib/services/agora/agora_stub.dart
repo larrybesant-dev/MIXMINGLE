@@ -52,6 +52,15 @@ class AgoraService {
   Future<bool> startMic(String? deviceId) async {
     return true;
   }
+
+  // Add missing methods for web stub
+  Future<bool> init(String appId) async {
+    return true;
+  }
+
+  Future<bool> startCamera(String containerId, String? deviceId) async {
+    return true;
+  }
 }
 
 // Web-safe stub instance

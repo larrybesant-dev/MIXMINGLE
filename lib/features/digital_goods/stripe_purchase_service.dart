@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
+// Removed flutter_stripe import for web compatibility
 import 'models.dart';
 
 class StripePurchaseService {

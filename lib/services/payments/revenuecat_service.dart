@@ -44,8 +44,8 @@ class RevenueCatService {
   List<StoreOffering> get offerings => const [];
 
   /// Initialize RevenueCat SDK
-  Future<void> init() async {
-    // Initialize RevenueCat SDK with API key when SDK is added to pubspec
+  Future<void> initialize([String? userId]) async {
+    // Web stub: no-op
   }
 
   /// Purchase a membership tier

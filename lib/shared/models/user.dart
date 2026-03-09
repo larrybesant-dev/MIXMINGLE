@@ -41,6 +41,7 @@ class User {
   final DateTime? birthdate;
   /// True only when computed age >= 18 at signup. Backend-enforced.
   final bool ageVerified;
+  final bool profileComplete;
   /// Age in full years at signup moment (defensive cache).
   final int? ageAtSignup;
 
@@ -78,10 +79,11 @@ class User {
     required this.badges,
     this.birthdate,
     this.ageVerified = false,
+    this.profileComplete = false,
     this.ageAtSignup,
   });
 
-  factory User.fromJson(Map<String, dynamic> json) {
+      factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] ?? '',
       email: json['email'] ?? '',
@@ -129,6 +131,7 @@ class User {
               : DateTime.tryParse(json['birthdate'].toString()))
           : null,
       ageVerified: json['ageVerified'] as bool? ?? false,
+        profileComplete: json['profileComplete'] as bool? ?? false,
       ageAtSignup: json['ageAtSignup'] as int?,
     );
   }
@@ -168,6 +171,7 @@ class User {
       'badges': badges,
       if (birthdate != null) 'birthdate': Timestamp.fromDate(birthdate!),
       'ageVerified': ageVerified,
+      'profileComplete': profileComplete,
       if (ageAtSignup != null) 'ageAtSignup': ageAtSignup,
     };
   }

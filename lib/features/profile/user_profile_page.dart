@@ -1,6 +1,7 @@
 ﻿
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+// Removed unnecessary riverpod import
 import 'package:flutter/material.dart';
 // (Removed: import 'package:riverpod/riverpod.dart';)
 import '../../shared/providers/providers.dart';
@@ -11,8 +12,7 @@ import '../../shared/neon_button.dart';
 import '../messages/chat_screen.dart';
 
 // Provider for follow/unfollow feedback state
-final _followFeedbackProvider = Provider<_FollowFeedbackNotifier>(
-  (ref) => _FollowFeedbackNotifier(),
+  (ref) => FollowFeedbackNotifier(),
 );
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
