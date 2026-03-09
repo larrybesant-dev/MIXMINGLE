@@ -10,7 +10,6 @@ class RoomManagementPage extends ConsumerWidget {
       appBar: AppBar(title: const Text('Room Management')),
       body: const Column(
         children: [
-          // TODO: Add view, join, monitor room widgets
           Text('Room view, join, monitor coming soon'),
         ],
       ),

@@ -12,8 +12,7 @@ import '../../shared/neon_button.dart';
 import '../messages/chat_screen.dart';
 
 // Provider for follow/unfollow feedback state
-  (ref) => FollowFeedbackNotifier(),
-);
+// (Removed stray parenthesis and incomplete provider code)
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -23,8 +22,10 @@ class FollowFeedbackState {
   FollowFeedbackState copyWith({String? status}) => FollowFeedbackState(status: status ?? this.status);
 }
 
-class FollowFeedbackNotifier extends StateNotifier<FollowFeedbackState> {
-  FollowFeedbackNotifier() : super(const FollowFeedbackState());
+class FollowFeedbackNotifier extends Notifier<FollowFeedbackState> {
+  @override
+  FollowFeedbackState build() => const FollowFeedbackState();
+
   void show(String newStatus) {
     state = state.copyWith(status: newStatus);
     Future.delayed(const Duration(seconds: 2), () {
@@ -32,6 +33,8 @@ class FollowFeedbackNotifier extends StateNotifier<FollowFeedbackState> {
     });
   }
 }
+
+final _followFeedbackProvider = NotifierProvider<FollowFeedbackNotifier, FollowFeedbackState>(FollowFeedbackNotifier.new);
 
 class UserProfilePage extends ConsumerWidget {
   final String userId;
@@ -204,7 +207,7 @@ class UserProfilePage extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: relationshipLabel == 'Friend' ? Colors.blueAccent.withOpacity(0.2) : Colors.green.withOpacity(0.2),
+                  color: relationshipLabel == 'Friend' ? Colors.blueAccent.withValues(alpha: 0.2) : Colors.green.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
@@ -229,7 +232,7 @@ class UserProfilePage extends ConsumerWidget {
         Text(
           '@${user.username}',
           style: TextStyle(
-            color: Colors.white.withOpacity(0.7),
+            color: Colors.white.withValues(alpha: 0.7),
             fontSize: 16,
           ),
         ),
@@ -263,8 +266,8 @@ class UserProfilePage extends ConsumerWidget {
                 color: feedbackNotifier.status == null
                     ? Colors.transparent
                     : (feedbackNotifier.status == 'Following'
-                        ? Colors.green.withOpacity(0.2)
-                        : Colors.red.withOpacity(0.2)),
+                      ? Colors.green.withValues(alpha: 0.2)
+                      : Colors.red.withValues(alpha: 0.2)),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
@@ -273,10 +276,10 @@ class UserProfilePage extends ConsumerWidget {
                     onPressed: () async {
                       if (isFollowing) {
                         await ref.read(unfollowUserProvider(user.id).future);
-                        feedbackNotifier.show('Unfollowed');
+                        ref.read(_followFeedbackProvider.notifier).show('Unfollowed');
                       } else {
                         await ref.read(followUserProvider(user.id).future);
-                        feedbackNotifier.show('Following');
+                        ref.read(_followFeedbackProvider.notifier).show('Following');
                       }
                     },
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

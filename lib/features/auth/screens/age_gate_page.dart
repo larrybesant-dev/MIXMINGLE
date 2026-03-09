@@ -132,32 +132,30 @@ class _AgeGatePageState extends ConsumerState<AgeGatePage> {
 
     setState(() => _isLoading = false);
 
-    if (mounted) {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        // Update Firestore user with ageVerified true if exists
-        final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-        if (doc.exists) {
-          await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'ageVerified': true});
-          // Force reload and verify ageVerified
-          final updatedDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-          final updatedAgeVerified = updatedDoc.data()?['ageVerified'] == true;
-          final _ = ref.refresh(currentUserProvider);
-          await Future.delayed(const Duration(milliseconds: 500));
-          if (updatedAgeVerified) {
-            Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-          } else {
-            setState(() {
-              _errorMessage = 'Age verification failed. Please try again.';
-              _isLoading = false;
-            });
-          }
-        } else {
-          Navigator.of(context).pushReplacementNamed(AppRoutes.signup);
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      // Update Firestore user with ageVerified true if exists
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists) {
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'ageVerified': true});
+        // Force reload and verify ageVerified
+        final updatedDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final updatedAgeVerified = updatedDoc.data()?['ageVerified'] == true;
+        final _ = ref.refresh(currentUserProvider);
+        await Future.delayed(const Duration(milliseconds: 500));
+        if (mounted && updatedAgeVerified) {
+          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+        } else if (mounted && !updatedAgeVerified) {
+          setState(() {
+            _errorMessage = 'Age verification failed. Please try again.';
+            _isLoading = false;
+          });
         }
-      } else {
+      } else if (mounted) {
         Navigator.of(context).pushReplacementNamed(AppRoutes.signup);
       }
+    } else if (mounted) {
+      Navigator.of(context).pushReplacementNamed(AppRoutes.signup);
     }
   }
 
@@ -393,7 +391,7 @@ class _AgeGatePageState extends ConsumerState<AgeGatePage> {
                   // ── Legal note ────────────────────────────────────────
                   Text(
                     'By continuing you confirm you are 18 or older and agree to '
-                    'MixVy\'s Terms of Service. Your date of birth is stored '
+                    'MixVy Terms of Service. Your date of birth is stored '
                     'securely and never shared.',
                     textAlign: TextAlign.center,
                     style: TextStyle(

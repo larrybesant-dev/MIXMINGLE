@@ -7,7 +7,7 @@ Future<void> main() async {
   final users = await firestore.collection('users').get();
   for (final doc in users.docs) {
     await firestore.collection('users').doc(doc.id).update({'profileComplete': true});
-    print('Updated user ${doc.id}');
+    // print('Updated user ${doc.id}'); // Use logger in production
   }
-  print('All users updated.');
+  // print('All users updated.'); // Use logger in production
 }

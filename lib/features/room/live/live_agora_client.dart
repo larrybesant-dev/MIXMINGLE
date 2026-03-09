@@ -6,8 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'live_room_schema.dart';
 import '../../../core/platform/web_platform_view_helper.dart';
 import '../../../services/agora/agora_platform_service.dart';
-import '../../../services/agora/agora_stub.dart'
-  if (dart.library.io) '../../../services/agora/agora_native.dart';
 
 // Web stub for AgoraWebBridgeV3
 // ignore: camel_case_types, non_constant_identifier_names

@@ -13,7 +13,6 @@ import '../models/room.dart';
 import '../models/user.dart';
 import '../models/room_role.dart';
 import '../models/agora_participant.dart';
-import '../../services/agora/agora_stub.dart';
 import '../../features/room/providers/room_subcollection_providers.dart';
 import 'agora_participant_provider.dart';
 import 'auth_providers.dart';

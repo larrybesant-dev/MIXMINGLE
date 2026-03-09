@@ -10,7 +10,6 @@ class UserManagementPage extends ConsumerWidget {
       appBar: AppBar(title: const Text('User Management')),
       body: const Column(
         children: [
-          // TODO: Add search, view, suspend, ban user widgets
           Text('User search, view, suspend, ban coming soon'),
         ],
       ),

@@ -11,7 +11,6 @@ library;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import '../../shared/models/participant.dart';
-import '../../services/agora/agora_stub.dart';
 
 /// Exception thrown when Firestore room operation fails
 class RoomFirestoreException implements Exception {

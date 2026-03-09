@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-// ignore: avoid_web_libraries_in_flutter
+// ignore: deprecated_member_use
 import 'dart:html' as html;
 import '../models/feedback_model.dart';
 import '../providers/feedback_provider.dart';
@@ -90,6 +90,8 @@ class _FeedbackModalState extends ConsumerState<FeedbackModal> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
     final meta = _getMetadata();
+    final navigator = Navigator.of(context);
+    final messenger = ScaffoldMessenger.of(context);
     String? screenshotUrl;
     if (_screenshotBytes != null) {
       screenshotUrl = await ref.read(feedbackControllerProvider.notifier).uploadScreenshot(
@@ -110,8 +112,8 @@ class _FeedbackModalState extends ConsumerState<FeedbackModal> {
       timestamp: Timestamp.now(),
     );
     await ref.read(feedbackControllerProvider.notifier).submitFeedback(feedback: feedback);
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
+    navigator.pop();
+    messenger.showSnackBar(
       const SnackBar(content: Text('Thanks! Your feedback was sent.'),),
     );
   }

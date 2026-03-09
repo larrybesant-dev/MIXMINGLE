@@ -157,14 +157,14 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
         }
         return Card(
           clipBehavior: Clip.antiAlias,
-          color: isRead ? Theme.of(context).colorScheme.surface.withOpacity(0.7) : null,
+          color: isRead ? Theme.of(context).colorScheme.surface.withValues(alpha: 0.7) : null,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // "It's a Match!" badge
               Container(
                 padding: const EdgeInsets.symmetric(vertical: 6),
-                color: Theme.of(context).colorScheme.secondary.withOpacity(0.15),
+                color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.15),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -221,11 +221,11 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.secondary.withOpacity(0.85),
+                          color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.85),
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: Theme.of(context).colorScheme.secondary.withOpacity(0.4),
+                              color: Theme.of(context).colorScheme.secondary.withValues(alpha: 0.4),
                               blurRadius: 8,
                               spreadRadius: 1,
                             ),
@@ -302,8 +302,8 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                                   lastMessage.toString(),
                                   style: TextStyle(
                                     color: isUnread
-                                        ? Theme.of(context).colorScheme.primary
-                                        : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                      ? Theme.of(context).colorScheme.primary
+                                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                                     fontWeight: isUnread ? FontWeight.bold : FontWeight.normal,
                                   ),
                                   maxLines: 1,
@@ -323,7 +323,7 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                             child: Text(
                               formattedTimestamp,
                               style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                                 fontSize: 12,
                               ),
                             ),

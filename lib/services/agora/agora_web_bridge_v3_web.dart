@@ -3,6 +3,8 @@
 // ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
+import 'dart:js' as js;
+import 'dart:js_util' as js_util;
 import '../../core/utils/app_logger.dart';
 
 class AgoraWebBridgeV3 {

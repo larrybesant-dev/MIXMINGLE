@@ -99,7 +99,6 @@ class _HealthDashboardState extends ConsumerState<HealthDashboard> {
   void _checkBridgeStatus() {
     setState(() {
       _bridgeReady = false;
-      final state = {};
       _agoraInitialized = false;
       _inChannel = false;
       _cameraActive = false;

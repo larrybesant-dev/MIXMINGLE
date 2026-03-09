@@ -1,17 +1,15 @@
-﻿  import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
   import 'package:firebase_auth/firebase_auth.dart';
   import 'package:cloud_firestore/cloud_firestore.dart';
   import 'package:firebase_analytics/firebase_analytics.dart';
   import 'package:flutter_riverpod/flutter_riverpod.dart';
   import '../../../core/theme/neon_colors.dart';
   import '../../../core/analytics/analytics_events.dart';
-  import '../../../core/routing/app_routes.dart';
   import '../../../shared/providers/auth_providers.dart';
   import '../../../shared/widgets/neon_components.dart';
   import '../providers/age_gate_provider.dart';
 
-  int _onboardingStep = 1;
-  bool _showWelcomeOverlay = false;
+  // Removed duplicate top-level variables
 
 /// ============================================================================
 /// NEON SIGNUP SCREEN - Electric Lounge Brand
@@ -26,143 +24,33 @@ class NeonSignupPage extends ConsumerStatefulWidget {
 }
 
 class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  final _usernameController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
+  // Fields
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   bool _isLoading = false;
   bool _hidePassword = true;
   bool _hideConfirmPassword = true;
   bool _agreeToTerms = false;
   String? _errorMessage;
+  final int _onboardingStep = 1;
+  bool _showWelcomeOverlay = false;
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // If the age gate hasn't been passed (e.g. direct navigation attempt),
-    // redirect back to the age gate screen.
-    final ageGateState = ref.read(ageGateProvider);
-    if (!ageGateState.isVerified) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          Navigator.of(context).pushReplacementNamed(AppRoutes.ageGate);
-        }
-      });
-    }
-  }
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
-    _usernameController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _handleSignup() async {
-    if (!_formKey.currentState!.validate()) return;
-    if (!_agreeToTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please agree to terms and conditions'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-
-    try {
-      // Create user account
-      final userCredential =
-          await FirebaseAuth.instance.createUserWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-      );
-
-      // Retrieve verified birthdate from age gate provider
-      final ageGateState = ref.read(ageGateProvider);
-      final birthdate    = ageGateState.birthdate;
-      final ageAtSignup  = ageGateState.computedAge;
-
-      // Create user profile in Firestore
-      await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .set({
-        'uid': userCredential.user!.uid,
-        'email': _emailController.text.trim(),
-        'username': _usernameController.text.trim(),
-        'displayName': _usernameController.text.trim(),
-        'createdAt': FieldValue.serverTimestamp(),
-        'profileImageUrl': '',
-        'bio': '',
-        'isVerified': false,
-        // ── 18+ AGE GATE ──────────────────────────────────────
-        'ageVerified': true,
-        'profileComplete': false,
-        if (birthdate != null) 'birthdate': Timestamp.fromDate(birthdate),
-        if (ageAtSignup != null) 'ageAtSignup': ageAtSignup,
-      });
-
-      // Mark profile as complete after signup
-        await FirebaseFirestore.instance
-          .collection('users')
-          .doc(userCredential.user!.uid)
-          .update({'profileComplete': true});
-        // Update local provider/user model
-        final _ = ref.refresh(currentUserProvider);
-
-      // Log analytics event
-      await FirebaseAnalytics.instance.logEvent(
-        name: AnalyticsEvents.userSignup18Plus,
-        parameters: {
-          if (ageAtSignup != null) 'age_at_signup': ageAtSignup,
-        },
-      );
-
-      // Reset age gate session state after successful account creation
-      ref.read(ageGateProvider.notifier).reset();
-
-      debugPrint('âœ… [Signup] Account created. Navigating to /app...');
-      if (mounted) {
-        setState(() {
-          _showWelcomeOverlay = true;
-        });
-        await Future.delayed(const Duration(seconds: 2));
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/app',
-          (route) => false,
-        );
-      }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _errorMessage = e.message ?? 'Signup failed. Please try again.';
-      });
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
+  // Unnamed constructor
+  _NeonSignupPageState();
 
   @override
   Widget build(BuildContext context) {
-        // Onboarding progress indicator
-        final Widget progressBar = Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          child: LinearProgressIndicator(
-            value: _onboardingStep / 3,
-            backgroundColor: NeonColors.darkBg2,
-            valueColor: const AlwaysStoppedAnimation(NeonColors.neonBlue),
-          ),
-        );
+    final Widget progressBar = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: LinearProgressIndicator(
+        value: _onboardingStep / 3,
+        backgroundColor: NeonColors.darkBg2,
+        valueColor: const AlwaysStoppedAnimation(NeonColors.neonBlue),
+      ),
+    );
     return Stack(
       children: [
         Scaffold(
@@ -183,23 +71,18 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(24),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      // Logo section
-                      SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+                      SizedBox(height: 40),
                       _buildLogoSection(),
-                      SizedBox(height: MediaQuery.of(context).size.height * 0.05),
+                      SizedBox(height: 40),
                       progressBar,
-                      // Signup form
                       NeonGlowCard(
                         glowColor: NeonColors.neonPurple,
                         glowRadius: 20,
                         borderRadius: 20,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
-                            // Title
-                            const NeonText(
+                            NeonText(
                               'JOIN THE PARTY',
                               fontSize: 24,
                               fontWeight: FontWeight.w900,
@@ -208,8 +91,8 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
                               glowRadius: 10,
                               textAlign: TextAlign.center,
                             ),
-                            const SizedBox(height: 8),
-                            const Text(
+                            SizedBox(height: 8),
+                            Text(
                               'Create your MIXVY account',
                               textAlign: TextAlign.center,
                               style: TextStyle(
@@ -218,9 +101,7 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
                                 letterSpacing: 0.3,
                               ),
                             ),
-                            const SizedBox(height: 32),
-
-                            // Error message
+                            SizedBox(height: 32),
                             if (_errorMessage != null)
                               Container(
                                 padding: const EdgeInsets.all(12),
@@ -234,16 +115,16 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
                                 ),
                                 child: Row(
                                   children: [
-                                    const Icon(
+                                    Icon(
                                       Icons.error_outline,
                                       color: NeonColors.errorRed,
                                       size: 18,
                                     ),
-                                    const SizedBox(width: 12),
+                                    SizedBox(width: 12),
                                     Expanded(
                                       child: Text(
                                         _errorMessage!,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           color: NeonColors.errorRed,
                                           fontSize: 12,
                                         ),
@@ -252,14 +133,11 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
                                   ],
                                 ),
                               ),
-                            if (_errorMessage != null) const SizedBox(height: 16),
-
-                            // Form
+                            if (_errorMessage != null) SizedBox(height: 16),
                             Form(
                               key: _formKey,
                               child: Column(
                                 children: [
-                                  // Username field
                                   NeonInputField(
                                     controller: _usernameController,
                                     hint: 'Choose a username',
@@ -267,9 +145,7 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
                                     prefixIcon: Icons.person_outline,
                                     focusGlowColor: NeonColors.neonBlue,
                                   ),
-                                  const SizedBox(height: 16),
-
-                                  // Email field
+                                  SizedBox(height: 16),
                                   NeonInputField(
                                     controller: _emailController,
                                     hint: 'Enter your email',
@@ -278,17 +154,11 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
                                     focusGlowColor: NeonColors.neonBlue,
                                     keyboardType: TextInputType.emailAddress,
                                   ),
-                                  const SizedBox(height: 16),
-
-                                  // Password field
+                                  SizedBox(height: 16),
                                   _buildPasswordField(),
-                                  const SizedBox(height: 16),
-
-                                  // Confirm password field
+                                  SizedBox(height: 16),
                                   _buildConfirmPasswordField(),
-                                  const SizedBox(height: 24),
-
-                                  // Sign up button
+                                  SizedBox(height: 24),
                                   NeonButton(
                                     label:
                                         _isLoading ? 'CREATING ACCOUNT...' : 'SIGN UP',
@@ -297,18 +167,12 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
                                     isLoading: _isLoading,
                                     height: 54,
                                   ),
-
-                                  const SizedBox(height: 20),
-
-                                  // Terms agreement
+                                  SizedBox(height: 20),
                                   _buildTermsCheckbox(),
                                 ],
                               ),
                             ),
-
-                            const SizedBox(height: 24),
-
-                            // Divider
+                            SizedBox(height: 24),
                             NeonDivider(
                               startColor:
                                   NeonColors.neonBlue.withValues(alpha: 0.2),
@@ -316,14 +180,11 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
                                   NeonColors.neonPurple.withValues(alpha: 0.2),
                               height: 1.5,
                             ),
-
-                            const SizedBox(height: 24),
-
-                            // Sign in link
+                            SizedBox(height: 24),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                const Text(
+                                Text(
                                   'Already have an account? ',
                                   style: TextStyle(
                                     color: NeonColors.textSecondary,
@@ -333,7 +194,7 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
                                 GestureDetector(
                                   onTap: () =>
                                       Navigator.of(context).pushNamed('/login'),
-                                  child: const Text(
+                                  child: Text(
                                     'Sign in',
                                     style: TextStyle(
                                       color: NeonColors.neonOrange,
@@ -348,7 +209,6 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
                           ],
                         ),
                       ),
-
                       SizedBox(height: MediaQuery.of(context).size.height * 0.05),
                     ],
                   ),
@@ -360,8 +220,8 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
         if (_showWelcomeOverlay)
           Positioned.fill(
             child: Container(
-              color: Colors.black.withOpacity(0.7),
-              child: const Center(
+              color: Colors.black.withValues(alpha: 0.7),
+              child: Center(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -388,6 +248,7 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
     );
   }
 
+  // Widget builder helpers
   Widget _buildLogoSection() {
     return Column(
       children: [
@@ -456,7 +317,7 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
             ),
           ),
         ),
-        const SizedBox(height: 12),
+        SizedBox(height: 12),
         const NeonText(
           'MIXVY',
           fontSize: 24,
@@ -594,7 +455,7 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
             ),
           ),
         ),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(
           child: GestureDetector(
             onTap: () => setState(() => _agreeToTerms = !_agreeToTerms),
@@ -616,7 +477,6 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
                       fontWeight: FontWeight.bold,
                       decoration: TextDecoration.underline,
                     ),
-                    // Add tap handler if needed
                   ),
                   TextSpan(
                     text: ' and ',
@@ -641,5 +501,86 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
         ),
       ],
     );
+  }
+
+  // Synchronous signup handler
+  void _handleSignup() {
+    if (!_agreeToTerms) {
+      setState(() {
+        _errorMessage = 'You must agree to the Terms of Service.';
+      });
+      return;
+    }
+    if (_formKey.currentState?.validate() ?? false) {
+      setState(() {
+        _isLoading = true;
+        _errorMessage = null;
+      });
+      _handleSignupAsync(() {
+        setState(() {
+          _showWelcomeOverlay = true;
+        });
+      }).then((_) {
+        setState(() {
+          _isLoading = false;
+        });
+        Future.delayed(const Duration(seconds: 2), () {
+          setState(() {
+            _showWelcomeOverlay = false;
+          });
+          Navigator.of(context).pushReplacementNamed('/app');
+        });
+      }).catchError((error) {
+        setState(() {
+          _isLoading = false;
+          _errorMessage = error.toString();
+        });
+      });
+    }
+  }
+
+  // Widget builder helpers are defined below (actual methods, not fragments)
+
+  // Async signup logic
+  Future<void> _handleSignupAsync(VoidCallback showOverlay) async {
+    final userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
+    final ageGateState = ref.read(ageGateProvider);
+    final birthdate = ageGateState.birthdate;
+    final ageAtSignup = ageGateState.computedAge;
+    await FirebaseFirestore.instance
+      .collection('users')
+      .doc(userCredential.user!.uid)
+      .set({
+        'uid': userCredential.user!.uid,
+        'email': _emailController.text.trim(),
+        'username': _usernameController.text.trim(),
+        'displayName': _usernameController.text.trim(),
+        'createdAt': FieldValue.serverTimestamp(),
+        'profileImageUrl': '',
+        'bio': '',
+        'isVerified': false,
+        'ageVerified': true,
+        'profileComplete': false,
+        if (birthdate != null) 'birthdate': Timestamp.fromDate(birthdate),
+        if (ageAtSignup != null) 'ageAtSignup': ageAtSignup,
+      });
+    await FirebaseFirestore.instance
+      .collection('users')
+      .doc(userCredential.user!.uid)
+      .update({'profileComplete': true});
+    final _ = ref.refresh(currentUserProvider);
+    await FirebaseAnalytics.instance.logEvent(
+      name: AnalyticsEvents.userSignup18Plus,
+      parameters: {
+        if (ageAtSignup != null) 'age_at_signup': ageAtSignup,
+      },
+    );
+    ref.read(ageGateProvider.notifier).reset();
+    debugPrint('âœ… [Signup] Account created. Navigating to /app...');
+    showOverlay();
+    await Future.delayed(const Duration(seconds: 2));
   }
 }

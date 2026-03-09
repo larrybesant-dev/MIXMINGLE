@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'features/navigation/routes/app_routes.dart';
+import 'features/navigation/pages/main_shell_page.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
@@ -54,7 +56,7 @@ void main() {
             body: Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: [
+                  runApp(const MyApp());
                   const Icon(Icons.error_outline, color: Color(0xFFFF6B35), size: 64),
                   const SizedBox(height: 24),
                   const Text(
@@ -80,7 +82,7 @@ void main() {
         // Initialize Firebase ONCE - block on this
         debugPrint('ðŸ”¥ Initializing Firebase...');
         await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-        debugPrint('âœ… Firebase initialized successfully');
+                  home: MainShellPage(userId: 'demoUser'), // TODO: Replace with actual userId
         AppLogger.info('Firebase initialized successfully');
 
         // Initialize Crashlytics BEFORE anything else that might error

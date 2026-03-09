@@ -19,15 +19,11 @@ class ProfileCompleteGuard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TEMP DISABLED: Onboarding bypassed for development
-    return child;
-
-    // Original guard logic (commented out):
-    // final onboardingCompleteAsync = ref.watch(hasCompletedOnboardingProvider);
-    // return onboardingCompleteAsync.when(
-    //   data: (isComplete) => isComplete ? child : OnboardingFlow(),
-    //   loading: () => CircularProgressIndicator(),
-    //   error: (error, stack) => ErrorScreen(),
+      final onboardingCompleteAsync = ref.watch(hasCompletedOnboardingProvider);
+      return onboardingCompleteAsync.when(
+        data: (isComplete) => isComplete ? child : OnboardingFlow(),
+        loading: () => CircularProgressIndicator(),
+        error: (error, stack) => ErrorScreen(),
     // );
   }
 }

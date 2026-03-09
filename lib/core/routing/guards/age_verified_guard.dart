@@ -10,6 +10,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../app_routes.dart';
 import '../../../shared/providers/auth_providers.dart';
+import '../../providers/all_providers.dart';
+import '../../../features/auth/screens/age_gate_page.dart';
 
 class AgeVerifiedGuard extends ConsumerWidget {
   final Widget child;
@@ -46,7 +48,8 @@ class AgeVerifiedGuard extends ConsumerWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
-        return child;
+          final hasVerifiedAge = ref.watch(hasVerifiedAgeProvider);
+          return hasVerifiedAge ? child : const AgeGatePage();
       },
       loading: () => const Scaffold(
         backgroundColor: Color(0xFF0A0C14),

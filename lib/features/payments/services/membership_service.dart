@@ -88,50 +88,6 @@ class MembershipService {
   }
 
   /// Sync membership tier to Firestore
-  Future<void> _syncMembershipToFirestore(MembershipTier tier) async {
-    if (_currentUserId == null) return;
-
-    try {
-      final previousTier = _currentTier;
-      _currentTier = tier;
-
-      await _firestore.collection('users').doc(_currentUserId).update({
-        'membershipTier': tier.firestoreValue,
-        'lastMembershipUpdate': FieldValue.serverTimestamp(),
-      });
-
-      _membershipStreamController?.add(tier);
-
-      // Log analytics events
-      if (tier.isHigherThan(previousTier)) {
-        await _logEvent('membership_upgraded', {
-          'previous_tier': previousTier.firestoreValue,
-          'new_tier': tier.firestoreValue,
-        });
-        await _coreAnalytics.logMembershipChanged(
-          tier: tier.firestoreValue,
-          previousTier: previousTier.firestoreValue,
-        );
-        // Track VIP conversion funnel
-        if (tier == MembershipTier.vip || tier == MembershipTier.vipPlus) {
-          await _coreAnalytics.logVipConversionFunnelStep(step: 'converted', tier: tier.firestoreValue);
-        }
-      } else if (previousTier.isHigherThan(tier)) {
-        await _logEvent('membership_downgraded', {
-          'previous_tier': previousTier.firestoreValue,
-          'new_tier': tier.firestoreValue,
-        });
-        await _coreAnalytics.logMembershipChanged(
-          tier: tier.firestoreValue,
-          previousTier: previousTier.firestoreValue,
-        );
-      }
-
-      debugPrint('âœ… [Membership] Synced tier to Firestore: ${tier.displayName}');
-    } catch (e) {
-      debugPrint('âŒ [Membership] Failed to sync tier: $e');
-    }
-  }
 
   /// Update coin balance in Firestore
   Future<bool> updateCoinBalance(int change, CoinTransactionType type, {String? description}) async {

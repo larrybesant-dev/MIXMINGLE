@@ -1,7 +1,8 @@
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:permission_handler/permission_handler.dart';
 import '../../core/utils/app_logger.dart';
-import '../../services/agora/agora_stub.dart';
+import '../../services/agora/agora_platform_service_web.dart'
+  if (dart.library.js) '../../services/agora/agora_platform_service_web.dart';
 /// Manages video room lifecycle: init â†’ join â†’ leave â†’ cleanup
 class VideoRoomLifecycle {
   final String appId;
