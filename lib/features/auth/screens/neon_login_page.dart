@@ -1,8 +1,12 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/neon_colors.dart';
 import '../../../shared/widgets/neon_components.dart';
+import '../../../shared/providers/auth_providers.dart';
+import '../../../shared/models/user.dart' as shared_models;
+import '../../../services/infra/firestore_service.dart';
 
 /// ============================================================================
 /// NEON LOGIN SCREEN - Electric Lounge Brand
@@ -56,6 +60,7 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
   }
 
   Future<void> _handleLogin() async {
+    final ref = ProviderScope.containerOf(context);
     // Basic validation
     if (_emailController.text.trim().isEmpty ||
         _passwordController.text.isEmpty) {
@@ -78,13 +83,59 @@ class _NeonLoginPageState extends State<NeonLoginPage> {
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
       );
-
-      // Navigate to '/app' which triggers RootAuthGate to check auth and show authenticated app
-      debugPrint('âœ… [Login] Sign in successful. Navigating to /app...');
+      final user = userCredential.user;
+      if (user != null) {
+        // Check Firestore user doc
+        final firestoreService = FirestoreService();
+        final userDoc = await firestoreService.getUser(user.uid);
+        if (userDoc == null) {
+          // Create Firestore user doc with minimal fields
+          final newUser = shared_models.User(
+            id: user.uid,
+            email: user.email ?? '',
+            displayName: user.displayName ?? '',
+            username: '',
+            bio: '',
+            interests: [],
+            avatarUrl: user.photoURL ?? '',
+            coinBalance: 0,
+            statusMessage: 'Available',
+            followersCount: 0,
+            followingCount: 0,
+            totalTipsReceived: 0,
+            liveSessionsHosted: 0,
+            socialLinks: {},
+            topGifts: [],
+            recentMediaUrls: [],
+            recentActivity: [],
+            membershipTier: 'free',
+            badges: [],
+            isOnline: true,
+            createdAt: user.metadata.creationTime ?? DateTime.now(),
+            location: '',
+            birthdate: null,
+            ageVerified: false,
+            profileComplete: false,
+            ageAtSignup: null,
+            featuredRoomId: null,
+            featuredContentUrl: null,
+            lookingFor: null,
+            minAgePreference: null,
+            maxAgePreference: null,
+            maxDistancePreference: null,
+            nickname: null,
+            lastSeen: null,
+          );
+          await firestoreService.createUser(newUser);
+        }
+        // Invalidate currentUserProvider to force fresh fetch
+        ref.invalidate(currentUserProvider);
+      }
+      debugPrint('✅ [Login] Sign in successful. Navigating to /app...');
       if (mounted) {
         Navigator.of(context).pushNamedAndRemoveUntil(
           '/app',
