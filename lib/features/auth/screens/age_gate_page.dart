@@ -134,15 +134,14 @@ class _AgeGatePageState extends ConsumerState<AgeGatePage> {
 
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      // Update Firestore user with ageVerified true if exists
       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       if (doc.exists) {
         await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'ageVerified': true});
-        // Force reload and verify ageVerified
-        final updatedDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-        final updatedAgeVerified = updatedDoc.data()?['ageVerified'] == true;
-        final _ = ref.refresh(currentUserProvider);
-        await Future.delayed(const Duration(milliseconds: 500));
+        // Refresh profile provider
+        await ref.refresh(currentUserProfileProvider);
+        // Fetch updated profile
+        final updatedProfile = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+        final updatedAgeVerified = updatedProfile.data()?['ageVerified'] == true;
         if (mounted && updatedAgeVerified) {
           Navigator.of(context).pushReplacementNamed(AppRoutes.home);
         } else if (mounted && !updatedAgeVerified) {

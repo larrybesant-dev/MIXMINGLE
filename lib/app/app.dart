@@ -3,7 +3,7 @@
 // import 'package:mixmingle/helpers/helpers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixvy/router/app_routes.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 import '../core/theme/neon_theme.dart';
 
 class VybeSocialApp extends StatelessWidget {

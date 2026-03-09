@@ -22,7 +22,7 @@ import 'services/notifications/notification_service.dart';
 import 'services/agora/agora_stub.dart'
   if (dart.library.io) 'services/agora/agora_native.dart';
 import 'services/room/room_firestore_service.dart';
-import 'router/app_routes.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 import 'utils/window_sync_service.dart';
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {

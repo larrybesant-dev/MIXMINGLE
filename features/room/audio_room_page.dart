@@ -4,8 +4,7 @@ import 'audio_room_service.dart';
 
 class AudioRoomPage extends ConsumerStatefulWidget {
   final String roomId;
-  final String userId;
-  const AudioRoomPage({required this.roomId, required this.userId, super.key});
+  const AudioRoomPage({required this.roomId, super.key});
 
   @override
   ConsumerState<AudioRoomPage> createState() => _AudioRoomPageState();
@@ -35,18 +34,19 @@ class _AudioRoomPageState extends ConsumerState<AudioRoomPage> {
   }
 
   void _requestMic() async {
-    await service.requestMic(widget.userId);
+    final profile = ref.read(currentUserProfileProvider);
+    await service.requestMic(profile.uid);
     await _loadQueue();
   }
 
-  void _grantMic(String userId) async {
-    await service.grantMic(userId);
+  void _grantMic(String uid) async {
+    await service.grantMic(uid);
     await _loadQueue();
     await _loadSpeakers();
   }
 
-  void _revokeMic(String userId) async {
-    await service.revokeMic(userId);
+  void _revokeMic(String uid) async {
+    await service.revokeMic(uid);
     await _loadQueue();
     await _loadSpeakers();
   }

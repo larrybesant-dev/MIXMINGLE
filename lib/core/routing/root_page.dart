@@ -22,7 +22,10 @@ void handleRouting(BuildContext context, AppUser? profile) {
     Navigator.pushReplacementNamed(context, AppRoutes.signup);
     return;
   }
-
+  if (profile.ageVerified != true) {
+    Navigator.pushReplacementNamed(context, AppRoutes.ageGate);
+    return;
+  }
   Navigator.pushReplacementNamed(context, AppRoutes.home);
 }
 

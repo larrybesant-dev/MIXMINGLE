@@ -51,7 +51,7 @@ class PackAsset {
 
 // Pack
 class Pack {
-  final String id;
+  final String uid;
   final PackType type;
   final String name;
   final String description;
@@ -59,7 +59,7 @@ class Pack {
   final PriceType priceType;
   final String? stripeProductId;
   final bool isOfficial;
-  final String? creatorId;
+  final String? username;
   final String previewImageUrl;
   final List<PackAsset> assets;
   final DateTime createdAt;
@@ -67,7 +67,7 @@ class Pack {
   final bool isPublished;
 
   const Pack({
-    required this.id,
+    required this.uid,
     required this.type,
     required this.name,
     required this.description,
@@ -75,7 +75,7 @@ class Pack {
     required this.priceType,
     this.stripeProductId,
     required this.isOfficial,
-    this.creatorId,
+    this.username,
     required this.previewImageUrl,
     required this.assets,
     required this.createdAt,
@@ -83,8 +83,8 @@ class Pack {
     required this.isPublished,
   });
 
-  factory Pack.fromJson(Map<String, dynamic> json, String id) => Pack(
-    id: id,
+  factory Pack.fromJson(Map<String, dynamic> json, String uid) => Pack(
+    uid: uid,
     type: _enumFromString(json['type'] ?? 'overlay', PackType.values),
     name: json['name'] ?? '',
     description: json['description'] ?? '',
@@ -92,7 +92,7 @@ class Pack {
     priceType: _enumFromString(json['priceType'] ?? 'free', PriceType.values),
     stripeProductId: json['stripeProductId'],
     isOfficial: json['isOfficial'] ?? false,
-    creatorId: json['creatorId'],
+    username: json['username'],
     previewImageUrl: json['previewImageUrl'] ?? '',
     assets: (json['assets'] as List<dynamic>? ?? [])
       .map((a) => PackAsset.fromJson(a as Map<String, dynamic>)).toList(),
@@ -109,7 +109,7 @@ class Pack {
     'priceType': priceType.name,
     'stripeProductId': stripeProductId,
     'isOfficial': isOfficial,
-    'creatorId': creatorId,
+    'username': username,
     'previewImageUrl': previewImageUrl,
     'assets': assets.map((a) => a.toJson()).toList(),
     'createdAt': Timestamp.fromDate(createdAt),
@@ -122,32 +122,32 @@ class Pack {
 
 // UserPurchase
 class UserPurchase {
-  final String packId;
+  final String uid;
   final DateTime purchasedAt;
-  final String stripeSessionId;
+  final String email;
   final PriceType priceType;
   final String source;
 
   const UserPurchase({
-    required this.packId,
+    required this.uid,
     required this.purchasedAt,
-    required this.stripeSessionId,
+    required this.email,
     required this.priceType,
     required this.source,
   });
 
   factory UserPurchase.fromJson(Map<String, dynamic> json) => UserPurchase(
-    packId: json['packId'] ?? '',
+    uid: json['uid'] ?? '',
     purchasedAt: (json['purchasedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-    stripeSessionId: json['stripeSessionId'] ?? '',
+    email: json['email'] ?? '',
     priceType: _enumFromString(json['priceType'] ?? 'oneTime', PriceType.values),
     source: json['source'] ?? 'direct',
   );
 
   Map<String, dynamic> toJson() => {
-    'packId': packId,
+    'uid': uid,
     'purchasedAt': Timestamp.fromDate(purchasedAt),
-    'stripeSessionId': stripeSessionId,
+    'email': email,
     'priceType': priceType.name,
     'source': source,
   };
@@ -157,52 +157,51 @@ class UserPurchase {
 
 // UserCreation
 class UserCreation {
-  final String id;
-  final String? basePackId;
+  final String uid;
+  final String? onboardingComplete;
   final PackType type;
   final String name;
   final String description;
   final List<PackAsset> assets;
   final bool isPublished;
-  final String? publishedPackId;
+  final String? createdAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
   const UserCreation({
-    required this.id,
-    this.basePackId,
+    required this.uid,
+    this.onboardingComplete,
     required this.type,
     required this.name,
     required this.description,
     required this.assets,
     required this.isPublished,
-    this.publishedPackId,
-    required this.createdAt,
+    this.createdAt,
     required this.updatedAt,
   });
 
-  factory UserCreation.fromJson(Map<String, dynamic> json, String id) => UserCreation(
-    id: id,
-    basePackId: json['basePackId'],
+  factory UserCreation.fromJson(Map<String, dynamic> json, String uid) => UserCreation(
+    uid: uid,
+    onboardingComplete: json['onboardingComplete'],
     type: _enumFromString(json['type'] ?? 'overlay', PackType.values),
     name: json['name'] ?? '',
     description: json['description'] ?? '',
     assets: (json['assets'] as List<dynamic>? ?? [])
       .map((a) => PackAsset.fromJson(a as Map<String, dynamic>)).toList(),
     isPublished: json['isPublished'] ?? false,
-    publishedPackId: json['publishedPackId'],
+    createdAt: json['createdAt'],
     createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     updatedAt: (json['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
   );
 
   Map<String, dynamic> toJson() => {
-    'basePackId': basePackId,
+    'onboardingComplete': onboardingComplete,
     'type': type.name,
     'name': name,
     'description': description,
     'assets': assets.map((a) => a.toJson()).toList(),
     'isPublished': isPublished,
-    'publishedPackId': publishedPackId,
+    'createdAt': createdAt,
     'createdAt': Timestamp.fromDate(createdAt),
     'updatedAt': Timestamp.fromDate(updatedAt),
   };
