@@ -14,6 +14,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/theme/neon_colors.dart';
 import '../../../core/analytics/analytics_events.dart';
 import '../../../core/routing/app_routes.dart';
+import '../../../shared/providers/auth_providers.dart';
 import '../providers/age_gate_provider.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -134,10 +135,23 @@ class _AgeGatePageState extends ConsumerState<AgeGatePage> {
     if (mounted) {
       final user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        // Check Firestore profile
+        // Update Firestore user with ageVerified true if exists
         final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
         if (doc.exists) {
-          Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          await FirebaseFirestore.instance.collection('users').doc(user.uid).update({'ageVerified': true});
+          // Force reload and verify ageVerified
+          final updatedDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+          final updatedAgeVerified = updatedDoc.data()?['ageVerified'] == true;
+          final _ = ref.refresh(currentUserProvider);
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (updatedAgeVerified) {
+            Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+          } else {
+            setState(() {
+              _errorMessage = 'Age verification failed. Please try again.';
+              _isLoading = false;
+            });
+          }
         } else {
           Navigator.of(context).pushReplacementNamed(AppRoutes.signup);
         }

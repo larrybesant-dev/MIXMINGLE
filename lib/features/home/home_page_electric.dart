@@ -132,20 +132,20 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
             shadows: DesignColors.primaryGlow,
           ),
         ),
-        if (profile?.vibeTag != null) ...[
+        if (profile != null && profile.vibeTag != null) ...[
           const SizedBox(width: 10),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
             decoration: BoxDecoration(
-              color: _vc(profile!.vibeTag).withValues(alpha: 0.15),
+              color: _vc(profile.vibeTag!).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: _vc(profile.vibeTag).withValues(alpha: 0.45)),
+              border: Border.all(color: _vc(profile.vibeTag!).withValues(alpha: 0.45)),
             ),
             child: Row(mainAxisSize: MainAxisSize.min, children: [
-              Icon(_vi(profile.vibeTag), size: 10, color: _vc(profile.vibeTag)),
+              Icon(_vi(profile.vibeTag!), size: 10, color: _vc(profile.vibeTag!)),
               const SizedBox(width: 4),
               Text(profile.vibeTag!,
-                  style: TextStyle(color: _vc(profile.vibeTag),
+                  style: TextStyle(color: _vc(profile.vibeTag!),
                       fontSize: 10, fontWeight: FontWeight.w700)),
             ]),
           ),

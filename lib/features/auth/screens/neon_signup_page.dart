@@ -6,6 +6,7 @@
   import '../../../core/theme/neon_colors.dart';
   import '../../../core/analytics/analytics_events.dart';
   import '../../../core/routing/app_routes.dart';
+  import '../../../shared/providers/auth_providers.dart';
   import '../../../shared/widgets/neon_components.dart';
   import '../providers/age_gate_provider.dart';
 
@@ -111,10 +112,12 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
       });
 
       // Mark profile as complete after signup
-      await FirebaseFirestore.instance
+        await FirebaseFirestore.instance
           .collection('users')
           .doc(userCredential.user!.uid)
           .update({'profileComplete': true});
+        // Update local provider/user model
+        final _ = ref.refresh(currentUserProvider);
 
       // Log analytics event
       await FirebaseAnalytics.instance.logEvent(
