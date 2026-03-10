@@ -1,4 +1,4 @@
-﻿// Agora Web Bridge v5 - Production-Ready Web Interop
+// Agora Web Bridge v5 - Production-Ready Web Interop
 // Interfaces with window.agoraWebBridge from agora_bridge.js
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;

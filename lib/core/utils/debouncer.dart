@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 /// Debouncer for delaying execution of a function
 class Debouncer {

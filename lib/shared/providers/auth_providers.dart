@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../../services/auth/auth_service.dart';
 import '../models/user.dart' as shared_models;
-import '../models/user_profile.dart';
+import '../../models/user_profile.dart';
 import '../../services/infra/firestore_service.dart';
 import 'user_providers.dart';
 

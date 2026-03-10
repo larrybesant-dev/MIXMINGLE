@@ -1,4 +1,4 @@
-﻿/// Safety Module
+/// Safety Module
 ///
 /// Exports all safety and moderation components.
 library;

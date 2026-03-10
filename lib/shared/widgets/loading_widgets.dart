@@ -1,5 +1,4 @@
-﻿import 'package:flutter/material.dart';
-import 'club_background.dart';
+import 'package:flutter/material.dart';
 import 'glow_text.dart';
 
 /// Simple loading spinner widget

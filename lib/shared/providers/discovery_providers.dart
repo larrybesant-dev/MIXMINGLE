@@ -12,7 +12,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/social/discovery_service.dart';
-import '../models/user_profile.dart';
+import '../../models/user_profile.dart';
 import '../models/room.dart';
 
 // ── Service ──────────────────────────────────────────────────────────────────

@@ -14,19 +14,17 @@ class RouteTestPage extends StatelessWidget {
   const RouteTestPage({super.key});
 
   /// All routes that can be navigated to without required arguments.
-  static const _noArgRoutes = <String>[
+  static final _noArgRoutes = <String>[
     AppRoutes.ageGate,
     AppRoutes.login,
     AppRoutes.signup,
-    AppRoutes.home,
+    AppRoutes.landing,
     AppRoutes.discovery,
     AppRoutes.editProfile,
-    AppRoutes.profile,
     AppRoutes.followers,
     AppRoutes.following,
     AppRoutes.friends,
-    AppRoutes.friendRequests,
-    AppRoutes.chatList,
+    AppRoutes.chats,
     AppRoutes.messageRequests,
     AppRoutes.rooms,
     AppRoutes.createRoom,
@@ -38,6 +36,18 @@ class RouteTestPage extends StatelessWidget {
     AppRoutes.blockedUsers,
     AppRoutes.events,
     AppRoutes.coins,
+    AppRoutes.routeTest,
+    AppRoutes.app,
+    AppRoutes.createShortVideo,
+    AppRoutes.agoraTest,
+    AppRoutes.adminDashboard,
+    AppRoutes.suggestedUsers,
+    AppRoutes.trendingUsers,
+    AppRoutes.activeNow,
+    AppRoutes.discoverRoomsLive,
+    AppRoutes.profileMedia,
+    AppRoutes.reportUser,
+    AppRoutes.socialFeed,
   ];
 
   /// Routes that require a string argument (shown as info only).
@@ -47,8 +57,6 @@ class RouteTestPage extends StatelessWidget {
     '${AppRoutes.chat} (needs chatId)',
     '${AppRoutes.userProfile} (needs userId)',
     '${AppRoutes.eventDetails} (needs eventId)',
-    '${AppRoutes.messageThread} (needs threadId)',
-    '${AppRoutes.hostTools} (needs roomId)',
   ];
 
   @override

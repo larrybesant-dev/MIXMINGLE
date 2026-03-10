@@ -1,4 +1,4 @@
-﻿/// Feature flags for gradual rollout and A/B testing
+/// Feature flags for gradual rollout and A/B testing
 ///
 /// Usage:
 /// ```dart

@@ -1,4 +1,4 @@
-﻿/// Analytics Events Constants
+/// Analytics Events Constants
 ///
 /// All analytics event names and parameter keys used throughout the app.
 /// Consistent naming ensures clean analytics data and easy reporting.

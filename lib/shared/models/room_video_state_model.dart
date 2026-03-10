@@ -1,4 +1,4 @@
-﻿import 'video_tile_model.dart';
+import 'video_tile_model.dart';
 import 'window_state_model.dart';
 import 'publisher_state_model.dart';
 

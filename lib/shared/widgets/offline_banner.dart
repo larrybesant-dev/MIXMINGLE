@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:mixmingle/core/providers/connectivity_provider.dart';
 
 /// Displays a banner when the app is offline

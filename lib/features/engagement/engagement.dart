@@ -1,4 +1,4 @@
-﻿/// Engagement Module
+/// Engagement Module
 ///
 /// Exports all engagement-related services and utilities.
 library;

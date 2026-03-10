@@ -8,7 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../../core/design_system/design_constants.dart';
-import '../../../shared/providers/profile_controller.dart';
+import '../../../providers/all_providers.dart';
 import '../widgets/media_gallery_widget.dart';
 
 class ProfileMediaPage extends ConsumerWidget {
@@ -25,7 +25,7 @@ class ProfileMediaPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profileAsync = ref.watch(userProfileProvider(userId));
+    final profileAsync = ref.watch(currentUserProfileProvider);
 
     return Scaffold(
       backgroundColor: DesignColors.background,
@@ -64,8 +64,8 @@ class ProfileMediaPage extends ConsumerWidget {
           return SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: MediaGallery(
-              photos: profile.galleryPhotos ?? [],
-              videos: profile.galleryVideos ?? [],
+              photos: profile.photoGallery ?? [],
+              videos: profile.videoGallery ?? [],
               isOwner: isOwner,
               onAddPhoto: isOwner ? () => _pickAndUploadPhoto(context, ref) : null,
               onAddVideo: isOwner ? () => _pickAndUploadVideo(context, ref) : null,

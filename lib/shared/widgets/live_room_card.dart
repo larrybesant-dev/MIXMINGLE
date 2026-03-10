@@ -1,7 +1,6 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/core/theme/colors.dart';
-import 'package:mixmingle/shared/providers/user_providers.dart';
 import '../models/room.dart';
 import 'glow_text.dart';
 
@@ -63,7 +62,7 @@ class _LiveRoomCardState extends ConsumerState<LiveRoomCard> with SingleTickerPr
     // Fetch the actual host display name from Firestore
     String displayDjName = widget.djName;
     if (widget.room != null) {
-      final hostProfileAsync = ref.watch(userProfileProvider(widget.room!.hostId));
+      final hostProfileAsync = ref.watch(userProfileProvider(widget.room!.hostId)); // from all_providers.dart
       displayDjName = hostProfileAsync.when(
         data: (profile) {
           if (profile?.displayName != null && profile!.displayName!.isNotEmpty) {

@@ -1,4 +1,4 @@
-﻿
+
 /// Collapsible Sidebar Widget - Base widget with collapse/expand animation and hover effects
 library;
 

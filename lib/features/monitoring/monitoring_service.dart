@@ -1,4 +1,4 @@
-﻿/// Monitoring Service
+/// Monitoring Service
 ///
 /// Tracks key app health metrics including crash-free sessions,
 /// room join success rates, video reliability, retention, and VIP conversion.

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:mixmingle/core/pagination/pagination_controller.dart';
 
 /// A reusable paginated list view widget

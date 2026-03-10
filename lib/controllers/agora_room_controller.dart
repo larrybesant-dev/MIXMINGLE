@@ -1,4 +1,4 @@
-﻿/// Agora Room Controller
+/// Agora Room Controller
 ///
 /// High-level orchestration of:
 /// - Join flow state machine (JoinFlowController)

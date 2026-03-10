@@ -1,4 +1,4 @@
-﻿/// User Safety Provider
+/// User Safety Provider
 /// Report and block users
 library;
 

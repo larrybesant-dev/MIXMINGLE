@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 
 /// Vybe Social App Logger
 /// Debug-only logging utility for tracking errors and unexpected states

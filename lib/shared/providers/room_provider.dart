@@ -1,4 +1,4 @@
-﻿// Room & Video Participant Provider - Manages active video rooms and participants
+// Room & Video Participant Provider - Manages active video rooms and participants
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_models.dart';

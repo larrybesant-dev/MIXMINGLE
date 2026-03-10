@@ -1,11 +1,12 @@
 /// Home Page Electric
 /// Main landing page after onboarding completion
+library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../shared/providers/user_providers.dart';
+import 'package:mixmingle/providers/all_providers.dart'; // currentUserProfileProvider
 
 class HomePageElectric extends ConsumerStatefulWidget {
-  const HomePageElectric({Key? key}) : super(key: key);
+  const HomePageElectric({super.key});
 
   @override
   ConsumerState<HomePageElectric> createState() => _HomePageElectricState();
@@ -21,7 +22,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       data: (profile) {
         // Onboarding overlay logic placeholder
         return Scaffold(
-          body: Center(child: Text('Home Content')), // Simple placeholder
+          appBar: AppBar(title: const Text('HomePageElectric')), // Unique identifier
+          body: const Center(child: Text('Home Content - Arrived at HomePageElectric')), // Unique content
         );
       },
       loading: () => const Scaffold(

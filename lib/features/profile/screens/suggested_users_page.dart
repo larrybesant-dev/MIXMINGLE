@@ -1,4 +1,4 @@
-﻿/// Suggested Users Page
+/// Suggested Users Page
 /// Discover new people to follow based on interests and mutual connections
 library;
 

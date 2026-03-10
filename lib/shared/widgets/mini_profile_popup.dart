@@ -1,4 +1,4 @@
-﻿/// Mini Profile Popup Widget
+/// Mini Profile Popup Widget
 ///
 /// Displays a compact profile card on mouse hover over participant tiles.
 /// Shows user avatar, name, bio snippet, online status, and quick action buttons.
@@ -20,8 +20,9 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design_system/design_constants.dart';
-import '../../shared/models/user_profile.dart';
-import '../../shared/providers/user_providers.dart';
+import '../../providers/all_providers.dart'; // currentUserProfileProvider, userProfileProvider
+import '../models/user_profile.dart';
+// Removed unused imports
 
 class MiniProfilePopup extends ConsumerWidget {
   final String userId;
@@ -48,7 +49,8 @@ class MiniProfilePopup extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Fetch additional user data
-    final userProfileAsync = ref.watch(userProfileProvider(userId));
+    final AsyncValue<UserProfile?> userProfileAsync = ref.watch(userProfileProvider(userId));
+    // If userPresenceProvider is needed, ensure it's imported from all_providers.dart
     final userPresenceAsync = ref.watch(userPresenceProvider(userId));
 
     // Get online status from presence or fallback to prop
@@ -245,21 +247,19 @@ class MiniProfilePopup extends ConsumerWidget {
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
       data: (profile) {
-        final followers = profile?.followersCount ?? 0;
-        final following = profile?.followingCount ?? 0;
-
+        // AppUser does not have followersCount/followingCount; show placeholder or use available fields
         return Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildStatItem(Icons.people, '$followers', 'Followers'),
+              _buildStatItem(Icons.people, '-', 'Followers'),
               Container(
                 width: 1,
                 height: 30,
                 color: Colors.white24,
               ),
-              _buildStatItem(Icons.person_add, '$following', 'Following'),
+              _buildStatItem(Icons.person_add, '-', 'Following'),
             ],
           ),
         );

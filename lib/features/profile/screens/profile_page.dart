@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mixmingle/shared/providers/profile_controller.dart';
-import 'package:mixmingle/shared/providers/providers.dart';
-import 'package:mixmingle/shared/models/user_profile.dart';
+import '../../../providers/all_providers.dart';
+import 'package:mixmingle/models/profile_mode.dart';
+import 'package:mixmingle/providers/user_providers.dart';
+import '../../../models/user_profile.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/core/routing/app_routes.dart';
@@ -896,10 +897,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                         child: CircleAvatar(
                           radius: 55,
                           backgroundColor: DesignColors.surfaceDefault,
-                          backgroundImage: p.photoUrl != null ? NetworkImage(p.photoUrl!) : null,
-                          child: p.photoUrl == null
-                              ? const Icon(Icons.person, size: 52, color: DesignColors.textGray)
-                              : null,
+                          backgroundImage: NetworkImage(p.photoUrl!),
+                          child: null,
                         ),
                       ),
                     ),
@@ -962,7 +961,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     final name = p.displayName ?? p.nickname ?? 'Anonymous';
     final age  = p.age;
     final flag = p.countryCode != null ? _countryFlag(p.countryCode!) : null;
-    final days = DateTime.now().difference(p.createdAt).inDays;
+    final createdAt = p.createdAt ?? DateTime.now();
+    final days = DateTime.now().difference(createdAt).inDays;
     final joined = days == 0 ? 'Joined today' : days == 1 ? 'Joined yesterday' : 'Joined $days days ago';
 
     return Column(
@@ -1022,12 +1022,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
             const SizedBox(width: 12),
             Container(width: 1, height: 28, color: DesignColors.divider),
             const SizedBox(width: 12),
-            _statBadge(_formatCount(p.followingCount), 'Following'),
-            if (p.roomsHostedCount > 0) ...[
+            _statBadge(_formatCount(p.followingCount ?? 0), 'Following'),
+            if ((p.roomsHostedCount ?? 0) > 0) ...[
               const SizedBox(width: 12),
               Container(width: 1, height: 28, color: DesignColors.divider),
               const SizedBox(width: 12),
-              _statBadge('${p.roomsHostedCount}', 'Rooms'),
+              _statBadge('${p.roomsHostedCount ?? 0}', 'Rooms'),
             ],
           ],
         ),
@@ -1215,22 +1215,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   Widget _buildBadgesSection(UserProfile p) {
     final badges = <_BadgeItem>[];
 
-    if (p.isPremium || p.isVip) {
+    if ((p.isPremium ?? false) || (p.isVip ?? false)) {
       badges.add(const _BadgeItem(Icons.workspace_premium, 'VIP', _kAmber));
     }
-    if (p.isCreatorBadge || p.isCreatorEnabled) {
+    if ((p.isCreatorBadge ?? false) || (p.isCreatorEnabled ?? false)) {
       badges.add(const _BadgeItem(Icons.movie_creation_outlined, 'Creator', _kPink));
     }
-    if (p.isPhotoVerified == true || p.isIdVerified == true) {
+    if ((p.isPhotoVerified ?? false) || (p.isIdVerified ?? false)) {
       badges.add(const _BadgeItem(Icons.verified_outlined, 'Verified', _kBlue));
     }
-    if (p.isBoosted) {
+    if (p.isBoosted ?? false) {
       badges.add(const _BadgeItem(Icons.rocket_launch_outlined, 'Boosted', _kCyan));
     }
-    if (p.communityRating >= 4.5 && p.totalRoomsJoined >= 10) {
+    if ((p.communityRating ?? 0) >= 4.5 && (p.totalRoomsJoined ?? 0) >= 10) {
       badges.add(const _BadgeItem(Icons.star_outline, 'Top Host', _kAmber));
     }
-    if (p.twoFactorEnabled) {
+    if (p.twoFactorEnabled ?? false) {
       badges.add(const _BadgeItem(Icons.security_outlined, '2FA Active', DesignColors.success));
     }
     // Stored badge IDs from Firestore
@@ -1256,7 +1256,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
     }
 
     // Always show at least placeholder row so space is reserved
-    if (badges.isEmpty && p.computedTags.isEmpty) {
+    if (badges.isEmpty && (p.computedTags ?? []).isEmpty) {
       return _buildEmptyBadgesPlaceholder();
     }
 
@@ -1291,7 +1291,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
                 ),
               )),
               // Computed behaviour tags (purple neon chips)
-              ...p.computedTags.map((tag) => Padding(
+              ...(p.computedTags ?? []).map((tag) => Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -1319,7 +1319,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   //  ENERGY SCORE SECTION  (#6)
   // ══════════════════════════════════════════════════════════
   Widget _buildEnergyScoreSection(UserProfile p) {
-    final score = p.energyScore;
+    final score = p.energyScore ?? 0.0;
     final ratio = score / 100.0;
     final tier = score < 30 ? 'Warm Up' : score < 65 ? 'Active' : 'High Energy';
     const barColor = Color(0xFF00E5CC);
@@ -1391,14 +1391,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage>
   Widget _buildActivityStatsSection(UserProfile p) {
     final stats = <_StatItem>[];
 
-    if (p.roomsHostedCount > 0) {
-      stats.add(_StatItem('${p.roomsHostedCount}', 'Rooms Hosted', Icons.mic_none_outlined, _kBlue));
+    if ((p.roomsHostedCount ?? 0) > 0) {
+      stats.add(_StatItem('${p.roomsHostedCount ?? 0}', 'Rooms Hosted', Icons.mic_none_outlined, _kBlue));
     }
-    if (p.eventsAttended > 0) {
-      stats.add(_StatItem('${p.eventsAttended}', 'Events', Icons.event_outlined, _kCyan));
+    if ((p.eventsAttended ?? 0) > 0) {
+      stats.add(_StatItem('${p.eventsAttended ?? 0}', 'Events', Icons.event_outlined, _kCyan));
     }
-    if (p.communityRating > 0) {
-      stats.add(_StatItem(p.communityRating.toStringAsFixed(1), 'Rating', Icons.star_outline, _kAmber));
+    if ((p.communityRating ?? 0) > 0) {
+      stats.add(_StatItem((p.communityRating ?? 0).toStringAsFixed(1), 'Rating', Icons.star_outline, _kAmber));
     }
     if (p.mutualsCount > 0) {
       stats.add(_StatItem('${p.mutualsCount}', 'Mutuals', Icons.people_outline, _kPurple));
@@ -1816,14 +1816,9 @@ class _FriendTile extends ConsumerWidget {
         return ListTile(
           leading: CircleAvatar(
             radius: 22,
-            backgroundImage: p.photoUrl != null ? NetworkImage(p.photoUrl!) : null,
+            backgroundImage: NetworkImage(p.photoUrl!),
             backgroundColor: const Color(0xFF1A1F2E),
-            child: p.photoUrl == null
-                ? Text(
-                    (p.displayName ?? 'U').substring(0, 1).toUpperCase(),
-                    style: const TextStyle(color: Colors.white54, fontWeight: FontWeight.w700),
-                  )
-                : null,
+            child: null,
           ),
           title: Text(
             p.displayName ?? 'Unknown',

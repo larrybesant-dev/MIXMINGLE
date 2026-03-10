@@ -1,4 +1,4 @@
-﻿/// Performance Service
+/// Performance Service
 ///
 /// Centralized performance monitoring using Firebase Performance.
 /// Provides methods for custom traces, metrics, and HTTP monitoring.

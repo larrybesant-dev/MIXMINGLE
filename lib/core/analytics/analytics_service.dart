@@ -1,4 +1,4 @@
-﻿/// Analytics Service
+/// Analytics Service
 ///
 /// Centralized analytics tracking using Firebase Analytics.
 /// Provides methods for logging events, setting user properties,

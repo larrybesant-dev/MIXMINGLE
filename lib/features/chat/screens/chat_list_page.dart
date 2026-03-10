@@ -1,7 +1,8 @@
+import 'package:mixmingle/models/user_profile.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
-import 'package:mixmingle/shared/providers/all_providers.dart';
+import 'package:mixmingle/providers/all_providers.dart'; // userProfileProvider, currentUserProfileProvider
 import 'package:mixmingle/router/app_routes.dart';
 
 class ChatListPage extends ConsumerWidget {
@@ -10,7 +11,7 @@ class ChatListPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final conversationListAsync = ref.watch(conversationListProvider);
-    final currentUserAsync = ref.watch(currentUserProvider);
+    final currentUserAsync = ref.watch(currentUserProfileProvider);
 
     return ClubBackground(
       child: Scaffold(
@@ -51,7 +52,8 @@ class ChatListPage extends ConsumerWidget {
                     final otherUserAsync = ref.watch(userProfileProvider(otherUserId));
 
                     return otherUserAsync.when(
-                      data: (otherUser) {
+                      data: (otherUserRaw) {
+                        final otherUser = otherUserRaw as UserProfile?;
                         // Watch presence status
                         final presenceAsync = ref.watch(presenceProvider(otherUserId));
 
@@ -63,14 +65,14 @@ class ChatListPage extends ConsumerWidget {
                               leading: Stack(
                                 children: [
                                   CircleAvatar(
-                                    backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                                    backgroundImage: otherUser?.photos.isNotEmpty == true
-                                        ? NetworkImage(otherUser!.photos.first)
+                                    backgroundColor: Theme.of(context).primaryColor.withOpacity(0.3),
+                                    backgroundImage: (otherUser?.photos != null && otherUser.photos!.isNotEmpty)
+                                        ? NetworkImage(otherUser.photos!.first)
                                         : null,
-                                    child: otherUser?.photos.isEmpty == true
+                                    child: (otherUser?.photos == null || otherUser.photos!.isEmpty)
                                         ? Text(
-                                            otherUser?.displayName?.isNotEmpty == true
-                                                ? otherUser!.displayName![0].toUpperCase()
+                                            (otherUser?.displayName != null && otherUser.displayName!.isNotEmpty)
+                                                ? otherUser.displayName![0].toUpperCase()
                                                 : '?',
                                           )
                                         : null,
@@ -96,7 +98,7 @@ class ChatListPage extends ConsumerWidget {
                                 ],
                               ),
                               title: Text(
-                                otherUser?.displayName ?? otherUser?.username ?? 'Unknown',
+                                otherUser?.displayName ?? (otherUser as dynamic)?.username ?? 'Unknown',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.w600,
@@ -166,19 +168,20 @@ class ChatListPage extends ConsumerWidget {
                           },
                           loading: () => ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                              backgroundImage:
-                                  otherUser?.photos.isNotEmpty == true ? NetworkImage(otherUser!.photos.first) : null,
-                              child: otherUser?.photos.isEmpty == true
+                              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.3),
+                              backgroundImage: (otherUser?.photos != null && otherUser.photos!.isNotEmpty)
+                                  ? NetworkImage(otherUser.photos!.first)
+                                  : null,
+                              child: (otherUser?.photos == null || otherUser.photos!.isEmpty)
                                   ? Text(
-                                      otherUser?.displayName?.isNotEmpty == true
-                                          ? otherUser!.displayName![0].toUpperCase()
+                                      (otherUser?.displayName != null && otherUser.displayName!.isNotEmpty)
+                                          ? otherUser.displayName![0].toUpperCase()
                                           : '?',
                                     )
                                   : null,
                             ),
                             title: Text(
-                              otherUser?.displayName ?? otherUser?.username ?? 'Unknown',
+                              otherUser?.displayName ?? (otherUser as dynamic)?.username ?? 'Unknown',
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w600,
@@ -193,24 +196,10 @@ class ChatListPage extends ConsumerWidget {
                           ),
                           error: (error, stack) => ListTile(
                             leading: CircleAvatar(
-                              backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
-                              backgroundImage:
-                                  otherUser?.photos.isNotEmpty == true ? NetworkImage(otherUser!.photos.first) : null,
-                              child: otherUser?.photos.isEmpty == true
-                                  ? Text(
-                                      otherUser?.displayName?.isNotEmpty == true
-                                          ? otherUser!.displayName![0].toUpperCase()
-                                          : '?',
-                                    )
-                                  : null,
+                              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.3),
+                              child: const Icon(Icons.error, size: 20),
                             ),
-                            title: Text(
-                              otherUser?.displayName ?? otherUser?.username ?? 'Unknown',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                            title: const Text('Error loading user', style: TextStyle(color: Colors.white70)),
                             subtitle: Text(
                               chatRoom.lastMessage,
                               maxLines: 1,
@@ -222,14 +211,14 @@ class ChatListPage extends ConsumerWidget {
                       },
                       loading: () => ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.3),
+                          backgroundColor: Theme.of(context).primaryColor.withOpacity(0.3),
                           child: const Icon(Icons.person, size: 20),
                         ),
                         title: const Text('Loading...', style: TextStyle(color: Colors.white70)),
                       ),
                       error: (error, stack) => ListTile(
                         leading: CircleAvatar(
-                          backgroundColor: Colors.red.withValues(alpha: 0.3),
+                          backgroundColor: Colors.red.withOpacity(0.3),
                           child: const Icon(Icons.error, size: 20),
                         ),
                         title: const Text('Error loading user', style: TextStyle(color: Colors.white70)),

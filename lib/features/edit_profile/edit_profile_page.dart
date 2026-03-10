@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -730,7 +730,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               ),
             );
           },
-          loading: () => const FullScreenLoader(message: 'Loading profile...'),
+          loading: () => const FullScreenLoader(message: 'Loading MixVy profile...'),
           error: (error, stack) => Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

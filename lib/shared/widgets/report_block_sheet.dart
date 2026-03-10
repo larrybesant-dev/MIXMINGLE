@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../core/services/report_block_service.dart';
 import '../../core/utils/app_logger.dart';
 

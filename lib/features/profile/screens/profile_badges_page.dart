@@ -7,8 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/design_system/design_constants.dart';
-import '../../../shared/models/user_profile.dart';
-import '../../../shared/providers/profile_controller.dart';
+import '../../../models/user_profile.dart';
+import '../../../providers/all_providers.dart';
 
 // ─── Badge catalogue ──────────────────────────────────────────────────────────
 

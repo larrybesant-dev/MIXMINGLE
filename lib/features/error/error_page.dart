@@ -1,8 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../../shared/club_background.dart';
 import '../../shared/glow_text.dart';
 import '../../shared/neon_button.dart';
-import 'package:mixvy/router/app_routes.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 
 class ErrorPage extends StatelessWidget {
   final String? errorMessage;

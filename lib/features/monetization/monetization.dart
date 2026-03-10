@@ -1,4 +1,4 @@
-﻿/// Monetization Module
+/// Monetization Module
 ///
 /// Exports all monetization components.
 library;

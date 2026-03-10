@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -8,7 +8,7 @@ import 'package:mixmingle/shared/providers/events_controller.dart';
 import 'package:mixmingle/shared/providers/providers.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/validation.dart';
-import 'package:mixvy/router/app_routes.dart';
+import 'package:mixmingle/core/routing/app_routes.dart';
 
 class CreateEventPage extends ConsumerStatefulWidget {
   const CreateEventPage({super.key});

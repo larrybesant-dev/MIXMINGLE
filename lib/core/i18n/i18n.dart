@@ -1,4 +1,4 @@
-﻿/// i18n Module
+/// i18n Module
 ///
 /// Exports all internationalization components.
 library;

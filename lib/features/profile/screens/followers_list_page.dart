@@ -1,4 +1,4 @@
-﻿/// Followers List Page
+/// Followers List Page
 /// Display list of users who follow the target user
 library;
 

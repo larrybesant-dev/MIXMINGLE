@@ -1,4 +1,4 @@
-﻿/// Immutable state model for video room
+/// Immutable state model for video room
 class VideoRoomState {
   final String roomId;
   final String userId;

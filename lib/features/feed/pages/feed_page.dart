@@ -5,7 +5,7 @@ import '../widgets/feed_item_widget.dart';
 
 class FeedPage extends ConsumerWidget {
   final String userId;
-  const FeedPage({required this.userId, Key? key}) : super(key: key);
+  const FeedPage({required this.userId, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

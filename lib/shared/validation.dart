@@ -1,4 +1,4 @@
-﻿/// Shared validation utilities for forms across the app.
+/// Shared validation utilities for forms across the app.
 /// All validators return null if valid, or an error message string if invalid.
 library;
 

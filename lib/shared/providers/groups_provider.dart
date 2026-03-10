@@ -1,4 +1,4 @@
-﻿
+
 // Groups Provider - Manages video groups/rooms with participants and state
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_models.dart';

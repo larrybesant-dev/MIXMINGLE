@@ -9,7 +9,7 @@ import '../../profile/pages/user_profile_page.dart';
 
 class MainShellPage extends StatefulWidget {
   final String userId;
-  const MainShellPage({required this.userId, Key? key}) : super(key: key);
+  const MainShellPage({required this.userId, super.key});
 
   @override
   State<MainShellPage> createState() => _MainShellPageState();

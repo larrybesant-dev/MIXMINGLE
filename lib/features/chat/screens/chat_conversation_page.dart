@@ -1,4 +1,4 @@
-﻿// lib/features/chat/screens/chat_conversation_page.dart
+// lib/features/chat/screens/chat_conversation_page.dart
 //
 // Direct-message conversation page.
 // Uses Riverpod auth, DesignColors, and shows read-receipt ticks.
@@ -454,7 +454,7 @@ class _ChatAppBarTitle extends ConsumerWidget {
                   color: DesignColors.white, fontSize: 18));
         }
 
-        final otherUserAsync = ref.watch(userProfileProvider(otherUserId));
+        final otherUserAsync = ref.watch(currentUserProfileProvider);
         final displayName = otherUserAsync.value?.displayName ??
             otherUserAsync.value?.username ??
             'Chat';

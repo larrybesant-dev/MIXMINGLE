@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
@@ -10,7 +10,7 @@ import '../../../core/animations/app_animations.dart';
 import '../../../shared/providers/all_providers.dart';
 import '../../../shared/widgets/club_background.dart';
 import '../../../shared/widgets/glow_text.dart';
-import '../../../shared/models/user_profile.dart';
+import '../../../models/user_profile.dart';
 import '../../../shared/models/vibe_genres.dart';
 import '../../../core/routing/app_routes.dart';
 

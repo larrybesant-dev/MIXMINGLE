@@ -1,4 +1,4 @@
-﻿enum PublisherStatus { idle, publishing, paused, error }
+enum PublisherStatus { idle, publishing, paused, error }
 
 class PublisherStateModel {
   final String userId;

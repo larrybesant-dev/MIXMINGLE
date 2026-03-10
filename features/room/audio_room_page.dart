@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'audio_room_service.dart';
+import 'package:mixmingle/providers/all_providers.dart';
+import '../../models/user_profile.dart';
 
 class AudioRoomPage extends ConsumerStatefulWidget {
   final String roomId;
@@ -34,8 +36,9 @@ class _AudioRoomPageState extends ConsumerState<AudioRoomPage> {
   }
 
   void _requestMic() async {
-    final profile = ref.read(currentUserProfileProvider);
-    await service.requestMic(profile.uid);
+    final profile = ref.watch(currentUserProfileProvider).value;
+    if (profile == null) return;
+    await service.requestMic(profile.id);
     await _loadQueue();
   }
 
@@ -64,15 +67,15 @@ class _AudioRoomPageState extends ConsumerState<AudioRoomPage> {
           const SizedBox(height: 16),
           const Text('Mic Queue:'),
           ...micQueue.map((entry) => ListTile(
-                title: Text(entry.userId),
+                title: Text(entry.uid),
                 subtitle: Text(entry.granted ? 'Granted' : 'Waiting'),
-                trailing: speakers.contains(entry.userId)
+                trailing: speakers.contains(entry.uid)
                     ? ElevatedButton(
-                        onPressed: () => _revokeMic(entry.userId),
+                        onPressed: () => _revokeMic(entry.uid),
                         child: const Text('Revoke'),
                       )
                     : ElevatedButton(
-                        onPressed: () => _grantMic(entry.userId),
+                        onPressed: () => _grantMic(entry.uid),
                         child: const Text('Grant'),
                       ),
               )),

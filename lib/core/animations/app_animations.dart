@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:mixmingle/core/theme/enhanced_theme.dart';
 
 /// Enhanced animation utilities for smooth transitions and micro-interactions

@@ -3,7 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../services/social/social_graph_service.dart';
 import '../../services/social/social_feed_service.dart';
-import '../models/user_profile.dart';
+import '../../models/user_profile.dart';
 import '../models/user_presence.dart';
 import '../models/post.dart';
 import 'user_providers.dart'; // For profileServiceProvider + presenceServiceProvider

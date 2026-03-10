@@ -4,7 +4,7 @@ import '../../../providers/social_providers.dart';
 
 class FriendsPage extends ConsumerWidget {
   final String userId;
-  const FriendsPage({required this.userId, Key? key}) : super(key: key);
+  const FriendsPage({required this.userId, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -20,7 +20,7 @@ class FriendsPage extends ConsumerWidget {
           SectionWidget(title: 'Friends', users: friends.maybeWhen(data: (d) => d, orElse: () => [])),
           SectionWidget(title: 'Followers', users: followers.maybeWhen(data: (d) => d, orElse: () => [])),
           SectionWidget(title: 'Following', users: following.maybeWhen(data: (d) => d, orElse: () => [])),
-          SectionWidget(title: 'Suggested Users', users: []), // TODO: Implement suggested users
+          const SectionWidget(title: 'Suggested Users', users: []), // TODO: Implement suggested users
         ],
       ),
     );
@@ -30,7 +30,7 @@ class FriendsPage extends ConsumerWidget {
 class SectionWidget extends StatelessWidget {
   final String title;
   final List<String> users;
-  const SectionWidget({required this.title, required this.users, Key? key}) : super(key: key);
+  const SectionWidget({required this.title, required this.users, super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -1,4 +1,4 @@
-﻿/// Edge Node Manager
+/// Edge Node Manager
 ///
 /// Manages edge nodes for low-latency content delivery and failover routing.
 library;

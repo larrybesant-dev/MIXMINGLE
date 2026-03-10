@@ -1,4 +1,4 @@
-﻿library;
+library;
 
 import 'package:flutter/material.dart';
 /// Chat Box Widget - Enhanced with message animations and smooth picker transitions

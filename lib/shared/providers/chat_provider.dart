@@ -1,4 +1,4 @@
-﻿
+
 // Chat Messages Provider - Manages chat messages for rooms and direct messages
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/chat_message.dart';

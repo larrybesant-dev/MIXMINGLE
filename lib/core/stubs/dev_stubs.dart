@@ -1,4 +1,4 @@
-﻿// TEMP DEV STUBS â€” REMOVE LATER
+// TEMP DEV STUBS â€” REMOVE LATER
 // These stubs are temporary placeholders to unblock development
 // They should be replaced with proper implementations when features are re-enabled
 

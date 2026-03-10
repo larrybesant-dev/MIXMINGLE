@@ -1,9 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/user_providers.dart';
+import 'package:mixmingle/providers/all_providers.dart';
 import '../services/messaging_service.dart';
 
 final unreadCountProvider = StreamProvider<int>((ref) {
-  final currentUser = ref.watch(currentUserProvider).value;
+  final currentUser = ref.watch(currentUserProfileProvider).value;
   if (currentUser == null) {
     return const Stream.empty();
   }

@@ -1,24 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../services/user/user_service.dart';
-import '../models/user_model.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:mixmingle/models/user_profile.dart';
 
-final userServiceProvider = Provider<UserService>((ref) {
-  return UserService();
+// Stable provider stubs for normalization
+final currentUserProfileProvider = StateProvider<UserProfile?>((ref) => null);
+final currentUserProvider = StateProvider<String?>((ref) => null);
+final hasCompletedOnboardingProvider = StateProvider<bool>((ref) => false);
+final conversationListProvider = StateProvider<List<String>>((ref) => []);
+final fileShareServiceProvider = Provider((ref) => null); // Replace null with FileShareService if available
+final userProfileProvider = FutureProvider.family<UserProfile?, String>((ref, userId) async {
+  // placeholder until service is wired
+  return null;
 });
+final presenceProvider = StateProvider<bool>((ref) => false);
 
-final authStateProvider = StreamProvider<User?>((ref) {
-  return FirebaseAuth.instance.authStateChanges();
-});
-
-final currentUserProvider = StreamProvider<UserModel?>((ref) {
-  final auth = ref.watch(authStateProvider).value;
-  if (auth == null) return const Stream.empty();
-  final service = ref.watch(userServiceProvider);
-  return service.watchUser(auth.uid);
-});
-
-final currentUserIdProvider = Provider<String?>((ref) {
-  final auth = ref.watch(authStateProvider).value;
-  return auth?.uid;
-});

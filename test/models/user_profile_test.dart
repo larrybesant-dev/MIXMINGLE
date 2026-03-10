@@ -1,43 +1,33 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mix_and_mingle/shared/models/user_profile.dart';
+import 'package:mixmingle/models/user_profile.dart';
 
 void main() {
   group('UserProfile', () {
-    test('fromMap populates profile fields', () {
-      final map = {
-        'id': 'user123',
-        'email': 'john@example.com',
-        'displayName': 'John Doe',
-        'nickname': 'Johnny',
-        'photoUrl': 'https://example.com/p.jpg',
-        'galleryPhotos': ['https://example.com/1.jpg'],
-        'interests': ['music', 'sports'],
-        'location': 'NYC',
-        'birthday': Timestamp.fromDate(DateTime(2000, 1, 1)),
-        'bio': 'Hello world',
-        'lookingFor': ['friends'],
-        'preferredGenders': ['any'],
-        'lifestylePrompts': {'fitness': true},
-        'isEmailVerified': true,
-        'verifiedOnlyMode': false,
-        'privateMode': true,
-        'createdAt': Timestamp.fromDate(DateTime(2024, 1, 1)),
-        'updatedAt': Timestamp.fromDate(DateTime(2024, 1, 2)),
-      };
-
-      final profile = UserProfile.fromMap(map);
-
-      expect(profile.id, 'user123');
-      expect(profile.email, 'john@example.com');
-      expect(profile.displayName, 'John Doe');
-      expect(profile.nickname, 'Johnny');
-      expect(profile.photoUrl, 'https://example.com/p.jpg');
-      expect(profile.galleryPhotos, ['https://example.com/1.jpg']);
-      expect(profile.interests, ['music', 'sports']);
-      expect(profile.location, 'NYC');
-      expect(profile.bio, 'Hello world');
-      expect(profile.lookingFor, ['friends']);
+    test('serialization/deserialization', () {
+      final user = UserProfile(
+        id: '123',
+        username: 'testuser',
+        displayName: 'Test User',
+        photoUrl: 'http://example.com/photo.png',
+        ageVerified: true,
+        chatList: ['chat1', 'chat2'],
+        bio: 'Hello world',
+        createdAt: DateTime.parse('2026-03-09T12:00:00Z'),
+        extraData: {'foo': 'bar'},
+      );
+      final map = user.toMap();
+      final user2 = UserProfile.fromMap(map);
+      expect(user2.id, user.id);
+      expect(user2.username, user.username);
+      expect(user2.displayName, user.displayName);
+      expect(user2.photoUrl, user.photoUrl);
+      expect(user2.ageVerified, user.ageVerified);
+      expect(user2.chatList, user.chatList);
+      expect(user2.bio, user.bio);
+      expect(user2.createdAt?.toIso8601String(), user.createdAt?.toIso8601String());
+      expect(user2.extraData, user.extraData);
+    });
+  });
       expect(profile.preferredGenders, ['any']);
       expect(profile.lifestylePrompts, {'fitness': true});
       expect(profile.isEmailVerified, isTrue);

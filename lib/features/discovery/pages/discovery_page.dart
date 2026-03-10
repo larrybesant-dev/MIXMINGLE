@@ -4,7 +4,7 @@ import '../providers/discovery_provider.dart';
 import '../widgets/discovery_tile_widget.dart';
 
 class DiscoveryPage extends ConsumerWidget {
-  const DiscoveryPage({Key? key}) : super(key: key);
+  const DiscoveryPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

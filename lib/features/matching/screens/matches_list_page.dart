@@ -3,12 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/core/responsive/responsive_utils.dart';
 import 'package:mixmingle/core/animations/app_animations.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
+import 'package:mixmingle/shared/providers/user_providers.dart';
 import 'package:mixmingle/core/routing/app_routes.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/shared/widgets/skeleton_loaders.dart';
 import 'package:mixmingle/shared/models/match.dart';
-import 'package:mixmingle/shared/models/user_profile.dart';
+import 'package:mixmingle/models/user_profile.dart';
 
 class MatchesPage extends ConsumerStatefulWidget {
   const MatchesPage({super.key});
@@ -122,9 +123,8 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
 
   Widget _buildMatchCard(BuildContext context, Match match) {
     final currentUid = ref.read(currentUserProvider).value?.id;
-    final otherUserId =
-        match.user1Id == currentUid ? match.user2Id : match.user1Id;
-    final userProfileAsync = ref.watch(userProfileProvider(otherUserId));
+    final otherUserId = match.user1Id == currentUid ? match.user2Id : match.user1Id;
+    final userProfileAsync = ref.watch(userProfileProvider(otherUserId ?? ''));
 
     return userProfileAsync.when(
       data: (profile) {

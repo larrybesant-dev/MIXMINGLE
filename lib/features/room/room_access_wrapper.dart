@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../shared/models/room.dart';
-import '../../shared/providers/auth_providers.dart';
+import '../../models/user_profile.dart';
+import '../../providers/all_providers.dart'; // currentUserProfileProvider
 import '../../core/utils/app_logger.dart';
 import 'room_access_gate.dart';
 import '../../core/design_system/design_constants.dart';
@@ -22,21 +22,28 @@ class RoomAccessWrapper extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final appUser = ref.watch(currentUserProvider).asData?.value;
-    final effectiveUserId =
-        (appUser?.id.trim().isNotEmpty == true) ? appUser!.id : userId.trim();
-
-    final profileDisplayName = appUser?.displayName?.trim() ?? '';
-    final profileUsername = appUser?.username.trim() ?? '';
-    final displayName = profileDisplayName.isNotEmpty
-      ? profileDisplayName
-      : profileUsername.isNotEmpty
-        ? profileUsername
-        : 'Guest';
-    final avatarUrl =
-        (appUser?.avatarUrl.trim().isNotEmpty == true)
-            ? appUser!.avatarUrl
+    final profileAsync = ref.watch(currentUserProfileProvider);
+    return profileAsync.when(
+      data: (userProfile) {
+        final effectiveUserId =
+          (userProfile?.id.trim().isNotEmpty == true) ? userProfile!.id : userId.trim();
+        final profileDisplayName = userProfile?.displayName.trim() ?? '';
+        final profileUsername = userProfile?.username.trim() ?? '';
+        final displayName = profileDisplayName.isNotEmpty
+          ? profileDisplayName
+          : profileUsername.isNotEmpty
+          ? profileUsername
+          : 'Guest';
+        final avatarUrl =
+          (userProfile?.photoUrl.trim().isNotEmpty == true)
+            ? userProfile!.photoUrl
             : null;
+        // ...existing widget tree using effectiveUserId, displayName, avatarUrl...
+        return Container(); // Placeholder
+      },
+      loading: () => const CircularProgressIndicator(),
+      error: (e, st) => const Text('Error loading profile'),
+    );
 
     // Hosts should always be able to enter their own room immediately.
     if (room.hostId == effectiveUserId && effectiveUserId.isNotEmpty) {

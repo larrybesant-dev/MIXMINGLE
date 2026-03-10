@@ -5,7 +5,7 @@ import '../widgets/notification_tile_widget.dart';
 
 class NotificationsPage extends ConsumerWidget {
   final String userId;
-  const NotificationsPage({required this.userId, Key? key}) : super(key: key);
+  const NotificationsPage({required this.userId, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

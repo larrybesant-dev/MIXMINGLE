@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/providers/providers.dart';
@@ -80,7 +80,7 @@ class NotificationsPage extends ConsumerWidget {
                 );
               },
               loading: () =>
-                  const FullScreenLoader(message: 'Loading notifications...'),
+                  const FullScreenLoader(message: 'Loading MixVy notifications...'),
               error: (error, stack) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -117,7 +117,7 @@ class NotificationsPage extends ConsumerWidget {
           ),
         );
       },
-      loading: () => const FullScreenLoader(message: 'Loading user...'),
+      loading: () => const FullScreenLoader(message: 'Loading MixVy user...'),
       error: (error, stack) => const ErrorPage(
         errorMessage: 'Failed to load user',
       ),

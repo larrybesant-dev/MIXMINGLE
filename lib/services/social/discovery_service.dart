@@ -10,7 +10,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../shared/models/user_profile.dart';
+import '../../models/user_profile.dart';
 import '../../shared/models/room.dart';
 
 class DiscoveryService {
@@ -47,9 +47,8 @@ class DiscoveryService {
           for (final doc in snap.docs) {
             if (excludeIds.contains(doc.id)) continue;
             final data = Map<String, dynamic>.from(doc.data());
-            data['id'] = doc.id;
             try {
-              results.add(UserProfile.fromMap(data));
+              results.add(UserProfile.fromMap(data, doc.id));
             } catch (_) {}
             if (results.length >= limit) break;
           }
@@ -70,9 +69,8 @@ class DiscoveryService {
           final results = <UserProfile>[];
           for (final doc in snap.docs) {
             final data = Map<String, dynamic>.from(doc.data());
-            data['id'] = doc.id;
             try {
-              results.add(UserProfile.fromMap(data));
+              results.add(UserProfile.fromMap(data, doc.id));
             } catch (_) {}
           }
           return results;

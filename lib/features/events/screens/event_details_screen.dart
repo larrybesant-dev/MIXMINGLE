@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/core/responsive/responsive_utils.dart';
 import 'package:mixmingle/core/animations/app_animations.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
+import 'package:mixmingle/shared/providers/user_providers.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/shared/widgets/skeleton_loaders.dart';
@@ -20,6 +21,7 @@ class EventDetailsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final eventAsync = ref.watch(eventProvider(eventId));
     final currentUser = ref.watch(currentUserProvider).value;
+      // Removed duplicate variable definitions
 
     return ClubBackground(
       child: Scaffold(
@@ -300,12 +302,12 @@ class EventDetailsPage extends ConsumerWidget {
                               CircleAvatar(
                                 radius: 20,
                                 backgroundImage:
-                                    profile.profileImageUrl != null ? NetworkImage(profile.profileImageUrl!) : null,
-                                child: profile.profileImageUrl == null ? const Icon(Icons.person, size: 20) : null,
+                                    profile.photoUrl != null ? NetworkImage(profile.photoUrl!) : null,
+                                child: profile.photoUrl == null ? const Icon(Icons.person, size: 20) : null,
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                profile.username ?? 'User',
+                                profile.displayName ?? profile.nickname ?? 'User',
                                 style: const TextStyle(fontSize: 10),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,

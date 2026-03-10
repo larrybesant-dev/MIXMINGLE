@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'colors_v2.dart';
 
 /// Electric Lounge typography system

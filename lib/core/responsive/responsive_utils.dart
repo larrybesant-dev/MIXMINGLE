@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Responsive design utilities for different screen sizes and orientations
 class Responsive {

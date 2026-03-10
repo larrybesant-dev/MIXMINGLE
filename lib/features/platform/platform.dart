@@ -1,4 +1,4 @@
-﻿/// Platform Module Barrel Export
+/// Platform Module Barrel Export
 ///
 /// Exports all platform-related services and widgets for
 /// Phase K - Platform & Ecosystem Expansion.

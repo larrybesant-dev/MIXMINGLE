@@ -37,8 +37,7 @@ class DiscoverRoomsLivePage extends ConsumerWidget {
             IconButton(
               icon: const Icon(Icons.add_box_rounded, color: DesignColors.accent),
               tooltip: 'Go Live',
-              onPressed: () =>
-                  Navigator.pushNamed(context, AppRoutes.createRoom),
+              onPressed: () => Navigator.pushNamed(context, AppRoutes.createRoom),
             ),
           ],
         ),
@@ -74,8 +73,7 @@ class DiscoverRoomsLivePage extends ConsumerWidget {
                 const SizedBox(height: 12),
                 Text(
                   'Could not load rooms',
-                  style: DesignTypography.body
-                      .copyWith(color: DesignColors.white),
+                  style: DesignTypography.body.copyWith(color: DesignColors.white),
                 ),
               ],
             ),
@@ -86,8 +84,7 @@ class DiscoverRoomsLivePage extends ConsumerWidget {
           onPressed: () => Navigator.pushNamed(context, AppRoutes.createRoom),
           backgroundColor: DesignColors.accent,
           label: const Text('GO LIVE',
-              style:
-                  TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+              style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
           icon: const Icon(Icons.fiber_smart_record),
         ),
       ),

@@ -6,7 +6,7 @@ import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixmingle/shared/models/user_profile.dart';
+import 'package:mixmingle/models/user_profile.dart';
 import 'i_profile_repository.dart';
 
 class ProfileRepository implements IProfileRepository {

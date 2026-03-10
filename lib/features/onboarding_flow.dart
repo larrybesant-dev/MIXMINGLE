@@ -1,3 +1,4 @@
+import 'package:mixmingle/providers/all_providers.dart'; // currentUserProfileProvider
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/responsive/responsive_utils.dart';
@@ -103,7 +104,7 @@ class _OnboardingFlowState extends ConsumerState<OnboardingFlow> with SingleTick
 
   Future<void> _completeOnboarding() async {
     // Invalidate profile provider after onboarding mutation (required for deterministic navigation)
-    await ref.invalidate(currentUserProfileProvider);
+    ref.invalidate(currentUserProfileProvider);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Navigator.pushReplacementNamed(context, AppRoutes.home);
     });

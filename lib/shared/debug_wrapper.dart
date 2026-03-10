@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 // Replaced with canonical relative import
 
 /// Debug wrapper widget that catches and logs errors for individual widgets

@@ -1,16 +1,16 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../shared/providers/events_providers.dart';
 import '../../../shared/providers/auth_providers.dart';
-import '../../../shared/providers/user_providers.dart';
 import '../../../shared/widgets/events_widgets.dart';
 import '../../../shared/widgets/club_background.dart';
 import '../../../shared/widgets/social_graph_widgets.dart';
 import '../../../shared/models/room.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import '../../room/room_access_wrapper.dart';
+import 'package:mixmingle/shared/providers/user_providers.dart';
 
 class EventDetailsPage extends ConsumerWidget {
   final String eventId;
@@ -24,6 +24,7 @@ class EventDetailsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final eventAsync = ref.watch(eventDetailsProvider(eventId));
     final currentUser = ref.watch(currentUserProvider).value;
+      // Removed duplicate variable definitions
 
     return ClubBackground(
       child: Scaffold(

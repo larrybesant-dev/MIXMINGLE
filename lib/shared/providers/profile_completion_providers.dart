@@ -1,6 +1,5 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'auth_providers.dart';
-import 'profile_controller.dart' hide currentUserProfileProvider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mixmingle/providers/all_providers.dart';
 
 final profileCompletionProvider = Provider<bool>((ref) {
   final currentUserProfile = ref.watch(currentUserProfileProvider).value;
@@ -9,8 +8,7 @@ final profileCompletionProvider = Provider<bool>((ref) {
 
   // Only require a displayName to be considered complete.
   // Age, gender, and interests are optional — users can fill them in later.
-  final hasDisplayName = currentUserProfile.displayName != null &&
-      currentUserProfile.displayName!.isNotEmpty;
+  final hasDisplayName = currentUserProfile.displayName.isNotEmpty;
 
   return hasDisplayName;
 });

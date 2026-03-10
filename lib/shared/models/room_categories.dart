@@ -1,4 +1,4 @@
-﻿/// Room Categories Helper
+/// Room Categories Helper
 /// Centralized room category constants and utilities
 library;
 

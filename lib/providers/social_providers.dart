@@ -1,4 +1,17 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final trendingRoomsProvider = StreamProvider<List<dynamic>>((ref) async* {
+  yield [];
+});
+
+final newRoomsProvider = StreamProvider<List<dynamic>>((ref) async* {
+  yield [];
+});
+
+final recommendedRoomsProvider = StreamProvider.family<List<dynamic>, String>((ref, userId) async* {
+  yield [];
+});
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/social_graph_service.dart';
 
 final socialGraphServiceProvider = Provider<SocialGraphService>((ref) => SocialGraphService());

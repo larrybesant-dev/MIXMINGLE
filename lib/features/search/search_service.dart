@@ -17,11 +17,11 @@ class SearchService {
     final usersRef = _firestore.collection('users');
     final usernameQuery = await usersRef
       .where('username', isGreaterThanOrEqualTo: query)
-      .where('username', isLessThanOrEqualTo: query + '\uf8ff')
+      .where('username', isLessThanOrEqualTo: '$query\uf8ff')
       .get();
     final displayNameQuery = await usersRef
       .where('displayName', isGreaterThanOrEqualTo: query)
-      .where('displayName', isLessThanOrEqualTo: query + '\uf8ff')
+      .where('displayName', isLessThanOrEqualTo: '$query\uf8ff')
       .get();
     final interestsQuery = await usersRef
       .where('interests', arrayContains: query)

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Vybe Social App-Wide Icon Constants
 /// Centralized icon definitions for consistency across the app

@@ -1,4 +1,4 @@
-﻿/// Centralized Firestore collection and field names
+/// Centralized Firestore collection and field names
 /// Single source of truth for database schema
 ///
 /// Usage:

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Debug wrapper widget that catches and logs errors for individual widgets
 class DebugWrapper extends StatefulWidget {

@@ -1,4 +1,4 @@
-﻿/// Trust Dashboard Widget
+/// Trust Dashboard Widget
 ///
 /// Displays certifications, violations, and trust scores.
 library;

@@ -1,4 +1,4 @@
-﻿// import 'package:freezed_annotation/freezed_annotation.dart';
+// import 'package:freezed_annotation/freezed_annotation.dart';
 import 'questionnaire_answers.dart';
 import 'dart:math' as dart_math;
 

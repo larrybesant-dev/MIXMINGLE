@@ -1,4 +1,4 @@
-﻿/// Notifications Provider
+/// Notifications Provider
 /// FCM token management and notification handling
 library;
 

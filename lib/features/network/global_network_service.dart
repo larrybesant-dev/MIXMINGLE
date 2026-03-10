@@ -1,4 +1,4 @@
-﻿/// Global Network Service
+/// Global Network Service
 ///
 /// Manages multi-region routing, latency-adaptive video, global presence sync,
 /// and cross-region room mirroring.

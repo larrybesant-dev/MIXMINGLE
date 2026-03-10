@@ -1,4 +1,4 @@
-﻿/// Monitoring Module
+/// Monitoring Module
 ///
 /// Exports all monitoring-related services and widgets.
 library;

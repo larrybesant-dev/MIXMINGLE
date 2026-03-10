@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// Vybe Social Custom Animations
 /// Smooth, energetic animations for nightclub aesthetic

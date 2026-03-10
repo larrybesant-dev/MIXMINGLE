@@ -1,4 +1,4 @@
-﻿
+
 // Enhanced Notification Widget - Display app notifications with actions and animations
 
 import 'package:flutter/material.dart';

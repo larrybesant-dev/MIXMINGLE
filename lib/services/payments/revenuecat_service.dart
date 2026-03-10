@@ -1,4 +1,4 @@
-﻿/// RevenueCat Service - Stub for compilation
+/// RevenueCat Service - Stub for compilation
 /// Integration pending RevenueCat SDK setup and App Store/Play Store configuration
 library;
 

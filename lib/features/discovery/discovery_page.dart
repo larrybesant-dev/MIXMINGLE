@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/design_system/design_constants.dart';
 import 'widgets/trending_rooms_section.dart';
 import 'widgets/recommended_users_section.dart';
+import '../../../shared/providers/auth_providers.dart';
 import 'discovery_filter_panel.dart';
 
 /// Main discovery feed: trending rooms + recommended users.
@@ -154,11 +155,17 @@ class _DiscoveryPageState extends ConsumerState<DiscoveryPage> {
           // Recommended users (only shown if no active search)
           if (_searchQuery.isEmpty)
             SliverToBoxAdapter(
-              child: RecommendedUsersSection(
-                category: _selectedCategory == 'All'
-                    ? null
-                    : _selectedCategory,
-              ),
+              child: Consumer(builder: (WidgetRef ref) {
+                final currentUserAsync = ref.watch(currentUserProvider);
+                return currentUserAsync.when(
+                  data: (user) {
+                    if (user == null) return const SizedBox();
+                    return RecommendedUsersSection(currentUserId: user.id);
+                  },
+                  loading: () => const SizedBox(),
+                  error: (_, __) => const SizedBox(),
+                );
+              }),
             ),
 
           const SliverToBoxAdapter(child: SizedBox(height: 80)),

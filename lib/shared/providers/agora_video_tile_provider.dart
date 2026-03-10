@@ -1,4 +1,4 @@
-﻿
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Video tile state for Agora

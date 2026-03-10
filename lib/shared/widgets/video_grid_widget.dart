@@ -1,4 +1,4 @@
-﻿/// Video Grid Widget - Enhanced with smooth animations and pin/unpin effects
+/// Video Grid Widget - Enhanced with smooth animations and pin/unpin effects
 ///
 /// Features:
 /// - Smooth tile entry animation (scale 0.8â†’1.0, 300ms)

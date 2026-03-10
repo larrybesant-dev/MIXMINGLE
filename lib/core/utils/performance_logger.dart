@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 
 /// Performance logging utilities (debug mode only)
 class PerformanceLogger {

@@ -1,4 +1,4 @@
-﻿// App Models and Data Classes for Video Chat Features
+// App Models and Data Classes for Video Chat Features
 
 /// Friend user model
 class Friend {

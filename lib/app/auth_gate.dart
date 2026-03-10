@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../providers/user_providers.dart';
+import '../providers/all_providers.dart';
+import '../shared/widgets/loading_widgets.dart';
 
 class AuthGate extends ConsumerWidget {
   const AuthGate({super.key});
@@ -17,7 +18,7 @@ class AuthGate extends ConsumerWidget {
           );
         }
         // User is authenticated — let AuthGateRoot handle routing
-        return const FullScreenLoader(message: 'Loading...');
+        return const FullScreenLoader(message: 'Loading MixMingle...');
       },
       loading: () => const FullScreenLoader(message: 'Checking authentication...'),
       error: (_, __) => const Scaffold(

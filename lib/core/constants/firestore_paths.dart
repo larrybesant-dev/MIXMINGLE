@@ -1,4 +1,4 @@
-﻿/// Centralized Firestore collection and document paths
+/// Centralized Firestore collection and document paths
 ///
 /// Use these constants to ensure consistent path naming across the app.
 class FirestorePaths {

@@ -1,4 +1,4 @@
-﻿/// Tip Overlay Widget
+/// Tip Overlay Widget
 ///
 /// Floating action button for quick tipping in video/voice rooms.
 /// Provides a one-tap way to send gifts to the room host or participants.

@@ -1,4 +1,4 @@
-﻿/// Unified video engine models for Web + Mobile parity
+/// Unified video engine models for Web + Mobile parity
 library;
 import 'package:flutter/foundation.dart';
 

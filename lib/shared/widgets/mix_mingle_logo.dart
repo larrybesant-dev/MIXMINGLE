@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:mixmingle/core/theme/neon_colors.dart';
 
 /// MIXVY logo widget — Neon brand identity

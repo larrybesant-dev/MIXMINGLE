@@ -1,4 +1,4 @@
-﻿/// Friend Card Widget - Design System Compliant
+/// Friend Card Widget - Design System Compliant
 ///
 /// Displays a friend with:
 /// - Avatar + online indicator

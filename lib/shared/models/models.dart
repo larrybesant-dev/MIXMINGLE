@@ -1,4 +1,4 @@
-import 'package:flutter/foundation.dart';
+// import 'package:flutter/foundation.dart';
 
 class AppUser {
   final String uid;
@@ -22,6 +22,10 @@ class AppUser {
     this.bio,
     this.location,
   });
+
+  // Media gallery support
+  List<String>? get photoGallery => photoUrl != null ? [photoUrl!] : [];
+  List<String>? get videoGallery => [];
 }
 
 class MicQueueEntry {

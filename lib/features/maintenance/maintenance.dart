@@ -1,4 +1,4 @@
-﻿/// Maintenance Module
+/// Maintenance Module
 ///
 /// Exports all maintenance and scheduling components.
 library;

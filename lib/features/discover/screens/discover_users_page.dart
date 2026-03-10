@@ -1,4 +1,4 @@
-﻿// lib/features/discover_users/discover_users_page.dart
+// lib/features/discover_users/discover_users_page.dart
 //
 // Discover Users – card-swipe deck + search/browse tab bar.
 //
@@ -12,7 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/providers/social_graph_providers.dart';
 import '../../../shared/providers/discovery_providers.dart';
 import '../../../shared/providers/user_providers.dart';
-import '../../../shared/models/user_profile.dart';
+import '../../../models/user_profile.dart';
 import '../../../shared/widgets/social_graph_widgets.dart';
 import '../../../shared/widgets/club_background.dart';
 import '../../../core/design_system/design_constants.dart';
@@ -430,23 +430,7 @@ class _ProfileCard extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             // Photo
-            if (user.photoUrl != null)
-              Image.network(user.photoUrl!, fit: BoxFit.cover)
-            else
-              Container(
-                color: DesignColors.surfaceLight,
-                child: Center(
-                  child: Text(
-                    user.displayName?.isNotEmpty == true
-                        ? user.displayName![0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(
-                        color: DesignColors.white,
-                        fontSize: 72,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
+            Image.network(user.photoUrl!, fit: BoxFit.cover),
 
             // Bottom gradient overlay
             Positioned.fill(
@@ -805,18 +789,9 @@ class _UserCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundImage: user.photoUrl != null
-                    ? NetworkImage(user.photoUrl!)
-                    : null,
+                backgroundImage: NetworkImage(user.photoUrl!),
                 backgroundColor: DesignColors.surfaceDefault,
-                child: user.photoUrl == null
-                    ? Text(
-                        user.displayName?.isNotEmpty == true
-                            ? user.displayName![0].toUpperCase()
-                            : '?',
-                        style: const TextStyle(
-                            color: DesignColors.white, fontSize: 22))
-                    : null,
+                child: null,
               ),
               Positioned(
                 right: 0,

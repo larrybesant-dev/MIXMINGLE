@@ -1,4 +1,4 @@
-﻿/// Notifications Module
+/// Notifications Module
 ///
 /// Exports notification-related utilities.
 library;

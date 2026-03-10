@@ -35,7 +35,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> with TickerProviderSt
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final currentUserAsync = ref.watch(currentUserProvider);
     final privacySettingsAsync = ref.watch(privacySettingsProvider);
 

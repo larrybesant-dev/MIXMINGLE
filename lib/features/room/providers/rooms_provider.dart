@@ -1,4 +1,4 @@
-﻿/// Rooms Provider - State management for rooms list
+/// Rooms Provider - State management for rooms list
 library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';

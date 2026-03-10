@@ -1,3 +1,5 @@
+import 'package:mixmingle/models/user_profile.dart';
+import 'package:mixmingle/features/profile/widgets/membership_badge.dart';
 /// NeonProfileCard — Sprint 1 "Neon ID Card"
 ///
 /// A compact profile snapshot used on:

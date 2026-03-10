@@ -1,4 +1,4 @@
-﻿/// Age Verified Guard
+/// Age Verified Guard
 /// Protects routes that require 18+ age verification.
 /// If the signed-in user's Firestore document has ageVerified != true,
 /// their session is terminated and they are redirected to the age gate.

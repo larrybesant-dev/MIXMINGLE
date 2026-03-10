@@ -1,4 +1,4 @@
-﻿
+
 /// Friends Provider with Real-Time Presence Integration
 ///
 /// Combines user friends list with live presence data

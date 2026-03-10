@@ -1,4 +1,4 @@
-﻿/// User Discovery Page
+/// User Discovery Page
 /// Browse and filter users to connect with
 library;
 

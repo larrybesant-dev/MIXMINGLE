@@ -1,5 +1,6 @@
 /// Automated script to verify analytics event logging and FCM push notification delivery for all web beta testers.
 /// Logs results to analytics_verification_report.txt and fcm_verification_report.txt.
+library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';

@@ -1,4 +1,4 @@
-﻿import 'package:cloud_functions/cloud_functions.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 
 class PaymentService {
   final HttpsCallable processTip = FirebaseFunctions.instance.httpsCallable('processTip');

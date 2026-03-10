@@ -51,6 +51,7 @@ class PackAsset {
 
 // Pack
 class Pack {
+    String get id => uid;
   final String uid;
   final PackType type;
   final String name;
@@ -164,7 +165,6 @@ class UserCreation {
   final String description;
   final List<PackAsset> assets;
   final bool isPublished;
-  final String? createdAt;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -176,7 +176,7 @@ class UserCreation {
     required this.description,
     required this.assets,
     required this.isPublished,
-    this.createdAt,
+    required this.createdAt,
     required this.updatedAt,
   });
 
@@ -189,7 +189,6 @@ class UserCreation {
     assets: (json['assets'] as List<dynamic>? ?? [])
       .map((a) => PackAsset.fromJson(a as Map<String, dynamic>)).toList(),
     isPublished: json['isPublished'] ?? false,
-    createdAt: json['createdAt'],
     createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
     updatedAt: (json['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
   );
@@ -201,7 +200,6 @@ class UserCreation {
     'description': description,
     'assets': assets.map((a) => a.toJson()).toList(),
     'isPublished': isPublished,
-    'createdAt': createdAt,
     'createdAt': Timestamp.fromDate(createdAt),
     'updatedAt': Timestamp.fromDate(updatedAt),
   };

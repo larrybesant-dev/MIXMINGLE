@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/features/room/services/enhanced_chat_service.dart';
+
 
 /// Enhanced Chat Widget for voice rooms
 ///
@@ -194,10 +195,17 @@ class _EnhancedChatWidgetState extends ConsumerState<EnhancedChatWidget> {
                   padding: const EdgeInsets.all(12),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    return _buildMessageBubble(
-                      messages[index],
-                      chatService,
-                      isCurrentUser: messages[index].userId == widget.currentUserId,
+                    final message = messages[index];
+                    return _MemoizedMessageBubble(
+                      key: ValueKey(message.id),
+                      message: message,
+                      chatService: chatService,
+                      isCurrentUser: message.userId == widget.currentUserId,
+                      buildBubble: (context) => _buildMessageBubble(
+                        message,
+                        chatService,
+                        isCurrentUser: message.userId == widget.currentUserId,
+                      ),
                     );
                   },
                 );
@@ -428,5 +436,25 @@ class _EnhancedChatWidgetState extends ConsumerState<EnhancedChatWidget> {
     } else {
       return '${difference.inDays}d ago';
     }
+  }
+}
+
+/// Memoized message bubble widget to minimize rebuilds
+class _MemoizedMessageBubble extends StatelessWidget {
+  final dynamic message;
+  final dynamic chatService;
+  final bool isCurrentUser;
+  final WidgetBuilder buildBubble;
+  const _MemoizedMessageBubble({
+    super.key,
+    required this.message,
+    required this.chatService,
+    required this.isCurrentUser,
+    required this.buildBubble,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return buildBubble(context);
   }
 }

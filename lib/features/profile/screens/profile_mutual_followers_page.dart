@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/design_system/design_constants.dart';
-import '../../../shared/models/user_profile.dart';
+import '../../../models/user_profile.dart';
 import '../../../shared/providers/social_graph_providers.dart';
 import 'user_profile_page.dart';
 
@@ -108,7 +108,7 @@ class _MutualTile extends StatelessWidget {
         radius: 24,
         backgroundColor: DesignColors.surfaceLight,
         backgroundImage: (user.photoUrl ?? '').isNotEmpty
-            ? NetworkImage(user.photoUrl!)
+            ? NetworkImage(user.photoUrl)
             : null,
         child: (user.photoUrl ?? '').isEmpty
             ? Text(

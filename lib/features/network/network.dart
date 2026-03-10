@@ -1,4 +1,4 @@
-﻿/// Network Module
+/// Network Module
 ///
 /// Real-time global network services for multi-region routing, edge nodes,
 /// latency-adaptive video, and global presence sync.

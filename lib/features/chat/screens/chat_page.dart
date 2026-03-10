@@ -1,3 +1,4 @@
+import 'package:mixmingle/models/user_profile.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +9,7 @@ import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/services/chat/chat_service.dart';
 import 'package:mixmingle/shared/models/chat_message.dart';
 import 'package:mixmingle/shared/widgets/typing_indicator_widget.dart';
-import 'package:mixmingle/shared/providers/all_providers.dart';
+import 'package:mixmingle/providers/all_providers.dart'; // userProfileProvider, currentUserProfileProvider
 
 class ChatPage extends ConsumerStatefulWidget {
   final String? chatId;
@@ -393,15 +394,27 @@ class _SenderNameWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // Fetch sender name from Firestore profile
-    final senderProfileAsync = ref.watch(userProfileProvider(senderId));
+    final AsyncValue<UserProfile?> senderProfileAsync = ref.watch(userProfileProvider(senderId));
 
     return senderProfileAsync.when(
       data: (profile) {
         String displayName = 'User';
-        if (profile?.displayName != null && profile!.displayName!.isNotEmpty) {
-          displayName = profile.displayName!;
+        if (profile?.displayName != null && profile!.displayName.isNotEmpty) {
+          displayName = profile.displayName;
         } else if (profile?.nickname != null && profile!.nickname!.isNotEmpty) {
           displayName = profile.nickname!;
+        }
+        return Text(
+          displayName,
+          style: TextStyle(
+            fontSize: 12,
+        String displayName = 'User';
+        if (profile != null) {
+          if (profile.displayName != null && profile.displayName!.isNotEmpty) {
+            displayName = profile.displayName!;
+          } else if (profile.nickname != null && profile.nickname!.isNotEmpty) {
+            displayName = profile.nickname!;
+          }
         }
         return Text(
           displayName,

@@ -1,7 +1,7 @@
 // lib/features/profile/repositories/i_profile_repository.dart
 //
 // Abstract contract for user-profile operations.
-import 'package:mixmingle/shared/models/user_profile.dart';
+import 'package:mixmingle/models/user_profile.dart';
 
 abstract class IProfileRepository {
   /// Fetch a single user profile by UID.

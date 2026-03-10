@@ -1,4 +1,4 @@
-﻿/// Live Monitoring Dashboard Widget
+/// Live Monitoring Dashboard Widget
 ///
 /// Displays key app health metrics with color-coded status indicators.
 library;

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../services/report_service.dart';
 
 class ReportUserScreen extends StatefulWidget {

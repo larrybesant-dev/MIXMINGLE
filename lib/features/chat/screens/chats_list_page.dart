@@ -1,4 +1,4 @@
-﻿/// Chats List Page
+/// Chats List Page
 /// View all conversations
 library;
 

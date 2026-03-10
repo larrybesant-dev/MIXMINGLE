@@ -1,16 +1,16 @@
-﻿import 'package:flutter/material.dart';
+import 'package:mixmingle/providers/all_providers.dart'; // profileControllerProvider, currentUserProfileProvider
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
+import 'package:mixmingle/models/user_profile.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
 import 'package:mixmingle/shared/providers/profile_controller.dart';
-import 'package:mixmingle/shared/models/user_profile.dart';
 import 'package:mixmingle/shared/validation.dart';
 import 'package:mixmingle/core/design_system/design_constants.dart';
-
 class EditProfilePage extends ConsumerStatefulWidget {
   const EditProfilePage({super.key});
 
@@ -83,17 +83,17 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   String? _pronouns;
 
   // ─── Section 3 – Your Vibe (personality prompts) ─────────────
-  final List<String?> _selectedPromptQuestions = [null, null, null];
+    final List<String?> _selectedPromptQuestions = [null, null, null]; // keep as is for UI, but personalityPrompts is List<String>
 
   // ─── Section 4 – Lifestyle ───────────────────────────────────
-  Map<String, bool> _lifestylePrompts = {};
+    List<String> _lifestylePrompts = [];
 
   // ─── Section 5 – What You're Into ───────────────────────────
   List<String> _selectedInterests = [];
   List<String> _selectedMusicTastes = [];
 
   // ─── Section 6 – What You're Looking For ────────────────────
-  List<String> _lookingFor = [];
+  String _lookingFor = '';
   String? _relationshipType;
   List<String> _preferredGenders = [];
 
@@ -198,12 +198,13 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _gender = profile.gender;
     _pronouns = profile.pronouns;
 
-    _lifestylePrompts = Map<String, bool>.from(profile.lifestylePrompts ?? {});
+    _lifestylePrompts = List<String>.from(profile.lifestylePrompts ?? []);
+      _lifestylePrompts = List<String>.from(profile.lifestylePrompts ?? []);
 
     _selectedInterests = List<String>.from(profile.interests ?? []);
     _selectedMusicTastes = List<String>.from(profile.musicTastes ?? []);
 
-    _lookingFor = List<String>.from(profile.lookingFor ?? []);
+    _lookingFor = profile.lookingFor ?? '';
     _relationshipType = profile.relationshipType;
     _preferredGenders = List<String>.from(profile.preferredGenders ?? []);
 
@@ -213,10 +214,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     _galleryPhotos = List<String>.from(profile.galleryPhotos ?? []);
 
     if (profile.personalityPrompts != null) {
-      final entries = profile.personalityPrompts!.entries.toList();
-      for (int i = 0; i < entries.length && i < 3; i++) {
-        _selectedPromptQuestions[i] = entries[i].key;
-        _promptAnswerControllers[i].text = entries[i].value;
+      for (int i = 0; i < profile.personalityPrompts!.length && i < 3; i++) {
+        _selectedPromptQuestions[i] = profile.personalityPrompts![i];
+        _promptAnswerControllers[i].text = '';
       }
     }
   }
@@ -232,7 +232,43 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       final url = await controller.uploadAvatar(picked, userId);
       if (url == null) throw Exception('Upload returned null URL');
       if (!mounted) return;
-      await profileService.updateUserProfile(currentProfile.copyWith(photoUrl: url));
+      await profileService.updateUserProfile(UserProfile(
+        id: currentProfile.id,
+        email: currentProfile.email,
+        displayName: currentProfile.displayName,
+        nickname: currentProfile.nickname,
+        bio: currentProfile.bio,
+        location: currentProfile.location,
+        photoUrl: url,
+        coverPhotoUrl: currentProfile.coverPhotoUrl,
+        galleryPhotos: currentProfile.galleryPhotos,
+        birthday: currentProfile.birthday,
+        gender: currentProfile.gender,
+        pronouns: currentProfile.pronouns,
+        lookingFor: currentProfile.lookingFor,
+        relationshipType: currentProfile.relationshipType,
+        minAgePreference: currentProfile.minAgePreference,
+        maxAgePreference: currentProfile.maxAgePreference,
+        preferredGenders: currentProfile.preferredGenders,
+        interests: currentProfile.interests,
+        musicTastes: currentProfile.musicTastes,
+        personalityPrompts: currentProfile.personalityPrompts,
+        lifestylePrompts: currentProfile.lifestylePrompts,
+        socialLinks: currentProfile.socialLinks,
+        isPhotoVerified: currentProfile.isPhotoVerified,
+        isPhoneVerified: currentProfile.isPhoneVerified,
+        isEmailVerified: currentProfile.isEmailVerified,
+        isIdVerified: currentProfile.isIdVerified,
+        verifiedOnlyMode: currentProfile.verifiedOnlyMode,
+        privateMode: currentProfile.privateMode,
+        latitude: currentProfile.latitude,
+        longitude: currentProfile.longitude,
+        followersCount: currentProfile.followersCount,
+        followingCount: currentProfile.followingCount,
+        presenceStatus: currentProfile.presenceStatus,
+        createdAt: currentProfile.createdAt,
+        updatedAt: DateTime.now(),
+      ));
       ref.invalidate(currentUserProfileProvider);
       if (mounted) _showSuccess('Avatar updated');
     } catch (e) {
@@ -252,7 +288,43 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       final url = await controller.uploadCoverPhoto(picked, userId);
       if (url == null) throw Exception('Upload returned null URL');
       if (!mounted) return;
-      await profileService.updateUserProfile(currentProfile.copyWith(coverPhotoUrl: url));
+      await profileService.updateUserProfile(UserProfile(
+        id: currentProfile.id,
+        email: currentProfile.email,
+        displayName: currentProfile.displayName,
+        nickname: currentProfile.nickname,
+        bio: currentProfile.bio,
+        location: currentProfile.location,
+        photoUrl: currentProfile.photoUrl,
+        coverPhotoUrl: url,
+        galleryPhotos: currentProfile.galleryPhotos,
+        birthday: currentProfile.birthday,
+        gender: currentProfile.gender,
+        pronouns: currentProfile.pronouns,
+        lookingFor: currentProfile.lookingFor,
+        relationshipType: currentProfile.relationshipType,
+        minAgePreference: currentProfile.minAgePreference,
+        maxAgePreference: currentProfile.maxAgePreference,
+        preferredGenders: currentProfile.preferredGenders,
+        interests: currentProfile.interests,
+        musicTastes: currentProfile.musicTastes,
+        personalityPrompts: currentProfile.personalityPrompts,
+        lifestylePrompts: currentProfile.lifestylePrompts,
+        socialLinks: currentProfile.socialLinks,
+        isPhotoVerified: currentProfile.isPhotoVerified,
+        isPhoneVerified: currentProfile.isPhoneVerified,
+        isEmailVerified: currentProfile.isEmailVerified,
+        isIdVerified: currentProfile.isIdVerified,
+        verifiedOnlyMode: currentProfile.verifiedOnlyMode,
+        privateMode: currentProfile.privateMode,
+        latitude: currentProfile.latitude,
+        longitude: currentProfile.longitude,
+        followersCount: currentProfile.followersCount,
+        followingCount: currentProfile.followingCount,
+        presenceStatus: currentProfile.presenceStatus,
+        createdAt: currentProfile.createdAt,
+        updatedAt: DateTime.now(),
+      ));
       ref.invalidate(currentUserProfileProvider);
       if (mounted) _showSuccess('Cover photo updated');
     } catch (e) {
@@ -277,7 +349,43 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       if (url == null) throw Exception('Upload failed');
       if (!mounted) return;
       setState(() => _galleryPhotos.add(url));
-      await profileService.updateUserProfile(profile.copyWith(galleryPhotos: _galleryPhotos));
+      await profileService.updateUserProfile(UserProfile(
+        id: profile.id,
+        email: profile.email,
+        displayName: profile.displayName,
+        nickname: profile.nickname,
+        bio: profile.bio,
+        location: profile.location,
+        photoUrl: profile.photoUrl,
+        coverPhotoUrl: profile.coverPhotoUrl,
+        galleryPhotos: _galleryPhotos,
+        birthday: profile.birthday,
+        gender: profile.gender,
+        pronouns: profile.pronouns,
+        lookingFor: profile.lookingFor,
+        relationshipType: profile.relationshipType,
+        minAgePreference: profile.minAgePreference,
+        maxAgePreference: profile.maxAgePreference,
+        preferredGenders: profile.preferredGenders,
+        interests: profile.interests,
+        musicTastes: profile.musicTastes,
+        personalityPrompts: profile.personalityPrompts,
+        lifestylePrompts: profile.lifestylePrompts,
+        socialLinks: profile.socialLinks,
+        isPhotoVerified: profile.isPhotoVerified,
+        isPhoneVerified: profile.isPhoneVerified,
+        isEmailVerified: profile.isEmailVerified,
+        isIdVerified: profile.isIdVerified,
+        verifiedOnlyMode: profile.verifiedOnlyMode,
+        privateMode: profile.privateMode,
+        latitude: profile.latitude,
+        longitude: profile.longitude,
+        followersCount: profile.followersCount,
+        followingCount: profile.followingCount,
+        presenceStatus: profile.presenceStatus,
+        createdAt: profile.createdAt,
+        updatedAt: DateTime.now(),
+      ));
       ref.invalidate(currentUserProfileProvider);
       if (mounted) _showSuccess('Photo added');
     } catch (e) {
@@ -292,11 +400,11 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     try {
-      final Map<String, String> prompts = {};
+      final List<String> prompts = [];
       for (int i = 0; i < 3; i++) {
         final q = _selectedPromptQuestions[i];
         final a = _promptAnswerControllers[i].text.trim();
-        if (q != null && a.isNotEmpty) prompts[q] = a;
+        if (q != null && a.isNotEmpty) prompts.add(q);
       }
 
       final Map<String, String> links = {};
@@ -333,7 +441,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         preferredGenders: _preferredGenders.isNotEmpty ? _preferredGenders : null,
         interests: _selectedInterests.isNotEmpty ? _selectedInterests : null,
         musicTastes: _selectedMusicTastes.isNotEmpty ? _selectedMusicTastes : null,
-        personalityPrompts: prompts.isNotEmpty ? prompts : null,
+        personalityPrompts: prompts.isNotEmpty ? List<String>.from(prompts) : null,
         lifestylePrompts: _lifestylePrompts.isNotEmpty ? _lifestylePrompts : null,
         socialLinks: links.isNotEmpty ? links : null,
         isPhotoVerified: currentProfile.isPhotoVerified,
@@ -396,12 +504,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   // ════════════════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
-    final profileAsync = ref.watch(currentUserProfileProvider);
+    final AsyncValue<UserProfile?> profileAsync = ref.watch(currentUserProfileProvider);
     return ClubBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: _buildAppBar(),
-        body: AsyncValueViewEnhanced<UserProfile?>(
+        body: AsyncValueViewEnhanced<UserProfile?> (
           value: profileAsync,
           maxRetries: 3,
           screenName: 'EditProfilePage',
@@ -566,14 +674,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               title: "What You're Looking For",
               color: DesignColors.gold,
               children: [
-                _buildChipSelectorMulti(
+                _buildChipSelector(
                   label: "I'm looking for",
                   options: _lookingForOptions,
-                  selected: _lookingFor,
-                  onToggle: (v) => setState(() {
-                    _lookingFor.contains(v)
-                        ? _lookingFor.remove(v)
-                        : _lookingFor.add(v);
+                  selected: _lookingFor != '' ? [_lookingFor] : [],
+                  onTap: (v) => setState(() {
+                    _lookingFor = v;
                   }),
                 ),
                 const SizedBox(height: 16),
@@ -825,10 +931,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 radius: 52,
                 backgroundColor: DesignColors.surfaceDefault,
                 backgroundImage:
-                    profile.photoUrl != null ? NetworkImage(profile.photoUrl!) : null,
-                child: profile.photoUrl == null
-                    ? const Icon(Icons.person, size: 52, color: DesignColors.textGray)
-                    : null,
+                    NetworkImage(profile.photoUrl!),
+                child: null,
               ),
             ),
             if (_isUploading)
@@ -1365,7 +1469,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   // LIFESTYLE TOGGLE
   // ════════════════════════════════════════════════════════════
   Widget _buildLifestyleToggle(String key, String label) {
-    final isOn = _lifestylePrompts[key] ?? false;
+    final isOn = _lifestylePrompts.contains(key);
     return Padding(
       padding: const EdgeInsets.only(bottom: 2),
       child: Row(
@@ -1373,7 +1477,13 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
           Expanded(child: Text(label, style: DesignTypography.body)),
           Switch(
             value: isOn,
-            onChanged: (v) => setState(() => _lifestylePrompts[key] = v),
+            onChanged: (v) => setState(() {
+              if (v) {
+                if (!_lifestylePrompts.contains(key)) _lifestylePrompts.add(key);
+              } else {
+                _lifestylePrompts.remove(key);
+              }
+            }),
             activeThumbColor: DesignColors.secondary,
             activeTrackColor:
                 DesignColors.secondary.withValues(alpha: 0.4),

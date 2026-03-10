@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/user_profile.dart';
+import '../../models/user_profile.dart';
 import '../../services/user/profile_service.dart';
 import '../../services/storage/storage_service.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,17 +12,7 @@ final profileServiceProvider = Provider<ProfileService>((ref) {
   return ProfileService();
 });
 
-// Current user profile provider - REAL-TIME STREAM
-final currentUserProfileProvider = StreamProvider<UserProfile?>((ref) {
-  final profileService = ref.watch(profileServiceProvider);
-  return profileService.streamCurrentUserProfile();
-});
-
-// User profile by ID provider - REAL-TIME STREAM
-final userProfileProvider = StreamProvider.family<UserProfile?, String>((ref, userId) {
-  final profileService = ref.watch(profileServiceProvider);
-  return profileService.streamUserProfile(userId);
-});
+// Use currentUserProfileProvider and userProfileProvider from lib/providers/all_providers.dart
 
 // Following status provider - REAL-TIME STREAM
 final isFollowingProvider = StreamProvider.family<bool, Map<String, String>>((ref, params) {

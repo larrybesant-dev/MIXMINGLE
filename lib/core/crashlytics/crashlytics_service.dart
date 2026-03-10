@@ -1,4 +1,4 @@
-﻿/// Crashlytics Service
+/// Crashlytics Service
 ///
 /// Centralized crash reporting using Firebase Crashlytics.
 /// Provides methods for logging errors, setting user identifiers,

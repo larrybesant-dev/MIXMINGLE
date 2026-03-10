@@ -1,4 +1,4 @@
-﻿/// Coin Package Model
+/// Coin Package Model
 ///
 /// Defines coin packages for purchase via RevenueCat consumables.
 library;

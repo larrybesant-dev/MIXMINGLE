@@ -1,4 +1,4 @@
-﻿// Removed invalid imports
+// Removed invalid imports
 // import 'dart:js_util' as js_util;
 // import 'package:mixmingle/helpers/helpers.dart';
 import 'package:flutter/material.dart';

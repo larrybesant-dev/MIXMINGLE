@@ -1,4 +1,4 @@
-﻿/// Notification Templates
+/// Notification Templates
 ///
 /// Predefined notification templates for various app events including
 /// daily return, favorite host live, room activity, referral rewards,

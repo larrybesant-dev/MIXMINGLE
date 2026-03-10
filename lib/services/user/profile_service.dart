@@ -1,12 +1,16 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
-import '../../shared/models/user_profile.dart';
+import '../../models/user_profile.dart';
 import '../../core/utils/cache_service.dart';
 
 class ProfileService {
+    // Stub: Get recommended users for a given userId
+    Future<List<UserProfile>> getRecommendedUsers(String userId) async {
+      // TODO: Implement real recommendation logic
+      return [];
+    }
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -18,7 +22,7 @@ class ProfileService {
     try {
       final doc = await _firestore.collection('users').doc(user.uid).get();
       if (doc.exists) {
-        return UserProfile.fromMap(doc.data()!..['id'] = doc.id);
+          return UserProfile.fromMap(doc.data()!, user.uid);
       }
       return null;
     } catch (e) {
@@ -38,7 +42,7 @@ class ProfileService {
       // Fetch from Firestore
       final doc = await _firestore.collection('users').doc(userId).get();
       if (doc.exists) {
-        final profile = UserProfile.fromMap(doc.data()!..['id'] = doc.id);
+          final profile = UserProfile.fromMap(doc.data()!, userId);
         // Cache the result
         AppCaches.userProfiles.put(userId, profile);
         return profile;
@@ -53,7 +57,7 @@ class ProfileService {
   Stream<UserProfile?> getUserProfileStream(String userId) {
     return _firestore.collection('users').doc(userId).snapshots().map((doc) {
       if (doc.exists && doc.data() != null) {
-        return UserProfile.fromMap(doc.data()!..['id'] = doc.id);
+          return UserProfile.fromMap(doc.data()!, userId);
       }
       return null;
     });
@@ -74,22 +78,22 @@ class ProfileService {
       }
 
       // Primary write — existing users collection (backward compatible)
-      await _firestore.collection('users').doc(resolvedId).set(
-            profile.toMap()..['id'] = resolvedId,
-            SetOptions(merge: true),
+        await _firestore.collection('users').doc(resolvedId).set(
+          profile.toMap()..['id'] = resolvedId,
+          SetOptions(merge: true),
           );
 
-      // Dual-write to split collections (non-blocking, best-effort)
-      unawaited(_firestore
+        // Dual-write to split collections (non-blocking, best-effort)
+        unawaited(_firestore
           .collection('profiles_public')
           .doc(resolvedId)
-          .set(profile.toPublicMap(), SetOptions(merge: true))
+          .set(profile.toMap(), SetOptions(merge: true))
           .catchError((e) => debugPrint('⚠️ [ProfileService] profiles_public sync failed: $e')));
 
-      unawaited(_firestore
+        unawaited(_firestore
           .collection('profiles_private')
           .doc(resolvedId)
-          .set(profile.toPrivateMap(), SetOptions(merge: true))
+          .set(profile.toMap(), SetOptions(merge: true))
           .catchError((e) => debugPrint('⚠️ [ProfileService] profiles_private sync failed: $e')));
 
       // Invalidate cache after update
@@ -113,7 +117,7 @@ class ProfileService {
       final data = doc.data()!..['id'] = userId;
       // Merge with a stub for required private fields so fromMap doesn't crash
       data['email'] ??= '';
-      return UserProfile.fromMap(data);
+        return UserProfile.fromMap(data, userId);
     } catch (e) {
       throw Exception('Failed to get public profile: $e');
     }
@@ -126,7 +130,7 @@ class ProfileService {
       final data = doc.data()!..['id'] = userId;
       data['email'] ??= '';
       try {
-        return UserProfile.fromMap(data);
+          return UserProfile.fromMap(data, userId);
       } catch (_) {
         return null;
       }
@@ -156,17 +160,13 @@ class ProfileService {
   // Create initial profile for new user
   Future<void> createInitialProfile(String userId, String email, String displayName) async {
     final profile = UserProfile(
-      id: userId,
-      email: email,
+      uid: userId,
       displayName: displayName,
       bio: '',
-      birthday: DateTime.now().subtract(const Duration(days: 365 * 18)),
-      gender: 'Not specified',
-      interests: [],
-      galleryPhotos: [],
-      location: '',
-      createdAt: DateTime.now(),
-      updatedAt: DateTime.now(),
+      galleryPhotos: const [],
+      interests: const [],
+      createdAt: Timestamp.fromDate(DateTime.now()),
+      updatedAt: Timestamp.fromDate(DateTime.now()),
     );
 
     await updateUserProfile(profile);
@@ -189,7 +189,7 @@ class ProfileService {
     try {
       final query = _firestore.collection('users').where('interests', arrayContainsAny: interests);
       final snapshot = await query.get();
-      return snapshot.docs.map((doc) => UserProfile.fromMap(doc.data()..['id'] = doc.id)).toList();
+        return snapshot.docs.map((doc) => UserProfile.fromMap(doc.data(), doc.id)).toList();
     } catch (e) {
       throw Exception('Failed to search users: $e');
     }
@@ -201,8 +201,8 @@ class ProfileService {
       // This is a simplified version. In production, you'd use geohashing or GeoFirestore
       final query = _firestore.collection('users');
       final snapshot = await query.get();
-      return snapshot.docs
-          .map((doc) => UserProfile.fromMap(doc.data()..['id'] = doc.id))
+        return snapshot.docs
+          .map((doc) => UserProfile.fromMap(doc.data(), doc.id))
           .where((profile) => _isWithinRadius(profile, latitude, longitude, radiusKm))
           .toList();
     } catch (e) {
@@ -212,18 +212,8 @@ class ProfileService {
 
   bool _isWithinRadius(UserProfile profile, double lat, double lng, double radiusKm) {
     // Check if profile has location data
-    if (profile.latitude == null || profile.longitude == null) {
-      return false;
-    }
-
-    // Haversine distance calculation
-    const double earthRadius = 6371; // km
-    final dLat = (profile.latitude! - lat) * (pi / 180);
-    final dLng = (profile.longitude! - lng) * (pi / 180);
-    final a = sin(dLat / 2) * sin(dLat / 2) + cos(lat) * cos(profile.latitude!) * sin(dLng / 2) * sin(dLng / 2);
-    final c = 2 * atan2(sqrt(a), sqrt(1 - a));
-    final distance = earthRadius * c;
-    return distance <= radiusKm;
+    // Location fields not present in UserProfile; always return false
+    return false;
   }
 
   // Stream current user profile
@@ -233,7 +223,7 @@ class ProfileService {
 
     return _firestore.collection('users').doc(user.uid).snapshots().map((doc) {
       if (doc.exists) {
-        return UserProfile.fromMap(doc.data()!..['id'] = doc.id);
+        return UserProfile.fromMap(doc.data(), doc.id);
       }
       return null;
     });
@@ -243,7 +233,7 @@ class ProfileService {
   Stream<UserProfile?> streamUserProfile(String userId) {
     return _firestore.collection('users').doc(userId).snapshots().map((doc) {
       if (doc.exists) {
-        return UserProfile.fromMap(doc.data()!..['id'] = doc.id);
+        return UserProfile.fromMap(doc.data(), doc.id);
       }
       return null;
     });
@@ -390,11 +380,10 @@ class ProfileService {
       final snapshot = await _firestore.collection('users').get();
 
       return snapshot.docs
-          .map((doc) => UserProfile.fromMap(doc.data()..['id'] = doc.id))
+          .map((doc) => UserProfile.fromMap(doc.data(), doc.id))
           .where((profile) {
             final displayName = (profile.displayName ?? '').toLowerCase();
-            final nickname = (profile.nickname ?? '').toLowerCase();
-            return displayName.contains(lowerQuery) || nickname.contains(lowerQuery);
+            return displayName.contains(lowerQuery);
           })
           .take(20)
           .toList();

@@ -1,4 +1,4 @@
-﻿/// Chat Screen re-export
+/// Chat Screen re-export
 ///
 /// Usage: `import 'package:mixmingle/screens/chat_screen.dart';`
 library;

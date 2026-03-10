@@ -1,4 +1,4 @@
-﻿class VideoService {
+class VideoService {
   bool _isInitialized = false;
 
   Future<void> initialize() async {

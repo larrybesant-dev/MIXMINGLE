@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../../shared/models/user_profile.dart';
+import '../../models/user_profile.dart';
 import 'activity_feed_service.dart';
 
 class SocialGraphService {
@@ -228,9 +228,7 @@ class SocialGraphService {
         if (following.contains(userId)) continue;
 
         final data = doc.data();
-        data['id'] = userId;
-
-        final profile = UserProfile.fromMap(data);
+        final profile = UserProfile.fromMap(data, userId);
 
         // Calculate similarity score based on interests
         final userInterests = profile.interests ?? [];

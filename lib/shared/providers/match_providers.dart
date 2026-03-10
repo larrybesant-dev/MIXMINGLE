@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/social/match_service.dart';
 import '../models/match.dart';
-import '../models/user_profile.dart';
+import '../../models/user_profile.dart';
 import 'auth_providers.dart';
 import 'discovery_providers.dart';
 

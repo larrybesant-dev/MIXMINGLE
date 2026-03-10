@@ -1,4 +1,4 @@
-﻿/// Friends Sidebar Widget - Enhanced with collapsible behavior, animations, and hover effects
+/// Friends Sidebar Widget - Enhanced with collapsible behavior, animations, and hover effects
 ///
 /// Features:
 /// - Smooth collapse/expand animation (300ms)

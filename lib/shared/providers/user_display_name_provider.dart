@@ -1,7 +1,6 @@
-﻿
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/user_profile.dart';
-import 'user_providers.dart';
+import 'package:mixmingle/providers/all_providers.dart';
 
 /// Cached display name provider with efficient fallback handling
 ///
@@ -25,12 +24,12 @@ final userDisplayNameProvider = FutureProvider.family<String, String>((ref, user
     final profile = profileAsync;
 
     // Fallback chain: displayName -> username -> 'Unknown User'
-    if (profile?.displayName != null && profile!.displayName!.isNotEmpty) {
-      return profile.displayName!;
+    if (profile?.displayName != null && profile!.displayName.isNotEmpty) {
+      return profile.displayName;
     }
 
-    if (profile?.username != null && profile!.username!.isNotEmpty) {
-      return profile.username!;
+    if (profile?.username != null && profile!.username.isNotEmpty) {
+      return profile.username;
     }
 
     return 'Unknown User';
