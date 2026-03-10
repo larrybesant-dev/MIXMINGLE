@@ -66,15 +66,15 @@ class ProfileService {
   // Create or update user profile
   Future<void> updateUserProfile(UserProfile profile) async {
     try {
-      // Defensive guard: recover empty id from live auth session
-      String resolvedId = profile.id;
+      // Defensive guard: recover empty uid from live auth session
+      String resolvedId = profile.uid;
       if (resolvedId.isEmpty) {
         final currentUser = _auth.currentUser;
         if (currentUser == null) {
-          throw Exception('Cannot update profile: no authenticated user and profile id is empty');
+          throw Exception('Cannot update profile: no authenticated user and profile uid is empty');
         }
         resolvedId = currentUser.uid;
-        debugPrint('⚠️ [ProfileService] profile.id was empty — using auth UID: $resolvedId');
+        debugPrint('⚠️ [ProfileService] profile.uid was empty — using auth UID: $resolvedId');
       }
 
       // Primary write — existing users collection (backward compatible)
