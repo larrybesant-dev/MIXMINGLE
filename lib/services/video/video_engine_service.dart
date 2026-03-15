@@ -1,8 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../shared/models/remote_user.dart';
 import 'video_engine_interface.dart';
-import '../agora/agora_stub.dart'
-  if (dart.library.io) '../agora/agora_native.dart';
 import '../agora/agora_mobile_engine.dart';
 
 /// Unified Video Engine Service

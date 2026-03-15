@@ -71,6 +71,7 @@ dependencies:
   flutter_dotenv: ^6.0.0
   # Web platform interop (required by web-only implementation files)
   web: ^1.1.0
+  firebase_database: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

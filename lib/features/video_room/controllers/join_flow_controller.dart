@@ -1,7 +1,6 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../services/agora/agora_stub.dart';
 import '../../../core/design_system/design_constants.dart';
 
 /// Join Flow Controller

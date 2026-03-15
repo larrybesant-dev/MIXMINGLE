@@ -126,6 +126,105 @@ service cloud.firestore {
           // No one can update or delete publish records
           allow update, delete: if false;
         }
+
+        // ============================================================
+        // ROOMS, MEMBERS, MESSAGES
+        // ============================================================
+        match /rooms/{roomId} {
+          allow read: if true;
+          allow create: if isSignedIn();
+          allow update, delete: if resource.data.hostId == request.auth.uid;
+
+          // Room members subcollection
+          match /members/{memberId} {
+            allow read: if true;
+            allow create: if isSignedIn() && request.auth.uid == memberId;
+            allow update, delete: if isSignedIn() && request.auth.uid == memberId;
+          }
+
+          // Room messages subcollection
+          match /messages/{messageId} {
+            allow read: if true;
+            allow create: if isSignedIn() && request.auth.uid == request.resource.data.senderId;
+          }
+        }
+
+        // ============================================================
+        // PROFILES
+        // ============================================================
+        match /profiles/{userId} {
+          allow read: if true;
+          allow create, update, delete: if isSignedIn() && request.auth.uid == userId;
+        }
+
+        // ============================================================
+        // FRIENDS
+        // ============================================================
+        match /users/{userId}/friends/{friendId} {
+          allow read: if isSignedIn() && (request.auth.uid == userId || request.auth.uid == friendId);
+          allow create, delete: if isSignedIn() && request.auth.uid == userId;
+        }
+
+        // ============================================================
+        // WALLETS
+        // ============================================================
+        match /wallets/{userId} {
+          allow read: if isSignedIn() && request.auth.uid == userId;
+          allow create, update: if isSignedIn() && request.auth.uid == userId;
+        }
+
+        // ============================================================
+        // GIFTS
+        // ============================================================
+        match /gifts/{giftId} {
+          allow read: if true;
+          allow create, update, delete: if isAdmin();
+        }
+
+        // ============================================================
+        // BLOCKED SUBCOLLECTION
+        // ============================================================
+        match /blocked/{blockedUserId} {
+          allow read: if isOwner(userId);
+          allow create: if isOwner(userId) && blockedUserId != userId;
+          allow delete: if isOwner(userId);
+        }
+
+        // ============================================================
+        // EVENT RSVPS SUBCOLLECTION
+        // ============================================================
+        match /event_rsvps/{eventId} {
+          allow read: if isOwner(userId);
+          allow write: if isOwner(userId);
+        }
+
+        // ============================================================
+        // FRIEND REQUESTS SUBCOLLECTION (incoming)
+        // ============================================================
+        match /friend_requests/{fromUid} {
+          // Owner can read their own incoming requests
+          allow read: if isOwner(userId);
+          // Sender can create (fromUid == sender) and delete (cancel)
+          allow create: if isSignedIn() && request.auth.uid == fromUid && fromUid != userId;
+          allow delete: if isOwner(userId) || request.auth.uid == fromUid;
+        }
+
+        // ============================================================
+        // SENT REQUESTS SUBCOLLECTION (outgoing tracker)
+        // ============================================================
+        match /sent_requests/{toUid} {
+          allow read, write: if isOwner(userId);
+        }
+
+        // ============================================================
+        // FRIENDS SUBCOLLECTION
+        // ============================================================
+        match /friends/{friendUid} {
+          // Both parties can read
+          allow read: if isOwner(userId) || request.auth.uid == friendUid;
+          // Owner manages their own friend list
+          allow write: if isOwner(userId);
+        }
       }
     }
         allow create: if isOwner(userId);

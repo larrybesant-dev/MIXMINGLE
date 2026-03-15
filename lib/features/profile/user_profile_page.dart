@@ -1,64 +1,11 @@
 ﻿
 
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-// Removed unnecessary riverpod import
-import 'package:flutter/material.dart';
-// (Removed: import 'package:riverpod/riverpod.dart';)
-import '../../shared/providers/providers.dart';
-import '../../shared/models/user.dart';
-import '../../shared/club_background.dart';
-import '../../shared/glow_text.dart';
-import '../../shared/neon_button.dart';
-import '../messages/chat_screen.dart';
-
-// Provider for follow/unfollow feedback state
-  (ref) => FollowFeedbackNotifier(),
-);
-
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-class FollowFeedbackState {
-  final String? status;
-  const FollowFeedbackState({this.status});
-  FollowFeedbackState copyWith({String? status}) => FollowFeedbackState(status: status ?? this.status);
-}
-
-class FollowFeedbackNotifier extends StateNotifier<FollowFeedbackState> {
-  FollowFeedbackNotifier() : super(const FollowFeedbackState());
-  void show(String newStatus) {
-    state = state.copyWith(status: newStatus);
-    Future.delayed(const Duration(seconds: 2), () {
-      state = state.copyWith(status: null);
-    });
-  }
-}
-
-class UserProfilePage extends ConsumerWidget {
-  final String userId;
-
-  const UserProfilePage({super.key, required this.userId});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final userAsync = ref.watch(userProvider(userId));
-    final currentUserAsync = ref.watch(currentUserProvider);
-
-    return ClubBackground(
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        appBar: AppBar(
-          title: const GlowText(
-            text: 'Profile',
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFFFFD700),
-            glowColor: Color(0xFFFF4C4C),
-          ),
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-        ),
-        body: userAsync.when(
+/* TODO: implement */
           data: (user) {
+  /*
+   TODO: implement
+   */
+            data: (user) {
             if (user == null) {
               return const Center(
                 child: GlowText(
@@ -157,29 +104,9 @@ class UserProfilePage extends ConsumerWidget {
         Container(
           width: 120,
           height: 120,
-          decoration: BoxDecoration(
+          decoration: const BoxDecoration(
             shape: BoxShape.circle,
-            gradient: const LinearGradient(
-              colors: [Color(0xFFFF4C4C), Color(0xFFFFD700)],
-            ),
-            border: Border.all(
-              color: const Color(0xFFFFD700),
-              width: 3,
-            ),
-          ),
-          child: user.avatarUrl.isNotEmpty
-              ? ClipOval(
-                  child: Image.network(
-                    '${user.avatarUrl}?t=${DateTime.now().millisecondsSinceEpoch}',
-                    fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => const Icon(
-                      Icons.person,
-                      color: Colors.white,
-                      size: 60,
-                    ),
-                  ),
-                )
-              : const Icon(
+    // ...existing code...
                   Icons.person,
                   color: Colors.white,
                   size: 60,
@@ -521,4 +448,7 @@ class UserProfilePage extends ConsumerWidget {
       ),
     );
   }
+  /*
+   End of user_profile_page.dart
+   */
 }
