@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:MIXVY/lib/features/notifications/notification.dart';
+import 'package:mixmingle/features/notifications/notification.dart';
 
 void main() {
   group('NotificationItem', () {

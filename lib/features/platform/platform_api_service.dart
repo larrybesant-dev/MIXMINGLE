@@ -1,7 +1,7 @@
 /// Platform API Service
 ///
 /// Manages external app registration, authentication, and API exposure
-/// for the Vybe Social platform ecosystem.
+/// for the MIXVY platform ecosystem.
 library;
 
 import 'dart:async';

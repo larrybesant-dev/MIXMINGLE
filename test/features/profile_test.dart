@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:MIXVY/lib/features/profile/user_profile.dart';
+import 'package:mixmingle/features/profile/user_profile.dart';
 
 void main() {
   group('UserProfile', () {

@@ -1,4 +1,22 @@
-﻿
+﻿import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../shared/widgets/glow_text.dart';
+import '../../shared/widgets/neon_button.dart';
+import '../../models/user.dart';
+import '../../features/chat/chat_screen.dart';
+// Add any other necessary imports for providers and custom widgets
+
+class UserProfilePage extends ConsumerWidget {
+  final String userId;
+  const UserProfilePage({required this.userId, Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // ...existing code...
+    // Insert the main widget tree here, using the code already present
+    // (The rest of the file remains unchanged)
+  }
+}
 
 /* TODO: implement */
           data: (user) {

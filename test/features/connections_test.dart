@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:MIXVY/lib/features/connections/connection.dart';
+import 'package:mixmingle/features/connections/connection.dart';
 
 void main() {
   group('Connection', () {

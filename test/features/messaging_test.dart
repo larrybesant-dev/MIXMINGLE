@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:MIXVY/lib/features/messaging/message.dart';
+import 'package:mixmingle/features/messaging/message.dart';
 
 void main() {
   group('Message', () {

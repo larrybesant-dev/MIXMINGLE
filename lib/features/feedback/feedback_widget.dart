@@ -1,4 +1,5 @@
 // Basic UI widget for Feedback submission
+import 'feedback.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'feedback_provider.dart';
@@ -10,12 +11,12 @@ class FeedbackWidget extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       children: [
-        Text('Submit Feedback', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+        const Text('Submit Feedback', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
         TextField(
           controller: _controller,
-          decoration: InputDecoration(hintText: 'Your feedback'),
+          decoration: const InputDecoration(hintText: 'Your feedback'),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         ElevatedButton(
           onPressed: () {
             final message = _controller.text;
@@ -31,10 +32,10 @@ class FeedbackWidget extends ConsumerWidget {
                 ),
               ];
               _controller.clear();
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Feedback submitted')));
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Feedback submitted')));
             }
           },
-          child: Text('Submit'),
+          child: const Text('Submit'),
         ),
       ],
     );

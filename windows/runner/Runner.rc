@@ -97,6 +97,12 @@ BEGIN
             VALUE "OriginalFilename", "vybe_social.exe" "\0"
             VALUE "ProductName", "Vybe Social" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
+                VALUE "CompanyName", "MIXVY" "\0"
+                VALUE "FileDescription", "MIXVY" "\0"
+                VALUE "InternalName", "mixvy" "\0"
+                VALUE "LegalCopyright", "Copyright (C) 2026 MIXVY. All rights reserved." "\0"
+                VALUE "OriginalFilename", "mixvy.exe" "\0"
+                VALUE "ProductName", "MIXVY" "\0"
         END
     END
     BLOCK "VarFileInfo"

@@ -125,49 +125,6 @@ class MembershipService {
           tier: tier.firestoreValue,
           previousTier: previousTier.firestoreValue,
         );
-      }
-
-      debugPrint('âœ… [Membership] Synced tier to Firestore: ${tier.displayName}');
-    } catch (e) {
-      debugPrint('âŒ [Membership] Failed to sync tier: $e');
-    }
-  }
-
-  /// Update coin balance in Firestore
-  Future<bool> updateCoinBalance(int change, CoinTransactionType type, {String? description}) async {
-    if (_currentUserId == null) return false;
-
-    try {
-      final newBalance = _coinBalance + change;
-      if (newBalance < 0) {
-        debugPrint('âš ï¸ [Membership] Insufficient coins');
-        return false;
-      }
-
-      // Update balance
-      await _firestore.collection('users').doc(_currentUserId).update({
-        'coinBalance': newBalance,
-      });
-
-      // Log transaction
-      await _firestore
-          .collection('users')
-          .doc(_currentUserId)
-          .collection('coinTransactions')
-          .add({
-        'type': type.value,
-        'amount': change,
-        'description': description,
-        'balanceAfter': newBalance,
-        'timestamp': FieldValue.serverTimestamp(),
-      });
-
-      _coinBalance = newBalance;
-      _coinBalanceStreamController?.add(_coinBalance);
-
-      debugPrint('âœ… [Membership] Coin balance updated: $change -> $newBalance');
-      return true;
-    } catch (e) {
       debugPrint('âŒ [Membership] Failed to update coins: $e');
       return false;
     }

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:MIXVY/lib/features/feed/post.dart';
+import 'package:mixmingle/features/feed/post.dart';
 
 void main() {
   group('Post', () {
