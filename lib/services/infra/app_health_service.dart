@@ -83,7 +83,7 @@ class AppHealthService {
   Future<String> getMaintenanceMessage() async {
     try {
       final doc = await _firestore.collection('system').doc('settings').get();
-      return doc['maintenance_message'] as String? ?? 'Vybe Social is undergoing maintenance. Please try again later.';
+      return doc['maintenance_message'] as String? ?? 'MIXVY is undergoing maintenance. Please try again later.';
     } catch (e) {
       return 'Unable to connect to service. Please try again later.';
     }

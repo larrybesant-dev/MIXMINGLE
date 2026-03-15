@@ -6,12 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/routing/app_routes.dart';
 import '../core/theme/neon_theme.dart';
 
-class VybeSocialApp extends StatelessWidget {
-  const VybeSocialApp({super.key});
+class MIXVYApp extends StatelessWidget {
+  const MIXVYApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('ðŸ—ï¸ Building VybeSocialApp...');
+    debugPrint('🚀 Building MIXVYApp...');
 
     return ProviderScope(
       child: MaterialApp(

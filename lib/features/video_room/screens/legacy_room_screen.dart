@@ -31,7 +31,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Vybe Social Room', style: Theme.of(context).textTheme.titleLarge),
+        title: Text('MIXVY Lounge', style: Theme.of(context).textTheme.titleLarge),
         backgroundColor: Colors.black87,
         elevation: 0,
         actions: [

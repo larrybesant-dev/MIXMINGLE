@@ -3,11 +3,11 @@ import 'package:mixmingle/shared/models/room_role.dart';
 
 /// Provider for voice room chat messages - manages local state for each room
 /// Use as: ref.watch(voiceRoomChatProvider(roomId)).messages
-// Deprecated: Use chatMessagesProvider from room_subcollection_providers instead
+// Use chatMessagesProvider from room_subcollection_providers
 // This provider uses the legacy VoiceRoomChatMessage model; kept for backward compatibility
 
 /// Notifier for managing chat messages in a voice room with change notifications
-// Deprecated: VoiceRoomChatNotifier - use ChatMessage-based providers instead
+// VoiceRoomChatNotifier - use ChatMessage-based providers
 /*
 class VoiceRoomChatNotifier extends StateNotifier<List<VoiceRoomChatMessage>> {
   VoiceRoomChatNotifier() : super([]);

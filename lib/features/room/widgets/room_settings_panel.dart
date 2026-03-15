@@ -62,7 +62,8 @@ class _RoomSettingsPanelState extends ConsumerState<RoomSettingsPanel> {
     _nameCtrl = TextEditingController(text: widget.roomData['name'] as String? ?? '');
     _descCtrl = TextEditingController(text: widget.roomData['description'] as String? ?? '');
     _coverCtrl = TextEditingController(text: widget.roomData['coverImageUrl'] as String? ?? '');
-    _maxParticipants = (widget.roomData['maxParticipants'] as int? ?? 50).toDouble().clamp(5, 200);
+    _maxParticipants = (widget.roomData['maxParticipants'] as int?)?.toDouble() ?? 50.0;
+    _maxParticipants = _maxParticipants.clamp(5.0, 200.0);
     _selectedCategory = widget.roomData['category'] as String?;
     _isPublic = widget.roomData['isPublic'] as bool? ?? true;
     _micLocked = widget.roomData['micLocked'] as bool? ?? false;

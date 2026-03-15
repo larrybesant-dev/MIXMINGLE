@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-/// Vybe Social Neon Club Color Palette
+/// MIXVY Neon Club Color Palette
 /// Electric aesthetic with vibrant neon accents - based on official brand
 class NeonColors {
-  // Primary Brand Colors - Vybe Social Official
+  // Primary Brand Colors - MIXVY Official
   static const Color neonOrange = Color(0xFFFF7A3C);      // Legacy accent (kept for compatibility)
   static const Color neonBlue = Color(0xFF00D9FF);        // Electric blue (primary brand)
   static const Color neonViolet = Color(0xFF7B2BFF);      // Violet (Neon Pulse mid)
@@ -41,7 +41,7 @@ class NeonColors {
     stops: [0.0, 0.5, 1.0],
   );
 
-  static const LinearGradient vybePulseGradient = LinearGradient(
+  static const LinearGradient mixvyPulseGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
     colors: [

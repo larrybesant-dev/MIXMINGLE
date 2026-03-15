@@ -1,4 +1,4 @@
-/// Vybe Social Humanized Copy Constants
+/// MIXVY Humanized Copy Constants
 /// Centralized, human-friendly text strings for the entire app
 /// Tone: Energetic, authentic, real-time social chemistry. Short sentences. Contractions. No jargon.
 library;
@@ -262,7 +262,7 @@ class CopyConstants {
   static const String settingsPrivacy = 'Who can see you';
   static const String settingsBlocked = 'People you\'ve blocked';
   static const String settingsHelp = 'Need help?';
-  static const String settingsLogout = 'Leave Vybe Social';
+  static const String settingsLogout = 'Leave MIXVY';
   static const String settingsDeleteAccount = 'Delete everything';
 
   // Settings Messages

@@ -48,7 +48,7 @@ class Room {
       id: doc.id,
       name: data['name'] ?? 'Unnamed Room',
       participantCount: (data['participantCount'] ?? 0) as int,
-      energy: ((data['energy'] ?? 0.0) as num).toDouble(),
+      energy: (data['energy'] as num?)?.toDouble() ?? 0.0,
       createdAt: data['createdAt'] != null
           ? (data['createdAt'] as Timestamp).toDate()
           : DateTime.now(),

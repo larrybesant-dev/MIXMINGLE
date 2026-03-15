@@ -334,7 +334,7 @@ class _DjPanelState extends ConsumerState<DjPanel> {
                 const Icon(Icons.volume_mute, color: Colors.white38, size: 18),
                 Expanded(
                   child: Slider(
-                    value: _djState.volume.toDouble(),
+                    value: (_djState.volume ?? 0).toDouble(),
                     min: 0,
                     max: 100,
                     divisions: 20,
@@ -365,7 +365,7 @@ class _DjPanelState extends ConsumerState<DjPanel> {
 
           if (_loading) ...[
             const SizedBox(height: 12),
-            const Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            const Center(child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF5A3A7E))),
           ],
         ],
       ),
@@ -416,7 +416,7 @@ class _DjPanelState extends ConsumerState<DjPanel> {
     final url = _urlCtrl.text.trim();
     if (url.isEmpty) {
       ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Enter an audio URL first')));
+          .showSnackBar(const SnackBar(content: Text('Please enter a valid audio URL to start your MIXVY Lounge soundtrack.')));
       return;
     }
     setState(() => _loading = true);
@@ -506,6 +506,6 @@ class _DjPanelState extends ConsumerState<DjPanel> {
 
   void _snack(String m) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('MIXVY Audio: $m')));
   }
 }

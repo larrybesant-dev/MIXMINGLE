@@ -1,7 +1,7 @@
 /// Welcome Room Service
 ///
 /// Manages the welcome room for new users, providing a friendly
-/// introduction to the Vybe Social community.
+/// introduction to The Lifestyle Community.
 library;
 
 import 'package:flutter/foundation.dart';
@@ -154,7 +154,7 @@ class WelcomeRoomService {
         'title': config.roomTitle,
         'description': config.roomDescription,
         'hostId': 'system', // System-hosted room
-        'hostName': 'Vybe Social',
+        'hostName': 'MIXVY',
         'creatorId': 'system',
         'isWelcomeRoom': true,
         'isActive': true,
@@ -259,12 +259,12 @@ class WelcomeRoomConfig {
 
   const WelcomeRoomConfig({
     this.isEnabled = true,
-    this.roomTitle = 'Welcome to Vybe Social! ðŸŽ‰',
+    this.roomTitle = 'Welcome to MIXVY Lounges! 🎉',
     this.roomDescription = 'A friendly place for new members to meet the community and learn the ropes.',
     this.maxRoomCapacity = 50,
     this.autoCreateIfNone = true,
     this.welcomeMessages = const [
-      'Welcome to Vybe Social! ðŸ‘‹',
+      'Welcome to MIXVY Lounges! 👋',
       'Feel free to say hi and introduce yourself!',
       'Need help? Just ask - our community is super friendly!',
     ],
@@ -273,7 +273,7 @@ class WelcomeRoomConfig {
   factory WelcomeRoomConfig.fromFirestore(Map<String, dynamic> data) {
     return WelcomeRoomConfig(
       isEnabled: data['isEnabled'] ?? true,
-      roomTitle: data['roomTitle'] ?? 'Welcome to Vybe Social! ðŸŽ‰',
+      roomTitle: data['roomTitle'] ?? 'Welcome to MIXVY Lounges! 🎉',
       roomDescription: data['roomDescription'] ??
           'A friendly place for new members to meet the community.',
       maxRoomCapacity: data['maxRoomCapacity'] ?? 50,

@@ -1,6 +1,6 @@
 /// Project Health Check System
 ///
-/// This file provides runtime health checks for Vybe Social application
+/// This file provides runtime health checks for MIXVY application
 /// Verifies all critical services are initialized and operational
 
 library;

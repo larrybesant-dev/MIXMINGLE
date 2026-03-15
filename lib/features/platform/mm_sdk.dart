@@ -1,6 +1,6 @@
-/// Vybe Social SDK
+/// MIXVY SDK
 ///
-/// Client SDK for integrating Vybe Social functionality
+/// Client SDK for integrating MIXVY functionality
 /// into external applications.
 library;
 
@@ -21,7 +21,7 @@ class MMSDKConfig {
   const MMSDKConfig({
     required this.clientId,
     required this.clientSecret,
-    this.baseUrl = 'https://api.Vybe Social.com',
+    this.baseUrl = 'https://api.mixvy.com',
     this.timeout = const Duration(seconds: 30),
     this.enableLogging = false,
   });
@@ -297,7 +297,7 @@ class SDKResponse<T> {
       );
 }
 
-/// Vybe Social SDK
+/// MIXVY SDK
 class MMSDK {
   final MMSDKConfig config;
   String? _accessToken;
@@ -320,7 +320,7 @@ class MMSDK {
 
   /// Initialize the SDK and authenticate
   Future<bool> initialize() async {
-    _log('Initializing Vybe Social SDK...');
+    _log('Initializing MIXVY SDK...');
 
     try {
       final response = await _httpClient.post(

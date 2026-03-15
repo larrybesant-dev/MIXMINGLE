@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/neon_colors.dart';
 
 /// ============================================================================
-/// BRANDED HEADER COMPONENT - Vybe Social Official Branding
+/// BRANDED HEADER COMPONENT - MIXVY Official Branding
 /// Used across the app for consistent top-level branding with logo
 /// ============================================================================
 

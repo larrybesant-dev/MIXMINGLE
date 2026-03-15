@@ -76,7 +76,7 @@ const _catalogue = <_BadgeDef>[
     id: 'active_today',
     icon: Icons.bolt,
     label: 'Active Today',
-    description: 'Active on Vybe Social today',
+    description: 'Active on MIXVY today',
     color: Color(0xFF00E5CC),
   ),
   _BadgeDef(

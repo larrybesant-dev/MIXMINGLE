@@ -1,5 +1,5 @@
 /// Vibe Intelligence Service
-/// Powers Vybe Social's self-improving discovery systems:
+/// Powers MIXVY's self-improving discovery systems:
 ///   #1 — Vibe Affinity tracking (vibeHistory writes to Firestore)
 ///   #7 — Auto vibe suggestion logic (computed client-side)
 ///  #10 — Behavior tag helpers (mirrored by Cloud Function nightly)

@@ -53,26 +53,26 @@ class TermsService {
 
   static String _defaultTermsOfService() {
     return '''
-Vybe Social Terms of Service
+MIXVY Terms of Service
 Last Updated: January 31, 2026
 
 1. ACCEPTANCE OF TERMS
-By accessing and using Vybe Social ("the Service"), you accept and agree to be bound by the terms and provision of this agreement.
+By accessing and using MIXVY ("the Service"), you accept and agree to be bound by the terms and provision of this agreement.
 
 2. USE LICENSE
-Permission is granted to temporarily download one copy of the materials (including information and software) on Vybe Social for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.
+Permission is granted to temporarily download one copy of the materials (including information and software) on MIXVY for personal, non-commercial transitory viewing only. This is the grant of a license, not a transfer of title.
 
 3. DISCLAIMER OF WARRANTIES
-The materials on Vybe Social's web site are provided on an 'as is' basis. Vybe Social makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
+The materials on MIXVY's web site are provided on an 'as is' basis. MIXVY makes no warranties, expressed or implied, and hereby disclaims and negates all other warranties including, without limitation, implied warranties or conditions of merchantability, fitness for a particular purpose, or non-infringement of intellectual property or other violation of rights.
 
 4. LIMITATIONS OF LIABILITY
-In no event shall Vybe Social or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on Vybe Social's Internet site.
+In no event shall MIXVY or its suppliers be liable for any damages (including, without limitation, damages for loss of data or profit, or due to business interruption) arising out of the use or inability to use the materials on MIXVY's Internet site.
 
 5. ACCURACY OF MATERIALS
-The materials appearing on Vybe Social's web site could include technical, typographical, or photographic errors. Vybe Social does not warrant that any of the materials on its web site are accurate, complete, or current. Vybe Social may make changes to the materials contained on its web site at any time without notice.
+The materials appearing on MIXVY's web site could include technical, typographical, or photographic errors. MIXVY does not warrant that any of the materials on its web site are accurate, complete, or current. MIXVY may make changes to the materials contained on its web site at any time without notice.
 
 6. MODIFICATIONS
-Vybe Social may revise these terms of service for its web site at any time without notice. By using this web site, you are agreeing to be bound by the then current version of these terms of service.
+MIXVY may revise these terms of service for its web site at any time without notice. By using this web site, you are agreeing to be bound by the then current version of these terms of service.
 
 7. GOVERNING LAW
 These terms and conditions are governed by and construed in accordance with the laws of [Your Jurisdiction] and you irrevocably submit to the exclusive jurisdiction of the courts located in that location.
@@ -87,16 +87,16 @@ Users agree not to:
 - Use the service for any illegal purpose
 
 9. CONTENT REMOVAL
-Vybe Social reserves the right to remove any content that violates these terms at any time without notice.
+MIXVY reserves the right to remove any content that violates these terms at any time without notice.
 
 10. ACCOUNT SUSPENSION
-Vybe Social reserves the right to suspend or terminate accounts that violate these terms of service.
+MIXVY reserves the right to suspend or terminate accounts that violate these terms of service.
     ''';
   }
 
   static String _defaultPrivacyPolicy() {
     return '''
-Vybe Social Privacy Policy
+MIXVY Privacy Policy
 Last Updated: January 31, 2026
 
 1. INFORMATION WE COLLECT
@@ -130,7 +130,7 @@ You have the right to:
 We may update this privacy policy from time to time. We encourage you to review this policy periodically for changes.
 
 7. CONTACT US
-If you have questions about this privacy policy, please contact us at privacy@Vybe Social.app
+If you have questions about this privacy policy, please contact us at privacy@mixvy.com
     ''';
   }
 }

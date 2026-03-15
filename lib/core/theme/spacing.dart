@@ -1,4 +1,4 @@
-/// Spacing scale for Vybe Social design system (Electric Lounge)
+/// Spacing scale for MIXVY design system (Electric Lounge)
 class Spacing {
   Spacing._();
 

@@ -1,7 +1,7 @@
 ﻿import 'dart:async';
 import 'package:flutter/material.dart';
 
-// Utility functions for Vybe Social
+// Utility functions for MIXVY
 class AppUtils {
   // Format duration for display
   static String formatDuration(Duration duration) {

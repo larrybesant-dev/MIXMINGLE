@@ -54,7 +54,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     } catch (e) {
       debugPrint('Failed to initialize Agora: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to join video: ${e.toString()}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('MIXVY Lounge: Unable to join video. Please check your connection and try again.')));
       }
     }
   }
@@ -85,7 +85,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
       _scrollToBottom();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to send message: ${e.toString()}')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('MIXVY Chat: Message could not be sent. Please try again.')));
       }
     }
   }
@@ -316,7 +316,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                           }
                         } catch (e) {
                           if (mounted) {
-                            messenger.showSnackBar(SnackBar(content: Text('Failed to toggle microphone: $e')));
+                            messenger.showSnackBar(SnackBar(content: Text('MIXVY Audio: Microphone toggle failed. Please try again.')));
                           }
                         }
                       },
@@ -334,7 +334,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                           }
                         } catch (e) {
                           if (mounted) {
-                            messenger.showSnackBar(SnackBar(content: Text('Failed to toggle camera: $e')));
+                            messenger.showSnackBar(SnackBar(content: Text('MIXVY Video: Camera toggle failed. Please try again.')));
                           }
                         }
                       },
@@ -447,7 +447,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
               Clipboard.setData(
                 ClipboardData(
                     text:
-                        'Join me in "${widget.room.title}" on Vybe Social! Room ID: ${widget.room.id}'),
+                        'Join me in "${widget.room.title}" on MIXVY! Lounge ID: ${widget.room.id}'),
               );
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(

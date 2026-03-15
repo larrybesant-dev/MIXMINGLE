@@ -89,9 +89,9 @@ class EdgeNode {
       port: data['port'] ?? 443,
       currentConnections: data['currentConnections'] ?? 0,
       maxConnections: data['maxConnections'] ?? 10000,
-      cpuUsage: (data['cpuUsage'] ?? 0).toDouble(),
-      memoryUsage: (data['memoryUsage'] ?? 0).toDouble(),
-      bandwidthUsage: (data['bandwidthUsage'] ?? 0).toDouble(),
+      cpuUsage: (data['cpuUsage'] as num?)?.toDouble() ?? 0.0,
+      memoryUsage: (data['memoryUsage'] as num?)?.toDouble() ?? 0.0,
+      bandwidthUsage: (data['bandwidthUsage'] as num?)?.toDouble() ?? 0.0,
       lastHealthCheck: (data['lastHealthCheck'] as Timestamp?)?.toDate() ?? DateTime.now(),
       metadata: Map<String, dynamic>.from(data['metadata'] ?? {}),
     );

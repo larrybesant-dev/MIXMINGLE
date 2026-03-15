@@ -35,7 +35,8 @@ class AuthRepository implements IAuthRepository {
   Future<UserCredential> signInWithGoogle() async {
     // Google Sign-In is temporarily disabled pending post-launch testing.
     // Re-enable by integrating google_sign_in v7 here.
-    throw UnimplementedError('Google Sign-In is not yet enabled');
+    // Google Sign-In is not yet enabled. Show user-friendly message or fallback.
+    return Future.error('Google Sign-In is currently unavailable. Please use another sign-in method or try again later.');
   }
 
   @override

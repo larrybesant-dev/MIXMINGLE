@@ -4,7 +4,7 @@ import '../../core/theme/neon_colors.dart';
 
 /// ============================================================================
 /// NEON GLOW COMPONENTS - Electric Lounge Design System
-/// Vybe Social Brand-Aligned Components with Glow Effects
+/// MIXVY Brand-Aligned Components with Glow Effects
 /// ============================================================================
 
 /// Neon-styled card with colorful glowing border

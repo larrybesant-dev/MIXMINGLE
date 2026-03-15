@@ -89,7 +89,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         if (senderId == null) return;
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('New room activity from another window'),
+            content: Text('MIXVY Lounge: Room activity detected in another window.'),
             duration: Duration(milliseconds: 1200),
           ),
         );
@@ -318,12 +318,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       final totalWidth = constraints.maxWidth;
       final isDesktop = totalWidth >= _desktopBreakpoint;
       final chatWidth =
-        (totalWidth * 0.28).clamp(_desktopChatMinWidth, _desktopChatMaxWidth).toDouble();
+        (totalWidth * 0.28).clamp(_desktopChatMinWidth, _desktopChatMaxWidth).toDouble(); // Already safe, leave as is
       final peopleWidth =
-        (totalWidth * 0.22).clamp(_desktopPeopleMinWidth, _desktopPeopleMaxWidth).toDouble();
+        (totalWidth * 0.22).clamp(_desktopPeopleMinWidth, _desktopPeopleMaxWidth).toDouble(); // Already safe, leave as is
       final stageMinWidth =
         (totalWidth - chatWidth - peopleWidth - 32).clamp(_desktopStageMinWidth, totalWidth)
-          .toDouble();
+          .toDouble(); // Already safe, leave as is
 
         if (!isDesktop) {
           return Column(
@@ -601,7 +601,7 @@ class _ControlBar extends ConsumerWidget {
               if (err != null && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(err),
+                    content: Text('MIXVY Video: $err'),
                     backgroundColor: const Color(0xFFFF4C4C),
                   ),
                 );
@@ -619,7 +619,7 @@ class _ControlBar extends ConsumerWidget {
               if (err != null && context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text(err),
+                    content: Text('MIXVY Audio: $err'),
                     backgroundColor: const Color(0xFFFF4C4C),
                   ),
                 );
@@ -1796,7 +1796,7 @@ class _DjPanelState extends ConsumerState<_DjPanel> {
                     const Icon(Icons.volume_down, color: Colors.white54, size: 18),
                     Expanded(
                       child: Slider(
-                        value: state.djVolume.toDouble(),
+                        value: (state.djVolume ?? 0).toDouble(),
                         min: 0,
                         max: 100,
                         divisions: 20,

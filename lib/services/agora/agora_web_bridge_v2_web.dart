@@ -200,7 +200,7 @@ class AgoraWebBridgeV2 {
     }
   }
 
-  // Deprecated: Use setAudioMuted instead
+  // Use setAudioMuted instead
   static Future<bool> setMicMuted(bool muted) => setAudioMuted(muted);
 
   // Get current client state for diagnostics

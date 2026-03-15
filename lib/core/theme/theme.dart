@@ -3,9 +3,9 @@ import 'package:flutter/services.dart';
 import 'colors.dart';
 import 'text_styles.dart';
 
-/// Vybe Social App Theme
+/// MIXVY App Theme
 /// Complete nightclub/social theme with vibrant energy
-final ThemeData vybeSocialTheme = ThemeData.dark().copyWith(
+final ThemeData mixvyTheme = ThemeData.dark().copyWith(
   // Color scheme
   colorScheme: const ColorScheme.dark(
     primary: ClubColors.primary,

@@ -392,7 +392,7 @@ class VoiceRoomControls extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                'https://vybe.social/room/${room.id}',
+                'https://mixvy.com/lounge/${room.id}',
                 style: const TextStyle(
                   fontFamily: 'monospace',
                   fontSize: 12,
@@ -410,7 +410,7 @@ class VoiceRoomControls extends ConsumerWidget {
             onPressed: () {
               // ignore: deprecated_member_use
               Share.share(
-                'Join my room on Vybe Social: https://vybe.social/room/${room.id}',
+                'Join my lounge on MIXVY: https://mixvy.com/lounge/${room.id}',
               );
               Navigator.of(context).pop();
             },

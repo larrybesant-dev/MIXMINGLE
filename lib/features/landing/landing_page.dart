@@ -152,7 +152,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const VybeSocialLogo(fontSize: 48),
+          const MIXVYLogo(fontSize: 48),
           const SizedBox(height: Spacing.sm),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.xs),
@@ -1014,7 +1014,7 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
       color: ElectricColors.surfaceMuted,
       child: Column(
         children: [
-          const VybeSocialLogo(fontSize: 28),
+          const MIXVYLogo(fontSize: 28),
           const SizedBox(height: Spacing.sm),
           Text(
             'Connect with live users and music lovers worldwide',

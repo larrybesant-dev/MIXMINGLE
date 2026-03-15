@@ -119,7 +119,7 @@ class HostControlsWidget extends StatelessWidget {
                 ),
               ),
               Slider(
-                value: maxParticipants.toDouble(),
+                value: (maxParticipants ?? 0).toDouble(),
                 min: 2,
                 max: 50,
                 divisions: 24,

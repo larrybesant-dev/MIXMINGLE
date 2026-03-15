@@ -54,11 +54,11 @@ enum MembershipTier {
   String get description {
     switch (this) {
       case MembershipTier.free:
-        return 'Basic access to Vybe Social';
+        return 'Basic access to MIXVY';
       case MembershipTier.vip:
         return 'Unlock the VIP experience';
       case MembershipTier.vipPlus:
-        return 'The ultimate Vybe Social experience';
+        return 'The ultimate MIXVY experience';
     }
   }
 

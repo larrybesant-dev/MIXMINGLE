@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Vybe Social Brand Colors
+/// MIXVY Brand Colors
 /// Nightclub/social vibe with vibrant energy
 class ClubColors {
   // Primary Brand Colors

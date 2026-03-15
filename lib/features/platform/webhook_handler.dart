@@ -1,7 +1,7 @@
 /// Webhook Handler
 ///
 /// Manages webhook registrations, deliveries, and event
-/// handling for the Vybe Social platform.
+/// handling for the MIXVY platform.
 library;
 
 import 'dart:async';

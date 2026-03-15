@@ -3,11 +3,11 @@ import 'package:mixmingle/core/theme/neon_colors.dart';
 
 /// MIXVY logo widget — Neon brand identity
 /// Glowing "M" icon + "MIXVY" gradient text
-class VybeSocialLogo extends StatelessWidget {
+class MIXVYLogo extends StatelessWidget {
   final double fontSize;
   final bool showIcon;
 
-  const VybeSocialLogo({
+  const MIXVYLogo({
     super.key,
     this.fontSize = 32,
     this.showIcon = true,
@@ -41,7 +41,7 @@ class VybeSocialLogo extends StatelessWidget {
                 errorBuilder: (_, __, ___) => Container(
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: NeonColors.vybePulseGradient,
+                    gradient: NeonColors.mixvyPulseGradient,
                   ),
                   child: Center(
                     child: Text(
@@ -62,7 +62,7 @@ class VybeSocialLogo extends StatelessWidget {
 
         // "MIXVY" gradient text
         ShaderMask(
-          shaderCallback: (bounds) => NeonColors.vybePulseGradient
+          shaderCallback: (bounds) => NeonColors.mixvyPulseGradient
               .createShader(Rect.fromLTWH(0, 0, bounds.width, bounds.height)),
           child: Text(
             'MIXVY',
@@ -80,17 +80,17 @@ class VybeSocialLogo extends StatelessWidget {
 }
 
 /// Compact version for small spaces (just text, no icon)
-class VybeSocialLogoCompact extends StatelessWidget {
+class MIXVYLogoCompact extends StatelessWidget {
   final double fontSize;
 
-  const VybeSocialLogoCompact({
+  const MIXVYLogoCompact({
     super.key,
     this.fontSize = 20,
   });
 
   @override
   Widget build(BuildContext context) {
-    return VybeSocialLogo(
+    return MIXVYLogo(
       fontSize: fontSize,
       showIcon: false,
     );
@@ -98,5 +98,5 @@ class VybeSocialLogoCompact extends StatelessWidget {
 }
 
 // Legacy aliases for backward compatibility
-typedef MixMingleLogo = VybeSocialLogo;
-typedef MixMingleLogoCompact = VybeSocialLogoCompact;
+typedef MixMingleLogo = MIXVYLogo;
+typedef MixMingleLogoCompact = MIXVYLogoCompact;

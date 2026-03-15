@@ -1,5 +1,5 @@
 
-/// Comprehensive provider exports for Vybe Social
+/// Comprehensive provider exports for MIXVY
 ///
 /// This file consolidates all Riverpod providers and controllers
 /// organized by feature domain.

@@ -1,4 +1,4 @@
-// App-wide constants for Vybe Social
+// App-wide constants for MIXVY
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 

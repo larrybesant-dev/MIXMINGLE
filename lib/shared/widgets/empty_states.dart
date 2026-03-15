@@ -3,7 +3,7 @@ import '../../core/theme/colors.dart';
 import '../../core/theme/text_styles.dart';
 import '../../core/animations/custom_animations.dart';
 
-/// Vybe Social Branded Empty States
+/// MIXVY Branded Empty States
 /// Consistent, engaging empty state UI across the app
 
 class EmptyState extends StatelessWidget {
