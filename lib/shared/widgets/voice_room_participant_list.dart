@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/room.dart';
 import 'package:mixmingle/shared/providers/providers.dart';
@@ -68,7 +68,8 @@ class VoiceRoomParticipantList extends ConsumerWidget {
               children: [
                 // Speakers Section
                 if (room.speakers.isNotEmpty) ...[
-                  _buildSectionHeader('Speakers', Icons.mic, theme.colorScheme.primary, theme),
+                  _buildSectionHeader(
+                      'Speakers', Icons.mic, theme.colorScheme.primary, theme),
                   ...room.speakers.map((userId) => _buildParticipantTile(
                         userId,
                         firestoreService,
@@ -79,7 +80,8 @@ class VoiceRoomParticipantList extends ConsumerWidget {
 
                 // Listeners Section
                 if (room.listeners.isNotEmpty) ...[
-                  _buildSectionHeader('Listeners', Icons.headphones, theme.colorScheme.secondary, theme),
+                  _buildSectionHeader('Listeners', Icons.headphones,
+                      theme.colorScheme.secondary, theme),
                   ...room.listeners.map((userId) => _buildParticipantTile(
                         userId,
                         firestoreService,
@@ -90,7 +92,8 @@ class VoiceRoomParticipantList extends ConsumerWidget {
 
                 // Moderators Section
                 if (room.moderators.length > 1) ...[
-                  _buildSectionHeader('Moderators', Icons.admin_panel_settings, theme.colorScheme.tertiary, theme),
+                  _buildSectionHeader('Moderators', Icons.admin_panel_settings,
+                      theme.colorScheme.tertiary, theme),
                   ...room.moderators.where((id) => id != room.hostId).map(
                         (userId) => _buildParticipantTile(
                           userId,
@@ -108,7 +111,8 @@ class VoiceRoomParticipantList extends ConsumerWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title, IconData icon, Color color, ThemeData theme) {
+  Widget _buildSectionHeader(
+      String title, IconData icon, Color color, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -167,7 +171,8 @@ class VoiceRoomParticipantList extends ConsumerWidget {
               // Avatar
               CircleAvatar(
                 radius: 20,
-                backgroundImage: userAsync.value?.photoUrl != null && userAsync.value?.photoUrl?.isNotEmpty == true
+                backgroundImage: userAsync.value?.photoUrl != null &&
+                        userAsync.value?.photoUrl?.isNotEmpty == true
                     ? NetworkImage(userAsync.value!.photoUrl!)
                     : null,
                 child: userAsync.value?.photoUrl == null
@@ -220,9 +225,11 @@ class VoiceRoomParticipantList extends ConsumerWidget {
                         if (isHost) ...[
                           const SizedBox(width: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -238,9 +245,11 @@ class VoiceRoomParticipantList extends ConsumerWidget {
                         if (isModerator && !isHost) ...[
                           const SizedBox(width: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.secondary.withValues(alpha: 0.1),
+                              color: theme.colorScheme.secondary
+                                  .withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -254,10 +263,12 @@ class VoiceRoomParticipantList extends ConsumerWidget {
                           ),
                         ],
                         // Current speaker indicator (turn-based mode)
-                        if (room.turnBased && room.currentSpeakerId == userId) ...[
+                        if (room.turnBased &&
+                            room.currentSpeakerId == userId) ...[
                           const SizedBox(width: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: Colors.amber.shade700,
                               borderRadius: BorderRadius.circular(8),
@@ -283,10 +294,12 @@ class VoiceRoomParticipantList extends ConsumerWidget {
                           ),
                         ],
                         // Hand raised indicator
-                        if (room.turnBased && room.raisedHands.contains(userId)) ...[
+                        if (room.turnBased &&
+                            room.raisedHands.contains(userId)) ...[
                           const SizedBox(width: 4),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: Colors.orange.shade600,
                               borderRadius: BorderRadius.circular(8),
@@ -313,11 +326,13 @@ class VoiceRoomParticipantList extends ConsumerWidget {
                         ],
                       ],
                     ),
-                    if (userAsync.value?.bio != null && userAsync.value!.bio.isNotEmpty)
+                    if (userAsync.value?.bio != null &&
+                        userAsync.value!.bio.isNotEmpty)
                       Text(
                         userAsync.value!.bio,
                         style: TextStyle(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                         maxLines: 1,
@@ -354,7 +369,12 @@ class VoiceRoomParticipantList extends ConsumerWidget {
                         value: 'make_admin',
                         child: Text('Add Admin'),
                       ),
+<<<<<<< HEAD
                     if (isCurrentUserOwner && room.admins.contains(userId) && userId != room.ownerId)
+=======
+                    if (room.moderators.contains(userId) &&
+                        userId != room.hostId)
+>>>>>>> origin/develop
                       const PopupMenuItem(
                         value: 'remove_admin',
                         child: Text('Remove Admin'),
@@ -390,8 +410,14 @@ class VoiceRoomParticipantList extends ConsumerWidget {
         case 'make_admin':
           await roomService.makeAdmin(room.id, targetUserId);
           break;
+<<<<<<< HEAD
         case 'remove_admin':
           await roomService.removeAdmin(room.id, targetUserId);
+=======
+        case 'remove_mod':
+          await roomService.removeModerator(
+              room.id, currentUserId, targetUserId);
+>>>>>>> origin/develop
           break;
         case 'kick':
           await roomService.kickUser(room.id, currentUserId, targetUserId);

@@ -25,6 +25,7 @@ Test Warnings: 8 (unchanged)
 ## 🔧 Provider Usage
 
 ### Get Conversation List
+
 ```dart
 final conversationListAsync = ref.watch(conversationListProvider);
 
@@ -43,6 +44,7 @@ conversationListAsync.when(
 ```
 
 ### Get Messages for a Chat Room
+
 ```dart
 final messagesAsync = ref.watch(messagesProvider(roomId));
 
@@ -59,6 +61,7 @@ messagesAsync.when(
 ```
 
 ### Check Typing Status
+
 ```dart
 final typingAsync = ref.watch(typingStatusProvider(roomId));
 
@@ -75,6 +78,7 @@ typingAsync.when(
 ```
 
 ### Check User Presence
+
 ```dart
 final presenceAsync = ref.watch(presenceProvider(userId));
 
@@ -100,6 +104,7 @@ presenceAsync.when(
 ## 📝 Service Methods
 
 ### Send Message (DM)
+
 ```dart
 final chatService = ref.read(chatServiceProvider);
 await chatService.sendMessage(
@@ -110,6 +115,7 @@ await chatService.sendMessage(
 ```
 
 ### Send Message (Room)
+
 ```dart
 final repository = ref.read(roomSubcollectionRepositoryProvider);
 final chatMessage = ChatMessage(
@@ -130,12 +136,14 @@ await repository.sendMessage(
 ```
 
 ### Mark Messages as Read
+
 ```dart
 final chatService = ref.read(chatServiceProvider);
 await chatService.markMessagesAsRead(roomId);
 ```
 
 ### Update Typing Status
+
 ```dart
 final chatService = ref.read(chatServiceProvider);
 await chatService.updateTypingStatus(roomId, true); // Start typing
@@ -143,6 +151,7 @@ await chatService.updateTypingStatus(roomId, false); // Stop typing
 ```
 
 ### Update User Presence
+
 ```dart
 final chatService = ref.read(chatServiceProvider);
 
@@ -158,6 +167,7 @@ await chatService.setUserOffline(userId);
 ## 🏗️ Data Models
 
 ### ChatRoom
+
 ```dart
 class ChatRoom {
   final String id;
@@ -170,6 +180,7 @@ class ChatRoom {
 ```
 
 ### ChatMessage
+
 ```dart
 class ChatMessage {
   final String id;
@@ -189,6 +200,7 @@ class ChatMessage {
 ```
 
 ### DirectMessage
+
 ```dart
 class DirectMessage {
   final String id;
@@ -209,6 +221,7 @@ class DirectMessage {
 ## 🎨 UI Patterns
 
 ### Conversation List Item
+
 ```dart
 ListTile(
   leading: Stack(
@@ -245,6 +258,7 @@ ListTile(
 ```
 
 ### Message Bubble
+
 ```dart
 Align(
   alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
@@ -280,6 +294,7 @@ Align(
 ## 🔄 Real-Time Patterns
 
 ### Pattern 1: Watch Single Stream
+
 ```dart
 final dataAsync = ref.watch(streamProvider);
 
@@ -291,6 +306,7 @@ dataAsync.when(
 ```
 
 ### Pattern 2: Watch Multiple Streams (Nested)
+
 ```dart
 final stream1Async = ref.watch(provider1);
 
@@ -310,6 +326,7 @@ stream1Async.when(
 ```
 
 ### Pattern 3: Watch with Default Fallback
+
 ```dart
 final dataAsync = ref.watch(streamProvider);
 
@@ -322,6 +339,7 @@ final data = dataAsync.valueOrNull ?? defaultValue;
 ## 🧪 Testing Examples
 
 ### Test Conversation List
+
 1. Open app and navigate to messages
 2. Verify list loads
 3. Send a message from another device
@@ -331,6 +349,7 @@ final data = dataAsync.valueOrNull ?? defaultValue;
 7. Verify unread count resets
 
 ### Test Typing Indicators
+
 1. Open conversation from device A
 2. Start typing on device B
 3. Verify "Typing..." appears on device A within 1 second
@@ -338,12 +357,14 @@ final data = dataAsync.valueOrNull ?? defaultValue;
 5. Verify "Typing..." disappears on device A after 3 seconds
 
 ### Test Presence
+
 1. User A logs in
 2. Verify green dot appears on User A's avatar in User B's conversation list
 3. User A closes app
 4. Verify green dot disappears within 5 seconds
 
 ### Test Room Chat
+
 1. Join voice room
 2. Open chat overlay
 3. Send message
@@ -355,21 +376,25 @@ final data = dataAsync.valueOrNull ?? defaultValue;
 ## 📁 File Locations
 
 ### Services
+
 - `lib/services/chat_service.dart` - Core chat operations
 - `lib/services/messaging_service.dart` - Direct message operations
 - `lib/services/typing_service.dart` - Typing indicator management
 
 ### Providers
+
 - `lib/providers/chat_providers.dart` - Chat providers
 - `lib/providers/messaging_providers.dart` - DM providers
 - `lib/providers/room_providers.dart` - Room providers
 
 ### Models
+
 - `lib/shared/models/chat_message.dart` - Unified message model
 - `lib/shared/models/direct_message.dart` - DM-specific model
 - `lib/models/chat_room.dart` - Chat room model
 
 ### UI Components
+
 - `lib/features/chat/screens/chat_list_page.dart` - Conversation list
 - `lib/features/messages/chat_screen.dart` - Direct message screen
 - `lib/features/room/widgets/voice_room_chat_overlay.dart` - Room chat
@@ -379,18 +404,23 @@ final data = dataAsync.valueOrNull ?? defaultValue;
 ## 🚨 Common Issues & Solutions
 
 ### Issue: Messages not updating in real-time
+
 **Solution:** Verify you're using `ref.watch()` not `ref.read()` in build method
 
 ### Issue: Typing indicator stuck on
+
 **Solution:** Typing service has auto-timeout after 3 seconds. If still stuck, manually call `stopTyping()`
 
 ### Issue: Presence always shows offline
+
 **Solution:** Ensure `setUserOnline()` is called on app start and resume
 
 ### Issue: Unread count not resetting
+
 **Solution:** Call `markMessagesAsRead()` when conversation is opened and visible
 
 ### Issue: Duplicate messages in room chat
+
 **Solution:** Ensure you're not creating multiple StreamProvider instances. Use `.family` for parameterized providers
 
 ---

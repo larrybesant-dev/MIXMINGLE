@@ -7,16 +7,19 @@ All pages in the Mix & Mingle app must use the centralized theme system to ensur
 ## Theme Architecture
 
 ### Main Theme Definition
+
 - **File**: `lib/core/theme/neon_theme.dart`
 - **Applied In**: `lib/app.dart` → `MaterialApp` theme property
 - **Status**: ✅ Actively maintained and enforced globally
 
 ### Color System
+
 - **File**: `lib/core/design_system/design_constants.dart`
 - **Class**: `DesignColors`
 - **Usage**: All colors should come from this centralized palette
 
 ### Typography System
+
 - **File**: `lib/core/theme/text_styles.dart`
 - **Class**: `DesignTypography` / `ClubTextStyles`
 - **Usage**: All text styling should use predefined text styles
@@ -24,6 +27,7 @@ All pages in the Mix & Mingle app must use the centralized theme system to ensur
 ## ✅ DO: Proper Theme Usage
 
 ### 1. Inherit Theme from MaterialApp
+
 Every page/screen automatically inherits the theme defined in `MaterialApp`. **Do not override unless absolutely necessary.**
 
 ```dart
@@ -46,6 +50,7 @@ class MyPage extends StatelessWidget {
 ```
 
 ### 2. Use Design Colors
+
 For colors needed outside of theme properties, use the centralized color system:
 
 ```dart
@@ -67,6 +72,7 @@ Container(
 ```
 
 ### 3. Use Design Typography
+
 All text should use predefined text styles:
 
 ```dart
@@ -85,6 +91,7 @@ Text(
 ```
 
 ### 4. Use Theme Context When Needed
+
 When you need theme properties dynamically:
 
 ```dart
@@ -101,6 +108,7 @@ Container(
 ## ❌ DON'T: Anti-Patterns
 
 ### 1. DO NOT hardcode colors
+
 ```dart
 // ❌ BAD: Hardcoded color
 Container(
@@ -112,6 +120,7 @@ Container(
 **Fix**: Use `DesignColors.dialogBackground` instead
 
 ### 2. DO NOT override scaffold background without reason
+
 ```dart
 // ❌ BAD: Unnecessary scaffold override
 Scaffold(
@@ -121,6 +130,7 @@ Scaffold(
 ```
 
 **Fix**: Omit backgroundColor and let theme handle it
+
 ```dart
 // ✅ GOOD: Uses theme background
 Scaffold(
@@ -130,6 +140,7 @@ Scaffold(
 ```
 
 ### 3. DO NOT create custom color schemes in individual widgets
+
 ```dart
 // ❌ BAD: Custom colors in widget
 Button(
@@ -138,6 +149,7 @@ Button(
 ```
 
 **Fix**: Use design system
+
 ```dart
 // ✅ GOOD: Using design system
 Button(
@@ -146,12 +158,14 @@ Button(
 ```
 
 ### 4. DO NOT use random opacity values
+
 ```dart
 // ❌ BAD: Random opacity
 Color.fromARGB(128, 255, 61, 61) // Unknown transparency level
 ```
 
 **Fix**: Use predefined opacity constants
+
 ```dart
 // ✅ GOOD: Named opacity variants
 DesignColors.accent50  // 50% opacity
@@ -161,11 +175,13 @@ DesignColors.accent30  // 30% opacity
 ## Color Reference
 
 ### Primary Colors
+
 - **Primary Accent**: `DesignColors.accent` → `#1E90FF` (Bright Blue)
 - **Secondary**: `DesignColors.secondary` → `#FF9500` (Orange)
 - **Tertiary**: `DesignColors.tertiary` → `#8B1538` (Dark Purple/Magenta)
 
 ### Surface Colors
+
 - **Background**: `DesignColors.background` → `#000000` (Pure Black)
 - **Surface Light**: `DesignColors.surfaceLight` → `#1A1A1A`
 - **Dialog Background**: `DesignColors.dialogBackground` → `#2A2A3E`
@@ -174,13 +190,16 @@ DesignColors.accent30  // 30% opacity
 - **Dark Surface**: `DesignColors.surfaceDark` → `#0A0A0A`
 
 ### Special Colors
+
 - **Gold Highlight**: `DesignColors.gold` → `#FFD700`
 - **Success**: `DesignColors.success` → `#4CAF50`
 - **Error**: `DesignColors.error` → `#FF3D3D` (accent red)
 - **Warning**: `DesignColors.warning` → `#FFC107`
 
 ### Opacity Variants
+
 All accent colors have predefined opacity levels:
+
 - `DesignColors.accent2` (2%)
 - `DesignColors.accent5` (5%)
 - `DesignColors.accent10` (10%)
@@ -225,14 +244,14 @@ Column(
 
 ### DesignSpacing Values
 
-| Constant | Value | Use Case |
-|----------|-------|----------|
-| `xs` | 4px | Micro spacing, icon padding |
-| `sm` | 8px | Small gaps, list item padding |
-| `md` | 12px | Medium spacing, form fields |
-| `lg` | 16px | Standard padding, card padding |
-| `xl` | 24px | Large spacing, section dividers |
-| `xxl` | 32px | Maximum spacing, page padding |
+| Constant | Value | Use Case                        |
+| -------- | ----- | ------------------------------- |
+| `xs`     | 4px   | Micro spacing, icon padding     |
+| `sm`     | 8px   | Small gaps, list item padding   |
+| `md`     | 12px  | Medium spacing, form fields     |
+| `lg`     | 16px  | Standard padding, card padding  |
+| `xl`     | 24px  | Large spacing, section dividers |
+| `xxl`    | 32px  | Maximum spacing, page padding   |
 
 ### Layout Constants
 
@@ -293,12 +312,12 @@ Container(
 
 ### DesignShadows Values
 
-| Constant | Use Case |
-|----------|----------|
-| `subtle` | Cards, buttons (blurRadius: 4) |
-| `medium` | Hovered cards, elevated surfaces (blurRadius: 8) |
-| `speakingGlow` | Speaking indicator, attention (blurRadius: 12) |
-| `error` | Error states, warnings (blurRadius: 6) |
+| Constant       | Use Case                                         |
+| -------------- | ------------------------------------------------ |
+| `subtle`       | Cards, buttons (blurRadius: 4)                   |
+| `medium`       | Hovered cards, elevated surfaces (blurRadius: 8) |
+| `speakingGlow` | Speaking indicator, attention (blurRadius: 12)   |
+| `error`        | Error states, warnings (blurRadius: 6)           |
 
 ## Borders
 
@@ -334,12 +353,12 @@ TextField(
 
 ### DesignBorders Values
 
-| Constant | Description |
-|----------|-------------|
-| `cardDefault` | Thick left border (3px) + subtle top/bottom |
-| `cardHovered` | Same as cardDefault |
-| `inputDefault` | Bottom border only (1px) |
-| `inputFocused` | Bottom border focused (2px) |
+| Constant       | Description                                 |
+| -------------- | ------------------------------------------- |
+| `cardDefault`  | Thick left border (3px) + subtle top/bottom |
+| `cardHovered`  | Same as cardDefault                         |
+| `inputDefault` | Bottom border only (1px)                    |
+| `inputFocused` | Bottom border focused (2px)                 |
 
 ## Animations & Timing
 
@@ -372,20 +391,20 @@ SlideTransition(
 
 ### DesignAnimations Values
 
-| Constant | Duration | Purpose |
-|----------|----------|---------|
-| `joinStage1Duration` | 150ms | Room entry animation |
-| `joinStage2MinDuration` | 400ms | Audio connection min wait |
-| `joinStage2MaxDuration` | 1000ms | Audio connection max wait |
-| `joinStage3Duration` | 400ms | "You're live" fade-in |
-| `presenceSlideInDuration` | 250ms | User presence slide-in |
-| `presenceFadeOutDuration` | 200ms | User presence fade-out |
-| `presenceSlideDownDuration` | 200ms | User presence slide-down |
-| `speakingPulseDuration` | 200ms | Speaking indicator pulse |
-| `buttonFeedbackDuration` | 100ms | Button press feedback |
-| `cardHoverDuration` | 150ms | Card hover effect |
-| `notificationFadeInDuration` | 150ms | Notification appearance |
-| `notificationFadeOutDuration` | 200ms | Notification disappearance |
+| Constant                      | Duration | Purpose                    |
+| ----------------------------- | -------- | -------------------------- |
+| `joinStage1Duration`          | 150ms    | Room entry animation       |
+| `joinStage2MinDuration`       | 400ms    | Audio connection min wait  |
+| `joinStage2MaxDuration`       | 1000ms   | Audio connection max wait  |
+| `joinStage3Duration`          | 400ms    | "You're live" fade-in      |
+| `presenceSlideInDuration`     | 250ms    | User presence slide-in     |
+| `presenceFadeOutDuration`     | 200ms    | User presence fade-out     |
+| `presenceSlideDownDuration`   | 200ms    | User presence slide-down   |
+| `speakingPulseDuration`       | 200ms    | Speaking indicator pulse   |
+| `buttonFeedbackDuration`      | 100ms    | Button press feedback      |
+| `cardHoverDuration`           | 150ms    | Card hover effect          |
+| `notificationFadeInDuration`  | 150ms    | Notification appearance    |
+| `notificationFadeOutDuration` | 200ms    | Notification disappearance |
 
 ### Animation Curves
 
@@ -399,11 +418,13 @@ DesignAnimations.easeInOut     // Ease in-out
 ## Color Reference
 
 ### Primary Colors
+
 - **Primary Accent**: `DesignColors.accent` → `#1E90FF` (Bright Blue)
 - **Secondary**: `DesignColors.secondary` → `#FF9500` (Orange)
 - **Tertiary**: `DesignColors.tertiary` → `#8B1538` (Dark Purple/Magenta)
 
 ### Surface Colors
+
 - **Background**: `DesignColors.background` → `#000000` (Pure Black)
 - **Surface Light**: `DesignColors.surfaceLight` → `#1A1A1A`
 - **Dialog Background**: `DesignColors.dialogBackground` → `#2A2A3E`
@@ -411,13 +432,16 @@ DesignAnimations.easeInOut     // Ease in-out
 - **Alternative Surface**: `DesignColors.surfaceAlt` → `#151A26`
 
 ### Special Colors
+
 - **Gold Highlight**: `DesignColors.gold` → `#FFD700`
 - **Success**: `DesignColors.success` → `#4CAF50`
 - **Error**: `DesignColors.error` → `#FF3D3D` (accent red)
 - **Warning**: `DesignColors.warning` → `#FFC107`
 
 ### Opacity Variants
+
 All accent colors have predefined opacity levels:
+
 - `DesignColors.accent5` (5%)
 - `DesignColors.accent10` (10%)
 - `DesignColors.accent20` (20%)
@@ -429,6 +453,7 @@ All accent colors have predefined opacity levels:
 ## Common Use Cases
 
 ### Dialog/Alert Display
+
 ```dart
 showDialog(
   context: context,
@@ -445,6 +470,7 @@ showDialog(
 ```
 
 ### Cards & Containers
+
 ```dart
 Card(
   // ✅ Inherits color from theme cardTheme
@@ -457,6 +483,7 @@ Card(
 ```
 
 ### Buttons
+
 ```dart
 // ✅ All button themes are defined in NeonTheme
 ElevatedButton(
@@ -475,6 +502,7 @@ ElevatedButton(
 ```
 
 ### Navigation/TabBar
+
 ```dart
 // ✅ Inherits colors from navigationBarTheme or tabBarTheme
 NavigationBar(
@@ -491,12 +519,14 @@ NavigationBar(
 When converting a page from hardcoded values to design system:
 
 ### Colors
+
 - [ ] Remove all `const Color(0xFF...)` declarations
 - [ ] Replace with `DesignColors.*` equivalents
 - [ ] Use `DesignColors.accent*` opacity variants instead of `.withOpacity()`
 - [ ] Use `Theme.of(context)` for dynamic theme values
 
 ### Spacing & Layout
+
 - [ ] Replace hardcoded `SizedBox(height: X)` with `DesignSpacing.*`
 - [ ] Replace hardcoded `padding:` with `DesignSpacing.*`
 - [ ] Replace hardcoded `margin:` with `DesignSpacing.*`
@@ -504,16 +534,19 @@ When converting a page from hardcoded values to design system:
 - [ ] Use avatar size constants for circular avatars
 
 ### Typography
+
 - [ ] Update text styles to use `DesignTypography.*`
 - [ ] Remove custom `TextStyle(fontSize: X)` declarations
 - [ ] Use wrapper widgets like `GlowText` instead of custom text styles
 
 ### Shadows & Borders
+
 - [ ] Replace custom `BoxShadow` with `DesignShadows.*`
 - [ ] Use `DesignBorders.*` for card and input borders
 - [ ] Remove unnecessary `backgroundColor` properties from `Scaffold`
 
 ### Animations
+
 - [ ] Use `DesignAnimations.*` for animation durations
 - [ ] Use `DesignAnimations.easeOutCubic` etc. for animation curves
 - [ ] Test with both light and dark themes (when available)
@@ -521,44 +554,48 @@ When converting a page from hardcoded values to design system:
 ## Common Replacements
 
 ### Colors
-| Hardcoded Color | Design System Equivalent |
-|---|---|
+
+| Hardcoded Color     | Design System Equivalent        |
+| ------------------- | ------------------------------- |
 | `Color(0xFF2A2A3E)` | `DesignColors.dialogBackground` |
-| `Color(0xFF1E1E2F)` | `DesignColors.cardBackground` |
-| `Color(0xFF151A26)` | `DesignColors.surfaceAlt` |
-| `Color(0xFF0A0A0A)` | `DesignColors.surfaceDark` |
-| `Color(0xFFFFD700)` | `DesignColors.gold` |
-| `Color(0xFF1E90FF)` | `DesignColors.accent` |
-| `Color(0xFFFF9500)` | `DesignColors.secondary` |
-| `Color(0xFF000000)` | `DesignColors.background` |
-| `Color(0xFF1A1A1A)` | `DesignColors.surfaceLight` |
+| `Color(0xFF1E1E2F)` | `DesignColors.cardBackground`   |
+| `Color(0xFF151A26)` | `DesignColors.surfaceAlt`       |
+| `Color(0xFF0A0A0A)` | `DesignColors.surfaceDark`      |
+| `Color(0xFFFFD700)` | `DesignColors.gold`             |
+| `Color(0xFF1E90FF)` | `DesignColors.accent`           |
+| `Color(0xFFFF9500)` | `DesignColors.secondary`        |
+| `Color(0xFF000000)` | `DesignColors.background`       |
+| `Color(0xFF1A1A1A)` | `DesignColors.surfaceLight`     |
 
 ### Spacing/Padding
-| Hardcoded Value | Design System Equivalent |
-|---|---|
-| `EdgeInsets.all(4)` | `EdgeInsets.all(DesignSpacing.xs)` |
-| `EdgeInsets.all(8)` | `EdgeInsets.all(DesignSpacing.sm)` |
-| `EdgeInsets.all(12)` | `EdgeInsets.all(DesignSpacing.md)` |
-| `EdgeInsets.all(16)` | `EdgeInsets.all(DesignSpacing.lg)` |
-| `EdgeInsets.all(24)` | `EdgeInsets.all(DesignSpacing.xl)` |
-| `EdgeInsets.all(32)` | `EdgeInsets.all(DesignSpacing.xxl)` |
-| `SizedBox(height: 8)` | `SizedBox(height: DesignSpacing.sm)` |
+
+| Hardcoded Value        | Design System Equivalent             |
+| ---------------------- | ------------------------------------ |
+| `EdgeInsets.all(4)`    | `EdgeInsets.all(DesignSpacing.xs)`   |
+| `EdgeInsets.all(8)`    | `EdgeInsets.all(DesignSpacing.sm)`   |
+| `EdgeInsets.all(12)`   | `EdgeInsets.all(DesignSpacing.md)`   |
+| `EdgeInsets.all(16)`   | `EdgeInsets.all(DesignSpacing.lg)`   |
+| `EdgeInsets.all(24)`   | `EdgeInsets.all(DesignSpacing.xl)`   |
+| `EdgeInsets.all(32)`   | `EdgeInsets.all(DesignSpacing.xxl)`  |
+| `SizedBox(height: 8)`  | `SizedBox(height: DesignSpacing.sm)` |
 | `SizedBox(height: 12)` | `SizedBox(height: DesignSpacing.md)` |
 | `SizedBox(height: 16)` | `SizedBox(height: DesignSpacing.lg)` |
 | `SizedBox(height: 24)` | `SizedBox(height: DesignSpacing.xl)` |
-| `SizedBox(width: 16)` | `SizedBox(width: DesignSpacing.lg)` |
+| `SizedBox(width: 16)`  | `SizedBox(width: DesignSpacing.lg)`  |
 
 ### Border Radius
-| Hardcoded Value | Design System Equivalent |
-|---|---|
-| `BorderRadius.circular(12)` | `BorderRadius.circular(DesignSpacing.cardBorderRadius)` |
-| `BorderRadius.circular(8)` | `DesignBorders.*` or `BorderRadius.circular(DesignSpacing.buttonBorderRadius)` |
+
+| Hardcoded Value             | Design System Equivalent                                                       |
+| --------------------------- | ------------------------------------------------------------------------------ |
+| `BorderRadius.circular(12)` | `BorderRadius.circular(DesignSpacing.cardBorderRadius)`                        |
+| `BorderRadius.circular(8)`  | `DesignBorders.*` or `BorderRadius.circular(DesignSpacing.buttonBorderRadius)` |
 
 ### Shadows
-| Hardcoded Value | Design System Equivalent |
-|---|---|
-| `BoxShadow(blurRadius: 4, ...)` | `DesignShadows.subtle` |
-| `BoxShadow(blurRadius: 8, ...)` | `DesignShadows.medium` |
+
+| Hardcoded Value                  | Design System Equivalent     |
+| -------------------------------- | ---------------------------- |
+| `BoxShadow(blurRadius: 4, ...)`  | `DesignShadows.subtle`       |
+| `BoxShadow(blurRadius: 8, ...)`  | `DesignShadows.medium`       |
 | `BoxShadow(blurRadius: 12, ...)` | `DesignShadows.speakingGlow` |
 
 ## Enforcement
@@ -571,6 +608,7 @@ When converting a page from hardcoded values to design system:
 ## Questions?
 
 Refer to:
+
 - **Design Bible**: `DESIGN_BIBLE.md` - Core design principles and philosophy
 - **Theme Implementation**: `lib/core/theme/neon_theme.dart` - MaterialApp theme setup
 - **Design Constants**: `lib/core/design_system/design_constants.dart` - All constants defined here
@@ -587,6 +625,7 @@ Refer to:
 ### All Available Constants
 
 **DesignColors**
+
 - Accent colors: `accent`, `accentLight`, `accentDark`
 - Secondary: `secondary`, `secondaryLight`, `secondaryDark`
 - Tertiary: `tertiary`, `tertiaryLight`, `tertiaryDark`
@@ -596,6 +635,7 @@ Refer to:
 - Effects: `overlay`, `shadowColor`, `primaryGlow`, `secondaryGlow`
 
 **DesignSpacing**
+
 - Insets: `xs` (4), `sm` (8), `md` (12), `lg` (16), `xl` (24), `xxl` (32)
 - Cards: `cardPadding` (16), `cardSpacing` (12), `cardBorderRadius` (12)
 - Buttons: `buttonMinHeight` (44), `buttonMinWidth` (100), `buttonPadding` (16), `buttonBorderRadius` (12)
@@ -603,6 +643,7 @@ Refer to:
 - Control: `controlBarHeight` (80), `controlSpacing` (16)
 
 **DesignTypography**
+
 - `heading` (18px, bold)
 - `subheading` (14px, w600)
 - `body` (14px, normal)
@@ -611,18 +652,21 @@ Refer to:
 - `button` (14px, w600)
 
 **DesignAnimations**
+
 - Durations: `joinStage1Duration`, `joinStage2MinDuration`, `joinStage2MaxDuration`, `joinStage3Duration`
 - Presence: `presenceSlideInDuration`, `presenceFadeOutDuration`, `presenceSlideDownDuration`
 - Interaction: `speakingPulseDuration`, `buttonFeedbackDuration`, `cardHoverDuration`, `notificationFadeInDuration`, `notificationFadeOutDuration`
 - Curves: `easeOutCubic`, `easeInCubic`, `easeInOut`
 
 **DesignShadows**
+
 - `subtle` - For cards and buttons
 - `medium` - For hovered surfaces
 - `speakingGlow` - For speaking indicators
 - `error` - For error states
 
 **DesignBorders**
+
 - `cardDefault` - Card style with thick left border
 - `cardHovered` - Hover state
 - `inputDefault` - Input field default

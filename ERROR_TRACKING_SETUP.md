@@ -7,6 +7,7 @@ Comprehensive error tracking and crash reporting with Firebase Crashlytics and c
 ## 📁 Files Created/Modified
 
 ### Services
+
 - `lib/services/error_tracking_service.dart` - Core error tracking service
   - Crashlytics integration
   - Custom error types
@@ -14,6 +15,7 @@ Comprehensive error tracking and crash reporting with Firebase Crashlytics and c
   - Zone error guard
 
 ### Dependencies
+
 - `pubspec.yaml` - Added `firebase_crashlytics: ^4.2.0`
 
 ## 🔧 Setup Instructions
@@ -586,6 +588,7 @@ if (!status.isGranted) {
 ### Monitoring Dashboard
 
 Track these metrics:
+
 - Daily/weekly crash-free users percentage
 - Most common crash types
 - Crashes by app version
@@ -598,6 +601,7 @@ Track these metrics:
 ### Crashes Not Appearing
 
 **Check:**
+
 1. Crashlytics enabled in Firebase Console
 2. google-services.json/GoogleService-Info.plist up to date
 3. App built in release mode (not debug)
@@ -607,6 +611,7 @@ Track these metrics:
 ### Symbol Upload Failing (iOS)
 
 **Fix:**
+
 ```bash
 # Manually upload dSYMs
 find . -name "*.dSYM" | xargs -I {} $PODS_ROOT/FirebaseCrashlytics/upload-symbols -gsp ios/Runner/GoogleService-Info.plist -p ios {}
@@ -615,6 +620,7 @@ find . -name "*.dSYM" | xargs -I {} $PODS_ROOT/FirebaseCrashlytics/upload-symbol
 ### ProGuard Issues (Android)
 
 **Fix in android/app/build.gradle:**
+
 ```gradle
 buildTypes {
     release {

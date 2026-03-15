@@ -227,20 +227,24 @@ class _AnimatedBadgeContentState extends State<_AnimatedBadgeContent>
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
-                widget.tier.primaryColor.withAlpha((51 * glowIntensity * 2).round()),
-                widget.tier.secondaryColor.withAlpha((51 * glowIntensity * 2).round()),
+                widget.tier.primaryColor
+                    .withAlpha((51 * glowIntensity * 2).round()),
+                widget.tier.secondaryColor
+                    .withAlpha((51 * glowIntensity * 2).round()),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: widget.tier.primaryColor.withAlpha((153 + 50 * glowIntensity).round()),
+              color: widget.tier.primaryColor
+                  .withAlpha((153 + 50 * glowIntensity).round()),
               width: 1,
             ),
             boxShadow: [
               BoxShadow(
-                color: widget.tier.primaryColor.withAlpha((77 + 50 * glowIntensity).round()),
+                color: widget.tier.primaryColor
+                    .withAlpha((77 + 50 * glowIntensity).round()),
                 blurRadius: 8 + 8 * glowIntensity,
                 spreadRadius: 0,
               ),

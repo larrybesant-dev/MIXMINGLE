@@ -82,8 +82,7 @@ void main() {
 
       for (final style in styles) {
         expect(
-          [DesignColors.accent, DesignColors.accent]
-              .contains(style.color),
+          [DesignColors.accent, DesignColors.accent].contains(style.color),
           isTrue,
           reason: 'All text should be dark or gray, no accent text',
         );

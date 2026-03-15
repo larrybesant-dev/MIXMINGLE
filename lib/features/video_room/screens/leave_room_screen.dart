@@ -119,7 +119,8 @@ class _LeaveRoomScreenState extends State<LeaveRoomScreen>
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.close, color: DesignColors.textSecondary),
+                        icon: const Icon(Icons.close,
+                            color: DesignColors.textSecondary),
                         onPressed: widget.onCancel,
                       ),
                     ],
@@ -145,7 +146,8 @@ class _LeaveRoomScreenState extends State<LeaveRoomScreen>
                         Container(
                           height: 40,
                           width: 1,
-                          color: DesignColors.textSecondary.withValues(alpha: 0.3),
+                          color:
+                              DesignColors.textSecondary.withValues(alpha: 0.3),
                         ),
                         _buildStat(
                           icon: Icons.access_time,
@@ -198,7 +200,8 @@ class _LeaveRoomScreenState extends State<LeaveRoomScreen>
                         child: OutlinedButton(
                           onPressed: widget.onCancel,
                           style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: DesignColors.textSecondary),
+                            side: const BorderSide(
+                                color: DesignColors.textSecondary),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),

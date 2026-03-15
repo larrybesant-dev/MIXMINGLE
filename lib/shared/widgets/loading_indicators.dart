@@ -63,9 +63,7 @@ class LoadingOverlay extends StatelessWidget {
               ),
               SizedBox(height: 32),
             ],
-
             const BrandedLoadingIndicator(size: 50),
-
             if (message != null) ...[
               const SizedBox(height: 24),
               Text(

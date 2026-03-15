@@ -1,4 +1,4 @@
-﻿/// Monitoring Service
+/// Monitoring Service
 ///
 /// Tracks key app health metrics including crash-free sessions,
 /// room join success rates, video reliability, retention, and VIP conversion.
@@ -40,14 +40,16 @@ class MonitoringService {
       final sessionsQuery = await _firestore
           .collection('analytics_events')
           .where('event', isEqualTo: 'session_start')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .count()
           .get();
 
       // Get crash data
       final crashesQuery = await _firestore
           .collection('crashes')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .count()
           .get();
 
@@ -55,9 +57,8 @@ class MonitoringService {
       final totalCrashes = crashesQuery.count ?? 0;
       final crashFreeSessions = totalSessions - totalCrashes;
 
-      final crashFreeRate = totalSessions > 0
-          ? (crashFreeSessions / totalSessions * 100)
-          : 100.0;
+      final crashFreeRate =
+          totalSessions > 0 ? (crashFreeSessions / totalSessions * 100) : 100.0;
 
       final metrics = CrashMetrics(
         date: targetDate,
@@ -70,7 +71,8 @@ class MonitoringService {
 
       await _recordMetric('crash_free_sessions', metrics.toMap());
 
-      debugPrint('ðŸ“Š [Monitor] Crash-free rate: ${crashFreeRate.toStringAsFixed(2)}%');
+      debugPrint(
+          'ðŸ“Š [Monitor] Crash-free rate: ${crashFreeRate.toStringAsFixed(2)}%');
 
       return metrics;
     } catch (e) {
@@ -103,21 +105,24 @@ class MonitoringService {
       final attemptsQuery = await _firestore
           .collection('room_events')
           .where('event', isEqualTo: 'join_attempt')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .get();
 
       // Get successful joins
       final successQuery = await _firestore
           .collection('room_events')
           .where('event', isEqualTo: 'join_success')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .get();
 
       // Get failures by reason
       final failuresQuery = await _firestore
           .collection('room_events')
           .where('event', isEqualTo: 'join_failed')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .get();
 
       final totalAttempts = attemptsQuery.docs.length;
@@ -130,9 +135,8 @@ class MonitoringService {
         failuresByReason[reason] = (failuresByReason[reason] ?? 0) + 1;
       }
 
-      final successRate = totalAttempts > 0
-          ? (successfulJoins / totalAttempts * 100)
-          : 100.0;
+      final successRate =
+          totalAttempts > 0 ? (successfulJoins / totalAttempts * 100) : 100.0;
 
       // Calculate average join time
       double avgJoinTime = 0;
@@ -159,7 +163,8 @@ class MonitoringService {
 
       await _recordMetric('room_join_success', metrics.toMap());
 
-      debugPrint('ðŸ“Š [Monitor] Room join success: ${successRate.toStringAsFixed(2)}%');
+      debugPrint(
+          'ðŸ“Š [Monitor] Room join success: ${successRate.toStringAsFixed(2)}%');
 
       return metrics;
     } catch (e) {
@@ -194,21 +199,24 @@ class MonitoringService {
       final sessionsQuery = await _firestore
           .collection('video_events')
           .where('event', isEqualTo: 'video_started')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .get();
 
       // Get video quality events
       final qualityQuery = await _firestore
           .collection('video_events')
           .where('event', isEqualTo: 'quality_report')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .get();
 
       // Get reconnection events
       final reconnectsQuery = await _firestore
           .collection('video_events')
           .where('event', isEqualTo: 'reconnected')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .count()
           .get();
 
@@ -216,7 +224,8 @@ class MonitoringService {
       final freezesQuery = await _firestore
           .collection('video_events')
           .where('event', isEqualTo: 'video_freeze')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .count()
           .get();
 
@@ -230,19 +239,40 @@ class MonitoringService {
       double avgFps = 0;
 
       if (qualityQuery.docs.isNotEmpty) {
-        final qualities = qualityQuery.docs.map((d) => (d.data()['quality'] ?? 0) as int);
-        final bitrates = qualityQuery.docs.map((d) => (d.data()['bitrate'] ?? 0) as int);
-        final fpsList = qualityQuery.docs.map((d) => (d.data()['fps'] ?? 0) as int);
+        final qualities =
+            qualityQuery.docs.map((d) => (d.data()['quality'] ?? 0) as int);
+        final bitrates =
+            qualityQuery.docs.map((d) => (d.data()['bitrate'] ?? 0) as int);
+        final fpsList =
+            qualityQuery.docs.map((d) => (d.data()['fps'] ?? 0) as int);
 
+<<<<<<< HEAD
         avgQuality = (qualities.reduce((a, b) => a + b) / qualityQuery.docs.length).toDouble(); // Already safe, leave as is
         avgBitrate = (bitrates.reduce((a, b) => a + b) / qualityQuery.docs.length).toDouble(); // Already safe, leave as is
         avgFps = (fpsList.reduce((a, b) => a + b) / qualityQuery.docs.length).toDouble(); // Already safe, leave as is
+=======
+        avgQuality =
+            (qualities.reduce((a, b) => a + b) / qualityQuery.docs.length)
+                .toDouble();
+        avgBitrate =
+            (bitrates.reduce((a, b) => a + b) / qualityQuery.docs.length)
+                .toDouble();
+        avgFps = (fpsList.reduce((a, b) => a + b) / qualityQuery.docs.length)
+            .toDouble();
+>>>>>>> origin/develop
       }
 
       // Calculate reliability score
-      final reconnectRate = totalSessions > 0 ? (reconnects / totalSessions) : 0.0;
+      final reconnectRate =
+          totalSessions > 0 ? (reconnects / totalSessions) : 0.0;
       final freezeRate = totalSessions > 0 ? (freezes / totalSessions) : 0.0;
+<<<<<<< HEAD
       final reliabilityScore = (100 - (reconnectRate * 10 + freezeRate * 15).clamp(0, 100)).toDouble(); // Already safe, leave as is
+=======
+      final reliabilityScore =
+          (100 - (reconnectRate * 10 + freezeRate * 15).clamp(0, 100))
+              .toDouble();
+>>>>>>> origin/develop
 
       final metrics = VideoMetrics(
         date: targetDate,
@@ -258,7 +288,8 @@ class MonitoringService {
 
       await _recordMetric('video_reliability', metrics.toMap());
 
-      debugPrint('ðŸ“Š [Monitor] Video reliability: ${reliabilityScore.toStringAsFixed(2)}%');
+      debugPrint(
+          'ðŸ“Š [Monitor] Video reliability: ${reliabilityScore.toStringAsFixed(2)}%');
 
       return metrics;
     } catch (e) {
@@ -300,24 +331,27 @@ class MonitoringService {
       // Weekly active users
       final wauQuery = await _firestore
           .collection('users')
-          .where('lastActiveAt', isGreaterThanOrEqualTo:
-              Timestamp.fromDate(targetDate.subtract(const Duration(days: 7))))
+          .where('lastActiveAt',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(
+                  targetDate.subtract(const Duration(days: 7))))
           .count()
           .get();
 
       // Monthly active users
       final mauQuery = await _firestore
           .collection('users')
-          .where('lastActiveAt', isGreaterThanOrEqualTo:
-              Timestamp.fromDate(targetDate.subtract(const Duration(days: 30))))
+          .where('lastActiveAt',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(
+                  targetDate.subtract(const Duration(days: 30))))
           .count()
           .get();
 
       // Daily active users
       final dauQuery = await _firestore
           .collection('users')
-          .where('lastActiveAt', isGreaterThanOrEqualTo:
-              Timestamp.fromDate(targetDate.subtract(const Duration(days: 1))))
+          .where('lastActiveAt',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(
+                  targetDate.subtract(const Duration(days: 1))))
           .count()
           .get();
 
@@ -342,7 +376,8 @@ class MonitoringService {
 
       await _recordMetric('retention', metrics.toMap());
 
-      debugPrint('ðŸ“Š [Monitor] D7 retention: ${d7Retention.toStringAsFixed(2)}%');
+      debugPrint(
+          'ðŸ“Š [Monitor] D7 retention: ${d7Retention.toStringAsFixed(2)}%');
 
       return metrics;
     } catch (e) {
@@ -364,13 +399,15 @@ class MonitoringService {
   Future<double> _calculateDayRetention(DateTime date, int days) async {
     try {
       final cohortDate = date.subtract(Duration(days: days));
-      final cohortStart = DateTime(cohortDate.year, cohortDate.month, cohortDate.day);
+      final cohortStart =
+          DateTime(cohortDate.year, cohortDate.month, cohortDate.day);
       final cohortEnd = cohortStart.add(const Duration(days: 1));
 
       // Users who signed up on cohort day
       final signupsQuery = await _firestore
           .collection('users')
-          .where('createdAt', isGreaterThanOrEqualTo: Timestamp.fromDate(cohortStart))
+          .where('createdAt',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(cohortStart))
           .where('createdAt', isLessThan: Timestamp.fromDate(cohortEnd))
           .get();
 
@@ -412,7 +449,8 @@ class MonitoringService {
       // Total users
       final totalUsersQuery = await _firestore
           .collection('users')
-          .where('createdAt', isLessThanOrEqualTo: Timestamp.fromDate(targetDate))
+          .where('createdAt',
+              isLessThanOrEqualTo: Timestamp.fromDate(targetDate))
           .count()
           .get();
 
@@ -434,14 +472,16 @@ class MonitoringService {
       final newVipQuery = await _firestore
           .collection('membership_events')
           .where('event', isEqualTo: 'upgraded_to_vip')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .count()
           .get();
 
       final newVipPlusQuery = await _firestore
           .collection('membership_events')
           .where('event', isEqualTo: 'upgraded_to_vip_plus')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .count()
           .get();
 
@@ -449,7 +489,8 @@ class MonitoringService {
       final churnedQuery = await _firestore
           .collection('membership_events')
           .where('event', isEqualTo: 'vip_cancelled')
-          .where('timestamp', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('timestamp',
+              isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
           .count()
           .get();
 
@@ -461,9 +502,8 @@ class MonitoringService {
       final churned = churnedQuery.count ?? 0;
 
       final totalPaidUsers = vipUsers + vipPlusUsers;
-      final conversionRate = totalUsers > 0
-          ? (totalPaidUsers / totalUsers * 100)
-          : 0.0;
+      final conversionRate =
+          totalUsers > 0 ? (totalPaidUsers / totalUsers * 100) : 0.0;
 
       final metrics = ConversionMetrics(
         date: targetDate,
@@ -479,7 +519,8 @@ class MonitoringService {
 
       await _recordMetric('vip_conversion', metrics.toMap());
 
-      debugPrint('ðŸ“Š [Monitor] VIP conversion: ${conversionRate.toStringAsFixed(2)}%');
+      debugPrint(
+          'ðŸ“Š [Monitor] VIP conversion: ${conversionRate.toStringAsFixed(2)}%');
 
       return metrics;
     } catch (e) {
@@ -542,7 +583,8 @@ class MonitoringService {
   // HELPER METHODS
   // ============================================================
 
-  Future<void> _recordMetric(String metricType, Map<String, dynamic> data) async {
+  Future<void> _recordMetric(
+      String metricType, Map<String, dynamic> data) async {
     try {
       await _firestore.collection(_metricsCollection).add({
         'type': metricType,
@@ -640,13 +682,13 @@ class CrashMetrics {
   });
 
   Map<String, dynamic> toMap() => {
-    'date': date.toIso8601String(),
-    'totalSessions': totalSessions,
-    'crashFreeSessions': crashFreeSessions,
-    'crashCount': crashCount,
-    'crashFreeRate': crashFreeRate,
-    'status': status.name,
-  };
+        'date': date.toIso8601String(),
+        'totalSessions': totalSessions,
+        'crashFreeSessions': crashFreeSessions,
+        'crashCount': crashCount,
+        'crashFreeRate': crashFreeRate,
+        'status': status.name,
+      };
 }
 
 class RoomJoinMetrics {
@@ -671,15 +713,15 @@ class RoomJoinMetrics {
   });
 
   Map<String, dynamic> toMap() => {
-    'date': date.toIso8601String(),
-    'totalAttempts': totalAttempts,
-    'successfulJoins': successfulJoins,
-    'failedJoins': failedJoins,
-    'successRate': successRate,
-    'averageJoinTimeMs': averageJoinTimeMs,
-    'failuresByReason': failuresByReason,
-    'status': status.name,
-  };
+        'date': date.toIso8601String(),
+        'totalAttempts': totalAttempts,
+        'successfulJoins': successfulJoins,
+        'failedJoins': failedJoins,
+        'successRate': successRate,
+        'averageJoinTimeMs': averageJoinTimeMs,
+        'failuresByReason': failuresByReason,
+        'status': status.name,
+      };
 }
 
 class VideoMetrics {
@@ -706,16 +748,16 @@ class VideoMetrics {
   });
 
   Map<String, dynamic> toMap() => {
-    'date': date.toIso8601String(),
-    'totalSessions': totalSessions,
-    'reconnects': reconnects,
-    'freezes': freezes,
-    'averageQuality': averageQuality,
-    'averageBitrate': averageBitrate,
-    'averageFps': averageFps,
-    'reliabilityScore': reliabilityScore,
-    'status': status.name,
-  };
+        'date': date.toIso8601String(),
+        'totalSessions': totalSessions,
+        'reconnects': reconnects,
+        'freezes': freezes,
+        'averageQuality': averageQuality,
+        'averageBitrate': averageBitrate,
+        'averageFps': averageFps,
+        'reliabilityScore': reliabilityScore,
+        'status': status.name,
+      };
 }
 
 class RetentionMetrics {
@@ -742,16 +784,16 @@ class RetentionMetrics {
   });
 
   Map<String, dynamic> toMap() => {
-    'date': date.toIso8601String(),
-    'd1Retention': d1Retention,
-    'd7Retention': d7Retention,
-    'd30Retention': d30Retention,
-    'dau': dau,
-    'wau': wau,
-    'mau': mau,
-    'stickiness': stickiness,
-    'status': status.name,
-  };
+        'date': date.toIso8601String(),
+        'd1Retention': d1Retention,
+        'd7Retention': d7Retention,
+        'd30Retention': d30Retention,
+        'dau': dau,
+        'wau': wau,
+        'mau': mau,
+        'stickiness': stickiness,
+        'status': status.name,
+      };
 }
 
 class ConversionMetrics {
@@ -778,16 +820,16 @@ class ConversionMetrics {
   });
 
   Map<String, dynamic> toMap() => {
-    'date': date.toIso8601String(),
-    'totalUsers': totalUsers,
-    'vipUsers': vipUsers,
-    'vipPlusUsers': vipPlusUsers,
-    'conversionRate': conversionRate,
-    'newConversions': newConversions,
-    'churned': churned,
-    'netGrowth': netGrowth,
-    'status': status.name,
-  };
+        'date': date.toIso8601String(),
+        'totalUsers': totalUsers,
+        'vipUsers': vipUsers,
+        'vipPlusUsers': vipPlusUsers,
+        'conversionRate': conversionRate,
+        'newConversions': newConversions,
+        'churned': churned,
+        'netGrowth': netGrowth,
+        'status': status.name,
+      };
 }
 
 class DashboardSnapshot {
@@ -810,12 +852,12 @@ class DashboardSnapshot {
   });
 
   Map<String, dynamic> toMap() => {
-    'timestamp': timestamp.toIso8601String(),
-    'crashMetrics': crashMetrics.toMap(),
-    'roomJoinMetrics': roomJoinMetrics.toMap(),
-    'videoMetrics': videoMetrics.toMap(),
-    'retentionMetrics': retentionMetrics.toMap(),
-    'conversionMetrics': conversionMetrics.toMap(),
-    'overallHealth': overallHealth.name,
-  };
+        'timestamp': timestamp.toIso8601String(),
+        'crashMetrics': crashMetrics.toMap(),
+        'roomJoinMetrics': roomJoinMetrics.toMap(),
+        'videoMetrics': videoMetrics.toMap(),
+        'retentionMetrics': retentionMetrics.toMap(),
+        'conversionMetrics': conversionMetrics.toMap(),
+        'overallHealth': overallHealth.name,
+      };
 }

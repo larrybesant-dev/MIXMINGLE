@@ -7,6 +7,7 @@
 ## 🔍 Pre-Deployment Verification
 
 ### Code Quality
+
 - [ ] No compilation errors
 - [ ] No analyzer warnings (critical)
 - [ ] All tests passing
@@ -14,6 +15,7 @@
 - [ ] Version number updated in `pubspec.yaml`
 
 ### Firebase Configuration
+
 - [ ] `firebase.json` configured correctly
 - [ ] `google-services.json` (Android) present
 - [ ] `GoogleService-Info.plist` (iOS) present
@@ -23,12 +25,14 @@
 - [ ] Firebase Functions deployed
 
 ### Environment Variables
+
 - [ ] Agora App ID configured
 - [ ] Firebase project ID correct
 - [ ] API keys secured (not hardcoded)
 - [ ] Environment-specific configs set
 
 ### Security Review
+
 - [ ] Authentication enabled
 - [ ] Authorization rules tested
 - [ ] User data protected
@@ -37,6 +41,7 @@
 - [ ] Input validation implemented
 
 ### Performance Check
+
 - [ ] Images optimized
 - [ ] Lazy loading implemented
 - [ ] Caching configured
@@ -48,11 +53,13 @@
 ## 🖥️ Web Deployment Verification
 
 ### Build Verification
+
 ```powershell
 flutter build web --release
 ```
 
 **Check for:**
+
 - [ ] Build completes successfully
 - [ ] No errors in output
 - [ ] `build/web` directory created
@@ -60,11 +67,13 @@ flutter build web --release
 - [ ] Assets included
 
 ### Hosting Verification
+
 ```powershell
 firebase deploy --only hosting
 ```
 
 **Check for:**
+
 - [ ] Deploy completes successfully
 - [ ] Hosting URL provided
 - [ ] No deployment errors
@@ -75,6 +84,7 @@ firebase deploy --only hosting
 **Visit:** `https://mixmingle-prod.web.app`
 
 #### Page Load
+
 - [ ] Site loads in <3 seconds
 - [ ] No 404 errors
 - [ ] No console errors
@@ -82,6 +92,7 @@ firebase deploy --only hosting
 - [ ] Title correct
 
 #### Browser Compatibility
+
 - [ ] Chrome (latest)
 - [ ] Firefox (latest)
 - [ ] Safari (latest)
@@ -89,6 +100,7 @@ firebase deploy --only hosting
 - [ ] Mobile browsers
 
 #### Authentication
+
 - [ ] Sign in with Google works
 - [ ] Sign in with email works
 - [ ] Sign out works
@@ -96,6 +108,7 @@ firebase deploy --only hosting
 - [ ] Session persists on refresh
 
 #### Profile Management
+
 - [ ] Profile creation loads
 - [ ] Photo upload works
 - [ ] Photo displays correctly
@@ -104,6 +117,7 @@ firebase deploy --only hosting
 - [ ] Profile displays to others
 
 #### Room Features
+
 - [ ] Room list loads
 - [ ] Can create new room
 - [ ] Can join room
@@ -115,6 +129,7 @@ firebase deploy --only hosting
 - [ ] Room closes properly
 
 #### Event Features
+
 - [ ] Event list loads
 - [ ] Can create event
 - [ ] Can RSVP to event
@@ -123,6 +138,7 @@ firebase deploy --only hosting
 - [ ] Event notifications work
 
 #### Messaging
+
 - [ ] Can send message
 - [ ] Messages display
 - [ ] Timestamps correct
@@ -130,6 +146,7 @@ firebase deploy --only hosting
 - [ ] Message history loads
 
 #### Speed Dating (if enabled)
+
 - [ ] Can join speed dating
 - [ ] Countdown displays
 - [ ] Partners switch on timer
@@ -137,12 +154,14 @@ firebase deploy --only hosting
 - [ ] Matches saved
 
 #### Notifications
+
 - [ ] Notification permissions requested
 - [ ] Browser notifications appear
 - [ ] Notification clicks work
 - [ ] Notifications dismissable
 
 #### Performance
+
 - [ ] First contentful paint <1.5s
 - [ ] Time to interactive <3s
 - [ ] No layout shifts
@@ -150,6 +169,7 @@ firebase deploy --only hosting
 - [ ] No janky scrolling
 
 #### Error Handling
+
 - [ ] Offline mode shows message
 - [ ] Failed loads show error
 - [ ] 404 page works
@@ -160,11 +180,13 @@ firebase deploy --only hosting
 ## 🤖 Android Deployment Verification
 
 ### Build Verification
+
 ```powershell
 flutter build appbundle --release
 ```
 
 **Check for:**
+
 - [ ] Build completes successfully
 - [ ] No errors in output
 - [ ] `.aab` file created
@@ -172,6 +194,7 @@ flutter build appbundle --release
 - [ ] Signing configured correctly
 
 ### Play Console Upload
+
 - [ ] App uploaded successfully
 - [ ] No upload errors
 - [ ] Version code incremented
@@ -183,6 +206,7 @@ flutter build appbundle --release
 **After joining internal testing:**
 
 #### Install Process
+
 - [ ] Tester link works
 - [ ] "Become a Tester" button appears
 - [ ] Wait 5 minutes for activation
@@ -192,12 +216,14 @@ flutter build appbundle --release
 - [ ] App icon appears on home screen
 
 #### First Launch
+
 - [ ] App opens without crash
 - [ ] Splash screen displays
 - [ ] Loads to login screen
 - [ ] No immediate errors
 
 #### Permissions
+
 - [ ] Camera permission requested
 - [ ] Microphone permission requested
 - [ ] Notification permission requested
@@ -206,6 +232,7 @@ flutter build appbundle --release
 - [ ] App works if permissions denied
 
 #### Authentication
+
 - [ ] Sign in with Google works
 - [ ] Sign in with email works
 - [ ] Sign out works
@@ -213,6 +240,7 @@ flutter build appbundle --release
 - [ ] Session persists after app close
 
 #### Profile Management
+
 - [ ] Profile creation loads
 - [ ] Can take photo with camera
 - [ ] Can select photo from gallery
@@ -222,6 +250,7 @@ flutter build appbundle --release
 - [ ] Profile updates save
 
 #### Room Features
+
 - [ ] Room list loads
 - [ ] Can create room
 - [ ] Can join room
@@ -237,6 +266,7 @@ flutter build appbundle --release
 - [ ] Can leave room
 
 #### Event Features
+
 - [ ] Event list loads
 - [ ] Can create event
 - [ ] Can RSVP
@@ -246,6 +276,7 @@ flutter build appbundle --release
 - [ ] Can un-RSVP
 
 #### Messaging
+
 - [ ] Can send message
 - [ ] Messages display
 - [ ] Real-time updates work
@@ -254,6 +285,7 @@ flutter build appbundle --release
 - [ ] Message history loads
 
 #### Speed Dating
+
 - [ ] Can join speed dating
 - [ ] Countdown displays
 - [ ] Partners switch
@@ -263,6 +295,7 @@ flutter build appbundle --release
 - [ ] Matches saved
 
 #### App Lifecycle
+
 - [ ] Background → Foreground works
 - [ ] Video reconnects after background
 - [ ] Audio reconnects after background
@@ -271,6 +304,7 @@ flutter build appbundle --release
 - [ ] App survives low memory
 
 #### Network Handling
+
 - [ ] Works on WiFi
 - [ ] Works on 4G/5G
 - [ ] Handles network switch
@@ -278,6 +312,7 @@ flutter build appbundle --release
 - [ ] Reconnects automatically
 
 #### Performance
+
 - [ ] Smooth scrolling
 - [ ] No UI freezes
 - [ ] Battery usage reasonable
@@ -287,6 +322,7 @@ flutter build appbundle --release
 - [ ] No overheating
 
 #### Device Compatibility
+
 - [ ] Works on high-end device
 - [ ] Works on mid-range device
 - [ ] Works on low-end device (if supported)
@@ -298,6 +334,7 @@ flutter build appbundle --release
 ## 🔧 Backend Verification
 
 ### Firebase Firestore
+
 - [ ] Collections created
 - [ ] Documents writing
 - [ ] Real-time listeners working
@@ -306,6 +343,7 @@ flutter build appbundle --release
 - [ ] No unauthorized access
 
 ### Firebase Storage
+
 - [ ] Files uploading
 - [ ] Files downloading
 - [ ] URLs generating
@@ -313,6 +351,7 @@ flutter build appbundle --release
 - [ ] File sizes reasonable
 
 ### Firebase Functions
+
 - [ ] Functions deployed
 - [ ] Functions responding
 - [ ] Agora token generation works
@@ -321,6 +360,7 @@ flutter build appbundle --release
 - [ ] No function errors in logs
 
 ### Firebase Authentication
+
 - [ ] User creation works
 - [ ] User sign-in works
 - [ ] Token refresh works
@@ -328,6 +368,7 @@ flutter build appbundle --release
 - [ ] No auth errors
 
 ### BigQuery Integration
+
 - [ ] Events logging
 - [ ] Tables updating
 - [ ] Queries returning data
@@ -335,6 +376,7 @@ flutter build appbundle --release
 - [ ] No missing data
 
 ### Agora Integration
+
 - [ ] Tokens generating
 - [ ] Channels creating
 - [ ] Video streaming
@@ -343,6 +385,7 @@ flutter build appbundle --release
 - [ ] No connection errors
 
 ### Analytics
+
 - [ ] Events tracking
 - [ ] User properties set
 - [ ] Screen views logging
@@ -350,6 +393,7 @@ flutter build appbundle --release
 - [ ] Real-time data visible
 
 ### Crashlytics
+
 - [ ] Enabled and configured
 - [ ] Crashes reporting
 - [ ] Stack traces readable
@@ -361,15 +405,18 @@ flutter build appbundle --release
 ## 📊 Performance Verification
 
 ### Web Performance
+
 **Use:** Chrome DevTools → Lighthouse
 
 **Target Scores:**
+
 - [ ] Performance: >80
 - [ ] Accessibility: >90
 - [ ] Best Practices: >90
 - [ ] SEO: >80
 
 **Metrics:**
+
 - [ ] First Contentful Paint: <1.5s
 - [ ] Time to Interactive: <3s
 - [ ] Speed Index: <3s
@@ -378,9 +425,11 @@ flutter build appbundle --release
 - [ ] Cumulative Layout Shift: <0.1
 
 ### Android Performance
+
 **Use:** Android Profiler
 
 **Metrics:**
+
 - [ ] App startup: <2s
 - [ ] Memory usage: <200MB
 - [ ] CPU usage: <50% average
@@ -389,18 +438,22 @@ flutter build appbundle --release
 - [ ] Storage usage: <100MB
 
 ### Database Performance
+
 **Monitor:** Firebase Console → Performance
 
 **Metrics:**
+
 - [ ] Read latency: <100ms
 - [ ] Write latency: <200ms
 - [ ] Query response: <500ms
 - [ ] Real-time updates: <100ms delay
 
 ### Video Performance
+
 **Monitor:** Agora Console → Analytics
 
 **Metrics:**
+
 - [ ] Video quality: 720p minimum
 - [ ] Frame rate: >24fps
 - [ ] Audio quality: Clear, no drops
@@ -414,6 +467,7 @@ flutter build appbundle --release
 **Test these scenarios that commonly break:**
 
 ### Authentication Edge Cases
+
 - [ ] Sign in with non-existent account
 - [ ] Sign in with wrong password
 - [ ] Sign in during network loss
@@ -422,6 +476,7 @@ flutter build appbundle --release
 - [ ] Multiple sign-in attempts
 
 ### Room Edge Cases
+
 - [ ] Join room that no longer exists
 - [ ] Join room at capacity
 - [ ] Join room while camera off
@@ -431,6 +486,7 @@ flutter build appbundle --release
 - [ ] Rejoin after network drop
 
 ### Event Edge Cases
+
 - [ ] RSVP to past event
 - [ ] RSVP to full event
 - [ ] Cancel RSVP multiple times
@@ -438,6 +494,7 @@ flutter build appbundle --release
 - [ ] Event time changed while RSVP'd
 
 ### Data Edge Cases
+
 - [ ] Empty profile
 - [ ] Very long bio (>500 chars)
 - [ ] Special characters in name
@@ -446,6 +503,7 @@ flutter build appbundle --release
 - [ ] Upload during network loss
 
 ### UI Edge Cases
+
 - [ ] Very small screen (320px)
 - [ ] Very large screen (4K)
 - [ ] Landscape orientation
@@ -460,6 +518,7 @@ flutter build appbundle --release
 **Grade yourself:**
 
 ### Must Have (Critical) — 100% Required
+
 - [ ] App builds without errors
 - [ ] Authentication works
 - [ ] Can create profile
@@ -468,9 +527,10 @@ flutter build appbundle --release
 - [ ] No crashes on launch
 - [ ] Firebase connected
 
-**Score:** ___/7 = ___% (Must be 100%)
+**Score:** **_/7 = _**% (Must be 100%)
 
 ### Should Have (Important) — 80%+ Required
+
 - [ ] Events work
 - [ ] Messaging works
 - [ ] Notifications work
@@ -482,9 +542,10 @@ flutter build appbundle --release
 - [ ] Works on multiple devices
 - [ ] Analytics tracking
 
-**Score:** ___/10 = ___% (Should be 80%+)
+**Score:** **_/10 = _**% (Should be 80%+)
 
 ### Nice to Have (Optional) — 50%+ Desired
+
 - [ ] Speed dating works
 - [ ] All animations smooth
 - [ ] Perfect accessibility
@@ -496,13 +557,14 @@ flutter build appbundle --release
 - [ ] Perfect performance scores
 - [ ] Works on all edge cases
 
-**Score:** ___/10 = ___% (Good if 50%+)
+**Score:** **_/10 = _**% (Good if 50%+)
 
 ---
 
 ## 🚨 Go/No-Go Decision Matrix
 
 ### ✅ GO (Deploy Now)
+
 - **Must Have:** 100%
 - **Should Have:** 80%+
 - **Nice to Have:** Any score
@@ -511,6 +573,7 @@ flutter build appbundle --release
 - **Authentication stable**
 
 ### ⚠️ CAUTION (Deploy with Monitoring)
+
 - **Must Have:** 100%
 - **Should Have:** 60-79%
 - **Some minor bugs present**
@@ -518,6 +581,7 @@ flutter build appbundle --release
 - **Monitor closely**
 
 ### 🛑 NO-GO (Fix First)
+
 - **Must Have:** <100%
 - **Critical crashes present**
 - **Data loss possible**
@@ -531,6 +595,7 @@ flutter build appbundle --release
 **Check within 1 hour of deployment:**
 
 ### Immediate (0-15 minutes)
+
 - [ ] Web URL loads
 - [ ] Android tester link works
 - [ ] Can sign in
@@ -539,6 +604,7 @@ flutter build appbundle --release
 - [ ] No spike in errors
 
 ### Short-term (15-60 minutes)
+
 - [ ] At least one tester successfully using app
 - [ ] Monitoring dashboards stable
 - [ ] No crash reports
@@ -546,6 +612,7 @@ flutter build appbundle --release
 - [ ] Analytics tracking users
 
 ### First 24 Hours
+
 - [ ] Multiple users signed up
 - [ ] Core features used
 - [ ] Feedback received
@@ -559,12 +626,14 @@ flutter build appbundle --release
 **Monitor these daily:**
 
 ### User Metrics
+
 - Active users today
 - New sign-ups today
 - Profiles completed today
 - Retention rate (day 1, day 7)
 
 ### Engagement Metrics
+
 - Rooms joined today
 - Events RSVP'd today
 - Messages sent today
@@ -572,12 +641,14 @@ flutter build appbundle --release
 - Daily active users (DAU)
 
 ### Technical Metrics
+
 - Crash-free rate (target: >99%)
 - Function success rate (target: >95%)
 - Page load time (target: <3s)
 - API response time (target: <500ms)
 
 ### Business Metrics
+
 - User feedback score (1-5)
 - Bug report count
 - Feature request count

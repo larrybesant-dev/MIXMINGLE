@@ -30,12 +30,12 @@ class PricingTier {
   double get effectivePrice => basePrice * multiplier;
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'name': name,
-    'basePrice': basePrice,
-    'multiplier': multiplier,
-    'features': features,
-  };
+        'id': id,
+        'name': name,
+        'basePrice': basePrice,
+        'multiplier': multiplier,
+        'features': features,
+      };
 
   factory PricingTier.fromMap(Map<String, dynamic> map) {
     return PricingTier(
@@ -112,14 +112,14 @@ class VIPBoost {
   });
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'name': name,
-    'type': type.name,
-    'multiplier': multiplier,
-    'durationMinutes': duration.inMinutes,
-    'price': price,
-    'eligibleTiers': eligibleTiers,
-  };
+        'id': id,
+        'name': name,
+        'type': type.name,
+        'multiplier': multiplier,
+        'durationMinutes': duration.inMinutes,
+        'price': price,
+        'eligibleTiers': eligibleTiers,
+      };
 
   factory VIPBoost.fromMap(Map<String, dynamic> map) {
     return VIPBoost(
@@ -131,8 +131,14 @@ class VIPBoost {
       ),
       multiplier: (map['multiplier'] as num).toDouble(),
       duration: Duration(minutes: map['durationMinutes'] as int? ?? 60),
+<<<<<<< HEAD
         price: (map['price'] as num?)?.toDouble() ?? 0.0,
       eligibleTiers: List<String>.from(map['eligibleTiers'] ?? ['vip', 'vip_plus']),
+=======
+      price: (map['price'] as num).toDouble(),
+      eligibleTiers:
+          List<String>.from(map['eligibleTiers'] ?? ['vip', 'vip_plus']),
+>>>>>>> origin/develop
     );
   }
 }
@@ -170,14 +176,14 @@ class SeasonalAdjustment {
   }
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'name': name,
-    'startDate': startDate.toIso8601String(),
-    'endDate': endDate.toIso8601String(),
-    'multiplier': multiplier,
-    'affectedProducts': affectedProducts,
-    'isActive': isActive,
-  };
+        'id': id,
+        'name': name,
+        'startDate': startDate.toIso8601String(),
+        'endDate': endDate.toIso8601String(),
+        'multiplier': multiplier,
+        'affectedProducts': affectedProducts,
+        'isActive': isActive,
+      };
 
   factory SeasonalAdjustment.fromMap(Map<String, dynamic> map) {
     return SeasonalAdjustment(
@@ -195,7 +201,8 @@ class SeasonalAdjustment {
 /// Engine for advanced monetization features
 class MonetizationEngine {
   static MonetizationEngine? _instance;
-  static MonetizationEngine get instance => _instance ??= MonetizationEngine._();
+  static MonetizationEngine get instance =>
+      _instance ??= MonetizationEngine._();
 
   MonetizationEngine._();
 
@@ -229,10 +236,12 @@ class MonetizationEngine {
   final List<SeasonalAdjustment> _seasonalAdjustments = [];
 
   // Stream controllers
-  final _priceChangeController = StreamController<Map<String, double>>.broadcast();
+  final _priceChangeController =
+      StreamController<Map<String, double>>.broadcast();
 
   /// Stream of price changes
-  Stream<Map<String, double>> get priceChangeStream => _priceChangeController.stream;
+  Stream<Map<String, double>> get priceChangeStream =>
+      _priceChangeController.stream;
 
   /// Update surge config
   void updateSurgeConfig(SurgeConfig config) {
@@ -349,7 +358,8 @@ class MonetizationEngine {
     required String transactionType,
   }) async {
     // Get creator's tier
-    final creatorDoc = await _firestore.collection('creators').doc(creatorId).get();
+    final creatorDoc =
+        await _firestore.collection('creators').doc(creatorId).get();
     final creatorTier = creatorDoc.data()?['tier'] as String? ?? 'standard';
 
     // Get revenue share config for tier
@@ -412,11 +422,15 @@ class MonetizationEngine {
     final userTier = userDoc.data()?['membershipTier'] as String? ?? 'free';
 
     if (!boost.eligibleTiers.contains(userTier)) {
-      return {'success': false, 'error': 'User tier not eligible for this boost'};
+      return {
+        'success': false,
+        'error': 'User tier not eligible for this boost'
+      };
     }
 
     // Check if user has balance
-    final userBalance = (userDoc.data()?['coinBalance'] as num?)?.toDouble() ?? 0;
+    final userBalance =
+        (userDoc.data()?['coinBalance'] as num?)?.toDouble() ?? 0;
     if (userBalance < boost.price) {
       return {'success': false, 'error': 'Insufficient balance'};
     }
@@ -526,7 +540,8 @@ class MonetizationEngine {
     return {
       'pricingTiers': _pricingTiers.length,
       'vipBoosts': _vipBoosts.length,
-      'activeSeasonalAdjustments': _seasonalAdjustments.where((a) => a.isCurrentlyActive).length,
+      'activeSeasonalAdjustments':
+          _seasonalAdjustments.where((a) => a.isCurrentlyActive).length,
       'revenueShareConfigs': _revenueShareConfigs.length,
     };
   }
@@ -674,7 +689,9 @@ class MonetizationEngine {
     final data = userDoc.data()!;
     final purchaseCount = (data['purchaseCount'] as int?) ?? 0;
     final accountAge = data['createdAt'] != null
-        ? DateTime.now().difference((data['createdAt'] as Timestamp).toDate()).inDays
+        ? DateTime.now()
+            .difference((data['createdAt'] as Timestamp).toDate())
+            .inDays
         : 0;
 
     // Calculate loyalty discount based on purchase history and account age
@@ -703,5 +720,3 @@ class MonetizationEngine {
     _priceChangeController.close();
   }
 }
-
-

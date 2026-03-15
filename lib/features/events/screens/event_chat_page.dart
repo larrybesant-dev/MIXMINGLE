@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../shared/providers/event_chat_providers.dart';
@@ -48,7 +48,8 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
       await service.sendMessage(
         eventId: widget.eventId,
         message: message,
-        senderName: currentUser.displayName ?? currentUser.nickname ?? 'Anonymous',
+        senderName:
+            currentUser.displayName ?? currentUser.nickname ?? 'Anonymous',
         senderAvatarUrl: currentUser.photoUrl,
       );
 
@@ -148,8 +149,9 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
                     itemBuilder: (context, index) {
                       final message = messages[index];
                       final isOwnMessage = message.senderId == currentUser?.id;
-                      final showDate =
-                          index == messages.length - 1 || !_isSameDay(message.timestamp, messages[index + 1].timestamp);
+                      final showDate = index == messages.length - 1 ||
+                          !_isSameDay(
+                              message.timestamp, messages[index + 1].timestamp);
 
                       return Column(
                         children: [
@@ -168,7 +170,8 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.error_outline, color: Colors.red, size: 64),
+                      const Icon(Icons.error_outline,
+                          color: Colors.red, size: 64),
                       const SizedBox(height: 16),
                       const Text(
                         'Error loading messages',
@@ -176,7 +179,8 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
                       ),
                       const SizedBox(height: 8),
                       TextButton(
-                        onPressed: () => ref.invalidate(eventChatProvider(widget.eventId)),
+                        onPressed: () =>
+                            ref.invalidate(eventChatProvider(widget.eventId)),
                         child: const Text('Retry'),
                       ),
                     ],
@@ -231,7 +235,8 @@ class _EventChatPageState extends ConsumerState<EventChatPage> {
                                 height: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(Colors.black),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.black),
                                 ),
                               )
                             : const Icon(Icons.send, color: Colors.black),
@@ -312,16 +317,21 @@ class _MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12.0),
       child: Row(
-        mainAxisAlignment: isOwnMessage ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isOwnMessage ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isOwnMessage) ...[
             CircleAvatar(
               radius: 16,
-              backgroundImage: message.senderAvatarUrl != null ? NetworkImage(message.senderAvatarUrl!) : null,
+              backgroundImage: message.senderAvatarUrl != null
+                  ? NetworkImage(message.senderAvatarUrl!)
+                  : null,
               child: message.senderAvatarUrl == null
                   ? Text(
-                      message.senderName.isNotEmpty ? message.senderName[0].toUpperCase() : '?',
+                      message.senderName.isNotEmpty
+                          ? message.senderName[0].toUpperCase()
+                          : '?',
                       style: const TextStyle(fontSize: 14),
                     )
                   : null,
@@ -330,7 +340,9 @@ class _MessageBubble extends StatelessWidget {
           ],
           Flexible(
             child: Column(
-              crossAxisAlignment: isOwnMessage ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isOwnMessage
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 if (!isOwnMessage)
                   Padding(
@@ -345,9 +357,12 @@ class _MessageBubble extends StatelessWidget {
                     ),
                   ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                   decoration: BoxDecoration(
-                    color: isOwnMessage ? const Color(0xFFFFD700) : Colors.white.withValues(alpha: 0.1),
+                    color: isOwnMessage
+                        ? const Color(0xFFFFD700)
+                        : Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.only(
                       topLeft: const Radius.circular(16),
                       topRight: const Radius.circular(16),
@@ -369,8 +384,9 @@ class _MessageBubble extends StatelessWidget {
                       Text(
                         DateFormat('h:mm a').format(message.timestamp),
                         style: TextStyle(
-                          color:
-                              isOwnMessage ? Colors.black.withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.5),
+                          color: isOwnMessage
+                              ? Colors.black.withValues(alpha: 0.6)
+                              : Colors.white.withValues(alpha: 0.5),
                           fontSize: 11,
                         ),
                       ),

@@ -8,7 +8,8 @@ class GroupChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  CollectionReference<Map<String, dynamic>> get _rooms => _firestore.collection('rooms');
+  CollectionReference<Map<String, dynamic>> get _rooms =>
+      _firestore.collection('rooms');
 
   Stream<GroupChatRoom?> watchRoom(String roomId) {
     return _rooms.doc(roomId).snapshots().map((doc) {
@@ -23,7 +24,8 @@ class GroupChatService {
         .collection('participants')
         .orderBy('joinedAt', descending: false)
         .snapshots()
-        .map((snap) => snap.docs.map(GroupChatParticipant.fromDocument).toList());
+        .map((snap) =>
+            snap.docs.map(GroupChatParticipant.fromDocument).toList());
   }
 
   Stream<List<GroupChatMessage>> watchMessages(String roomId) {
@@ -54,7 +56,8 @@ class GroupChatService {
     return room;
   }
 
-  Future<void> joinRoom(String roomId, {required String username, String? avatarUrl}) async {
+  Future<void> joinRoom(String roomId,
+      {required String username, String? avatarUrl}) async {
     final user = _auth.currentUser;
     if (user == null) {
       throw StateError('User must be signed in');
@@ -113,7 +116,8 @@ class GroupChatService {
       txn.delete(participantRef);
 
       final roomSnap = await txn.get(roomRef);
-      final activeCount = (roomSnap.data()?['activeCount'] as num?)?.toInt() ?? 1;
+      final activeCount =
+          (roomSnap.data()?['activeCount'] as num?)?.toInt() ?? 1;
       final nextCount = activeCount - 1;
 
       txn.set(
@@ -133,9 +137,12 @@ class GroupChatService {
     }
 
     // Get sender name from participant data
-    final participantDoc = await _rooms.doc(roomId).collection('participants').doc(user.uid).get();
-    final senderName =
-        participantDoc.data()?['username'] as String? ?? user.displayName ?? user.email ?? 'Unknown User';
+    final participantDoc =
+        await _rooms.doc(roomId).collection('participants').doc(user.uid).get();
+    final senderName = participantDoc.data()?['username'] as String? ??
+        user.displayName ??
+        user.email ??
+        'Unknown User';
 
     final message = GroupChatMessage(
       id: _firestore.collection('noop').doc().id,
@@ -146,10 +153,15 @@ class GroupChatService {
       timestamp: DateTime.now(),
     );
 
-    await _rooms.doc(roomId).collection('messages').doc(message.id).set(message.toMap());
+    await _rooms
+        .doc(roomId)
+        .collection('messages')
+        .doc(message.id)
+        .set(message.toMap());
   }
 
-  Future<void> updateMediaState(String roomId, {bool? isMuted, bool? isCameraOn}) async {
+  Future<void> updateMediaState(String roomId,
+      {bool? isMuted, bool? isCameraOn}) async {
     final user = _auth.currentUser;
     if (user == null) return;
 
@@ -158,8 +170,10 @@ class GroupChatService {
     if (isCameraOn != null) updates['isCameraOn'] = isCameraOn;
     if (updates.isEmpty) return;
 
-    await _rooms.doc(roomId).collection('participants').doc(user.uid).set(updates, SetOptions(merge: true));
+    await _rooms
+        .doc(roomId)
+        .collection('participants')
+        .doc(user.uid)
+        .set(updates, SetOptions(merge: true));
   }
 }
-
-

@@ -12,15 +12,19 @@ Complete one-click automation for deploying your Flutter app to production (Web 
 ## 🎯 QUICK START
 
 ### Option A: Fastest Way (Recommended)
+
 ```powershell
 .\launch.ps1
 ```
+
 Interactive menu to choose your automation mode. **START HERE!**
 
 ### Option B: Full Automation (No Questions Asked)
+
 ```powershell
 .\master-production-automation.ps1
 ```
+
 Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 
 ---
@@ -28,13 +32,16 @@ Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 ## 📚 AVAILABLE SCRIPTS
 
 ### 1. `launch.ps1` - Interactive Launcher ⭐ START HERE
+
 **Purpose:** User-friendly menu to choose automation mode
 **What it does:**
+
 - Shows 5 options (Full, Android-only, Verify-only, Custom, Guide)
 - Launches appropriate script based on selection
 - No configuration needed
 
 **Usage:**
+
 ```powershell
 .\launch.ps1
 ```
@@ -44,8 +51,10 @@ Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 ---
 
 ### 2. `master-production-automation.ps1` - Complete Automation
+
 **Purpose:** One-click full production deployment
 **What it does:**
+
 1. Fixes Android Gradle/Kotlin/SDK configuration
 2. Builds Android APK (device testing)
 3. Builds Android AAB (Play Store submission)
@@ -55,6 +64,7 @@ Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 **Duration:** 1-2 hours (first build longer due to deps)
 
 **Usage:**
+
 ```powershell
 # Full automation
 .\master-production-automation.ps1
@@ -71,8 +81,10 @@ Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 ---
 
 ### 3. `android-production-ready.ps1` - Android Build Only
+
 **Purpose:** Fix Android and build APK/AAB
 **What it does:**
+
 1. Updates Gradle wrapper to 8.2
 2. Updates Android Gradle Plugin to 8.2.0
 3. Sets Kotlin to 1.9.0
@@ -86,6 +98,7 @@ Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 **Duration:** 1-2 hours (subsequent builds 10-15 min)
 
 **Usage:**
+
 ```powershell
 # Full APK + AAB build
 .\android-production-ready.ps1
@@ -108,8 +121,10 @@ Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 ---
 
 ### 4. `verify-production-ready.ps1` - Verification Only
+
 **Purpose:** Check if Web + Android are production-ready
 **What it does:**
+
 1. Tests Web app accessibility
 2. Verifies Firebase Hosting
 3. Checks security headers
@@ -122,6 +137,7 @@ Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 **Duration:** 1-2 minutes
 
 **Usage:**
+
 ```powershell
 # Full verification
 .\verify-production-ready.ps1
@@ -143,6 +159,7 @@ Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 ## 🎯 WORKFLOW EXAMPLES
 
 ### Scenario 1: First Time Production Deploy
+
 ```powershell
 # Start here
 .\launch.ps1
@@ -153,6 +170,7 @@ Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 ```
 
 ### Scenario 2: Just Fix & Build Android
+
 ```powershell
 .\android-production-ready.ps1
 
@@ -163,6 +181,7 @@ Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 ```
 
 ### Scenario 3: Check Current Status
+
 ```powershell
 .\verify-production-ready.ps1 -QuickTest
 
@@ -174,6 +193,7 @@ Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 ```
 
 ### Scenario 4: Rebuild After Fix
+
 ```powershell
 # Quick rebuild (skip clean for speed)
 .\android-production-ready.ps1 -SkipClean
@@ -187,31 +207,37 @@ Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 ## 📋 WHAT GETS FIXED
 
 ### Gradle Configuration
+
 - ✅ Gradle wrapper → 8.2 (from older versions)
 - ✅ Android Gradle Plugin → 8.2.0
 - ✅ Gradle cache cleanup
 
 ### Kotlin & Compiler
+
 - ✅ Kotlin version → 1.9.0
 - ✅ Compiler compatibility fixes
 
 ### SDK Versions
+
 - ✅ compileSdkVersion → 34
 - ✅ targetSdkVersion → 34
 - ✅ minSdkVersion → 21 (from potentially older)
 
 ### Dependencies
+
 - ✅ Flutter plugins upgraded
 - ✅ Dependencies resolved
 - ✅ MultiDex enabled
 
 ### Security & Optimization
+
 - ✅ ProGuard rules added (Firebase, Stripe, Agora)
 - ✅ App signing configured
 - ✅ Shrinking enabled
 - ✅ Obfuscation configured
 
 ### Artifacts Generated
+
 - ✅ APK (build/app/outputs/flutter-apk/app-release.apk)
 - ✅ AAB (build/app/outputs/bundle/release/app-release.aab)
 - ✅ Web (already on Firebase)
@@ -221,6 +247,7 @@ Fixes everything, builds APK/AAB, verifies all, generates report. **~1-2 hours**
 ## 📊 BUILD ARTIFACTS PRODUCED
 
 ### Android APK
+
 ```
 Location: build/app/outputs/flutter-apk/app-release.apk
 Purpose: Installation on devices and emulators for testing
@@ -229,6 +256,7 @@ Signing: Release key applied
 ```
 
 ### Android AAB
+
 ```
 Location: build/app/outputs/bundle/release/app-release.aab
 Purpose: Upload to Google Play Store for distribution
@@ -238,6 +266,7 @@ Format: Android App Bundle (Play Store requirement)
 ```
 
 ### Web
+
 ```
 URL: https://mix-and-mingle-v2.web.app
 Status: Already LIVE on Firebase Hosting
@@ -249,6 +278,7 @@ Format: Progressive Web App with service workers
 ## ✅ NEXT STEPS AFTER SCRIPTS
 
 ### [1] TEST ANDROID APK (15-30 minutes)
+
 ```powershell
 # Install on device/emulator
 adb install -r build/app/outputs/flutter-apk/app-release.apk
@@ -264,6 +294,7 @@ adb install -r build/app/outputs/flutter-apk/app-release.apk
 ```
 
 ### [2] TEST WEB APP (5 minutes)
+
 ```
 URL: https://mix-and-mingle-v2.web.app
 
@@ -274,6 +305,7 @@ Test:
 ```
 
 ### [3] SUBMIT TO GOOGLE PLAY STORE (30 minutes)
+
 ```
 1. Go to: https://play.google.com/console
 2. Select your app (Mix & Mingle)
@@ -290,6 +322,7 @@ Timeline: Google reviews within 2-48 hours
 ```
 
 ### [4] MONITOR AFTER LAUNCH
+
 ```
 Daily:
 - Check Firebase Console > Crash Analytics
@@ -312,6 +345,7 @@ Monthly:
 Each script generates detailed markdown reports:
 
 ### `MASTER_PRODUCTION_REPORT_*.md`
+
 - Full execution summary
 - Build artifacts status
 - Artifacts locations and sizes
@@ -321,12 +355,14 @@ Each script generates detailed markdown reports:
 - Rollback procedures
 
 ### `ANDROID_PRODUCTION_READY_*.md`
+
 - Configuration updates applied
 - Build details and times
 - Artifacts generated
 - Next steps
 
 ### `PRODUCTION_VERIFICATION_REPORT_*.md`
+
 - Web app test results
 - Android APK/AAB status
 - Code quality analysis
@@ -334,6 +370,7 @@ Each script generates detailed markdown reports:
 - Launch checklist
 
 ### Build Logs
+
 - Stored in: `android_build_logs_*/`
 - APK build log: `apk_build.log`
 - AAB build log: `aab_build.log`
@@ -343,18 +380,22 @@ Each script generates detailed markdown reports:
 ## ⚙️ CONFIGURATION & CUSTOMIZATION
 
 ### Gradle Configuration Files Modified
+
 - `android/gradle/wrapper/gradle-wrapper.properties`
 - `android/build.gradle`
 - `android/app/build.gradle`
 
 ### New Files Created
+
 - `android/app/proguard-rules.pro` (optimization rules)
 
 ### Environment Variables (if using Foundry models)
+
 - `.env` file for model credentials
 - Scripts auto-detect and configure
 
 ### Android Keystore
+
 - Location: `android/app/keystore.jks` (expected)
 - Config: `android/key.properties`
 - Signing: Automatically applied to APK/AAB
@@ -364,7 +405,9 @@ Each script generates detailed markdown reports:
 ## 🐛 TROUBLESHOOTING
 
 ### "AndroidStudioChannel.main (Main Channel) requires Android Studio version 2022.3 or higher"
+
 **Fix:** Update Android Studio or use `flutter` directly
+
 ```powershell
 flutter doctor  # Check versions
 flutter pub get
@@ -372,26 +415,33 @@ flutter build apk --release
 ```
 
 ### "Gradle build failed"
+
 **Fix:** Run the android-production-ready.ps1 script
+
 ```powershell
 .\android-production-ready.ps1
 ```
 
 ### "APK installation fails"
+
 **Fix:**
+
 ```powershell
 adb uninstall com.mixmingle.app
 adb install -r build/app/outputs/flutter-apk/app-release.apk
 ```
 
 ### "Web app shows Firebase errors"
+
 ```powershell
 firebase login
 firebase deploy --only hosting
 ```
 
 ### "Gradle tasks exceed 64K methods"
+
 **Fix:** Already handled by MultiDex in these scripts
+
 ```gradle
 // Auto-configured by script:
 multiDexEnabled true
@@ -402,23 +452,27 @@ multiDexEnabled true
 ## 📞 SUPPORT COMMANDS
 
 ### Flutter Diagnostics
+
 ```powershell
 flutter doctor -v
 flutter doctor --android-licenses
 ```
 
 ### Check Gradle Version
+
 ```powershell
 cd android
 .\gradlew --version
 ```
 
 ### View Android Logs
+
 ```powershell
 adb logcat | findstr flutter
 ```
 
 ### Firebase Deployment
+
 ```powershell
 firebase login
 firebase deploy
@@ -426,6 +480,7 @@ firebase hosting:rollback  # If needed
 ```
 
 ### Cloud Functions Logs
+
 ```powershell
 firebase functions:log --only generateAgoraToken
 ```
@@ -448,6 +503,7 @@ Your app is production-ready when:
 ## 💾 BACKUP IMPORTANT FILES
 
 Before final submission:
+
 ```powershell
 # Backup keystore
 Copy-Item android/app/keystore.jks android/app/keystore.jks.backup
@@ -464,13 +520,15 @@ Copy-Item build/app/outputs build_outputs_backup -Recurse
 ## 📝 VERSION BUMPING
 
 Before resubmitting after changes:
+
 ```yaml
 # pubspec.yaml
-version: 1.0.0+1  # Increment both numbers
+version: 1.0.0+1 # Increment both numbers
 # Example: 1.0.1+2 for patch release
 ```
 
 Then rebuild:
+
 ```powershell
 flutter build appbundle --release
 ```
@@ -484,6 +542,7 @@ Your Mix & Mingle app is fully automated for production deployment.
 **Start with:** `.\launch.ps1`
 
 **Questions?** Check the generated reports or run:
+
 ```powershell
 .\verify-production-ready.ps1
 ```

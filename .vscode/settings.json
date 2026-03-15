@@ -92,9 +92,7 @@
       "icon": "terminal-powershell"
     },
     "Command Prompt": {
-      "path": [
-        "${env:windir}\\System32\\cmd.exe"
-      ],
+      "path": ["${env:windir}\\System32\\cmd.exe"],
       "icon": "terminal-cmd"
     },
     "Git Bash": {
@@ -105,19 +103,8 @@
   "emmet.includeLanguages": {
     "dart": "html"
   },
-  "errorLens.enabledDiagnosticLevels": [
-    "error",
-    "warning",
-    "info"
-  ],
-  "todo-tree.general.tags": [
-    "TODO",
-    "FIXME",
-    "BUG",
-    "HACK",
-    "NOTE",
-    "XXX"
-  ],
+  "errorLens.enabledDiagnosticLevels": ["error", "warning", "info"],
+  "todo-tree.general.tags": ["TODO", "FIXME", "BUG", "HACK", "NOTE", "XXX"],
   "todo-tree.highlights.defaultHighlight": {
     "icon": "alert",
     "type": "text",
@@ -164,8 +151,12 @@
     }
   },
   "java.configuration.updateBuildConfiguration": "automatic",
+<<<<<<< HEAD
   "flutterTools.displayGetxContextMenu": false,
   "flutterTools.displayMobxContextMenu": false,
   "flutterTools.displayRiverpodContextMenu": true,
   "flutterTools.displayModularContextMenu": false
+=======
+  "github-actions.validator.enabled": false
+>>>>>>> origin/develop
 }

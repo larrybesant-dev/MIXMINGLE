@@ -1,4 +1,4 @@
-﻿// Agora Web Bridge v5 - Production-Ready Web Interop
+// Agora Web Bridge v5 - Production-Ready Web Interop
 // Interfaces with window.agoraWebBridge from agora_bridge.js
 // ignore_for_file: avoid_web_libraries_in_flutter
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
@@ -14,7 +14,8 @@ import 'dart:js_interop_unsafe';
 external JSPromise<JSBoolean?> _jsInit(JSString appId);
 
 @JS('agoraWebBridge.joinChannel')
-external JSPromise<JSBoolean?> _jsJoinChannel(JSString token, JSString channel, JSString uid);
+external JSPromise<JSBoolean?> _jsJoinChannel(
+    JSString token, JSString channel, JSString uid);
 
 @JS('agoraWebBridge.createCameraTrack')
 external JSPromise<JSBoolean?> _jsCreateCameraTrack();
@@ -33,7 +34,8 @@ external JSPromise<JSBoolean?> _jsSetVideoMuted(JSBoolean muted);
 
 /// Flat style functions for backward compatibility
 @JS('agoraWebJoinChannel')
-external JSPromise<JSBoolean?> _jsFlatJoinChannel(JSString appId, JSString channelName, JSString token, JSString uid);
+external JSPromise<JSBoolean?> _jsFlatJoinChannel(
+    JSString appId, JSString channelName, JSString token, JSString uid);
 
 @JS('agoraWebGetState')
 external JSObject? _jsFlatGetState();
@@ -79,12 +81,14 @@ class AgoraWebBridge {
       debugPrint('[BRIDGE] Checking bridge availability...');
 
       if (!isBridgeReady) {
-        debugPrint('[BRIDGE] âŒ JS bridge not ready - check agora_bridge.js loaded in index.html');
+        debugPrint(
+            '[BRIDGE] âŒ JS bridge not ready - check agora_bridge.js loaded in index.html');
         AppLogger.error('âŒ Agora JS bridge not loaded');
         return false;
       }
 
-      debugPrint('[BRIDGE] âœ… Bridge ready, initializing with appId: ${appId.substring(0, 8)}...');
+      debugPrint(
+          '[BRIDGE] âœ… Bridge ready, initializing with appId: ${appId.substring(0, 8)}...');
       AppLogger.info('ðŸŒ Initializing Agora Web SDK v5...');
 
       // Call the actual JS init function (this starts async SDK load)
@@ -98,7 +102,8 @@ class AgoraWebBridge {
       final state = getState();
 
       if (state['initialized'] != true) {
-        throw Exception('Agora JS initialized but state not ready. State: $state');
+        throw Exception(
+            'Agora JS initialized but state not ready. State: $state');
       }
 
       _initialized = true;
@@ -125,7 +130,8 @@ class AgoraWebBridge {
       debugPrint('[BRIDGE] Joining channel (simple): $channel, uid: $uid');
       AppLogger.info('ðŸ”— Joining Agora channel: $channel...');
 
-      final result = await _jsJoinChannel(token.toJS, channel.toJS, uid.toJS).toDart;
+      final result =
+          await _jsJoinChannel(token.toJS, channel.toJS, uid.toJS).toDart;
 
       if (result?.toDart == true) {
         AppLogger.info('âœ… Joined channel successfully');
@@ -395,7 +401,8 @@ class AgoraWebBridge {
   /// Enable debug logging
   static void enableDebugLogging() {
     if (!kIsWeb) return;
-    debugPrint('[BRIDGE] Debug logging enabled - check browser console for [AgoraBridge] logs');
+    debugPrint(
+        '[BRIDGE] Debug logging enabled - check browser console for [AgoraBridge] logs');
   }
 }
 

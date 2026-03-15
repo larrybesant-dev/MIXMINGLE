@@ -335,10 +335,12 @@ class IntegrationsService {
     List<String>? currencies,
     List<String>? methods,
   }) async {
-    debugPrint('ðŸ’³ [Integrations] Integrating payment provider: ${provider.name}');
+    debugPrint(
+        'ðŸ’³ [Integrations] Integrating payment provider: ${provider.name}');
 
     try {
-      final id = 'payment_${provider.name}_${DateTime.now().millisecondsSinceEpoch}';
+      final id =
+          'payment_${provider.name}_${DateTime.now().millisecondsSinceEpoch}';
 
       final paymentProvider = PaymentProvider(
         id: id,
@@ -387,7 +389,8 @@ class IntegrationsService {
         parameters: {'provider': provider.name, 'live_mode': liveMode},
       );
 
-      debugPrint('âœ… [Integrations] Payment provider connected: ${provider.name}');
+      debugPrint(
+          'âœ… [Integrations] Payment provider connected: ${provider.name}');
       return IntegrationResult(success: true, integration: integration);
     } catch (e) {
       debugPrint('âŒ [Integrations] Payment integration failed: $e');
@@ -436,10 +439,12 @@ class IntegrationsService {
     List<String>? features,
     Map<String, dynamic>? trackingConfig,
   }) async {
-    debugPrint('ðŸ“¢ [Integrations] Integrating marketing platform: ${platform.name}');
+    debugPrint(
+        'ðŸ“¢ [Integrations] Integrating marketing platform: ${platform.name}');
 
     try {
-      final id = 'marketing_${platform.name}_${DateTime.now().millisecondsSinceEpoch}';
+      final id =
+          'marketing_${platform.name}_${DateTime.now().millisecondsSinceEpoch}';
 
       final marketingPlatform = MarketingPlatform(
         id: id,
@@ -485,7 +490,8 @@ class IntegrationsService {
         parameters: {'platform': platform.name},
       );
 
-      debugPrint('âœ… [Integrations] Marketing platform connected: ${platform.name}');
+      debugPrint(
+          'âœ… [Integrations] Marketing platform connected: ${platform.name}');
       return IntegrationResult(success: true, integration: integration);
     } catch (e) {
       debugPrint('âŒ [Integrations] Marketing integration failed: $e');
@@ -493,7 +499,8 @@ class IntegrationsService {
     }
   }
 
-  String _getMarketingPlatformName(MarketingPlatformType type) => switch (type) {
+  String _getMarketingPlatformName(MarketingPlatformType type) =>
+      switch (type) {
         MarketingPlatformType.googleAds => 'Google Ads',
         MarketingPlatformType.facebookAds => 'Meta Ads',
         MarketingPlatformType.tiktokAds => 'TikTok Ads',
@@ -630,10 +637,12 @@ class IntegrationsService {
     bool simultaneousStream = true,
     StreamQuality quality = StreamQuality.hd,
   }) async {
-    debugPrint('ðŸ“º [Integrations] Integrating streaming platform: ${platform.name}');
+    debugPrint(
+        'ðŸ“º [Integrations] Integrating streaming platform: ${platform.name}');
 
     try {
-      final id = 'streaming_${platform.name}_${DateTime.now().millisecondsSinceEpoch}';
+      final id =
+          'streaming_${platform.name}_${DateTime.now().millisecondsSinceEpoch}';
 
       final streamingPlatform = StreamingPlatform(
         id: id,
@@ -684,7 +693,8 @@ class IntegrationsService {
         },
       );
 
-      debugPrint('âœ… [Integrations] Streaming platform connected: ${platform.name}');
+      debugPrint(
+          'âœ… [Integrations] Streaming platform connected: ${platform.name}');
       return IntegrationResult(success: true, integration: integration);
     } catch (e) {
       debugPrint('âŒ [Integrations] Streaming integration failed: $e');
@@ -692,7 +702,8 @@ class IntegrationsService {
     }
   }
 
-  String _getStreamingPlatformName(StreamingPlatformType type) => switch (type) {
+  String _getStreamingPlatformName(StreamingPlatformType type) =>
+      switch (type) {
         StreamingPlatformType.youtube => 'YouTube Live',
         StreamingPlatformType.twitch => 'Twitch',
         StreamingPlatformType.facebook => 'Facebook Live',

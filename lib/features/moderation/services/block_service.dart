@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/analytics/analytics_service.dart';
 
 class BlockService {
@@ -73,9 +73,6 @@ class BlockService {
         .doc(userId)
         .collection('blockedUsers')
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => doc.id).toList());
+        .map((snapshot) => snapshot.docs.map((doc) => doc.id).toList());
   }
 }
-
-

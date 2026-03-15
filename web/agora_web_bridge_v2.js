@@ -8,8 +8,8 @@
  * <script src="agora_web_bridge_v2.js"></script>
  */
 
-(function(window) {
-  'use strict';
+(function (window) {
+  "use strict";
 
   // Global state
   let agoraInitialized = false;
@@ -18,21 +18,21 @@
   let isAudioMuted = false;
   let isVideoMuted = false;
 
-  console.log('[AgoraBridge] Initializing Agora Web Bridge v2...');
+  console.log("[AgoraBridge] Initializing Agora Web Bridge v2...");
 
   /**
    * Initialize Agora SDK
    * @param {string} appId - Agora App ID
    */
-  window.AgoraInit = async function(appId) {
-    console.log('[AgoraBridge] AgoraInit called with App ID:', appId);
+  window.AgoraInit = async function (appId) {
+    console.log("[AgoraBridge] AgoraInit called with App ID:", appId);
 
-    if (!appId || appId === 'YOUR_AGORA_APP_ID_HERE') {
-      console.warn('[AgoraBridge] ⚠️  Using test/demo App ID. Real Agora SDK not loaded.');
+    if (!appId || appId === "YOUR_AGORA_APP_ID_HERE") {
+      console.warn("[AgoraBridge] ⚠️  Using test/demo App ID. Real Agora SDK not loaded.");
     }
 
     agoraInitialized = true;
-    console.log('[AgoraBridge] ✅ Agora initialized successfully');
+    console.log("[AgoraBridge] ✅ Agora initialized successfully");
 
     return Promise.resolve();
   };
@@ -43,24 +43,28 @@
    * @param {number} uid - Local user ID
    * @param {string} token - Agora token (can be empty for testing)
    */
-  window.AgoraJoinChannel = async function(channel, uid, token) {
-    console.log('[AgoraBridge] AgoraJoinChannel:', { channel, uid, token: token ? '<token provided>' : '<no token>' });
+  window.AgoraJoinChannel = async function (channel, uid, token) {
+    console.log("[AgoraBridge] AgoraJoinChannel:", {
+      channel,
+      uid,
+      token: token ? "<token provided>" : "<no token>",
+    });
 
     if (!agoraInitialized) {
-      console.error('[AgoraBridge] ❌ Agora not initialized. Call AgoraInit first.');
-      throw new Error('Agora not initialized');
+      console.error("[AgoraBridge] ❌ Agora not initialized. Call AgoraInit first.");
+      throw new Error("Agora not initialized");
     }
 
     currentChannel = channel;
     currentUid = uid;
 
-    console.log('[AgoraBridge] ✅ Joined channel:', channel, 'with UID:', uid);
+    console.log("[AgoraBridge] ✅ Joined channel:", channel, "with UID:", uid);
 
     // Simulate a remote user joining after 2 seconds (for testing)
     setTimeout(() => {
       if (window.onUserJoined) {
         const remoteUid = 1234;
-        console.log('[AgoraBridge] 🎥 Simulating remote user join:', remoteUid);
+        console.log("[AgoraBridge] 🎥 Simulating remote user join:", remoteUid);
         window.onUserJoined(remoteUid);
       }
     }, 2000);
@@ -71,14 +75,14 @@
   /**
    * Leave the current channel
    */
-  window.AgoraLeaveChannel = async function() {
-    console.log('[AgoraBridge] AgoraLeaveChannel called');
+  window.AgoraLeaveChannel = async function () {
+    console.log("[AgoraBridge] AgoraLeaveChannel called");
 
     if (currentChannel) {
       // Simulate remote user leaving after 500ms
       setTimeout(() => {
         if (window.onUserLeft) {
-          console.log('[AgoraBridge] ⛔ Simulating remote user leave: 1234');
+          console.log("[AgoraBridge] ⛔ Simulating remote user leave: 1234");
           window.onUserLeft(1234);
         }
       }, 500);
@@ -89,7 +93,7 @@
     isAudioMuted = false;
     isVideoMuted = false;
 
-    console.log('[AgoraBridge] ✅ Left channel');
+    console.log("[AgoraBridge] ✅ Left channel");
     return Promise.resolve();
   };
 
@@ -98,15 +102,20 @@
    * @param {boolean} enableAudio - Enable audio
    * @param {boolean} enableVideo - Enable video
    */
-  window.AgoraEnableLocalTracks = async function(enableAudio, enableVideo) {
-    console.log('[AgoraBridge] AgoraEnableLocalTracks:', { enableAudio, enableVideo });
+  window.AgoraEnableLocalTracks = async function (enableAudio, enableVideo) {
+    console.log("[AgoraBridge] AgoraEnableLocalTracks:", { enableAudio, enableVideo });
 
     if (!currentChannel) {
-      console.error('[AgoraBridge] ❌ Not connected to a channel');
-      throw new Error('Not connected to channel');
+      console.error("[AgoraBridge] ❌ Not connected to a channel");
+      throw new Error("Not connected to channel");
     }
 
-    console.log('[AgoraBridge] ✅ Local tracks enabled - Audio:', enableAudio, 'Video:', enableVideo);
+    console.log(
+      "[AgoraBridge] ✅ Local tracks enabled - Audio:",
+      enableAudio,
+      "Video:",
+      enableVideo,
+    );
     return Promise.resolve();
   };
 
@@ -114,16 +123,16 @@
    * Mute/unmute local audio
    * @param {boolean} muted - True to mute, false to unmute
    */
-  window.AgoraSetAudioMuted = async function(muted) {
-    console.log('[AgoraBridge] AgoraSetAudioMuted:', muted);
+  window.AgoraSetAudioMuted = async function (muted) {
+    console.log("[AgoraBridge] AgoraSetAudioMuted:", muted);
 
     if (!currentChannel) {
-      console.error('[AgoraBridge] ❌ Not connected to a channel');
-      throw new Error('Not connected to channel');
+      console.error("[AgoraBridge] ❌ Not connected to a channel");
+      throw new Error("Not connected to channel");
     }
 
     isAudioMuted = muted;
-    console.log('[AgoraBridge] ✅ Audio', muted ? 'muted' : 'unmuted');
+    console.log("[AgoraBridge] ✅ Audio", muted ? "muted" : "unmuted");
     return Promise.resolve();
   };
 
@@ -131,30 +140,30 @@
    * Mute/unmute local video
    * @param {boolean} muted - True to mute, false to unmute
    */
-  window.AgoraSetVideoMuted = async function(muted) {
-    console.log('[AgoraBridge] AgoraSetVideoMuted:', muted);
+  window.AgoraSetVideoMuted = async function (muted) {
+    console.log("[AgoraBridge] AgoraSetVideoMuted:", muted);
 
     if (!currentChannel) {
-      console.error('[AgoraBridge] ❌ Not connected to a channel');
-      throw new Error('Not connected to channel');
+      console.error("[AgoraBridge] ❌ Not connected to a channel");
+      throw new Error("Not connected to channel");
     }
 
     isVideoMuted = muted;
-    console.log('[AgoraBridge] ✅ Video', muted ? 'muted' : 'unmuted');
+    console.log("[AgoraBridge] ✅ Video", muted ? "muted" : "unmuted");
     return Promise.resolve();
   };
 
   /**
    * Get bridge status (for debugging)
    */
-  window.AgoraGetBridgeStatus = function() {
+  window.AgoraGetBridgeStatus = function () {
     return {
       initialized: agoraInitialized,
       currentChannel,
       currentUid,
       isAudioMuted,
       isVideoMuted,
-      version: '2.0.0'
+      version: "2.0.0",
     };
   };
 
@@ -163,6 +172,5 @@
   window.onUserLeft = null;
   window.onConnectionStateChanged = null;
 
-  console.log('[AgoraBridge] ✅ Agora Web Bridge v2 ready');
-
+  console.log("[AgoraBridge] ✅ Agora Web Bridge v2 ready");
 })(window);

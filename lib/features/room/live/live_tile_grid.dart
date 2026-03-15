@@ -41,7 +41,7 @@ class _LiveTileGridState extends ConsumerState<LiveTileGrid> {
   @override
   Widget build(BuildContext context) {
     final roomState = ref.watch(liveRoomControllerProvider);
-    final ctrl      = ref.read(liveRoomControllerProvider.notifier);
+    final ctrl = ref.read(liveRoomControllerProvider.notifier);
 
     // Always show grid participants (they ARE the visible set in a fixed grid)
     final gridParts = roomState.gridParticipants;
@@ -69,6 +69,7 @@ class _LiveTileGridState extends ConsumerState<LiveTileGrid> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
+<<<<<<< HEAD
         final count = gridParts.length;
         final cols = switch (count) {
           <= 1 => 1,
@@ -83,27 +84,37 @@ class _LiveTileGridState extends ConsumerState<LiveTileGrid> {
             : 200.0;
         final targetTileH = tileW / (4 / 3);
         final tileH = targetTileH > maxTileH ? maxTileH : targetTileH;
+=======
+        final cols = gridParts.length <= 2 ? gridParts.length : 2;
+        final rows = (gridParts.length / cols).ceil();
+        final tileW = constraints.maxWidth / cols;
+        final tileH = rows > 0
+            ? (constraints.maxHeight / rows).clamp(80.0, 240.0)
+            : 180.0;
+>>>>>>> origin/develop
 
         return GridView.builder(
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount:   cols,
+            crossAxisCount: cols,
             childAspectRatio: tileW / tileH,
             crossAxisSpacing: 4,
-            mainAxisSpacing:  4,
+            mainAxisSpacing: 4,
           ),
           itemCount: gridParts.length,
           itemBuilder: (ctx, i) => _TileCard(
             participant: gridParts[i],
-            isLocal:     gridParts[i].userId == roomState.localUserId,
-            isHost:      roomState.isHost,
-            engine:      kIsWeb ? null : ctrl.videoEngine,
-            channelId:   widget.args.roomId,
+            isLocal: gridParts[i].userId == roomState.localUserId,
+            isHost: roomState.isHost,
+            engine: kIsWeb ? null : ctrl.videoEngine,
+            channelId: widget.args.roomId,
             activeSpeakerUid: roomState.activeSpeakerUid,
-            onDemote: (roomState.isHost && gridParts[i].userId != roomState.localUserId)
+            onDemote: (roomState.isHost &&
+                    gridParts[i].userId != roomState.localUserId)
                 ? () async {
-                    final err = await ctrl.demoteParticipant(gridParts[i].userId);
+                    final err =
+                        await ctrl.demoteParticipant(gridParts[i].userId);
                     if (err != null && ctx.mounted) {
                       ScaffoldMessenger.of(ctx).showSnackBar(
                         SnackBar(
@@ -143,16 +154,20 @@ class _TileCard extends StatelessWidget {
   });
 
   final RoomParticipant participant;
-  final bool            isLocal;
-  final bool            isHost;
-  final RtcEngine?      engine;
-  final String          channelId;
-  final int?            activeSpeakerUid;
-  final VoidCallback?   onDemote;
+  final bool isLocal;
+  final bool isHost;
+  final RtcEngine? engine;
+  final String channelId;
+  final int? activeSpeakerUid;
+  final VoidCallback? onDemote;
 
   bool get _isSpeaking =>
+<<<<<<< HEAD
       (participant.agoraUid != null && participant.agoraUid == activeSpeakerUid) ||
       (activeSpeakerUid == null && participant.isMicActive);
+=======
+      participant.agoraUid != null && participant.agoraUid == activeSpeakerUid;
+>>>>>>> origin/develop
 
   @override
   Widget build(BuildContext context) {
@@ -161,9 +176,8 @@ class _TileCard extends StatelessWidget {
         color: const Color(0xFF1A1A2E),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: _isSpeaking
-              ? const Color(0xFF00FF88)
-              : const Color(0xFF3A1A5E),
+          color:
+              _isSpeaking ? const Color(0xFF00FF88) : const Color(0xFF3A1A5E),
           width: _isSpeaking ? 2.5 : 1,
         ),
         boxShadow: _isSpeaking
@@ -214,7 +228,8 @@ class _TileCard extends StatelessWidget {
                   if (participant.isMicActive)
                     const Padding(
                       padding: EdgeInsets.only(left: 4),
-                      child: Icon(Icons.mic, color: Color(0xFF00FF88), size: 14),
+                      child:
+                          Icon(Icons.mic, color: Color(0xFF00FF88), size: 14),
                     ),
                 ],
               ),
@@ -226,7 +241,8 @@ class _TileCard extends StatelessWidget {
                 top: 6,
                 right: 34,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFF4C4C).withAlpha(200),
                     borderRadius: BorderRadius.circular(4),
@@ -248,7 +264,8 @@ class _TileCard extends StatelessWidget {
                 top: 6,
                 right: 34,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFF0040),
                     borderRadius: BorderRadius.circular(4),
@@ -338,7 +355,7 @@ class _TileCard extends StatelessWidget {
     if (engine == null || uid == null || !participant.isOnCam) {
       return _AvatarPlaceholder(
         displayName: participant.displayName,
-        avatarUrl:   participant.avatarUrl,
+        avatarUrl: participant.avatarUrl,
       );
     }
 
@@ -356,7 +373,7 @@ class _TileCard extends StatelessWidget {
     return AgoraVideoView(
       controller: VideoViewController.remote(
         rtcEngine: engine!,
-        canvas:    VideoCanvas(uid: uid),
+        canvas: VideoCanvas(uid: uid),
         connection: RtcConnection(channelId: channelId),
       ),
     );
@@ -504,7 +521,7 @@ class _WebLocalCameraViewState extends State<_WebLocalCameraView> {
 class _AvatarPlaceholder extends StatelessWidget {
   const _AvatarPlaceholder({required this.displayName, this.avatarUrl});
 
-  final String  displayName;
+  final String displayName;
   final String? avatarUrl;
 
   @override
@@ -522,9 +539,7 @@ class _AvatarPlaceholder extends StatelessWidget {
                 radius: 28,
                 backgroundColor: const Color(0xFF3A1A5E),
                 child: Text(
-                  displayName.isNotEmpty
-                      ? displayName[0].toUpperCase()
-                      : '?',
+                  displayName.isNotEmpty ? displayName[0].toUpperCase() : '?',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 22,

@@ -1,4 +1,4 @@
-﻿// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
@@ -201,7 +201,8 @@ class _MatchesPageState extends ConsumerState<MatchesPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.people_outline, size: 64, color: Colors.grey),
+                    const Icon(Icons.people_outline,
+                        size: 64, color: Colors.grey),
                     const SizedBox(height: 16),
                     const Text(
                       'No matches yet',
@@ -266,7 +267,8 @@ class _MatchCard extends StatelessWidget {
           // Profile image
           if (match.photoUrl != null)
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
               child: Image.network(
                 match.photoUrl!,
                 height: 300,
@@ -284,7 +286,8 @@ class _MatchCard extends StatelessWidget {
               height: 300,
               decoration: BoxDecoration(
                 color: Colors.grey[300],
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
               ),
               child: const Center(
                 child: Icon(Icons.person, size: 80, color: Colors.grey),

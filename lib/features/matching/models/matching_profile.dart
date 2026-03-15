@@ -1,4 +1,4 @@
-﻿// import 'package:freezed_annotation/freezed_annotation.dart';
+// import 'package:freezed_annotation/freezed_annotation.dart';
 import 'questionnaire_answers.dart';
 import 'dart:math' as dart_math;
 
@@ -46,7 +46,8 @@ class MatchingProfile {
       age: json['age'] as int,
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
-      answers: QuestionnaireAnswers.fromJson(json['answers'] as Map<String, dynamic>),
+      answers: QuestionnaireAnswers.fromJson(
+          json['answers'] as Map<String, dynamic>),
       lastActive: DateTime.parse(json['lastActive'] as String),
       createdAt: DateTime.parse(json['createdAt'] as String),
       isActive: json['isActive'] as bool? ?? true,
@@ -79,7 +80,8 @@ class MatchingProfile {
   /// Check if other user meets distance preference
   bool meetsDistancePreference(MatchingProfile other) {
     final distance = distanceTo(other);
-    return distance <= _getMaxDistanceFromPreference(answers.distancePreference);
+    return distance <=
+        _getMaxDistanceFromPreference(answers.distancePreference);
   }
 
   /// Check if user has been blocked
@@ -108,7 +110,8 @@ class MatchingProfile {
             dart_math.sin(dLon / 2) *
             dart_math.sin(dLon / 2);
 
-    final double c = 2 * dart_math.atan2(dart_math.sqrt(a), dart_math.sqrt(1 - a));
+    final double c =
+        2 * dart_math.atan2(dart_math.sqrt(a), dart_math.sqrt(1 - a));
     return earthRadiusMiles * c;
   }
 
@@ -138,5 +141,3 @@ class Math {
   static double atan2(double y, double x) => dart_math.atan2(y, x);
   static const double pi = dart_math.pi;
 }
-
-

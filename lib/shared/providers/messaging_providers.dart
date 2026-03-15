@@ -1,5 +1,5 @@
-
 import 'dart:async';
+import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/chat/chat_service.dart';
 import '../../services/chat/messaging_service.dart';
@@ -11,23 +11,54 @@ import 'auth_providers.dart';
 /// Service providers
 final chatServiceProvider = Provider<ChatService>((ref) => ChatService());
 
-final messagingServiceProvider = Provider<MessagingService>((ref) => MessagingService());
+final messagingServiceProvider =
+    Provider<MessagingService>((ref) => MessagingService());
 
 /// Room messages stream provider with pagination
+<<<<<<< HEAD
 final roomMessagesProvider = StreamProvider.family<List<Message>, String>((ref, roomId) {
   final messagingService = ref.watch(messagingServiceProvider);
   return messagingService.getRoomMessages(roomId);
+=======
+final roomMessagesProvider =
+    StreamProvider.family<List<Message>, String>((ref, roomId) {
+  return FirebaseFirestore.instance
+      .collection('messages')
+      .where('roomId', isEqualTo: roomId)
+      .orderBy('timestamp', descending: true)
+      .limit(50) // Pagination: load last 50 messages
+      .snapshots()
+      .map((snapshot) => snapshot.docs
+          .map((doc) {
+            final data = doc.data();
+            data['id'] = doc.id;
+            return Message.fromMap(data);
+          })
+          .toList()
+          .reversed // Reverse to show oldest first
+          .toList())
+      .transform(StreamTransformer.fromHandlers(
+        handleError: (error, stackTrace, sink) {
+          debugPrint('[CHAT] messages stream error (emitting empty): $error');
+          sink.add(<Message>[]);
+        },
+      ));
+>>>>>>> origin/develop
 });
 
 /// Paginated room messages with cursor
 /// Note: Use roomMessagesControllerProvider instead for better control
-final paginatedRoomMessagesProvider = StreamProvider.family<List<Message>, String>((ref, roomId) {
+final paginatedRoomMessagesProvider =
+    StreamProvider.family<List<Message>, String>((ref, roomId) {
   final messagingService = ref.watch(messagingServiceProvider);
-  return messagingService.getRoomMessages(roomId).handleError((_) => <Message>[]);
+  return messagingService
+      .getRoomMessages(roomId)
+      .handleError((_) => <Message>[]);
 });
 
 /// Room messages with pagination controller
-final roomMessagesControllerProvider = StreamProvider.autoDispose.family<List<Message>, String>((ref, roomId) {
+final roomMessagesControllerProvider =
+    StreamProvider.autoDispose.family<List<Message>, String>((ref, roomId) {
   final messagingService = ref.watch(messagingServiceProvider);
   return messagingService.getRoomMessages(roomId).handleError((error) {
     return <Message>[];
@@ -41,10 +72,12 @@ class RoomMessagesController {
 
   RoomMessagesController(this.ref, this.roomId);
 
-  late final MessagingService _messagingService = ref.read(messagingServiceProvider);
+  late final MessagingService _messagingService =
+      ref.read(messagingServiceProvider);
 
   /// Send a message to the room
-  Future<void> sendMessage(String content, {String? replyToMessageId, String? mediaUrl}) async {
+  Future<void> sendMessage(String content,
+      {String? replyToMessageId, String? mediaUrl}) async {
     try {
       final currentUser = await ref.read(currentUserProvider.future);
       if (currentUser == null) {
@@ -86,7 +119,8 @@ class RoomMessagesController {
         throw Exception('User not authenticated');
       }
 
-      await _messagingService.editMessage(messageId, currentUser.id, newContent);
+      await _messagingService.editMessage(
+          messageId, currentUser.id, newContent);
     } catch (e) {
       rethrow;
     }
@@ -127,13 +161,17 @@ final conversationsProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
   if (currentUser == null) return Stream.value([]);
 
   final messagingService = ref.watch(messagingServiceProvider);
-  return messagingService.getUserConversations(currentUser.id).handleError((error) {
+  return messagingService
+      .getUserConversations(currentUser.id)
+      .handleError((error) {
     return <Map<String, dynamic>>[];
   });
 });
 
 /// Conversation messages provider
-final conversationMessagesProvider = StreamProvider.family<List<DirectMessage>, Map<String, String>>((ref, params) {
+final conversationMessagesProvider =
+    StreamProvider.family<List<DirectMessage>, Map<String, String>>(
+        (ref, params) {
   final messagingService = ref.watch(messagingServiceProvider);
   return messagingService
       .getConversationMessages(
@@ -146,13 +184,15 @@ final conversationMessagesProvider = StreamProvider.family<List<DirectMessage>, 
 });
 
 /// Direct message controller
-final directMessageControllerProvider =
-    StreamProvider.autoDispose.family<List<DirectMessage>, String>((ref, otherUserId) {
+final directMessageControllerProvider = StreamProvider.autoDispose
+    .family<List<DirectMessage>, String>((ref, otherUserId) {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) return Stream.value([]);
 
   final messagingService = ref.watch(messagingServiceProvider);
-  return messagingService.getConversationMessages(currentUser.id, otherUserId).handleError((error) {
+  return messagingService
+      .getConversationMessages(currentUser.id, otherUserId)
+      .handleError((error) {
     return <DirectMessage>[];
   });
 });
@@ -163,7 +203,8 @@ class DirectMessageController {
 
   DirectMessageController(this.ref, this.otherUserId);
 
-  late final MessagingService _messagingService = ref.read(messagingServiceProvider);
+  late final MessagingService _messagingService =
+      ref.read(messagingServiceProvider);
 
   /// Send a direct message
   Future<void> sendMessage(
@@ -201,8 +242,10 @@ class DirectMessageController {
         throw Exception('User not authenticated');
       }
 
-      final conversationId = ChatMessage.createConversationId(currentUser.id, otherUserId);
-      await _messagingService.markMessagesAsRead(conversationId, currentUser.id);
+      final conversationId =
+          ChatMessage.createConversationId(currentUser.id, otherUserId);
+      await _messagingService.markMessagesAsRead(
+          conversationId, currentUser.id);
     } catch (e) {
       rethrow;
     }
@@ -230,7 +273,8 @@ class DirectMessageController {
         throw Exception('User not authenticated');
       }
 
-      await _messagingService.editMessage(messageId, currentUser.id, newContent);
+      await _messagingService.editMessage(
+          messageId, currentUser.id, newContent);
     } catch (e) {
       rethrow;
     }
@@ -266,7 +310,8 @@ class DirectMessageController {
 }
 
 /// Typing indicator provider
-final typingUsersProvider = StreamProvider.family<List<String>, String>((ref, roomId) {
+final typingUsersProvider =
+    StreamProvider.family<List<String>, String>((ref, roomId) {
   final messagingService = ref.watch(messagingServiceProvider);
   return messagingService.getTypingUsers(roomId).handleError((error) {
     return <String>[];
@@ -291,7 +336,8 @@ final totalUnreadMessagesProvider = StreamProvider<int>((ref) async* {
 });
 
 /// Unread messages per conversation provider
-final unreadMessagesPerConversationProvider = StreamProvider.family<int, String>((ref, conversationId) async* {
+final unreadMessagesPerConversationProvider =
+    StreamProvider.family<int, String>((ref, conversationId) async* {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) {
     yield 0;
@@ -304,7 +350,8 @@ final unreadMessagesPerConversationProvider = StreamProvider.family<int, String>
 });
 
 /// Send a room message
-final sendRoomMessageProvider = FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
+final sendRoomMessageProvider =
+    FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) throw Exception('User not authenticated');
 
@@ -317,5 +364,3 @@ final sendRoomMessageProvider = FutureProvider.family<void, Map<String, dynamic>
     content: params['content'],
   );
 });
-
-

@@ -56,7 +56,8 @@ class _NeonCoinPackageCardState extends State<NeonCoinPackageCard>
   Widget build(BuildContext context) {
     final totalCoins = widget.package.getTotalCoins(widget.isVipPlus);
     final hasBonus = (widget.package.bonusCoins ?? 0) > 0;
-    final hasVipBonus = widget.isVipPlus && widget.package.vipPlusBonusCoins > 0;
+    final hasVipBonus =
+        widget.isVipPlus && widget.package.vipPlusBonusCoins > 0;
 
     return GestureDetector(
       onTap: widget.onTap,
@@ -71,7 +72,8 @@ class _NeonCoinPackageCardState extends State<NeonCoinPackageCard>
               gradient: LinearGradient(
                 colors: [
                   DesignColors.gold.withAlpha(widget.isSelected ? 38 : 20),
-                  const Color(0xFFFF7A3C).withAlpha(widget.isSelected ? 38 : 20),
+                  const Color(0xFFFF7A3C)
+                      .withAlpha(widget.isSelected ? 38 : 20),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -86,7 +88,8 @@ class _NeonCoinPackageCardState extends State<NeonCoinPackageCard>
               boxShadow: [
                 if (widget.isSelected)
                   BoxShadow(
-                    color: DesignColors.gold.withAlpha((60 * glowIntensity).round()),
+                    color: DesignColors.gold
+                        .withAlpha((60 * glowIntensity).round()),
                     blurRadius: 20,
                     spreadRadius: 0,
                   ),
@@ -293,7 +296,8 @@ class _CoinIconState extends State<_CoinIcon>
       vsync: this,
     )..repeat();
 
-    _rotateAnimation = Tween<double>(begin: 0, end: 1).animate(_rotateController);
+    _rotateAnimation =
+        Tween<double>(begin: 0, end: 1).animate(_rotateController);
   }
 
   @override
@@ -334,7 +338,8 @@ class _CoinIconState extends State<_CoinIcon>
               ),
               boxShadow: [
                 BoxShadow(
-                  color: DesignColors.gold.withAlpha((77 * widget.glowIntensity).round()),
+                  color: DesignColors.gold
+                      .withAlpha((77 * widget.glowIntensity).round()),
                   blurRadius: widget.isSelected ? 16 : 8,
                   spreadRadius: 0,
                 ),
@@ -403,9 +408,7 @@ class CompactCoinPackageCard extends StatelessWidget {
               : Colors.white.withAlpha(13),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected
-                ? DesignColors.gold
-                : Colors.white.withAlpha(51),
+            color: isSelected ? DesignColors.gold : Colors.white.withAlpha(51),
             width: isSelected ? 2 : 1,
           ),
         ),

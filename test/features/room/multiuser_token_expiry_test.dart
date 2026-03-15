@@ -4,10 +4,15 @@ import '../../helpers/token_expiry_harness.dart';
 
 void main() {
   group('Multi-User Token Expiry', () {
-    testWidgets('Room state consistent with staggered/multi-user expiry', (tester) async {
+    testWidgets('Room state consistent with staggered/multi-user expiry',
+        (tester) async {
       // Simulate 6 users, staggered expiry
       for (int i = 0; i < 6; i++) {
-        final harness = TokenExpiryHarness(forceExpiry: true, multiUserCount: 6, expiryDelay: Duration(milliseconds: 500 * i), logger: print);
+        final harness = TokenExpiryHarness(
+            forceExpiry: true,
+            multiUserCount: 6,
+            expiryDelay: Duration(milliseconds: 500 * i),
+            logger: print);
         await harness.runWithExpiry(() async {
           // ...existing code for user join...
         }, onTokenRefresh: () async {
@@ -19,8 +24,10 @@ void main() {
       expect(find.byType(Widget), findsNWidgets(6));
     });
 
-    testWidgets('No ghost users or stuck indicators after all tokens expire', (tester) async {
-      final harness = TokenExpiryHarness(forceExpiry: true, multiUserCount: 6, logger: print);
+    testWidgets('No ghost users or stuck indicators after all tokens expire',
+        (tester) async {
+      final harness = TokenExpiryHarness(
+          forceExpiry: true, multiUserCount: 6, logger: print);
       await harness.runWithExpiry(() async {
         // Simulate all users expiring simultaneously
         // ...existing code...

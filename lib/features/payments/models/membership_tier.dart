@@ -280,8 +280,10 @@ class TierPricing {
   /// Yearly savings percentage
   int get yearlySavingsPercent {
     // Extract numeric values for calculation
-    final monthlyNum = double.tryParse(monthlyPrice.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0;
-    final yearlyNum = double.tryParse(yearlyPrice.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0;
+    final monthlyNum =
+        double.tryParse(monthlyPrice.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0;
+    final yearlyNum =
+        double.tryParse(yearlyPrice.replaceAll(RegExp(r'[^\d.]'), '')) ?? 0;
     if (monthlyNum == 0) return 0;
     final fullYear = monthlyNum * 12;
     return ((fullYear - yearlyNum) / fullYear * 100).round();

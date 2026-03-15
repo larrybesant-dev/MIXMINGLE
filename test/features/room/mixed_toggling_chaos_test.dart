@@ -6,8 +6,13 @@ import '../../helpers/token_expiry_harness.dart';
 
 void main() {
   group('Mixed Toggling Chaos', () {
-    testWidgets('Randomized mic/cam/screen-share toggling with network chaos', (tester) async {
-      final networkHarness = NetworkDegradationHarness(packetLossRate: 0.2, minLatencyMs: 100, maxLatencyMs: 1000, logger: print);
+    testWidgets('Randomized mic/cam/screen-share toggling with network chaos',
+        (tester) async {
+      final networkHarness = NetworkDegradationHarness(
+          packetLossRate: 0.2,
+          minLatencyMs: 100,
+          maxLatencyMs: 1000,
+          logger: print);
       final harness = TogglingStressHarness(
         micToggles: 40,
         camToggles: 40,
@@ -31,8 +36,10 @@ void main() {
       expect(find.byType(Widget), findsOneWidget);
     });
 
-    testWidgets('Toggling during token expiry and multi-user session', (tester) async {
-      final tokenHarness = TokenExpiryHarness(forceExpiry: true, multiUserCount: 4, logger: print);
+    testWidgets('Toggling during token expiry and multi-user session',
+        (tester) async {
+      final tokenHarness = TokenExpiryHarness(
+          forceExpiry: true, multiUserCount: 4, logger: print);
       final harness = TogglingStressHarness(
         micToggles: 30,
         camToggles: 30,

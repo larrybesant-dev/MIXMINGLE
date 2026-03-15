@@ -387,7 +387,8 @@ void main() {
         const speakerId = 1001;
 
         // Act
-        final galleryParticipants = participants.where((p) => p != speakerId).toList();
+        final galleryParticipants =
+            participants.where((p) => p != speakerId).toList();
 
         // Assert
         expect(galleryParticipants.length, 3);

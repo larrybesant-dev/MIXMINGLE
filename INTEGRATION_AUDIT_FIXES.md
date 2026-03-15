@@ -7,12 +7,14 @@
 ---
 
 ## FIX #1: Update Firestore Rules to Support `admins` Field
+
 **Priority:** 🔴 **CRITICAL**
 **Time:** 5 minutes
 **File:** `firestore.rules`
 **Lines:** 143-149
 
 ### Current Code (BROKEN):
+
 ```firerules
 allow update, delete: if isSignedIn() &&
                        (request.auth.uid == resource.data.get('hostId', null) ||
@@ -22,6 +24,7 @@ allow update, delete: if isSignedIn() &&
 **Problem:** Only checks `moderators` field, ignores `admins` field.
 
 ### Fixed Code:
+
 ```firerules
 allow update, delete: if isSignedIn() &&
                        (request.auth.uid == resource.data.get('hostId', null) ||
@@ -32,6 +35,7 @@ allow update, delete: if isSignedIn() &&
 ### Also fix in Participants subcollection:
 
 **Current Code (Line 161):**
+
 ```firerules
 allow read: if isSignedIn() &&
                (request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.get('hostId', null) ||
@@ -40,6 +44,7 @@ allow read: if isSignedIn() &&
 ```
 
 **Fixed Code:**
+
 ```firerules
 allow read: if isSignedIn() &&
                (request.auth.uid == get(/databases/$(database)/documents/rooms/$(roomId)).data.get('hostId', null) ||
@@ -49,6 +54,7 @@ allow read: if isSignedIn() &&
 ```
 
 ### Verify After:
+
 ```
 ✅ Users with admins field can update rooms
 ✅ Users with moderators field can update rooms
@@ -58,24 +64,27 @@ allow read: if isSignedIn() &&
 ---
 
 ## FIX #2: Fix Test Room Creation Script
+
 **Priority:** 🔴 **CRITICAL**
 **Time:** 10 minutes
 **File:** `functions/create_test_room.js`
 **Lines:** 11-20
 
 ### Current Code (BROKEN):
+
 ```javascript
 const roomData = {
-  name: 'Test Room',
-  description: 'Room for testing Agora token generation',
+  name: "Test Room",
+  description: "Room for testing Agora token generation",
   createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  createdBy: 'DahcyIkN6DSnOeENNuWeC0dfGLQ2',
+  createdBy: "DahcyIkN6DSnOeENNuWeC0dfGLQ2",
   isActive: true,
-  participants: []
+  participants: [],
 };
 ```
 
 **Problems:**
+
 - ❌ Missing `isLive` (Cloud Functions require this)
 - ❌ Missing `status` (Cloud Functions require this)
 - ❌ Missing `hostId` (uses `createdBy` instead)
@@ -84,20 +93,21 @@ const roomData = {
 - ❌ Missing moderators, admins, speakers, bannedUsers
 
 ### Fixed Code:
+
 ```javascript
-const userId = 'DahcyIkN6DSnOeENNuWeC0dfGLQ2';
+const userId = "DahcyIkN6DSnOeENNuWeC0dfGLQ2";
 
 const roomData = {
   // Required core fields
-  id: 'test-room-001',
-  title: 'Test Room',
-  name: 'Test Room',
-  description: 'Room for testing Agora token generation',
+  id: "test-room-001",
+  title: "Test Room",
+  name: "Test Room",
+  description: "Room for testing Agora token generation",
   hostId: userId,
 
   // Required for token generation (CRITICAL)
   isLive: true,
-  status: 'live',
+  status: "live",
 
   // Authorization fields
   moderators: [userId],
@@ -110,18 +120,18 @@ const roomData = {
 
   // Participant tracking
   participantIds: [userId],
-  participants: [userId],  // Keep for compatibility
+  participants: [userId], // Keep for compatibility
   listeners: [],
 
   // Metadata
   createdAt: admin.firestore.FieldValue.serverTimestamp(),
   updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-  createdBy: userId,  // Keep for backward compat
+  createdBy: userId, // Keep for backward compat
 
   // Room configuration
-  category: 'Testing',
-  tags: ['test', 'agora'],
-  privacy: 'public',
+  category: "Testing",
+  tags: ["test", "agora"],
+  privacy: "public",
   viewerCount: 1,
   camCount: 0,
 
@@ -131,16 +141,17 @@ const roomData = {
   isHidden: true,
 
   // Other defaults
-  roomType: 'voice',
-  agoraChannelName: 'test-room-001',
+  roomType: "voice",
+  agoraChannelName: "test-room-001",
   maxUsers: 200,
   allowSpeakerRequests: true,
   turnBased: false,
-  turnDurationSeconds: 60
+  turnDurationSeconds: 60,
 };
 ```
 
 ### Verify After:
+
 ```bash
 # Run the script
 node functions/create_test_room.js
@@ -159,6 +170,7 @@ firebase functions:call generateAgoraToken --data '{"roomId":"test-room-001","us
 ---
 
 ## FIX #3: Add Comment Documentation to Room Model
+
 **Priority:** 🟡 **MEDIUM**
 **Time:** 15 minutes
 **File:** `lib/shared/models/room.dart`
@@ -211,6 +223,7 @@ Insert after line 7 (after `enum RoomType`):
 ---
 
 ## FIX #4: Add Broadcaster Mode Implementation Notes
+
 **Priority:** 🟡 **MEDIUM**
 **Time:** 10 minutes
 **File:** `lib/shared/models/room.dart`
@@ -231,6 +244,7 @@ Replace lines 50-52 with:
 ---
 
 ## FIX #5: Add Deprecation Notes to Legacy Fields
+
 **Priority:** 🟢 **LOW**
 **Time:** 5 minutes
 **File:** `lib/shared/models/room.dart`
@@ -266,6 +280,7 @@ Replace lines 50-52 with:
 ---
 
 ## FIX #6: Update RoomManagerService to Document Requirements
+
 **Priority:** 🟢 **LOW**
 **Time:** 5 minutes
 **File:** `lib/services/room_manager_service.dart`
@@ -305,6 +320,7 @@ Replace lines 50-52 with:
 ---
 
 ## FIX #7: Add Integration Test Helper
+
 **Priority:** 🟢 **LOW**
 **Time:** 20 minutes
 **File:** Create new file: `lib/test_helpers/room_integration_test.dart`
@@ -406,8 +422,10 @@ class RoomIntegrationTestHelper {
 ---
 
 ## FIX #8: Update Integration Audit Documentation
+
 **Priority:** 🟢 **LOW**
 **Time:** Already done - See generated reports:
+
 - `INTEGRATION_AUDIT_REPORT.md` ✅ Created
 - `INTEGRATION_COMPATIBILITY_MATRIX.md` ✅ Created
 
@@ -417,20 +435,20 @@ class RoomIntegrationTestHelper {
 
 ### Changes to Deploy Immediately:
 
-| Fix # | File | Change Type | Risk | Impact |
-|-------|------|-------------|------|--------|
-| 1 | firestore.rules | Add admins field check | 🟢 LOW | Enables admins to update rooms |
-| 2 | create_test_room.js | Add missing fields | 🟢 LOW | Test room works properly |
+| Fix # | File                | Change Type            | Risk   | Impact                         |
+| ----- | ------------------- | ---------------------- | ------ | ------------------------------ |
+| 1     | firestore.rules     | Add admins field check | 🟢 LOW | Enables admins to update rooms |
+| 2     | create_test_room.js | Add missing fields     | 🟢 LOW | Test room works properly       |
 
 ### Changes for Code Quality (Optional but Recommended):
 
-| Fix # | File | Change Type | Risk | Impact |
-|-------|------|-------------|------|--------|
-| 3 | room.dart | Add documentation | 🟢 LOW | Better maintainability |
-| 4 | room.dart | Add broadcaster notes | 🟢 LOW | Future-proofing |
-| 5 | room.dart | Add deprecation notes | 🟢 LOW | Migration planning |
-| 6 | room_manager_service.dart | Add documentation | 🟢 LOW | Better maintainability |
-| 7 | NEW FILE | Create test helper | 🟢 LOW | Testing improvements |
+| Fix # | File                      | Change Type           | Risk   | Impact                 |
+| ----- | ------------------------- | --------------------- | ------ | ---------------------- |
+| 3     | room.dart                 | Add documentation     | 🟢 LOW | Better maintainability |
+| 4     | room.dart                 | Add broadcaster notes | 🟢 LOW | Future-proofing        |
+| 5     | room.dart                 | Add deprecation notes | 🟢 LOW | Migration planning     |
+| 6     | room_manager_service.dart | Add documentation     | 🟢 LOW | Better maintainability |
+| 7     | NEW FILE                  | Create test helper    | 🟢 LOW | Testing improvements   |
 
 ---
 
@@ -511,4 +529,3 @@ No data loss or structural changes involved.
 ---
 
 **END OF ACTIONABLE FIXES**
-

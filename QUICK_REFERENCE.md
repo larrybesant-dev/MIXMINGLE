@@ -53,6 +53,7 @@ AnalyticsDashboardWidget(
 ## 📦 Available Services & Providers
 
 ### Module B: Advanced Mic
+
 ```dart
 // Service
 final advancedMicServiceProvider = StateNotifierProvider<
@@ -70,6 +71,7 @@ micNotifier.setSoundMode(1); // 0: Default, 1: Enhanced, 2: Speech
 ```
 
 ### Module C: Enhanced Chat
+
 ```dart
 // Providers
 final chatMessagesProvider = StreamProvider.family<List<ChatMessage>, String>((ref, roomId) => ...);
@@ -90,6 +92,7 @@ await chatService.addReaction(roomId, messageId, emoji);
 ```
 
 ### Module D: Recording
+
 ```dart
 // Provider
 final roomRecordingServiceProvider = StateNotifierProvider<
@@ -112,6 +115,7 @@ recordingNotifier.setRecordingPublic(true);
 ```
 
 ### Module E: Presence
+
 ```dart
 // Providers
 final roomPresenceProvider = StreamProvider.family<List<UserPresence>, String>((ref, roomId) => ...);
@@ -125,6 +129,7 @@ await presenceService.setTypingStatus(userId, true);
 ```
 
 ### Module F: Moderation
+
 ```dart
 // Providers
 final moderationLogsProvider = StreamProvider.family<List<ModerationLog>, String>((ref, roomId) => ...);
@@ -164,6 +169,7 @@ await moderationService.banUser(
 ```
 
 ### Module G: Analytics
+
 ```dart
 // Providers
 final roomStatisticsProvider = StreamProvider.family<RoomStatistics?, String>((ref, roomId) => ...);
@@ -182,23 +188,29 @@ await analyticsService.recordRecordingCreated(roomId, userId, fileSize);
 ## 🎨 UI Components
 
 ### Module B Widgets
+
 - `AdvancedMicControlWidget` - Main control panel
 
 ### Module C Widgets
+
 - `EnhancedChatWidget` - Chat interface with message display
 
 ### Module D Widgets
+
 - `RoomRecordingWidget` - Recording controls and timer
 
 ### Module E Widgets
+
 - `UserPresenceIndicator` - Individual status dot
 - `TypingIndicator` - Animated typing animation
 - `RoomPresencePanelWidget` - Complete presence panel
 
 ### Module F Widgets
+
 - `RoomModerationWidget` - Moderation control panel
 
 ### Module G Widgets
+
 - `AnalyticsDashboardWidget` - Analytics dashboard
 
 ---
@@ -206,6 +218,7 @@ await analyticsService.recordRecordingCreated(roomId, userId, fileSize);
 ## 🔌 Firebase Integration Points
 
 ### Firestore Collections Used
+
 ```
 rooms/{roomId}/chat_messages
 rooms/{roomId}/moderation_logs
@@ -218,6 +231,7 @@ room_statistics/{roomId}
 ```
 
 ### Data Models
+
 - `ChatMessage` - Module C
 - `RecordingInfo` - Module D
 - `UserPresence` - Module E
@@ -230,6 +244,7 @@ room_statistics/{roomId}
 ## ⚙️ Configuration
 
 ### Video Quality Settings (Module A)
+
 ```dart
 // High Quality: 1280x720@30fps, 3200kbps
 // Medium Quality: 640x480@24fps, 1200kbps
@@ -237,12 +252,14 @@ room_statistics/{roomId}
 ```
 
 ### Presence Statuses (Module E)
+
 - `PresenceStatus.online` (Green 🟢)
 - `PresenceStatus.away` (Yellow 🟡)
 - `PresenceStatus.offline` (Gray ⚫)
 - `PresenceStatus.doNotDisturb` (Red 🔴)
 
 ### Moderation Actions (Module F)
+
 - `ModerationAction.warn`
 - `ModerationAction.mute`
 - `ModerationAction.kick`
@@ -250,6 +267,7 @@ room_statistics/{roomId}
 - `ModerationAction.unban`
 
 ### Recording States (Module D)
+
 - `RecordingState.idle`
 - `RecordingState.recording`
 - `RecordingState.paused`
@@ -260,6 +278,7 @@ room_statistics/{roomId}
 ## 🎯 Common Use Cases
 
 ### Display Live Chat in Room
+
 ```dart
 EnhancedChatWidget(
   roomId: roomId,
@@ -270,11 +289,13 @@ EnhancedChatWidget(
 ```
 
 ### Show Who's Online
+
 ```dart
 RoomPresencePanelWidget(roomId: roomId)
 ```
 
 ### Allow Room Recording
+
 ```dart
 RoomRecordingWidget(
   roomId: roomId,
@@ -284,6 +305,7 @@ RoomRecordingWidget(
 ```
 
 ### Monitor Room Health (Moderators Only)
+
 ```dart
 if (isModerator) {
   RoomModerationWidget(
@@ -295,11 +317,13 @@ if (isModerator) {
 ```
 
 ### View Room Statistics
+
 ```dart
 AnalyticsDashboardWidget(roomId: roomId)
 ```
 
 ### Fine-Tune Audio Quality
+
 ```dart
 AdvancedMicControlWidget()
 ```
@@ -309,6 +333,7 @@ AdvancedMicControlWidget()
 ## 🚨 Error Handling
 
 All widgets include error handling:
+
 - Loading states while fetching Firestore data
 - Error messages displayed to users
 - Graceful fallbacks for missing data
@@ -348,6 +373,7 @@ Implement Firestore security rules as shown in ADVANCED_MODULES_DELIVERY.md
 ## 📱 Responsive Design
 
 All widgets are responsive:
+
 - Adapts to different screen sizes
 - Touch-friendly controls
 - Proper padding and spacing
@@ -384,32 +410,36 @@ All widgets are responsive:
 
 ## 📖 Documentation Files
 
-| File | Purpose |
-|------|---------|
-| MODULE_INTEGRATION_INDEX.md | Complete module reference |
-| ADVANCED_MODULES_DELIVERY.md | Implementation summary |
-| QUICK_REFERENCE.md | This file |
+| File                         | Purpose                   |
+| ---------------------------- | ------------------------- |
+| MODULE_INTEGRATION_INDEX.md  | Complete module reference |
+| ADVANCED_MODULES_DELIVERY.md | Implementation summary    |
+| QUICK_REFERENCE.md           | This file                 |
 
 ---
 
 ## 🆘 Troubleshooting
 
 ### Chat not loading?
+
 - Check Firestore rules
 - Verify room ID is correct
 - Check Firebase connection
 
 ### Presence not updating?
+
 - Verify user_presence collection exists
 - Check StreamProvider is watching correct roomId
 - Ensure current user ID is set
 
 ### Recording not working?
+
 - Verify Agora engine is initialized
 - Check permissions on device
 - Verify room ID passed correctly
 
 ### Analytics data missing?
+
 - Ensure events are being recorded
 - Check room_statistics collection
 - Verify timestamp fields in Firestore

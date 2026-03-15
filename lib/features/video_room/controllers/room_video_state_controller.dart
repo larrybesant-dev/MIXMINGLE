@@ -46,7 +46,8 @@ class RoomVideoStateController {
   }
 
   // Add a video tile
-  Future<void> addVideoTile(VideoTileModel tile, WindowStateModel windowState) async {
+  Future<void> addVideoTile(
+      VideoTileModel tile, WindowStateModel windowState) async {
     final newTiles = [..._currentState.videoTiles, tile];
     final newWindows = [..._currentState.windowStates, windowState];
     final newState = _currentState.copyWith(
@@ -58,8 +59,11 @@ class RoomVideoStateController {
 
   // Remove a video tile
   Future<void> removeVideoTile(String tileId) async {
-    final newTiles = _currentState.videoTiles.where((t) => t.id != tileId).toList();
-    final newWindows = _currentState.windowStates.where((w) => w.videoTileId != tileId).toList();
+    final newTiles =
+        _currentState.videoTiles.where((t) => t.id != tileId).toList();
+    final newWindows = _currentState.windowStates
+        .where((w) => w.videoTileId != tileId)
+        .toList();
     final newState = _currentState.copyWith(
       videoTiles: newTiles,
       windowStates: newWindows,
@@ -69,18 +73,18 @@ class RoomVideoStateController {
 
   // Update video tile
   Future<void> updateVideoTile(VideoTileModel updatedTile) async {
-    final newTiles = _currentState.videoTiles.map((t) =>
-      t.id == updatedTile.id ? updatedTile : t
-    ).toList();
+    final newTiles = _currentState.videoTiles
+        .map((t) => t.id == updatedTile.id ? updatedTile : t)
+        .toList();
     final newState = _currentState.copyWith(videoTiles: newTiles);
     await updateState(newState);
   }
 
   // Update window state
   Future<void> updateWindowState(WindowStateModel updatedWindow) async {
-    final newWindows = _currentState.windowStates.map((w) =>
-      w.id == updatedWindow.id ? updatedWindow : w
-    ).toList();
+    final newWindows = _currentState.windowStates
+        .map((w) => w.id == updatedWindow.id ? updatedWindow : w)
+        .toList();
     final newState = _currentState.copyWith(windowStates: newWindows);
     await updateState(newState);
   }
@@ -94,9 +98,9 @@ class RoomVideoStateController {
 
   // Update publisher
   Future<void> updatePublisher(PublisherStateModel updatedPublisher) async {
-    final newPublishers = _currentState.publishers.map((p) =>
-      p.userId == updatedPublisher.userId ? updatedPublisher : p
-    ).toList();
+    final newPublishers = _currentState.publishers
+        .map((p) => p.userId == updatedPublisher.userId ? updatedPublisher : p)
+        .toList();
     final newState = _currentState.copyWith(publishers: newPublishers);
     await updateState(newState);
   }
@@ -113,7 +117,8 @@ class RoomVideoStateController {
     if (activeCount > _currentState.maxPublishers) {
       // Disable oldest publishers or something
       // For now, just log
-      AppLogger.warning('Publisher limit exceeded: $activeCount > ${_currentState.maxPublishers}');
+      AppLogger.warning(
+          'Publisher limit exceeded: $activeCount > ${_currentState.maxPublishers}');
     }
   }
 
@@ -121,5 +126,3 @@ class RoomVideoStateController {
     _subscription?.cancel();
   }
 }
-
-

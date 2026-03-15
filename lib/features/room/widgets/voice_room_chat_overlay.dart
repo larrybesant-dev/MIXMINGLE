@@ -19,10 +19,12 @@ class VoiceRoomChatOverlay extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<VoiceRoomChatOverlay> createState() => _VoiceRoomChatOverlayState();
+  ConsumerState<VoiceRoomChatOverlay> createState() =>
+      _VoiceRoomChatOverlayState();
 }
 
-class _VoiceRoomChatOverlayState extends ConsumerState<VoiceRoomChatOverlay> with SingleTickerProviderStateMixin {
+class _VoiceRoomChatOverlayState extends ConsumerState<VoiceRoomChatOverlay>
+    with SingleTickerProviderStateMixin {
   late TextEditingController _messageController;
   late ScrollController _scrollController;
   late AnimationController _slideController;
@@ -95,7 +97,8 @@ class _VoiceRoomChatOverlayState extends ConsumerState<VoiceRoomChatOverlay> wit
 
   @override
   Widget build(BuildContext context) {
-    final messagesAsync = ref.watch(roomMessagesFirestoreProvider(widget.roomId));
+    final messagesAsync =
+        ref.watch(roomMessagesFirestoreProvider(widget.roomId));
 
     return messagesAsync.when(
       data: (messages) => SlideTransition(
@@ -143,7 +146,8 @@ class _VoiceRoomChatOverlayState extends ConsumerState<VoiceRoomChatOverlay> wit
                         itemBuilder: (context, index) {
                           return _ChatMessageBubble(
                             message: messages[index],
-                            isCurrentUser: messages[index].senderId == widget.currentUserId,
+                            isCurrentUser: messages[index].senderId ==
+                                widget.currentUserId,
                           );
                         },
                       ),
@@ -246,12 +250,14 @@ class _ChatMessageBubble extends StatelessWidget {
       );
     }
 
-    final displayName = message.senderName.isNotEmpty ? message.senderName : message.senderId;
+    final displayName =
+        message.senderName.isNotEmpty ? message.senderName : message.senderId;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isCurrentUser)
             Tooltip(
@@ -278,13 +284,17 @@ class _ChatMessageBubble extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Column(
-                crossAxisAlignment: isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                crossAxisAlignment: isCurrentUser
+                    ? CrossAxisAlignment.end
+                    : CrossAxisAlignment.start,
                 children: [
                   // Always show sender name
                   Text(
                     displayName,
                     style: TextStyle(
-                      color: isCurrentUser ? Colors.white.withValues(alpha: 0.9) : Colors.pink,
+                      color: isCurrentUser
+                          ? Colors.white.withValues(alpha: 0.9)
+                          : Colors.pink,
                       fontSize: 11,
                       fontWeight: FontWeight.w600,
                     ),

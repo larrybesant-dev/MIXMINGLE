@@ -67,10 +67,12 @@ class ProfileService {
       if (resolvedId.isEmpty) {
         final currentUser = _auth.currentUser;
         if (currentUser == null) {
-          throw Exception('Cannot update profile: no authenticated user and profile id is empty');
+          throw Exception(
+              'Cannot update profile: no authenticated user and profile id is empty');
         }
         resolvedId = currentUser.uid;
-        debugPrint('⚠️ [ProfileService] profile.id was empty — using auth UID: $resolvedId');
+        debugPrint(
+            '⚠️ [ProfileService] profile.id was empty — using auth UID: $resolvedId');
       }
 
       // Primary write — existing users collection (backward compatible)
@@ -84,13 +86,15 @@ class ProfileService {
           .collection('profiles_public')
           .doc(resolvedId)
           .set(profile.toPublicMap(), SetOptions(merge: true))
-          .catchError((e) => debugPrint('⚠️ [ProfileService] profiles_public sync failed: $e')));
+          .catchError((e) => debugPrint(
+              '⚠️ [ProfileService] profiles_public sync failed: $e')));
 
       unawaited(_firestore
           .collection('profiles_private')
           .doc(resolvedId)
           .set(profile.toPrivateMap(), SetOptions(merge: true))
-          .catchError((e) => debugPrint('⚠️ [ProfileService] profiles_private sync failed: $e')));
+          .catchError((e) => debugPrint(
+              '⚠️ [ProfileService] profiles_private sync failed: $e')));
 
       // Invalidate cache after update
       AppCaches.userProfiles.remove(resolvedId);
@@ -104,7 +108,8 @@ class ProfileService {
   /// Read public profile for any user (uses profiles_public collection).
   Future<UserProfile?> getPublicProfile(String userId) async {
     try {
-      final doc = await _firestore.collection('profiles_public').doc(userId).get();
+      final doc =
+          await _firestore.collection('profiles_public').doc(userId).get();
       if (!doc.exists) {
         // Fall back to users collection for profiles not yet migrated
         return getUserProfile(userId);
@@ -121,7 +126,11 @@ class ProfileService {
 
   /// Stream public profile for any user.
   Stream<UserProfile?> streamPublicProfile(String userId) {
-    return _firestore.collection('profiles_public').doc(userId).snapshots().map((doc) {
+    return _firestore
+        .collection('profiles_public')
+        .doc(userId)
+        .snapshots()
+        .map((doc) {
       if (!doc.exists) return null;
       final data = doc.data()!..['id'] = userId;
       data['email'] ??= '';
@@ -135,13 +144,15 @@ class ProfileService {
 
   /// Update only the private settings for the owner.
   /// Enforces that only the currently authenticated user can update their own private data.
-  Future<void> updatePrivateSettings(String userId, Map<String, dynamic> settings) async {
+  Future<void> updatePrivateSettings(
+      String userId, Map<String, dynamic> settings) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) {
       throw Exception('Cannot update private settings: no authenticated user');
     }
     if (currentUser.uid != userId) {
-      throw Exception('Cannot update private settings: userId does not match authenticated user');
+      throw Exception(
+          'Cannot update private settings: userId does not match authenticated user');
     }
     try {
       await _firestore.collection('profiles_private').doc(userId).set(
@@ -154,7 +165,8 @@ class ProfileService {
   }
 
   // Create initial profile for new user
-  Future<void> createInitialProfile(String userId, String email, String displayName) async {
+  Future<void> createInitialProfile(
+      String userId, String email, String displayName) async {
     final profile = UserProfile(
       id: userId,
       email: email,
@@ -185,32 +197,40 @@ class ProfileService {
   }
 
   // Search users by interests
-  Future<List<UserProfile>> searchUsersByInterests(List<String> interests) async {
+  Future<List<UserProfile>> searchUsersByInterests(
+      List<String> interests) async {
     try {
-      final query = _firestore.collection('users').where('interests', arrayContainsAny: interests);
+      final query = _firestore
+          .collection('users')
+          .where('interests', arrayContainsAny: interests);
       final snapshot = await query.get();
-      return snapshot.docs.map((doc) => UserProfile.fromMap(doc.data()..['id'] = doc.id)).toList();
+      return snapshot.docs
+          .map((doc) => UserProfile.fromMap(doc.data()..['id'] = doc.id))
+          .toList();
     } catch (e) {
       throw Exception('Failed to search users: $e');
     }
   }
 
   // Get users near location (simplified - would need geolocation package for real implementation)
-  Future<List<UserProfile>> getNearbyUsers(double latitude, double longitude, double radiusKm) async {
+  Future<List<UserProfile>> getNearbyUsers(
+      double latitude, double longitude, double radiusKm) async {
     try {
       // This is a simplified version. In production, you'd use geohashing or GeoFirestore
       final query = _firestore.collection('users');
       final snapshot = await query.get();
       return snapshot.docs
           .map((doc) => UserProfile.fromMap(doc.data()..['id'] = doc.id))
-          .where((profile) => _isWithinRadius(profile, latitude, longitude, radiusKm))
+          .where((profile) =>
+              _isWithinRadius(profile, latitude, longitude, radiusKm))
           .toList();
     } catch (e) {
       throw Exception('Failed to get nearby users: $e');
     }
   }
 
-  bool _isWithinRadius(UserProfile profile, double lat, double lng, double radiusKm) {
+  bool _isWithinRadius(
+      UserProfile profile, double lat, double lng, double radiusKm) {
     // Check if profile has location data
     if (profile.latitude == null || profile.longitude == null) {
       return false;
@@ -220,7 +240,8 @@ class ProfileService {
     const double earthRadius = 6371; // km
     final dLat = (profile.latitude! - lat) * (pi / 180);
     final dLng = (profile.longitude! - lng) * (pi / 180);
-    final a = sin(dLat / 2) * sin(dLat / 2) + cos(lat) * cos(profile.latitude!) * sin(dLng / 2) * sin(dLng / 2);
+    final a = sin(dLat / 2) * sin(dLat / 2) +
+        cos(lat) * cos(profile.latitude!) * sin(dLng / 2) * sin(dLng / 2);
     final c = 2 * atan2(sqrt(a), sqrt(1 - a));
     final distance = earthRadius * c;
     return distance <= radiusKm;
@@ -260,13 +281,21 @@ class ProfileService {
 
       // Add to followers sub-collection
       batch.set(
-        _firestore.collection('users').doc(followingId).collection('followers').doc(followerId),
+        _firestore
+            .collection('users')
+            .doc(followingId)
+            .collection('followers')
+            .doc(followerId),
         {'timestamp': FieldValue.serverTimestamp()},
       );
 
       // Add to following sub-collection
       batch.set(
-        _firestore.collection('users').doc(followerId).collection('following').doc(followingId),
+        _firestore
+            .collection('users')
+            .doc(followerId)
+            .collection('following')
+            .doc(followingId),
         {'timestamp': FieldValue.serverTimestamp()},
       );
 
@@ -315,12 +344,20 @@ class ProfileService {
 
       // Remove from followers sub-collection
       batch.delete(
-        _firestore.collection('users').doc(followingId).collection('followers').doc(followerId),
+        _firestore
+            .collection('users')
+            .doc(followingId)
+            .collection('followers')
+            .doc(followerId),
       );
 
       // Remove from following sub-collection
       batch.delete(
-        _firestore.collection('users').doc(followerId).collection('following').doc(followingId),
+        _firestore
+            .collection('users')
+            .doc(followerId)
+            .collection('following')
+            .doc(followingId),
       );
 
       // Update follower counts
@@ -343,7 +380,12 @@ class ProfileService {
   // Check if following a user
   Future<bool> isFollowing(String followerId, String followingId) async {
     try {
-      final doc = await _firestore.collection('users').doc(followerId).collection('following').doc(followingId).get();
+      final doc = await _firestore
+          .collection('users')
+          .doc(followerId)
+          .collection('following')
+          .doc(followingId)
+          .get();
       return doc.exists;
     } catch (e) {
       return false;
@@ -364,7 +406,11 @@ class ProfileService {
   // Get followers list
   Future<List<String>> getFollowers(String userId) async {
     try {
-      final snapshot = await _firestore.collection('users').doc(userId).collection('followers').get();
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('followers')
+          .get();
       return snapshot.docs.map((doc) => doc.id).toList();
     } catch (e) {
       return [];
@@ -374,7 +420,11 @@ class ProfileService {
   // Get following list
   Future<List<String>> getFollowing(String userId) async {
     try {
-      final snapshot = await _firestore.collection('users').doc(userId).collection('following').get();
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('following')
+          .get();
       return snapshot.docs.map((doc) => doc.id).toList();
     } catch (e) {
       return [];
@@ -394,7 +444,8 @@ class ProfileService {
           .where((profile) {
             final displayName = (profile.displayName ?? '').toLowerCase();
             final nickname = (profile.nickname ?? '').toLowerCase();
-            return displayName.contains(lowerQuery) || nickname.contains(lowerQuery);
+            return displayName.contains(lowerQuery) ||
+                nickname.contains(lowerQuery);
           })
           .take(20)
           .toList();
@@ -427,5 +478,3 @@ class ProfileService {
         .map((snapshot) => snapshot.docs.map((doc) => doc.id).toList());
   }
 }
-
-

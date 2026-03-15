@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'app_logger.dart';
 
@@ -177,7 +177,8 @@ class SafeFirestore {
       if (value is T) {
         return value;
       } else {
-        AppLogger.warning('Type mismatch for $key: expected $T, got ${value.runtimeType}');
+        AppLogger.warning(
+            'Type mismatch for $key: expected $T, got ${value.runtimeType}');
         return defaultValue;
       }
     } catch (e) {
@@ -204,7 +205,8 @@ class SafeFirestore {
       if (value is T) {
         return value;
       } else {
-        AppLogger.warning('Type mismatch for $key: expected $T, got ${value.runtimeType}');
+        AppLogger.warning(
+            'Type mismatch for $key: expected $T, got ${value.runtimeType}');
         return null;
       }
     } catch (e) {
@@ -213,5 +215,3 @@ class SafeFirestore {
     }
   }
 }
-
-

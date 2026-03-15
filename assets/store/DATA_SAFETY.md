@@ -1,8 +1,11 @@
 # Google Play Store Data Safety Documentation
+
 # Version: 1.0.0
+
 # Last Updated: 2026-02-09
 
 # This document outlines the data collection and sharing practices for Mix & Mingle
+
 # as required by Google Play's Data Safety section.
 
 ## Overview
@@ -18,6 +21,7 @@ why it is collected, and how it is used.
 ### 1. Personal Information
 
 #### Name
+
 - **Collected**: Yes
 - **Shared**: No
 - **Purpose**: Account creation and display name in rooms
@@ -25,6 +29,7 @@ why it is collected, and how it is used.
 - **User Control**: Can edit in profile settings
 
 #### Email Address
+
 - **Collected**: Yes
 - **Shared**: No
 - **Purpose**: Account authentication and communication
@@ -36,6 +41,7 @@ why it is collected, and how it is used.
 ### 2. Financial Information
 
 #### Purchase History
+
 - **Collected**: Yes
 - **Shared**: Yes (with payment processors)
 - **Shared With**: RevenueCat, Stripe, Apple/Google
@@ -44,6 +50,7 @@ why it is collected, and how it is used.
 - **User Control**: Purchase history viewable in app
 
 #### Payment Information
+
 - **Collected**: No (handled by platform)
 - **Note**: Payment card details are handled by Apple App Store / Google Play
   and are never stored directly by Mix & Mingle
@@ -53,6 +60,7 @@ why it is collected, and how it is used.
 ### 3. Photos and Videos
 
 #### Profile Photo
+
 - **Collected**: Yes
 - **Shared**: Yes (displayed to other users)
 - **Purpose**: User identification in rooms
@@ -60,6 +68,7 @@ why it is collected, and how it is used.
 - **User Control**: Can upload, change, or remove
 
 #### Video Streams
+
 - **Collected**: Temporarily during calls
 - **Shared**: Yes (with room participants via Agora)
 - **Purpose**: Real-time video communication
@@ -72,6 +81,7 @@ why it is collected, and how it is used.
 ### 4. Audio
 
 #### Voice Data
+
 - **Collected**: Temporarily during calls
 - **Shared**: Yes (with room participants via Agora)
 - **Purpose**: Real-time audio communication
@@ -84,6 +94,7 @@ why it is collected, and how it is used.
 ### 5. App Activity
 
 #### In-App Interactions
+
 - **Collected**: Yes
 - **Shared**: Yes (with Firebase Analytics)
 - **Purpose**: Improve app experience and features
@@ -95,6 +106,7 @@ why it is collected, and how it is used.
   - Screen views
 
 #### In-App Search History
+
 - **Collected**: Yes
 - **Shared**: No
 - **Purpose**: Improve search recommendations
@@ -106,6 +118,7 @@ why it is collected, and how it is used.
 ### 6. App Info and Performance
 
 #### Crash Logs
+
 - **Collected**: Yes
 - **Shared**: Yes (with Firebase Crashlytics)
 - **Purpose**: Identify and fix app issues
@@ -113,6 +126,7 @@ why it is collected, and how it is used.
 - **User Control**: Opt-out available in settings
 
 #### Diagnostics
+
 - **Collected**: Yes
 - **Shared**: Yes (with Firebase Performance)
 - **Purpose**: Monitor app performance
@@ -127,6 +141,7 @@ why it is collected, and how it is used.
 ### 7. Device and Other Identifiers
 
 #### Device ID
+
 - **Collected**: Yes
 - **Shared**: Yes (with Firebase)
 - **Purpose**: Analytics and fraud prevention
@@ -134,6 +149,7 @@ why it is collected, and how it is used.
 - **User Control**: Reset via device settings
 
 #### Firebase Installation ID
+
 - **Collected**: Yes
 - **Shared**: No
 - **Purpose**: Push notifications and analytics
@@ -157,36 +173,43 @@ why it is collected, and how it is used.
 
 ### Data Retention
 
-| Data Type | Retention Period |
-|-----------|------------------|
-| Account data | Until deletion requested |
+| Data Type           | Retention Period            |
+| ------------------- | --------------------------- |
+| Account data        | Until deletion requested    |
 | Transaction history | 7 years (legal requirement) |
-| Analytics data | 14 months |
-| Crash logs | 90 days |
-| Video/audio streams | Not retained |
+| Analytics data      | 14 months                   |
+| Crash logs          | 90 days                     |
+| Video/audio streams | Not retained                |
 
 ---
 
 ## User Rights and Controls
 
 ### Data Access
+
 Users can view their data through:
+
 - Profile settings
 - Transaction history
 - Downloaded data export (available on request)
 
 ### Data Deletion
+
 Users can request account deletion through:
+
 - In-app settings → Account → Delete Account
 - Email: support@mixmingle.app
 
 Upon deletion:
+
 - Account data removed within 30 days
 - Analytics data anonymized
 - Transaction records retained for legal compliance
 
 ### Data Portability
+
 Users can request a copy of their data by:
+
 - Email: privacy@mixmingle.app
 - Response time: Within 30 days
 
@@ -195,14 +218,17 @@ Users can request a copy of their data by:
 ## Third-Party Services
 
 ### Firebase (Google)
+
 - Services: Authentication, Firestore, Analytics, Crashlytics, Performance
 - Privacy Policy: https://firebase.google.com/support/privacy
 
 ### Agora
+
 - Services: Real-time video/audio communication
 - Privacy Policy: https://www.agora.io/privacy-policy
 
 ### RevenueCat
+
 - Services: In-app purchase management
 - Privacy Policy: https://www.revenuecat.com/privacy
 
@@ -211,10 +237,12 @@ Users can request a copy of their data by:
 ## Contact Information
 
 For privacy-related inquiries:
+
 - Email: privacy@mixmingle.app
 - Website: https://mixmingle.app/privacy
 
 Data Protection Officer:
+
 - Email: dpo@mixmingle.app
 
 ---
@@ -225,6 +253,7 @@ This document is updated whenever our data practices change.
 Last update: 2026-02-09
 
 Users will be notified of significant changes through:
+
 - In-app notification
 - Email (for registered users)
 - App Store update notes

@@ -9,6 +9,7 @@
 ## 🚀 ONE-COMMAND DEPLOYMENT
 
 ### Option 1: Automated Script (Recommended)
+
 ```powershell
 # Review what will be deployed (dry run)
 .\deploy-phase1.ps1 -DryRun
@@ -18,6 +19,7 @@
 ```
 
 ### Option 2: Manual Deployment
+
 ```bash
 # 1. Build functions
 cd functions
@@ -55,6 +57,7 @@ Before running deployment:
 **Run ALL 5 tests before calling Phase 1 "done":**
 
 ### Test 1: Session Expiry ⏱️
+
 ```
 1. Create 2 test accounts
 2. Start speed dating session
@@ -64,6 +67,7 @@ Before running deployment:
 ```
 
 ### Test 2: Late Decision ❌
+
 ```
 1. Complete speed dating session
 2. Wait for expiry
@@ -73,6 +77,7 @@ Before running deployment:
 ```
 
 ### Test 3: Firestore Security 🔒
+
 ```
 1. Open Firebase Console
 2. Try to create speed_dating_sessions document manually
@@ -81,6 +86,7 @@ Before running deployment:
 ```
 
 ### Test 4: Cross-User Decision 🚫
+
 ```
 1. User A & B in session
 2. User A tries API call to submit for User B
@@ -89,6 +95,7 @@ Before running deployment:
 ```
 
 ### Test 5: Duplicate Decision 🔄
+
 ```
 1. User A submits "keep"
 2. User A tries to change to "pass"
@@ -101,6 +108,7 @@ Before running deployment:
 ## 📊 MONITORING AFTER DEPLOYMENT
 
 ### Check Function Logs
+
 ```bash
 # Watch for errors in real-time
 firebase functions:log --only submitSpeedDatingDecision
@@ -110,12 +118,14 @@ firebase functions:log --only onSpeedDatingSessionCreated
 ```
 
 ### Check Firestore Health
+
 ```bash
 # List active sessions (should be empty after 10 minutes)
 firebase firestore:get speed_dating_sessions --where status==active
 ```
 
 ### Watch for Red Flags 🚨
+
 - Multiple "deadline-exceeded" errors → Users trying to submit late
 - "permission-denied" spikes → Attempted rule bypass
 - Sessions stuck on "active" → Timer not working
@@ -125,6 +135,7 @@ firebase firestore:get speed_dating_sessions --where status==active
 ## 🔄 ROLLBACK PLAN (If Something Breaks)
 
 ### Rollback Functions
+
 ```bash
 # List previous versions
 firebase functions:list
@@ -136,6 +147,7 @@ firebase rollback functions:leaveSpeedDatingSession
 ```
 
 ### Rollback Rules
+
 ```bash
 # Firestore rules are versioned automatically
 # Rollback via Firebase Console:
@@ -146,6 +158,7 @@ firebase rollback functions:leaveSpeedDatingSession
 ```
 
 ### Emergency Stop
+
 ```bash
 # Disable functions temporarily
 firebase functions:config:unset speed_dating.enabled
@@ -170,12 +183,14 @@ Phase 1 deployment is ONLY successful if:
 ## 📞 TROUBLESHOOTING
 
 ### "firebase: command not found"
+
 ```bash
 npm install -g firebase-tools
 firebase login
 ```
 
 ### "Permission denied" during deployment
+
 ```bash
 # Make sure you're on correct project
 firebase use --add
@@ -184,6 +199,7 @@ firebase use --add
 ```
 
 ### Functions deploy fails
+
 ```bash
 # Check TypeScript compilation
 cd functions
@@ -193,6 +209,7 @@ npm run build
 ```
 
 ### Rules validation error
+
 ```bash
 # Test rules locally
 firebase emulators:start --only firestore
@@ -224,12 +241,14 @@ firebase emulators:start --only firestore
 ## 🚦 GO / NO-GO DECISION
 
 **GREEN (Deploy):**
+
 - All pre-deployment checks passed
 - Team available to monitor deployment
 - Non-peak hours (late night / weekend)
 - Backup plan ready
 
 **RED (Wait):**
+
 - Missing tests
 - Peak usage time
 - No one available to monitor

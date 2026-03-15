@@ -1,4 +1,4 @@
-﻿/// Friend Card Widget - Design System Compliant
+/// Friend Card Widget - Design System Compliant
 ///
 /// Displays a friend with:
 /// - Avatar + online indicator
@@ -76,11 +76,13 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
     );
 
     _scaleAnimation = Tween<double>(begin: 1.0, end: 1.02).animate(
-      CurvedAnimation(parent: _hoverController, curve: DesignAnimations.easeOutCubic),
+      CurvedAnimation(
+          parent: _hoverController, curve: DesignAnimations.easeOutCubic),
     );
 
     _shadowAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _hoverController, curve: DesignAnimations.easeOutCubic),
+      CurvedAnimation(
+          parent: _hoverController, curve: DesignAnimations.easeOutCubic),
     );
 
     // Pulse animation for online indicator
@@ -90,7 +92,8 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
     )..repeat(reverse: true);
 
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.3).animate(
-      CurvedAnimation(parent: _pulseController, curve: DesignAnimations.easeInOut),
+      CurvedAnimation(
+          parent: _pulseController, curve: DesignAnimations.easeInOut),
     );
   }
 
@@ -125,7 +128,8 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
           },
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(DesignSpacing.cardBorderRadius),
+              borderRadius:
+                  BorderRadius.circular(DesignSpacing.cardBorderRadius),
               border: Border(
                 left: BorderSide(
                   color: _getStatusColor(),
@@ -297,8 +301,12 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
 
   /// Get status background color
   Color _getStatusBackgroundColor() {
-    if (widget.friend.isOnline) return DesignColors.accent.withValues(alpha: 0.1);
-    if (widget.friend.isInactive) return DesignColors.accent.withValues(alpha: 0.1);
+    if (widget.friend.isOnline) {
+      return DesignColors.accent.withValues(alpha: 0.1);
+    }
+    if (widget.friend.isInactive) {
+      return DesignColors.accent.withValues(alpha: 0.1);
+    }
     return DesignColors.accent;
   }
 
@@ -353,8 +361,10 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
         if (widget.friend.isOnline)
           PopupMenuItem(
             value: 'invite_to_room',
-            child: const Text('📩 Invite to Room', style: DesignTypography.body),
-            onTap: () => widget.onContextMenu?.call('invite_to_room', widget.friend),
+            child:
+                const Text('📩 Invite to Room', style: DesignTypography.body),
+            onTap: () =>
+                widget.onContextMenu?.call('invite_to_room', widget.friend),
           ),
         PopupMenuItem(
           value: 'view_profile',
@@ -375,6 +385,3 @@ class _FriendCardWidgetState extends ConsumerState<FriendCardWidget>
     );
   }
 }
-
-
-

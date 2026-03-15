@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixmingle/core/pagination/pagination_controller.dart';
@@ -11,10 +11,12 @@ class BrowseRoomsPaginatedPage extends ConsumerStatefulWidget {
   const BrowseRoomsPaginatedPage({super.key});
 
   @override
-  ConsumerState<BrowseRoomsPaginatedPage> createState() => _BrowseRoomsPaginatedPageState();
+  ConsumerState<BrowseRoomsPaginatedPage> createState() =>
+      _BrowseRoomsPaginatedPageState();
 }
 
-class _BrowseRoomsPaginatedPageState extends ConsumerState<BrowseRoomsPaginatedPage> {
+class _BrowseRoomsPaginatedPageState
+    extends ConsumerState<BrowseRoomsPaginatedPage> {
   late PaginationController<Room> _controller;
   String? _selectedCategory;
 
@@ -38,6 +40,7 @@ class _BrowseRoomsPaginatedPageState extends ConsumerState<BrowseRoomsPaginatedP
     _controller = PaginationController<Room>(
       pageSize: 20,
       queryBuilder: () {
+<<<<<<< HEAD
         var query = FirebaseFirestore.instance
             .collection('rooms')
             .orderBy('createdAt', descending: true);
@@ -45,6 +48,11 @@ class _BrowseRoomsPaginatedPageState extends ConsumerState<BrowseRoomsPaginatedP
           query = query.where('category', isEqualTo: category);
         }
         return query;
+=======
+        return FirebaseFirestore.instance
+            .collection('rooms')
+            .orderBy('createdAt', descending: true);
+>>>>>>> origin/develop
       },
       fromDocument: (doc) => Room.fromMap(doc.data() as Map<String, dynamic>),
     );
@@ -129,7 +137,8 @@ class _BrowseRoomsPaginatedPageState extends ConsumerState<BrowseRoomsPaginatedP
             child: Card(
               child: ListTile(
                 title: Text(room.name ?? room.title),
-                subtitle: Text('${room.participantIds.length} members â€¢ ${room.viewerCount} viewers'),
+                subtitle: Text(
+                    '${room.participantIds.length} members â€¢ ${room.viewerCount} viewers'),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
                   // Navigate to room details

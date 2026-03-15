@@ -1,11 +1,16 @@
-﻿// TEMP DEV STUBS â€” REMOVE LATER
+// TEMP DEV STUBS â€” REMOVE LATER
 // These stubs are temporary placeholders to unblock development
 // They should be replaced with proper implementations when features are re-enabled
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+<<<<<<< HEAD
 /// Presence service is now fully implemented — see lib/shared/providers/user_providers.dart
 /// presenceServiceProvider was removed from stubs.
+=======
+/// NOTE: presenceServiceProvider has been removed from this stub file.
+/// Use the real provider: import '../../shared/providers/user_providers.dart'
+>>>>>>> origin/develop
 
 /// ------------------------------
 /// SPEED DATING (DISABLED STUBS)
@@ -14,7 +19,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final activeSpeedDatingSessionProvider = Provider<dynamic>((ref) => null);
 
 /// Speed dating matches provider - returns empty list wrapped in AsyncValue
-final speedDatingMatchesProvider = StreamProvider<List<SpeedDatingMatch>>((ref) {
+final speedDatingMatchesProvider =
+    StreamProvider<List<SpeedDatingMatch>>((ref) {
   return Stream.value(const []);
 });
 
@@ -35,5 +41,3 @@ class SpeedDatingMatch {
 
 /// Stub for SpeedDatingResult model
 class SpeedDatingResult {}
-
-

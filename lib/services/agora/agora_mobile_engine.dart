@@ -7,10 +7,12 @@ import 'dart:async';
 class AgoraMobileEngine implements IVideoEngine {
   late final RtcEngine _engine;
   final Map<int, RemoteUser> _remoteUsersMap = {};
-  final StreamController<List<RemoteUser>> _remoteUsersController = StreamController.broadcast();
+  final StreamController<List<RemoteUser>> _remoteUsersController =
+      StreamController.broadcast();
 
   @override
-  Stream<List<RemoteUser>> get remoteUsersStream => _remoteUsersController.stream;
+  Stream<List<RemoteUser>> get remoteUsersStream =>
+      _remoteUsersController.stream;
 
   @override
   Future<void> init(String appId, {String? token}) async {
@@ -39,7 +41,10 @@ class AgoraMobileEngine implements IVideoEngine {
   }
 
   @override
-  Future<void> joinChannel({required String channel, required int uid, required String token}) async {
+  Future<void> joinChannel(
+      {required String channel,
+      required int uid,
+      required String token}) async {
     try {
       await _engine.joinChannel(
         token: token,
@@ -68,11 +73,13 @@ class AgoraMobileEngine implements IVideoEngine {
   }
 
   @override
-  Future<void> enableLocalTracks({bool enableAudio = true, bool enableVideo = true}) async {
+  Future<void> enableLocalTracks(
+      {bool enableAudio = true, bool enableVideo = true}) async {
     try {
       await _engine.enableLocalAudio(enableAudio);
       await _engine.enableLocalVideo(enableVideo);
-      debugPrint('âœ… Local tracks enabled - Audio: $enableAudio, Video: $enableVideo');
+      debugPrint(
+          'âœ… Local tracks enabled - Audio: $enableAudio, Video: $enableVideo');
     } catch (e) {
       debugPrint('âŒ Error enabling local tracks: $e');
       rethrow;

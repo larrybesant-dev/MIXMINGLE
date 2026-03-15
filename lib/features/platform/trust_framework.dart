@@ -82,7 +82,8 @@ class Certification {
         trustScore: (map['trustScore'] as num?)?.toDouble() ?? 0,
         badges: List<String>.from(map['badges'] ?? []),
         requirements: List<String>.from(map['requirements'] ?? []),
-        completedRequirements: List<String>.from(map['completedRequirements'] ?? []),
+        completedRequirements:
+            List<String>.from(map['completedRequirements'] ?? []),
         metadata: (map['metadata'] as Map<String, dynamic>?) ?? {},
         issuedAt: DateTime.parse(map['issuedAt'] as String),
         expiresAt: map['expiresAt'] != null
@@ -314,7 +315,8 @@ class TrustFrameworkService {
   final _certificationController = StreamController<Certification>.broadcast();
   final _violationController = StreamController<Violation>.broadcast();
 
-  Stream<Certification> get certificationStream => _certificationController.stream;
+  Stream<Certification> get certificationStream =>
+      _certificationController.stream;
   Stream<Violation> get violationStream => _violationController.stream;
 
   // Collections
@@ -345,14 +347,17 @@ class TrustFrameworkService {
     debugPrint('ðŸ† [TrustFramework] Certifying creator: $creatorId');
 
     try {
-      final id = 'cert_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
+      final id =
+          'cert_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
       final now = DateTime.now();
 
       // Get requirements for certification type
-      final requirements = _getCertificationRequirements(type, EntityType.creator);
+      final requirements =
+          _getCertificationRequirements(type, EntityType.creator);
 
       // Calculate initial trust score
-      final trustScore = await _calculateTrustScore(creatorId, EntityType.creator);
+      final trustScore =
+          await _calculateTrustScore(creatorId, EntityType.creator);
 
       final certification = Certification(
         id: id,
@@ -396,7 +401,11 @@ class TrustFrameworkService {
     CertificationType type,
     EntityType entityType,
   ) {
-    final baseRequirements = ['identity_verified', 'email_verified', 'terms_accepted'];
+    final baseRequirements = [
+      'identity_verified',
+      'email_verified',
+      'terms_accepted'
+    ];
 
     return switch (type) {
       CertificationType.verified => [...baseRequirements],
@@ -450,11 +459,14 @@ class TrustFrameworkService {
     debugPrint('ðŸ† [TrustFramework] Certifying partner: $partnerId');
 
     try {
-      final id = 'cert_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
+      final id =
+          'cert_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
       final now = DateTime.now();
 
-      final requirements = _getCertificationRequirements(type, EntityType.partner);
-      final trustScore = await _calculateTrustScore(partnerId, EntityType.partner);
+      final requirements =
+          _getCertificationRequirements(type, EntityType.partner);
+      final trustScore =
+          await _calculateTrustScore(partnerId, EntityType.partner);
 
       final certification = Certification(
         id: id,
@@ -504,7 +516,8 @@ class TrustFrameworkService {
     debugPrint('ðŸ† [TrustFramework] Certifying app: $appId');
 
     try {
-      final id = 'cert_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
+      final id =
+          'cert_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
       final now = DateTime.now();
 
       final requirements = [
@@ -569,7 +582,8 @@ class TrustFrameworkService {
       final rule = await _getRule(ruleId);
       final actualSeverity = severity ?? rule?.severity ?? RuleSeverity.warning;
 
-      final id = 'viol_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
+      final id =
+          'viol_${DateTime.now().millisecondsSinceEpoch}_${_random.nextInt(10000)}';
 
       // Calculate trust score impact
       final impact = _calculateTrustScoreImpact(actualSeverity);
@@ -783,9 +797,8 @@ class TrustFrameworkService {
     String entityId,
     EntityType entityType,
   ) async {
-    final doc = await _trustScoresCollection
-        .doc('${entityType.name}_$entityId')
-        .get();
+    final doc =
+        await _trustScoresCollection.doc('${entityType.name}_$entityId').get();
 
     if (!doc.exists) {
       return _calculateTrustScore(entityId, entityType);

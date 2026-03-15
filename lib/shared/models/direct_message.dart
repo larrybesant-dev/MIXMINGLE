@@ -11,7 +11,8 @@ enum DirectMessageType {
 
 class DirectMessage {
   final String id;
-  final String conversationId; // Unique ID for the conversation between two users
+  final String
+      conversationId; // Unique ID for the conversation between two users
   final String senderId;
   final String receiverId;
   final DirectMessageType type;
@@ -193,7 +194,8 @@ class DirectMessage {
   }
 
   /// Get the total number of reactions
-  int get totalReactions => reactions.values.fold(0, (total, users) => total + users.length);
+  int get totalReactions =>
+      reactions.values.fold(0, (total, users) => total + users.length);
 
   DirectMessage copyWith({
     String? id,

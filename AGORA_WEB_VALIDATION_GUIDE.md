@@ -8,12 +8,14 @@
 ## 📊 What You Now Have
 
 ### ✅ Fixed Issues
+
 - ✅ Eliminated `NoSuchMethodError: jsPromise.then` crash
 - ✅ Fixed timing race between Flutter boot and JS bridge load
 - ✅ Eliminated undefined returns from JS
 - ✅ Suppressed verbose Agora SDK logs (errors only)
 
 ### ✅ New Validation Features
+
 - ✅ Complete join lifecycle tracking
 - ✅ Remote user event detection
 - ✅ Video/audio stream validation
@@ -59,15 +61,15 @@ Open DevTools (F12) → Console:
 
 ```javascript
 // 1. Check bridge loaded
-window.agoraWeb
+window.agoraWeb;
 // Should output: Object { joinChannel, leaveChannel, ... }
 
 // 2. Check join status
-window.getAgoraJoinStatus()
+window.getAgoraJoinStatus();
 // Should show all lifecycle steps as true
 
 // 3. Check remote users
-console.log(Object.keys(remoteUsers).length)
+console.log(Object.keys(remoteUsers).length);
 // Should show connected user count
 ```
 
@@ -103,41 +105,51 @@ Your join is **fully successful** when ALL of these pass:
 ## 🔍 What Each Log Message Means
 
 ### Success Logs
+
 ```
 [AgoraWeb] 📊 Join Status: { ...all true... }
 ```
+
 ✅ Every lifecycle step completed
 
 ```
 [AgoraWeb] 👤 Remote user joined: uid=12345, hasVideo=true
 ```
+
 ✅ Remote peer successfully joined and is sending video
 
 ```
 [AgoraWeb] 🎥 Remote user published video: uid=12345
 ```
+
 ✅ Remote video stream is available for playback
 
 ### Warning Logs (Normal, Not Errors)
+
 ```
 Agora-SDK [WARNING]: You input a string as the user ID
 ```
+
 ℹ️ Informational. Strings are supported and work fine.
 
 ```
 AgoraRTCError NETWORK_ERROR: Network Error (retry)
 ```
+
 ℹ️ Normal WebRTC transient network hiccup. Single retry is expected.
 
 ### Error Logs (Real Problems)
+
 ```
 [AgoraWeb] ❌ AgoraRTC SDK not loaded
 ```
+
 ❌ SDK failed to load. Check network/CSP headers.
 
 ```
 [AgoraWeb] ❌ joinChannel FAILED
 ```
+
 ❌ Join failed. Check appId/token validity.
 
 ---
@@ -145,6 +157,7 @@ AgoraRTCError NETWORK_ERROR: Network Error (retry)
 ## 📋 Testing Scenario: Multi-Peer Call
 
 ### **Test Setup**
+
 1. Open two browser tabs (same URL)
 2. Tab A: Join as User 1
 3. Tab B: Join as User 2
@@ -153,6 +166,7 @@ AgoraRTCError NETWORK_ERROR: Network Error (retry)
 ### **What to Observe**
 
 **Tab A logs:**
+
 ```
 ✅ joinChannel completed. Result: true
 👤 Remote user joined: uid=User2, hasVideo=true
@@ -161,6 +175,7 @@ AgoraRTCError NETWORK_ERROR: Network Error (retry)
 ```
 
 **Tab B logs:**
+
 ```
 ✅ joinChannel completed. Result: true
 👤 Remote user joined: uid=User1, hasVideo=true
@@ -169,6 +184,7 @@ AgoraRTCError NETWORK_ERROR: Network Error (retry)
 ```
 
 **Expected Result:**
+
 - ✅ Local video visible in your tab
 - ✅ Remote video visible from other tab
 - ✅ Audio working both directions

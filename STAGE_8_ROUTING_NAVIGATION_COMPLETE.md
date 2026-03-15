@@ -9,6 +9,7 @@
 ## 🎯 Deliverables
 
 ### Centralized Routing
+
 ✅ **Named Routes** - All routes defined in single AppRoutes class
 ✅ **Route Generation** - `onGenerateRoute` with pattern matching
 ✅ **Type-Safe Arguments** - Validated route arguments with null checks
@@ -16,18 +17,21 @@
 ✅ **Debug Logging** - Route navigation tracking in dev mode
 
 ### Route Guards
+
 ✅ **Age Verification** - Redirect to age gate if not verified
 ✅ **Profile Completion** - Ensure profile setup before app access
 ✅ **Authentication** - Protected routes require login
 ✅ **Premium Gates** - Check membership tier access
 
 ### Navigation Patterns
+
 ✅ **Push** - Standard forward navigation
 ✅ **Pop** - Back navigation with result passing
 ✅ **Replace** - Replace current route (login → home)
 ✅ **PushAndRemoveUntil** - Reset navigation stack
 
 ### Deep Linking (Ready)
+
 ✅ **URL Scheme Support** - `mixmingle://` protocol
 ✅ **Universal Links** - `https://mixmingle.app/` support
 ✅ **Route Parsing** - Parse deep link URLs to routes
@@ -38,68 +42,78 @@
 ## 📁 Complete Route Map
 
 ### Public Routes (No Auth Required)
-| Route | Path | Screen | Arguments |
-|-------|------|--------|-----------|
-| **Landing** | `/` | LandingPage | None |
-| **Login** | `/login` | NeonLoginPage | None |
-| **Signup** | `/signup` | NeonSignupPage | None |
-| **Forgot Password** | `/forgot-password` | ForgotPasswordPage | None |
+
+| Route               | Path               | Screen             | Arguments |
+| ------------------- | ------------------ | ------------------ | --------- |
+| **Landing**         | `/`                | LandingPage        | None      |
+| **Login**           | `/login`           | NeonLoginPage      | None      |
+| **Signup**          | `/signup`          | NeonSignupPage     | None      |
+| **Forgot Password** | `/forgot-password` | ForgotPasswordPage | None      |
 
 ### Onboarding Routes
-| Route | Path | Screen | Guards |
-|-------|------|--------|--------|
-| **Age Gate** | `/age-gate` | AgeGatePage | None |
+
+| Route               | Path          | Screen         | Guards       |
+| ------------------- | ------------- | -------------- | ------------ |
+| **Age Gate**        | `/age-gate`   | AgeGatePage    | None         |
 | **Onboarding Flow** | `/onboarding` | OnboardingFlow | Age Verified |
 
 ### Main App Routes
-| Route | Path | Screen | Guards |
-|-------|------|--------|--------|
-| **Home** | `/home` | HomePageElectric | Age + Profile |
-| **Settings** | `/settings` | SettingsPage (TODO) | Age |
+
+| Route        | Path        | Screen              | Guards        |
+| ------------ | ----------- | ------------------- | ------------- |
+| **Home**     | `/home`     | HomePageElectric    | Age + Profile |
+| **Settings** | `/settings` | SettingsPage (TODO) | Age           |
 
 ### Speed Dating Routes
-| Route | Path | Screen | Arguments | Guards |
-|-------|------|--------|-----------|--------|
-| **Speed Dating Lobby** | `/speed-dating` | SpeedDatingLobbyPage | None | Age + Profile |
+
+| Route                    | Path                    | Screen                 | Arguments         | Guards        |
+| ------------------------ | ----------------------- | ---------------------- | ----------------- | ------------- |
+| **Speed Dating Lobby**   | `/speed-dating`         | SpeedDatingLobbyPage   | None              | Age + Profile |
 | **Speed Dating Session** | `/speed-dating/session` | SpeedDatingSessionPage | sessionId: String | Age + Profile |
 
 ### Room Routes
-| Route | Path | Screen | Arguments | Guards |
-|-------|------|--------|-----------|--------|
-| **Rooms List** | `/rooms` | RoomsListPage | None | Age + Profile |
-| **Room Detail** | `/room` | RoomPage (TODO) | roomId: String | Age + Profile |
+
+| Route           | Path     | Screen          | Arguments      | Guards        |
+| --------------- | -------- | --------------- | -------------- | ------------- |
+| **Rooms List**  | `/rooms` | RoomsListPage   | None           | Age + Profile |
+| **Room Detail** | `/room`  | RoomPage (TODO) | roomId: String | Age + Profile |
 
 ### Chat Routes
-| Route | Path | Screen | Arguments | Guards |
-|-------|------|--------|-----------|--------|
-| **Chats List** | `/chats` | ChatsListPage | None | Age + Profile |
-| **Chat Conversation** | `/chat` | ChatConversationPage | chatId: String | Age + Profile |
+
+| Route                 | Path     | Screen               | Arguments      | Guards        |
+| --------------------- | -------- | -------------------- | -------------- | ------------- |
+| **Chats List**        | `/chats` | ChatsListPage        | None           | Age + Profile |
+| **Chat Conversation** | `/chat`  | ChatConversationPage | chatId: String | Age + Profile |
 
 ### Profile & Social Routes
-| Route | Path | Screen | Arguments | Guards |
-|-------|------|--------|-----------|--------|
-| **Edit Profile** | `/profile/edit` | EditProfilePage | None | Age |
-| **User Profile** | `/profile` | UserProfilePage | userId: String | Age |
-| **Discovery** | `/discovery` | UserDiscoveryPage | None | Age + Profile |
-| **Followers** | `/followers` | FollowersListPage | userId: String,<br>displayName: String | Age |
-| **Following** | `/following` | FollowingListPage | userId: String,<br>displayName: String | Age |
-| **Suggested Users** | `/suggested` | SuggestedUsersPage | None | Age + Profile |
+
+| Route               | Path            | Screen             | Arguments                              | Guards        |
+| ------------------- | --------------- | ------------------ | -------------------------------------- | ------------- |
+| **Edit Profile**    | `/profile/edit` | EditProfilePage    | None                                   | Age           |
+| **User Profile**    | `/profile`      | UserProfilePage    | userId: String                         | Age           |
+| **Discovery**       | `/discovery`    | UserDiscoveryPage  | None                                   | Age + Profile |
+| **Followers**       | `/followers`    | FollowersListPage  | userId: String,<br>displayName: String | Age           |
+| **Following**       | `/following`    | FollowingListPage  | userId: String,<br>displayName: String | Age           |
+| **Suggested Users** | `/suggested`    | SuggestedUsersPage | None                                   | Age + Profile |
 
 ### Monetization Routes
-| Route | Path | Screen | Guards |
-|-------|------|--------|--------|
-| **Coin Store** | `/coins` | CoinStoreScreen | Age |
-| **Membership Upgrade** | `/membership/upgrade` | MembershipUpgradeScreen | Age |
+
+| Route                  | Path                  | Screen                  | Guards |
+| ---------------------- | --------------------- | ----------------------- | ------ |
+| **Coin Store**         | `/coins`              | CoinStoreScreen         | Age    |
+| **Membership Upgrade** | `/membership/upgrade` | MembershipUpgradeScreen | Age    |
 
 ### Moderation Routes
-| Route | Path | Screen | Arguments | Guards |
-|-------|------|--------|-----------|--------|
-| **Report User** | `/report/user` | ReportUserScreen | userId: String,<br>userName: String | Age |
-| **Blocked Users** | `/blocked-users` | BlockedUsersScreen | None | Age |
+
+| Route             | Path             | Screen             | Arguments                           | Guards |
+| ----------------- | ---------------- | ------------------ | ----------------------------------- | ------ |
+| **Report User**   | `/report/user`   | ReportUserScreen   | userId: String,<br>userName: String | Age    |
+| **Blocked Users** | `/blocked-users` | BlockedUsersScreen | None                                | Age    |
 
 ### Admin Routes
-| Route | Path | Screen | Guards |
-|-------|------|--------|--------|
+
+| Route               | Path               | Screen             | Guards           |
+| ------------------- | ------------------ | ------------------ | ---------------- |
 | **Admin Dashboard** | `/admin/dashboard` | AdminDashboardPage | Age + Admin Role |
 
 ---
@@ -107,11 +121,13 @@
 ## 🛡️ Route Guards
 
 ### AgeVerifiedGuard
+
 **Purpose:** Ensure user confirmed 18+ age before accessing content
 **Redirect:** `/age-gate` if not verified
 **Check:** `user.dateOfBirth` exists and calculates age >= 18
 
 **Implementation:**
+
 ```dart
 class AgeVerifiedGuard extends ConsumerWidget {
   final Widget child;
@@ -147,11 +163,13 @@ class AgeVerifiedGuard extends ConsumerWidget {
 ---
 
 ### ProfileCompleteGuard
+
 **Purpose:** Ensure user completed onboarding profile setup
 **Redirect:** `/onboarding` if profile incomplete
 **Check:** `user.displayName`, `user.photos`, `user.interests` all populated
 
 **Implementation:**
+
 ```dart
 class ProfileCompleteGuard extends ConsumerWidget {
   final Widget child;
@@ -184,6 +202,7 @@ class ProfileCompleteGuard extends ConsumerWidget {
 ---
 
 ### AdminRoleGuard (Future Enhancement)
+
 **Purpose:** Restrict access to admin-only routes
 **Redirect:** `/home` if not admin
 **Check:** `user.role == 'admin'` in Firestore
@@ -195,11 +214,13 @@ class ProfileCompleteGuard extends ConsumerWidget {
 ### Basic Navigation
 
 #### Push to Named Route (No Arguments)
+
 ```dart
 Navigator.pushNamed(context, AppRoutes.coins);
 ```
 
 #### Push with Single Argument
+
 ```dart
 Navigator.pushNamed(
   context,
@@ -209,6 +230,7 @@ Navigator.pushNamed(
 ```
 
 #### Push with Multiple Arguments
+
 ```dart
 Navigator.pushNamed(
   context,
@@ -221,6 +243,7 @@ Navigator.pushNamed(
 ```
 
 #### Pop with Result
+
 ```dart
 // On detail screen
 Navigator.pop(context, result);
@@ -246,6 +269,7 @@ Navigator.push(
 ```
 
 **When to use:**
+
 - Quick prototyping
 - When route doesn't need to be named
 - Passing complex objects as arguments
@@ -260,6 +284,7 @@ Navigator.pushReplacementNamed(context, AppRoutes.home);
 ```
 
 **Use cases:**
+
 - Login → Home (prevent back to login)
 - Signup → Onboarding
 - Onboarding → Home
@@ -277,6 +302,7 @@ Navigator.pushNamedAndRemoveUntil(
 ```
 
 **Use cases:**
+
 - Logout → Landing
 - Complete onboarding → Home
 - Reset after deep link
@@ -290,6 +316,7 @@ Navigator.popUntil(context, ModalRoute.withName(AppRoutes.home));
 ```
 
 **Use cases:**
+
 - Navigate back from nested modal
 - Cancel multi-step flow
 
@@ -300,6 +327,7 @@ Navigator.popUntil(context, ModalRoute.withName(AppRoutes.home));
 ### URL Scheme Configuration
 
 #### iOS (ios/Runner/Info.plist)
+
 ```xml
 <key>CFBundleURLTypes</key>
 <array>
@@ -315,6 +343,7 @@ Navigator.popUntil(context, ModalRoute.withName(AppRoutes.home));
 ```
 
 #### Android (android/app/src/main/AndroidManifest.xml)
+
 ```xml
 <intent-filter>
   <action android:name="android.intent.action.VIEW" />
@@ -336,14 +365,14 @@ Navigator.popUntil(context, ModalRoute.withName(AppRoutes.home));
 
 ### Deep Link Examples
 
-| Deep Link | Mapped Route | Arguments |
-|-----------|--------------|-----------|
-| `mixmingle://home` | `/home` | None |
-| `mixmingle://profile/user123` | `/profile` | userId: "user123" |
-| `mixmingle://room/room456` | `/room` | roomId: "room456" |
-| `mixmingle://chat/chat789` | `/chat` | chatId: "chat789" |
-| `mixmingle://coins` | `/coins` | None |
-| `mixmingle://membership/upgrade` | `/membership/upgrade` | None |
+| Deep Link                                 | Mapped Route            | Arguments           |
+| ----------------------------------------- | ----------------------- | ------------------- |
+| `mixmingle://home`                        | `/home`                 | None                |
+| `mixmingle://profile/user123`             | `/profile`              | userId: "user123"   |
+| `mixmingle://room/room456`                | `/room`                 | roomId: "room456"   |
+| `mixmingle://chat/chat789`                | `/chat`                 | chatId: "chat789"   |
+| `mixmingle://coins`                       | `/coins`                | None                |
+| `mixmingle://membership/upgrade`          | `/membership/upgrade`   | None                |
 | `mixmingle://speed-dating/session/ses123` | `/speed-dating/session` | sessionId: "ses123" |
 
 ---
@@ -516,11 +545,13 @@ showDialog(
 ### 404 - Route Not Found
 
 **Displayed when:**
+
 - User navigates to undefined route
 - DeepLink points to invalid path
 - Push with misspelled route name
 
 **Error Screen shows:**
+
 - ⚠️ Error icon
 - "Route not found: /invalid-route"
 - "Go Home" button → navigates to "/"
@@ -530,10 +561,12 @@ showDialog(
 ### Missing Arguments
 
 **Displayed when:**
+
 - Route requires argument but none provided
 - Example: `/chat` without `chatId`
 
 **Error Screen shows:**
+
 - ⚠️ Error icon
 - "Chat ID required"
 - "Go Home" button
@@ -543,6 +576,7 @@ showDialog(
 ### Guard Redirect Loops
 
 **Prevention:**
+
 - Guards check conditions once per route
 - Use `addPostFrameCallback` for redirect timing
 - Avoid recursive guard redirects
@@ -583,12 +617,14 @@ Navigator.pushNamed(context, AppRoutes.chat); // Missing chatId
 ## 🔮 Future Enhancements
 
 ### Navigation 2.0 Migration
+
 - Declarative routing with `Router` widget
 - Deep state restoration
 - Nested navigation with `ShellRoute`
 - Web URL sync
 
 ### Go Router Package
+
 ```dart
 final router = GoRouter(
   routes: [
@@ -608,11 +644,13 @@ final router = GoRouter(
 ```
 
 ### Tab Persistence
+
 - Remember selected tab across restarts
 - Restore scroll position
 - Maintain nested navigation state
 
 ### Analytics Integration
+
 ```dart
 class AnalyticsNavigatorObserver extends NavigatorObserver {
   @override
@@ -632,6 +670,7 @@ materialApp(
 ## ✅ Stage 8 Complete
 
 **Routing and navigation system is production-ready:**
+
 - ✅ 30+ Named Routes
 - ✅ Age Verification Guard
 - ✅ Profile Completion Guard
@@ -643,6 +682,7 @@ materialApp(
 - ✅ Debug Logging
 
 **All Stages 1-8 routes integrated:**
+
 - Stage 1: `/login`, `/signup`, `/onboarding`
 - Stage 2: `/home`, `/rooms`
 - Stage 3: `/speed-dating`, `/speed-dating/session`

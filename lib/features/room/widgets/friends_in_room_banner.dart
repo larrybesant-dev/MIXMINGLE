@@ -58,7 +58,7 @@ class FriendsInRoomBanner extends StatelessWidget {
               child: Stack(
                 children: visible.asMap().entries.map((e) {
                   final idx = e.key;
-                  final p   = e.value;
+                  final p = e.value;
                   return Positioned(
                     left: idx * 18.0,
                     child: _MiniAvatar(presence: p),
@@ -84,7 +84,9 @@ class FriendsInRoomBanner extends StatelessWidget {
   }
 
   String _label(int overflow, int total) {
-    if (total == 1) return '${friends.first.displayName.split(' ').first} is here';
+    if (total == 1) {
+      return '${friends.first.displayName.split(' ').first} is here';
+    }
     if (overflow > 0) return '$total friends here';
     final names = friends.take(2).map((p) => p.displayName.split(' ').first);
     return '${names.join(', ')} ${friends.length == 1 ? "is" : "are"} here';
@@ -106,8 +108,8 @@ class _MiniAvatar extends StatelessWidget {
       ),
       child: ClipOval(
         child: presence.avatarUrl.isNotEmpty
-            ? Image.network(presence.avatarUrl, fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _initials())
+            ? Image.network(presence.avatarUrl,
+                fit: BoxFit.cover, errorBuilder: (_, __, ___) => _initials())
             : _initials(),
       ),
     );

@@ -22,10 +22,12 @@ class PermissionAwareVideoView extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<PermissionAwareVideoView> createState() => _PermissionAwareVideoViewState();
+  ConsumerState<PermissionAwareVideoView> createState() =>
+      _PermissionAwareVideoViewState();
 }
 
-class _PermissionAwareVideoViewState extends ConsumerState<PermissionAwareVideoView> {
+class _PermissionAwareVideoViewState
+    extends ConsumerState<PermissionAwareVideoView> {
   bool _hasPermission = false;
   bool _isCheckingPermission = true;
   bool _isRequestingPermission = false;
@@ -78,7 +80,8 @@ class _PermissionAwareVideoViewState extends ConsumerState<PermissionAwareVideoV
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Request sent. Waiting for ${widget.ownerName} to respond...'),
+            content: Text(
+                'Request sent. Waiting for ${widget.ownerName} to respond...'),
             duration: const Duration(seconds: 3),
           ),
         );
@@ -122,9 +125,11 @@ class _PermissionAwareVideoViewState extends ConsumerState<PermissionAwareVideoV
     }
 
     // Browser camera/mic permission denied state
-    if (agoraService.isCameraPermissionDenied || agoraService.isMicPermissionDenied) {
+    if (agoraService.isCameraPermissionDenied ||
+        agoraService.isMicPermissionDenied) {
       final isPermanentlyDenied =
-          agoraService.isCameraPermissionPermanentlyDenied || agoraService.isMicPermissionPermanentlyDenied;
+          agoraService.isCameraPermissionPermanentlyDenied ||
+              agoraService.isMicPermissionPermanentlyDenied;
 
       return Container(
         color: const Color(0xFF1E1E2F),
@@ -182,7 +187,8 @@ class _PermissionAwareVideoViewState extends ConsumerState<PermissionAwareVideoV
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
-                      onPressed: _isRequestingPermission ? null : _requestPermission,
+                      onPressed:
+                          _isRequestingPermission ? null : _requestPermission,
                       icon: const Icon(Icons.videocam),
                       label: const Text('Grant Camera Access'),
                       style: ElevatedButton.styleFrom(
@@ -308,5 +314,3 @@ class _PermissionAwareVideoViewState extends ConsumerState<PermissionAwareVideoV
     return AgoraVideoView(controller: controller);
   }
 }
-
-

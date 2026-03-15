@@ -19,8 +19,7 @@ class VideoChatPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final darkMode = ref.watch(darkModeProvider);
-    final friendsSidebarCollapsed =
-        ref.watch(friendsSidebarCollapsedProvider);
+    final friendsSidebarCollapsed = ref.watch(friendsSidebarCollapsedProvider);
     final groupsSidebarCollapsed = ref.watch(groupsSidebarCollapsedProvider);
     final notifications = ref.watch(notificationsProvider);
 
@@ -93,7 +92,7 @@ class VideoChatPage extends ConsumerWidget {
       // Floating notifications
       floatingActionButton: notifications.isNotEmpty
           ? Column(
-             mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.end,
               children: notifications.take(3).map((notification) {
                 return NotificationWidget(notification: notification);
               }).toList(),

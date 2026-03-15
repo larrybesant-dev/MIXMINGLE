@@ -1,6 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+<<<<<<< HEAD
 enum ReportType { spam, harassment, inappropriateContent, hateSpeech, violence, scam, suspectedMinor, other }
+=======
+enum ReportType {
+  spam,
+  harassment,
+  inappropriateContent,
+  hateSpeech,
+  violence,
+  scam,
+  other
+}
+>>>>>>> origin/develop
 
 enum ReportStatus { pending, reviewed, resolved }
 
@@ -62,7 +74,9 @@ class Report {
       description: json['description'] as String? ?? '',
       status: _parseStatus(json['status'] as String?),
       reviewedBy: json['reviewedBy'] as String?,
-      reviewedAt: json['reviewedAt'] != null ? _parseTimestamp(json['reviewedAt']) : null,
+      reviewedAt: json['reviewedAt'] != null
+          ? _parseTimestamp(json['reviewedAt'])
+          : null,
       createdAt: _parseTimestamp(json['createdAt']),
     );
   }
@@ -187,5 +201,3 @@ class Report {
     return DateTime.now();
   }
 }
-
-

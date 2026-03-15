@@ -10,6 +10,7 @@ This project uses a custom build process to integrate the 100ms JavaScript SDK w
 ## Web Setup
 
 The `web_modules/` directory contains:
+
 - `package.json` - NPM dependencies including 100ms SDK
 - `hms-setup.js` - JavaScript that initializes 100ms and exposes it globally
 - `vite.config.js` - Vite bundler configuration
@@ -17,14 +18,17 @@ The `web_modules/` directory contains:
 ## Building for Web
 
 1. **Build the JavaScript bundle** (only needed when updating 100ms or changing hms-setup.js):
+
    ```bash
    cd web_modules
    npm install
    npm run build
    ```
+
    This creates `web/hms-bundle.iife.js`
 
 2. **Build Flutter web**:
+
    ```bash
    flutter build web --release
    ```
@@ -44,12 +48,14 @@ The `web_modules/` directory contains:
 ## Development
 
 To watch for changes and auto-rebuild the bundle:
+
 ```bash
 cd web_modules
 npm run dev
 ```
 
 Then in another terminal:
+
 ```bash
 flutter run -d chrome
 ```
@@ -64,6 +70,7 @@ flutter run -d chrome
 ## Updating 100ms SDK
 
 To update to a newer version:
+
 ```bash
 cd web_modules
 npm update @100mslive/hms-video-store

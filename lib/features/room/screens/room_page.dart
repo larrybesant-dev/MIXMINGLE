@@ -15,6 +15,7 @@ import 'package:mixmingle/services/room/room_manager_service.dart';
 import 'package:mixmingle/features/room/widgets/participant_list_sidebar.dart';
 import 'package:mixmingle/features/room/widgets/raised_hands_panel.dart';
 import 'package:mixmingle/features/room/widgets/room_controls.dart';
+import 'package:mixmingle/core/analytics/analytics_service.dart';
 
 class RoomPage extends ConsumerStatefulWidget {
   final Room room;
@@ -40,6 +41,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
   @override
   void initState() {
     super.initState();
+    AnalyticsService.instance.logScreenView(screenName: 'screen_room');
     _initializeVideo();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -53,6 +55,7 @@ class _RoomPageState extends ConsumerState<RoomPage> {
 
   @override
   void dispose() {
+    AnalyticsService.instance.logRoomLeave(roomId: widget.room.id);
     ref.read(agoraVideoServiceProvider).removeListener(_onAgoraServiceChanged);
     _messageController.dispose();
     _scrollController.dispose();
@@ -79,7 +82,12 @@ class _RoomPageState extends ConsumerState<RoomPage> {
       // #1 Record vibe join for intelligence layer
       final vibeUid = FirebaseAuth.instance.currentUser?.uid;
       if (vibeUid != null && widget.room.vibeTag != null) {
+<<<<<<< HEAD
         ref.read(vibeIntelligenceServiceProvider)
+=======
+        ref
+            .read(vibeIntelligenceServiceProvider)
+>>>>>>> origin/develop
             .recordVibeJoin(userId: vibeUid, vibeTag: widget.room.vibeTag!);
       }
 
@@ -89,7 +97,13 @@ class _RoomPageState extends ConsumerState<RoomPage> {
           _hasInitializedVideo = true;
         });
       }
+      AnalyticsService.instance.logRoomJoinSuccess(roomId: widget.room.id);
+      AnalyticsService.instance.logFirstRoomJoinOnce(roomId: widget.room.id);
     } catch (e) {
+      AnalyticsService.instance.logRoomJoinFailed(
+        roomId: widget.room.id,
+        error: e.toString(),
+      );
       debugPrint('âŒ Video initialization failed: $e');
       if (mounted) {
         setState(() {
@@ -269,7 +283,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                 content: const Text('The host has removed you from this room.'),
                 actions: [
                   ElevatedButton(
-                    onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                    onPressed: () => Navigator.of(context)
+                        .popUntil((route) => route.isFirst),
                     child: const Text('OK'),
                   ),
                 ],
@@ -291,7 +306,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                 content: const Text('The host has ended this room.'),
                 actions: [
                   ElevatedButton(
-                    onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                    onPressed: () => Navigator.of(context)
+                        .popUntil((route) => route.isFirst),
                     child: const Text('OK'),
                   ),
                 ],
@@ -302,7 +318,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
       }
     }
 
-    if (roomAsync.asData?.value != null && !(roomAsync.asData?.value?.isLive ?? true)) {
+    if (roomAsync.asData?.value != null &&
+        !(roomAsync.asData?.value?.isLive ?? true)) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) Navigator.of(context).pop();
       });
@@ -311,10 +328,13 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     final agoraService = ref.read(agoraVideoServiceProvider);
     final isHost = currentUser != null && currentRoom.hostId == currentUser.uid;
     final isModerator = currentUser != null &&
-        (currentRoom.moderators.contains(currentUser.uid) || currentRoom.admins.contains(currentUser.uid));
-    final isSpeaker = currentUser != null && currentRoom.speakers.contains(currentUser.uid);
+        (currentRoom.moderators.contains(currentUser.uid) ||
+            currentRoom.admins.contains(currentUser.uid));
+    final isSpeaker =
+        currentUser != null && currentRoom.speakers.contains(currentUser.uid);
     final isListener = currentUser != null && !isSpeaker;
-    final hasRaisedHand = currentUser != null && currentRoom.raisedHands.contains(currentUser.uid);
+    final hasRaisedHand = currentUser != null &&
+        currentRoom.raisedHands.contains(currentUser.uid);
 
     return ClubBackground(
       child: Scaffold(
@@ -337,7 +357,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(12),
@@ -362,11 +383,14 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                   if (currentRoom.isRoomLocked) ...[
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: Colors.amber.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.amber.withValues(alpha: 0.6), width: 1),
+                        border: Border.all(
+                            color: Colors.amber.withValues(alpha: 0.6),
+                            width: 1),
                       ),
                       child: const Row(
                         mainAxisSize: MainAxisSize.min,
@@ -385,6 +409,9 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                       ),
                     ),
                   ],
+                  // Room type badge
+                  const SizedBox(width: 8),
+                  _RoomTypeBadge(roomType: currentRoom.roomType),
                 ],
               ),
             ],
@@ -407,7 +434,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                         ),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      margin: EdgeInsets.all(Responsive.responsiveSpacing(context, 16)),
+                      margin: EdgeInsets.all(
+                          Responsive.responsiveSpacing(context, 16)),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(
                           Responsive.responsiveBorderRadius(context, 10),
@@ -430,7 +458,9 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                         children: [
                           _buildControlButton(
                             context,
-                            icon: agoraService.isMicMuted ? Icons.mic_off : Icons.mic,
+                            icon: agoraService.isMicMuted
+                                ? Icons.mic_off
+                                : Icons.mic,
                             label: agoraService.isMicMuted ? 'Unmute' : 'Mute',
                             isActive: !agoraService.isMicMuted,
                             isLoading: _isTogglingMic,
@@ -440,14 +470,19 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                               try {
                                 await agoraService.toggleMic();
                               } finally {
-                                if (mounted) setState(() => _isTogglingMic = false);
+                                if (mounted) {
+                                  setState(() => _isTogglingMic = false);
+                                }
                               }
                             },
                           ),
-                          SizedBox(width: Responsive.responsiveSpacing(context, 12)),
+                          SizedBox(
+                              width: Responsive.responsiveSpacing(context, 12)),
                           _buildControlButton(
                             context,
-                            icon: agoraService.isVideoMuted ? Icons.videocam_off : Icons.videocam,
+                            icon: agoraService.isVideoMuted
+                                ? Icons.videocam_off
+                                : Icons.videocam,
                             label: 'Camera',
                             isActive: !agoraService.isVideoMuted,
                             isLoading: _isTogglingVideo,
@@ -457,11 +492,14 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                               try {
                                 await agoraService.toggleVideo();
                               } finally {
-                                if (mounted) setState(() => _isTogglingVideo = false);
+                                if (mounted) {
+                                  setState(() => _isTogglingVideo = false);
+                                }
                               }
                             },
                           ),
-                          SizedBox(width: Responsive.responsiveSpacing(context, 12)),
+                          SizedBox(
+                              width: Responsive.responsiveSpacing(context, 12)),
                           _buildControlButton(
                             context,
                             icon: Icons.call_end,
@@ -491,9 +529,12 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                           ),
                           if (isHost || isModerator)
                             TextButton.icon(
-                              onPressed: () => setState(() => _showSidebar = !_showSidebar),
+                              onPressed: () =>
+                                  setState(() => _showSidebar = !_showSidebar),
                               icon: Icon(
-                                _showSidebar ? Icons.close_fullscreen : Icons.open_in_full,
+                                _showSidebar
+                                    ? Icons.close_fullscreen
+                                    : Icons.open_in_full,
                                 color: Colors.white70,
                               ),
                               label: Text(
@@ -525,7 +566,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFF4C4C).withValues(alpha: 0.1),
+                              color: const Color(0xFFFF4C4C)
+                                  .withValues(alpha: 0.1),
                               borderRadius: const BorderRadius.only(
                                 topLeft: Radius.circular(12),
                                 topRight: Radius.circular(12),
@@ -533,7 +575,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                             ),
                             child: Row(
                               children: [
-                                const Icon(Icons.chat, color: Color(0xFFFF4C4C), size: 20),
+                                const Icon(Icons.chat,
+                                    color: Color(0xFFFF4C4C), size: 20),
                                 const SizedBox(width: 8),
                                 const Text(
                                   'Room Chat',
@@ -547,22 +590,27 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                                 if (agoraService.remoteUsers.isNotEmpty)
                                   Text(
                                     '${agoraService.remoteUsers.length + 1} online',
-                                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                    style: const TextStyle(
+                                        color: Colors.white70, fontSize: 12),
                                   ),
                               ],
                             ),
                           ),
                           Expanded(
                             child: StreamBuilder<List<room_message.Message>?>(
-                              stream: _messagingService.getRoomMessages(widget.room.id),
+                              stream: _messagingService
+                                  .getRoomMessages(widget.room.id),
                               builder: (context, snapshot) {
-                                if (snapshot.connectionState == ConnectionState.waiting) {
+                                if (snapshot.connectionState ==
+                                    ConnectionState.waiting) {
                                   return const Center(
-                                    child: CircularProgressIndicator(color: Color(0xFFFF4C4C)),
+                                    child: CircularProgressIndicator(
+                                        color: Color(0xFFFF4C4C)),
                                   );
                                 }
 
-                                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                                if (!snapshot.hasData ||
+                                    snapshot.data!.isEmpty) {
                                   return const Center(
                                     child: Text(
                                       'No messages yet. Say hello!',
@@ -578,20 +626,27 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                                   itemCount: messages.length,
                                   itemBuilder: (context, index) {
                                     final message = messages[index];
-                                    final isMe = message.senderId == currentUser?.uid;
+                                    final isMe =
+                                        message.senderId == currentUser?.uid;
                                     final displayName =
-                                        message.senderName.isNotEmpty ? message.senderName : 'Unknown User';
+                                        message.senderName.isNotEmpty
+                                            ? message.senderName
+                                            : 'Unknown User';
 
                                     return Padding(
                                       padding: const EdgeInsets.only(bottom: 8),
                                       child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        mainAxisAlignment: isMe
+                                            ? MainAxisAlignment.end
+                                            : MainAxisAlignment.start,
                                         children: [
                                           if (!isMe) ...[
                                             CircleAvatar(
                                               radius: 16,
-                                              backgroundColor: const Color(0xFFFF4C4C),
+                                              backgroundColor:
+                                                  const Color(0xFFFF4C4C),
                                               child: Text(
                                                 displayName[0].toUpperCase(),
                                                 style: const TextStyle(
@@ -604,35 +659,43 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                                           ],
                                           Flexible(
                                             child: Container(
-                                              padding: const EdgeInsets.symmetric(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
                                                 horizontal: 12,
                                                 vertical: 8,
                                               ),
                                               decoration: BoxDecoration(
                                                 color: isMe
-                                                    ? const Color(0xFFFF4C4C).withValues(alpha: 0.2)
-                                                    : Colors.white.withValues(alpha: 0.1),
-                                                borderRadius: BorderRadius.circular(10),
+                                                    ? const Color(0xFFFF4C4C)
+                                                        .withValues(alpha: 0.2)
+                                                    : Colors.white
+                                                        .withValues(alpha: 0.1),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
                                               ),
                                               child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
                                                     displayName,
                                                     style: const TextStyle(
                                                       color: Colors.white,
                                                       fontSize: 12,
-                                                      fontWeight: FontWeight.w600,
+                                                      fontWeight:
+                                                          FontWeight.w600,
                                                     ),
                                                   ),
                                                   const SizedBox(height: 4),
                                                   Text(
                                                     message.content,
-                                                    style: const TextStyle(color: Colors.white70),
+                                                    style: const TextStyle(
+                                                        color: Colors.white70),
                                                   ),
                                                   const SizedBox(height: 4),
                                                   Text(
-                                                    _formatTimestamp(message.timestamp),
+                                                    _formatTimestamp(
+                                                        message.timestamp),
                                                     style: const TextStyle(
                                                       color: Colors.white38,
                                                       fontSize: 10,
@@ -660,22 +723,28 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                                     style: const TextStyle(color: Colors.white),
                                     decoration: InputDecoration(
                                       hintText: 'Type a message...',
-                                      hintStyle: const TextStyle(color: Colors.white54),
+                                      hintStyle: const TextStyle(
+                                          color: Colors.white54),
                                       filled: true,
-                                      fillColor: Colors.white.withValues(alpha: 0.06),
+                                      fillColor:
+                                          Colors.white.withValues(alpha: 0.06),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
                                         borderSide: BorderSide(
-                                          color: Colors.white.withValues(alpha: 0.2),
+                                          color: Colors.white
+                                              .withValues(alpha: 0.2),
                                         ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(color: Color(0xFFFF4C4C)),
+                                        borderSide: const BorderSide(
+                                            color: Color(0xFFFF4C4C)),
                                       ),
                                     ),
                                     onSubmitted: (_) {
-                                      if (currentUser != null) _sendMessage(currentUser);
+                                      if (currentUser != null) {
+                                        _sendMessage(currentUser);
+                                      }
                                     },
                                   ),
                                 ),
@@ -693,7 +762,9 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                                     ),
                                   ),
                                   onPressed: () {
-                                    if (currentUser != null) _sendMessage(currentUser);
+                                    if (currentUser != null) {
+                                      _sendMessage(currentUser);
+                                    }
                                   },
                                   child: const Icon(Icons.send),
                                 ),
@@ -808,7 +879,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
 
     // Deduplicate remote users using Set to prevent ghost tiles
     final remoteUsers = List<int>.from(agoraService.remoteUsers);
-    final uniqueRemoteUsers = remoteUsers.toSet().toList(); // Atomic deduplication
+    final uniqueRemoteUsers =
+        remoteUsers.toSet().toList(); // Atomic deduplication
     final hasRemoteUsers = uniqueRemoteUsers.isNotEmpty;
 
     return Stack(
@@ -850,7 +922,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
                       bottom: 4,
                       left: 4,
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.6),
                           borderRadius: BorderRadius.circular(4),
@@ -904,7 +977,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     );
   }
 
-  Widget _buildRemoteVideoGrid(AgoraVideoService agoraService, List<int> remoteUsers) {
+  Widget _buildRemoteVideoGrid(
+      AgoraVideoService agoraService, List<int> remoteUsers) {
     if (remoteUsers.length == 1) {
       return AgoraVideoView(
         controller: VideoViewController.remote(
@@ -916,8 +990,12 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     } else if (remoteUsers.length == 2) {
       return Row(
         children: [
-          Expanded(child: RepaintBoundary(child: _buildRemoteVideoTile(agoraService, remoteUsers[0]))),
-          Expanded(child: RepaintBoundary(child: _buildRemoteVideoTile(agoraService, remoteUsers[1]))),
+          Expanded(
+              child: RepaintBoundary(
+                  child: _buildRemoteVideoTile(agoraService, remoteUsers[0]))),
+          Expanded(
+              child: RepaintBoundary(
+                  child: _buildRemoteVideoTile(agoraService, remoteUsers[1]))),
         ],
       );
     } else {
@@ -958,7 +1036,8 @@ class _RoomPageState extends ConsumerState<RoomPage> {
       child: Container(
         margin: const EdgeInsets.all(2),
         decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFFF4C4C).withValues(alpha: 0.3)),
+          border:
+              Border.all(color: const Color(0xFFFF4C4C).withValues(alpha: 0.3)),
         ),
         child: Stack(
           children: [
@@ -1088,8 +1167,10 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     _messageController.clear();
 
     try {
-      final userProfile = await ref.read(profileServiceProvider).getCurrentUserProfile();
-      final displayName = userProfile?.displayName ?? currentUser.email ?? 'User';
+      final userProfile =
+          await ref.read(profileServiceProvider).getCurrentUserProfile();
+      final displayName =
+          userProfile?.displayName ?? currentUser.email ?? 'User';
 
       await _messagingService.sendRoomMessage(
         senderId: currentUser.uid,
@@ -1132,5 +1213,44 @@ class _RoomPageState extends ConsumerState<RoomPage> {
     } else {
       return '${timestamp.day}/${timestamp.month}';
     }
+  }
+}
+
+// ── Room Type Badge chip shown in app bar ─────────────────────────────────────
+class _RoomTypeBadge extends StatelessWidget {
+  final RoomType roomType;
+  const _RoomTypeBadge({required this.roomType});
+
+  @override
+  Widget build(BuildContext context) {
+    final (Color color, IconData icon, String label) = switch (roomType) {
+      RoomType.video => (const Color(0xFFFF4D8B), Icons.videocam_outlined, 'Video'),
+      RoomType.text =>
+        (const Color(0xFF4A90FF), Icons.chat_bubble_outline, 'Text'),
+      RoomType.voice => (const Color(0xFF00E5CC), Icons.mic_outlined, 'Voice'),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.55), width: 1),
+        boxShadow: [
+          BoxShadow(color: color.withValues(alpha: 0.2), blurRadius: 6)
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 13),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+                color: color, fontSize: 11, fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
   }
 }

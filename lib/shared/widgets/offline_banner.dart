@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:mixmingle/core/providers/connectivity_provider.dart';
 
 /// Displays a banner when the app is offline
@@ -25,7 +25,8 @@ class OfflineBanner extends StatelessWidget {
               bottom: false,
               child: Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Row(
                   children: [
                     const Icon(

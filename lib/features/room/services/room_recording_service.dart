@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Recording state enum
 enum RecordingState { idle, recording, paused, completed }
@@ -60,7 +60,8 @@ class RoomRecordingService {
     required String userId,
   }) async {
     _recordingStartTime = DateTime.now();
-    final recordingId = 'recording_${roomId}_${_recordingStartTime!.millisecondsSinceEpoch}';
+    final recordingId =
+        'recording_${roomId}_${_recordingStartTime!.millisecondsSinceEpoch}';
 
     _currentRecording = RecordingInfo(
       id: recordingId,
@@ -79,7 +80,8 @@ class RoomRecordingService {
 
   /// Pause recording
   Future<void> pauseRecording() async {
-    if (_currentRecording != null && _currentRecording!.state == RecordingState.recording) {
+    if (_currentRecording != null &&
+        _currentRecording!.state == RecordingState.recording) {
       _currentRecording = _currentRecording!.copyWith(
         state: RecordingState.paused,
       );
@@ -88,7 +90,8 @@ class RoomRecordingService {
 
   /// Resume recording
   Future<void> resumeRecording() async {
-    if (_currentRecording != null && _currentRecording!.state == RecordingState.paused) {
+    if (_currentRecording != null &&
+        _currentRecording!.state == RecordingState.paused) {
       _currentRecording = _currentRecording!.copyWith(
         state: RecordingState.recording,
       );
@@ -168,7 +171,8 @@ extension RecordingInfoCopyWith on RecordingInfo {
 }
 
 /// Provider for Room Recording Service
-final roomRecordingServiceProvider = NotifierProvider<RoomRecordingServiceNotifier, RecordingInfo?>(
+final roomRecordingServiceProvider =
+    NotifierProvider<RoomRecordingServiceNotifier, RecordingInfo?>(
   RoomRecordingServiceNotifier.new,
 );
 
@@ -221,5 +225,3 @@ class RoomRecordingServiceNotifier extends Notifier<RecordingInfo?> {
     state = null;
   }
 }
-
-

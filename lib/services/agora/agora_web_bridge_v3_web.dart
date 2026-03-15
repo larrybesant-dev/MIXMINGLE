@@ -1,14 +1,66 @@
-// Agora Web Bridge v3 - Production Ready
+﻿// Agora Web Bridge v3 - Production Ready (WASM-safe)
 // Interfaces with agora_web_v5_production.js
+<<<<<<< HEAD
 // ignore_for_file: avoid_web_libraries_in_flutter, deprecated_member_use
+=======
+// Replaces dart:js with dart:js_interop for WASM compatibility.
+// ignore_for_file: avoid_web_libraries_in_flutter
+import 'dart:js_interop';
+>>>>>>> origin/develop
 import 'dart:async';
 import 'package:flutter/foundation.dart' show kIsWeb, debugPrint;
 import '../../core/utils/app_logger.dart';
+
+// ── External JS declarations ─────────────────────────────────────────────
+// Each @JS annotation captures a nullable handle to a window property so
+// we can check availability before calling.
+
+@JS('agoraWebInit')
+external JSAny? get _jsAgoraWebInit;
+
+@JS('agoraWebJoinChannel')
+external JSAny? get _jsAgoraWebJoinChannel;
+
+@JS('agoraWebLeaveChannel')
+external JSAny? get _jsAgoraWebLeaveChannel;
+
+@JS('agoraWebSetMicMuted')
+external JSAny? get _jsAgoraWebSetMicMuted;
+
+@JS('agoraWebSetVideoMuted')
+external JSAny? get _jsAgoraWebSetVideoMuted;
+
+@JS('agoraWebGetState')
+external JSAny? get _jsAgoraWebGetState;
+
+@JS('agoraWebDebug')
+external JSAny? get _jsAgoraWebDebug;
+
+@JS('agoraWebRenewToken')
+external JSAny? get _jsAgoraWebRenewToken;
+
+// ── Helper: call a nullable JS function and await its Promise<bool> ───────
+
+Future<bool> _callPromise(JSAny? fn, [
+  JSAny? a1,
+  JSAny? a2,
+  JSAny? a3,
+  JSAny? a4,
+]) async {
+  if (fn == null) throw Exception('JS function not found on window');
+  final raw = (fn as JSFunction).callAsFunction(null, a1, a2, a3, a4);
+  if (raw == null) return false;
+  final result = await (raw as JSPromise<JSBoolean?>).toDart;
+  return result?.toDart ?? false;
+}
+
+// ── Bridge class (public API unchanged) ───────────────────────────────────
 
 class AgoraWebBridgeV3 {
   static bool get isAvailable {
     if (!kIsWeb) return false;
     try {
+<<<<<<< HEAD
       final webObj = js.context['agoraWeb'];
       final objReady = webObj is js.JsObject &&
           webObj['init'] != null &&
@@ -19,6 +71,10 @@ class AgoraWebBridgeV3 {
       return jsAvailable;
     } catch (e) {
       debugPrint('[BRIDGE] Error checking isAvailable: $e');
+=======
+      return _jsAgoraWebInit != null && _jsAgoraWebJoinChannel != null;
+    } catch (_) {
+>>>>>>> origin/develop
       return false;
     }
   }
@@ -29,8 +85,8 @@ class AgoraWebBridgeV3 {
       AppLogger.error('[BRIDGE] Not on web, returning false');
       return false;
     }
-
     try {
+<<<<<<< HEAD
       debugPrint('[BRIDGE] Initializing with appId: ${appId.substring(0, 8)}...');
       AppLogger.info('ðŸŒ Initializing Agora Web SDK v5...');
 
@@ -50,8 +106,15 @@ class AgoraWebBridgeV3 {
         AppLogger.error('âŒ Init returned false');
         return false;
       }
+=======
+      debugPrint('[BRIDGE] Initializing...');
+      AppLogger.info('Initializing Agora Web SDK v5...');
+      final ok = await _callPromise(_jsAgoraWebInit, appId.toJS);
+      if (ok) AppLogger.info('Agora Web SDK v5 initialized');
+      return ok;
+>>>>>>> origin/develop
     } catch (e) {
-      AppLogger.error('âŒ Agora init failed: $e');
+      AppLogger.error('Agora init failed: $e');
       debugPrint('[BRIDGE] Init error: $e');
       return false;
     }
@@ -65,8 +128,8 @@ class AgoraWebBridgeV3 {
     required String uid,
   }) async {
     if (!kIsWeb) return false;
-
     try {
+<<<<<<< HEAD
       debugPrint('[BRIDGE] Joining channel: $channelName, uid: $uid, token length: ${token.length}');
       AppLogger.info('ðŸ”— Joining Agora channel: $channelName...');
 
@@ -86,8 +149,21 @@ class AgoraWebBridgeV3 {
         AppLogger.error('âŒ joinChannel returned false');
         return false;
       }
+=======
+      debugPrint('[BRIDGE] Joining channel: $channelName, uid: $uid');
+      AppLogger.info('Joining Agora channel: $channelName...');
+      final ok = await _callPromise(
+        _jsAgoraWebJoinChannel,
+        appId.toJS,
+        channelName.toJS,
+        token.toJS,
+        uid.toJS,
+      );
+      if (ok) AppLogger.info('Successfully joined channel: $channelName');
+      return ok;
+>>>>>>> origin/develop
     } catch (e) {
-      AppLogger.error('âŒ Failed to join channel: $e');
+      AppLogger.error('Failed to join channel: $e');
       debugPrint('[BRIDGE] joinChannel error: $e');
       return false;
     }
@@ -96,8 +172,8 @@ class AgoraWebBridgeV3 {
   /// Leave the current channel
   static Future<bool> leaveChannel() async {
     if (!kIsWeb) return false;
-
     try {
+<<<<<<< HEAD
       debugPrint('[BRIDGE] Leaving channel...');
       AppLogger.info('ðŸ‘‹ Leaving channel...');
 
@@ -114,9 +190,13 @@ class AgoraWebBridgeV3 {
         AppLogger.warning('âš ï¸ Leave returned false');
         return false;
       }
+=======
+      final ok = await _callPromise(_jsAgoraWebLeaveChannel);
+      if (ok) AppLogger.info('Left channel');
+      return ok;
+>>>>>>> origin/develop
     } catch (e) {
-      AppLogger.error('âŒ Failed to leave channel: $e');
-      debugPrint('[BRIDGE] leaveChannel error: $e');
+      AppLogger.error('Failed to leave channel: $e');
       return false;
     }
   }
@@ -124,8 +204,8 @@ class AgoraWebBridgeV3 {
   /// Set microphone muted state
   static Future<bool> setMicMuted(bool muted) async {
     if (!kIsWeb) return false;
-
     try {
+<<<<<<< HEAD
       debugPrint('[BRIDGE] Setting mic muted: $muted');
       final promiseObj = _invokeBridgeMethod(
         objectMethod: 'setMicMuted',
@@ -139,8 +219,13 @@ class AgoraWebBridgeV3 {
         return true;
       }
       return false;
+=======
+      final ok = await _callPromise(_jsAgoraWebSetMicMuted, muted.toJS);
+      if (ok) AppLogger.info('Microphone ${muted ? "muted" : "unmuted"}');
+      return ok;
+>>>>>>> origin/develop
     } catch (e) {
-      AppLogger.error('âŒ Failed to set mic mute: $e');
+      AppLogger.error('Failed to set mic mute: $e');
       return false;
     }
   }
@@ -148,8 +233,8 @@ class AgoraWebBridgeV3 {
   /// Set video muted state
   static Future<bool> setVideoMuted(bool muted) async {
     if (!kIsWeb) return false;
-
     try {
+<<<<<<< HEAD
       debugPrint('[BRIDGE] Setting video muted: $muted');
       final promiseObj = _invokeBridgeMethod(
         objectMethod: 'setVideoMuted',
@@ -163,8 +248,13 @@ class AgoraWebBridgeV3 {
         return true;
       }
       return false;
+=======
+      final ok = await _callPromise(_jsAgoraWebSetVideoMuted, muted.toJS);
+      if (ok) AppLogger.info('Video ${muted ? "disabled" : "enabled"}');
+      return ok;
+>>>>>>> origin/develop
     } catch (e) {
-      AppLogger.error('âŒ Failed to set video mute: $e');
+      AppLogger.error('Failed to set video mute: $e');
       return false;
     }
   }
@@ -248,8 +338,8 @@ class AgoraWebBridgeV3 {
   /// Get current Agora Web state (for debugging)
   static Map<String, dynamic> getState() {
     if (!kIsWeb) return {};
-
     try {
+<<<<<<< HEAD
       final stateObj = _invokeBridgeMethod(
         objectMethod: 'getState',
         flatMethod: 'agoraWebGetState',
@@ -279,43 +369,44 @@ class AgoraWebBridgeV3 {
         'error': 'agoraWebGetState returned non-map state',
         'type': stateObj.runtimeType.toString(),
       };
+=======
+      final fn = _jsAgoraWebGetState;
+      if (fn == null) return {'error': 'agoraWebGetState not found'};
+      (fn as JSFunction).callAsFunction(null);
+      return {'available': true};
+>>>>>>> origin/develop
     } catch (e) {
-      debugPrint('[BRIDGE] Error getting state: $e');
       return {'error': e.toString()};
     }
   }
 
-  /// Enable debug mode (shows extra logging)
+  /// Enable debug mode
   static void enableDebugLogging() {
     if (!kIsWeb) return;
-
     try {
-      js.context['__AGORA_DEBUG'] = true;
-      debugPrint('[BRIDGE] Debug logging enabled');
-      AppLogger.info('ðŸ” Agora debug logging enabled');
-    } catch (e) {
-      debugPrint('[BRIDGE] Error enabling debug: $e');
-    }
+      (_jsAgoraWebDebug as JSFunction?)?.callAsFunction(null);
+    } catch (_) {}
   }
 
   /// Print debug info to console
   static void printDebugInfo() {
-    if (!kIsWeb) {
-      debugPrint('[BRIDGE] Not on web');
-      return;
-    }
-
+    if (!kIsWeb) return;
     try {
+<<<<<<< HEAD
       if (js.context['agoraDebug'] != null) {
         js.context.callMethod('agoraDebug');
       } else if (js.context['agoraWebDebug'] != null) {
         js.context.callMethod('agoraWebDebug');
       }
+=======
+      (_jsAgoraWebDebug as JSFunction?)?.callAsFunction(null);
+>>>>>>> origin/develop
     } catch (e) {
-      debugPrint('[BRIDGE] Error printing debug info: $e');
+      debugPrint('[BRIDGE] Error: $e');
     }
   }
 
+<<<<<<< HEAD
   /// Register a Dart callback that fires when JS user-published fires.
   /// Sets window.agoraWeb.onRemoteUserPublished so the JS bridge can call it.
   static void registerRemotePublishedCallback(
@@ -492,9 +583,22 @@ class AgoraWebBridgeV3 {
         }
         rethrow;
       }
+=======
+  /// Renew the Agora token for the current session (synchronous JS call).
+  /// Call this when the privilege expiry callback fires or on a ~23h timer.
+  static bool renewToken(String newToken) {
+    if (!kIsWeb) return false;
+    try {
+      final fn = _jsAgoraWebRenewToken;
+      if (fn == null) return false;
+      final result = (fn as JSFunction).callAsFunction(null, newToken.toJS);
+      if (result == null) return false;
+      final dartValue = (result as JSBoolean).toDart;
+      return dartValue;
+>>>>>>> origin/develop
     } catch (e) {
-      debugPrint('[BRIDGE] Error converting promise: $e');
-      return Future.error(Exception('Failed to convert promise: $e'));
+      debugPrint('[BRIDGE] renewToken error: $e');
+      return false;
     }
   }
 
@@ -564,6 +668,5 @@ class AgoraWebBridgeV3 {
   }
 }
 
-// ========== COMPATIBILITY ALIAS ==========
-// Keep old name for backward compatibility
+// ── Compatibility alias ───────────────────────────────────────────────────
 typedef AgoraWebBridgeV2 = AgoraWebBridgeV3;

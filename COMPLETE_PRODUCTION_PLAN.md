@@ -18,11 +18,13 @@ dart --version
 ```
 
 **Requirements:**
+
 - Flutter 3.38.7
 - Dart 3.10.7
 - Stable channel
 
 **If upgrades needed:**
+
 ```powershell
 flutter channel stable
 flutter upgrade
@@ -36,10 +38,12 @@ firebase --version
 ```
 
 **Requirements:**
+
 - Node v20.19.4+
 - Firebase CLI installed and authenticated
 
 **If not authenticated:**
+
 ```powershell
 firebase login
 ```
@@ -74,11 +78,13 @@ flutter analyze --no-pub > audit_initial_report.txt
 ```
 
 **Outputs:**
+
 - `audit_initial_report.txt` - Comprehensive analysis report
 - List of files to remove
 - Service dependency map
 
 **Actions from audit:**
+
 - Identify stub/deprecated files for removal
 - List duplicate services for consolidation
 - Note compilation errors for Phase 3
@@ -99,6 +105,7 @@ cd ..
 ### Consolidate Video Engine
 
 **Keep only:**
+
 - `services/video_engine_service.dart` (main router)
 - `services/agora_web_engine.dart` (Web implementation)
 - `services/agora_mobile_engine.dart` (Mobile implementation)
@@ -106,11 +113,13 @@ cd ..
 - `services/video_engine_interface.dart` (abstract interface)
 
 **Remove:**
+
 - All bridge duplicates
 - Old Agora service wrappers
 - Web-only/Mobile-only duplicates
 
 **Ensure VideoEngineService:**
+
 ```dart
 // Detects platform and routes correctly
 class VideoEngineService {
@@ -126,13 +135,13 @@ class VideoEngineService {
 
 ### Merge Overlapping Services
 
-| Service | Current Files | Action |
-|---------|---------------|--------|
-| **Room** | `room_service.dart` + `room_manager_service.dart` | Keep unified `RoomManagerService` |
-| **Video** | `video_service.dart` + `agora_video_service.dart` | Route via `VideoEngineService` |
-| **Payment** | `payment_service.dart` + `tipping_service.dart` | Unified `PaymentService` |
-| **Speed Dating** | `speed_dating_service.dart` | Ensure single source of truth |
-| **Auth** | `auth_service.dart` + `firebase_auth_service.dart` | Keep unified `AuthService` |
+| Service          | Current Files                                      | Action                            |
+| ---------------- | -------------------------------------------------- | --------------------------------- |
+| **Room**         | `room_service.dart` + `room_manager_service.dart`  | Keep unified `RoomManagerService` |
+| **Video**        | `video_service.dart` + `agora_video_service.dart`  | Route via `VideoEngineService`    |
+| **Payment**      | `payment_service.dart` + `tipping_service.dart`    | Unified `PaymentService`          |
+| **Speed Dating** | `speed_dating_service.dart`                        | Ensure single source of truth     |
+| **Auth**         | `auth_service.dart` + `firebase_auth_service.dart` | Keep unified `AuthService`        |
 
 ---
 
@@ -301,6 +310,7 @@ abstract class IVideoEngine {
 ### Web Implementation Check
 
 **File**: `lib/services/agora_web_engine.dart`
+
 - Verify `AgoraWebEngine implements IVideoEngine`
 - Check `StreamController` usage for multi-window support
 - Ensure proper cleanup on window close
@@ -308,6 +318,7 @@ abstract class IVideoEngine {
 ### Mobile Implementation Check
 
 **File**: `lib/services/agora_mobile_engine.dart`
+
 - Verify `AgoraMobileEngine implements IVideoEngine`
 - Check `ChannelMediaOptions` enum (Agora 6.x)
 - Verify `RemoteAudioState`, `RemoteVideoState` enums
@@ -327,6 +338,7 @@ flutter run -d ios
 ```
 
 **Verify:**
+
 - ✅ Users can join/leave
 - ✅ Audio/video toggle works
 - ✅ Mute/unmute reflects in UI
@@ -541,6 +553,7 @@ class SpeedDatingService {
 ### 3. Speed Dating UI
 
 **File**: `lib/screens/speed_dating_screen.dart`
+
 - Show questionnaire on entry
 - Display round timer (5-minute countdown)
 - Show Keep/Pass buttons
@@ -740,6 +753,7 @@ class RoomManagerService {
 ```
 
 **UI Integration**:
+
 - Add moderator panel to room screen
 - Show list of participants
 - Add action buttons (mute, remove, promote, demote)
@@ -755,22 +769,22 @@ class RoomManagerService {
 **File**: `functions/src/stripe.ts`
 
 ```typescript
-import * as functions from 'firebase-functions';
-import * as admin from 'firebase-admin';
-import Stripe from 'stripe';
+import * as functions from "firebase-functions";
+import * as admin from "firebase-admin";
+import Stripe from "stripe";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 // Process tip
 export const processTip = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new Error('Auth required');
+  if (!context.auth) throw new Error("Auth required");
 
   const { recipientUid, amount, message } = data;
 
   // Create payment intent
   const paymentIntent = await stripe.paymentIntents.create({
     amount: Math.round(amount * 100), // cents
-    currency: 'usd',
+    currency: "usd",
     description: `Tip for ${recipientUid}`,
     metadata: {
       senderUid: context.auth.uid,
@@ -780,33 +794,34 @@ export const processTip = functions.https.onCall(async (data, context) => {
   });
 
   // Log transaction
-  await admin.firestore()
-      .collection('transactions')
-      .doc(context.auth.uid)
-      .collection('history')
-      .add({
-        type: 'tip',
-        amount,
-        recipient: recipientUid,
-        status: 'pending',
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-      });
+  await admin
+    .firestore()
+    .collection("transactions")
+    .doc(context.auth.uid)
+    .collection("history")
+    .add({
+      type: "tip",
+      amount,
+      recipient: recipientUid,
+      status: "pending",
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+    });
 
   return { clientSecret: paymentIntent.client_secret };
 });
 
 // Create checkout session
 export const createCheckout = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new Error('Auth required');
+  if (!context.auth) throw new Error("Auth required");
 
   const { coinPackage } = data; // { coins: 100, price: 9.99 }
 
   const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
+    payment_method_types: ["card"],
     line_items: [
       {
         price_data: {
-          currency: 'usd',
+          currency: "usd",
           product_data: {
             name: `${coinPackage.coins} Coins`,
           },
@@ -815,9 +830,9 @@ export const createCheckout = functions.https.onCall(async (data, context) => {
         quantity: 1,
       },
     ],
-    mode: 'payment',
-    success_url: 'https://mixmingle.app/coins-success',
-    cancel_url: 'https://mixmingle.app/coins-cancelled',
+    mode: "payment",
+    success_url: "https://mixmingle.app/coins-success",
+    cancel_url: "https://mixmingle.app/coins-cancelled",
     customer_email: context.auth.token.email,
     metadata: {
       uid: context.auth.uid,
@@ -830,57 +845,60 @@ export const createCheckout = functions.https.onCall(async (data, context) => {
 
 // Webhook handler for successful payment
 export const stripeWebhook = functions.https.onRequest(async (req, res) => {
-  const sig = req.headers['stripe-signature'] as string;
+  const sig = req.headers["stripe-signature"] as string;
   const event = stripe.webhooks.constructEvent(
-      req.rawBody,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET!
+    req.rawBody,
+    sig,
+    process.env.STRIPE_WEBHOOK_SECRET!,
   );
 
   switch (event.type) {
-    case 'payment_intent.succeeded': {
+    case "payment_intent.succeeded": {
       const intent = event.data.object as Stripe.PaymentIntent;
-      await admin.firestore()
-          .collection('transactions')
-          .doc(intent.metadata!.senderUid)
-          .collection('history')
-          .add({
-            type: 'tip',
-            amount: intent.amount / 100,
-            recipient: intent.metadata!.recipientUid,
-            status: 'completed',
-            stripeId: intent.id,
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
-          });
+      await admin
+        .firestore()
+        .collection("transactions")
+        .doc(intent.metadata!.senderUid)
+        .collection("history")
+        .add({
+          type: "tip",
+          amount: intent.amount / 100,
+          recipient: intent.metadata!.recipientUid,
+          status: "completed",
+          stripeId: intent.id,
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        });
       break;
     }
 
-    case 'checkout.session.completed': {
+    case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       const uid = session.metadata!.uid;
       const coins = parseInt(session.metadata!.coins, 10);
 
       // Add coins to user
-      await admin.firestore()
-          .collection('users')
-          .doc(uid)
-          .update({
-            coins: admin.firestore.FieldValue.increment(coins),
-          });
+      await admin
+        .firestore()
+        .collection("users")
+        .doc(uid)
+        .update({
+          coins: admin.firestore.FieldValue.increment(coins),
+        });
 
       // Log transaction
-      await admin.firestore()
-          .collection('transactions')
-          .doc(uid)
-          .collection('history')
-          .add({
-            type: 'purchase',
-            coins,
-            amount: (session.amount_total! / 100),
-            status: 'completed',
-            stripeId: session.payment_intent,
-            timestamp: admin.firestore.FieldValue.serverTimestamp(),
-          });
+      await admin
+        .firestore()
+        .collection("transactions")
+        .doc(uid)
+        .collection("history")
+        .add({
+          type: "purchase",
+          coins,
+          amount: session.amount_total! / 100,
+          status: "completed",
+          stripeId: session.payment_intent,
+          timestamp: admin.firestore.FieldValue.serverTimestamp(),
+        });
       break;
     }
   }
@@ -890,29 +908,30 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
 
 // Refund payment
 export const refundPayment = functions.https.onCall(async (data, context) => {
-  if (!context.auth) throw new Error('Auth required');
+  if (!context.auth) throw new Error("Auth required");
 
   const { stripeId, reason } = data;
 
   // Only allow refunds for own transactions
-  const tx = await admin.firestore()
-      .collection('transactions')
-      .doc(context.auth.uid)
-      .collection('history')
-      .where('stripeId', '==', stripeId)
-      .limit(1)
-      .get();
+  const tx = await admin
+    .firestore()
+    .collection("transactions")
+    .doc(context.auth.uid)
+    .collection("history")
+    .where("stripeId", "==", stripeId)
+    .limit(1)
+    .get();
 
-  if (tx.empty) throw new Error('Transaction not found');
+  if (tx.empty) throw new Error("Transaction not found");
 
   const refund = await stripe.refunds.create({
     payment_intent: stripeId,
-    reason: reason || 'requested_by_customer',
+    reason: reason || "requested_by_customer",
   });
 
   // Update transaction
   await tx.docs[0].ref.update({
-    status: 'refunded',
+    status: "refunded",
     refundId: refund.id,
   });
 
@@ -1134,6 +1153,7 @@ class NeonTheme {
 ```
 
 **Apply globally**:
+
 ```dart
 // main.dart
 MaterialApp(
@@ -1153,6 +1173,7 @@ flutter analyze --no-pub > analysis_report.txt
 ```
 
 **Handle info-level warnings:**
+
 - Unused imports: Remove them
 - Unused variables: Remove or use
 - Unnecessary null checks: Fix type safety
@@ -1165,6 +1186,7 @@ flutter test test/unit/
 ```
 
 **Create tests for:**
+
 - `VideoEngineService` routing
 - `SpeedDatingService` pairing logic
 - `PaymentService` transaction logging
@@ -1198,6 +1220,7 @@ flutter build ios --release
 ```
 
 **Verify:**
+
 - No build errors
 - All assets included
 - All plugins linked
@@ -1221,6 +1244,7 @@ firebase deploy --only hosting
 ```
 
 **Verify:**
+
 - ✅ Live URL accessible
 - ✅ Multi-window rooms work
 - ✅ Speed dating accessible
@@ -1238,10 +1262,12 @@ flutter build appbundle --release
 ```
 
 **Artifacts:**
+
 - `build/app/outputs/flutter-apk/app-release.apk`
 - `build/app/outputs/bundle/release/app-release.aab`
 
 **Prepare for Play Store:**
+
 - Sign APK/AAB with keystore
 - Upload AAB to Play Console
 - Configure release notes
@@ -1268,9 +1294,11 @@ xcodebuild -exportArchive \
 ```
 
 **Artifacts:**
+
 - `build/ios/ipa/Runner.ipa`
 
 **Prepare for App Store:**
+
 - Sign IPA with App Store certificate
 - Upload to App Store Connect
 - Configure release notes & screenshots
@@ -1365,6 +1393,7 @@ Write-Host "🎉 Build & deploy complete!" -ForegroundColor Green
 ```
 
 **Run:**
+
 ```powershell
 .\build-and-deploy.ps1
 ```
@@ -1374,6 +1403,7 @@ Write-Host "🎉 Build & deploy complete!" -ForegroundColor Green
 ## **1️⃣3️⃣ Post-Launch Checklist**
 
 ### Stability & Performance
+
 - [ ] Load test with 50+ concurrent users
 - [ ] Monitor Firebase resource usage
 - [ ] Check for memory leaks (video streams)
@@ -1381,6 +1411,7 @@ Write-Host "🎉 Build & deploy complete!" -ForegroundColor Green
 - [ ] Monitor Firestore query performance
 
 ### Feature Verification
+
 - [ ] Speed dating pairing logic works correctly
 - [ ] Keep/Pass matching is accurate
 - [ ] Round timers are synchronized
@@ -1390,6 +1421,7 @@ Write-Host "🎉 Build & deploy complete!" -ForegroundColor Green
 - [ ] Multi-window Web stable (100+ rooms)
 
 ### User Experience
+
 - [ ] Video quality is acceptable
 - [ ] Audio latency is < 500ms
 - [ ] UI responsive on all devices
@@ -1398,6 +1430,7 @@ Write-Host "🎉 Build & deploy complete!" -ForegroundColor Green
 - [ ] Error messages are clear
 
 ### Security & Compliance
+
 - [ ] Firestore rules enforced
 - [ ] Stripe PCI compliance met
 - [ ] No sensitive data in logs
@@ -1406,6 +1439,7 @@ Write-Host "🎉 Build & deploy complete!" -ForegroundColor Green
 - [ ] User privacy settings respected
 
 ### Analytics & Monitoring
+
 - [ ] Firebase Analytics events firing
 - [ ] Crash Reporting enabled
 - [ ] Performance Monitoring active
@@ -1413,6 +1447,7 @@ Write-Host "🎉 Build & deploy complete!" -ForegroundColor Green
 - [ ] Moderation audit trail complete
 
 ### App Store Submission
+
 - [ ] App icon, splash screen finalized (iOS/Android)
 - [ ] Privacy policy & terms updated
 - [ ] Release notes written
@@ -1433,6 +1468,7 @@ Write-Host "🎉 Build & deploy complete!" -ForegroundColor Green
 - **Documented**: Code clean, services unified, architecture clear
 
 **Timeline estimate**:
+
 - Setup & Cleanup: 2-4 hours
 - Core fixes & consolidation: 4-6 hours
 - Speed dating implementation: 6-8 hours

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'package:mixmingle/core/routing/app_routes.dart';
 
@@ -181,7 +181,12 @@ class TermsOfServicePage extends StatelessWidget {
                 text: TextSpan(
                   style: TextStyle(color: Colors.grey.shade600),
                   children: [
+<<<<<<< HEAD
                     const TextSpan(text: 'By using MIXVY, you agree to our\n'),
+=======
+                    const TextSpan(
+                        text: 'By using Mix & Mingle, you agree to our\n'),
+>>>>>>> origin/develop
                     TextSpan(
                       text: 'Terms of Service',
                       style: TextStyle(

@@ -38,7 +38,8 @@ class RoomLimitEnforcement {
         final activeCount = await _limitManager.getPublisherCount(roomId);
         return RoomJoinCheckResult(
           canJoin: false,
-          reason: 'Room is full ($activeCount/${FeatureFlags.maxConcurrentAgoraConnections} publishers). '
+          reason:
+              'Room is full ($activeCount/${FeatureFlags.maxConcurrentAgoraConnections} publishers). '
               'Try joining as audience or wait for a publisher to leave.',
           limit: FeatureFlags.maxConcurrentAgoraConnections,
           currentCount: activeCount,
@@ -50,7 +51,8 @@ class RoomLimitEnforcement {
         canJoin: true,
         reason: 'Slot available',
         limit: FeatureFlags.maxConcurrentAgoraConnections,
-        currentCount: FeatureFlags.maxConcurrentAgoraConnections - availableSlots,
+        currentCount:
+            FeatureFlags.maxConcurrentAgoraConnections - availableSlots,
         availableSlots: availableSlots,
       );
     } catch (e) {
@@ -104,7 +106,8 @@ class RoomLimitEnforcement {
     try {
       final canGoLive = await _limitManager.canUserGoLive(roomId, userId);
       if (!canGoLive) {
-        final isPublishing = await _limitManager.isUserPublishing(roomId, userId);
+        final isPublishing =
+            await _limitManager.isUserPublishing(roomId, userId);
         if (isPublishing) {
           return GoLiveButtonState.alreadyLive;
         }
@@ -192,10 +195,12 @@ class RoomLimitEnforcement {
   }
 
   /// Get bandwidth allocation recommendations based on publisher count
-  static Future<BandwidthAllocation> getBandwidthAllocation(String roomId) async {
+  static Future<BandwidthAllocation> getBandwidthAllocation(
+      String roomId) async {
     try {
       final count = await _limitManager.getPublisherCount(roomId);
-      final allocation = _limitManager.getBandwidthAllocationByPublisherCount(count);
+      final allocation =
+          _limitManager.getBandwidthAllocationByPublisherCount(count);
       return BandwidthAllocation(
         videoBitrate: allocation['video']!,
         audioBitrate: allocation['audio']!,
@@ -235,7 +240,8 @@ class RoomLimitEnforcement {
     try {
       final info = await getRoomCapacityInfo(roomId);
       if (info.isAtCapacity) {
-        AppLogger.info('Room $roomId at capacity: ${info.currentPublishers}/${info.maxPublishers}');
+        AppLogger.info(
+            'Room $roomId at capacity: ${info.currentPublishers}/${info.maxPublishers}');
       }
     } catch (e) {
       AppLogger.error('Error validating room data: $e');
@@ -299,7 +305,8 @@ class RoomCapacityInfo {
   });
 
   @override
-  String toString() => 'RoomCapacityInfo(current=$currentPublishers/$maxPublishers, '
+  String toString() =>
+      'RoomCapacityInfo(current=$currentPublishers/$maxPublishers, '
       'util=$utilizationPercent%, near=$isNearCapacity, at=$isAtCapacity)';
 }
 
@@ -316,7 +323,8 @@ class BandwidthAllocation {
   });
 
   @override
-  String toString() => 'BandwidthAllocation(video=$videoBitrate, audio=$audioBitrate, '
+  String toString() =>
+      'BandwidthAllocation(video=$videoBitrate, audio=$audioBitrate, '
       'publishers=$publisherCount)';
 }
 
@@ -327,5 +335,3 @@ enum GoLiveButtonState {
   roomAtCapacity,
   error,
 }
-
-

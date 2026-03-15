@@ -124,7 +124,8 @@ class HostControlsWidget extends StatelessWidget {
                 max: 50,
                 divisions: 24,
                 label: maxParticipants.toString(),
-                onChanged: (value) => onMaxParticipantsChange?.call(value.toInt()),
+                onChanged: (value) =>
+                    onMaxParticipantsChange?.call(value.toInt()),
                 activeColor: DesignColors.accent,
                 inactiveColor: DesignColors.surface,
               ),

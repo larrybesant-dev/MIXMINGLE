@@ -90,5 +90,3 @@ abstract class IVideoEngine {
   /// Dispose resources when done
   Future<void> dispose();
 }
-
-

@@ -43,8 +43,7 @@ class _EnergyMeterWidgetState extends State<EnergyMeterWidget>
   @override
   void initState() {
     super.initState();
-    _pulseCtrl = AnimationController(vsync: this)
-      ..repeat(reverse: true);
+    _pulseCtrl = AnimationController(vsync: this)..repeat(reverse: true);
     _updatePulseDuration();
   }
 

@@ -12,12 +12,14 @@
 Implemented **4-layer authentication security** to handle all edge cases in user authentication and room access. System now handles network delays, auth state timing issues, and permission violations gracefully.
 
 ### What Was Fixed
+
 1. **Race Condition in initState** - Auth listener now activates BEFORE first join attempt
 2. **Short Timeout** - Increased from 5s to 10s for slow networks
 3. **Missing Permission Check** - Added ban/room existence validation
 4. **Generic Error Messages** - Now specific about failure cause
 
 ### Impact
+
 - ✅ Users can join rooms immediately (no "User: NULL" errors)
 - ✅ Automatic retry works on slow networks
 - ✅ Banned users get clear error messages
@@ -67,6 +69,7 @@ _startAgoraSyncTimer();
 ```
 
 **Result**:
+
 - Retry logic is guaranteed to be active
 - Prevents race condition where auth resolves between first call and listener setup
 - Users with slow auth resolution now join successfully
@@ -102,6 +105,7 @@ final userAsync = await ref.read(currentUserProvider.future).timeout(
 ```
 
 **Result**:
+
 - Users with latency ≤10s have auth resolution succeed without fallback
 - Fallback to Firebase Auth only if provider truly slow
 - Better experience on mobile networks
@@ -156,6 +160,7 @@ await agoraService.joinRoom(widget.room.id);
 ```
 
 **Result**:
+
 - Banned users get immediate error (not after Agora initialization)
 - Deleted rooms caught before wasting resources
 - Clear differentiation between permission and network errors
@@ -216,6 +221,7 @@ if (user == null) {
 ```
 
 **Result**:
+
 - Users see meaningful error messages
 - Error logs show exact failure point
 - Developers can diagnose issues faster
@@ -271,37 +277,44 @@ if (user == null) {
 Test each scenario to verify all fixes work:
 
 ### Test 1: Normal Login → Join
+
 - [ ] User logs in
 - [ ] Waits for auth to resolve
 - [ ] Clicks "Join Room"
 - **Expected**: Join succeeds, video streams
 
 ### Test 2: Immediate Join (Auth Still Resolving)
+
 - [ ] User logs in
 - [ ] Immediately clicks "Join Room" (before auth fully resolved)
 - **Expected**: First attempt times out, auto-retry succeeds
 
 ### Test 3: Slow Network
+
 - [ ] Simulate slow network (DevTools throttling)
 - [ ] User joins room
 - **Expected**: 10s timeout allows join, doesn't fail early
 
 ### Test 4: User Banned from Room
+
 - [ ] Ban user from room via Firestore/Admin
 - [ ] User tries to join
 - **Expected**: Clear error message: "You are banned from this room"
 
 ### Test 5: Room Deleted
+
 - [ ] Delete room document
 - [ ] User tries to join
 - **Expected**: Clear error message: "Room no longer exists"
 
 ### Test 6: Auth Timeout Edge Case
+
 - [ ] Slow Riverpod provider (simulated)
 - [ ] Falls back to Firebase Auth
 - **Expected**: Join succeeds via fallback
 
 ### Test 7: Error Message Details
+
 - [ ] Trigger different auth failures
 - [ ] Check console logs for detailed error info
 - **Expected**: Logs show exactly which source failed (timeout, provider error, etc)
@@ -310,26 +323,28 @@ Test each scenario to verify all fixes work:
 
 ## 📊 CHANGES SUMMARY
 
-| Component | Before | After | Benefit |
-|-----------|--------|-------|---------|
-| Auth Timeout | 5 seconds | 10 seconds | Better mobile support |
-| Auth Listener | AFTER join | BEFORE join | Prevents race condition |
-| Permission Check | None | Full validation | Catches issues early |
-| Error Messages | Generic | Detailed | Better debugging |
-| Ban Handling | After Agora | Before join | Faster failure |
-| Retry Logic | Implicit | Explicit | Reliable fallback |
+| Component        | Before      | After           | Benefit                 |
+| ---------------- | ----------- | --------------- | ----------------------- |
+| Auth Timeout     | 5 seconds   | 10 seconds      | Better mobile support   |
+| Auth Listener    | AFTER join  | BEFORE join     | Prevents race condition |
+| Permission Check | None        | Full validation | Catches issues early    |
+| Error Messages   | Generic     | Detailed        | Better debugging        |
+| Ban Handling     | After Agora | Before join     | Faster failure          |
+| Retry Logic      | Implicit    | Explicit        | Reliable fallback       |
 
 ---
 
 ## 🚀 DEPLOYMENT NOTES
 
 ### Prerequisites
+
 - ✅ Flutter 3.38.x with Dart 3.10.x
 - ✅ Firebase Auth initialized
 - ✅ Firestore rules deployed (Jan 28)
 - ✅ Agora RTC Engine 6.2.2
 
 ### Deployment Steps
+
 1. Pull latest code (includes this commit)
 2. Run `flutter pub get` (no new dependencies)
 3. Run `flutter build web` (or `flutter run -d chrome`)
@@ -337,6 +352,7 @@ Test each scenario to verify all fixes work:
 5. Monitor logs for auth errors
 
 ### Rollback Plan
+
 - Revert to previous commit if auth issues appear
 - No database migrations required
 - No breaking changes to API
@@ -376,6 +392,7 @@ Watch for these log messages to verify fixes are working:
 ## ✨ PRODUCTION READINESS
 
 ### Security ✅
+
 - Client-side permission validation
 - Ban list enforcement
 - Auth state verification
@@ -383,18 +400,21 @@ Watch for these log messages to verify fixes are working:
 - Detailed error logging
 
 ### Reliability ✅
+
 - Dual-source user lookup
 - Automatic retry on auth delay
 - Timeout handling
 - Clear error messages
 
 ### Performance ✅
+
 - Minimal additional latency
 - Efficient Firestore queries
 - Fallback prevents long waits
 - Room check batched with join
 
 ### User Experience ✅
+
 - Meaningful error messages
 - Auto-retry without user action
 - Faster failure on banned/deleted

@@ -1,6 +1,7 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'dart:async';
+import 'package:mixmingle/app/app_routes.dart';
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/glow_text.dart';
 import 'package:mixmingle/core/routing/app_routes.dart';
@@ -26,7 +27,8 @@ class _SplashPageState extends State<SplashPage> {
     // Minimum splash delay (show branding)
     Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted && !_hasNavigated) {
-        debugPrint('â° Minimum delay passed - checking if auth already resolved');
+        debugPrint(
+            'â° Minimum delay passed - checking if auth already resolved');
         setState(() {
           _hasMinimumDelayPassed = true;
         });
@@ -37,9 +39,11 @@ class _SplashPageState extends State<SplashPage> {
     });
 
     // Listen to Firebase auth state changes directly (no providers)
-    _authSubscription = firebase_auth.FirebaseAuth.instance.authStateChanges().listen((user) {
+    _authSubscription =
+        firebase_auth.FirebaseAuth.instance.authStateChanges().listen((user) {
       if (mounted && !_hasNavigated && _hasMinimumDelayPassed) {
-        debugPrint('ðŸ”” Auth state changed: ${user != null ? "user present" : "no user"}');
+        debugPrint(
+            'ðŸ”” Auth state changed: ${user != null ? "user present" : "no user"}');
         _tryNavigate();
       }
     });
@@ -47,9 +51,13 @@ class _SplashPageState extends State<SplashPage> {
     // Timeout as safety net - 15 seconds
     _timeoutTimer = Timer(const Duration(seconds: 15), () {
       if (mounted && !_hasNavigated) {
-        debugPrint('âš ï¸ Splash timeout (15s) - forcing navigation to login');
+        debugPrint('⚠ Splash timeout (15s) - forcing navigation to onboarding');
         _hasNavigated = true;
+<<<<<<< HEAD
         Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+=======
+        Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
+>>>>>>> origin/develop
       }
     });
   }
@@ -64,11 +72,19 @@ class _SplashPageState extends State<SplashPage> {
       _timeoutTimer?.cancel();
 
       if (user != null) {
+<<<<<<< HEAD
         debugPrint('âœ… User authenticated - navigating to /home');
         Navigator.of(context).pushReplacementNamed(AppRoutes.home);
       } else {
         debugPrint('ℹ️ No user - navigating to /login');
         Navigator.of(context).pushReplacementNamed(AppRoutes.login);
+=======
+        debugPrint('✅ User authenticated - navigating to /home');
+        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+      } else {
+        debugPrint('ℹ No user - navigating to onboarding');
+        Navigator.of(context).pushReplacementNamed(AppRoutes.onboarding);
+>>>>>>> origin/develop
       }
     }
   }

@@ -22,7 +22,9 @@ class UserLevel {
       level: map['level'] ?? 1,
       xp: map['xp'] ?? 0,
       xpToNextLevel: map['xpToNextLevel'] ?? 100,
-      lastUpdated: map['lastUpdated'] != null ? DateTime.parse(map['lastUpdated']) : DateTime.now(),
+      lastUpdated: map['lastUpdated'] != null
+          ? DateTime.parse(map['lastUpdated'])
+          : DateTime.now(),
     );
   }
 
@@ -84,5 +86,3 @@ class UserLevel {
     );
   }
 }
-
-

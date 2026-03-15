@@ -1,4 +1,4 @@
-﻿import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,7 +43,8 @@ class _GroupChatRoomPageState extends ConsumerState<GroupChatRoomPage> {
     setState(() => _joining = true);
 
     // Fetch user's displayName from Firestore UserProfile
-    final userProfile = await ref.read(profileServiceProvider).getCurrentUserProfile();
+    final userProfile =
+        await ref.read(profileServiceProvider).getCurrentUserProfile();
     final displayName = userProfile?.displayName ?? user.email ?? 'Guest';
 
     final chatService = ref.read(groupChatServiceProvider);
@@ -53,8 +54,11 @@ class _GroupChatRoomPageState extends ConsumerState<GroupChatRoomPage> {
       avatarUrl: userProfile?.photoUrl ?? user.photoURL,
     );
 
-    await chatService.updateMediaState(widget.roomId, isMuted: false, isCameraOn: true);
-    await ref.read(groupCallControllerProvider.notifier).initializeAndJoin(widget.roomId);
+    await chatService.updateMediaState(widget.roomId,
+        isMuted: false, isCameraOn: true);
+    await ref
+        .read(groupCallControllerProvider.notifier)
+        .initializeAndJoin(widget.roomId);
     if (mounted) {
       setState(() => _joining = false);
     }
@@ -68,7 +72,8 @@ class _GroupChatRoomPageState extends ConsumerState<GroupChatRoomPage> {
   @override
   Widget build(BuildContext context) {
     final roomAsync = ref.watch(groupRoomProvider(widget.roomId));
-    final participantsAsync = ref.watch(groupParticipantsProvider(widget.roomId));
+    final participantsAsync =
+        ref.watch(groupParticipantsProvider(widget.roomId));
     final messagesAsync = ref.watch(groupMessagesProvider(widget.roomId));
     final callState = ref.watch(groupCallControllerProvider);
 
@@ -84,11 +89,16 @@ class _GroupChatRoomPageState extends ConsumerState<GroupChatRoomPage> {
         actions: [
           IconButton(
             icon: Icon(callState.isMicMuted ? Icons.mic_off : Icons.mic),
-            onPressed: () => ref.read(groupCallControllerProvider.notifier).toggleMic(roomId: widget.roomId),
+            onPressed: () => ref
+                .read(groupCallControllerProvider.notifier)
+                .toggleMic(roomId: widget.roomId),
           ),
           IconButton(
-            icon: Icon(callState.isVideoMuted ? Icons.videocam_off : Icons.videocam),
-            onPressed: () => ref.read(groupCallControllerProvider.notifier).toggleVideo(roomId: widget.roomId),
+            icon: Icon(
+                callState.isVideoMuted ? Icons.videocam_off : Icons.videocam),
+            onPressed: () => ref
+                .read(groupCallControllerProvider.notifier)
+                .toggleVideo(roomId: widget.roomId),
           ),
           IconButton(
             icon: const Icon(Icons.call_end),
@@ -132,7 +142,8 @@ class _GroupChatRoomPageState extends ConsumerState<GroupChatRoomPage> {
                           child: Column(
                             children: [
                               Expanded(
-                                child: AsyncValueViewEnhanced<List<GroupChatMessage>>(
+                                child: AsyncValueViewEnhanced<
+                                    List<GroupChatMessage>>(
                                   value: messagesAsync,
                                   maxRetries: 3,
                                   skeleton: const Column(
@@ -146,8 +157,10 @@ class _GroupChatRoomPageState extends ConsumerState<GroupChatRoomPage> {
                                   ),
                                   screenName: 'GroupChatRoomPage',
                                   providerName: 'groupMessagesProvider',
-                                  onRetry: () => ref.invalidate(groupMessagesProvider(widget.roomId)),
-                                  data: (messages) => _buildMessageList(messages),
+                                  onRetry: () => ref.invalidate(
+                                      groupMessagesProvider(widget.roomId)),
+                                  data: (messages) =>
+                                      _buildMessageList(messages),
                                 ),
                               ),
                               _buildComposer(),
@@ -164,9 +177,12 @@ class _GroupChatRoomPageState extends ConsumerState<GroupChatRoomPage> {
                   child: Card(
                     margin: const EdgeInsets.all(8),
                     child: participantsAsync.when(
-                      data: (participants) => _buildParticipantList(participants),
-                      loading: () => const Center(child: CircularProgressIndicator()),
-                      error: (err, _) => Center(child: Text('Participants unavailable: $err')),
+                      data: (participants) =>
+                          _buildParticipantList(participants),
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
+                      error: (err, _) =>
+                          Center(child: Text('Participants unavailable: $err')),
                     ),
                   ),
                 ),
@@ -228,15 +244,20 @@ class _GroupChatRoomPageState extends ConsumerState<GroupChatRoomPage> {
         final p = participants[index];
         return ListTile(
           leading: CircleAvatar(
-            backgroundImage: p.avatarUrl != null ? NetworkImage(p.avatarUrl!) : null,
-            child: p.avatarUrl == null ? Text(p.username.isNotEmpty ? p.username[0].toUpperCase() : '?') : null,
+            backgroundImage:
+                p.avatarUrl != null ? NetworkImage(p.avatarUrl!) : null,
+            child: p.avatarUrl == null
+                ? Text(
+                    p.username.isNotEmpty ? p.username[0].toUpperCase() : '?')
+                : null,
           ),
           title: Text(p.username),
           subtitle: Row(
             children: [
               Icon(p.isMuted ? Icons.mic_off : Icons.mic, size: 16),
               const SizedBox(width: 6),
-              Icon(p.isCameraOn ? Icons.videocam : Icons.videocam_off, size: 16),
+              Icon(p.isCameraOn ? Icons.videocam : Icons.videocam_off,
+                  size: 16),
             ],
           ),
         );
@@ -254,7 +275,8 @@ class _GroupChatRoomPageState extends ConsumerState<GroupChatRoomPage> {
         final isCurrentUser = message.senderId == currentUser?.uid;
 
         return Align(
-          alignment: isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
+          alignment:
+              isCurrentUser ? Alignment.centerRight : Alignment.centerLeft,
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             padding: const EdgeInsets.all(8),
@@ -262,7 +284,9 @@ class _GroupChatRoomPageState extends ConsumerState<GroupChatRoomPage> {
               maxWidth: MediaQuery.of(context).size.width * 0.7,
             ),
             decoration: BoxDecoration(
-              color: isCurrentUser ? Theme.of(context).primaryColor.withValues(alpha: 0.8) : Colors.grey[700],
+              color: isCurrentUser
+                  ? Theme.of(context).primaryColor.withValues(alpha: 0.8)
+                  : Colors.grey[700],
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -316,6 +340,8 @@ class _GroupChatRoomPageState extends ConsumerState<GroupChatRoomPage> {
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
     _messageController.clear();
-    await ref.read(groupChatServiceProvider).sendTextMessage(widget.roomId, text);
+    await ref
+        .read(groupChatServiceProvider)
+        .sendTextMessage(widget.roomId, text);
   }
 }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/providers/providers.dart';
 
@@ -209,7 +209,8 @@ class _GiftSelectorState extends ConsumerState<GiftSelector> {
               maxLines: 2,
               decoration: InputDecoration(
                 hintText: 'Add a message (optional)',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                hintStyle:
+                    TextStyle(color: Colors.white.withValues(alpha: 0.7)),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(color: Color(0xFFFFD700)),

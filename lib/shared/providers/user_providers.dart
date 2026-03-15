@@ -9,9 +9,11 @@ import '../models/user_presence.dart';
 import 'auth_providers.dart';
 
 /// Service providers
-final profileServiceProvider = Provider<ProfileService>((ref) => ProfileService());
+final profileServiceProvider =
+    Provider<ProfileService>((ref) => ProfileService());
 
-final presenceServiceProvider = Provider<PresenceService>((ref) => PresenceService());
+final presenceServiceProvider =
+    Provider<PresenceService>((ref) => PresenceService());
 
 /// Current user profile provider
 final currentUserProfileProvider = StreamProvider<UserProfile?>((ref) async* {
@@ -31,31 +33,55 @@ final currentUserProfileProvider = StreamProvider<UserProfile?>((ref) async* {
 });
 
 /// User profile by ID provider
+<<<<<<< HEAD
 final userProfileProvider = StreamProvider.family<UserProfile?, String>((ref, userId) {
   return ref.watch(profileServiceProvider).getUserProfileStream(userId);
+=======
+final userProfileProvider =
+    StreamProvider.family<UserProfile?, String>((ref, userId) async* {
+  final profileService = ref.watch(profileServiceProvider);
+  try {
+    final profile = await profileService.getUserProfile(userId);
+    yield profile;
+
+    // Keep listening for updates (simplified - in production use Firestore stream)
+    await for (final _ in Stream.periodic(const Duration(seconds: 10))) {
+      final updated = await profileService.getUserProfile(userId);
+      yield updated;
+    }
+  } catch (e) {
+    yield null;
+  }
+>>>>>>> origin/develop
 });
 
 /// User presence provider - Phase 2 Hardened
 /// Uses error handling and prevents infinite retry loops
-final userPresenceProvider = StreamProvider.family<UserPresence?, String>((ref, userId) {
+final userPresenceProvider =
+    StreamProvider.family<UserPresence?, String>((ref, userId) {
   final presenceService = ref.watch(presenceServiceProvider);
 
   // Get stream with built-in error handling and retry guards
-  return presenceService.getUserPresence(userId).handleError((error, stackTrace) {
+  return presenceService
+      .getUserPresence(userId)
+      .handleError((error, stackTrace) {
     debugPrint('âŒ userPresenceProvider error for $userId: $error');
     return null; // Return null on error instead of propagating
   });
 });
 
 /// Nearby users provider
-final nearbyUsersProvider = StreamProvider.family<List<UserProfile>, Map<String, dynamic>>((ref, params) async* {
+final nearbyUsersProvider =
+    StreamProvider.family<List<UserProfile>, Map<String, dynamic>>(
+        (ref, params) async* {
   final profileService = ref.watch(profileServiceProvider);
   final latitude = params['latitude'] as double;
   final longitude = params['longitude'] as double;
   final radiusKm = params['radiusKm'] as double? ?? 10.0;
 
   try {
-    final users = await profileService.getNearbyUsers(latitude, longitude, radiusKm);
+    final users =
+        await profileService.getNearbyUsers(latitude, longitude, radiusKm);
     yield users;
   } catch (e) {
     yield [];
@@ -63,7 +89,9 @@ final nearbyUsersProvider = StreamProvider.family<List<UserProfile>, Map<String,
 });
 
 /// Search users by interests provider
-final searchUsersByInterestsProvider = StreamProvider.family<List<UserProfile>, List<String>>((ref, interests) async* {
+final searchUsersByInterestsProvider =
+    StreamProvider.family<List<UserProfile>, List<String>>(
+        (ref, interests) async* {
   final profileService = ref.watch(profileServiceProvider);
 
   try {
@@ -75,7 +103,14 @@ final searchUsersByInterestsProvider = StreamProvider.family<List<UserProfile>, 
 });
 
 /// Profile controller for profile operations
+<<<<<<< HEAD
 final userProfileControllerProvider = NotifierProvider<ProfileController, AsyncValue<UserProfile?>>(ProfileController.new);
+=======
+final userProfileControllerProvider =
+    NotifierProvider<ProfileController, AsyncValue<UserProfile?>>(() {
+  return ProfileController();
+});
+>>>>>>> origin/develop
 
 class ProfileController extends Notifier<AsyncValue<UserProfile?>> {
   late final ProfileService _profileService;
@@ -195,7 +230,8 @@ class ProfileController extends Notifier<AsyncValue<UserProfile?>> {
 }
 
 /// User search controller
-final userSearchControllerProvider = NotifierProvider<UserSearchController, AsyncValue<List<UserProfile>>>(() {
+final userSearchControllerProvider =
+    NotifierProvider<UserSearchController, AsyncValue<List<UserProfile>>>(() {
   return UserSearchController();
 });
 
@@ -240,16 +276,19 @@ class UserSearchController extends Notifier<AsyncValue<List<UserProfile>>> {
       List<UserProfile> results = [];
 
       if (_interestFilters.isNotEmpty) {
-        results = await _profileService.searchUsersByInterests(_interestFilters);
+        results =
+            await _profileService.searchUsersByInterests(_interestFilters);
       }
 
       // Apply text search filter if query provided
       if (_searchQuery.isNotEmpty) {
         results = results.where((user) {
-          final displayNameMatch = (user.displayName?.toLowerCase() ?? '').contains(_searchQuery.toLowerCase());
-          final bioMatch = (user.bio?.toLowerCase() ?? '').contains(_searchQuery.toLowerCase());
-          final interestsMatch =
-              (user.interests ?? []).any((interest) => interest.toLowerCase().contains(_searchQuery.toLowerCase()));
+          final displayNameMatch = (user.displayName?.toLowerCase() ?? '')
+              .contains(_searchQuery.toLowerCase());
+          final bioMatch = (user.bio?.toLowerCase() ?? '')
+              .contains(_searchQuery.toLowerCase());
+          final interestsMatch = (user.interests ?? []).any((interest) =>
+              interest.toLowerCase().contains(_searchQuery.toLowerCase()));
           return displayNameMatch || bioMatch || interestsMatch;
         }).toList();
       }
@@ -269,7 +308,8 @@ final onlineUsersProvider = StreamProvider<List<String>>((ref) async* {
 });
 
 /// User statistics provider
-final userStatisticsProvider = StreamProvider.family<Map<String, dynamic>, String>((ref, userId) async* {
+final userStatisticsProvider =
+    StreamProvider.family<Map<String, dynamic>, String>((ref, userId) async* {
   // This would aggregate various user stats
   // For now, return empty map
   yield {};
@@ -289,14 +329,16 @@ final blockedUsersProvider = StreamProvider<List<String>>((ref) async* {
 });
 
 /// User followers provider
-final userFollowersProvider = StreamProvider.family<List<UserProfile>, String>((ref, userId) async* {
+final userFollowersProvider =
+    StreamProvider.family<List<UserProfile>, String>((ref, userId) async* {
   // This would query followers
   // For now, return empty list
   yield [];
 });
 
 /// User following provider
-final userFollowingProvider = StreamProvider.family<List<UserProfile>, String>((ref, userId) async* {
+final userFollowingProvider =
+    StreamProvider.family<List<UserProfile>, String>((ref, userId) async* {
   // This would query following
   // For now, return empty list
   yield [];

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 ﻿// Updated for current Flutter best practices
+=======
+// ignore_for_file: deprecated_member_use
+>>>>>>> origin/develop
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,21 +67,25 @@ class BrowseRoomsPage extends ConsumerWidget {
                         ),
                       ),
                       child: TextField(
-                        onChanged: (value) => ref.read(searchQueryProvider.notifier).update(value),
+                        onChanged: (value) => ref
+                            .read(searchQueryProvider.notifier)
+                            .update(value),
                         style: const TextStyle(color: Colors.white),
                         decoration: const InputDecoration(
                           hintText: 'Search rooms...',
                           hintStyle: TextStyle(color: Colors.white70),
                           prefixIcon: Icon(Icons.search, color: Colors.white70),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                          contentPadding: EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 16),
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 12),
                   NeonButton(
-                    onPressed: () => Navigator.of(context).pushNamed('/create-room'),
+                    onPressed: () =>
+                        Navigator.of(context).pushNamed('/create-room'),
                     padding: const EdgeInsets.all(12),
                     child: const Icon(Icons.add, size: 24),
                   ),
@@ -90,6 +98,7 @@ class BrowseRoomsPage extends ConsumerWidget {
               height: 50,
               child: ListView(
                 scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   _buildCategoryChip('All', true),
@@ -130,11 +139,13 @@ class BrowseRoomsPage extends ConsumerWidget {
                           const SizedBox(height: 8),
                           Text(
                             'Be the first to start a session!',
-                            style: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
+                            style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.7)),
                           ),
                           const SizedBox(height: 24),
                           NeonButton(
-                            onPressed: () => Navigator.of(context).pushNamed('/create-room'),
+                            onPressed: () =>
+                                Navigator.of(context).pushNamed('/create-room'),
                             child: const Text('Create Room'),
                           ),
                         ],
@@ -143,19 +154,24 @@ class BrowseRoomsPage extends ConsumerWidget {
                   }
 
                   return ListView.builder(
+                    physics: const BouncingScrollPhysics(
+                        parent: AlwaysScrollableScrollPhysics()),
                     padding: const EdgeInsets.all(16),
                     itemCount: filteredRooms.length,
                     itemBuilder: (context, index) {
                       final room = filteredRooms[index];
                       // Fetch host profile to get display name
-                      final hostProfileAsync = ref.watch(userProvider(room.hostId));
+                      final hostProfileAsync =
+                          ref.watch(userProvider(room.hostId));
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 16),
                         child: hostProfileAsync.when(
                           data: (hostProfile) => LiveRoomCard(
                             roomName: room.name ?? room.title,
-                            djName: hostProfile?.displayName ?? room.hostName ?? 'Unknown DJ',
+                            djName: hostProfile?.displayName ??
+                                room.hostName ??
+                                'Unknown DJ',
                             viewerCount: room.viewerCount,
                             onTap: () => _joinRoom(context, room),
                           ),
@@ -199,10 +215,14 @@ class BrowseRoomsPage extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: isSelected ? const Color(0xFFFF4C4C) : Colors.white.withValues(alpha: 0.1),
+        color: isSelected
+            ? const Color(0xFFFF4C4C)
+            : Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isSelected ? const Color(0xFFFF4C4C) : const Color(0xFFFF4C4C).withValues(alpha: 0.3),
+          color: isSelected
+              ? const Color(0xFFFF4C4C)
+              : const Color(0xFFFF4C4C).withValues(alpha: 0.3),
           width: 1,
         ),
       ),
@@ -235,7 +255,8 @@ class BrowseRoomsPage extends ConsumerWidget {
           fontSize: 20,
         ),
         content: TextField(
-          onChanged: (value) => ref.read(searchQueryProvider.notifier).update(value),
+          onChanged: (value) =>
+              ref.read(searchQueryProvider.notifier).update(value),
           style: const TextStyle(color: Colors.white),
           decoration: InputDecoration(
             hintText: 'Enter room name or description...',
@@ -268,9 +289,9 @@ class BrowseRoomsPage extends ConsumerWidget {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => RoomAccessWrapper(
-            room: room,
-            userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
-          ),
+          room: room,
+          userId: fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '',
+        ),
       ),
     );
   }
@@ -289,7 +310,15 @@ class _FilterDialogState extends State<FilterDialog> {
   RoomStatus? _selectedStatus;
   bool _onlyLiveRooms = false;
 
-  final List<String> _categories = ['Music', 'Talk Show', 'Gaming', 'Comedy', 'Education', 'Sports', 'Other'];
+  final List<String> _categories = [
+    'Music',
+    'Talk Show',
+    'Gaming',
+    'Comedy',
+    'Education',
+    'Sports',
+    'Other'
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -307,7 +336,8 @@ class _FilterDialogState extends State<FilterDialog> {
             // Category Filter
             const Text(
               'Category',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Wrap(
@@ -337,26 +367,31 @@ class _FilterDialogState extends State<FilterDialog> {
             // Privacy Filter
             const Text(
               'Privacy',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
                   child: RadioListTile<RoomPrivacy>(
-                    title: const Text('Public', style: TextStyle(color: Colors.white70)),
+                    title: const Text('Public',
+                        style: TextStyle(color: Colors.white70)),
                     value: RoomPrivacy.public,
                     groupValue: _selectedPrivacy,
-                    onChanged: (value) => setState(() => _selectedPrivacy = value),
+                    onChanged: (value) =>
+                        setState(() => _selectedPrivacy = value),
                     activeColor: const Color(0xFFFF4C4C),
                   ),
                 ),
                 Expanded(
                   child: RadioListTile<RoomPrivacy>(
-                    title: const Text('Private', style: TextStyle(color: Colors.white70)),
+                    title: const Text('Private',
+                        style: TextStyle(color: Colors.white70)),
                     value: RoomPrivacy.private,
                     groupValue: _selectedPrivacy,
-                    onChanged: (value) => setState(() => _selectedPrivacy = value),
+                    onChanged: (value) =>
+                        setState(() => _selectedPrivacy = value),
                     activeColor: const Color(0xFFFF4C4C),
                   ),
                 ),
@@ -368,26 +403,31 @@ class _FilterDialogState extends State<FilterDialog> {
             // Status Filter
             const Text(
               'Status',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
                   child: RadioListTile<RoomStatus>(
-                    title: const Text('Live', style: TextStyle(color: Colors.white70)),
+                    title: const Text('Live',
+                        style: TextStyle(color: Colors.white70)),
                     value: RoomStatus.live,
                     groupValue: _selectedStatus,
-                    onChanged: (value) => setState(() => _selectedStatus = value),
+                    onChanged: (value) =>
+                        setState(() => _selectedStatus = value),
                     activeColor: const Color(0xFFFF4C4C),
                   ),
                 ),
                 Expanded(
                   child: RadioListTile<RoomStatus>(
-                    title: const Text('Ended', style: TextStyle(color: Colors.white70)),
+                    title: const Text('Ended',
+                        style: TextStyle(color: Colors.white70)),
                     value: RoomStatus.ended,
                     groupValue: _selectedStatus,
-                    onChanged: (value) => setState(() => _selectedStatus = value),
+                    onChanged: (value) =>
+                        setState(() => _selectedStatus = value),
                     activeColor: const Color(0xFFFF4C4C),
                   ),
                 ),
@@ -398,9 +438,11 @@ class _FilterDialogState extends State<FilterDialog> {
 
             // Live Rooms Only
             CheckboxListTile(
-              title: const Text('Live rooms only', style: TextStyle(color: Colors.white70)),
+              title: const Text('Live rooms only',
+                  style: TextStyle(color: Colors.white70)),
               value: _onlyLiveRooms,
-              onChanged: (value) => setState(() => _onlyLiveRooms = value ?? false),
+              onChanged: (value) =>
+                  setState(() => _onlyLiveRooms = value ?? false),
               activeColor: const Color(0xFFFF4C4C),
               checkColor: Colors.white,
             ),
@@ -422,7 +464,8 @@ class _FilterDialogState extends State<FilterDialog> {
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: const Text('Apply', style: TextStyle(color: Color(0xFFFF4C4C))),
+          child:
+              const Text('Apply', style: TextStyle(color: Color(0xFFFF4C4C))),
         ),
       ],
     );

@@ -1,60 +1,127 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RoomManagerService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> muteUser(String roomId, String uid) async {
-    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(uid).update({'muted': true});
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(uid)
+        .update({'muted': true});
   }
+
   Future<void> unmuteUser(String roomId, String uid) async {
-    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(uid).update({'muted': false});
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(uid)
+        .update({'muted': false});
   }
+
   Future<void> removeUser(String roomId, String uid) async {
-    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(uid).delete();
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(uid)
+        .delete();
   }
+
   Future<void> lockRoom(String roomId) async {
     await _firestore.collection('rooms').doc(roomId).update({'isLocked': true, 'isRoomLocked': true});
   }
+
   Future<void> unlockRoom(String roomId) async {
     await _firestore.collection('rooms').doc(roomId).update({'isLocked': false, 'isRoomLocked': false});
   }
+
   Future<void> endRoom(String roomId) async {
     await _firestore.collection('rooms').doc(roomId).update({'ended': true});
   }
+
   Future<void> promoteCoHost(String roomId, String uid) async {
-    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(uid).update({'role': 'cohost'});
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(uid)
+        .update({'role': 'cohost'});
   }
+
   Future<void> demoteCoHost(String roomId, String uid) async {
-    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(uid).update({'role': 'participant'});
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(uid)
+        .update({'role': 'participant'});
   }
 
   // New methods for room management
   Future<void> promoteToSpeaker(String roomId, String uid) async {
-    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(uid).update({'role': 'speaker'});
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(uid)
+        .update({'role': 'speaker'});
   }
 
   Future<void> demoteToListener(String roomId, String uid) async {
-    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(uid).update({'role': 'listener'});
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(uid)
+        .update({'role': 'listener'});
   }
 
   Future<void> makeModerator(String roomId, String uid) async {
-    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(uid).update({'role': 'moderator'});
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(uid)
+        .update({'role': 'moderator'});
   }
 
   Future<void> removeModerator(String roomId, String uid) async {
-    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(uid).update({'role': 'participant'});
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(uid)
+        .update({'role': 'participant'});
   }
 
   Future<void> approveRaisedHand(String roomId, String uid) async {
-    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(uid).update({'handRaised': false, 'approved': true});
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(uid)
+        .update({'handRaised': false, 'approved': true});
   }
 
   Future<void> declineRaisedHand(String roomId, String uid) async {
-    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(uid).update({'handRaised': false, 'approved': false});
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(uid)
+        .update({'handRaised': false, 'approved': false});
   }
 
   Future<void> requestToSpeak(String roomId, String uid) async {
-    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(uid).update({'handRaised': true});
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(uid)
+        .update({'handRaised': true});
   }
 
   Future<void> createRoom(String roomId, Map<String, dynamic> roomData) async {
@@ -68,11 +135,13 @@ class RoomManagerService {
   Stream<dynamic> getLiveRoomsStream() {
     return _firestore
         .collection('rooms')
+<<<<<<< HEAD
         .where('isActive', isEqualTo: true)
         .orderBy('createdAt', descending: true)
         .limit(50)
+=======
+        .where('ended', isEqualTo: false)
+>>>>>>> origin/develop
         .snapshots();
   }
 }
-
-

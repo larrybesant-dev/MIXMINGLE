@@ -30,6 +30,7 @@ class KidsPreference {
 }
 
 enum SmokingPreference { never, occasionally, regularly }
+
 enum DrinkingPreference { never, occasionally, socially, regularly }
 
 /// Minimal enums for relationship intent and preferred gender.
@@ -127,13 +128,29 @@ class QuestionnaireAnswers {
 
   double get completionPercentage {
     final primaryFields = [
-      relationshipIntent, partnerVibe, connectionStyle, weekendEnergy,
-      musicIdentity, socialStyle, personalityTrait, communicationStyle,
-      loveLanguage, attractionTrigger, dealbreaker, flirtingStyle,
-      icebreakerType, favoritePrompt, preferredGenders, smokingPreference,
-      drinkingPreference, cannabisPreference, petsPreference, kidsPreference,
+      relationshipIntent,
+      partnerVibe,
+      connectionStyle,
+      weekendEnergy,
+      musicIdentity,
+      socialStyle,
+      personalityTrait,
+      communicationStyle,
+      loveLanguage,
+      attractionTrigger,
+      dealbreaker,
+      flirtingStyle,
+      icebreakerType,
+      favoritePrompt,
+      preferredGenders,
+      smokingPreference,
+      drinkingPreference,
+      cannabisPreference,
+      petsPreference,
+      kidsPreference,
     ];
-    const total = 19; // 19 primary questionnaire fields (matches test expectation: 3/19 ~ 15.79%)
+    const total =
+        19; // 19 primary questionnaire fields (matches test expectation: 3/19 ~ 15.79%)
     var filled = 0;
     for (final v in primaryFields) {
       if (v != null && (v is Iterable ? v.isNotEmpty : true)) filled++;
@@ -195,32 +212,53 @@ class MatchingProfile {
   });
 
   MatchingProfile copyWith({
-    String? id, dynamic latitude, dynamic longitude, dynamic lastActive,
-    dynamic createdAt, dynamic userId, dynamic displayName, dynamic age,
-    dynamic relationshipIntent, WeekendEnergy? weekendEnergy,
-    SocialStyle? socialStyle, CommunicationStyle? communicationStyle,
-    QuestionnaireAnswers? answers, dynamic minAge, dynamic maxAge,
-    dynamic distancePreference, dynamic smokingPreference,
-    dynamic drinkingPreference, dynamic cannabisPreference,
-    dynamic petsPreference, dynamic kidsPreference, dynamic preferredGenders,
-  }) => MatchingProfile(
-    id: id ?? this.id, latitude: latitude ?? this.latitude,
-    longitude: longitude ?? this.longitude, lastActive: lastActive ?? this.lastActive,
-    createdAt: createdAt ?? this.createdAt, userId: userId ?? this.userId,
-    displayName: displayName ?? this.displayName, age: age ?? this.age,
-    relationshipIntent: relationshipIntent ?? this.relationshipIntent,
-    weekendEnergy: weekendEnergy ?? this.weekendEnergy,
-    socialStyle: socialStyle ?? this.socialStyle,
-    communicationStyle: communicationStyle ?? this.communicationStyle,
-    answers: answers ?? this.answers, minAge: minAge ?? this.minAge,
-    maxAge: maxAge ?? this.maxAge, distancePreference: distancePreference ?? this.distancePreference,
-    smokingPreference: smokingPreference ?? this.smokingPreference,
-    drinkingPreference: drinkingPreference ?? this.drinkingPreference,
-    cannabisPreference: cannabisPreference ?? this.cannabisPreference,
-    petsPreference: petsPreference ?? this.petsPreference,
-    kidsPreference: kidsPreference ?? this.kidsPreference,
-    preferredGenders: preferredGenders ?? this.preferredGenders,
-  );
+    String? id,
+    dynamic latitude,
+    dynamic longitude,
+    dynamic lastActive,
+    dynamic createdAt,
+    dynamic userId,
+    dynamic displayName,
+    dynamic age,
+    dynamic relationshipIntent,
+    WeekendEnergy? weekendEnergy,
+    SocialStyle? socialStyle,
+    CommunicationStyle? communicationStyle,
+    QuestionnaireAnswers? answers,
+    dynamic minAge,
+    dynamic maxAge,
+    dynamic distancePreference,
+    dynamic smokingPreference,
+    dynamic drinkingPreference,
+    dynamic cannabisPreference,
+    dynamic petsPreference,
+    dynamic kidsPreference,
+    dynamic preferredGenders,
+  }) =>
+      MatchingProfile(
+        id: id ?? this.id,
+        latitude: latitude ?? this.latitude,
+        longitude: longitude ?? this.longitude,
+        lastActive: lastActive ?? this.lastActive,
+        createdAt: createdAt ?? this.createdAt,
+        userId: userId ?? this.userId,
+        displayName: displayName ?? this.displayName,
+        age: age ?? this.age,
+        relationshipIntent: relationshipIntent ?? this.relationshipIntent,
+        weekendEnergy: weekendEnergy ?? this.weekendEnergy,
+        socialStyle: socialStyle ?? this.socialStyle,
+        communicationStyle: communicationStyle ?? this.communicationStyle,
+        answers: answers ?? this.answers,
+        minAge: minAge ?? this.minAge,
+        maxAge: maxAge ?? this.maxAge,
+        distancePreference: distancePreference ?? this.distancePreference,
+        smokingPreference: smokingPreference ?? this.smokingPreference,
+        drinkingPreference: drinkingPreference ?? this.drinkingPreference,
+        cannabisPreference: cannabisPreference ?? this.cannabisPreference,
+        petsPreference: petsPreference ?? this.petsPreference,
+        kidsPreference: kidsPreference ?? this.kidsPreference,
+        preferredGenders: preferredGenders ?? this.preferredGenders,
+      );
 
   MatchingProfile.fromJson(Map<String, dynamic> json)
       : this(
@@ -232,70 +270,157 @@ class MatchingProfile {
           userId: json['userId'] ?? json['user_id'],
           displayName: json['displayName'] ?? json['display_name'],
           age: json['age'],
-          relationshipIntent: json['relationshipIntent'] ?? json['relationship_intent'],
+          relationshipIntent:
+              json['relationshipIntent'] ?? json['relationship_intent'],
           weekendEnergy: json['weekendEnergy'] ?? json['weekend_energy'],
           socialStyle: json['socialStyle'] ?? json['social_style'],
-          communicationStyle: json['communicationStyle'] ?? json['communication_style'],
+          communicationStyle:
+              json['communicationStyle'] ?? json['communication_style'],
           answers: json['answers'] is Map
-              ? QuestionnaireAnswers(answers: Map<String, dynamic>.from(json['answers']))
+              ? QuestionnaireAnswers(
+                  answers: Map<String, dynamic>.from(json['answers']))
               : const QuestionnaireAnswers(),
           minAge: json['minAge'] ?? json['min_age'],
           maxAge: json['maxAge'] ?? json['max_age'],
-          distancePreference: json['distancePreference'] ?? json['distance_preference'],
-          smokingPreference: json['smokingPreference'] ?? json['smoking_preference'],
-          drinkingPreference: json['drinkingPreference'] ?? json['drinking_preference'],
-          cannabisPreference: json['cannabisPreference'] ?? json['cannabis_preference'],
+          distancePreference:
+              json['distancePreference'] ?? json['distance_preference'],
+          smokingPreference:
+              json['smokingPreference'] ?? json['smoking_preference'],
+          drinkingPreference:
+              json['drinkingPreference'] ?? json['drinking_preference'],
+          cannabisPreference:
+              json['cannabisPreference'] ?? json['cannabis_preference'],
           petsPreference: json['petsPreference'] ?? json['pets_preference'],
           kidsPreference: json['kidsPreference'] ?? json['kids_preference'],
-          preferredGenders: json['preferredGenders'] ?? json['preferred_genders'],
+          preferredGenders:
+              json['preferredGenders'] ?? json['preferred_genders'],
         );
 
   MatchingProfile.fromMap({
-    String? id, dynamic latitude, dynamic longitude, dynamic lastActive,
-    dynamic createdAt, dynamic userId, dynamic displayName, dynamic age,
-    dynamic relationshipIntent, WeekendEnergy? weekendEnergy,
-    SocialStyle? socialStyle, CommunicationStyle? communicationStyle,
+    String? id,
+    dynamic latitude,
+    dynamic longitude,
+    dynamic lastActive,
+    dynamic createdAt,
+    dynamic userId,
+    dynamic displayName,
+    dynamic age,
+    dynamic relationshipIntent,
+    WeekendEnergy? weekendEnergy,
+    SocialStyle? socialStyle,
+    CommunicationStyle? communicationStyle,
     QuestionnaireAnswers answers = const QuestionnaireAnswers(),
-    dynamic minAge, dynamic maxAge, dynamic distancePreference,
-    dynamic smokingPreference, dynamic drinkingPreference,
-    dynamic cannabisPreference, dynamic petsPreference, dynamic kidsPreference,
+    dynamic minAge,
+    dynamic maxAge,
+    dynamic distancePreference,
+    dynamic smokingPreference,
+    dynamic drinkingPreference,
+    dynamic cannabisPreference,
+    dynamic petsPreference,
+    dynamic kidsPreference,
     dynamic preferredGenders,
   }) : this(
-    id: id ?? 'stub-id', latitude: latitude, longitude: longitude,
-    lastActive: lastActive, createdAt: createdAt, userId: userId,
-    displayName: displayName, age: age, relationshipIntent: relationshipIntent,
-    weekendEnergy: weekendEnergy, socialStyle: socialStyle,
-    communicationStyle: communicationStyle, answers: answers,
-    minAge: minAge, maxAge: maxAge, distancePreference: distancePreference,
-    smokingPreference: smokingPreference, drinkingPreference: drinkingPreference,
-    cannabisPreference: cannabisPreference, petsPreference: petsPreference,
-    kidsPreference: kidsPreference, preferredGenders: preferredGenders,
-  );
+          id: id ?? 'stub-id',
+          latitude: latitude,
+          longitude: longitude,
+          lastActive: lastActive,
+          createdAt: createdAt,
+          userId: userId,
+          displayName: displayName,
+          age: age,
+          relationshipIntent: relationshipIntent,
+          weekendEnergy: weekendEnergy,
+          socialStyle: socialStyle,
+          communicationStyle: communicationStyle,
+          answers: answers,
+          minAge: minAge,
+          maxAge: maxAge,
+          distancePreference: distancePreference,
+          smokingPreference: smokingPreference,
+          drinkingPreference: drinkingPreference,
+          cannabisPreference: cannabisPreference,
+          petsPreference: petsPreference,
+          kidsPreference: kidsPreference,
+          preferredGenders: preferredGenders,
+        );
 
   MatchingProfile.fromSnapshot(dynamic snapshot)
-      : this.fromJson(snapshot is Map ? Map<String, dynamic>.from(snapshot) : <String, dynamic>{});
+      : this.fromJson(snapshot is Map
+            ? Map<String, dynamic>.from(snapshot)
+            : <String, dynamic>{});
   MatchingProfile.fromDocument(dynamic doc)
-      : this.fromJson(doc is Map ? Map<String, dynamic>.from(doc) : <String, dynamic>{});
+      : this.fromJson(
+            doc is Map ? Map<String, dynamic>.from(doc) : <String, dynamic>{});
   MatchingProfile.fromFirestore(dynamic doc)
-      : this.fromJson(doc is Map ? Map<String, dynamic>.from(doc) : <String, dynamic>{});
+      : this.fromJson(
+            doc is Map ? Map<String, dynamic>.from(doc) : <String, dynamic>{});
   MatchingProfile.fromMapLike(dynamic mapLike)
-      : this.fromJson(mapLike is Map ? Map<String, dynamic>.from(mapLike) : <String, dynamic>{});
+      : this.fromJson(mapLike is Map
+            ? Map<String, dynamic>.from(mapLike)
+            : <String, dynamic>{});
 }
 
 /// Minimal PartnerVibe stub for tests
 enum PartnerVibe { fun, serious, adventurous, chill, intellectual, athletic }
 
 /// Minimal ConnectionStyle stub for tests
-enum ConnectionStyle { introvert, extrovert, ambivert, deepConversations, physical }
+enum ConnectionStyle {
+  introvert,
+  extrovert,
+  ambivert,
+  deepConversations,
+  physical
+}
 
 enum MusicIdentity { pop, rock, jazz, classical, edm, indie, hiphopHead }
-enum PersonalityTrait { thoughtful, spontaneous, analytical, creative, empathetic }
-enum LoveLanguage { words, acts, gifts, time, touch, qualityTime, physicalTouch }
-enum AttractionTrigger { humor, intellect, kindness, ambition, intelligence, physicalAppearance }
+
+enum PersonalityTrait {
+  thoughtful,
+  spontaneous,
+  analytical,
+  creative,
+  empathetic
+}
+
+enum LoveLanguage {
+  words,
+  acts,
+  gifts,
+  time,
+  touch,
+  qualityTime,
+  physicalTouch
+}
+
+enum AttractionTrigger {
+  humor,
+  intellect,
+  kindness,
+  ambition,
+  intelligence,
+  physicalAppearance
+}
 
 /// Minimal stubs for additional relationship features
-enum Dealbreaker { none, smoking, drinking, drugs, pets, dishonesty, lackOfAmbition }
-enum FlirtingStyle { subtle, bold, playful, awkward, intellectualBanter, shySubtle, directConfident }
+enum Dealbreaker {
+  none,
+  smoking,
+  drinking,
+  drugs,
+  pets,
+  dishonesty,
+  lackOfAmbition
+}
+
+enum FlirtingStyle {
+  subtle,
+  bold,
+  playful,
+  awkward,
+  intellectualBanter,
+  shySubtle,
+  directConfident
+}
 
 // ─── MatchingScoringUtils ───────────────────────────────────────────────────
 
@@ -305,7 +430,8 @@ class MatchingScoringUtils {
     return a == b ? 100.0 : 0.0;
   }
 
-  static double complementaryScore<T>(T? a, T? b, Map<T, List<T>> compatibilityMap) {
+  static double complementaryScore<T>(
+      T? a, T? b, Map<T, List<T>> compatibilityMap) {
     if (a == null || b == null) return 0.0;
     final complements = compatibilityMap[a];
     if (complements == null) return 0.0;
@@ -314,7 +440,8 @@ class MatchingScoringUtils {
 
   static double normalizeScore(double score) => score.clamp(0.0, 100.0);
 
-  static double applyWeight(double score, double weight) => (score / 100.0) * weight;
+  static double applyWeight(double score, double weight) =>
+      (score / 100.0) * weight;
 
   static double weightedAverage(Map<double, double> scoreWeights) {
     if (scoreWeights.isEmpty) return 0.0;
@@ -328,7 +455,8 @@ class MatchingScoringUtils {
     return (weightedSum / totalWeight) * 100;
   }
 
-  static double ageCompatibilityScore(int myAge, int partnerAge, int minAge, int maxAge) {
+  static double ageCompatibilityScore(
+      int myAge, int partnerAge, int minAge, int maxAge) {
     return (partnerAge >= minAge && partnerAge <= maxAge) ? 100.0 : 0.0;
   }
 
@@ -360,7 +488,8 @@ class MatchingWeights {
     'distanceCompatibility': 5.0,
   };
 
-  static double get totalWeight => categoryWeights.values.fold(0.0, (a, b) => a + b);
+  static double get totalWeight =>
+      categoryWeights.values.fold(0.0, (a, b) => a + b);
 
   static bool validateWeights() {
     final total = totalWeight;
@@ -424,7 +553,8 @@ class MatchingService {
 
   MatchingService({required this.firestore});
 
-  Future<MatchScore> calculateMatchScore(MatchingProfile a, MatchingProfile b) async {
+  Future<MatchScore> calculateMatchScore(
+      MatchingProfile a, MatchingProfile b) async {
     final qa = a.answers;
     final qb = b.answers;
     double total = 0.0;
@@ -444,21 +574,53 @@ class MatchingService {
       }
     }
 
-    compare('relationshipIntent', MatchingWeights.categoryWeights['relationshipIntent']!, qa.relationshipIntent, qb.relationshipIntent);
-    compare('partnerVibe', MatchingWeights.categoryWeights['partnerVibe']!, qa.partnerVibe, qb.partnerVibe);
-    compare('connectionStyle', MatchingWeights.categoryWeights['connectionStyle']!, qa.connectionStyle, qb.connectionStyle);
-    compare('weekendEnergy', MatchingWeights.categoryWeights['weekendEnergy']!, qa.weekendEnergy, qb.weekendEnergy);
-    compare('musicIdentity', MatchingWeights.categoryWeights['musicIdentity']!, qa.musicIdentity, qb.musicIdentity);
-    compare('socialStyle', MatchingWeights.categoryWeights['socialStyle']!, qa.socialStyle, qb.socialStyle);
-    compare('personalityTrait', MatchingWeights.categoryWeights['personalityTrait']!, qa.personalityTrait, qb.personalityTrait);
-    compare('communicationStyle', MatchingWeights.categoryWeights['communicationStyle']!, qa.communicationStyle, qb.communicationStyle);
-    compare('loveLanguage', MatchingWeights.categoryWeights['loveLanguage']!, qa.loveLanguage, qb.loveLanguage);
-    compare('attractionTrigger', MatchingWeights.categoryWeights['attractionTrigger']!, qa.attractionTrigger, qb.attractionTrigger);
-    compare('dealbreaker', MatchingWeights.categoryWeights['dealbreaker']!, qa.dealbreaker, qb.dealbreaker);
-    compare('flirtingStyle', MatchingWeights.categoryWeights['flirtingStyle']!, qa.flirtingStyle, qb.flirtingStyle);
-    compare('icebreakerType', MatchingWeights.categoryWeights['icebreakerType']!, qa.icebreakerType, qb.icebreakerType);
+    compare(
+        'relationshipIntent',
+        MatchingWeights.categoryWeights['relationshipIntent']!,
+        qa.relationshipIntent,
+        qb.relationshipIntent);
+    compare('partnerVibe', MatchingWeights.categoryWeights['partnerVibe']!,
+        qa.partnerVibe, qb.partnerVibe);
+    compare(
+        'connectionStyle',
+        MatchingWeights.categoryWeights['connectionStyle']!,
+        qa.connectionStyle,
+        qb.connectionStyle);
+    compare('weekendEnergy', MatchingWeights.categoryWeights['weekendEnergy']!,
+        qa.weekendEnergy, qb.weekendEnergy);
+    compare('musicIdentity', MatchingWeights.categoryWeights['musicIdentity']!,
+        qa.musicIdentity, qb.musicIdentity);
+    compare('socialStyle', MatchingWeights.categoryWeights['socialStyle']!,
+        qa.socialStyle, qb.socialStyle);
+    compare(
+        'personalityTrait',
+        MatchingWeights.categoryWeights['personalityTrait']!,
+        qa.personalityTrait,
+        qb.personalityTrait);
+    compare(
+        'communicationStyle',
+        MatchingWeights.categoryWeights['communicationStyle']!,
+        qa.communicationStyle,
+        qb.communicationStyle);
+    compare('loveLanguage', MatchingWeights.categoryWeights['loveLanguage']!,
+        qa.loveLanguage, qb.loveLanguage);
+    compare(
+        'attractionTrigger',
+        MatchingWeights.categoryWeights['attractionTrigger']!,
+        qa.attractionTrigger,
+        qb.attractionTrigger);
+    compare('dealbreaker', MatchingWeights.categoryWeights['dealbreaker']!,
+        qa.dealbreaker, qb.dealbreaker);
+    compare('flirtingStyle', MatchingWeights.categoryWeights['flirtingStyle']!,
+        qa.flirtingStyle, qb.flirtingStyle);
+    compare(
+        'icebreakerType',
+        MatchingWeights.categoryWeights['icebreakerType']!,
+        qa.icebreakerType,
+        qb.icebreakerType);
 
-    final score = maxTotal == 0 ? 0.0 : (total / maxTotal * 100).clamp(0.0, 100.0);
+    final score =
+        maxTotal == 0 ? 0.0 : (total / maxTotal * 100).clamp(0.0, 100.0);
 
     return MatchScore(
       userId: a.userId?.toString() ?? a.id,
@@ -478,8 +640,10 @@ class MatchingService {
     final matches = await findMatches(profile);
     if (matches.isEmpty) return const MatchStatistics();
     final strong = matches.where((m) => m.isStrongMatch).length;
-    final avg = matches.map((m) => m.overallScore).reduce((a, b) => a + b) / matches.length;
-    return MatchStatistics(totalMatches: matches.length, strongMatches: strong, averageScore: avg);
+    final avg = matches.map((m) => m.overallScore).reduce((a, b) => a + b) /
+        matches.length;
+    return MatchStatistics(
+        totalMatches: matches.length, strongMatches: strong, averageScore: avg);
   }
 }
 
@@ -490,8 +654,10 @@ extension MatchingProfileTestHelpers on MatchingProfile {
     try {
       final lat1 = (latitude is num) ? (latitude as num).toDouble() : 0.0;
       final lon1 = (longitude is num) ? (longitude as num).toDouble() : 0.0;
-      final lat2 = (other.latitude is num) ? (other.latitude as num).toDouble() : 0.0;
-      final lon2 = (other.longitude is num) ? (other.longitude as num).toDouble() : 0.0;
+      final lat2 =
+          (other.latitude is num) ? (other.latitude as num).toDouble() : 0.0;
+      final lon2 =
+          (other.longitude is num) ? (other.longitude as num).toDouble() : 0.0;
       return ((lat1 - lat2).abs() + (lon1 - lon2).abs());
     } catch (_) {
       return 0.0;
@@ -499,9 +665,13 @@ extension MatchingProfileTestHelpers on MatchingProfile {
   }
 
   bool isWithinAgeRange(MatchingProfile other) {
-    final a = (other.age is num) ? (other.age as num).toInt() : int.tryParse('${other.age}') ?? 0;
-    final minA = answers.minAge ?? (minAge is num ? (minAge as num).toInt() : 0);
-    final maxA = answers.maxAge ?? (maxAge is num ? (maxAge as num).toInt() : 999);
+    final a = (other.age is num)
+        ? (other.age as num).toInt()
+        : int.tryParse('${other.age}') ?? 0;
+    final minA =
+        answers.minAge ?? (minAge is num ? (minAge as num).toInt() : 0);
+    final maxA =
+        answers.maxAge ?? (maxAge is num ? (maxAge as num).toInt() : 999);
     return a >= minA && a <= maxA;
   }
 
@@ -517,7 +687,8 @@ extension MatchingProfileTestHelpers on MatchingProfile {
   bool get isReadyForMatching {
     final hasLocation = latitude != null && longitude != null;
     final hasAge = age != null;
-    final hasIntent = answers.relationshipIntent != null || relationshipIntent != null;
+    final hasIntent =
+        answers.relationshipIntent != null || relationshipIntent != null;
     return hasLocation && hasAge && hasIntent && answers.isComplete;
   }
 }
@@ -528,5 +699,6 @@ class DistancePreference {
   final double maxDistanceKm;
   const DistancePreference({this.maxDistanceKm = 50});
   static const DistancePreference defaultPreference = DistancePreference();
-  static const DistancePreference within10Miles = DistancePreference(maxDistanceKm: 16.0934);
+  static const DistancePreference within10Miles =
+      DistancePreference(maxDistanceKm: 16.0934);
 }

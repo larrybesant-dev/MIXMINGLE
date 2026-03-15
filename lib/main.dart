@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -22,8 +22,18 @@ import 'services/notifications/notification_service.dart';
 import 'services/agora/agora_stub.dart'
   if (dart.library.io) 'services/agora/agora_native.dart';
 import 'services/room/room_firestore_service.dart';
+<<<<<<< HEAD
 import 'core/routing/app_routes.dart';
 import 'utils/window_sync_service.dart';
+=======
+import 'app/app_routes.dart';
+import 'features/buddy_list/buddy_list_screen.dart';
+import 'features/buddy_list/buddy_profile_screen.dart';
+import 'core/web/web_window_service.dart';
+import 'features/video_room/screens/video_window_screen.dart';
+import 'features/chat/screens/chat_pop_out_screen.dart';
+
+>>>>>>> origin/develop
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
@@ -55,7 +65,8 @@ void main() {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, color: Color(0xFFFF6B35), size: 64),
+                  const Icon(Icons.error_outline,
+                      color: Color(0xFFFF6B35), size: 64),
                   const SizedBox(height: 24),
                   const Text(
                     'Something went wrong',
@@ -66,7 +77,8 @@ void main() {
                     '${details.exception}'.length > 100
                         ? '${details.exception}'.substring(0, 100)
                         : '${details.exception}',
-                    style: const TextStyle(color: Color(0xFF888888), fontSize: 12),
+                    style:
+                        const TextStyle(color: Color(0xFF888888), fontSize: 12),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -79,7 +91,8 @@ void main() {
       try {
         // Initialize Firebase ONCE - block on this
         debugPrint('ðŸ”¥ Initializing Firebase...');
-        await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+        await Firebase.initializeApp(
+            options: DefaultFirebaseOptions.currentPlatform);
         debugPrint('âœ… Firebase initialized successfully');
         AppLogger.info('Firebase initialized successfully');
 
@@ -106,7 +119,8 @@ void main() {
 
         // Set up FCM background message handler
         debugPrint('ðŸ“± Setting up FCM...');
-        FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+        FirebaseMessaging.onBackgroundMessage(
+            _firebaseMessagingBackgroundHandler);
         debugPrint('âœ… FCM background handler registered');
 
         // Initialize local notifications (don't block app startup if it fails)
@@ -114,9 +128,11 @@ void main() {
         NotificationService().initialize().then((_) {
           debugPrint('âœ… Notifications initialized successfully');
         }).catchError((e) {
-          debugPrint('âš ï¸  Notification initialization non-fatal failure: $e');
+          debugPrint(
+              'âš ï¸  Notification initialization non-fatal failure: $e');
           AppLogger.warning('Notifications unavailable: $e');
-          CrashlyticsService.instance.recordError(e, reason: 'notification_init_failure');
+          CrashlyticsService.instance
+              .recordError(e, reason: 'notification_init_failure');
         });
 
         // Initialize FCM notifications (don't block app startup if it fails)
@@ -126,13 +142,15 @@ void main() {
         debugPrint('ðŸ¥ Running project health checks...');
         final healthChecker = ProjectHealthChecker();
         await healthChecker.runAllChecks();
-        final healthStatus = healthChecker.isHealthy ? 'âœ… HEALTHY' : 'âš ï¸  ISSUES DETECTED';
+        final healthStatus =
+            healthChecker.isHealthy ? 'âœ… HEALTHY' : 'âš ï¸  ISSUES DETECTED';
         debugPrint('Health check status: $healthStatus');
         AppLogger.info('Health check completed: $healthStatus');
       } catch (e, stackTrace) {
         debugPrint('âŒ Initialization error: $e');
         AppLogger.error('Initialization failed: $e');
-        CrashlyticsService.instance.recordError(e, stackTrace: stackTrace, reason: 'app_init_failure');
+        CrashlyticsService.instance
+            .recordError(e, stackTrace: stackTrace, reason: 'app_init_failure');
         // App will still start even if services fail, but user may experience missing features
       }
 
@@ -191,12 +209,31 @@ class _AlwaysLandingApp extends riverpod.ConsumerWidget {
       title: 'MIXVY',
       debugShowCheckedModeBanner: false,
       theme: themedTheme,
+<<<<<<< HEAD
       initialRoute: '/',
       onGenerateRoute: (settings) {
         if (kDebugMode) {
           debugPrint('🌐 [AlwaysLanding] Route: ${settings.name}');
         }
         switch (settings.name) {
+=======
+      // Use RootAuthGate as home so returning authenticated users go directly
+      // to the app rather than being shown LandingPage on every startup.
+      // RootAuthGate handles unauthenticated users by showing LandingPage itself.
+      home: const RootAuthGate(),
+      onGenerateRoute: (settings) {
+        debugPrint('🌐 [AppRouter] Route: ${settings.name}');
+        // Strip query-string from the route name before matching.
+        // On Flutter Web (hash routing) pop-out windows open at URLs like
+        // /buddy-profile?uid=xxx — the full string becomes settings.name,
+        // so we must compare only the path portion.
+        final rawName = settings.name ?? '';
+        final routeUri = Uri.tryParse(rawName);
+        final routePath = routeUri?.path ?? rawName;           // e.g. /buddy-profile
+        final routeParams = routeUri?.queryParameters ?? {};    // e.g. {uid: 'abc'}
+
+        switch (routePath) {
+>>>>>>> origin/develop
           case '/':
           case '/landing':
             return MaterialPageRoute(builder: (_) => const LandingPage());
@@ -205,10 +242,82 @@ class _AlwaysLandingApp extends riverpod.ConsumerWidget {
           case '/signup':
             return MaterialPageRoute(builder: (_) => const NeonSignupPage());
           case '/forgot-password':
-            return MaterialPageRoute(builder: (_) => const ForgotPasswordPage());
+            return MaterialPageRoute(
+                builder: (_) => const ForgotPasswordPage());
           case '/app':
             // After login, go to the auth-protected app
+<<<<<<< HEAD
             return MaterialPageRoute(builder: (_) => const AuthGateRoot());
+=======
+            // On web, also restore any previously-open pop-out windows.
+            WidgetsBinding.instance.addPostFrameCallback(
+                (_) => WebWindowService.restoreWindowsOnLogin());
+            return MaterialPageRoute(builder: (_) => const RootAuthGate());
+
+          // ── Pop-out window routes (no extra auth guard needed;
+          //    opened only from authenticated sessions) ────────────────
+          case '/buddy-list':
+            return MaterialPageRoute(
+                builder: (_) => const BuddyListScreen());
+
+          case '/buddy-profile':
+            // uid may arrive as a query param in the URL (/buddy-profile?uid=X)
+            // or as a plain String argument from Navigator.pushNamed.
+            final uid = routeParams['uid'] ??
+                (settings.arguments as String? ?? '');
+            if (uid.isEmpty) {
+              return MaterialPageRoute(
+                  builder: (_) => const Scaffold(
+                        body: Center(child: Text('User ID missing'))));
+            }
+            return MaterialPageRoute(
+                builder: (_) => BuddyProfileScreen(uid: uid));
+
+          // ── Chat pop-out window ───────────────────────────────
+          case '/buddy-chat':
+            // chatId / name may arrive as URL params or via arguments String.
+            final chatId = routeParams['chatId'] ??
+                Uri.tryParse(settings.arguments as String? ?? '')
+                    ?.queryParameters['chatId'] ??
+                '';
+            final peerName = routeParams['name'] ??
+                Uri.tryParse(settings.arguments as String? ?? '')
+                    ?.queryParameters['name'] ??
+                'Chat';
+            return MaterialPageRoute(
+                builder: (_) => ChatPopOutScreen(
+                      chatId: chatId,
+                      peerName: Uri.decodeComponent(peerName),
+                    ));
+
+          // ── In-app full-page routes ─────────────────────────────────────
+          // NOTE: /feed and /speed-dating are intentionally NOT handled here
+          // so they fall through to AppRoutes.generateRoute below, which
+          // wraps them properly in AuthGate + ProfileGuard.
+
+          case '/video-window':
+            final videoUid = routeParams['uid'] ??
+                Uri.tryParse(settings.arguments as String? ?? '')
+                    ?.queryParameters['uid'] ??
+                (settings.arguments as String? ?? '');
+            final videoName = routeParams['name'] ??
+                Uri.tryParse(settings.arguments as String? ?? '')
+                    ?.queryParameters['name'] ??
+                '';
+            final videoChannelId = routeParams['channelId'];
+            final videoAgoraUidStr = routeParams['agoraUid'];
+            final videoAgoraUid = videoAgoraUidStr != null
+                ? int.tryParse(videoAgoraUidStr)
+                : null;
+            return MaterialPageRoute(
+                builder: (_) => VideoWindowScreen(
+                      uid: videoUid,
+                      displayName: Uri.decodeComponent(videoName),
+                      channelId: videoChannelId,
+                      agoraUid: videoAgoraUid,
+                    ));
+
+>>>>>>> origin/develop
           default:
             // Delegate all authenticated-app routes to the full AppRoutes table
             return AppRoutes.onGenerateRoute(settings);

@@ -1,4 +1,3 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../../services/auth/auth_service.dart';
@@ -10,7 +9,8 @@ import 'user_providers.dart';
 /// Service providers
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
 
-final firestoreServiceProvider = Provider<FirestoreService>((ref) => FirestoreService());
+final firestoreServiceProvider =
+    Provider<FirestoreService>((ref) => FirestoreService());
 
 /// Auth state stream provider - directly watch Firebase auth state
 /// This bypasses the service layer on web to ensure proper initialization
@@ -117,7 +117,9 @@ final currentUserProfileProvider = StreamProvider<UserProfile?>((ref) {
           if (authUser == null) {
             return Stream.value(null);
           }
-          return ref.watch(profileServiceProvider).getUserProfileStream(authUser.uid);
+          return ref
+              .watch(profileServiceProvider)
+              .getUserProfileStream(authUser.uid);
         },
         loading: () => Stream.value(null),
         error: (_, __) => Stream.value(null),
@@ -125,7 +127,8 @@ final currentUserProfileProvider = StreamProvider<UserProfile?>((ref) {
 });
 
 /// Auth controller for authentication operations
-final authControllerProvider = NotifierProvider<AuthController, AsyncValue<firebase_auth.User?>>(() {
+final authControllerProvider =
+    NotifierProvider<AuthController, AsyncValue<firebase_auth.User?>>(() {
   return AuthController();
 });
 
@@ -144,7 +147,8 @@ class AuthController extends Notifier<AsyncValue<firebase_auth.User?>> {
   Future<void> signInWithEmail(String email, String password) async {
     state = const AsyncValue.loading();
     try {
-      final userCredential = await _authService.signInWithEmailAndPassword(email, password);
+      final userCredential =
+          await _authService.signInWithEmailAndPassword(email, password);
       state = AsyncValue.data(userCredential?.user);
     } catch (e, stackTrace) {
       state = AsyncValue.error(e, stackTrace);
@@ -159,7 +163,8 @@ class AuthController extends Notifier<AsyncValue<firebase_auth.User?>> {
   ) async {
     state = const AsyncValue.loading();
     try {
-      final userCredential = await _authService.createUserWithEmailAndPassword(email, password);
+      final userCredential =
+          await _authService.createUserWithEmailAndPassword(email, password);
       if (userCredential?.user != null) {
         // Create initial user document
         final newUser = shared_models.User(
@@ -201,13 +206,16 @@ class AuthController extends Notifier<AsyncValue<firebase_auth.User?>> {
       final userCredential = await _authService.signInWithGoogle();
       if (userCredential?.user != null) {
         // Check if user document exists, create if not
-        final userDoc = await _firestoreService.getUser(userCredential!.user!.uid);
+        final userDoc =
+            await _firestoreService.getUser(userCredential!.user!.uid);
         if (userDoc == null) {
           final newUser = shared_models.User(
             id: userCredential.user!.uid,
             email: userCredential.user!.email ?? '',
             displayName: userCredential.user!.displayName ?? 'User',
-            username: (userCredential.user!.displayName ?? 'user').toLowerCase().replaceAll(' ', '_'),
+            username: (userCredential.user!.displayName ?? 'user')
+                .toLowerCase()
+                .replaceAll(' ', '_'),
             bio: '',
             interests: [],
             avatarUrl: userCredential.user!.photoURL ?? '',
@@ -283,7 +291,9 @@ final emailVerificationStatusProvider = StreamProvider<bool>((ref) {
             return user.emailVerified;
           }).asyncMap((_) async {
             await user.reload();
-            return firebase_auth.FirebaseAuth.instance.currentUser?.emailVerified ?? false;
+            return firebase_auth
+                    .FirebaseAuth.instance.currentUser?.emailVerified ??
+                false;
           });
         },
         loading: () => Stream.value(false),
@@ -298,5 +308,3 @@ final sendEmailVerificationProvider = FutureProvider((ref) async {
     await user.sendEmailVerification();
   }
 });
-
-

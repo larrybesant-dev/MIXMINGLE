@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-02-09
 
 ### Added
+
 - **Voice & Video Rooms**: Real-time multi-participant video chat with up to 12 active cameras
 - **Multi-Window Layout**: Adaptive grid layouts (1x1 to 4x3) with intelligent participant ordering
 - **Spotlight Mode**: Featured broadcaster highlighting with visual indicators
@@ -52,16 +53,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Performance traces for critical paths
 
 ### Changed
+
 - Migrated state management to Riverpod 3.x
 - Updated all Firebase dependencies to latest versions
 - Improved video encoding settings for better quality
 
 ### Fixed
+
 - Room join reliability on slow networks
 - Memory leaks in video tile management
 - Audio echo in multi-participant calls
 
 ### Security
+
 - Implemented rate limiting on API calls
 - Added Firebase Auth token refresh handling
 - Secured Agora token generation
@@ -69,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
+
 - Screen sharing for presentations
 - Virtual backgrounds
 - Recording and playback

@@ -32,7 +32,7 @@ class LiveRoomPresence {
   final String? initialAvatarUrl;
 
   // ── Internals ─────────────────────────────────────────────────────────────
-  final _fs   = FirebaseFirestore.instance;
+  final _fs = FirebaseFirestore.instance;
   final _auth = FirebaseAuth.instance;
 
   Timer? _heartbeatTimer;
@@ -41,8 +41,8 @@ class LiveRoomPresence {
   final _participantsController =
       StreamController<List<RoomParticipant>>.broadcast();
 
-  bool   _disposed  = false;
-  bool   _joined    = false;
+  bool _disposed = false;
+  bool _joined = false;
   String? _cachedUid;
 
   // If heartbeat stops for this long, treat participant as disconnected in UI.
@@ -77,20 +77,21 @@ class LiveRoomPresence {
 
     // 1. Write participant document (upsert — always refresh heartbeat)
     batch.set(_myDoc, {
-      ParticipantFields.userId:         _uid,
-      ParticipantFields.displayName:    initialDisplayName,
-      ParticipantFields.avatarUrl:      initialAvatarUrl,
-      ParticipantFields.role:           role,
-      ParticipantFields.isOnCam:        false,
-      ParticipantFields.isMicActive:    false,
-      ParticipantFields.isStreaming:    false,
+      ParticipantFields.userId: _uid,
+      ParticipantFields.displayName: initialDisplayName,
+      ParticipantFields.avatarUrl: initialAvatarUrl,
+      ParticipantFields.role: role,
+      ParticipantFields.isOnCam: false,
+      ParticipantFields.isMicActive: false,
+      ParticipantFields.isStreaming: false,
       ParticipantFields.isForegrounded: true,
-      ParticipantFields.gridPosition:   gridPosition,
-      ParticipantFields.agoraUid:       null,
-      ParticipantFields.joinedAt:       FieldValue.serverTimestamp(),
-      ParticipantFields.lastHeartbeat:  FieldValue.serverTimestamp(),
+      ParticipantFields.gridPosition: gridPosition,
+      ParticipantFields.agoraUid: null,
+      ParticipantFields.joinedAt: FieldValue.serverTimestamp(),
+      ParticipantFields.lastHeartbeat: FieldValue.serverTimestamp(),
     });
 
+<<<<<<< HEAD
     // 2. Only increment counters for genuinely new joins.
     if (!alreadyPresent) {
       batch.update(_fs.collection('rooms').doc(roomId), {
@@ -99,16 +100,23 @@ class LiveRoomPresence {
         RoomFields.updatedAt:        FieldValue.serverTimestamp(),
       });
     }
+=======
+    // 2. Increment participant count in room doc
+    batch.update(_fs.collection('rooms').doc(roomId), {
+      RoomFields.participantCount: FieldValue.increment(1),
+      RoomFields.updatedAt: FieldValue.serverTimestamp(),
+    });
+>>>>>>> origin/develop
 
     // 3. Update global presence
     batch.set(
       _fs.collection('presence').doc(_uid),
       {
-        PresenceFields.userId:         _uid,
-        PresenceFields.status:         'online',
-        PresenceFields.currentRoomId:  roomId,
+        PresenceFields.userId: _uid,
+        PresenceFields.status: 'online',
+        PresenceFields.currentRoomId: roomId,
         PresenceFields.isForegrounded: true,
-        PresenceFields.lastSeen:       FieldValue.serverTimestamp(),
+        PresenceFields.lastSeen: FieldValue.serverTimestamp(),
       },
       SetOptions(merge: true),
     );
@@ -133,6 +141,7 @@ class LiveRoomPresence {
     _teardown();
 
     try {
+<<<<<<< HEAD
       // First clear media flags so stale tiles cannot show ghost cam/mic if delete is delayed.
       await _myDoc.set({
         ParticipantFields.isOnCam:           false,
@@ -171,6 +180,23 @@ class LiveRoomPresence {
           SetOptions(merge: true),
         );
       });
+=======
+      final batch = _fs.batch();
+      batch.delete(_myDoc);
+      batch.update(_fs.collection('rooms').doc(roomId), {
+        RoomFields.participantCount: FieldValue.increment(-1),
+        RoomFields.updatedAt: FieldValue.serverTimestamp(),
+      });
+      batch.set(
+        _fs.collection('presence').doc(_uid),
+        {
+          PresenceFields.currentRoomId: null,
+          PresenceFields.lastSeen: FieldValue.serverTimestamp(),
+        },
+        SetOptions(merge: true),
+      );
+      await batch.commit();
+>>>>>>> origin/develop
     } catch (e) {
       debugPrint('[PRESENCE] leave() error: $e');
     }
@@ -178,11 +204,15 @@ class LiveRoomPresence {
 
   // ── Field setters ─────────────────────────────────────────────────────────
 
-  Future<void> setCamOn(bool value)           => _set(ParticipantFields.isOnCam,           value);
-  Future<void> setMicActive(bool value)       => _set(ParticipantFields.isMicActive,        value);
-  Future<void> setStreaming(bool value)       => _set(ParticipantFields.isStreaming,         value);
-  Future<void> setVideoEngineUid(int uid)     => _set(ParticipantFields.agoraUid,            uid);
-  Future<void> setCamRequestPending(bool v)   => _set(ParticipantFields.camRequestPending,   v);
+  Future<void> setCamOn(bool value) => _set(ParticipantFields.isOnCam, value);
+  Future<void> setMicActive(bool value) =>
+      _set(ParticipantFields.isMicActive, value);
+  Future<void> setStreaming(bool value) =>
+      _set(ParticipantFields.isStreaming, value);
+  Future<void> setVideoEngineUid(int uid) =>
+      _set(ParticipantFields.agoraUid, uid);
+  Future<void> setCamRequestPending(bool v) =>
+      _set(ParticipantFields.camRequestPending, v);
 
   /// Promote another user to a broadcaster grid slot.
   /// Only the room host should call this.
@@ -190,7 +220,7 @@ class LiveRoomPresence {
   /// camera on after promotion (prevents phantom CAM badge in the tile grid).
   Future<void> promoteParticipant(
     String userId, {
-    required int    gridPosition,
+    required int gridPosition,
     required String role,
   }) async {
     if (_disposed) return;
@@ -201,10 +231,10 @@ class LiveRoomPresence {
           .collection('participants')
           .doc(userId)
           .update({
-        ParticipantFields.gridPosition:      gridPosition,
-        ParticipantFields.role:              role,
+        ParticipantFields.gridPosition: gridPosition,
+        ParticipantFields.role: role,
         ParticipantFields.camRequestPending: false,
-        ParticipantFields.lastHeartbeat:     FieldValue.serverTimestamp(),
+        ParticipantFields.lastHeartbeat: FieldValue.serverTimestamp(),
       });
     } catch (e) {
       debugPrint('[PRESENCE] promoteParticipant error: $e');
@@ -222,7 +252,7 @@ class LiveRoomPresence {
           .doc(userId)
           .update({
         ParticipantFields.camRequestPending: false,
-        ParticipantFields.lastHeartbeat:     FieldValue.serverTimestamp(),
+        ParticipantFields.lastHeartbeat: FieldValue.serverTimestamp(),
       });
     } catch (e) {
       debugPrint('[PRESENCE] denyParticipantRequest error: $e');
@@ -241,13 +271,13 @@ class LiveRoomPresence {
           .collection('participants')
           .doc(userId)
           .update({
-        ParticipantFields.role:              ParticipantRole.audience,
-        ParticipantFields.gridPosition:      -1,
-        ParticipantFields.isOnCam:           false,
-        ParticipantFields.isStreaming:       false,
-        ParticipantFields.isMicActive:       false,
+        ParticipantFields.role: ParticipantRole.audience,
+        ParticipantFields.gridPosition: -1,
+        ParticipantFields.isOnCam: false,
+        ParticipantFields.isStreaming: false,
+        ParticipantFields.isMicActive: false,
         ParticipantFields.camRequestPending: false,
-        ParticipantFields.lastHeartbeat:     FieldValue.serverTimestamp(),
+        ParticipantFields.lastHeartbeat: FieldValue.serverTimestamp(),
       });
     } catch (e) {
       debugPrint('[PRESENCE] demoteParticipant error: $e');
@@ -260,7 +290,7 @@ class LiveRoomPresence {
       await _fs.collection('presence').doc(_uid).set(
         {
           PresenceFields.isForegrounded: value,
-          PresenceFields.lastSeen:       FieldValue.serverTimestamp(),
+          PresenceFields.lastSeen: FieldValue.serverTimestamp(),
         },
         SetOptions(merge: true),
       );
@@ -274,7 +304,7 @@ class LiveRoomPresence {
     try {
       await _fs.collection('rooms').doc(roomId).update({
         RoomFields.videoChannelLive: value,
-        RoomFields.updatedAt:        FieldValue.serverTimestamp(),
+        RoomFields.updatedAt: FieldValue.serverTimestamp(),
       });
     } catch (e) {
       debugPrint('[PRESENCE] setVideoChannelLive error: $e');
@@ -285,13 +315,13 @@ class LiveRoomPresence {
   Future<void> deactivateVideoChannelIfLast() async {
     try {
       await _fs.runTransaction((tx) async {
-        final ref  = _fs.collection('rooms').doc(roomId);
+        final ref = _fs.collection('rooms').doc(roomId);
         final snap = await tx.get(ref);
         final count = (snap.data()?[RoomFields.participantCount] as int?) ?? 0;
         if (count <= 1) {
           tx.update(ref, {
             RoomFields.videoChannelLive: false,
-            RoomFields.updatedAt:        FieldValue.serverTimestamp(),
+            RoomFields.updatedAt: FieldValue.serverTimestamp(),
           });
         }
       });
@@ -306,7 +336,7 @@ class LiveRoomPresence {
     if (_disposed) return;
     try {
       await _myDoc.update({
-        field:                           value,
+        field: value,
         ParticipantFields.lastHeartbeat: FieldValue.serverTimestamp(),
       });
     } catch (e) {
@@ -317,7 +347,8 @@ class LiveRoomPresence {
   Future<void> _heartbeat() async {
     if (_disposed) return;
     try {
-      await _myDoc.update({ParticipantFields.lastHeartbeat: FieldValue.serverTimestamp()});
+      await _myDoc.update(
+          {ParticipantFields.lastHeartbeat: FieldValue.serverTimestamp()});
     } catch (e) {
       debugPrint('[PRESENCE] heartbeat error: $e');
     }

@@ -14,9 +14,15 @@ final trendingRoomsProvider = StreamProvider<List<Room>>((ref) {
   return ref.watch(roomDiscoveryServiceProvider).getTrendingRoomsStream();
 });
 
+<<<<<<< HEAD
 /// Live stream of newest rooms (public, ordered by createdAt desc).
 final newRoomsProvider = StreamProvider<List<Room>>((ref) {
   return ref.watch(roomDiscoveryServiceProvider).getNewRoomsStream();
+=======
+final activeRoomsProvider = FutureProvider<List<DocumentSnapshot>>((ref) async {
+  final service = ref.read(roomDiscoveryServiceProvider);
+  return service.getRoomsByCategory('active');
+>>>>>>> origin/develop
 });
 
 /// Live stream of recommended rooms personalised for [userId].

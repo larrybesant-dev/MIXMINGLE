@@ -57,7 +57,9 @@ class Match {
       conversationId: json['conversationId'] as String?,
       status: _parseStatus(json['status'] as String?),
       matchedAt: _parseTimestamp(json['matchedAt']),
-      lastInteractionAt: json['lastInteractionAt'] != null ? _parseTimestamp(json['lastInteractionAt']) : null,
+      lastInteractionAt: json['lastInteractionAt'] != null
+          ? _parseTimestamp(json['lastInteractionAt'])
+          : null,
     );
   }
 
@@ -71,7 +73,8 @@ class Match {
       if (conversationId != null) 'conversationId': conversationId,
       'status': status.name,
       'matchedAt': Timestamp.fromDate(matchedAt),
-      if (lastInteractionAt != null) 'lastInteractionAt': Timestamp.fromDate(lastInteractionAt!),
+      if (lastInteractionAt != null)
+        'lastInteractionAt': Timestamp.fromDate(lastInteractionAt!),
     };
   }
 

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/message.dart';
 import 'package:mixmingle/shared/providers/user_display_name_provider.dart';
@@ -22,7 +22,8 @@ class MessageBubble extends ConsumerWidget {
     final isCurrentUser = message.senderId == currentUserId;
 
     // Get cached display name - use message.senderName if available, otherwise fetch
-    final displayNameAsync = ref.watch(userDisplayNameProvider(message.senderId));
+    final displayNameAsync =
+        ref.watch(userDisplayNameProvider(message.senderId));
     final displayName = message.senderName.isNotEmpty
         ? message.senderName
         : displayNameAsync.maybeWhen(
@@ -35,25 +36,34 @@ class MessageBubble extends ConsumerWidget {
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         child: Row(
-          mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+          mainAxisAlignment:
+              isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
           children: [
             Flexible(
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 decoration: BoxDecoration(
-                  color: isCurrentUser ? const Color(0xFFFF69B4) : Colors.grey[200],
+                  color: isCurrentUser
+                      ? const Color(0xFFFF69B4)
+                      : Colors.grey[200],
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(16),
                     topRight: const Radius.circular(16),
-                    bottomLeft: isCurrentUser ? const Radius.circular(16) : const Radius.circular(4),
-                    bottomRight: isCurrentUser ? const Radius.circular(4) : const Radius.circular(16),
+                    bottomLeft: isCurrentUser
+                        ? const Radius.circular(16)
+                        : const Radius.circular(4),
+                    bottomRight: isCurrentUser
+                        ? const Radius.circular(4)
+                        : const Radius.circular(16),
                   ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Reply indicator
-                    if (message.replyToMessageId != null && repliedMessage != null)
+                    if (message.replyToMessageId != null &&
+                        repliedMessage != null)
                       Container(
                         margin: const EdgeInsets.only(bottom: 8),
                         padding: const EdgeInsets.all(8),
@@ -62,7 +72,8 @@ class MessageBubble extends ConsumerWidget {
                           borderRadius: BorderRadius.circular(8),
                           border: Border(
                             left: BorderSide(
-                              color: isCurrentUser ? Colors.white70 : Colors.blue,
+                              color:
+                                  isCurrentUser ? Colors.white70 : Colors.blue,
                               width: 3,
                             ),
                           ),
@@ -75,7 +86,9 @@ class MessageBubble extends ConsumerWidget {
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
-                                color: isCurrentUser ? Colors.white70 : Colors.blue,
+                                color: isCurrentUser
+                                    ? Colors.white70
+                                    : Colors.blue,
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -83,7 +96,9 @@ class MessageBubble extends ConsumerWidget {
                               repliedMessage!.content,
                               style: TextStyle(
                                 fontSize: 12,
-                                color: isCurrentUser ? Colors.white70 : Colors.black54,
+                                color: isCurrentUser
+                                    ? Colors.white70
+                                    : Colors.black54,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
@@ -121,7 +136,8 @@ class MessageBubble extends ConsumerWidget {
                           _formatTimestamp(message.timestamp),
                           style: TextStyle(
                             fontSize: 10,
-                            color: isCurrentUser ? Colors.white70 : Colors.black54,
+                            color:
+                                isCurrentUser ? Colors.white70 : Colors.black54,
                           ),
                         ),
 
@@ -139,7 +155,9 @@ class MessageBubble extends ConsumerWidget {
                             style: TextStyle(
                               fontSize: 10,
                               fontStyle: FontStyle.italic,
-                              color: isCurrentUser ? Colors.white70 : Colors.black54,
+                              color: isCurrentUser
+                                  ? Colors.white70
+                                  : Colors.black54,
                             ),
                           ),
                         ],

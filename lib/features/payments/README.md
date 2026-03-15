@@ -3,6 +3,7 @@
 ## Overview
 
 The payments feature provides:
+
 - **Membership Tiers**: Free, VIP ($9.99/mo), VIP+ ($19.99/mo)
 - **Coin Economy**: 4 packages (100, 500, 1000, 5000 coins)
 - **RevenueCat Integration**: Subscriptions and consumables
@@ -181,33 +182,36 @@ users/{userId}/coinTransactions/{transactionId}
 ## RevenueCat Product IDs
 
 ### Subscriptions
+
 - `vip_monthly` - VIP Monthly ($9.99)
 - `vip_yearly` - VIP Yearly ($79.99)
 - `vip_plus_monthly` - VIP+ Monthly ($19.99)
 - `vip_plus_yearly` - VIP+ Yearly ($149.99)
 
 ### Consumables (Coins)
+
 - `coins_100` - 100 coins ($0.99)
 - `coins_500` - 500 coins + 50 bonus ($4.99)
 - `coins_1000` - 1000 coins + 150 bonus ($9.99)
 - `coins_5000` - 5000 coins + 1000 bonus ($39.99)
 
 ### Entitlements
+
 - `vip` - VIP tier access
 - `vip_plus` - VIP+ tier access
 
 ## Analytics Events
 
-| Event | Parameters |
-|-------|------------|
-| `paywall_viewed` | `current_tier` |
-| `membership_upgraded` | `previous_tier`, `new_tier` |
-| `membership_downgraded` | `previous_tier`, `new_tier` |
-| `coin_purchase_started` | `package_id`, `coins`, `price` |
-| `coin_purchase_completed` | `package_id`, `coins`, `price` |
-| `coin_purchase_failed` | `package_id`, `error` |
-| `vip_room_attempt_blocked` | `current_tier` |
-| `spotlight_attempt_blocked` | `current_tier` |
+| Event                       | Parameters                     |
+| --------------------------- | ------------------------------ |
+| `paywall_viewed`            | `current_tier`                 |
+| `membership_upgraded`       | `previous_tier`, `new_tier`    |
+| `membership_downgraded`     | `previous_tier`, `new_tier`    |
+| `coin_purchase_started`     | `package_id`, `coins`, `price` |
+| `coin_purchase_completed`   | `package_id`, `coins`, `price` |
+| `coin_purchase_failed`      | `package_id`, `error`          |
+| `vip_room_attempt_blocked`  | `current_tier`                 |
+| `spotlight_attempt_blocked` | `current_tier`                 |
 
 ## Design Tokens
 
@@ -219,6 +223,7 @@ The feature uses the existing design system from `lib/core/design_system/design_
 - **Secondary Orange**: `DesignColors.secondary` (#FF6B35)
 
 And neon colors from `lib/core/theme/neon_colors.dart`:
+
 - **Neon Orange**: `NeonColors.neonOrange` (#FF7A3C)
 - **Neon Blue**: `NeonColors.neonBlue` (#00D9FF)
 - **Success Green**: `NeonColors.successGreen` (#00FF88)

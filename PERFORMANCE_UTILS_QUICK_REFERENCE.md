@@ -1,6 +1,7 @@
 # Performance Utilities - Quick Reference Guide
 
 ## 📚 Table of Contents
+
 1. [Pagination](#pagination)
 2. [Caching](#caching)
 3. [Debouncing & Throttling](#debouncing--throttling)
@@ -12,11 +13,13 @@
 ## 1. Pagination
 
 ### Import:
+
 ```dart
 import '../core/utils/pagination_controller.dart';
 ```
 
 ### Basic Setup:
+
 ```dart
 class MyListPage extends StatefulWidget {
   @override
@@ -87,6 +90,7 @@ class _MyListPageState extends State<MyListPage> {
 ```
 
 ### Pull to Refresh:
+
 ```dart
 RefreshIndicator(
   onRefresh: () async {
@@ -102,11 +106,13 @@ RefreshIndicator(
 ## 2. Caching
 
 ### Import:
+
 ```dart
 import '../core/utils/cache_service.dart';
 ```
 
 ### Using Pre-configured Caches:
+
 ```dart
 // In your service class
 class ProfileService {
@@ -140,6 +146,7 @@ class ProfileService {
 ```
 
 ### Using getOrCompute():
+
 ```dart
 final profile = await AppCaches.userProfiles.getOrCompute(
   userId,
@@ -148,6 +155,7 @@ final profile = await AppCaches.userProfiles.getOrCompute(
 ```
 
 ### Creating Custom Cache:
+
 ```dart
 final customCache = CacheService<String, MyData>(
   ttl: Duration(minutes: 15),
@@ -159,6 +167,7 @@ final data = customCache.get('key');
 ```
 
 ### Cache Management:
+
 ```dart
 // Clear specific cache
 AppCaches.userProfiles.clear();
@@ -175,11 +184,13 @@ AppCaches.cleanupAll();
 ## 3. Debouncing & Throttling
 
 ### Import:
+
 ```dart
 import '../core/utils/debouncer.dart';
 ```
 
 ### Debouncing Search Input:
+
 ```dart
 class SearchPage extends StatefulWidget {
   @override
@@ -219,6 +230,7 @@ class _SearchPageState extends State<SearchPage> {
 ```
 
 ### Throttling Scroll Events:
+
 ```dart
 class ScrollablePage extends StatefulWidget {
   @override
@@ -246,6 +258,7 @@ class _ScrollablePageState extends State<ScrollablePage> {
 ```
 
 ### Cancel Debouncer:
+
 ```dart
 // Cancel pending execution
 _searchDebouncer.cancel();
@@ -263,11 +276,13 @@ void dispose() {
 ## 4. Performance Logging
 
 ### Import:
+
 ```dart
 import '../core/utils/performance_logger.dart';
 ```
 
 ### Basic Timing:
+
 ```dart
 void myFunction() {
   PerformanceLogger.start('myFunction');
@@ -280,6 +295,7 @@ void myFunction() {
 ```
 
 ### Measure Synchronous Operations:
+
 ```dart
 final result = PerformanceLogger.measure('computation', () {
   return expensiveComputation();
@@ -287,6 +303,7 @@ final result = PerformanceLogger.measure('computation', () {
 ```
 
 ### Measure Async Operations:
+
 ```dart
 final data = await PerformanceLogger.measureAsync('fetchData', () async {
   return await fetchFromAPI();
@@ -294,6 +311,7 @@ final data = await PerformanceLogger.measureAsync('fetchData', () async {
 ```
 
 ### Get Statistics:
+
 ```dart
 // Get stats for specific operation
 final stats = PerformanceLogger.getStats('fetchData');
@@ -308,6 +326,7 @@ PerformanceLogger.printAllStats();
 ```
 
 ### Track Widget Build Time:
+
 ```dart
 @override
 Widget build(BuildContext context) {
@@ -320,6 +339,7 @@ Widget build(BuildContext context) {
 ```
 
 ### Additional Logging:
+
 ```dart
 // Log custom metric
 PerformanceLogger.logMetric('cacheHitRate', 0.85);
@@ -338,11 +358,13 @@ PerformanceLogger.logFrameTime();
 ## 5. Image Optimization
 
 ### Import:
+
 ```dart
 import '../services/image_optimization_service.dart';
 ```
 
 ### Upload with Thumbnails:
+
 ```dart
 class MyUploadService {
   final _imageOptimization = ImageOptimizationService();
@@ -376,6 +398,7 @@ class MyUploadService {
 ```
 
 ### Custom Thumbnail Sizes:
+
 ```dart
 final urls = await _imageOptimization.uploadImageWithThumbnails(
   imageFile: file,
@@ -389,6 +412,7 @@ final urls = await _imageOptimization.uploadImageWithThumbnails(
 ```
 
 ### Delete with Thumbnails:
+
 ```dart
 await _imageOptimization.deleteImageWithThumbnails(
   'profile_photos/user123/1234567890.jpg'
@@ -397,6 +421,7 @@ await _imageOptimization.deleteImageWithThumbnails(
 ```
 
 ### Optimize Only (no upload):
+
 ```dart
 final optimizedFile = await _imageOptimization.optimizeImage(
   originalFile,
@@ -407,6 +432,7 @@ final optimizedFile = await _imageOptimization.optimizeImage(
 ```
 
 ### Display Thumbnails in UI:
+
 ```dart
 // Use thumbnail for list items
 CircleAvatar(
@@ -431,6 +457,7 @@ PhotoView(
 ## 🎯 Best Practices
 
 ### Pagination:
+
 - ✅ Always include `orderBy()` for consistent results
 - ✅ Use reasonable page sizes (10-50 items)
 - ✅ Show loading indicators during loadMore()
@@ -438,6 +465,7 @@ PhotoView(
 - ✅ Dispose controller in widget dispose()
 
 ### Caching:
+
 - ✅ Cache frequently accessed data (profiles, settings)
 - ✅ Use short TTLs for frequently changing data
 - ✅ Invalidate cache after mutations
@@ -445,6 +473,7 @@ PhotoView(
 - ✅ Monitor cache hit rates
 
 ### Debouncing:
+
 - ✅ Use for search inputs (300-500ms)
 - ✅ Use for auto-save (1000-2000ms)
 - ✅ Always dispose in widget lifecycle
@@ -452,6 +481,7 @@ PhotoView(
 - ✅ Cancel when unmounting
 
 ### Performance Logging:
+
 - ✅ Only runs in debug mode (kDebugMode)
 - ✅ Use for identifying bottlenecks
 - ✅ Review stats periodically
@@ -459,6 +489,7 @@ PhotoView(
 - ✅ Track before/after optimization
 
 ### Image Optimization:
+
 - ✅ Always optimize before upload
 - ✅ Use appropriate thumbnail size for context
 - ✅ Delete all sizes when removing image
@@ -470,29 +501,34 @@ PhotoView(
 ## 🚫 Common Pitfalls
 
 ### Pagination:
+
 - ❌ Don't use offset-based pagination (slow at scale)
 - ❌ Don't paginate without orderBy() (inconsistent results)
 - ❌ Don't forget to handle errors
 - ❌ Don't load too many items per page (>100)
 
 ### Caching:
+
 - ❌ Don't cache everything (waste memory)
 - ❌ Don't use stale cache for critical data
 - ❌ Don't forget to invalidate on updates
 - ❌ Don't cache streams (defeats real-time purpose)
 
 ### Debouncing:
+
 - ❌ Don't use delay too short (<100ms, ineffective)
 - ❌ Don't use delay too long (>1000ms, feels laggy)
 - ❌ Don't forget to dispose
 - ❌ Don't debounce critical operations (e.g., save button)
 
 ### Performance Logging:
+
 - ❌ Don't use in production (already disabled by kDebugMode)
 - ❌ Don't log excessively (adds overhead in debug)
 - ❌ Don't forget to remove debug logs before release
 
 ### Image Optimization:
+
 - ❌ Don't optimize twice (already done in service)
 - ❌ Don't skip thumbnail generation (saves bandwidth)
 - ❌ Don't forget to delete temporary files
@@ -502,13 +538,13 @@ PhotoView(
 
 ## 📊 Performance Impact
 
-| Utility | Primary Benefit | Reduction |
-|---------|----------------|-----------|
-| Pagination | Load time, memory | 80-90% |
-| Caching | Firestore reads | 60-80% |
-| Debouncing | API calls | 90-95% |
-| Performance Logging | Identify bottlenecks | N/A |
-| Image Optimization | Bandwidth, storage | 70-96% |
+| Utility             | Primary Benefit      | Reduction |
+| ------------------- | -------------------- | --------- |
+| Pagination          | Load time, memory    | 80-90%    |
+| Caching             | Firestore reads      | 60-80%    |
+| Debouncing          | API calls            | 90-95%    |
+| Performance Logging | Identify bottlenecks | N/A       |
+| Image Optimization  | Bandwidth, storage   | 70-96%    |
 
 ---
 
@@ -528,6 +564,7 @@ PhotoView(
 ## 💡 Examples by Use Case
 
 ### Use Case 1: Infinite Scroll List
+
 ```dart
 // Use: PaginationController + Debouncing (if search)
 final _controller = PaginationController<Event>(...);
@@ -545,6 +582,7 @@ ListView.builder(
 ```
 
 ### Use Case 2: Profile Details Page
+
 ```dart
 // Use: Caching + Image Thumbnails
 final profile = await AppCaches.userProfiles.getOrCompute(
@@ -558,6 +596,7 @@ CircleAvatar(
 ```
 
 ### Use Case 3: Search Bar
+
 ```dart
 // Use: Debouncing + Performance Logging
 final _debouncer = Debouncer(delay: Duration(milliseconds: 300));
@@ -575,6 +614,7 @@ TextField(
 ```
 
 ### Use Case 4: Photo Upload
+
 ```dart
 // Use: Image Optimization + Performance Logging
 final urls = await PerformanceLogger.measureAsync('photoUpload', () {

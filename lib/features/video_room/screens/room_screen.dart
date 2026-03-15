@@ -58,7 +58,8 @@ class RoomScreen extends ConsumerStatefulWidget {
   ConsumerState<RoomScreen> createState() => _RoomScreenState();
 }
 
-class _RoomScreenState extends ConsumerState<RoomScreen> with TickerProviderStateMixin {
+class _RoomScreenState extends ConsumerState<RoomScreen>
+    with TickerProviderStateMixin {
   @override
   void initState() {
     super.initState();
@@ -71,7 +72,9 @@ class _RoomScreenState extends ConsumerState<RoomScreen> with TickerProviderStat
     notifier.setRoomContext(
       roomId: widget.roomId,
       userId: currentUser?.uid ?? 'anonymous',
-      userName: currentUser?.displayName ?? currentUser?.email?.split('@').first ?? 'Guest',
+      userName: currentUser?.displayName ??
+          currentUser?.email?.split('@').first ??
+          'Guest',
     );
     try {
       await notifier.joinRoom(agoraToken: widget.agoraToken);
@@ -171,14 +174,19 @@ class _RoomScreenState extends ConsumerState<RoomScreen> with TickerProviderStat
                   vertical: DesignSpacing.sm,
                 ),
                 decoration: BoxDecoration(
-                  color: RoomEnergyThresholds.getEnergyColor(roomState.energy).withValues(alpha: 0.1),
-                  border: Border.all(color: RoomEnergyThresholds.getEnergyColor(roomState.energy), width: 1),
+                  color: RoomEnergyThresholds.getEnergyColor(roomState.energy)
+                      .withValues(alpha: 0.1),
+                  border: Border.all(
+                      color:
+                          RoomEnergyThresholds.getEnergyColor(roomState.energy),
+                      width: 1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
                   RoomEnergyThresholds.getEnergyLabel(roomState.energy),
                   style: DesignTypography.caption.copyWith(
-                    color: RoomEnergyThresholds.getEnergyColor(roomState.energy),
+                    color:
+                        RoomEnergyThresholds.getEnergyColor(roomState.energy),
                   ),
                 ),
               ),
@@ -197,25 +205,40 @@ class _RoomScreenState extends ConsumerState<RoomScreen> with TickerProviderStat
               padding: const EdgeInsets.all(DesignSpacing.lg),
               decoration: const BoxDecoration(
                 color: DesignColors.surfaceDefault,
-                border: Border(top: BorderSide(color: DesignColors.surfaceLight, width: 1)),
+                border: Border(
+                    top:
+                        BorderSide(color: DesignColors.surfaceLight, width: 1)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   FloatingActionButton.small(
-                    backgroundColor: roomState.isMicMuted ? DesignColors.error : DesignColors.surfaceLight,
-                    onPressed: () => ref.read(agoraRoomProvider.notifier).toggleMicrophone(),
-                    child: Icon(roomState.isMicMuted ? Icons.mic_off : Icons.mic, color: DesignColors.white),
+                    backgroundColor: roomState.isMicMuted
+                        ? DesignColors.error
+                        : DesignColors.surfaceLight,
+                    onPressed: () =>
+                        ref.read(agoraRoomProvider.notifier).toggleMicrophone(),
+                    child: Icon(
+                        roomState.isMicMuted ? Icons.mic_off : Icons.mic,
+                        color: DesignColors.white),
                   ),
                   FloatingActionButton.small(
-                    backgroundColor: roomState.isVideoMuted ? DesignColors.error : DesignColors.surfaceLight,
-                    onPressed: () => ref.read(agoraRoomProvider.notifier).toggleVideo(),
-                    child: Icon(roomState.isVideoMuted ? Icons.videocam_off : Icons.videocam, color: DesignColors.white),
+                    backgroundColor: roomState.isVideoMuted
+                        ? DesignColors.error
+                        : DesignColors.surfaceLight,
+                    onPressed: () =>
+                        ref.read(agoraRoomProvider.notifier).toggleVideo(),
+                    child: Icon(
+                        roomState.isVideoMuted
+                            ? Icons.videocam_off
+                            : Icons.videocam,
+                        color: DesignColors.white),
                   ),
                   FloatingActionButton.small(
                     backgroundColor: const Color(0xFFEF5350),
                     onPressed: _handleLeaveRoom,
-                    child: const Icon(Icons.phone_disabled, color: DesignColors.white),
+                    child: const Icon(Icons.phone_disabled,
+                        color: DesignColors.white),
                   ),
                 ],
               ),
@@ -223,6 +246,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> with TickerProviderStat
           : const SizedBox.shrink(),
     );
   }
+
   /// Build join flow overlay while room is connecting
   Widget _buildJoinFlowOverlay(AgoraRoomState roomState) {
     final joinFlow = ref.watch(joinFlowProvider);
@@ -236,14 +260,16 @@ class _RoomScreenState extends ConsumerState<RoomScreen> with TickerProviderStat
             valueColor: AlwaysStoppedAnimation<Color>(DesignColors.accent),
           ),
           const SizedBox(height: DesignSpacing.xl),
-          Text(displayText, style: DesignTypography.heading, textAlign: TextAlign.center),
+          Text(displayText,
+              style: DesignTypography.heading, textAlign: TextAlign.center),
           const SizedBox(height: DesignSpacing.md),
           if (phase == JoinPhase.error)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.lg),
               child: Text(
                 joinFlow.errorMessage ?? 'Unknown error',
-                style: DesignTypography.caption.copyWith(color: const Color(0xFFEF5350)),
+                style: DesignTypography.caption
+                    .copyWith(color: const Color(0xFFEF5350)),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -251,6 +277,7 @@ class _RoomScreenState extends ConsumerState<RoomScreen> with TickerProviderStat
       ),
     );
   }
+
   /// Build main room content with participant cards
   Widget _buildRoomContent(AgoraRoomState roomState, {required bool isAdmin, Room? room}) {
     final participants = roomState.participants;
@@ -289,20 +316,29 @@ class _RoomScreenState extends ConsumerState<RoomScreen> with TickerProviderStat
     );
   }
 
+<<<<<<< HEAD
   void _showParticipantActionsMenu(BuildContext context, Participant participant,
       {required bool isAdmin}) {
+=======
+  void _showParticipantActionsMenu(
+      BuildContext context, Participant participant) {
+>>>>>>> origin/develop
     showModalBottomSheet(
       context: context,
       builder: (ctx) => Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           ListTile(
-            leading: Icon(participant.isMuted ? Icons.volume_up : Icons.volume_off),
+            leading:
+                Icon(participant.isMuted ? Icons.volume_up : Icons.volume_off),
             title: Text(participant.isMuted ? 'Unmute for me' : 'Mute for me'),
             onTap: () {
               Navigator.of(ctx).pop();
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(participant.isMuted ? 'Unmuted ${participant.name}' : 'Muted ${participant.name}')),
+                SnackBar(
+                    content: Text(participant.isMuted
+                        ? 'Unmuted ${participant.name}'
+                        : 'Muted ${participant.name}')),
               );
             },
           ),
@@ -311,7 +347,8 @@ class _RoomScreenState extends ConsumerState<RoomScreen> with TickerProviderStat
             title: const Text('View Profile'),
             onTap: () {
               Navigator.of(ctx).pop();
-              Navigator.of(context).pushNamed('/profile/user', arguments: participant.uid);
+              Navigator.of(context)
+                  .pushNamed('/profile/user', arguments: participant.uid);
             },
           ),
           ListTile(

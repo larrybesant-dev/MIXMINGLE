@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
@@ -88,7 +88,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   }
 
   void _onScroll() {
-    if (_scrollController.position.pixels <= 100 && !_isLoadingMore && _hasMoreMessages) {
+    if (_scrollController.position.pixels <= 100 &&
+        !_isLoadingMore &&
+        _hasMoreMessages) {
       _loadMoreMessages();
     }
   }
@@ -102,7 +104,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     try {
       final messagingService = ref.read(messagingServiceProvider);
-      final (newMessages, lastDoc) = await messagingService.getPaginatedMessages(
+      final (newMessages, lastDoc) =
+          await messagingService.getPaginatedMessages(
         widget.currentUser.id,
         widget.otherUser.id,
         limit: 20,
@@ -111,7 +114,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
       if (newMessages.isNotEmpty) {
         setState(() {
-          _messages.insertAll(0, newMessages); // Insert at beginning for older messages
+          _messages.insertAll(
+              0, newMessages); // Insert at beginning for older messages
           _lastDocument = lastDoc;
           _hasMoreMessages = newMessages.length == 20;
         });
@@ -167,12 +171,14 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   void _setupMessageStream() {
     final messagingService = ref.read(messagingServiceProvider);
-    _messagesSubscription =
-        messagingService.getConversationMessages(widget.currentUser.id, widget.otherUser.id).listen((messages) async {
+    _messagesSubscription = messagingService
+        .getConversationMessages(widget.currentUser.id, widget.otherUser.id)
+        .listen((messages) async {
       if (mounted && !_isInitialLoading) {
         // Mark incoming messages as delivered
         for (final message in messages) {
-          if (message.senderId != widget.currentUser.id && message.status == MessageStatus.sent) {
+          if (message.senderId != widget.currentUser.id &&
+              message.status == MessageStatus.sent) {
             try {
               await ref.read(markMessageAsDeliveredProvider({
                 'messageId': message.id,
@@ -223,7 +229,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         child: Image.network(
                           '${widget.otherUser.avatarUrl}?t=${DateTime.now().millisecondsSinceEpoch}',
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Icon(
                             Icons.person,
                             color: Colors.white,
                             size: 20,
@@ -283,7 +290,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               child: _isInitialLoading
                   ? const Center(
                       child: CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF4C4C)),
+                        valueColor:
+                            AlwaysStoppedAnimation<Color>(Color(0xFFFF4C4C)),
                       ),
                     )
                   : _messages.isEmpty
@@ -291,21 +299,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                       : ListView.builder(
                           controller: _scrollController,
                           padding: const EdgeInsets.all(16),
-                          itemCount: _messages.length + (_isLoadingMore ? 1 : 0),
+                          itemCount:
+                              _messages.length + (_isLoadingMore ? 1 : 0),
                           itemBuilder: (context, index) {
                             if (index == _messages.length && _isLoadingMore) {
                               return const Center(
                                 child: Padding(
                                   padding: EdgeInsets.all(16),
                                   child: CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF4C4C)),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Color(0xFFFF4C4C)),
                                   ),
                                 ),
                               );
                             }
 
                             final message = _messages[index];
-                            final isCurrentUser = message.isFromCurrentUser(widget.currentUser.id);
+                            final isCurrentUser = message
+                                .isFromCurrentUser(widget.currentUser.id);
 
                             return MessageBubble(
                               message: message,
@@ -322,7 +333,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             // Typing indicator
             if (_isTyping)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: Row(
                   children: [
                     Text(
@@ -422,7 +434,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 ),
                 filled: true,
                 fillColor: Colors.white.withValues(alpha: 0.1),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               ),
               maxLines: null,
               textInputAction: TextInputAction.send,
@@ -592,21 +605,32 @@ class MessageBubble extends ConsumerWidget {
             maxWidth: MediaQuery.of(context).size.width * 0.75,
           ),
           child: Column(
-            crossAxisAlignment: isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            crossAxisAlignment: isCurrentUser
+                ? CrossAxisAlignment.end
+                : CrossAxisAlignment.start,
             children: [
               // Message bubble
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 decoration: BoxDecoration(
-                  color: isCurrentUser ? const Color(0xFFFF4C4C) : Colors.white.withValues(alpha: 0.1),
+                  color: isCurrentUser
+                      ? const Color(0xFFFF4C4C)
+                      : Colors.white.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(16),
                     topRight: const Radius.circular(16),
-                    bottomLeft: isCurrentUser ? const Radius.circular(16) : const Radius.circular(4),
-                    bottomRight: isCurrentUser ? const Radius.circular(4) : const Radius.circular(16),
+                    bottomLeft: isCurrentUser
+                        ? const Radius.circular(16)
+                        : const Radius.circular(4),
+                    bottomRight: isCurrentUser
+                        ? const Radius.circular(4)
+                        : const Radius.circular(16),
                   ),
                   border: Border.all(
-                    color: isCurrentUser ? Colors.transparent : Colors.white.withValues(alpha: 0.2),
+                    color: isCurrentUser
+                        ? Colors.transparent
+                        : Colors.white.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -665,7 +689,8 @@ class MessageBubble extends ConsumerWidget {
                   children: message.reactions.entries.map((entry) {
                     final emoji = entry.key;
                     final users = entry.value;
-                    final hasCurrentUserReacted = currentUser != null && users.contains(currentUser.id);
+                    final hasCurrentUserReacted =
+                        currentUser != null && users.contains(currentUser.id);
 
                     return GestureDetector(
                       onTap: () {
@@ -678,15 +703,17 @@ class MessageBubble extends ConsumerWidget {
                         }
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
                           color: hasCurrentUserReacted
                               ? const Color(0xFFFF4C4C).withValues(alpha: 0.3)
                               : Colors.white.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color:
-                                hasCurrentUserReacted ? const Color(0xFFFF4C4C) : Colors.white.withValues(alpha: 0.2),
+                            color: hasCurrentUserReacted
+                                ? const Color(0xFFFF4C4C)
+                                : Colors.white.withValues(alpha: 0.2),
                             width: 1,
                           ),
                         ),
@@ -912,7 +939,16 @@ class MessageBubble extends ConsumerWidget {
   }
 
   void _showReactionPicker(BuildContext context) {
-    final commonEmojis = ['ðŸ‘', 'â¤ï¸', 'ðŸ˜‚', 'ðŸ˜®', 'ðŸ˜¢', 'ðŸ˜¡', 'ðŸŽ‰', 'ðŸ”¥'];
+    final commonEmojis = [
+      'ðŸ‘',
+      'â¤ï¸',
+      'ðŸ˜‚',
+      'ðŸ˜®',
+      'ðŸ˜¢',
+      'ðŸ˜¡',
+      'ðŸŽ‰',
+      'ðŸ”¥'
+    ];
 
     showModalBottomSheet(
       context: context,

@@ -8,11 +8,13 @@
 ## ✅ Web Deployment - COMPLETE
 
 **Deployed Successfully**:
+
 - 🌐 **Hosting URL**: https://mix-and-mingle-v2.web.app
 - 📦 **Files Deployed**: 87 files
 - ✅ **Status**: Active and live
 
 **Firebase Logs Status**: ✅ Healthy
+
 - Agora token generation: Working
 - Auth tokens: Valid
 - Function execution: Successful (Average ~1s per request)
@@ -24,6 +26,7 @@
 ### Step 1: Connect Android Device/Emulator
 
 **Option A - Physical Device**:
+
 ```powershell
 # Enable USB Debugging on phone: Settings > Developer Options > USB Debugging
 # Connect phone via USB cable to computer
@@ -37,6 +40,7 @@ adb devices
 ```
 
 **Option B - Android Emulator**:
+
 ```powershell
 # Open Android Studio and launch an emulator, OR use command line:
 emulator -avd YOUR_AVD_NAME
@@ -64,6 +68,7 @@ adb install build\app\outputs\flutter-apk\app-release.apk
 **Manual Testing Checklist**:
 
 #### Sign-In Test
+
 - [ ] Open app
 - [ ] Tap "Sign In"
 - [ ] Enter test email/password
@@ -72,24 +77,28 @@ adb install build\app\outputs\flutter-apk\app-release.apk
 - ✅ **Expected**: Auth listener works, user loads from Riverpod provider
 
 #### Room Join Test - Normal Case
+
 - [ ] Create or join an existing room
 - [ ] Verify participant list shows your name
 - [ ] Check Firebase logs show token generation
 - [ ] ✅ **Expected**: User can join without race condition errors
 
 #### Room Join Test - Slow Auth (Testing 10s Timeout)
+
 - [ ] Disable Firebase cache: `firebase.auth().setPersistence(firebase.auth.Auth.Persistence.NONE)`
 - [ ] Create room and quickly close/reopen app
 - [ ] Watch for auto-retry logic (should wait up to 10s)
 - [ ] ✅ **Expected**: App retries instead of failing immediately
 
 #### Permission Check Test
+
 - [ ] Have another user ban you from a room: `bannedUsers: [YOUR_UID]`
 - [ ] Try to join that room as the banned user
 - [ ] Verify permission error shows specific message
 - [ ] ✅ **Expected**: "You are banned from this room" (clear error, not generic)
 
 #### Room Deletion Test
+
 - [ ] Create a room as host
 - [ ] Quit app
 - [ ] Delete the room from Firestore via Console
@@ -101,6 +110,7 @@ adb install build\app\outputs\flutter-apk\app-release.apk
 ## 🌐 Web Testing Instructions
 
 ### Access the App
+
 ```
 https://mix-and-mingle-v2.web.app
 ```
@@ -108,12 +118,14 @@ https://mix-and-mingle-v2.web.app
 ### Browser Testing Checklist
 
 #### Sign-In Test
+
 - [ ] Open in Chrome/Firefox/Safari
 - [ ] Sign in with test account
 - [ ] Check browser console (F12) for auth errors
 - [ ] ✅ **Expected**: No dart:js errors, clean auth flow
 
 #### Agora Web SDK Test
+
 - [ ] Allow microphone/camera permissions
 - [ ] Join a room
 - [ ] Verify video/audio streams appear
@@ -121,6 +133,7 @@ https://mix-and-mingle-v2.web.app
 - [ ] ✅ **Expected**: Agora web SDK initializes successfully
 
 #### Download Feature Test (Web-Specific)
+
 - [ ] Go to Account Settings
 - [ ] Click "Download Profile Data"
 - [ ] Verify JSON file downloads to computer
@@ -128,6 +141,7 @@ https://mix-and-mingle-v2.web.app
 - ℹ️ **Note**: This uses the new conditional imports (dart:js_interop)
 
 #### Network Latency Test
+
 - [ ] Open DevTools (F12)
 - [ ] Go to Network tab
 - [ ] Set throttling: "Slow 3G"
@@ -140,6 +154,7 @@ https://mix-and-mingle-v2.web.app
 ## 🔍 Firebase Monitoring
 
 ### Check Auth Errors
+
 ```powershell
 # View real-time auth logs
 firebase functions:log --only generateAgoraToken --limit 50
@@ -148,12 +163,14 @@ firebase functions:log --only generateAgoraToken --limit 50
 ### Key Log Indicators
 
 **✅ Success Logs**:
+
 ```
 Auth context - UID: [USER_ID], Token: PRESENT
 Generated Agora token for user [USER_ID] in room [ROOM_ID]
 ```
 
 **❌ Error Logs to Watch For** (should NOT see these):
+
 ```
 User: NULL                          # Auth not loaded (FIXED ✅)
 Provider timeout                    # Should only happen after 10s
@@ -161,11 +178,13 @@ Dart library error                  # Web platform issue (FIXED ✅)
 ```
 
 ### Monitor Firebase Console
+
 ```
 URL: https://console.firebase.google.com/project/mix-and-mingle-v2/
 ```
 
 **Sections to Check**:
+
 - **Authentication** > Users (verify test accounts)
 - **Firestore** > Collections (verify rooms are created)
 - **Functions** > generateAgoraToken (check invocation logs)
@@ -176,6 +195,7 @@ URL: https://console.firebase.google.com/project/mix-and-mingle-v2/
 ## 📋 Automated Testing Command
 
 **Run full test suite**:
+
 ```powershell
 cd c:\Users\LARRY\MIXMINGLE
 
@@ -197,6 +217,7 @@ flutter test
 ## 🚀 Upload to Google Play Console (Beta Track)
 
 ### Step 1: Prepare APK
+
 ```powershell
 # Verify APK exists
 Test-Path build\app\outputs\flutter-apk\app-release.apk
@@ -204,6 +225,7 @@ Test-Path build\app\outputs\flutter-apk\app-release.apk
 ```
 
 ### Step 2: Upload to Play Console
+
 1. Go to **Google Play Console** > **Your App** > **Testing** > **Internal Testing**
 2. Click **Create new release**
 3. Upload `build\app\outputs\flutter-apk\app-release.apk`
@@ -221,6 +243,7 @@ Test-Path build\app\outputs\flutter-apk\app-release.apk
 7. Add beta testers: **App testers** > **Manage testers** > Add email addresses
 
 ### Step 3: Monitor Beta Feedback
+
 - Watch for user reports in Play Console
 - Monitor Firebase logs for auth errors
 - Check crash reports: **Android Vitals** > **Crashes**
@@ -229,39 +252,43 @@ Test-Path build\app\outputs\flutter-apk\app-release.apk
 
 ## 📊 Testing Scenarios & Expected Outcomes
 
-| Scenario | What to Test | Expected Outcome | Status |
-|----------|-------------|------------------|--------|
-| User signs in | Firebase Auth resolves | User loads from Riverpod provider | ✅ FIXED |
-| Quick room join | No race condition | Auth listener fires before join attempt | ✅ FIXED |
-| Slow network | Auth timeout | App waits 10s, then retries with fallback | ✅ FIXED |
-| Banned user | Permission check | Client-side rejection with clear error | ✅ FIXED |
-| Deleted room | Room existence | "Room no longer exists" error | ✅ FIXED |
-| Weak signal | Auto-retry | Waits up to 10s, shows retry UI | ✅ FIXED |
-| Download data (web) | Platform-specific import | JSON file downloads without errors | ✅ FIXED |
-| Video on web | Agora JS SDK | Camera/mic work with browser permissions | ✅ FIXED |
-| Video on mobile | Native Agora SDK | Camera/mic work with app permissions | ✅ FIXED |
+| Scenario            | What to Test             | Expected Outcome                          | Status   |
+| ------------------- | ------------------------ | ----------------------------------------- | -------- |
+| User signs in       | Firebase Auth resolves   | User loads from Riverpod provider         | ✅ FIXED |
+| Quick room join     | No race condition        | Auth listener fires before join attempt   | ✅ FIXED |
+| Slow network        | Auth timeout             | App waits 10s, then retries with fallback | ✅ FIXED |
+| Banned user         | Permission check         | Client-side rejection with clear error    | ✅ FIXED |
+| Deleted room        | Room existence           | "Room no longer exists" error             | ✅ FIXED |
+| Weak signal         | Auto-retry               | Waits up to 10s, shows retry UI           | ✅ FIXED |
+| Download data (web) | Platform-specific import | JSON file downloads without errors        | ✅ FIXED |
+| Video on web        | Agora JS SDK             | Camera/mic work with browser permissions  | ✅ FIXED |
+| Video on mobile     | Native Agora SDK         | Camera/mic work with app permissions      | ✅ FIXED |
 
 ---
 
 ## 🎯 Success Criteria
 
 ### Mobile Build
+
 - [x] APK compiles without errors
 - [x] No "dart:js_interop" errors on mobile
 - [x] APK is 244 MB (reasonable size)
 
 ### Web Build
+
 - [x] Web files deploy successfully
 - [x] No User type conflicts
 - [x] 87 files deployed to Firebase Hosting
 
 ### Authentication
+
 - [x] Auth listener setup before room join attempt
 - [x] 10-second timeout (up from 5)
 - [x] Room permission checks implemented
 - [x] Enhanced error messages with auth state
 
 ### Deployment
+
 - [x] Web live at https://mix-and-mingle-v2.web.app
 - [x] Firebase logs show healthy function execution
 - [x] Git commits recorded with clear messages
@@ -295,21 +322,25 @@ Test-Path build\app\outputs\flutter-apk\app-release.apk
 ## 🐛 Troubleshooting
 
 **Issue**: App still shows "User: NULL"
+
 - **Cause**: Riverpod provider not resolving
 - **Fix**: Check Firebase auth is enabled in project
 - **Verify**: `flutter run -d chrome` on web, check console logs
 
 **Issue**: Room join times out after 10 seconds
+
 - **Cause**: Firebase auth taking too long
 - **Fix**: Check network connection and Firebase project status
 - **Verify**: `firebase functions:log` should show token generation
 
 **Issue**: Download feature fails on web
+
 - **Cause**: Browser permission denied
 - **Fix**: Check browser allows downloads
 - **Verify**: Check browser console for permission errors
 
 **Issue**: Mobile build fails with "dart:js error"
+
 - **Cause**: Web-specific imports still unconditional
 - **Fix**: Check `if (dart.library.html)` conditional imports
 - **Verify**: `flutter build apk --release` should succeed

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
@@ -13,7 +13,8 @@ class NotificationService {
   NotificationService._internal();
 
   final FirebaseMessaging _firebaseMessaging = FirebaseMessaging.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
   final AnalyticsService _analytics = AnalyticsService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -39,14 +40,16 @@ class NotificationService {
         // Set up message handlers
         _setupMessageHandlers();
       } else {
-        debugPrint('Skipping Firebase Messaging initialization on web (service worker issues)');
+        debugPrint(
+            'Skipping Firebase Messaging initialization on web (service worker issues)');
       }
 
       debugPrint('Notification service initialized successfully');
     } catch (e) {
       // Handle service worker registration failures gracefully
       debugPrint('Warning: Notification service initialization failed: $e');
-      debugPrint('Push notifications may not work, but app will continue normally');
+      debugPrint(
+          'Push notifications may not work, but app will continue normally');
 
       // Still try to set up basic message handlers if possible
       try {
@@ -78,7 +81,8 @@ class NotificationService {
       iOS: DarwinInitializationSettings(),
     );
 
-    await _localNotifications.initialize(settings: initializationSettings,
+    await _localNotifications.initialize(
+      settings: initializationSettings,
       onDidReceiveNotificationResponse: (NotificationResponse response) {
         _handleNotificationTap(response.payload);
       },
@@ -157,7 +161,8 @@ class NotificationService {
   }
 
   /// Send notification for new message
-  Future<void> notifyNewMessage(String roomId, String senderName, String message) async {
+  Future<void> notifyNewMessage(
+      String roomId, String senderName, String message) async {
     // This would typically be handled by a Cloud Function
     // For now, we'll just log it
     debugPrint('New message notification: $senderName in room $roomId');
@@ -168,7 +173,8 @@ class NotificationService {
   }
 
   /// Send notification for new direct message
-  Future<void> notifyNewDirectMessage(String conversationId, String senderName, String message) async {
+  Future<void> notifyNewDirectMessage(
+      String conversationId, String senderName, String message) async {
     // Show local notification for direct messages
     const notificationDetails = NotificationDetails(
       android: AndroidNotificationDetails(
@@ -196,8 +202,10 @@ class NotificationService {
   }
 
   /// Send notification for room invitation
-  Future<void> notifyRoomInvitation(String roomId, String roomName, String inviterName) async {
-    debugPrint('Room invitation notification: $inviterName invited to $roomName');
+  Future<void> notifyRoomInvitation(
+      String roomId, String roomName, String inviterName) async {
+    debugPrint(
+        'Room invitation notification: $inviterName invited to $roomName');
     _analytics.trackEngagement('room_invitation_sent', parameters: {
       'room_id': roomId,
       'room_name': roomName,

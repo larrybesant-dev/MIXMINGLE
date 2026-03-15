@@ -11,7 +11,8 @@ import '../../shared/models/user_profile.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 
-final vibeIntelligenceServiceProvider = Provider<VibeIntelligenceService>((ref) {
+final vibeIntelligenceServiceProvider =
+    Provider<VibeIntelligenceService>((ref) {
   return VibeIntelligenceService(FirebaseFirestore.instance);
 });
 
@@ -51,16 +52,13 @@ class VibeIntelligenceService {
     if (top == null || topCount < threshold) return null;
 
     // Find an alternative vibe to suggest
-    final alternatives = _kVibes
-        .where((v) => v != top)
-        .toList()
+    final alternatives = _kVibes.where((v) => v != top).toList()
       ..sort(); // deterministic across builds
     if (alternatives.isEmpty) return null;
 
     // Prefer a vibe the user has never tried
-    final neverTried = alternatives
-        .where((v) => !history.containsKey(v))
-        .toList();
+    final neverTried =
+        alternatives.where((v) => !history.containsKey(v)).toList();
 
     final suggestion = neverTried.isNotEmpty
         ? neverTried.first
@@ -133,6 +131,11 @@ class VibeIntelligenceService {
   // ── Helpers ───────────────────────────────────────────────────────────────
 
   static const _kVibes = [
-    'Chill', 'Hype', 'Deep Talk', 'Late Night', 'Study', 'Party',
+    'Chill',
+    'Hype',
+    'Deep Talk',
+    'Late Night',
+    'Study',
+    'Party',
   ];
 }

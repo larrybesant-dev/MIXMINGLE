@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 
@@ -54,7 +54,8 @@ class ReportingService {
           .collection('reports')
           .where('reporterId', isEqualTo: user.uid)
           .where('reportedId', isEqualTo: reportedId)
-          .where('createdAt', isGreaterThan: DateTime.now().subtract(const Duration(days: 7)))
+          .where('createdAt',
+              isGreaterThan: DateTime.now().subtract(const Duration(days: 7)))
           .limit(1)
           .get();
 
@@ -81,7 +82,8 @@ class ReportingService {
 
       // Add type-specific data
       if (type == ReportType.user) {
-        final reportedUser = await _firestore.collection('users').doc(reportedId).get();
+        final reportedUser =
+            await _firestore.collection('users').doc(reportedId).get();
         reportData['reportedUserEmail'] = reportedUser.data()?['email'];
         reportData['reportedUserName'] = reportedUser.data()?['displayName'];
       }

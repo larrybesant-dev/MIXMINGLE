@@ -33,7 +33,6 @@ class RoomCardWidget extends StatefulWidget {
   /// Room energy level (0.0-10.0)
   final double energy;
 
-
   /// Callback when card is tapped
   final VoidCallback onTap;
 
@@ -136,15 +135,15 @@ class _RoomCardWidgetState extends State<RoomCardWidget>
                   AnimatedBuilder(
                     animation: _energyPulseController,
                     builder: (context, child) {
-                      final glowAlpha = 0.3 +
-                          (_energyPulseController.value * 0.5);
+                      final glowAlpha =
+                          0.3 + (_energyPulseController.value * 0.5);
                       return Container(
                         margin: const EdgeInsets.only(bottom: 10),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFCC2200)
-                              .withValues(alpha: 0.18),
+                          color:
+                              const Color(0xFFCC2200).withValues(alpha: 0.18),
                           border: Border.all(
                             color: const Color(0xFFFF3B1A)
                                 .withValues(alpha: glowAlpha),
@@ -211,8 +210,7 @@ class _RoomCardWidgetState extends State<RoomCardWidget>
                       animation: _energyPulseController,
                       builder: (context, child) {
                         final scale = 1.0 +
-                            (0.1 *
-                                _energyPulseController.value); // 1.0 to 1.1
+                            (0.1 * _energyPulseController.value); // 1.0 to 1.1
 
                         return Transform.scale(
                           scale: scale,

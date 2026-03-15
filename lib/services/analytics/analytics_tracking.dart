@@ -159,7 +159,8 @@ class SkeletonTracker {
     String interactionType, [
     Map<String, dynamic>? metadata,
   ]) async {
-    final visibleDuration = DateTime.now().difference(_displayTime).inMilliseconds;
+    final visibleDuration =
+        DateTime.now().difference(_displayTime).inMilliseconds;
     await analytics.trackSkeletonInteraction(
       screenName: screenName,
       interactionType: interactionType,
@@ -229,9 +230,8 @@ class AnalyticsTracker {
   }
 
   /// Get provider performance for dashboard
-  Future<Map<String, dynamic>> getProviderPerformance(String providerName) async {
+  Future<Map<String, dynamic>> getProviderPerformance(
+      String providerName) async {
     return service.getProviderPerformance(providerName);
   }
 }
-
-

@@ -25,32 +25,28 @@ const List<_TourStep> _steps = [
   _TourStep(
     emoji: '👋',
     title: 'Welcome to Mix\u00a0& Mingle!',
-    body:
-        'You\'re in. This is a live video social platform where real '
+    body: 'You\'re in. This is a live video social platform where real '
         'conversations happen — no filters, no scripts, just vibes.',
     ctaIcon: Icons.waving_hand,
   ),
   _TourStep(
     emoji: '🎥',
     title: 'Jump into a Live Room',
-    body:
-        'Browse hundreds of live rooms by topic or mood. '
+    body: 'Browse hundreds of live rooms by topic or mood. '
         'Tap the Rooms tab to watch, join the stage, or host your own show.',
     ctaIcon: Icons.videocam_outlined,
   ),
   _TourStep(
     emoji: '💬',
     title: 'Connect & Chat',
-    body:
-        'Follow people you vibe with, send DMs, and link up in group chats. '
+    body: 'Follow people you vibe with, send DMs, and link up in group chats. '
         'Tap the Chats tab to start a conversation.',
     ctaIcon: Icons.chat_bubble_outline,
   ),
   _TourStep(
     emoji: '🚀',
     title: 'You\'re All Set',
-    body:
-        'Your profile is live. Go explore rooms, find your people, '
+    body: 'Your profile is live. Go explore rooms, find your people, '
         'and make some noise. The stage is yours.',
     ctaIcon: Icons.rocket_launch_outlined,
   ),

@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 
 /// Comprehensive provider exports for MIXVY
+=======
+/// Comprehensive provider exports for Mix & Mingle
+>>>>>>> origin/develop
 ///
 /// This file consolidates all Riverpod providers and controllers
 /// organized by feature domain.
@@ -51,8 +55,13 @@ export 'match_providers.dart' hide matchStatisticsProvider;
 // EVENTS PROVIDERS
 // ============================================================================
 
-export 'event_dating_providers.dart' hide eventsServiceProvider, EventsController, eventProvider;
-export 'events_controller.dart' hide eventsServiceProvider, attendingEventsProvider, eventsControllerProvider;
+export 'event_dating_providers.dart'
+    hide eventsServiceProvider, EventsController, eventProvider;
+export 'events_controller.dart'
+    hide
+        eventsServiceProvider,
+        attendingEventsProvider,
+        eventsControllerProvider;
 
 // ============================================================================
 // MEDIA & MODERATION PROVIDERS
@@ -105,8 +114,34 @@ export 'vibe_theme_provider.dart';
 export '../../core/intelligence/vibe_intelligence_service.dart';
 
 // ============================================================================
+<<<<<<< HEAD
 // MONETIZATION — GIFTS, BOOSTS, ADMIN (Phase 12)
 // ============================================================================
 export 'gift_providers.dart';
 export 'boost_providers.dart';
 export 'admin_providers.dart';
+=======
+// FRIEND SYSTEM PROVIDERS
+// ============================================================================
+export 'friend_providers.dart';
+
+// ============================================================================
+// NOTIFICATION SYSTEM PROVIDERS
+// ============================================================================
+export 'notification_providers.dart';
+
+// ============================================================================
+// MATCH INBOX PROVIDERS
+// ============================================================================
+export '../../features/match_inbox/providers/match_inbox_providers.dart';
+
+// ============================================================================
+// ROOM DISCOVERY PROVIDERS
+// ============================================================================
+export '../../features/discover/providers/room_discovery_providers.dart';
+
+// ============================================================================
+// USER DISCOVERY / ACTIVE FRIENDS PROVIDERS
+// ============================================================================
+export '../../features/discover_users/providers/active_friends_provider.dart';
+>>>>>>> origin/develop

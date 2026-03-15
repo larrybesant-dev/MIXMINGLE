@@ -159,10 +159,12 @@ class OAuthAccountLinkingSection extends StatefulWidget {
   });
 
   @override
-  State<OAuthAccountLinkingSection> createState() => _OAuthAccountLinkingSectionState();
+  State<OAuthAccountLinkingSection> createState() =>
+      _OAuthAccountLinkingSectionState();
 }
 
-class _OAuthAccountLinkingSectionState extends State<OAuthAccountLinkingSection> {
+class _OAuthAccountLinkingSectionState
+    extends State<OAuthAccountLinkingSection> {
   final OAuthService _oauthService = OAuthService();
 
   bool _isGoogleLoading = false;
@@ -182,16 +184,13 @@ class _OAuthAccountLinkingSectionState extends State<OAuthAccountLinkingSection>
           ),
         ),
         const SizedBox(height: 16),
-
         _buildLinkButton(
           icon: const Icon(Icons.g_mobiledata, color: Colors.white),
           label: 'Google',
           isLoading: _isGoogleLoading,
           onLink: _handleLinkGoogle,
         ),
-
         const SizedBox(height: 12),
-
         _buildLinkButton(
           icon: const Icon(Icons.apple, color: Colors.white),
           label: 'Apple',

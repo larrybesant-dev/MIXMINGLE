@@ -1,4 +1,5 @@
 # Auth Flow Test Checklist
+
 # Use this during the next test run to verify all layers are working
 
 ## Pre-Test Verification
@@ -112,15 +113,15 @@ flutter run -d chrome 2>&1 | Tee-Object -FilePath flutter_debug.log
 
 ## Signal Values
 
-| Signal | What It Means |
-|--------|--------------|
-| Frontend: "Auth verified" + Backend: "UID: [present]" | ✅ All three layers working |
-| Frontend: "Auth verified" + Backend: "UID: NONE" | ⚠️ Web SDK not initialized |
-| Frontend: "ERROR: currentUser is null" | ⚠️ User not authenticated |
-| CORS error in console | ⚠️ HTTP GET being used instead of callable |
-| Backend: "Authentication required" | ⚠️ request.auth.uid missing |
-| Network: POST with Authorization header | ✅ Callable API working |
-| Network: GET request | ❌ Old HTTP path, run flutter clean |
+| Signal                                                | What It Means                              |
+| ----------------------------------------------------- | ------------------------------------------ |
+| Frontend: "Auth verified" + Backend: "UID: [present]" | ✅ All three layers working                |
+| Frontend: "Auth verified" + Backend: "UID: NONE"      | ⚠️ Web SDK not initialized                 |
+| Frontend: "ERROR: currentUser is null"                | ⚠️ User not authenticated                  |
+| CORS error in console                                 | ⚠️ HTTP GET being used instead of callable |
+| Backend: "Authentication required"                    | ⚠️ request.auth.uid missing                |
+| Network: POST with Authorization header               | ✅ Callable API working                    |
+| Network: GET request                                  | ❌ Old HTTP path, run flutter clean        |
 
 ## Next Steps After Success
 
@@ -134,6 +135,7 @@ flutter run -d chrome 2>&1 | Tee-Object -FilePath flutter_debug.log
 ---
 
 **Remember**: All three layers must be present and working together:
+
 - ✅ Frontend: Auth state verified before callable
 - ✅ Backend: Auth context validated in handler
 - ✅ Web: Firebase Functions JS SDK initialized with region

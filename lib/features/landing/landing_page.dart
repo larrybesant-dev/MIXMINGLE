@@ -22,10 +22,13 @@ class LandingPage extends ConsumerStatefulWidget {
   ConsumerState<LandingPage> createState() => _LandingPageState();
 }
 
-class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProviderStateMixin {
+class _LandingPageState extends ConsumerState<LandingPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   LandingMusicService? _music;
+  bool _musicPlaying = false;
+  bool _musicStarted = false; // has music been started at all?
 
   /// Web-safe image provider - returns null on web to avoid CORS errors
   ImageProvider? _safeImageProvider(String? url) {
@@ -44,13 +47,40 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
     )..repeat(reverse: true);
 
     // Start landing music after the first frame so providers are ready.
+    // On web, browsers block autoplay – we'll start on first user gesture instead.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final svc = ref.read(landingMusicProvider);
       if (svc != null) {
         _music = svc;
-        await _music!.start();
+        if (!kIsWeb) {
+          // Native: autoplay is allowed.
+          await _music!.start();
+          if (mounted) setState(() { _musicPlaying = true; _musicStarted = true; });
+        }
+        // Web: wait for first user gesture (see _onFirstGesture).
       }
     });
+  }
+
+  /// Called on the first pointer-down on web to satisfy the browser autoplay policy.
+  Future<void> _onFirstGesture() async {
+    if (_musicStarted || _music == null) return;
+    _musicStarted = true;
+    await _music!.start();
+    if (mounted) setState(() => _musicPlaying = true);
+  }
+
+  /// Toggle music on/off via the floating button.
+  Future<void> _toggleMusic() async {
+    if (_music == null) return;
+    if (_musicPlaying) {
+      await _music!.fadeOut();
+      if (mounted) setState(() => _musicPlaying = false);
+    } else {
+      _musicStarted = true;
+      await _music!.start();
+      if (mounted) setState(() => _musicPlaying = true);
+    }
   }
 
   @override
@@ -104,12 +134,18 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
 
     return Scaffold(
       backgroundColor: ElectricColors.surface,
-      body: Stack(
+      body: Listener(
+        // Web autoplay fix: start music on first user gesture.
+        onPointerDown: kIsWeb ? (_) => _onFirstGesture() : null,
+        child: Stack(
         children: [
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [ElectricColors.surface, ElectricColors.surfaceElevated],
+                colors: [
+                  ElectricColors.surface,
+                  ElectricColors.surfaceElevated
+                ],
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
               ),
@@ -133,7 +169,64 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
               ),
             ),
           ),
+<<<<<<< HEAD
+=======
+          // Debug indicator - top left
+          Positioned(
+            top: 40,
+            left: 10,
+            child: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.red,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: const Text(
+                'LANDING PAGE',
+                style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+          // Floating music toggle button (top-right)
+          Positioned(
+            top: 40,
+            right: 16,
+            child: Tooltip(
+              message: _musicPlaying ? 'Mute music' : 'Play music',
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(24),
+                  onTap: _toggleMusic,
+                  child: Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: ElectricColors.surfaceElevated.withValues(alpha: 0.85),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: ElectricColors.neonMagenta.withValues(alpha: 0.4),
+                        width: 1,
+                      ),
+                    ),
+                    child: Icon(
+                      _musicPlaying ? Icons.music_note : Icons.music_off,
+                      color: _musicPlaying
+                          ? ElectricColors.neonMagenta
+                          : ElectricColors.onSurfaceSecondary,
+                      size: 20,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+>>>>>>> origin/develop
         ],
+      ),
       ),
     );
   }
@@ -141,7 +234,8 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
   Widget _buildHeroSection(TextTheme textTheme) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: Spacing.xxl, horizontal: Spacing.lg),
+      padding: const EdgeInsets.symmetric(
+          vertical: Spacing.xxl, horizontal: Spacing.lg),
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           colors: [ElectricColors.deepViolet, ElectricColors.surfaceElevated],
@@ -155,7 +249,8 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
           const MIXVYLogo(fontSize: 48),
           const SizedBox(height: Spacing.sm),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.xs),
+            padding: const EdgeInsets.symmetric(
+                horizontal: Spacing.md, vertical: Spacing.xs),
             decoration: BoxDecoration(
               gradient: ElectricColors.electricDiagonal,
               borderRadius: BorderRadius.circular(20),
@@ -250,14 +345,30 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
         // Show placeholder if no real data
         if (activities.isEmpty) {
           activities.addAll([
-            {'icon': '🎧', 'text': 'Be the first to go live!', 'time': 'Now', 'status': NeonStatus.online},
-            {'icon': '🎤', 'text': 'Start your stream and connect', 'time': 'Today', 'status': NeonStatus.online},
-            {'icon': '🔴', 'text': 'Share your sound with the world', 'time': 'Soon', 'status': NeonStatus.speaking},
+            {
+              'icon': '🎧',
+              'text': 'Be the first to go live!',
+              'time': 'Now',
+              'status': NeonStatus.online
+            },
+            {
+              'icon': '🎤',
+              'text': 'Start your stream and connect',
+              'time': 'Today',
+              'status': NeonStatus.online
+            },
+            {
+              'icon': '🔴',
+              'text': 'Share your sound with the world',
+              'time': 'Soon',
+              'status': NeonStatus.speaking
+            },
           ]);
         }
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.xl),
+          padding: const EdgeInsets.symmetric(
+              horizontal: Spacing.lg, vertical: Spacing.lg),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -265,23 +376,27 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                 title: 'Live Activity',
                 subtitle: 'Real-time motion from across the grid',
               ),
-              const SizedBox(height: Spacing.md),
+              const SizedBox(height: Spacing.sm),
               ...activities.map((activity) => Padding(
-                    padding: const EdgeInsets.only(bottom: Spacing.sm),
+                    padding: const EdgeInsets.only(bottom: Spacing.xs),
                     child: GlassCard(
-                      padding: const EdgeInsets.all(Spacing.md),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: Spacing.md, vertical: Spacing.xs),
                       child: Row(
                         children: [
-                          Text(activity['icon']! as String, style: const TextStyle(fontSize: 24)),
-                          const SizedBox(width: Spacing.md),
-                          NeonBadge(status: activity['status']! as NeonStatus, size: NeonBadgeSize.medium),
+                          Text(activity['icon']! as String,
+                              style: const TextStyle(fontSize: 16)),
                           const SizedBox(width: Spacing.sm),
+                          NeonBadge(
+                              status: activity['status']! as NeonStatus,
+                              size: NeonBadgeSize.small),
+                          const SizedBox(width: Spacing.xs),
                           Expanded(
                             child: Text(
                               activity['text']! as String,
-                              style: textTheme.bodyMedium?.copyWith(
+                              style: textTheme.bodySmall?.copyWith(
                                 color: ElectricColors.onSurfacePrimary,
-                                height: 1.4,
+                                height: 1.3,
                               ),
                             ),
                           ),
@@ -305,10 +420,20 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
   Widget _buildStatsSection(TextTheme textTheme) {
     return StreamBuilder<List<int>>(
       stream: Stream.periodic(const Duration(seconds: 5)).asyncMap((_) async {
-        final onlineUsers = await _firestore.collection('users').where('isOnline', isEqualTo: true).get();
+        final onlineUsers = await _firestore
+            .collection('users')
+            .where('isOnline', isEqualTo: true)
+            .get();
         final totalUsers = await _firestore.collection('users').get();
-        final liveRooms = await _firestore.collection('rooms').where('isActive', isEqualTo: true).get();
-        return [onlineUsers.docs.length, totalUsers.docs.length, liveRooms.docs.length];
+        final liveRooms = await _firestore
+            .collection('rooms')
+            .where('isActive', isEqualTo: true)
+            .get();
+        return [
+          onlineUsers.docs.length,
+          totalUsers.docs.length,
+          liveRooms.docs.length
+        ];
       }),
       builder: (context, snapshot) {
         final activeUsers = snapshot.data?[0] ?? 0;
@@ -316,13 +441,26 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
         final liveRooms = snapshot.data?[2] ?? 0;
 
         final stats = [
-          {'icon': Icons.headset, 'value': liveRooms > 0 ? '$liveRooms Live' : 'New!', 'label': liveRooms > 0 ? 'Active rooms now' : 'Be first to go live'},
-          {'icon': Icons.people, 'value': totalUsers > 0 ? '$totalUsers+' : '0', 'label': 'Community members'},
-          {'icon': Icons.access_time, 'value': activeUsers > 0 ? '$activeUsers' : '24/7', 'label': activeUsers > 0 ? 'Users online now' : 'Always open'},
+          {
+            'icon': Icons.headset,
+            'value': liveRooms > 0 ? '$liveRooms Live' : 'New!',
+            'label': liveRooms > 0 ? 'Active rooms now' : 'Be first to go live'
+          },
+          {
+            'icon': Icons.people,
+            'value': totalUsers > 0 ? '$totalUsers+' : '0',
+            'label': 'Community members'
+          },
+          {
+            'icon': Icons.access_time,
+            'value': activeUsers > 0 ? '$activeUsers' : '24/7',
+            'label': activeUsers > 0 ? 'Users online now' : 'Always open'
+          },
         ];
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.xl),
+          padding: const EdgeInsets.symmetric(
+              horizontal: Spacing.lg, vertical: Spacing.xl),
           child: Column(
             children: [
               const SectionHeader(
@@ -344,17 +482,21 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(stat['icon']! as IconData, color: ElectricColors.electricCyan, size: 32),
+                              Icon(stat['icon']! as IconData,
+                                  color: ElectricColors.electricCyan, size: 32),
                               const SizedBox(height: Spacing.sm),
                               Text(
                                 stat['value']! as String,
-                                style: textTheme.headlineMedium?.copyWith(color: ElectricColors.onSurfacePrimary),
+                                style: textTheme.headlineMedium?.copyWith(
+                                    color: ElectricColors.onSurfacePrimary),
                               ),
                               const SizedBox(height: Spacing.xs),
                               Text(
                                 stat['label']! as String,
                                 textAlign: TextAlign.center,
-                                style: textTheme.bodyMedium?.copyWith(color: ElectricColors.onSurfaceSecondary, height: 1.4),
+                                style: textTheme.bodyMedium?.copyWith(
+                                    color: ElectricColors.onSurfaceSecondary,
+                                    height: 1.4),
                               ),
                             ],
                           ),
@@ -397,14 +539,30 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
         // Show placeholder if no real data
         if (sessions.isEmpty) {
           sessions.addAll([
-            {'dj': 'Coming Soon', 'title': 'Be the first to go live!', 'genre': 'All Genres', 'listeners': 0},
-            {'dj': 'Your Stream', 'title': 'Start broadcasting now', 'genre': 'Music', 'listeners': 0},
-            {'dj': 'Join Us', 'title': 'Create your first room', 'genre': 'Community', 'listeners': 0},
+            {
+              'dj': 'Coming Soon',
+              'title': 'Be the first to go live!',
+              'genre': 'All Genres',
+              'listeners': 0
+            },
+            {
+              'dj': 'Your Stream',
+              'title': 'Start broadcasting now',
+              'genre': 'Music',
+              'listeners': 0
+            },
+            {
+              'dj': 'Join Us',
+              'title': 'Create your first room',
+              'genre': 'Community',
+              'listeners': 0
+            },
           ]);
         }
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.xl),
+          padding: const EdgeInsets.symmetric(
+              horizontal: Spacing.lg, vertical: Spacing.xl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -430,7 +588,8 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                             gradient: ElectricColors.electricDiagonal,
                             borderRadius: BorderRadius.circular(14),
                           ),
-                          child: const Icon(Icons.music_note, color: ElectricColors.onSurfacePrimary, size: 32),
+                          child: const Icon(Icons.music_note,
+                              color: ElectricColors.onSurfacePrimary, size: 32),
                         ),
                         const SizedBox(width: Spacing.md),
                         Expanded(
@@ -439,11 +598,19 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                             children: [
                               Row(
                                 children: [
-                                  NeonBadge(status: session['listeners'] > 0 ? NeonStatus.speaking : NeonStatus.offline, size: NeonBadgeSize.medium),
+                                  NeonBadge(
+                                      status: session['listeners'] > 0
+                                          ? NeonStatus.speaking
+                                          : NeonStatus.offline,
+                                      size: NeonBadgeSize.medium),
                                   const SizedBox(width: Spacing.xs),
                                   Text(
-                                    session['listeners'] > 0 ? 'LIVE Â· ${session['genre']}' : session['genre']! as String,
-                                    style: textTheme.labelMedium?.copyWith(color: ElectricColors.onSurfaceSecondary),
+                                    session['listeners'] > 0
+                                        ? 'LIVE Â· ${session['genre']}'
+                                        : session['genre']! as String,
+                                    style: textTheme.labelMedium?.copyWith(
+                                        color:
+                                            ElectricColors.onSurfaceSecondary),
                                   ),
                                 ],
                               ),
@@ -454,12 +621,16 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                               ),
                               Text(
                                 session['dj']! as String,
-                                style: textTheme.bodyMedium?.copyWith(color: ElectricColors.onSurfaceMuted),
+                                style: textTheme.bodyMedium?.copyWith(
+                                    color: ElectricColors.onSurfaceMuted),
                               ),
                               const SizedBox(height: Spacing.sm),
                               Text(
-                                session['listeners'] > 0 ? '${session['listeners']} listening' : 'Ready to start',
-                                style: textTheme.labelSmall?.copyWith(color: ElectricColors.onSurfaceSecondary),
+                                session['listeners'] > 0
+                                    ? '${session['listeners']} listening'
+                                    : 'Ready to start',
+                                style: textTheme.labelSmall?.copyWith(
+                                    color: ElectricColors.onSurfaceSecondary),
                               ),
                             ],
                           ),
@@ -467,7 +638,8 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                         ElectricButton(
                           label: session['listeners'] > 0 ? 'Join' : 'Start',
                           variant: ElectricButtonVariant.secondary,
-                          onPressed: () => Navigator.pushNamed(context, session['listeners'] > 0 ? '/home' : '/login'),
+                          onPressed: () => Navigator.pushNamed(context,
+                              session['listeners'] > 0 ? '/home' : '/login'),
                         ),
                       ],
                     ),
@@ -491,14 +663,37 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
   }
 
   Widget _buildHowItWorks(TextTheme textTheme) {
+<<<<<<< HEAD
     final steps = <Map<String, dynamic>>[
       {'step': '1', 'icon': Icons.headset_mic, 'title': 'Join a room', 'desc': 'Browse live rooms and drop in instantly.'},
       {'step': '2', 'icon': Icons.videocam, 'title': 'Go live', 'desc': 'Start your own stream with zero setup friction.'},
       {'step': '3', 'icon': Icons.volunteer_activism, 'title': 'Tip & connect', 'desc': 'Support creators and build connections.'},
+=======
+    final steps = [
+      {
+        'step': '1',
+        'emoji': '🎧',
+        'title': 'Join a room',
+        'desc': 'Browse live rooms and drop in instantly.'
+      },
+      {
+        'step': '2',
+        'emoji': '🎤',
+        'title': 'Go live',
+        'desc': 'Start your own stream with zero setup friction.'
+      },
+      {
+        'step': '3',
+        'emoji': '💰',
+        'title': 'Tip & connect',
+        'desc': 'Support creators and build connections.'
+      },
+>>>>>>> origin/develop
     ];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.xl),
+      padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.lg, vertical: Spacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -523,8 +718,14 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                       ),
                       child: Center(
                         child: Text(
+<<<<<<< HEAD
                           step['step'] as String,
                           style: textTheme.titleLarge?.copyWith(color: ElectricColors.onSurfacePrimary),
+=======
+                          step['step']!,
+                          style: textTheme.titleLarge?.copyWith(
+                              color: ElectricColors.onSurfacePrimary),
+>>>>>>> origin/develop
                         ),
                       ),
                     ),
@@ -535,15 +736,29 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                         children: [
                           Row(
                             children: [
+<<<<<<< HEAD
                               Icon(step['icon'] as IconData, size: 18, color: ElectricColors.neonMagenta),
                               const SizedBox(width: Spacing.xs),
                               Text(step['title'] as String, style: textTheme.titleMedium),
+=======
+                              Text(step['emoji']!,
+                                  style: const TextStyle(fontSize: 20)),
+                              const SizedBox(width: Spacing.xs),
+                              Text(step['title']!,
+                                  style: textTheme.titleMedium),
+>>>>>>> origin/develop
                             ],
                           ),
                           const SizedBox(height: Spacing.xs),
                           Text(
+<<<<<<< HEAD
                             step['desc'] as String,
                             style: textTheme.bodyMedium?.copyWith(color: ElectricColors.onSurfaceSecondary),
+=======
+                            step['desc']!,
+                            style: textTheme.bodyMedium?.copyWith(
+                                color: ElectricColors.onSurfaceSecondary),
+>>>>>>> origin/develop
                           ),
                         ],
                       ),
@@ -595,15 +810,44 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
         // Show placeholder if no real data
         if (profiles.isEmpty) {
           profiles.addAll([
-            {'name': 'Join us', 'photoUrl': null, 'age': null, 'location': 'Worldwide', 'isOnline': false, 'lookingFor': 'Connection'},
-            {'name': 'Meet new people', 'photoUrl': null, 'age': null, 'location': 'Global', 'isOnline': false, 'lookingFor': 'Friends'},
-            {'name': 'Start dating', 'photoUrl': null, 'age': null, 'location': 'Your City', 'isOnline': false, 'lookingFor': 'Romance'},
-            {'name': 'Find your match', 'photoUrl': null, 'age': null, 'location': 'Everywhere', 'isOnline': false, 'lookingFor': 'Love'},
+            {
+              'name': 'Join us',
+              'photoUrl': null,
+              'age': null,
+              'location': 'Worldwide',
+              'isOnline': false,
+              'lookingFor': 'Connection'
+            },
+            {
+              'name': 'Meet new people',
+              'photoUrl': null,
+              'age': null,
+              'location': 'Global',
+              'isOnline': false,
+              'lookingFor': 'Friends'
+            },
+            {
+              'name': 'Start dating',
+              'photoUrl': null,
+              'age': null,
+              'location': 'Your City',
+              'isOnline': false,
+              'lookingFor': 'Romance'
+            },
+            {
+              'name': 'Find your match',
+              'photoUrl': null,
+              'age': null,
+              'location': 'Everywhere',
+              'isOnline': false,
+              'lookingFor': 'Love'
+            },
           ]);
         }
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.xl),
+          padding: const EdgeInsets.symmetric(
+              horizontal: Spacing.lg, vertical: Spacing.xl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -630,7 +874,8 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: Spacing.md, vertical: Spacing.xs),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: Spacing.md, vertical: Spacing.xs),
                           decoration: BoxDecoration(
                             color: ElectricColors.neonMagenta,
                             borderRadius: BorderRadius.circular(20),
@@ -698,84 +943,89 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                         padding: const EdgeInsets.all(Spacing.sm),
                         elevation: GlassCardElevation.low,
                         child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        AspectRatio(
-                          aspectRatio: 1.0,
-                          child: Stack(
-                            children: [
-                              Container(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12),
-                                  gradient: profile['photoUrl'] == null
-                                      ? ElectricColors.electricDiagonal
-                                      : null,
-                                  image: _safeImageProvider(profile['photoUrl']) != null
-                                      ? DecorationImage(
-                                          image: _safeImageProvider(profile['photoUrl'])!,
-                                          fit: BoxFit.cover,
-                                        )
-                                      : null,
-                                ),
-                                child: profile['photoUrl'] == null
-                                    ? const Center(
-                                        child: Icon(
-                                          Icons.favorite,
-                                          size: 40,
-                                          color: ElectricColors.onSurfacePrimary,
-                                        ),
-                                      )
-                                    : null,
-                              ),
-                              if (profile['isOnline'] == true)
-                                Positioned(
-                                  top: 8,
-                                  right: 8,
-                                  child: Container(
-                                    width: 12,
-                                    height: 12,
-                                    decoration: const BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: Color(0xFF4CAF50),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Color(0xFF4CAF50),
-                                          blurRadius: 8,
-                                          spreadRadius: 2,
-                                        ),
-                                      ],
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            AspectRatio(
+                              aspectRatio: 1.0,
+                              child: Stack(
+                                children: [
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      gradient: profile['photoUrl'] == null
+                                          ? ElectricColors.electricDiagonal
+                                          : null,
+                                      image: _safeImageProvider(
+                                                  profile['photoUrl']) !=
+                                              null
+                                          ? DecorationImage(
+                                              image: _safeImageProvider(
+                                                  profile['photoUrl'])!,
+                                              fit: BoxFit.cover,
+                                            )
+                                          : null,
                                     ),
+                                    child: profile['photoUrl'] == null
+                                        ? const Center(
+                                            child: Icon(
+                                              Icons.favorite,
+                                              size: 40,
+                                              color: ElectricColors
+                                                  .onSurfacePrimary,
+                                            ),
+                                          )
+                                        : null,
                                   ),
-                                ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: Spacing.xs),
-                        Text(
-                          profile['age'] != null
-                              ? '${profile['name']}, ${profile['age']}'
-                              : profile['name']!,
-                          style: textTheme.titleSmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                        ),
-                        if (profile['location'] != null && profile['location'].toString().isNotEmpty)
-                          Text(
-                            profile['location']!,
-                            style: textTheme.labelSmall?.copyWith(
-                              color: ElectricColors.onSurfaceMuted,
+                                  if (profile['isOnline'] == true)
+                                    Positioned(
+                                      top: 8,
+                                      right: 8,
+                                      child: Container(
+                                        width: 12,
+                                        height: 12,
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color(0xFF4CAF50),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Color(0xFF4CAF50),
+                                              blurRadius: 8,
+                                              spreadRadius: 2,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
+                            const SizedBox(height: Spacing.xs),
+                            Text(
+                              profile['age'] != null
+                                  ? '${profile['name']}, ${profile['age']}'
+                                  : profile['name']!,
+                              style: textTheme.titleSmall,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                            ),
+                            if (profile['location'] != null &&
+                                profile['location'].toString().isNotEmpty)
+                              Text(
+                                profile['location']!,
+                                style: textTheme.labelSmall?.copyWith(
+                                  color: ElectricColors.onSurfaceMuted,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                              ),
+                          ],
+                        ),
+                      );
+                    },
+                  );
+                },
               ),
               const SizedBox(height: Spacing.lg),
               Center(
@@ -814,7 +1064,9 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
             final followers = data['followersCount'] ?? 0;
             djs.add({
               'name': data['displayName'] ?? data['username'] ?? 'User',
-              'genre': data['interests']?.isNotEmpty == true ? (data['interests'][0] ?? 'Music') : 'Music',
+              'genre': data['interests']?.isNotEmpty == true
+                  ? (data['interests'][0] ?? 'Music')
+                  : 'Music',
               'followers': _formatCount(followers),
               'avatarUrl': data['avatarUrl'],
             });
@@ -832,7 +1084,8 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
         }
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.xl),
+          padding: const EdgeInsets.symmetric(
+              horizontal: Spacing.lg, vertical: Spacing.xl),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -857,25 +1110,35 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                               _safeImageProvider(dj['avatarUrl']) != null
                                   ? CircleAvatar(
                                       radius: 36,
-                                      backgroundImage: _safeImageProvider(dj['avatarUrl']),
+                                      backgroundImage:
+                                          _safeImageProvider(dj['avatarUrl']),
                                     )
                                   : const CircleAvatar(
                                       radius: 36,
-                                      backgroundColor: ElectricColors.surfaceMuted,
-                                      child: Icon(Icons.person, size: 32, color: ElectricColors.onSurfacePrimary),
+                                      backgroundColor:
+                                          ElectricColors.surfaceMuted,
+                                      child: Icon(Icons.person,
+                                          size: 32,
+                                          color:
+                                              ElectricColors.onSurfacePrimary),
                                     ),
                               const SizedBox(height: Spacing.sm),
-                              Text(dj['name']!, style: textTheme.titleSmall, maxLines: 1, overflow: TextOverflow.ellipsis),
+                              Text(dj['name']!,
+                                  style: textTheme.titleSmall,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis),
                               Text(
                                 dj['genre']!,
-                                style: textTheme.bodySmall?.copyWith(color: ElectricColors.onSurfaceSecondary),
+                                style: textTheme.bodySmall?.copyWith(
+                                    color: ElectricColors.onSurfaceSecondary),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),
                               const SizedBox(height: Spacing.xs),
                               Text(
                                 '${dj['followers']} followers',
-                                style: textTheme.labelSmall?.copyWith(color: ElectricColors.onSurfaceMuted),
+                                style: textTheme.labelSmall?.copyWith(
+                                    color: ElectricColors.onSurfaceMuted),
                               ),
                             ],
                           ),
@@ -894,21 +1157,24 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
   Widget _buildTestimonials(TextTheme textTheme) {
     final testimonials = [
       {
-        'emoji': 'ðŸŒŠ',
-        'quote': 'Pure sonic adventure. Every room has its own vibe, every DJ tells a story.',
+        'emoji': '🌊',
+        'quote':
+            'Pure sonic adventure. Every room has its own vibe, every DJ tells a story.',
         'name': 'Sofia Waves',
         'title': 'Ambient Composer',
       },
       {
         'emoji': '⚡',
-        'quote': 'This is where electronic music culture thrives. The community here is incredible.',
+        'quote':
+            'This is where electronic music culture thrives. The community here is incredible.',
         'name': 'Kai Thunder',
         'title': 'Festival Curator',
       },
     ];
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.xl),
+      padding: const EdgeInsets.symmetric(
+          horizontal: Spacing.lg, vertical: Spacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -939,11 +1205,13 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
                     const SizedBox(height: Spacing.sm),
                     Text(
                       item['name']!,
-                      style: textTheme.titleMedium?.copyWith(color: ElectricColors.neonMagenta),
+                      style: textTheme.titleMedium
+                          ?.copyWith(color: ElectricColors.neonMagenta),
                     ),
                     Text(
                       item['title']!,
-                      style: textTheme.bodySmall?.copyWith(color: ElectricColors.onSurfaceSecondary),
+                      style: textTheme.bodySmall
+                          ?.copyWith(color: ElectricColors.onSurfaceSecondary),
                     ),
                   ],
                 ),
@@ -958,7 +1226,8 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
   Widget _buildCTA(TextTheme textTheme) {
     return Container(
       width: double.infinity,
-      margin: const EdgeInsets.symmetric(horizontal: Spacing.lg, vertical: Spacing.xl),
+      margin: const EdgeInsets.symmetric(
+          horizontal: Spacing.lg, vertical: Spacing.xl),
       padding: const EdgeInsets.all(Spacing.xl),
       decoration: BoxDecoration(
         gradient: ElectricColors.electricDiagonal,
@@ -975,13 +1244,15 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
         children: [
           Text(
             'Ready to join the party?',
-            style: textTheme.headlineMedium?.copyWith(color: ElectricColors.onSurfacePrimary),
+            style: textTheme.headlineMedium
+                ?.copyWith(color: ElectricColors.onSurfacePrimary),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: Spacing.sm),
           Text(
             'Your next favorite creator is live right now.',
-            style: textTheme.titleMedium?.copyWith(color: ElectricColors.onSurfacePrimary.withValues(alpha: 0.85)),
+            style: textTheme.titleMedium?.copyWith(
+                color: ElectricColors.onSurfacePrimary.withValues(alpha: 0.85)),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: Spacing.lg),
@@ -1018,7 +1289,8 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
           const SizedBox(height: Spacing.sm),
           Text(
             'Connect with live users and music lovers worldwide',
-            style: textTheme.bodySmall?.copyWith(color: ElectricColors.onSurfaceSecondary),
+            style: textTheme.bodySmall
+                ?.copyWith(color: ElectricColors.onSurfaceSecondary),
           ),
           const SizedBox(height: Spacing.md),
           Wrap(
@@ -1026,26 +1298,36 @@ class _LandingPageState extends ConsumerState<LandingPage> with SingleTickerProv
             children: [
               TextButton(
                 onPressed: () {},
-                child: const Text('About', style: TextStyle(color: ElectricColors.onSurfacePrimary)),
+                child: const Text('About',
+                    style: TextStyle(color: ElectricColors.onSurfacePrimary)),
               ),
               TextButton(
                 onPressed: () {},
-                child: const Text('Privacy', style: TextStyle(color: ElectricColors.onSurfacePrimary)),
+                child: const Text('Privacy',
+                    style: TextStyle(color: ElectricColors.onSurfacePrimary)),
               ),
               TextButton(
                 onPressed: () {},
-                child: const Text('Terms', style: TextStyle(color: ElectricColors.onSurfacePrimary)),
+                child: const Text('Terms',
+                    style: TextStyle(color: ElectricColors.onSurfacePrimary)),
               ),
               TextButton(
                 onPressed: () {},
-                child: const Text('Contact', style: TextStyle(color: ElectricColors.onSurfacePrimary)),
+                child: const Text('Contact',
+                    style: TextStyle(color: ElectricColors.onSurfacePrimary)),
               ),
             ],
           ),
           const SizedBox(height: Spacing.sm),
           Text(
+<<<<<<< HEAD
             '© 2026 MIXVY. All rights reserved.',
             style: textTheme.labelSmall?.copyWith(color: ElectricColors.onSurfaceMuted),
+=======
+            'Â© 2026 Mix & Mingle. All rights reserved.',
+            style: textTheme.labelSmall
+                ?.copyWith(color: ElectricColors.onSurfaceMuted),
+>>>>>>> origin/develop
           ),
         ],
       ),

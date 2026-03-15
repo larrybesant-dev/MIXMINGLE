@@ -12,13 +12,13 @@ Your MixMingle app **CANNOT COMPILE** due to 21 critical errors that must be fix
 
 ### Top 5 Blocking Issues
 
-| # | Issue | File | Lines | Impact |
-|---|-------|------|-------|--------|
-| 1 | Riverpod provider architecture broken | `messaging_providers.dart` | 25-313 | 50+ cascading errors |
-| 2 | Import path error for CameraState | `spotlight_view.dart` | 3 | 15 cascading errors |
-| 3 | StateNotifierProvider API wrong | `advanced_mic_service.dart` | 74-128 | 20 cascading errors |
-| 4 | StateNotifierProvider API wrong | `room_recording_service.dart` | 171-220 | 10 cascading errors |
-| 5 | Missing service methods | `speed_dating_service.dart` | All | 8 errors + non-functional feature |
+| #   | Issue                                 | File                          | Lines   | Impact                            |
+| --- | ------------------------------------- | ----------------------------- | ------- | --------------------------------- |
+| 1   | Riverpod provider architecture broken | `messaging_providers.dart`    | 25-313  | 50+ cascading errors              |
+| 2   | Import path error for CameraState     | `spotlight_view.dart`         | 3       | 15 cascading errors               |
+| 3   | StateNotifierProvider API wrong       | `advanced_mic_service.dart`   | 74-128  | 20 cascading errors               |
+| 4   | StateNotifierProvider API wrong       | `room_recording_service.dart` | 171-220 | 10 cascading errors               |
+| 5   | Missing service methods               | `speed_dating_service.dart`   | All     | 8 errors + non-functional feature |
 
 ---
 
@@ -54,12 +54,12 @@ TOTAL:                           139 issues
 
 ## ⚡ Quick Fix Priority Matrix
 
-| Severity | Count | Effort | Impact | Do First? |
-|----------|-------|--------|--------|-----------|
-| P0 | 21 | 2 hours | App won't compile | ✅ YES |
-| P1 | 45 | 3 hours | Features broken | ✅ YES |
-| P2 | 50+ | 2 hours | Warnings/deprecation | ⚠️ LATER |
-| P3 | - | 1 hour | Code cleanup | ⏱️ OPTIONAL |
+| Severity | Count | Effort  | Impact               | Do First?   |
+| -------- | ----- | ------- | -------------------- | ----------- |
+| P0       | 21    | 2 hours | App won't compile    | ✅ YES      |
+| P1       | 45    | 3 hours | Features broken      | ✅ YES      |
+| P2       | 50+   | 2 hours | Warnings/deprecation | ⚠️ LATER    |
+| P3       | -     | 1 hour  | Code cleanup         | ⏱️ OPTIONAL |
 
 **Total Estimated Fix Time:** 6-8 hours for experienced dev, 1-2 days for careful approach
 
@@ -141,12 +141,14 @@ TOTAL:                           139 issues
 ### MUST DO (Today)
 
 - [ ] **Fix Import Path** - `spotlight_view.dart:3`
+
   ```
   ❌ import '../../shared/models/camera_state.dart';
   ✅ import 'package:mix_and_mingle/shared/models/camera_state.dart';
   ```
 
 - [ ] **Fix Widget Property** - `room_moderation_widget.dart:196`
+
   ```
   ❌ item.child.data ?? ''
   ✅ item.child  (or extract differently)
@@ -188,6 +190,7 @@ TOTAL:                           139 issues
 ## 🔍 What's Currently Broken
 
 ### Features That Won't Work
+
 - ❌ Speed Dating (0 methods implemented)
 - ❌ Gamification/Leaderboards (5 methods missing)
 - ❌ Payment Processing (6 methods missing)
@@ -199,6 +202,7 @@ TOTAL:                           139 issues
 - ❌ Room Chat Messages (provider broken)
 
 ### Features That Should Work
+
 - ✅ Authentication (via Firebase)
 - ✅ Basic Room Creation
 - ✅ User Profiles (with minor type issues)
@@ -211,6 +215,7 @@ TOTAL:                           139 issues
 ### Files You'll Need to Modify
 
 **CRITICAL:**
+
 1. `lib/providers/messaging_providers.dart` - Riverpod architecture
 2. `lib/features/voice_room/services/advanced_mic_service.dart` - StateNotifier
 3. `lib/features/voice_room/services/room_recording_service.dart` - StateNotifier
@@ -220,11 +225,7 @@ TOTAL:                           139 issues
 7. `lib/services/gamification_service.dart` - Methods
 8. `lib/services/payment_service.dart` - Methods
 
-**IMPORTANT:**
-9. `lib/shared/models/speed_dating.dart` - Model
-10. `lib/shared/models/event.dart` - Model
-11. `lib/shared/models/user_level.dart` - Model
-12. `lib/features/speed_dating/screens/speed_dating_lobby_page.dart` - Type fixes
+**IMPORTANT:** 9. `lib/shared/models/speed_dating.dart` - Model 10. `lib/shared/models/event.dart` - Model 11. `lib/shared/models/user_level.dart` - Model 12. `lib/features/speed_dating/screens/speed_dating_lobby_page.dart` - Type fixes
 
 ### Documentation Generated
 
@@ -268,6 +269,7 @@ TOTAL:                           139 issues
 ## 📞 Need Help?
 
 If stuck on a specific issue, reference:
+
 - **DIAGNOSTIC_REPORT_FINAL.md** - Detailed analysis
 - **ERROR_CATALOG_DETAILED.md** - Every error with line numbers
 - **QUICK_FIX_REFERENCE.md** - Copy/paste solutions
@@ -288,6 +290,7 @@ If stuck on a specific issue, reference:
 ## 📈 Progress Tracking
 
 After completing each phase, run:
+
 ```bash
 flutter clean
 flutter pub get
@@ -296,6 +299,7 @@ flutter analyze > analyze_current.txt
 ```
 
 **Target Error Count by Phase:**
+
 - Phase 1 complete: 139 → 30 errors (78% reduction)
 - Phase 2 complete: 30 → 5 errors (95% reduction)
 - Phase 3 complete: 5 → 0 errors (100%)
@@ -306,4 +310,3 @@ flutter analyze > analyze_current.txt
 **Generated by: Diagnostic Analysis**
 **Last Updated: January 26, 2026**
 **All recommendations based on Flutter/Dart best practices**
-

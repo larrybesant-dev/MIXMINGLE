@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../shared/providers/providers.dart';
 import '../../shared/models/user.dart';
@@ -44,7 +44,9 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                   autofocus: true,
                   style: const TextStyle(color: Colors.white),
                   decoration: InputDecoration(
-                    hintText: _searchInMessages ? 'Search message content...' : 'Search conversations...',
+                    hintText: _searchInMessages
+                        ? 'Search message content...'
+                        : 'Search conversations...',
                     hintStyle: const TextStyle(color: Colors.white54),
                     border: InputBorder.none,
                   ),
@@ -70,7 +72,8 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                     unreadCountAsync.when(
                       data: (count) => count > 0
                           ? Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFF4C4C),
                                 borderRadius: BorderRadius.circular(12),
@@ -122,17 +125,21 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
             : conversationsAsync.when(
                 data: (conversations) {
                   // Filter conversations based on search query and advanced filters
-                  final filteredConversations = conversations.where((conversation) {
+                  final filteredConversations =
+                      conversations.where((conversation) {
                     final user = conversation['otherUser'] as User;
-                    final lastMessageTime = conversation['lastMessageTime'] as DateTime?;
+                    final lastMessageTime =
+                        conversation['lastMessageTime'] as DateTime?;
 
                     // Basic text search
                     bool matchesText = true;
                     if (_searchQuery.isNotEmpty) {
-                      final displayName = (user.displayName ?? "").toLowerCase();
+                      final displayName =
+                          (user.displayName ?? "").toLowerCase();
                       final username = user.username.toLowerCase();
                       final query = _searchQuery.toLowerCase();
-                      matchesText = displayName.contains(query) || username.contains(query);
+                      matchesText = displayName.contains(query) ||
+                          username.contains(query);
                     }
 
                     // Date range filter
@@ -141,10 +148,13 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                       if (lastMessageTime == null) {
                         matchesDate = false;
                       } else {
-                        if (_startDate != null && lastMessageTime.isBefore(_startDate!)) {
+                        if (_startDate != null &&
+                            lastMessageTime.isBefore(_startDate!)) {
                           matchesDate = false;
                         }
-                        if (_endDate != null && lastMessageTime.isAfter(_endDate!.add(const Duration(days: 1)))) {
+                        if (_endDate != null &&
+                            lastMessageTime.isAfter(
+                                _endDate!.add(const Duration(days: 1)))) {
                           matchesDate = false;
                         }
                       }
@@ -153,14 +163,17 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                     // Conversation filter (if searching within specific conversation)
                     bool matchesConversation = true;
                     if (_selectedConversationId != null) {
-                      final conversationId = conversation['conversationId'] as String?;
-                      matchesConversation = conversationId == _selectedConversationId;
+                      final conversationId =
+                          conversation['conversationId'] as String?;
+                      matchesConversation =
+                          conversationId == _selectedConversationId;
                     }
 
                     return matchesText && matchesDate && matchesConversation;
                   }).toList();
 
-                  if (filteredConversations.isEmpty && (_searchQuery.isNotEmpty || _hasActiveFilters())) {
+                  if (filteredConversations.isEmpty &&
+                      (_searchQuery.isNotEmpty || _hasActiveFilters())) {
                     return _buildEmptyState(isSearchResult: true);
                   }
 
@@ -170,7 +183,8 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                     itemBuilder: (context, index) {
                       final conversation = filteredConversations[index];
                       return ConversationTile(
-                        key: Key('conversation-${conversation['conversationId'] ?? conversation['otherUser'].id}'),
+                        key: Key(
+                            'conversation-${conversation['conversationId'] ?? conversation['otherUser'].id}'),
                         conversation: conversation,
                         onTap: () => _openChat(conversation),
                       );
@@ -179,7 +193,8 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                 },
                 loading: () => const Center(
                   child: CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFFF4C4C)),
+                    valueColor:
+                        AlwaysStoppedAnimation<Color>(Color(0xFFFF4C4C)),
                   ),
                 ),
                 error: (error, stack) => Center(
@@ -200,7 +215,8 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                       const SizedBox(height: 16),
                       NeonButton(
                         key: const Key('messages-retry-btn'),
-                        onPressed: () => ref.invalidate(userConversationsProvider),
+                        onPressed: () =>
+                            ref.invalidate(userConversationsProvider),
                         child: const Text('Retry'),
                       ),
                     ],
@@ -466,7 +482,9 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                           foregroundColor: Colors.white,
                         ),
                         child: Text(
-                          _endDate != null ? '${_endDate!.month}/${_endDate!.day}/${_endDate!.year}' : 'End Date',
+                          _endDate != null
+                              ? '${_endDate!.month}/${_endDate!.day}/${_endDate!.year}'
+                              : 'End Date',
                         ),
                       ),
                     ),
@@ -502,7 +520,8 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
                     filled: true,
                     fillColor: Color(0xFF2A2A2A),
                     border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    contentPadding:
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   dropdownColor: const Color(0xFF2A2A2A),
                   style: const TextStyle(color: Colors.white),
@@ -572,7 +591,9 @@ class ConversationTile extends StatelessWidget {
           color: Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: unreadCount > 0 ? const Color(0xFFFF4C4C) : Colors.white.withValues(alpha: 0.2),
+            color: unreadCount > 0
+                ? const Color(0xFFFF4C4C)
+                : Colors.white.withValues(alpha: 0.2),
             width: unreadCount > 0 ? 2 : 1,
           ),
         ),
@@ -597,7 +618,8 @@ class ConversationTile extends StatelessWidget {
                       child: Image.network(
                         '${otherUser.avatarUrl}?t=${DateTime.now().millisecondsSinceEpoch}',
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const Icon(
+                        errorBuilder: (context, error, stackTrace) =>
+                            const Icon(
                           Icons.person,
                           color: Colors.white,
                           size: 25,
@@ -631,7 +653,8 @@ class ConversationTile extends StatelessWidget {
                       if (unreadCount > 0) ...[
                         const SizedBox(width: 8),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
                           decoration: const BoxDecoration(
                             color: Color(0xFFFF4C4C),
                             shape: BoxShape.circle,

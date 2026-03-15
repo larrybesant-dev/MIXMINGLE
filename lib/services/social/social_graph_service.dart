@@ -11,13 +11,19 @@ class SocialGraphService {
   Future<void> followUser(String targetUserId) async {
     final currentUser = _auth.currentUser;
     if (currentUser == null) throw Exception('User not authenticated');
-    if (currentUser.uid == targetUserId) throw Exception('Cannot follow yourself');
+    if (currentUser.uid == targetUserId) {
+      throw Exception('Cannot follow yourself');
+    }
 
     final batch = _firestore.batch();
 
     // Add to current user's following
     batch.set(
-      _firestore.collection('users').doc(currentUser.uid).collection('following').doc(targetUserId),
+      _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('following')
+          .doc(targetUserId),
       {
         'timestamp': FieldValue.serverTimestamp(),
       },
@@ -25,7 +31,11 @@ class SocialGraphService {
 
     // Add to target user's followers
     batch.set(
-      _firestore.collection('users').doc(targetUserId).collection('followers').doc(currentUser.uid),
+      _firestore
+          .collection('users')
+          .doc(targetUserId)
+          .collection('followers')
+          .doc(currentUser.uid),
       {
         'timestamp': FieldValue.serverTimestamp(),
       },
@@ -78,12 +88,20 @@ class SocialGraphService {
 
     // Remove from current user's following
     batch.delete(
-      _firestore.collection('users').doc(currentUser.uid).collection('following').doc(targetUserId),
+      _firestore
+          .collection('users')
+          .doc(currentUser.uid)
+          .collection('following')
+          .doc(targetUserId),
     );
 
     // Remove from target user's followers
     batch.delete(
-      _firestore.collection('users').doc(targetUserId).collection('followers').doc(currentUser.uid),
+      _firestore
+          .collection('users')
+          .doc(targetUserId)
+          .collection('followers')
+          .doc(currentUser.uid),
     );
 
     // Update counters
@@ -105,8 +123,12 @@ class SocialGraphService {
     final currentUser = _auth.currentUser;
     if (currentUser == null) return false;
 
-    final doc =
-        await _firestore.collection('users').doc(currentUser.uid).collection('following').doc(targetUserId).get();
+    final doc = await _firestore
+        .collection('users')
+        .doc(currentUser.uid)
+        .collection('following')
+        .doc(targetUserId)
+        .get();
 
     return doc.exists;
   }
@@ -206,18 +228,24 @@ class SocialGraphService {
 
     try {
       // Get current user's profile
-      final currentUserDoc = await _firestore.collection('users').doc(currentUser.uid).get();
+      final currentUserDoc =
+          await _firestore.collection('users').doc(currentUser.uid).get();
       if (!currentUserDoc.exists) return [];
 
       final currentUserData = currentUserDoc.data()!;
-      final currentUserInterests = (currentUserData['interests'] as List<dynamic>?)?.cast<String>() ?? [];
+      final currentUserInterests =
+          (currentUserData['interests'] as List<dynamic>?)?.cast<String>() ??
+              [];
 
       // Get users current user is following
       final following = await getFollowing(currentUser.uid);
 
       // Query users with similar interests
-      final usersSnapshot =
-          await _firestore.collection('users').where('id', isNotEqualTo: currentUser.uid).limit(100).get();
+      final usersSnapshot = await _firestore
+          .collection('users')
+          .where('id', isNotEqualTo: currentUser.uid)
+          .limit(100)
+          .get();
 
       final suggestions = <UserProfile>[];
 
@@ -234,7 +262,8 @@ class SocialGraphService {
 
         // Calculate similarity score based on interests
         final userInterests = profile.interests ?? [];
-        final commonInterests = currentUserInterests.where((i) => userInterests.contains(i)).length;
+        final commonInterests =
+            currentUserInterests.where((i) => userInterests.contains(i)).length;
 
         // Only include users with at least one common interest or nearby location
         if (commonInterests > 0 || _isNearby(currentUserData, data)) {
@@ -246,8 +275,12 @@ class SocialGraphService {
 
       // Sort by number of common interests (descending)
       suggestions.sort((a, b) {
-        final aCommon = currentUserInterests.where((i) => (a.interests ?? []).contains(i)).length;
-        final bCommon = currentUserInterests.where((i) => (b.interests ?? []).contains(i)).length;
+        final aCommon = currentUserInterests
+            .where((i) => (a.interests ?? []).contains(i))
+            .length;
+        final bCommon = currentUserInterests
+            .where((i) => (b.interests ?? []).contains(i))
+            .length;
         return bCommon.compareTo(aCommon);
       });
 
@@ -258,7 +291,8 @@ class SocialGraphService {
   }
 
   /// Helper to check if users are nearby
-  bool _isNearby(Map<String, dynamic> user1Data, Map<String, dynamic> user2Data) {
+  bool _isNearby(
+      Map<String, dynamic> user1Data, Map<String, dynamic> user2Data) {
     final lat1 = user1Data['latitude'] as double?;
     final lon1 = user1Data['longitude'] as double?;
     final lat2 = user2Data['latitude'] as double?;
@@ -275,5 +309,3 @@ class SocialGraphService {
     return latDiff < 0.5 && lonDiff < 0.5;
   }
 }
-
-

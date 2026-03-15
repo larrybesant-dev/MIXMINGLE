@@ -61,12 +61,14 @@ class Event {
       startTime: map['startTime'] != null
           ? (map['startTime'] is Timestamp
               ? (map['startTime'] as Timestamp).toDate()
-              : DateTime.tryParse(map['startTime'].toString()) ?? DateTime.now())
+              : DateTime.tryParse(map['startTime'].toString()) ??
+                  DateTime.now())
           : DateTime.now(),
       endTime: map['endTime'] != null
           ? (map['endTime'] is Timestamp
               ? (map['endTime'] as Timestamp).toDate()
-              : DateTime.tryParse(map['endTime'].toString()) ?? DateTime.now().add(const Duration(hours: 2)))
+              : DateTime.tryParse(map['endTime'].toString()) ??
+                  DateTime.now().add(const Duration(hours: 2)))
           : DateTime.now().add(const Duration(hours: 2)),
       location: map['location'] as String? ?? '',
       attendees: List<String>.from(map['attendees'] ?? []),
@@ -83,7 +85,8 @@ class Event {
       createdAt: map['createdAt'] != null
           ? (map['createdAt'] is Timestamp
               ? (map['createdAt'] as Timestamp).toDate()
-              : DateTime.tryParse(map['createdAt'].toString()) ?? DateTime.now())
+              : DateTime.tryParse(map['createdAt'].toString()) ??
+                  DateTime.now())
           : DateTime.now(),
     );
   }

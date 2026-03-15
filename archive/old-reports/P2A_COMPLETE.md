@@ -9,9 +9,11 @@
 ## 🎯 What Was Accomplished
 
 ### ✅ 1. AsyncValueView Rollout (Complete)
+
 Replaced **69 instances** of `.when(...)` across the entire app with the unified `AsyncValueView` widget.
 
 **Files Updated:**
+
 - **Chat Screens (3):**
   - `chat_list_page.dart` — Conversations list
   - `chat_room_page.dart` — Messages view
@@ -44,6 +46,7 @@ Replaced **69 instances** of `.when(...)` across the entire app with the unified
 ### ✅ 2. Offline Indicator System (Complete)
 
 #### New Files Created:
+
 1. **`lib/core/providers/connectivity_provider.dart`**
    - `ConnectivityNotifier` — Tracks online/offline state
    - `ConnectivityState` — Holds connection status
@@ -57,6 +60,7 @@ Replaced **69 instances** of `.when(...)` across the entire app with the unified
    - User-dismissible
 
 #### Integration:
+
 - **AsyncValueView automatically reports connectivity:**
   - ✅ Success → `reportOnline()`
   - ❌ Network error → `reportOffline(message)`
@@ -67,25 +71,32 @@ Replaced **69 instances** of `.when(...)` across the entire app with the unified
 ## 🔥 What This Gives You
 
 ### 1. **Consistent Loading States**
+
 Every screen now shows the same `LoadingSpinner` widget.
 
 ### 2. **Consistent Error States**
+
 Every screen now shows the same `ErrorView` with:
+
 - User-friendly message
 - Optional technical details
 - Retry button (when applicable)
 
 ### 3. **Consistent Empty States**
+
 Custom empty states preserved where defined (e.g., "No conversations yet").
 
 ### 4. **Network Awareness**
+
 - Real-time offline detection
 - Automatic banner display
 - No external dependencies
 - Works across all AsyncValue calls
 
 ### 5. **Less Boilerplate**
+
 Before:
+
 ```dart
 eventsAsync.when(
   loading: () => const Center(child: CircularProgressIndicator()),
@@ -105,6 +116,7 @@ eventsAsync.when(
 ```
 
 After:
+
 ```dart
 AsyncValueView(
   value: eventsAsync,
@@ -118,9 +130,11 @@ AsyncValueView(
 ## 🛠️ How to Use
 
 ### For Screens (Already Done)
+
 All major screens now use `AsyncValueView` automatically.
 
 ### For New Screens
+
 ```dart
 final dataAsync = ref.watch(someProvider);
 
@@ -135,7 +149,9 @@ return AsyncValueView(
 ```
 
 ### Adding Offline Banner to New Screens
+
 **Option 1: Use OfflineAwareScaffold (Recommended)**
+
 ```dart
 return OfflineAwareScaffold(
   appBar: AppBar(title: Text('My Screen')),
@@ -144,6 +160,7 @@ return OfflineAwareScaffold(
 ```
 
 **Option 2: Manual Banner**
+
 ```dart
 return Scaffold(
   body: Column(
@@ -157,6 +174,7 @@ return Scaffold(
 
 **Option 3: In Main App (Global)**
 If you want the banner visible across all routes:
+
 ```dart
 // In app.dart or main.dart
 MaterialApp(
@@ -177,6 +195,7 @@ MaterialApp(
 ## 🧪 Testing
 
 ### Manual Testing:
+
 1. **Offline Mode:**
    - Turn off WiFi/data
    - Navigate to any screen
@@ -193,7 +212,9 @@ MaterialApp(
    - Tapping retry should re-fetch data
 
 ### Integration Tests:
+
 Run existing tests:
+
 ```bash
 flutter test integration_test
 ```
@@ -205,12 +226,16 @@ All tests should pass — no breaking changes made.
 ## 📊 Coverage Summary
 
 ### Screens Updated: 13
+
 ### AsyncValue Calls Replaced: 69
+
 ### New System Files: 2
+
 - ✅ Connectivity provider
 - ✅ Offline banner widget
 
 ### Breaking Changes: 0
+
 All changes are **drop-in replacements** — existing functionality preserved.
 
 ---
@@ -218,13 +243,16 @@ All changes are **drop-in replacements** — existing functionality preserved.
 ## 🚀 What's Next
 
 ### Ready for P2B: Rate Limiting
+
 With error handling fully rolled out, you're now ready to:
+
 1. Add rate limit detection in `AppError`
 2. Surface rate-limit messages through `ErrorView`
 3. Implement backend rate limiting in Cloud Functions
 4. Update Firestore rules for rate limiting
 
 ### Optional Enhancements (Not Urgent)
+
 1. **Loading Skeletons:**
    - Replace `LoadingSpinner` with content-specific skeletons
    - Better perceived performance
@@ -246,6 +274,7 @@ With error handling fully rolled out, you're now ready to:
 ## 🎉 Summary
 
 **P2A is complete.** You now have:
+
 - ✅ Unified error handling across the app
 - ✅ Automatic offline detection
 - ✅ Consistent loading/error/empty states

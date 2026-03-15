@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:mixmingle/shared/models/event.dart';
@@ -21,7 +21,8 @@ class EventCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final currentUser = ref.watch(currentUserProvider).value;
     final friendsAttendingAsync = currentUser != null
-        ? ref.watch(friendsAttendingEventProvider((userId: currentUser.id, eventId: event.id)))
+        ? ref.watch(friendsAttendingEventProvider(
+            (userId: currentUser.id, eventId: event.id)))
         : const AsyncValue<List<UserProfile>>.data([]);
 
     return Card(
@@ -55,10 +56,12 @@ class EventCard extends ConsumerWidget {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(Icons.access_time, color: Color(0xFFFFD700), size: 16),
+                            const Icon(Icons.access_time,
+                                color: Color(0xFFFFD700), size: 16),
                             const SizedBox(width: 4),
                             Text(
-                              DateFormat('MMM d, h:mm a').format(event.startTime),
+                              DateFormat('MMM d, h:mm a')
+                                  .format(event.startTime),
                               style: TextStyle(
                                 color: Colors.white.withValues(alpha: 0.7),
                                 fontSize: 14,
@@ -71,7 +74,8 @@ class EventCard extends ConsumerWidget {
                   ),
                   if (event.isOnline)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFFD700).withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
@@ -140,7 +144,8 @@ class EventCard extends ConsumerWidget {
                   if (event.interestedCount > 0) ...[
                     Row(
                       children: [
-                        const Icon(Icons.star_outline, color: Colors.white70, size: 16),
+                        const Icon(Icons.star_outline,
+                            color: Colors.white70, size: 16),
                         const SizedBox(width: 4),
                         Text(
                           '${event.interestedCount} interested',
@@ -159,7 +164,8 @@ class EventCard extends ConsumerWidget {
                     child: friendsAttendingAsync.when(
                       data: (friends) {
                         if (friends.isEmpty) return const SizedBox.shrink();
-                        return EventAttendeesStrip(profiles: friends, maxDisplay: 3);
+                        return EventAttendeesStrip(
+                            profiles: friends, maxDisplay: 3);
                       },
                       loading: () => const SizedBox.shrink(),
                       error: (_, __) => const SizedBox.shrink(),
@@ -217,13 +223,17 @@ class EventAttendeesStrip extends StatelessWidget {
                               fit: BoxFit.cover,
                             )
                           : null,
-                      color: displayProfiles[i].photoUrl == null ? const Color(0xFFFFD700) : null,
+                      color: displayProfiles[i].photoUrl == null
+                          ? const Color(0xFFFFD700)
+                          : null,
                     ),
                     child: displayProfiles[i].photoUrl == null
                         ? Center(
                             child: Text(
                               displayProfiles[i].displayName?.isNotEmpty == true
-                                  ? displayProfiles[i].displayName![0].toUpperCase()
+                                  ? displayProfiles[i]
+                                      .displayName![0]
+                                      .toUpperCase()
                                   : '?',
                               style: const TextStyle(
                                 color: Colors.black,
@@ -280,7 +290,8 @@ class EventRsvpButtons extends ConsumerWidget {
     final currentUser = ref.watch(currentUserProvider).value;
     if (currentUser == null) return const SizedBox.shrink();
 
-    final rsvpStatusAsync = ref.watch(userRsvpStatusProvider((userId: currentUser.id, eventId: eventId)));
+    final rsvpStatusAsync = ref.watch(
+        userRsvpStatusProvider((userId: currentUser.id, eventId: eventId)));
 
     return rsvpStatusAsync.when(
       data: (currentStatus) {
@@ -297,12 +308,17 @@ class EventRsvpButtons extends ConsumerWidget {
                       await ref.read(eventsServiceProvider).removeRsvp(eventId);
                     } else {
                       if (currentStatus != null) {
-                        await ref.read(eventsServiceProvider).removeRsvp(eventId);
+                        await ref
+                            .read(eventsServiceProvider)
+                            .removeRsvp(eventId);
                       }
-                      await ref.read(eventsServiceProvider).rsvpToEvent(eventId, 'going');
+                      await ref
+                          .read(eventsServiceProvider)
+                          .rsvpToEvent(eventId, 'going');
                     }
                     ref.invalidate(eventDetailsProvider(eventId));
-                    ref.invalidate(userRsvpStatusProvider((userId: currentUser.id, eventId: eventId)));
+                    ref.invalidate(userRsvpStatusProvider(
+                        (userId: currentUser.id, eventId: eventId)));
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -325,12 +341,17 @@ class EventRsvpButtons extends ConsumerWidget {
                       await ref.read(eventsServiceProvider).removeRsvp(eventId);
                     } else {
                       if (currentStatus != null) {
-                        await ref.read(eventsServiceProvider).removeRsvp(eventId);
+                        await ref
+                            .read(eventsServiceProvider)
+                            .removeRsvp(eventId);
                       }
-                      await ref.read(eventsServiceProvider).rsvpToEvent(eventId, 'interested');
+                      await ref
+                          .read(eventsServiceProvider)
+                          .rsvpToEvent(eventId, 'interested');
                     }
                     ref.invalidate(eventDetailsProvider(eventId));
-                    ref.invalidate(userRsvpStatusProvider((userId: currentUser.id, eventId: eventId)));
+                    ref.invalidate(userRsvpStatusProvider(
+                        (userId: currentUser.id, eventId: eventId)));
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -348,7 +369,8 @@ class EventRsvpButtons extends ConsumerWidget {
                   try {
                     await ref.read(eventsServiceProvider).removeRsvp(eventId);
                     ref.invalidate(eventDetailsProvider(eventId));
-                    ref.invalidate(userRsvpStatusProvider((userId: currentUser.id, eventId: eventId)));
+                    ref.invalidate(userRsvpStatusProvider(
+                        (userId: currentUser.id, eventId: eventId)));
                   } catch (e) {
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -389,13 +411,17 @@ class _RsvpButton extends StatelessWidget {
       icon: Icon(icon, size: 18),
       label: Text(label),
       style: ElevatedButton.styleFrom(
-        backgroundColor: isSelected ? const Color(0xFFFFD700) : Colors.white.withValues(alpha: 0.1),
+        backgroundColor: isSelected
+            ? const Color(0xFFFFD700)
+            : Colors.white.withValues(alpha: 0.1),
         foregroundColor: isSelected ? Colors.black : Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 12),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
           side: BorderSide(
-            color: isSelected ? const Color(0xFFFFD700) : Colors.white.withValues(alpha: 0.3),
+            color: isSelected
+                ? const Color(0xFFFFD700)
+                : Colors.white.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -420,7 +446,8 @@ class FriendsAttendingBanner extends ConsumerWidget {
     final currentUser = ref.watch(currentUserProvider).value;
     if (currentUser == null) return const SizedBox.shrink();
 
-    final friendsAsync = ref.watch(friendsAttendingEventProvider((userId: currentUser.id, eventId: eventId)));
+    final friendsAsync = ref.watch(friendsAttendingEventProvider(
+        (userId: currentUser.id, eventId: eventId)));
 
     return friendsAsync.when(
       data: (friends) {
@@ -440,7 +467,8 @@ class FriendsAttendingBanner extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                EventAttendeesStrip(profiles: friends, maxDisplay: 5, avatarSize: 32),
+                EventAttendeesStrip(
+                    profiles: friends, maxDisplay: 5, avatarSize: 32),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
@@ -456,8 +484,14 @@ class FriendsAttendingBanner extends ConsumerWidget {
                       ),
                       if (friends.isNotEmpty)
                         Text(
-                          friends.map((f) => f.displayName ?? f.nickname ?? 'User').take(2).join(', ') +
-                              (friends.length > 2 ? ' and ${friends.length - 2} more' : ''),
+                          friends
+                                  .map((f) =>
+                                      f.displayName ?? f.nickname ?? 'User')
+                                  .take(2)
+                                  .join(', ') +
+                              (friends.length > 2
+                                  ? ' and ${friends.length - 2} more'
+                                  : ''),
                           style: TextStyle(
                             color: Colors.white.withValues(alpha: 0.7),
                             fontSize: 13,

@@ -60,9 +60,11 @@ class _ModerationPageState extends State<ModerationPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
+                  Icon(Icons.error_outline,
+                      size: 48, color: theme.colorScheme.error),
                   const SizedBox(height: 16),
-                  Text('Error loading reports', style: theme.textTheme.titleMedium),
+                  Text('Error loading reports',
+                      style: theme.textTheme.titleMedium),
                   const SizedBox(height: 8),
                   Text(
                     snapshot.error.toString(),
@@ -114,7 +116,8 @@ class _ModerationPageState extends State<ModerationPage> {
     );
   }
 
-  Widget _buildReportCard(BuildContext context, String reportId, Map<String, dynamic> data) {
+  Widget _buildReportCard(
+      BuildContext context, String reportId, Map<String, dynamic> data) {
     final theme = Theme.of(context);
 
     final type = data['type'] as String?;
@@ -274,12 +277,15 @@ class _ModerationPageState extends State<ModerationPage> {
         'status': newStatus.name,
         'updatedAt': FieldValue.serverTimestamp(),
         if (actionTaken != null) 'actionTaken': actionTaken,
-        if (newStatus != ReportStatus.pending) 'reviewedAt': FieldValue.serverTimestamp(),
+        if (newStatus != ReportStatus.pending)
+          'reviewedAt': FieldValue.serverTimestamp(),
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Report marked as ${_getStatusText(newStatus).toLowerCase()}')),
+          SnackBar(
+              content: Text(
+                  'Report marked as ${_getStatusText(newStatus).toLowerCase()}')),
         );
       }
     } catch (e) {

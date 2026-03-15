@@ -1,6 +1,7 @@
 # App Performance & Stability Fixes - January 31, 2026
 
 ## Overview
+
 Fixed critical issues causing Firestore connection failures, notification permission violations, and performance degradation on web platform.
 
 ---
@@ -8,17 +9,21 @@ Fixed critical issues causing Firestore connection failures, notification permis
 ## Issues Addressed
 
 ### 1. ✅ Notification Permission Violation (CRITICAL)
+
 **Problem:** App was requesting notification permissions at startup without user gesture, violating browser policy
+
 ```
 [Violation] Only request notification permission in response to a user gesture.
 ```
 
 **Files Modified:**
+
 - `lib/main.dart` - Deferred notification initialization on web
 - `lib/core/services/push_notification_service.dart` - Added web platform check
 - `lib/services/push_notification_service.dart` - Using provisional permissions on web
 
 **Changes:**
+
 ```dart
 // OLD: Called immediately at startup
 await PushNotificationService().initialize();
@@ -40,17 +45,21 @@ final settings = await _messaging.requestPermission(
 ---
 
 ### 2. ✅ Firestore Listener Connection Failure
+
 **Problem:** Firestore.Listen endpoint was failing with fetch errors
+
 ```
 Fetch failed loading: GET "https://firestore.googleapis.com/google.firestore.v1.Firestore/Listen/channel?..."
 ```
 
 **Files Modified:**
+
 - `firestore.rules` - Clarified read permissions for listeners
 - `lib/main.dart` - Added Firestore listener optimization initialization
 - NEW: `lib/core/utils/firestore_listener_config.dart` - Optimized Firestore configuration for web
 
 **Changes:**
+
 - Enabled Firestore persistence for web (`persistenceEnabled: true`)
 - Set unlimited cache size for better offline support
 - Clarified security rules to allow authenticated listeners
@@ -58,18 +67,22 @@ Fetch failed loading: GET "https://firestore.googleapis.com/google.firestore.v1.
 ---
 
 ### 3. ✅ Performance Violations (Frame Drops)
+
 **Problem:** Event handlers taking 51-143ms when they should be under 16ms
+
 ```
 [Violation] 'setTimeout' handler took 51ms
 [Violation] 'requestAnimationFrame' handler took 143ms
 ```
 
 **New Performance Utilities Created:**
+
 - `lib/core/utils/listener_optimizer.dart` - Debounces listener updates (100ms delay)
 - `lib/core/utils/render_frame_throttler.dart` - Throttles expensive operations to maintain 60 FPS
 - `lib/core/utils/batched_analytics_service.dart` - Batches analytics events to reduce network calls
 
 **How it works:**
+
 ```dart
 // Debounce rapid Firestore updates
 ListenerOptimizer().debounce('room-updates', () {
@@ -87,7 +100,9 @@ RenderFrameThrottler().throttle(() {
 ---
 
 ### 4. ✅ Unused Code Cleanup
+
 **Files Modified:**
+
 - `lib/features/room/screens/voice_room_page.dart` - Removed unused `kickedUsers` variable
 
 ---
@@ -95,6 +110,7 @@ RenderFrameThrottler().throttle(() {
 ## Deployments Completed
 
 ### ✅ Firebase Hosting
+
 ```
 ✓ 87 files uploaded
 ✓ Release complete
@@ -102,6 +118,7 @@ URL: https://mix-and-mingle-v2.web.app
 ```
 
 ### ✅ Firestore Rules
+
 ```
 ✓ Rules compiled successfully
 ✓ Released to Cloud Firestore
@@ -112,13 +129,13 @@ Warnings: 2 (unused function, invalid variable names - pre-existing)
 
 ## Expected Improvements
 
-| Metric | Before | After | Impact |
-|--------|--------|-------|--------|
-| Notification Permission | ❌ Blocks startup | ✅ Deferred to user gesture | No more browser violations |
-| Firestore Listeners | ❌ Connection errors | ✅ Persistent enabled | Real-time updates work |
-| Frame Time | 51-143ms | ~16ms | Smooth 60 FPS |
-| Network Calls | Excessive (~12+ per load) | Batched & debounced | 70-80% reduction |
-| Web Performance | Poor | Good | Better UX |
+| Metric                  | Before                    | After                       | Impact                     |
+| ----------------------- | ------------------------- | --------------------------- | -------------------------- |
+| Notification Permission | ❌ Blocks startup         | ✅ Deferred to user gesture | No more browser violations |
+| Firestore Listeners     | ❌ Connection errors      | ✅ Persistent enabled       | Real-time updates work     |
+| Frame Time              | 51-143ms                  | ~16ms                       | Smooth 60 FPS              |
+| Network Calls           | Excessive (~12+ per load) | Batched & debounced         | 70-80% reduction           |
+| Web Performance         | Poor                      | Good                        | Better UX                  |
 
 ---
 

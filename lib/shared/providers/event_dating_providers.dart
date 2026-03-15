@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'dart:async';
 import 'dart:math' as math;
@@ -37,7 +36,8 @@ class EventFilters {
 }
 
 /// Event filters provider
-final eventFiltersProvider = NotifierProvider<EventFiltersNotifier, EventFilters>(() {
+final eventFiltersProvider =
+    NotifierProvider<EventFiltersNotifier, EventFilters>(() {
   return EventFiltersNotifier();
 });
 
@@ -74,23 +74,31 @@ final eventsProvider = StreamProvider<List<Event>>((ref) {
       .orderBy('startTime', descending: false)
       .limit(30) // Pagination: load next 30 events
       .snapshots()
-      .map((snapshot) => snapshot.docs.map((doc) => Event.fromMap(doc.data()..['id'] = doc.id)).toList())
+      .map((snapshot) => snapshot.docs
+          .map((doc) => Event.fromMap(doc.data()..['id'] = doc.id))
+          .toList())
       .handleError((error) {
     return <Event>[];
   });
 });
 
 /// Paginated events with cursor
-final paginatedEventsProvider = StreamProvider.family<List<Event>, DocumentSnapshot?>(
+final paginatedEventsProvider =
+    StreamProvider.family<List<Event>, DocumentSnapshot?>(
   (ref, startAfter) {
-    var query = FirebaseFirestore.instance.collection('events').orderBy('startTime', descending: false).limit(30);
+    var query = FirebaseFirestore.instance
+        .collection('events')
+        .orderBy('startTime', descending: false)
+        .limit(30);
 
     if (startAfter != null) {
       query = query.startAfterDocument(startAfter);
     }
 
     return query.snapshots().map(
-          (snapshot) => snapshot.docs.map((doc) => Event.fromMap(doc.data()..['id'] = doc.id)).toList(),
+          (snapshot) => snapshot.docs
+              .map((doc) => Event.fromMap(doc.data()..['id'] = doc.id))
+              .toList(),
         );
   },
 );
@@ -107,7 +115,9 @@ final pastEventsProvider = StreamProvider<List<Event>>((ref) {
       .orderBy('endTime', descending: true)
       .limit(20) // Pagination: last 20 past events
       .snapshots()
-      .map((snapshot) => snapshot.docs.map((doc) => Event.fromMap(doc.data()..['id'] = doc.id)).toList())
+      .map((snapshot) => snapshot.docs
+          .map((doc) => Event.fromMap(doc.data()..['id'] = doc.id))
+          .toList())
       .handleError((error) {
     return <Event>[];
   });
@@ -134,7 +144,9 @@ final attendingEventsProvider = StreamProvider<List<Event>>((ref) async* {
   }
 
   final events = ref.watch(eventsProvider).value ?? [];
-  yield events.where((event) => event.attendees.contains(currentUser.id)).toList();
+  yield events
+      .where((event) => event.attendees.contains(currentUser.id))
+      .toList();
 });
 
 /// Single event provider
@@ -144,7 +156,8 @@ final eventProvider = StreamProvider.family<Event?, String>((ref, eventId) {
 });
 
 /// Events controller
-final eventsControllerProvider = NotifierProvider<EventsController, AsyncValue<Event?>>(() {
+final eventsControllerProvider =
+    NotifierProvider<EventsController, AsyncValue<Event?>>(() {
   return EventsController();
 });
 
@@ -272,7 +285,8 @@ class EventsController extends Notifier<AsyncValue<Event?>> {
 }
 
 /// Event search controller
-final eventSearchControllerProvider = NotifierProvider<EventSearchController, AsyncValue<List<Event>>>(() {
+final eventSearchControllerProvider =
+    NotifierProvider<EventSearchController, AsyncValue<List<Event>>>(() {
   return EventSearchController();
 });
 
@@ -333,15 +347,20 @@ class EventSearchController extends Notifier<AsyncValue<List<Event>>> {
       // Apply search query
       if (_searchQuery.isNotEmpty) {
         events = events.where((event) {
-          return event.title.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-              event.description.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          return event.title
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase()) ||
+              event.description
+                  .toLowerCase()
+                  .contains(_searchQuery.toLowerCase()) ||
               event.location.toLowerCase().contains(_searchQuery.toLowerCase());
         }).toList();
       }
 
       // Apply category filter
       if (_categoryFilter != null) {
-        events = events.where((event) => event.category == _categoryFilter).toList();
+        events =
+            events.where((event) => event.category == _categoryFilter).toList();
       }
 
       // Apply date filter
@@ -531,7 +550,8 @@ class SpeedDatingController extends Notifier<AsyncValue<SpeedDatingRound?>> {
 */
 
 /// Speed dating timer provider
-final speedDatingTimerProvider = NotifierProvider<SpeedDatingTimerNotifier, Duration>(() {
+final speedDatingTimerProvider =
+    NotifierProvider<SpeedDatingTimerNotifier, Duration>(() {
   return SpeedDatingTimerNotifier();
 });
 
@@ -574,7 +594,8 @@ class SpeedDatingTimerNotifier extends Notifier<Duration> {
 }
 
 /// Speed dating statistics provider
-final speedDatingStatisticsProvider = StreamProvider<Map<String, dynamic>>((ref) async* {
+final speedDatingStatisticsProvider =
+    StreamProvider<Map<String, dynamic>>((ref) async* {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) {
     yield {};

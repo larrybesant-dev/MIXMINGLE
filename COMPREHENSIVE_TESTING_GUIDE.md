@@ -1,9 +1,11 @@
 # 🧪 COMPREHENSIVE TESTING & QA GUIDE
+
 ## Mix & Mingle Production Testing Framework
 
 ---
 
 ## 📋 Table of Contents
+
 1. [Testing Strategy Overview](#testing-strategy-overview)
 2. [Automated Testing](#automated-testing)
 3. [Manual Testing Checklists](#manual-testing-checklists)
@@ -18,6 +20,7 @@
 ## 🎯 Testing Strategy Overview
 
 ### Testing Levels
+
 1. **Unit Tests** - Individual functions and classes
 2. **Widget Tests** - UI components
 3. **Integration Tests** - End-to-end user flows
@@ -26,6 +29,7 @@
 6. **Security Tests** - Authentication and data protection
 
 ### Test Environments
+
 - **Development**: Local machine
 - **Staging**: Firebase emulators
 - **Production**: Live Firebase services
@@ -35,6 +39,7 @@
 ## 🤖 Automated Testing
 
 ### Running All Tests
+
 ```powershell
 # Run unit and widget tests
 flutter test
@@ -50,6 +55,7 @@ start coverage/html/index.html
 ### Unit Test Examples
 
 #### Test Authentication Service
+
 ```dart
 // test/services/auth_service_test.dart
 import 'package:flutter_test/flutter_test.dart';
@@ -86,6 +92,7 @@ void main() {
 ```
 
 #### Test Agora Service
+
 ```dart
 // test/services/agora_service_test.dart
 import 'package:flutter_test/flutter_test.dart';
@@ -117,6 +124,7 @@ void main() {
 ### Widget Test Examples
 
 #### Test Login Page
+
 ```dart
 // test/features/auth/neon_login_page_test.dart
 import 'package:flutter/material.dart';
@@ -178,6 +186,7 @@ void main() {
 ### Integration Test Examples
 
 #### Test Complete Auth Flow
+
 ```dart
 // integration_test/auth_flow_test.dart
 import 'package:flutter/material.dart';
@@ -237,6 +246,7 @@ void main() {
 ### 1. Authentication Testing
 
 #### Email/Password Sign-Up
+
 - [ ] Valid email formats accepted
 - [ ] Invalid email formats rejected
 - [ ] Password strength requirements enforced (min 6 chars)
@@ -246,6 +256,7 @@ void main() {
 - [ ] Error messages are user-friendly
 
 #### Email/Password Login
+
 - [ ] Valid credentials log in successfully
 - [ ] Invalid email shows error
 - [ ] Incorrect password shows error
@@ -254,6 +265,7 @@ void main() {
 - [ ] Success navigates to home page
 
 #### Google Sign-In (Web)
+
 - [ ] Google popup opens
 - [ ] Sign-in with Google account succeeds
 - [ ] User can cancel sign-in
@@ -261,12 +273,14 @@ void main() {
 - [ ] Returning users navigate to home
 
 #### Google Sign-In (Mobile)
+
 - [ ] Google account picker appears
 - [ ] Sign-in succeeds with selected account
 - [ ] User can cancel sign-in
 - [ ] Works on both Android and iOS
 
 #### Apple Sign-In
+
 - [ ] Available on iOS 13+
 - [ ] Apple sign-in dialog appears
 - [ ] Face ID/Touch ID works
@@ -274,6 +288,7 @@ void main() {
 - [ ] User can cancel sign-in
 
 #### Password Reset
+
 - [ ] Valid email sends reset email
 - [ ] Invalid email shows error
 - [ ] Reset email arrives (<5 minutes)
@@ -281,6 +296,7 @@ void main() {
 - [ ] Password update succeeds
 
 #### Sign Out
+
 - [ ] Sign out button works
 - [ ] User redirected to landing page
 - [ ] Session cleared completely
@@ -291,6 +307,7 @@ void main() {
 ### 2. Profile Testing
 
 #### Profile Creation
+
 - [ ] Display name required
 - [ ] Display name uniqueness enforced
 - [ ] Avatar upload works (images only)
@@ -301,6 +318,7 @@ void main() {
 - [ ] NSFW preferences save (if enabled)
 
 #### Profile Editing
+
 - [ ] All fields editable
 - [ ] Changes save successfully
 - [ ] Avatar can be updated
@@ -309,6 +327,7 @@ void main() {
 - [ ] Validation errors shown
 
 #### Profile Viewing
+
 - [ ] Own profile displays correctly
 - [ ] Other users' profiles display
 - [ ] Privacy settings respected
@@ -321,6 +340,7 @@ void main() {
 ### 3. Room Testing
 
 #### Create Room
+
 - [ ] Public room creation works
 - [ ] Private room creation works
 - [ ] Room name required (1-200 chars)
@@ -330,6 +350,7 @@ void main() {
 - [ ] Room appears in listings
 
 #### Join Room
+
 - [ ] Public rooms joinable by anyone
 - [ ] Private rooms require invitation
 - [ ] Room capacity enforced
@@ -338,6 +359,7 @@ void main() {
 - [ ] Success navigates to room page
 
 #### In Room - Text Chat
+
 - [ ] Messages send successfully
 - [ ] Messages appear in real-time
 - [ ] Sender name displays
@@ -347,12 +369,14 @@ void main() {
 - [ ] URLs are clickable
 
 #### In Room - Reactions
+
 - [ ] Reaction picker opens
 - [ ] Reactions send successfully
 - [ ] Reactions animate on screen
 - [ ] Multiple reactions batch correctly
 
 #### In Room - Virtual Gifts
+
 - [ ] Gift picker opens
 - [ ] Gift preview shows
 - [ ] Gift costs display
@@ -361,6 +385,7 @@ void main() {
 - [ ] Balance updates correctly
 
 #### Leave Room
+
 - [ ] Leave button works
 - [ ] Confirmation dialog appears
 - [ ] User removed from participants
@@ -372,6 +397,7 @@ void main() {
 ### 4. Video Chat Testing (Agora)
 
 #### Camera/Microphone Permissions
+
 - [ ] Permission request appears on first use
 - [ ] User can grant permission
 - [ ] User can deny permission
@@ -379,6 +405,7 @@ void main() {
 - [ ] Settings link opens device settings
 
 #### Local Video Preview
+
 - [ ] Camera preview appears
 - [ ] Preview shows correct camera
 - [ ] Switch camera button works (mobile)
@@ -386,6 +413,7 @@ void main() {
 - [ ] Preview positioned correctly
 
 #### Join Video Channel
+
 - [ ] Agora token requested from server
 - [ ] Token generation succeeds
 - [ ] Video channel joined successfully
@@ -393,6 +421,7 @@ void main() {
 - [ ] Audio published automatically
 
 #### Remote Video Streams
+
 - [ ] Remote videos appear when users join
 - [ ] Multiple remote videos display
 - [ ] Remote videos update in real-time
@@ -400,6 +429,7 @@ void main() {
 - [ ] Audio plays correctly
 
 #### Mute/Unmute Controls
+
 - [ ] Mute audio button works
 - [ ] Unmute audio button works
 - [ ] Mute video button works
@@ -408,6 +438,7 @@ void main() {
 - [ ] Remote users see mute status
 
 #### Device Switching (Web)
+
 - [ ] Camera device selector appears
 - [ ] Can switch between cameras
 - [ ] Microphone device selector appears
@@ -415,6 +446,7 @@ void main() {
 - [ ] Speaker device selector appears (if supported)
 
 #### Leave Video Channel
+
 - [ ] Leave button works
 - [ ] Confirmation not required
 - [ ] Local streams unpublished
@@ -426,6 +458,7 @@ void main() {
 ### 5. Speed Dating Testing
 
 #### Join Queue
+
 - [ ] Queue button accessible
 - [ ] Preferences can be set
 - [ ] Join queue succeeds
@@ -433,6 +466,7 @@ void main() {
 - [ ] Match notification appears
 
 #### Match Found
+
 - [ ] Match modal animates in
 - [ ] Countdown timer starts (3-5 min)
 - [ ] Video call connects
@@ -440,6 +474,7 @@ void main() {
 - [ ] Warning at 1 minute remaining
 
 #### During Call
+
 - [ ] Video streams work
 - [ ] Audio works
 - [ ] Chat works (if enabled)
@@ -447,6 +482,7 @@ void main() {
 - [ ] Can end call early
 
 #### Post-Call Decision
+
 - [ ] Keep/discard modal appears
 - [ ] "Keep" saves match
 - [ ] "Discard" removes match
@@ -454,6 +490,7 @@ void main() {
 - [ ] One-sided "keep" does not match
 
 #### View Matches
+
 - [ ] Matches list displays
 - [ ] Match profiles accessible
 - [ ] Chat with match button works
@@ -464,6 +501,7 @@ void main() {
 ### 6. Notifications Testing
 
 #### FCM Push Notifications
+
 - [ ] Notification permission requested
 - [ ] User can grant/deny permission
 - [ ] Notifications arrive when app closed
@@ -472,6 +510,7 @@ void main() {
 - [ ] Notification tap navigates correctly
 
 #### In-App Notifications
+
 - [ ] New message notifications appear
 - [ ] New match notifications appear
 - [ ] New follower notifications appear
@@ -481,6 +520,7 @@ void main() {
 - [ ] Clear all works
 
 #### Notification Types
+
 - [ ] New message: body preview shows
 - [ ] New match: match name shows
 - [ ] New follower: follower name shows
@@ -492,6 +532,7 @@ void main() {
 ### 7. Error Handling Testing
 
 #### Network Errors
+
 - [ ] Offline mode detected
 - [ ] Offline banner appears
 - [ ] User-friendly error messages
@@ -499,23 +540,27 @@ void main() {
 - [ ] Online mode restores
 
 #### Authentication Errors
+
 - [ ] Invalid credentials: clear message
 - [ ] Email not verified: prompt sent
 - [ ] Account disabled: support link
 - [ ] Too many attempts: timeout shown
 
 #### Firestore Errors
+
 - [ ] Permission denied: clear message
 - [ ] Not found: helpful message
 - [ ] Quota exceeded: contact support
 
 #### Agora Errors
+
 - [ ] Token generation fails: retry option
 - [ ] Channel join fails: clear message
 - [ ] Network issues: reconnect logic
 - [ ] Camera/mic errors: settings link
 
 #### Form Validation Errors
+
 - [ ] Required field errors show
 - [ ] Format errors show (email, phone)
 - [ ] Length errors show (min/max chars)
@@ -528,6 +573,7 @@ void main() {
 ### Web Testing
 
 #### Browsers to Test
+
 - [ ] Chrome (latest)
 - [ ] Firefox (latest)
 - [ ] Safari (latest)
@@ -536,6 +582,7 @@ void main() {
 - [ ] Mobile Safari (iOS)
 
 #### Web-Specific Features
+
 - [ ] Responsive design (mobile, tablet, desktop)
 - [ ] Browser back/forward buttons work
 - [ ] URL navigation works
@@ -547,6 +594,7 @@ void main() {
 ### Android Testing
 
 #### Devices to Test
+
 - [ ] Android 8.0 (API 26) - minimum
 - [ ] Android 10 (API 29)
 - [ ] Android 12 (API 31)
@@ -554,6 +602,7 @@ void main() {
 - [ ] Various screen sizes (small, normal, large)
 
 #### Android-Specific Features
+
 - [ ] App icon displays correctly
 - [ ] Splash screen displays
 - [ ] Status bar color correct
@@ -568,6 +617,7 @@ void main() {
 ### iOS Testing
 
 #### Devices to Test
+
 - [ ] iOS 13 - minimum
 - [ ] iOS 15
 - [ ] iOS 16
@@ -578,6 +628,7 @@ void main() {
 - [ ] iPad (tablet)
 
 #### iOS-Specific Features
+
 - [ ] App icon displays correctly
 - [ ] Splash screen displays
 - [ ] Status bar color correct
@@ -595,6 +646,7 @@ void main() {
 ## ⚡ Performance Testing
 
 ### Load Time Metrics
+
 - [ ] App launches in <3 seconds
 - [ ] Home page loads in <2 seconds
 - [ ] Room list loads in <2 seconds
@@ -602,18 +654,21 @@ void main() {
 - [ ] Image loads in <1 second
 
 ### Memory Usage
+
 - [ ] Initial memory <100 MB
 - [ ] Video call memory <300 MB
 - [ ] No memory leaks detected
 - [ ] Smooth scrolling (60 FPS)
 
 ### Network Usage
+
 - [ ] Efficient data usage
 - [ ] Images cached properly
 - [ ] Firestore listeners optimized
 - [ ] Agora bandwidth reasonable
 
 ### Battery Usage
+
 - [ ] No excessive battery drain
 - [ ] Background tasks optimized
 - [ ] Location services efficient
@@ -623,18 +678,21 @@ void main() {
 ## 🔐 Security Testing
 
 ### Authentication Security
+
 - [ ] Passwords hashed (Firebase default)
 - [ ] Session tokens secure
 - [ ] OAuth tokens secure
 - [ ] Password reset secure
 
 ### Data Security
+
 - [ ] Firestore rules enforce auth
 - [ ] Private data not exposed
 - [ ] User data encrypted at rest
 - [ ] HTTPS enforced
 
 ### API Security
+
 - [ ] Cloud Functions require auth
 - [ ] Rate limiting in place
 - [ ] Input validation on server
@@ -647,7 +705,9 @@ void main() {
 ### UAT Scenarios
 
 #### Scenario 1: New User Sign-Up
+
 **Steps:**
+
 1. Open app
 2. Click "Sign Up"
 3. Enter email and password
@@ -658,7 +718,9 @@ void main() {
 **Expected**: Smooth onboarding, no errors
 
 #### Scenario 2: Join Video Room
+
 **Steps:**
+
 1. Log in
 2. Browse rooms
 3. Join public room
@@ -669,7 +731,9 @@ void main() {
 **Expected**: Seamless video chat experience
 
 #### Scenario 3: Speed Dating Match
+
 **Steps:**
+
 1. Set dating preferences
 2. Join speed dating queue
 3. Get matched
@@ -684,6 +748,7 @@ void main() {
 ## 🐛 Bug Reporting
 
 ### Bug Report Template
+
 ```markdown
 ## Bug Report
 
@@ -692,12 +757,14 @@ void main() {
 **Severity**: [Critical / High / Medium / Low]
 
 **Environment**:
+
 - Platform: [Web / Android / iOS]
 - OS Version: [e.g., Android 12]
 - Browser: [if web, e.g., Chrome 120]
 - App Version: [e.g., 1.0.0]
 
 **Steps to Reproduce**:
+
 1.
 2.
 3.
@@ -713,7 +780,9 @@ void main() {
 
 **Console Logs**:
 ```
+
 [Paste relevant logs]
+
 ```
 
 **Additional Context**:
@@ -732,12 +801,14 @@ void main() {
 ## 📊 Test Metrics
 
 ### Coverage Goals
+
 - Unit Test Coverage: >80%
 - Widget Test Coverage: >70%
 - Integration Test Coverage: >50%
 - Manual Test Coverage: 100% critical paths
 
 ### Quality Metrics
+
 - Zero critical bugs before release
 - <5 high-severity bugs before release
 - All user flows tested end-to-end

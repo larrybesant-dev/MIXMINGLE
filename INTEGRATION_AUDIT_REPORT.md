@@ -1,4 +1,5 @@
 # 🔍 COMPLETE INTEGRATION AUDIT: MixMingle App
+
 **Generated:** January 31, 2026
 **Status:** COMPREHENSIVE ANALYSIS COMPLETE
 
@@ -9,6 +10,7 @@
 The MixMingle app has a **moderately complex integration** across Frontend (Flutter), Firestore Database, and Cloud Functions. The Room model is **well-designed** but shows **several critical mismatches** between what the frontend passes, what Firestore stores, what Cloud Functions expect, and what VoiceRoomPage actually uses.
 
 ### 🎯 Key Findings:
+
 - ✅ **Overall Structure**: Sound architecture with Room model supporting legacy and new fields
 - ⚠️ **Critical Issues**: 5 mismatches that could cause runtime errors
 - ❌ **Missing Fields**: 3 fields used by VoiceRoomPage not consistently provided
@@ -23,53 +25,53 @@ The MixMingle app has a **moderately complex integration** across Frontend (Flut
 
 #### Room Class Fields (57 total fields):
 
-| Field Name | Type | Required | Default | Purpose |
-|-----------|------|----------|---------|---------|
-| **CORE FIELDS** | | | | |
-| `id` | `String` | ✅ YES | N/A | Unique room identifier |
-| `title` | `String` | ✅ YES | N/A | Room display name |
-| `description` | `String` | ✅ YES | N/A | Room purpose/info |
-| `hostId` | `String` | ✅ YES | N/A | Room creator/owner UID |
-| `tags` | `List<String>` | ✅ YES | N/A | Search/categorization |
-| `category` | `String` | ✅ YES | N/A | Room category |
-| `createdAt` | `DateTime` | ✅ YES | N/A | Room creation timestamp |
-| `updatedAt` | `DateTime` | ✅ YES | `createdAt` | Last modification time |
-| `isLive` | `bool` | ✅ YES | N/A | Is room currently active |
-| `viewerCount` | `int` | ✅ YES | N/A | Current participant count |
-| **NEW ARCHITECTURE** | | | | |
-| `admins` | `List<String>` | ❌ NO | `[]` | Room moderators/managers |
-| `camCount` | `int` | ❌ NO | `0` | Users with camera on |
-| `isLocked` | `bool` | ❌ NO | `false` | Password protected |
-| `passwordHash` | `String?` | ❌ NO | `null` | Hashed room password |
-| `maxUsers` | `int` | ❌ NO | `200` | Room capacity |
-| `isNSFW` | `bool` | ❌ NO | `false` | Adult content flag |
-| `isHidden` | `bool` | ❌ NO | `false` | Not in public listings |
-| `slowModeSeconds` | `int` | ❌ NO | `0` | Message rate limiting |
-| **LEGACY FIELDS** | | | | |
-| `name` | `String?` | ❌ NO | N/A | Alias for title |
-| `participantIds` | `List<String>` | ❌ NO | `[]` | Active participants |
-| `isActive` | `bool` | ❌ NO | `isLive` | Alias for isLive |
-| `privacy` | `String` | ❌ NO | 'public'\|'private' | Privacy level |
-| `status` | `String` | ❌ NO | 'live'\|'ended' | Room status |
-| `hostName` | `String?` | ❌ NO | `null` | Host display name |
-| `thumbnailUrl` | `String?` | ❌ NO | `null` | Room preview image |
-| `roomType` | `RoomType` | ❌ NO | `RoomType.voice` | text\|voice\|video |
-| `moderators` | `List<String>` | ❌ NO | `admins` | Legacy moderator list |
-| `bannedUsers` | `List<String>` | ❌ NO | `[]` | Banned user IDs |
-| `mutedUsers` | `List<String>` | ❌ NO | `[]` | Muted user IDs |
-| `kickedUsers` | `List<String>` | ❌ NO | `[]` | Kicked user IDs |
-| `agoraChannelName` | `String?` | ❌ NO | `null` | Agora channel ID |
-| `speakers` | `List<String>` | ❌ NO | `[]` | Speaking users |
-| `listeners` | `List<String>` | ❌ NO | `[]` | Listening users |
-| `allowSpeakerRequests` | `bool` | ❌ NO | `true` | Can users request to speak |
-| `turnBased` | `bool` | ❌ NO | `false` | Turn-based speaking mode |
-| `currentSpeakerId` | `String?` | ❌ NO | `null` | Currently speaking user |
-| `speakerQueue` | `List<String>` | ❌ NO | `[]` | Queue for speakers |
-| `raisedHands` | `List<String>` | ❌ NO | `[]` | Users with hand raised |
-| `turnDurationSeconds` | `int` | ❌ NO | `60` | Max seconds per speaker turn |
-| **BROADCASTER MODE** | | | | |
-| `activeBroadcasters` | `List<String>` | ❌ NO | `[]` | Current broadcaster UIDs |
-| `maxBroadcasters` | `int` | ❌ NO | `20` | Max simultaneous broadcasters |
+| Field Name             | Type           | Required | Default             | Purpose                       |
+| ---------------------- | -------------- | -------- | ------------------- | ----------------------------- |
+| **CORE FIELDS**        |                |          |                     |                               |
+| `id`                   | `String`       | ✅ YES   | N/A                 | Unique room identifier        |
+| `title`                | `String`       | ✅ YES   | N/A                 | Room display name             |
+| `description`          | `String`       | ✅ YES   | N/A                 | Room purpose/info             |
+| `hostId`               | `String`       | ✅ YES   | N/A                 | Room creator/owner UID        |
+| `tags`                 | `List<String>` | ✅ YES   | N/A                 | Search/categorization         |
+| `category`             | `String`       | ✅ YES   | N/A                 | Room category                 |
+| `createdAt`            | `DateTime`     | ✅ YES   | N/A                 | Room creation timestamp       |
+| `updatedAt`            | `DateTime`     | ✅ YES   | `createdAt`         | Last modification time        |
+| `isLive`               | `bool`         | ✅ YES   | N/A                 | Is room currently active      |
+| `viewerCount`          | `int`          | ✅ YES   | N/A                 | Current participant count     |
+| **NEW ARCHITECTURE**   |                |          |                     |                               |
+| `admins`               | `List<String>` | ❌ NO    | `[]`                | Room moderators/managers      |
+| `camCount`             | `int`          | ❌ NO    | `0`                 | Users with camera on          |
+| `isLocked`             | `bool`         | ❌ NO    | `false`             | Password protected            |
+| `passwordHash`         | `String?`      | ❌ NO    | `null`              | Hashed room password          |
+| `maxUsers`             | `int`          | ❌ NO    | `200`               | Room capacity                 |
+| `isNSFW`               | `bool`         | ❌ NO    | `false`             | Adult content flag            |
+| `isHidden`             | `bool`         | ❌ NO    | `false`             | Not in public listings        |
+| `slowModeSeconds`      | `int`          | ❌ NO    | `0`                 | Message rate limiting         |
+| **LEGACY FIELDS**      |                |          |                     |                               |
+| `name`                 | `String?`      | ❌ NO    | N/A                 | Alias for title               |
+| `participantIds`       | `List<String>` | ❌ NO    | `[]`                | Active participants           |
+| `isActive`             | `bool`         | ❌ NO    | `isLive`            | Alias for isLive              |
+| `privacy`              | `String`       | ❌ NO    | 'public'\|'private' | Privacy level                 |
+| `status`               | `String`       | ❌ NO    | 'live'\|'ended'     | Room status                   |
+| `hostName`             | `String?`      | ❌ NO    | `null`              | Host display name             |
+| `thumbnailUrl`         | `String?`      | ❌ NO    | `null`              | Room preview image            |
+| `roomType`             | `RoomType`     | ❌ NO    | `RoomType.voice`    | text\|voice\|video            |
+| `moderators`           | `List<String>` | ❌ NO    | `admins`            | Legacy moderator list         |
+| `bannedUsers`          | `List<String>` | ❌ NO    | `[]`                | Banned user IDs               |
+| `mutedUsers`           | `List<String>` | ❌ NO    | `[]`                | Muted user IDs                |
+| `kickedUsers`          | `List<String>` | ❌ NO    | `[]`                | Kicked user IDs               |
+| `agoraChannelName`     | `String?`      | ❌ NO    | `null`              | Agora channel ID              |
+| `speakers`             | `List<String>` | ❌ NO    | `[]`                | Speaking users                |
+| `listeners`            | `List<String>` | ❌ NO    | `[]`                | Listening users               |
+| `allowSpeakerRequests` | `bool`         | ❌ NO    | `true`              | Can users request to speak    |
+| `turnBased`            | `bool`         | ❌ NO    | `false`             | Turn-based speaking mode      |
+| `currentSpeakerId`     | `String?`      | ❌ NO    | `null`              | Currently speaking user       |
+| `speakerQueue`         | `List<String>` | ❌ NO    | `[]`                | Queue for speakers            |
+| `raisedHands`          | `List<String>` | ❌ NO    | `[]`                | Users with hand raised        |
+| `turnDurationSeconds`  | `int`          | ❌ NO    | `60`                | Max seconds per speaker turn  |
+| **BROADCASTER MODE**   |                |          |                     |                               |
+| `activeBroadcasters`   | `List<String>` | ❌ NO    | `[]`                | Current broadcaster UIDs      |
+| `maxBroadcasters`      | `int`          | ❌ NO    | `20`                | Max simultaneous broadcasters |
 
 #### Serialization Methods:
 
@@ -118,6 +120,7 @@ match /rooms/{roomId} {
 #### 📋 Firestore Expected Room Document Fields:
 
 From rules validation, at minimum Firestore expects:
+
 - ✅ `title` (String, 3-100 chars) - REQUIRED for create
 - ✅ `hostId` - Used in security rules for ownership
 - ✅ `moderators` - Used in security rules for authorization
@@ -143,6 +146,7 @@ From rules validation, at minimum Firestore expects:
 **Triggered By:** HTTP request with Bearer token auth
 
 **Input Parameters:**
+
 ```javascript
 {
   channelName: string,    // Room ID (required - used in rules)
@@ -152,6 +156,7 @@ From rules validation, at minimum Firestore expects:
 ```
 
 **Firestore Data Accessed:**
+
 ```javascript
 // Line 65: Fetches room document
 const roomData = roomDoc.data();
@@ -164,11 +169,13 @@ if (!participantDoc.exists && roomData.hostId !== userId) { ... }
 ```
 
 **Room Fields Expected:**
+
 - ✅ `privacy` - Privacy level check
 - ✅ `isPrivate` - Alternative privacy check (INCONSISTENCY!)
 - ✅ `hostId` - Host access check
 
 **Data NOT Used in This Function:**
+
 - `title`, `description`, `speakers`, `moderators`, `admins`, `bannedUsers`, `kickedUsers`
 
 ---
@@ -180,6 +187,7 @@ if (!participantDoc.exists && roomData.hostId !== userId) { ... }
 **Location:** [lib/index.js Lines 43-100](functions/lib/index.js#L43-L100)
 
 **Input Parameters:**
+
 ```typescript
 {
   roomId: string,   // Room ID (required)
@@ -188,6 +196,7 @@ if (!participantDoc.exists && roomData.hostId !== userId) { ... }
 ```
 
 **Firestore Data Accessed:**
+
 ```typescript
 // Line 63: Loads room data
 const roomData = roomSnap.data() || {};
@@ -202,9 +211,7 @@ const moderators = roomData.moderators ?? roomData.admins ?? [];
 const speakers = roomData.speakers ?? [];
 
 // Line 78+: Determines Agora role
-const isBroadcaster = userId === hostId ||
-                      moderators.includes(userId) ||
-                      speakers.includes(userId);
+const isBroadcaster = userId === hostId || moderators.includes(userId) || speakers.includes(userId);
 ```
 
 **Room Fields REQUIRED in Firestore:**
@@ -219,6 +226,7 @@ const isBroadcaster = userId === hostId ||
 | `speakers` | array | ✅ YES | Determine Agora role |
 
 **🚨 ISSUE #1: Functions Expect `moderators` OR `admins`, Frontend Uses `admins`**
+
 - Frontend Room model has both `moderators` and `admins`
 - Cloud Functions fallback: `roomData.moderators ?? roomData.admins ?? []`
 - If only `admins` is set, function correctly uses it ✅
@@ -228,6 +236,7 @@ const isBroadcaster = userId === hostId ||
 ### File: [functions/create_test_room.js](functions/create_test_room.js)
 
 **Test Room Created Fields:**
+
 ```javascript
 {
   name: 'Test Room',
@@ -240,6 +249,7 @@ const isBroadcaster = userId === hostId ||
 ```
 
 **🚨 ISSUE #2: Test Creates Room with INCOMPLETE Fields**
+
 - ❌ Missing: `hostId` (uses `createdBy` instead)
 - ❌ Missing: `moderators`/`admins`
 - ❌ Missing: `isLive` (security functions expect this!)
@@ -247,6 +257,7 @@ const isBroadcaster = userId === hostId ||
 - ⚠️ Using `participants` instead of `participantIds`
 
 This test room **WILL FAIL** token generation because:
+
 1. No `isLive` field → `isLive === true` fails → throws "Room has ended"
 
 ---
@@ -257,19 +268,21 @@ This test room **WILL FAIL** token generation because:
 
 #### Room Fields Accessed by VoiceRoomPage:
 
-| Field | Line(s) | Usage | Required? |
-|-------|---------|-------|-----------|
-| `id` | 148, 352, 380-382 | Room identifier | ✅ YES |
-| `turnBased` | 94 | Check speaking mode | ❌ NO |
-| `turnDurationSeconds` | 95 | Get max speaker time | ❌ NO |
-| *(via agoraService.joinRoom())* | Various | Agora channel join | N/A |
+| Field                           | Line(s)           | Usage                | Required? |
+| ------------------------------- | ----------------- | -------------------- | --------- |
+| `id`                            | 148, 352, 380-382 | Room identifier      | ✅ YES    |
+| `turnBased`                     | 94                | Check speaking mode  | ❌ NO     |
+| `turnDurationSeconds`           | 95                | Get max speaker time | ❌ NO     |
+| _(via agoraService.joinRoom())_ | Various           | Agora channel join   | N/A       |
 
 **Key Finding:** VoiceRoomPage only directly accesses **3 fields**:
+
 - `room.id` (12 times)
 - `room.turnBased` (1 time)
 - `room.turnDurationSeconds` (1 time)
 
 **Indirect Access** (via RoomService):
+
 - All participant lists passed to Firebase functions
 - `bannedUsers` checked before joining
 - `moderators`/`speakers` used for Agora token role
@@ -283,6 +296,7 @@ This test room **WILL FAIL** token generation because:
 #### Room Navigation Endpoints:
 
 **VoiceRoomPage Registration:**
+
 ```dart
 // Line 13: Import statement
 import 'features/room/screens/voice_room_page.dart';
@@ -293,6 +307,7 @@ import 'features/room/screens/voice_room_page.dart';
 **Room Passing Methods Identified:**
 
 1. **From CreateRoomPageComplete** [lib/features/rooms/create_room_page_complete.dart Line 46-56]:
+
 ```dart
 final service = ref.read(roomManagerServiceProvider);
 final room = await service.createRoom(
@@ -311,15 +326,18 @@ Navigator.of(context).pushReplacement(
   ),
 );
 ```
+
 ✅ **Correctly Passes Full Room Object**
 
 2. **From Profile Page** [grep match]:
+
 ```dart
 // Uses: VoiceRoomPage(room: room)
 // ✅ Correctly passes Room object
 ```
 
 3. **From Room Discovery Page** [grep match]:
+
 ```dart
 // Uses: VoiceRoomPage(room: room)
 // ✅ Correctly passes Room object
@@ -335,14 +353,16 @@ Navigator.of(context).pushReplacement(
 
 **Problem:** Two different privacy fields checked
 
-| Layer | Field | Value | Check |
-|-------|-------|-------|-------|
-| **Frontend Model** | `privacy` | 'public'\|'private' | Stored ✅ |
-| **Firestore Rules** | `privacy` | 'public'\|'private' | Validated ✅ |
-| **Cloud Functions** | `privacy` OR `isPrivate` | Different values | Both checked ⚠️ |
+| Layer               | Field                    | Value               | Check           |
+| ------------------- | ------------------------ | ------------------- | --------------- |
+| **Frontend Model**  | `privacy`                | 'public'\|'private' | Stored ✅       |
+| **Firestore Rules** | `privacy`                | 'public'\|'private' | Validated ✅    |
+| **Cloud Functions** | `privacy` OR `isPrivate` | Different values    | Both checked ⚠️ |
 
 **Code Reference:**
+
 - [functions/index.js Line 67](functions/index.js#L67):
+
 ```javascript
 if (roomData.privacy === 'private' || roomData.isPrivate) { ... }
 ```
@@ -357,15 +377,17 @@ if (roomData.privacy === 'private' || roomData.isPrivate) { ... }
 
 **Problem:** Three different field names for moderators
 
-| Layer | Field Name(s) | Values |
-|-------|----------------|--------|
-| **Frontend (Model)** | `moderators` AND `admins` | Both stored ✅ |
-| **Firestore (Stored)** | `moderators` OR `admins` | Depends on creation |
-| **Cloud Functions** | `moderators ?? admins` | Fallback works ✅ |
-| **Firestore Rules** | `moderators` | Only checks this field ⚠️ |
+| Layer                  | Field Name(s)             | Values                    |
+| ---------------------- | ------------------------- | ------------------------- |
+| **Frontend (Model)**   | `moderators` AND `admins` | Both stored ✅            |
+| **Firestore (Stored)** | `moderators` OR `admins`  | Depends on creation       |
+| **Cloud Functions**    | `moderators ?? admins`    | Fallback works ✅         |
+| **Firestore Rules**    | `moderators`              | Only checks this field ⚠️ |
 
 **Code References:**
+
 - [lib/shared/models/room.dart Lines 43, 75-76](lib/shared/models/room.dart#L43):
+
 ```dart
 final List<String> admins; // New architecture
 final List<String> moderators; // Legacy - use admins instead
@@ -374,6 +396,7 @@ moderators = moderators ?? admins;
 ```
 
 - [firestore.rules Lines 143-149](firestore.rules#L143-L149):
+
 ```firerules
 allow update: if isSignedIn() &&
               (request.auth.uid == resource.data.get('hostId', null) ||
@@ -381,11 +404,13 @@ allow update: if isSignedIn() &&
 ```
 
 - [functions/lib/index.js Line 69](functions/lib/index.js#L69):
+
 ```javascript
 const moderators = roomData.moderators ?? roomData.admins ?? [];
 ```
 
 **Risk:** ❌ **CRITICAL** - If room created with only `admins` field:
+
 1. Firestore rules will NOT grant update permissions to admins (looks for `moderators` only)
 2. Cloud Functions will work (has fallback)
 3. Frontend model works (both stored)
@@ -445,6 +470,7 @@ await _firestore.collection('rooms').doc(roomId).set(room.toJson());
 ```
 
 **Analysis:**
+
 - ✅ All required fields for token generation ARE present
 - ✅ All Firestore rules requirements ARE met
 - ✅ All Cloud Functions requirements ARE met
@@ -458,13 +484,13 @@ await _firestore.collection('rooms').doc(roomId).set(room.toJson());
 
 **Problem:** Dual field names for backward compatibility create confusion
 
-| Legacy Field | New Field | Frontend | Firestore | CloudFn | VoiceRoom |
-|--------------|-----------|----------|-----------|---------|-----------|
-| `name` | `title` | Both ✅ | Both ✅ | Not used | Not used ❌ |
-| `isActive` | `isLive` | Both ✅ | Both ✅ | Used ✅ | Not used ❌ |
-| `privacy` + logic | `isLocked` | Both ✅ | Both ✅ | Uses `privacy` ⚠️ | Not used |
-| `participantIds` | N/A | Present ✅ | Present ✅ | Not used | Not used |
-| `moderators` | `admins` | Both ✅ | Both ✅ | Falls back ✅ | Not used |
+| Legacy Field      | New Field  | Frontend   | Firestore  | CloudFn           | VoiceRoom   |
+| ----------------- | ---------- | ---------- | ---------- | ----------------- | ----------- |
+| `name`            | `title`    | Both ✅    | Both ✅    | Not used          | Not used ❌ |
+| `isActive`        | `isLive`   | Both ✅    | Both ✅    | Used ✅           | Not used ❌ |
+| `privacy` + logic | `isLocked` | Both ✅    | Both ✅    | Uses `privacy` ⚠️ | Not used    |
+| `participantIds`  | N/A        | Present ✅ | Present ✅ | Not used          | Not used    |
+| `moderators`      | `admins`   | Both ✅    | Both ✅    | Falls back ✅     | Not used    |
 
 **Risk:** If old data exists with only legacy fields and new code expects new field names, failures may occur.
 
@@ -478,11 +504,11 @@ await _firestore.collection('rooms').doc(roomId).set(room.toJson());
 
 **Problem:** Broadcaster mode fields defined but not accessed by VoiceRoomPage
 
-| Field | Frontend | VoiceRoom | CloudFn | Usage |
-|-------|----------|-----------|---------|-------|
+| Field                | Frontend  | VoiceRoom   | CloudFn     | Usage  |
+| -------------------- | --------- | ----------- | ----------- | ------ |
 | `activeBroadcasters` | Stored ✅ | Not used ❌ | Not used ❌ | Unused |
-| `maxBroadcasters` | Stored ✅ | Not used ❌ | Not used ❌ | Unused |
-| `camCount` | Stored ✅ | Not used ❌ | Not used ❌ | Unused |
+| `maxBroadcasters`    | Stored ✅ | Not used ❌ | Not used ❌ | Unused |
+| `camCount`           | Stored ✅ | Not used ❌ | Not used ❌ | Unused |
 
 **Risk:** Features planned but not implemented. If VoiceRoomPage tries to access these for broadcaster mode, will need implementation.
 
@@ -501,49 +527,49 @@ await _firestore.collection('rooms').doc(roomId).set(room.toJson());
 🟡 = Field unused but harmless
 ```
 
-| Field | Model | toFirestore | Rules | CloudFn | VoiceRoom | Status |
-|-------|-------|-------------|-------|---------|-----------|--------|
-| `id` | ✅ | ✅ | N/A | N/A | ✅ | ✅ FULL |
-| `title` | ✅ | ✅ | ✅ | ❌ | ❌ | ✅ OK |
-| `description` | ✅ | ✅ | N/A | ❌ | ❌ | ✅ OK |
-| `hostId` | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ OK |
-| `tags` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `category` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `createdAt` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `updatedAt` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `isLive` | ✅ | ✅ | N/A | ✅ | ❌ | ✅ CRITICAL |
-| `viewerCount` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `admins` | ✅ | ✅ | ❌ | ✅ | ❌ | ⚠️ MISMATCH |
-| `camCount` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `isLocked` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `passwordHash` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `maxUsers` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `isNSFW` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `isHidden` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `slowModeSeconds` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `name` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 LEGACY |
-| `participantIds` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `isActive` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 LEGACY |
-| `privacy` | ✅ | ✅ | ✅ | ✅ | ❌ | ✅ OK |
-| `status` | ✅ | ✅ | N/A | ✅ | ❌ | ✅ CRITICAL |
-| `hostName` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `thumbnailUrl` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `roomType` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `moderators` | ✅ | ✅ | ⚠️ | ✅ | ❌ | ⚠️ MISMATCH |
-| `bannedUsers` | ✅ | ✅ | N/A | ✅ | ❌ | ✅ CRITICAL |
-| `mutedUsers` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `kickedUsers` | ✅ | ✅ | N/A | ✅ | ❌ | ✅ CRITICAL |
-| `agoraChannelName` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `speakers` | ✅ | ✅ | N/A | ✅ | ❌ | ✅ IMPORTANT |
-| `listeners` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `allowSpeakerRequests` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `turnBased` | ✅ | ✅ | N/A | ❌ | ✅ | ✅ OK |
-| `currentSpeakerId` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `speakerQueue` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `raisedHands` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 UNUSED |
-| `turnDurationSeconds` | ✅ | ✅ | N/A | ❌ | ✅ | ✅ OK |
-| `activeBroadcasters` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 PLANNED |
-| `maxBroadcasters` | ✅ | ✅ | N/A | ❌ | ❌ | 🟡 PLANNED |
+| Field                  | Model | toFirestore | Rules | CloudFn | VoiceRoom | Status       |
+| ---------------------- | ----- | ----------- | ----- | ------- | --------- | ------------ |
+| `id`                   | ✅    | ✅          | N/A   | N/A     | ✅        | ✅ FULL      |
+| `title`                | ✅    | ✅          | ✅    | ❌      | ❌        | ✅ OK        |
+| `description`          | ✅    | ✅          | N/A   | ❌      | ❌        | ✅ OK        |
+| `hostId`               | ✅    | ✅          | ✅    | ✅      | ❌        | ✅ OK        |
+| `tags`                 | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `category`             | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `createdAt`            | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `updatedAt`            | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `isLive`               | ✅    | ✅          | N/A   | ✅      | ❌        | ✅ CRITICAL  |
+| `viewerCount`          | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `admins`               | ✅    | ✅          | ❌    | ✅      | ❌        | ⚠️ MISMATCH  |
+| `camCount`             | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `isLocked`             | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `passwordHash`         | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `maxUsers`             | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `isNSFW`               | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `isHidden`             | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `slowModeSeconds`      | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `name`                 | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 LEGACY    |
+| `participantIds`       | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `isActive`             | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 LEGACY    |
+| `privacy`              | ✅    | ✅          | ✅    | ✅      | ❌        | ✅ OK        |
+| `status`               | ✅    | ✅          | N/A   | ✅      | ❌        | ✅ CRITICAL  |
+| `hostName`             | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `thumbnailUrl`         | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `roomType`             | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `moderators`           | ✅    | ✅          | ⚠️    | ✅      | ❌        | ⚠️ MISMATCH  |
+| `bannedUsers`          | ✅    | ✅          | N/A   | ✅      | ❌        | ✅ CRITICAL  |
+| `mutedUsers`           | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `kickedUsers`          | ✅    | ✅          | N/A   | ✅      | ❌        | ✅ CRITICAL  |
+| `agoraChannelName`     | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `speakers`             | ✅    | ✅          | N/A   | ✅      | ❌        | ✅ IMPORTANT |
+| `listeners`            | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `allowSpeakerRequests` | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `turnBased`            | ✅    | ✅          | N/A   | ❌      | ✅        | ✅ OK        |
+| `currentSpeakerId`     | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `speakerQueue`         | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `raisedHands`          | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 UNUSED    |
+| `turnDurationSeconds`  | ✅    | ✅          | N/A   | ❌      | ✅        | ✅ OK        |
+| `activeBroadcasters`   | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 PLANNED   |
+| `maxBroadcasters`      | ✅    | ✅          | N/A   | ❌      | ❌        | 🟡 PLANNED   |
 
 ---
 
@@ -556,6 +582,7 @@ await _firestore.collection('rooms').doc(roomId).set(room.toJson());
 **Location:** [firestore.rules Lines 143-149](firestore.rules#L143-L149)
 
 **Problem:**
+
 ```firerules
 allow update: if isSignedIn() &&
               (request.auth.uid == resource.data.get('hostId', null) ||
@@ -565,17 +592,20 @@ allow update: if isSignedIn() &&
 If a room is created with `admins` field but no `moderators` field, moderators cannot update the room.
 
 **Current Code:**
+
 ```dart
 // lib/services/room_manager_service.dart Line 48
 admins: [currentUser.uid],
 ```
 
 **Scenario:**
+
 1. Room created with `admins: [user1]` ✅
-2. Firestore stores: `{ ..., "admins": ["user1"], "moderators": ["user1"] }`  (both present via Room model)
+2. Firestore stores: `{ ..., "admins": ["user1"], "moderators": ["user1"] }` (both present via Room model)
 3. Should work ✅
 
 **BUT** if external API or legacy code creates room with only `admins`:
+
 ```firestore
 { "admins": ["user1"] }  // No moderators field
 ```
@@ -583,6 +613,7 @@ admins: [currentUser.uid],
 **Then** user1 cannot update: `user1 in resource.data.get('moderators', [])` → false
 
 **Fix Required:**
+
 ```firerules
 allow update: if isSignedIn() &&
               (request.auth.uid == resource.data.get('hostId', null) ||
@@ -601,15 +632,18 @@ allow update: if isSignedIn() &&
 **Location:** [functions/index.js Line 67](functions/index.js#L67)
 
 **Problem:**
+
 ```javascript
 if (roomData.privacy === 'private' || roomData.isPrivate) { ... }
 ```
 
 Two different privacy mechanisms:
+
 - `privacy: 'private' | 'public'` (string)
 - `isPrivate: boolean` (boolean)
 
 **Current Code:**
+
 - Frontend sets: `privacy: isPrivate ? 'private' : 'public'` ✅
 - Functions check both ✅
 - But inconsistent field naming
@@ -627,18 +661,20 @@ Two different privacy mechanisms:
 **Location:** [functions/create_test_room.js Lines 11-15](functions/create_test_room.js#L11-L15)
 
 **Problem:**
+
 ```javascript
 const roomData = {
-  name: 'Test Room',
-  description: 'Room for testing Agora token generation',
+  name: "Test Room",
+  description: "Room for testing Agora token generation",
   createdAt: admin.firestore.FieldValue.serverTimestamp(),
-  createdBy: 'DahcyIkN6DSnOeENNuWeC0dfGLQ2',  // ← Should be 'hostId'
-  isActive: true,                              // ← Should be 'isLive'
-  participants: []                             // ← Should be 'participantIds'
+  createdBy: "DahcyIkN6DSnOeENNuWeC0dfGLQ2", // ← Should be 'hostId'
+  isActive: true, // ← Should be 'isLive'
+  participants: [], // ← Should be 'participantIds'
 };
 ```
 
 Missing required fields for token generation:
+
 - ❌ `isLive` (required by Cloud Functions)
 - ❌ `status` (required by Cloud Functions)
 - ❌ `bannedUsers` (optional but expected)
@@ -657,6 +693,7 @@ Missing required fields for token generation:
 **Severity:** 🟡 **LOW** - Features defined but not used
 
 **Fields Affected:**
+
 - `activeBroadcasters` - Stored but never used
 - `maxBroadcasters` - Stored but never used
 - `camCount` - Stored but never used
@@ -672,6 +709,7 @@ Missing required fields for token generation:
 **Severity:** 🟡 **LOW** - Works but adds complexity
 
 **Fields:**
+
 - `name` (legacy) vs `title` (new)
 - `isActive` (legacy) vs `isLive` (new)
 - `participants` (legacy) vs `participantIds` (new)
@@ -686,22 +724,26 @@ Missing required fields for token generation:
 ### Potential Runtime Errors:
 
 #### ❌ ERROR #1: Token Generation Fails for Specific Rooms
+
 **Condition:** Room created without `isLive` or `status` fields
 **Error Message:** `"Room has ended"`
 **Likelihood:** LOW (RoomManagerService sets these ✅)
 **Affected Code:** [functions/lib/index.js Line 64-65](functions/lib/index.js#L64-L65)
 
 #### ❌ ERROR #2: Moderators Cannot Update Room
+
 **Condition:** Room in Firestore has `admins` but not `moderators`
 **Error Message:** Firestore permission denied
 **Likelihood:** LOW (RoomManagerService sets both ✅)
 **Affected Code:** [firestore.rules Line 143-149](firestore.rules#L143-L149)
 
 #### ✅ ERROR #3: VoiceRoomPage Can't Access Room.id
+
 **Condition:** Never - always required ✅
 **Status:** No risk
 
 #### ✅ ERROR #4: VoiceRoomPage Fields turnBased/turnDurationSeconds Missing
+
 **Condition:** Never - Room model has defaults ✅
 **Status:** No risk
 
@@ -769,6 +811,7 @@ CreateRoomPageComplete
 ## 11. SUMMARY & RECOMMENDATIONS
 
 ### What Works Well ✅
+
 1. **Room Model Design:** Comprehensive, flexible, supports legacy + new fields
 2. **Serialization:** Robust to/from JSON/Firestore conversion
 3. **Cloud Functions:** Security checks comprehensive (host, moderators, speakers, bans, kicks)
@@ -777,15 +820,16 @@ CreateRoomPageComplete
 
 ### What Needs Fixing ⚠️
 
-| Priority | Issue | File | Line | Fix |
-|----------|-------|------|------|-----|
-| 🔴 HIGH | Firestore rules don't check `admins` | firestore.rules | 143-149 | Add `\|\| request.auth.uid in resource.data.get('admins', [])` |
-| 🔴 HIGH | Test room incomplete | create_test_room.js | 11-15 | Add all required fields |
-| 🟡 MED | Dual privacy fields | functions/index.js | 67 | Standardize on single field |
-| 🟡 MED | Broadcaster mode unused | room.dart | 50-52 | Implement or remove |
-| 🟡 LOW | Legacy field names | room.dart | All | Consider deprecation path |
+| Priority | Issue                                | File                | Line    | Fix                                                            |
+| -------- | ------------------------------------ | ------------------- | ------- | -------------------------------------------------------------- |
+| 🔴 HIGH  | Firestore rules don't check `admins` | firestore.rules     | 143-149 | Add `\|\| request.auth.uid in resource.data.get('admins', [])` |
+| 🔴 HIGH  | Test room incomplete                 | create_test_room.js | 11-15   | Add all required fields                                        |
+| 🟡 MED   | Dual privacy fields                  | functions/index.js  | 67      | Standardize on single field                                    |
+| 🟡 MED   | Broadcaster mode unused              | room.dart           | 50-52   | Implement or remove                                            |
+| 🟡 LOW   | Legacy field names                   | room.dart           | All     | Consider deprecation path                                      |
 
 ### Best Practices ✅
+
 1. ✅ All required fields are set during room creation
 2. ✅ VoiceRoomPage has minimal dependencies (just id, turnBased, turnDurationSeconds)
 3. ✅ Cloud Functions validate security-critical fields
@@ -796,18 +840,18 @@ CreateRoomPageComplete
 
 ## 12. FILES & LINE REFERENCES
 
-| System | File | Purpose | Lines |
-|--------|------|---------|-------|
-| **Frontend Model** | `lib/shared/models/room.dart` | Room data class | 1-371 |
-| **Frontend Service** | `lib/services/room_manager_service.dart` | Room creation/management | 1-685 |
-| **Frontend Service** | `lib/services/room_service.dart` | Room operations | 1-1150 |
-| **Frontend UI** | `lib/features/room/screens/voice_room_page.dart` | Room screen widget | 1-2723 |
-| **Frontend Create** | `lib/features/rooms/create_room_page_complete.dart` | Room creation UI | 1-462 |
-| **Frontend Routes** | `lib/app.dart` | Navigation setup | 1-341 |
-| **Backend Security** | `firestore.rules` | Access control | 1-337 |
-| **Backend Functions** | `functions/index.js` | Agora token generation | 1-95 |
-| **Backend Functions** | `functions/lib/index.js` | Callable token generation | 1-131 |
-| **Backend Test** | `functions/create_test_room.js` | Test room creation | 1-24 |
+| System                | File                                                | Purpose                   | Lines  |
+| --------------------- | --------------------------------------------------- | ------------------------- | ------ |
+| **Frontend Model**    | `lib/shared/models/room.dart`                       | Room data class           | 1-371  |
+| **Frontend Service**  | `lib/services/room_manager_service.dart`            | Room creation/management  | 1-685  |
+| **Frontend Service**  | `lib/services/room_service.dart`                    | Room operations           | 1-1150 |
+| **Frontend UI**       | `lib/features/room/screens/voice_room_page.dart`    | Room screen widget        | 1-2723 |
+| **Frontend Create**   | `lib/features/rooms/create_room_page_complete.dart` | Room creation UI          | 1-462  |
+| **Frontend Routes**   | `lib/app.dart`                                      | Navigation setup          | 1-341  |
+| **Backend Security**  | `firestore.rules`                                   | Access control            | 1-337  |
+| **Backend Functions** | `functions/index.js`                                | Agora token generation    | 1-95   |
+| **Backend Functions** | `functions/lib/index.js`                            | Callable token generation | 1-131  |
+| **Backend Test**      | `functions/create_test_room.js`                     | Test room creation        | 1-24   |
 
 ---
 
@@ -828,4 +872,3 @@ CreateRoomPageComplete
 
 **AUDIT COMPLETE**
 **Status:** Ready for integration testing with noted fixes
-

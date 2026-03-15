@@ -1,4 +1,4 @@
-﻿/// Platform Module Barrel Export
+/// Platform Module Barrel Export
 ///
 /// Exports all platform-related services and widgets for
 /// Phase K - Platform & Ecosystem Expansion.
@@ -16,5 +16,3 @@ export 'oauth_provider.dart';
 // Platform Governance & Trust
 export 'trust_framework.dart';
 export 'trust_dashboard.dart';
-
-

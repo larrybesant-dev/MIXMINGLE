@@ -19,13 +19,14 @@ async function getUserFcmTokens(userId: string): Promise<string[]> {
 
   try {
     // Method 1: Check for tokens subcollection (frontend pattern)
-    const tokensSnap = await admin.firestore()
+    const tokensSnap = await admin
+      .firestore()
       .collection("users")
       .doc(userId)
       .collection("tokens")
       .get();
 
-    tokensSnap.docs.forEach(doc => {
+    tokensSnap.docs.forEach((doc) => {
       const data = doc.data();
       if (data.token) {
         tokens.push(data.token);
@@ -33,10 +34,7 @@ async function getUserFcmTokens(userId: string): Promise<string[]> {
     });
 
     // Method 2: Also check array field for backward compatibility
-    const userDoc = await admin.firestore()
-      .collection("users")
-      .doc(userId)
-      .get();
+    const userDoc = await admin.firestore().collection("users").doc(userId).get();
 
     if (userDoc.exists) {
       const userData = userDoc.data();
@@ -67,13 +65,14 @@ async function removeInvalidFcmTokens(userId: string, invalidTokens: string[]): 
     const batch = admin.firestore().batch();
 
     // Remove from tokens subcollection
-    const tokensSnap = await admin.firestore()
+    const tokensSnap = await admin
+      .firestore()
       .collection("users")
       .doc(userId)
       .collection("tokens")
       .get();
 
-    tokensSnap.docs.forEach(doc => {
+    tokensSnap.docs.forEach((doc) => {
       const data = doc.data();
       const tokenValue = data.token;
       if (tokenValue && invalidTokens.includes(tokenValue)) {
@@ -183,7 +182,7 @@ export const sendPushNotification = onDocumentCreated(
         error: error.message,
       });
     }
-  }
+  },
 );
 
 /**
@@ -200,7 +199,8 @@ export const onNewMessage = onDocumentCreated(
     const conversationId = event.params.conversationId;
 
     // Get conversation to find recipient
-    const conversationSnap = await admin.firestore()
+    const conversationSnap = await admin
+      .firestore()
       .collection("conversations")
       .doc(conversationId)
       .get();
@@ -213,51 +213,49 @@ export const onNewMessage = onDocumentCreated(
     if (!recipientId) return;
 
     // Get sender name
-    const senderSnap = await admin.firestore()
-      .collection("users")
-      .doc(senderId)
-      .get();
+    const senderSnap = await admin.firestore().collection("users").doc(senderId).get();
 
     const senderName = senderSnap.exists ? senderSnap.data()?.displayName : "Someone";
 
     // Queue notification
-    await admin.firestore().collection("notificationQueue").add({
-      userId: recipientId,
-      title: `New message from ${senderName}`,
-      body: text?.length > 100 ? text.substring(0, 97) + "..." : text,
-      type: "message",
-      data: {
-        conversationId: conversationId,
-        senderId: senderId,
-      },
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      status: "pending",
-    });
-  }
+    await admin
+      .firestore()
+      .collection("notificationQueue")
+      .add({
+        userId: recipientId,
+        title: `New message from ${senderName}`,
+        body: text?.length > 100 ? text.substring(0, 97) + "..." : text,
+        type: "message",
+        data: {
+          conversationId: conversationId,
+          senderId: senderId,
+        },
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        status: "pending",
+      });
+  },
 );
 
 /**
  * Send notification when someone follows you
  */
-export const onNewFollow = onDocumentCreated(
-  "follows/{followId}",
-  async (event) => {
-    const snap = event.data;
-    if (!snap) return;
+export const onNewFollow = onDocumentCreated("follows/{followId}", async (event) => {
+  const snap = event.data;
+  if (!snap) return;
 
-    const follow = snap.data();
-    const { followerId, followingId } = follow;
+  const follow = snap.data();
+  const { followerId, followingId } = follow;
 
-    // Get follower name
-    const followerSnap = await admin.firestore()
-      .collection("users")
-      .doc(followerId)
-      .get();
+  // Get follower name
+  const followerSnap = await admin.firestore().collection("users").doc(followerId).get();
 
-    const followerName = followerSnap.exists ? followerSnap.data()?.displayName : "Someone";
+  const followerName = followerSnap.exists ? followerSnap.data()?.displayName : "Someone";
 
-    // Queue notification
-    await admin.firestore().collection("notificationQueue").add({
+  // Queue notification
+  await admin
+    .firestore()
+    .collection("notificationQueue")
+    .add({
       userId: followingId,
       title: "New Follower",
       body: `${followerName} started following you`,
@@ -268,15 +266,14 @@ export const onNewFollow = onDocumentCreated(
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
       status: "pending",
     });
-  }
-);
+});
 
 /**
  * Send notification for event reminders
  * Run daily to check for upcoming events
  */
 export const sendEventReminders = onSchedule(
-  "every day 09:00",
+  { schedule: "every day 09:00", region: "us-central1" },
   async () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -286,7 +283,8 @@ export const sendEventReminders = onSchedule(
     tomorrowEnd.setHours(23, 59, 59, 999);
 
     // Get events happening tomorrow
-    const eventsSnap = await admin.firestore()
+    const eventsSnap = await admin
+      .firestore()
       .collection("events")
       .where("startTime", ">=", admin.firestore.Timestamp.fromDate(tomorrow))
       .where("startTime", "<=", admin.firestore.Timestamp.fromDate(tomorrowEnd))
@@ -300,23 +298,26 @@ export const sendEventReminders = onSchedule(
 
       // Send reminder to all participants
       for (const userId of participants) {
-        await admin.firestore().collection("notificationQueue").add({
-          userId: userId,
-          title: "Event Reminder",
-          body: `"${title}" is happening tomorrow!`,
-          type: "eventReminder",
-          data: {
-            eventId: eventDoc.id,
-          },
-          createdAt: admin.firestore.FieldValue.serverTimestamp(),
-          status: "pending",
-        });
+        await admin
+          .firestore()
+          .collection("notificationQueue")
+          .add({
+            userId: userId,
+            title: "Event Reminder",
+            body: `"${title}" is happening tomorrow!`,
+            type: "eventReminder",
+            data: {
+              eventId: eventDoc.id,
+            },
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            status: "pending",
+          });
       }
     }
 
     logger.log(`Sent reminders for ${eventsSnap.size} events`);
-    return null;
-  }
+    // No return value (void)
+  },
 );
 
 /**
@@ -324,23 +325,24 @@ export const sendEventReminders = onSchedule(
  * Runs daily
  */
 export const cleanupOldNotifications = onSchedule(
-  "every day 02:00",
+  { schedule: "every day 02:00", region: "us-central1" },
   async () => {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-    const oldNotificationsSnap = await admin.firestore()
+    const oldNotificationsSnap = await admin
+      .firestore()
       .collection("notifications")
       .where("createdAt", "<", admin.firestore.Timestamp.fromDate(thirtyDaysAgo))
       .get();
 
     const batch = admin.firestore().batch();
-    oldNotificationsSnap.docs.forEach(doc => {
+    oldNotificationsSnap.docs.forEach((doc) => {
       batch.delete(doc.ref);
     });
 
     await batch.commit();
     logger.log(`Deleted ${oldNotificationsSnap.size} old notifications`);
-    return null;
-  }
+    // No return value (void)
+  },
 );

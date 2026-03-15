@@ -56,17 +56,20 @@ void main() {
     });
 
     group('Video Quality Settings', () {
-      test('Set video quality to High - should configure 1280x720@30fps', () async {
+      test('Set video quality to High - should configure 1280x720@30fps',
+          () async {
         // Act & Assert
         expect(true, true);
       });
 
-      test('Set video quality to Medium - should configure 640x480@24fps', () async {
+      test('Set video quality to Medium - should configure 640x480@24fps',
+          () async {
         // Act & Assert
         expect(true, true);
       });
 
-      test('Set video quality to Low - should configure 320x240@15fps', () async {
+      test('Set video quality to Low - should configure 320x240@15fps',
+          () async {
         // Act & Assert
         expect(true, true);
       });

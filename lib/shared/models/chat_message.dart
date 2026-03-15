@@ -111,22 +111,32 @@ class ChatMessage {
     return ChatMessage(
       id: map['id'] as String? ?? '',
       senderId: map['senderId'] as String? ?? map['userId'] as String? ?? '',
-      senderName: map['senderName'] as String? ?? map['displayName'] as String? ?? 'Unknown',
-      senderAvatarUrl: map['senderAvatarUrl'] as String? ?? map['userAvatar'] as String?,
-      content: map['content'] as String? ?? map['message'] as String? ?? map['text'] as String? ?? '',
+      senderName: map['senderName'] as String? ??
+          map['displayName'] as String? ??
+          'Unknown',
+      senderAvatarUrl:
+          map['senderAvatarUrl'] as String? ?? map['userAvatar'] as String?,
+      content: map['content'] as String? ??
+          map['message'] as String? ??
+          map['text'] as String? ??
+          '',
       timestamp: _parseTimestamp(map['timestamp']),
-      context: _parseContext(map['context'] as String? ?? map['roomType'] as String?),
+      context: _parseContext(
+          map['context'] as String? ?? map['roomType'] as String?),
       roomId: map['roomId'] as String?,
       receiverId: map['receiverId'] as String?,
       conversationId: map['conversationId'] as String?,
-      contentType: _parseContentType(map['contentType'] as String? ?? map['type'] as String?),
+      contentType: _parseContentType(
+          map['contentType'] as String? ?? map['type'] as String?),
       status: _parseStatus(map['status'] as String?),
       isDeleted: map['isDeleted'] as bool? ?? false,
       isRead: map['isRead'] as bool? ?? false,
       isPinned: map['isPinned'] as bool? ?? false,
       isEdited: map['isEdited'] as bool? ?? false,
-      editedAt: map['editedAt'] != null ? _parseTimestamp(map['editedAt']) : null,
-      replyToId: map['replyToId'] as String? ?? map['replyToMessageId'] as String?,
+      editedAt:
+          map['editedAt'] != null ? _parseTimestamp(map['editedAt']) : null,
+      replyToId:
+          map['replyToId'] as String? ?? map['replyToMessageId'] as String?,
       reactions: List<String>.from(map['reactions'] ?? []),
       reactionsMap: (map['reactionsMap'] as Map<String, dynamic>?)?.map(
         (k, v) => MapEntry(k, v as String),
@@ -399,4 +409,3 @@ class ChatSettings {
     );
   }
 }
-

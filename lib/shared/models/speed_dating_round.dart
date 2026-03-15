@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SpeedDatingRound {
@@ -36,24 +35,28 @@ class SpeedDatingRound {
       id: map['id'] as String? ?? '',
       eventId: map['eventId'] as String? ?? '',
       hostId: map['hostId'] as String? ?? '',
-      participants: (map['participants'] as List<dynamic>?)?.cast<String>() ?? [],
+      participants:
+          (map['participants'] as List<dynamic>?)?.cast<String>() ?? [],
       startTime: map['startTime'] != null
           ? (map['startTime'] is Timestamp
               ? (map['startTime'] as Timestamp).toDate()
-              : DateTime.tryParse(map['startTime'].toString()) ?? DateTime.now())
+              : DateTime.tryParse(map['startTime'].toString()) ??
+                  DateTime.now())
           : DateTime.now(),
       roundDurationMinutes: map['roundDurationMinutes'] as int? ?? 5,
       currentRound: map['currentRound'] as int? ?? 1,
       totalRounds: map['totalRounds'] as int? ?? 3,
       matches: (map['matches'] as Map<String, dynamic>?)?.map(
-            (key, value) => MapEntry(key, (value as List<dynamic>?)?.cast<String>() ?? []),
+            (key, value) =>
+                MapEntry(key, (value as List<dynamic>?)?.cast<String>() ?? []),
           ) ??
           {},
       isActive: map['isActive'] as bool? ?? false,
       createdAt: map['createdAt'] != null
           ? (map['createdAt'] is Timestamp
               ? (map['createdAt'] as Timestamp).toDate()
-              : DateTime.tryParse(map['createdAt'].toString()) ?? DateTime.now())
+              : DateTime.tryParse(map['createdAt'].toString()) ??
+                  DateTime.now())
           : DateTime.now(),
     );
   }
@@ -142,4 +145,3 @@ class SpeedDatingRound {
     return 'SpeedDatingRound(id: $id, eventId: $eventId, currentRound: $currentRound/$totalRounds, participants: ${participants.length}, isActive: $isActive)';
   }
 }
-

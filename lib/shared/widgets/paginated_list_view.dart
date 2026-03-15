@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:mixmingle/core/pagination/pagination_controller.dart';
 
 /// A reusable paginated list view widget
@@ -142,7 +142,8 @@ class _PaginatedListViewState<T> extends State<PaginatedListView<T>> {
         padding: widget.padding,
         shrinkWrap: widget.shrinkWrap,
         physics: widget.physics,
-        itemCount: widget.controller.items.length + (widget.controller.hasMore ? 1 : 0),
+        itemCount: widget.controller.items.length +
+            (widget.controller.hasMore ? 1 : 0),
         itemBuilder: (context, index) {
           // Show loading indicator at bottom
           if (index == widget.controller.items.length) {
@@ -241,11 +242,15 @@ class _PaginatedGridViewState<T> extends State<PaginatedGridView<T>> {
   @override
   Widget build(BuildContext context) {
     if (widget.controller.items.isEmpty && widget.controller.isLoading) {
-      return widget.loadingWidget ?? const Center(child: CircularProgressIndicator());
+      return widget.loadingWidget ??
+          const Center(child: CircularProgressIndicator());
     }
 
     if (widget.controller.items.isEmpty) {
-      return widget.emptyWidget ?? const Center(child: Text('No items found', style: TextStyle(color: Colors.white70)));
+      return widget.emptyWidget ??
+          const Center(
+              child: Text('No items found',
+                  style: TextStyle(color: Colors.white70)));
     }
 
     return RefreshIndicator(
@@ -257,16 +262,16 @@ class _PaginatedGridViewState<T> extends State<PaginatedGridView<T>> {
           crossAxisCount: widget.crossAxisCount,
           childAspectRatio: widget.childAspectRatio,
         ),
-        itemCount: widget.controller.items.length + (widget.controller.hasMore ? 1 : 0),
+        itemCount: widget.controller.items.length +
+            (widget.controller.hasMore ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == widget.controller.items.length) {
             return const Center(child: CircularProgressIndicator());
           }
-          return widget.itemBuilder(context, widget.controller.items[index], index);
+          return widget.itemBuilder(
+              context, widget.controller.items[index], index);
         },
       ),
     );
   }
 }
-
-

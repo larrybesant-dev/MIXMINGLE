@@ -1,4 +1,4 @@
-﻿/// Followers List Page
+/// Followers List Page
 /// Display list of users who follow the target user
 library;
 
@@ -62,13 +62,15 @@ class FollowersListPage extends ConsumerWidget {
                 Icon(
                   Icons.error_outline,
                   size: 64,
-                  color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+                  color: DesignColors.white
+                      .withValues(alpha: 255, red: 255, green: 255, blue: 255),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'Error loading followers',
                   style: TextStyle(
-                    color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+                    color: DesignColors.white.withValues(
+                        alpha: 255, red: 255, green: 255, blue: 255),
                     fontSize: 18,
                   ),
                 ),
@@ -76,7 +78,8 @@ class FollowersListPage extends ConsumerWidget {
                 Text(
                   error.toString(),
                   style: TextStyle(
-                    color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+                    color: DesignColors.white.withValues(
+                        alpha: 255, red: 255, green: 255, blue: 255),
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
@@ -89,7 +92,8 @@ class FollowersListPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildFollowerCard(BuildContext context, WidgetRef ref, dynamic follower) {
+  Widget _buildFollowerCard(
+      BuildContext context, WidgetRef ref, dynamic follower) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: NeonGlowCard(
@@ -108,9 +112,11 @@ class FollowersListPage extends ConsumerWidget {
               children: [
                 CircleAvatar(
                   radius: 30,
-                  backgroundColor: DesignColors.accent.withValues(alpha: 255, red: 255, green: 255, blue: 255),
-                  backgroundImage:
-                      follower.photos.isNotEmpty ? NetworkImage(follower.photos.first) : null,
+                  backgroundColor: DesignColors.accent
+                      .withValues(alpha: 255, red: 255, green: 255, blue: 255),
+                  backgroundImage: follower.photos.isNotEmpty
+                      ? NetworkImage(follower.photos.first)
+                      : null,
                   child: follower.photos.isEmpty
                       ? Text(
                           follower.displayName[0].toUpperCase(),
@@ -152,7 +158,8 @@ class FollowersListPage extends ConsumerWidget {
                     Text(
                       follower.bio!,
                       style: TextStyle(
-                        color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+                        color: DesignColors.white.withValues(
+                            alpha: 255, red: 255, green: 255, blue: 255),
                         fontSize: 12,
                       ),
                       maxLines: 1,
@@ -200,13 +207,15 @@ class FollowersListPage extends ConsumerWidget {
           Icon(
             Icons.people_outline,
             size: 80,
-            color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+            color: DesignColors.white
+                .withValues(alpha: 255, red: 255, green: 255, blue: 255),
           ),
           const SizedBox(height: 16),
           Text(
             'No followers yet',
             style: TextStyle(
-              color: DesignColors.white.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+              color: DesignColors.white
+                  .withValues(alpha: 255, red: 255, green: 255, blue: 255),
               fontSize: 18,
             ),
           ),

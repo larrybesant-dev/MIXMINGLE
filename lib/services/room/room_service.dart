@@ -5,78 +5,138 @@ import 'package:flutter/foundation.dart';
 import 'package:mixmingle/shared/models/room.dart';
 
 class RoomService {
+<<<<<<< HEAD
     // Advanced role management
     Future<void> promoteToCoHost(String roomId, String userId) async {
       await _assertAdminOrOwner(roomId, _currentUserId);
+=======
+  // Advanced role management
+  Future<void> promoteToCoHost(String roomId, String userId) async {
+    if (roomId.isEmpty) throw ArgumentError('roomId cannot be empty');
+    if (userId.isEmpty) throw ArgumentError('userId cannot be empty');
+    try {
+>>>>>>> origin/develop
       await _firestore.collection('rooms').doc(roomId).update({
         'moderators': FieldValue.arrayUnion([userId]),
         'roleMap.$userId': 'coHost',
       });
+    } catch (e) {
+      debugPrint('❌ [RoomService] promoteToCoHost failed: $e');
+      rethrow;
     }
+  }
 
-    Future<void> demoteFromCoHost(String roomId, String userId) async {
+  Future<void> demoteFromCoHost(String roomId, String userId) async {
+    if (roomId.isEmpty) throw ArgumentError('roomId cannot be empty');
+    if (userId.isEmpty) throw ArgumentError('userId cannot be empty');
+    try {
       await _firestore.collection('rooms').doc(roomId).update({
         'moderators': FieldValue.arrayRemove([userId]),
         'roleMap.$userId': 'guest',
       });
+    } catch (e) {
+      debugPrint('❌ [RoomService] demoteFromCoHost failed: $e');
+      rethrow;
     }
+  }
 
+<<<<<<< HEAD
     Future<void> transferHostRole(String roomId, String newHostId) async {
       final doc = await _firestore.collection('rooms').doc(roomId).get();
       if (!doc.exists) throw Exception('Room not found');
       final d = doc.data()!;
       final ownerId = d['ownerId'] as String? ?? d['hostId'] as String? ?? '';
       if (_currentUserId != ownerId) throw Exception('Only the owner can transfer host role');
+=======
+  Future<void> transferHostRole(String roomId, String newHostId) async {
+    if (roomId.isEmpty) throw ArgumentError('roomId cannot be empty');
+    if (newHostId.isEmpty) throw ArgumentError('newHostId cannot be empty');
+    try {
+>>>>>>> origin/develop
       await _firestore.collection('rooms').doc(roomId).update({
         'hostId': newHostId,
         'roleMap.$newHostId': 'host',
       });
+    } catch (e) {
+      debugPrint('❌ [RoomService] transferHostRole failed: $e');
+      rethrow;
     }
+  }
 
-    // Spotlight stage layout
-    Future<void> setSpotlighted(String roomId, String userId, bool isSpotlighted) async {
+  // Spotlight stage layout
+  Future<void> setSpotlighted(
+      String roomId, String userId, bool isSpotlighted) async {
+    if (roomId.isEmpty) throw ArgumentError('roomId cannot be empty');
+    if (userId.isEmpty) throw ArgumentError('userId cannot be empty');
+    try {
       await _firestore.collection('rooms').doc(roomId).update({
-        'spotlighted': isSpotlighted ? FieldValue.arrayUnion([userId]) : FieldValue.arrayRemove([userId]),
+        'spotlighted': isSpotlighted
+            ? FieldValue.arrayUnion([userId])
+            : FieldValue.arrayRemove([userId]),
         'participantMap.$userId.isSpotlighted': isSpotlighted,
       });
+    } catch (e) {
+      debugPrint('❌ [RoomService] setSpotlighted failed: $e');
+      rethrow;
     }
+  }
 
-    // Breakout room hooks (future-ready)
-    Future<void> createBreakoutRoom(String parentRoomId, String name, List<String> participantUids) async {
+  // Breakout room hooks (future-ready)
+  Future<void> createBreakoutRoom(
+      String parentRoomId, String name, List<String> participantUids) async {
+    if (parentRoomId.isEmpty) throw ArgumentError('parentRoomId cannot be empty');
+    if (name.isEmpty) throw ArgumentError('Breakout room name cannot be empty');
+    try {
       // Skeleton only: store under parent room
-      await _firestore.collection('rooms').doc(parentRoomId).collection('breakoutRooms').add({
+      await _firestore
+          .collection('rooms')
+          .doc(parentRoomId)
+          .collection('breakoutRooms')
+          .add({
         'name': name,
         'participantUids': participantUids,
-        'createdAt': DateTime.now().toIso8601String(),
+        'createdAt': FieldValue.serverTimestamp(),
       });
+    } catch (e) {
+      debugPrint('❌ [RoomService] createBreakoutRoom failed: $e');
+      rethrow;
     }
+  }
 
-    // Reliability: Retry flows for join/leave, token, permissions
-    Future<T> retry<T>(Future<T> Function() action, {int maxAttempts = 3, Duration delay = const Duration(seconds: 2)}) async {
-      int attempts = 0;
-      while (true) {
-        try {
-          return await action();
-        } catch (e) {
-          attempts++;
-          if (attempts >= maxAttempts) rethrow;
-          await Future.delayed(delay);
-        }
-      }
-    }
-
-    // Graceful teardown on navigation away
-    Future<void> teardownRoom(String roomId, String userId) async {
+  // Reliability: Retry flows for join/leave, token, permissions
+  Future<T> retry<T>(Future<T> Function() action,
+      {int maxAttempts = 3,
+      Duration delay = const Duration(seconds: 2)}) async {
+    int attempts = 0;
+    while (true) {
       try {
-        await leaveVoiceRoom(roomId, userId);
-        // Additional teardown logic (Agora, providers, etc.)
+        return await action();
       } catch (e) {
-        debugPrint('Teardown error: $e');
+        attempts++;
+        if (attempts >= maxAttempts) rethrow;
+        await Future.delayed(delay);
       }
     }
+  }
+
+  // Graceful teardown on navigation away
+  Future<void> teardownRoom(String roomId, String userId) async {
+    try {
+      await leaveVoiceRoom(roomId, userId);
+      // Additional teardown logic (Agora, providers, etc.)
+    } catch (e) {
+      debugPrint('Teardown error: $e');
+    }
+  }
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+<<<<<<< HEAD
   final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
   final FirebaseAuth _auth = FirebaseAuth.instance;
+=======
+  final FirebaseFunctions _functions =
+      FirebaseFunctions.instanceFor(region: 'us-central1');
+>>>>>>> origin/develop
 
   // Create a new voice room
   Future<Room> createVoiceRoom({
@@ -88,17 +148,19 @@ class RoomService {
     required String category,
     String privacy = 'public',
   }) async {
-    // Rate limit check
-    await _checkRateLimitServer(
-      uid: hostId,
-      action: 'create_room',
-      limit: 10,
-      windowSeconds: 3600, // 10 rooms per hour
-    );
+    if (hostId.isEmpty) throw ArgumentError('hostId cannot be empty');
+    if (title.isEmpty) throw ArgumentError('Room title cannot be empty');
 
-    final roomId = _firestore.collection('rooms').doc().id;
-    final agoraChannelName = 'room_$roomId';
+    try {
+      // Rate limit check
+      await _checkRateLimitServer(
+        uid: hostId,
+        action: 'create_room',
+        limit: 10,
+        windowSeconds: 3600, // 10 rooms per hour
+      );
 
+<<<<<<< HEAD
     final room = Room(
       id: roomId,
       name: title,
@@ -141,13 +203,57 @@ class RoomService {
     roomData['maxActiveMics']     ??= 4;
     // URL-safe slug: lowercase title, non-alphanumeric → hyphens, trim leading/trailing hyphens, + 8-char roomId suffix
     roomData['slug'] = '${title.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '-').replaceAll(RegExp(r'^-+|-+$'), '')}-${roomId.substring(0, 8)}';
+=======
+      final roomId = _firestore.collection('rooms').doc().id;
+      final agoraChannelName = 'room_$roomId';
 
-    await _firestore.collection('rooms').doc(roomId).set(roomData);
-    return room;
+      final room = Room(
+        id: roomId,
+        name: title,
+        hostId: hostId,
+        participantIds: [hostId], // Host is automatically a participant
+        isActive: true,
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+        title: title,
+        description: description,
+        tags: tags,
+        privacy: privacy,
+        status: 'live',
+        category: category,
+        hostName: hostName,
+        viewerCount: 1,
+        isLive: true,
+        roomType: RoomType.voice,
+        moderators: [hostId], // Host is automatically a moderator
+        bannedUsers: [],
+        agoraChannelName: agoraChannelName,
+        speakers: [hostId], // Host starts as speaker
+        listeners: [],
+      );
+>>>>>>> origin/develop
+
+      // Add creatorId for Firestore security rules
+      final roomData = room.toMap();
+      roomData['creatorId'] = hostId;
+      // Ensure LiveRoom schema fields are initialized on creation
+      roomData['videoChannelLive'] =
+          false; // set to true by controller when first user enters
+      roomData['participantCount'] = 0;
+      roomData['maxBroadcasters'] ??= 4;
+      roomData['maxActiveMics'] ??= 4;
+
+      await _firestore.collection('rooms').doc(roomId).set(roomData);
+      return room;
+    } catch (e) {
+      debugPrint('❌ [RoomService] createVoiceRoom failed: $e');
+      rethrow;
+    }
   }
 
   // Join a voice room - Phase 3: Transaction-based for atomicity
-  Future<void> joinVoiceRoom(String roomId, String userId, String userName) async {
+  Future<void> joinVoiceRoom(
+      String roomId, String userId, String userName) async {
     // Rate limit check
     await _checkRateLimitServer(
       uid: userId,
@@ -184,7 +290,8 @@ class RoomService {
         }
 
         // Add user to participants
-        final updatedParticipants = List<String>.from(roomData['participantIds'] ?? []);
+        final updatedParticipants =
+            List<String>.from(roomData['participantIds'] ?? []);
         if (!updatedParticipants.contains(userId)) {
           // Capacity check: enforce maxUsers limit for non-privileged users
           final maxUsers = (roomData['maxUsers'] as int?) ?? 200;
@@ -232,6 +339,7 @@ class RoomService {
         final admins = List<String>.from(roomData['admins'] ?? []);
 
         // Remove user from all role lists
+<<<<<<< HEAD
         final updatedParticipants = List<String>.from(roomData['participantIds'] ?? [])..remove(userId);
         final updatedSpeakers    = List<String>.from(roomData['speakers'] ?? [])..remove(userId);
         final updatedListeners   = List<String>.from(roomData['listeners'] ?? [])..remove(userId);
@@ -239,6 +347,16 @@ class RoomService {
         final updatedModerators  = admins.contains(userId)
             ? List<String>.from(roomData['moderators'] ?? [])
             : List<String>.from(roomData['moderators'] ?? [])..remove(userId);
+=======
+        final updatedParticipants =
+            List<String>.from(roomData['participantIds'] ?? [])..remove(userId);
+        final updatedSpeakers = List<String>.from(roomData['speakers'] ?? [])
+          ..remove(userId);
+        final updatedListeners = List<String>.from(roomData['listeners'] ?? [])
+          ..remove(userId);
+        final updatedModerators =
+            List<String>.from(roomData['moderators'] ?? [])..remove(userId);
+>>>>>>> origin/develop
 
         transaction.update(roomRef, {
           'participantIds': updatedParticipants,
@@ -292,7 +410,8 @@ class RoomService {
         }
 
         // Remove from listeners
-        final updatedListeners = List<String>.from(room.listeners)..remove(userId);
+        final updatedListeners = List<String>.from(room.listeners)
+          ..remove(userId);
 
         transaction.update(roomRef, {
           'speakers': updatedSpeakers,
@@ -324,7 +443,8 @@ class RoomService {
         }
 
         // Move to listeners
-        final updatedSpeakers = List<String>.from(room.speakers)..remove(userId);
+        final updatedSpeakers = List<String>.from(room.speakers)
+          ..remove(userId);
         final updatedListeners = List<String>.from(room.listeners);
         if (!updatedListeners.contains(userId)) {
           updatedListeners.add(userId);
@@ -342,7 +462,8 @@ class RoomService {
   }
 
   // Moderator actions
-  Future<void> makeModerator(String roomId, String moderatorId, String targetUserId) async {
+  Future<void> makeModerator(
+      String roomId, String moderatorId, String targetUserId) async {
     try {
       await _firestore.runTransaction((transaction) async {
         final roomRef = _firestore.collection('rooms').doc(roomId);
@@ -375,7 +496,8 @@ class RoomService {
     }
   }
 
-  Future<void> removeModerator(String roomId, String moderatorId, String targetUserId) async {
+  Future<void> removeModerator(
+      String roomId, String moderatorId, String targetUserId) async {
     try {
       await _firestore.runTransaction((transaction) async {
         final roomRef = _firestore.collection('rooms').doc(roomId);
@@ -396,7 +518,8 @@ class RoomService {
           throw Exception('Cannot remove the room owner as moderator');
         }
 
-        final updatedModerators = List<String>.from(room.moderators)..remove(targetUserId);
+        final updatedModerators = List<String>.from(room.moderators)
+          ..remove(targetUserId);
 
         transaction.update(roomRef, {
           'moderators': updatedModerators,
@@ -408,7 +531,8 @@ class RoomService {
     }
   }
 
-  Future<void> kickUser(String roomId, String moderatorId, String targetUserId) async {
+  Future<void> kickUser(
+      String roomId, String moderatorId, String targetUserId) async {
     try {
       await _firestore.runTransaction((transaction) async {
         final roomRef = _firestore.collection('rooms').doc(roomId);
@@ -433,10 +557,14 @@ class RoomService {
         }
 
         // Remove user from all lists
-        final updatedParticipants = List<String>.from(room.participantIds)..remove(targetUserId);
-        final updatedSpeakers = List<String>.from(room.speakers)..remove(targetUserId);
-        final updatedListeners = List<String>.from(room.listeners)..remove(targetUserId);
-        final updatedModerators = List<String>.from(room.moderators)..remove(targetUserId);
+        final updatedParticipants = List<String>.from(room.participantIds)
+          ..remove(targetUserId);
+        final updatedSpeakers = List<String>.from(room.speakers)
+          ..remove(targetUserId);
+        final updatedListeners = List<String>.from(room.listeners)
+          ..remove(targetUserId);
+        final updatedModerators = List<String>.from(room.moderators)
+          ..remove(targetUserId);
 
         transaction.update(roomRef, {
           'participantIds': updatedParticipants,
@@ -452,7 +580,8 @@ class RoomService {
     }
   }
 
-  Future<void> banUser(String roomId, String moderatorId, String targetUserId) async {
+  Future<void> banUser(
+      String roomId, String moderatorId, String targetUserId) async {
     final roomRef = _firestore.collection('rooms').doc(roomId);
 
     // Single transaction: auth check + kick + ban array — no race window between kick and ban
@@ -502,7 +631,8 @@ class RoomService {
   // ============================================================================
 
   /// Mute user (soft mute - can unmute themselves)
-  Future<void> muteUser(String roomId, String moderatorId, String targetUserId) async {
+  Future<void> muteUser(
+      String roomId, String moderatorId, String targetUserId) async {
     try {
       await _firestore.runTransaction((transaction) async {
         final roomRef = _firestore.collection('rooms').doc(roomId);
@@ -524,7 +654,11 @@ class RoomService {
         }
 
         // Update participant's mic state in subcollection
-        final participantRef = _firestore.collection('rooms').doc(roomId).collection('participants').doc(targetUserId);
+        final participantRef = _firestore
+            .collection('rooms')
+            .doc(roomId)
+            .collection('participants')
+            .doc(targetUserId);
 
         transaction.update(participantRef, {
           'isMuted': true,
@@ -539,7 +673,8 @@ class RoomService {
   }
 
   /// Unmute user
-  Future<void> unmuteUser(String roomId, String moderatorId, String targetUserId) async {
+  Future<void> unmuteUser(
+      String roomId, String moderatorId, String targetUserId) async {
     try {
       await _firestore.runTransaction((transaction) async {
         final roomRef = _firestore.collection('rooms').doc(roomId);
@@ -557,7 +692,11 @@ class RoomService {
         }
 
         // Update participant's mic state in subcollection
-        final participantRef = _firestore.collection('rooms').doc(roomId).collection('participants').doc(targetUserId);
+        final participantRef = _firestore
+            .collection('rooms')
+            .doc(roomId)
+            .collection('participants')
+            .doc(targetUserId);
 
         transaction.update(participantRef, {
           'isMuted': false,
@@ -572,7 +711,8 @@ class RoomService {
   }
 
   /// Spotlight user (make them featured speaker)
-  Future<void> spotlightUser(String roomId, String moderatorId, String targetUserId) async {
+  Future<void> spotlightUser(
+      String roomId, String moderatorId, String targetUserId) async {
     try {
       await _firestore.runTransaction((transaction) async {
         final roomRef = _firestore.collection('rooms').doc(roomId);
@@ -697,7 +837,8 @@ class RoomService {
   }
 
   // Generic room search by title (prefix)
-  Future<List<QueryDocumentSnapshot>> searchRooms(String q, {int limit = 30}) async {
+  Future<List<QueryDocumentSnapshot>> searchRooms(String q,
+      {int limit = 30}) async {
     final s = q.trim().toLowerCase();
     if (s.isEmpty) return [];
     final snap = await _firestore
@@ -710,7 +851,8 @@ class RoomService {
   }
 
   // Filter example: rooms by tag or participant
-  Future<List<QueryDocumentSnapshot>> filterRooms({String? tag, String? participantUid, int limit = 30}) async {
+  Future<List<QueryDocumentSnapshot>> filterRooms(
+      {String? tag, String? participantUid, int limit = 30}) async {
     Query q = _firestore.collection('rooms');
     if (tag != null) q = q.where('tags', arrayContains: tag);
     if (participantUid != null) {
@@ -729,7 +871,8 @@ class RoomService {
   }
 
   // Update room description
-  Future<void> updateRoomDescription(String roomId, String newDescription) async {
+  Future<void> updateRoomDescription(
+      String roomId, String newDescription) async {
     await _firestore.collection('rooms').doc(roomId).update({
       'description': newDescription,
     });
@@ -767,7 +910,8 @@ class RoomService {
   }
 
   /// Invite user to room
-  Future<void> inviteUser(String roomId, String userId, String invitedUserId) async {
+  Future<void> inviteUser(
+      String roomId, String userId, String invitedUserId) async {
     // Store invitation
     await _firestore.collection('roomInvitations').add({
       'roomId': roomId,
@@ -787,7 +931,8 @@ class RoomService {
     }
 
     final room = Room.fromDocument(roomDoc);
-    final updatedParticipants = List<String>.from(room.participantIds)..remove(userId);
+    final updatedParticipants = List<String>.from(room.participantIds)
+      ..remove(userId);
     final updatedSpeakers = List<String>.from(room.speakers)..remove(userId);
     final updatedListeners = List<String>.from(room.listeners)..remove(userId);
 
@@ -811,7 +956,8 @@ class RoomService {
     final updatedSpeakers = List<String>.from(room.speakers);
     final updatedListeners = List<String>.from(room.listeners);
 
-    if (!updatedSpeakers.contains(userId) && updatedListeners.contains(userId)) {
+    if (!updatedSpeakers.contains(userId) &&
+        updatedListeners.contains(userId)) {
       updatedSpeakers.add(userId);
       updatedListeners.remove(userId);
 
@@ -834,7 +980,8 @@ class RoomService {
     final updatedSpeakers = List<String>.from(room.speakers);
     final updatedListeners = List<String>.from(room.listeners);
 
-    if (updatedSpeakers.contains(userId) && !updatedListeners.contains(userId)) {
+    if (updatedSpeakers.contains(userId) &&
+        !updatedListeners.contains(userId)) {
       updatedSpeakers.remove(userId);
       updatedListeners.add(userId);
 
@@ -851,7 +998,8 @@ class RoomService {
 
   /// Grant speaking turn to a user (turn-based mode)
   /// Only moderators can grant turns
-  Future<void> grantTurn(String roomId, String moderatorId, String userId) async {
+  Future<void> grantTurn(
+      String roomId, String moderatorId, String userId) async {
     final roomRef = _firestore.collection('rooms').doc(roomId);
     final roomDoc = await roomRef.get();
 
@@ -982,7 +1130,8 @@ class RoomService {
     final room = Room.fromDocument(roomDoc);
 
     // Remove from raised hands and speaker queue
-    final updatedRaisedHands = List<String>.from(room.raisedHands)..remove(userId);
+    final updatedRaisedHands = List<String>.from(room.raisedHands)
+      ..remove(userId);
     final updatedQueue = List<String>.from(room.speakerQueue)..remove(userId);
 
     await roomRef.update({
@@ -994,7 +1143,8 @@ class RoomService {
   }
 
   /// Approve raised hand - promote listener to speaker (Phase 3.1c)
-  Future<void> approveRaisedHand(String roomId, String moderatorId, String targetUserId) async {
+  Future<void> approveRaisedHand(
+      String roomId, String moderatorId, String targetUserId) async {
     try {
       await _firestore.runTransaction((transaction) async {
         final roomRef = _firestore.collection('rooms').doc(roomId);
@@ -1012,9 +1162,12 @@ class RoomService {
         }
 
         // Remove from raisedHands, speakerQueue, and listeners; add to speakers
-        final updatedRaisedHands = List<String>.from(room.raisedHands)..remove(targetUserId);
-        final updatedQueue = List<String>.from(room.speakerQueue)..remove(targetUserId);
-        final updatedListeners = List<String>.from(room.listeners)..remove(targetUserId);
+        final updatedRaisedHands = List<String>.from(room.raisedHands)
+          ..remove(targetUserId);
+        final updatedQueue = List<String>.from(room.speakerQueue)
+          ..remove(targetUserId);
+        final updatedListeners = List<String>.from(room.listeners)
+          ..remove(targetUserId);
         final updatedSpeakers = List<String>.from(room.speakers);
         if (!updatedSpeakers.contains(targetUserId)) {
           updatedSpeakers.add(targetUserId);
@@ -1062,7 +1215,8 @@ class RoomService {
 
     final nextSpeakerId = room.speakerQueue.first;
     final updatedQueue = List<String>.from(room.speakerQueue)..removeAt(0);
-    final updatedRaisedHands = List<String>.from(room.raisedHands)..remove(nextSpeakerId);
+    final updatedRaisedHands = List<String>.from(room.raisedHands)
+      ..remove(nextSpeakerId);
 
     // Move to speakers list if not already there
     final updatedListeners = List<String>.from(room.listeners);
@@ -1098,22 +1252,32 @@ class RoomService {
   // ============================================================================
 
   /// Update participant mic state in Firestore
-  Future<void> updateMicState(String roomId, String userId, bool isMuted) async {
+  Future<void> updateMicState(
+      String roomId, String userId, bool isMuted) async {
     try {
-      final participantRef = _firestore.collection('rooms').doc(roomId).collection('participants').doc(userId);
+      final participantRef = _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('participants')
+          .doc(userId);
 
       await participantRef.update({
         'isMuted': isMuted,
         'lastActiveAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('ðŸŽ¤ Mic state updated: $userId â†’ ${isMuted ? "muted" : "unmuted"}');
+      debugPrint(
+          'ðŸŽ¤ Mic state updated: $userId â†’ ${isMuted ? "muted" : "unmuted"}');
     } catch (e) {
       debugPrint('âŒ Failed to update mic state: $e');
       // Retry once
       try {
         await Future.delayed(const Duration(milliseconds: 500));
-        final participantRef = _firestore.collection('rooms').doc(roomId).collection('participants').doc(userId);
+        final participantRef = _firestore
+            .collection('rooms')
+            .doc(roomId)
+            .collection('participants')
+            .doc(userId);
         await participantRef.update({
           'isMuted': isMuted,
           'lastActiveAt': FieldValue.serverTimestamp(),
@@ -1125,22 +1289,32 @@ class RoomService {
   }
 
   /// Update participant camera state in Firestore
-  Future<void> updateCameraState(String roomId, String userId, bool isOff) async {
+  Future<void> updateCameraState(
+      String roomId, String userId, bool isOff) async {
     try {
-      final participantRef = _firestore.collection('rooms').doc(roomId).collection('participants').doc(userId);
+      final participantRef = _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('participants')
+          .doc(userId);
 
       await participantRef.update({
         'isOnCam': !isOff,
         'lastActiveAt': FieldValue.serverTimestamp(),
       });
 
-      debugPrint('ðŸŽ¥ Camera state updated: $userId â†’ ${isOff ? "off" : "on"}');
+      debugPrint(
+          'ðŸŽ¥ Camera state updated: $userId â†’ ${isOff ? "off" : "on"}');
     } catch (e) {
       debugPrint('âŒ Failed to update camera state: $e');
       // Retry once
       try {
         await Future.delayed(const Duration(milliseconds: 500));
-        final participantRef = _firestore.collection('rooms').doc(roomId).collection('participants').doc(userId);
+        final participantRef = _firestore
+            .collection('rooms')
+            .doc(roomId)
+            .collection('participants')
+            .doc(userId);
         await participantRef.update({
           'isOnCam': !isOff,
           'lastActiveAt': FieldValue.serverTimestamp(),
@@ -1152,9 +1326,14 @@ class RoomService {
   }
 
   /// Update participant speaking state in Firestore
-  Future<void> updateSpeakingState(String roomId, String userId, bool isSpeaking) async {
+  Future<void> updateSpeakingState(
+      String roomId, String userId, bool isSpeaking) async {
     try {
-      final participantRef = _firestore.collection('rooms').doc(roomId).collection('participants').doc(userId);
+      final participantRef = _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('participants')
+          .doc(userId);
 
       await participantRef.update({
         'isSpeaking': isSpeaking,
@@ -1172,9 +1351,14 @@ class RoomService {
   }
 
   /// Update participant network quality in Firestore
-  Future<void> updateNetworkQuality(String roomId, String userId, String quality) async {
+  Future<void> updateNetworkQuality(
+      String roomId, String userId, String quality) async {
     try {
-      final participantRef = _firestore.collection('rooms').doc(roomId).collection('participants').doc(userId);
+      final participantRef = _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('participants')
+          .doc(userId);
 
       await participantRef.update({
         'connectionQuality': quality,
@@ -1191,9 +1375,14 @@ class RoomService {
   }
 
   /// Update participant connection state in Firestore
-  Future<void> updateConnectionState(String roomId, String userId, String state) async {
+  Future<void> updateConnectionState(
+      String roomId, String userId, String state) async {
     try {
-      final participantRef = _firestore.collection('rooms').doc(roomId).collection('participants').doc(userId);
+      final participantRef = _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('participants')
+          .doc(userId);
 
       await participantRef.update({
         'connectionState': state,
@@ -1209,7 +1398,11 @@ class RoomService {
   /// Mark user as online in Firestore
   Future<void> markUserOnline(String roomId, String userId) async {
     try {
-      final participantRef = _firestore.collection('rooms').doc(roomId).collection('participants').doc(userId);
+      final participantRef = _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('participants')
+          .doc(userId);
 
       await participantRef.update({
         'isOnline': true,
@@ -1225,7 +1418,11 @@ class RoomService {
   /// Mark user as offline in Firestore
   Future<void> markUserOffline(String roomId, String userId) async {
     try {
-      final participantRef = _firestore.collection('rooms').doc(roomId).collection('participants').doc(userId);
+      final participantRef = _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('participants')
+          .doc(userId);
 
       await participantRef.update({
         'isOnline': false,
@@ -1258,13 +1455,17 @@ class RoomService {
       final data = result.data as Map;
       final allowed = data['allowed'] == true;
       if (!allowed) {
-        final retryAfterSeconds = (data['retryAfterSeconds'] as num?)?.toInt() ?? 0;
-        throw Exception('Rate limit exceeded. Try again in ${retryAfterSeconds}s');
+        final retryAfterSeconds =
+            (data['retryAfterSeconds'] as num?)?.toInt() ?? 0;
+        throw Exception(
+            'Rate limit exceeded. Try again in ${retryAfterSeconds}s');
       }
     } on FirebaseFunctionsException catch (e) {
       if (e.code == 'resource-exhausted') {
-        final retryAfterSeconds = (e.details?['retryAfterSeconds'] as num?)?.toInt() ?? 0;
-        throw Exception('Rate limit exceeded. Try again in ${retryAfterSeconds}s');
+        final retryAfterSeconds =
+            (e.details?['retryAfterSeconds'] as num?)?.toInt() ?? 0;
+        throw Exception(
+            'Rate limit exceeded. Try again in ${retryAfterSeconds}s');
       }
       throw Exception('Rate limit check failed: ${e.message}');
     } catch (e) {

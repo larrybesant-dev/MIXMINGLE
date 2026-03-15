@@ -19,7 +19,8 @@ class AutoModerationService {
   final Map<String, List<String>> _recentMessages = {};
 
   /// Check if a message should be auto-moderated
-  Future<AutoModerationResult> checkMessage(ChatMessage message, String roomId) async {
+  Future<AutoModerationResult> checkMessage(
+      ChatMessage message, String roomId) async {
     try {
       // 1. Check for spam (too many messages)
       if (_isSpamming(message.senderId)) {
@@ -87,7 +88,8 @@ class AutoModerationService {
         moderatorName: 'Auto-Moderator',
         reason: reason,
         timestamp: DateTime.now(),
-        expiresAt: duration != null ? ModerationAction.getExpiryTime(duration) : null,
+        expiresAt:
+            duration != null ? ModerationAction.getExpiryTime(duration) : null,
         isAutoModerated: true,
       );
 
@@ -104,7 +106,8 @@ class AutoModerationService {
           if (duration != null) {
             await _applyTimeout(roomId, userId, duration);
           } else {
-            debugPrint('âš ï¸ Timeout action requires duration, but duration is null');
+            debugPrint(
+                'âš ï¸ Timeout action requires duration, but duration is null');
           }
           break;
         case ModerationType.ban:
@@ -146,7 +149,8 @@ class AutoModerationService {
     }
 
     // Check for repeated content
-    final repeats = _recentMessages[userId]!.where((msg) => msg == content).length;
+    final repeats =
+        _recentMessages[userId]!.where((msg) => msg == content).length;
     _recentMessages[userId]!.add(content);
 
     return repeats >= _spamThreshold;
@@ -169,14 +173,16 @@ class AutoModerationService {
     return letters == letters.toUpperCase();
   }
 
-  Future<void> _applyTimeout(String roomId, String userId, BanDuration duration) async {
+  Future<void> _applyTimeout(
+      String roomId, String userId, BanDuration duration) async {
     final expiresAt = ModerationAction.getExpiryTime(duration);
     await _firestore.collection('rooms').doc(roomId).update({
       'timedOutUsers.$userId': Timestamp.fromDate(expiresAt),
     });
   }
 
-  Future<void> _applyBan(String roomId, String userId, BanDuration? duration) async {
+  Future<void> _applyBan(
+      String roomId, String userId, BanDuration? duration) async {
     final roomRef = _firestore.collection('rooms').doc(roomId);
     await roomRef.update({
       'bannedUsers': FieldValue.arrayUnion([userId]),

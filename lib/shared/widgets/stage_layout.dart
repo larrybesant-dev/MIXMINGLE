@@ -35,7 +35,8 @@ class StageLayout extends StatefulWidget {
   State<StageLayout> createState() => _StageLayoutState();
 }
 
-class _StageLayoutState extends State<StageLayout> with SingleTickerProviderStateMixin {
+class _StageLayoutState extends State<StageLayout>
+    with SingleTickerProviderStateMixin {
   late AnimationController _spotlightAnimationController;
   late Animation<double> _spotlightFadeAnimation;
 
@@ -47,7 +48,8 @@ class _StageLayoutState extends State<StageLayout> with SingleTickerProviderStat
       vsync: this,
     );
     _spotlightFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _spotlightAnimationController, curve: Curves.easeIn),
+      CurvedAnimation(
+          parent: _spotlightAnimationController, curve: Curves.easeIn),
     );
     _spotlightAnimationController.forward();
   }
@@ -71,7 +73,9 @@ class _StageLayoutState extends State<StageLayout> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     // Separate speaker from listeners
-    final speaker = widget.speakerId != null ? widget.allParticipants[widget.speakerId] : null;
+    final speaker = widget.speakerId != null
+        ? widget.allParticipants[widget.speakerId]
+        : null;
 
     final listeners = widget.allParticipants.entries
         .where((entry) => entry.key != widget.speakerId)
@@ -83,7 +87,9 @@ class _StageLayoutState extends State<StageLayout> with SingleTickerProviderStat
         // Spotlight section (takes 60% of space)
         Expanded(
           flex: 60,
-          child: speaker != null ? _buildSpotlight(speaker) : _buildEmptySpotlight(),
+          child: speaker != null
+              ? _buildSpotlight(speaker)
+              : _buildEmptySpotlight(),
         ),
 
         const SizedBox(height: 8),
@@ -127,7 +133,9 @@ class _StageLayoutState extends State<StageLayout> with SingleTickerProviderStat
               color: Colors.grey[900],
               child: Center(
                 child: Text(
-                  speaker.displayName.isNotEmpty ? speaker.displayName[0].toUpperCase() : '?',
+                  speaker.displayName.isNotEmpty
+                      ? speaker.displayName[0].toUpperCase()
+                      : '?',
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 48,
@@ -142,7 +150,8 @@ class _StageLayoutState extends State<StageLayout> with SingleTickerProviderStat
               top: 12,
               left: 12,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.black87,
                   borderRadius: BorderRadius.circular(6),
@@ -299,7 +308,9 @@ class _StageLayoutState extends State<StageLayout> with SingleTickerProviderStat
             // Avatar
             Center(
               child: Text(
-                listener.displayName.isNotEmpty ? listener.displayName[0].toUpperCase() : '?',
+                listener.displayName.isNotEmpty
+                    ? listener.displayName[0].toUpperCase()
+                    : '?',
                 style: const TextStyle(
                   color: Colors.white70,
                   fontSize: 18,

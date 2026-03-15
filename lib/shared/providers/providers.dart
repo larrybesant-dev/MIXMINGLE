@@ -27,8 +27,10 @@ import '../models/tip.dart';
 
 // Services
 final authServiceProvider = Provider<AuthService>((ref) => AuthService());
-final firestoreServiceProvider = Provider<FirestoreService>((ref) => FirestoreService());
-final analyticsServiceProvider = Provider<AnalyticsService>((ref) => AnalyticsService());
+final firestoreServiceProvider =
+    Provider<FirestoreService>((ref) => FirestoreService());
+final analyticsServiceProvider =
+    Provider<AnalyticsService>((ref) => AnalyticsService());
 
 // Placeholder service providers
 // DEPRECATED: Use agoraVideoServiceProvider instead
@@ -37,13 +39,27 @@ final analyticsServiceProvider = Provider<AnalyticsService>((ref) => AnalyticsSe
 //   debugPrint('âš ï¸ agoraServiceProvider accessed - please use agoraVideoServiceProvider instead');
 //   return AgoraService();
 // });
-final messagingServiceProvider = Provider<MessagingService>((ref) => MessagingService());
+final messagingServiceProvider =
+    Provider<MessagingService>((ref) => MessagingService());
 final socialServiceProvider = Provider<SocialService>((ref) => SocialService());
-final tippingServiceProvider = Provider<TippingService>((ref) => TippingService());
-final storageServiceProvider = Provider<StorageService>((ref) => StorageService());
+final tippingServiceProvider =
+    Provider<TippingService>((ref) => TippingService());
+final storageServiceProvider =
+    Provider<StorageService>((ref) => StorageService());
 final tokenServiceProvider = Provider<TokenService>((ref) => TokenService());
-final notificationServiceProvider = Provider<NotificationService>((ref) => NotificationService());
+final notificationServiceProvider =
+    Provider<NotificationService>((ref) => NotificationService());
 
+<<<<<<< HEAD
+=======
+// Mark notification as read
+final markNotificationAsReadProvider =
+    FutureProvider.family<void, String>((ref, notificationId) async {
+  final notificationService = ref.watch(notificationServiceProvider);
+  await notificationService.markAsRead(notificationId);
+});
+
+>>>>>>> origin/develop
 // Auth State
 final authStateProvider = StreamProvider<firebase_auth.User?>((ref) {
   return ref.watch(authServiceProvider).authStateChanges;
@@ -70,7 +86,8 @@ final userProvider = StreamProvider.family<User?, String>((ref, userId) {
 });
 
 // Browse Rooms (with search)
-final browseRoomsProvider = NotifierProvider<BrowseRoomsNotifier, List<Room>>(() {
+final browseRoomsProvider =
+    NotifierProvider<BrowseRoomsNotifier, List<Room>>(() {
   return BrowseRoomsNotifier();
 });
 
@@ -97,7 +114,8 @@ final usersProvider = StreamProvider<List<User>>((ref) {
   return ref.watch(firestoreServiceProvider).getUsersStream();
 });
 
-final discoverUsersProvider = NotifierProvider<DiscoverUsersNotifier, List<User>>(() {
+final discoverUsersProvider =
+    NotifierProvider<DiscoverUsersNotifier, List<User>>(() {
   return DiscoverUsersNotifier();
 });
 
@@ -126,7 +144,8 @@ final conversationsProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
 });
 
 // Settings
-final settingsProvider = NotifierProvider<SettingsNotifier, Map<String, dynamic>>(() {
+final settingsProvider =
+    NotifierProvider<SettingsNotifier, Map<String, dynamic>>(() {
   return SettingsNotifier();
 });
 
@@ -152,7 +171,8 @@ class SettingsNotifier extends Notifier<Map<String, dynamic>> {
 // final videoServiceProvider = Provider<AgoraService>((ref) => AgoraService());
 
 // Message providers
-final sendMessageProvider = FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
+final sendMessageProvider =
+    FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
   final messagingService = ref.read(messagingServiceProvider);
   await messagingService.sendMessage(
     senderId: params['senderId'],
@@ -162,7 +182,8 @@ final sendMessageProvider = FutureProvider.family<void, Map<String, dynamic>>((r
 });
 
 // Room message providers
-final sendRoomMessageProvider = FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
+final sendRoomMessageProvider =
+    FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) throw Exception('User not authenticated');
 
@@ -176,7 +197,8 @@ final sendRoomMessageProvider = FutureProvider.family<void, Map<String, dynamic>
   );
 });
 
-final messagesProvider = StreamProvider.family<List<Message>, String>((ref, roomId) {
+final messagesProvider =
+    StreamProvider.family<List<Message>, String>((ref, roomId) {
   final messagingService = ref.read(messagingServiceProvider);
   return messagingService.getRoomMessages(roomId);
 });
@@ -190,7 +212,8 @@ final followProvider = FutureProvider.family<void, String>((ref, userId) async {
   await socialService.followUser(currentUser.id, userId);
 });
 
-final messageProvider = FutureProvider.family<void, String>((ref, userId) async {
+final messageProvider =
+    FutureProvider.family<void, String>((ref, userId) async {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) throw Exception('User not authenticated');
 
@@ -220,22 +243,27 @@ class SearchQueryNotifier extends Notifier<String> {
   }
 }
 
-final isFollowingProvider = FutureProvider.family<bool, Map<String, String>>((ref, params) async {
+final isFollowingProvider =
+    FutureProvider.family<bool, Map<String, String>>((ref, params) async {
   final socialService = ref.read(socialServiceProvider);
-  return await socialService.isFollowing(params['followerId']!, params['followingId']!);
+  return await socialService.isFollowing(
+      params['followerId']!, params['followingId']!);
 });
 
-final followersProvider = StreamProvider.family<List<User>, String>((ref, userId) {
+final followersProvider =
+    StreamProvider.family<List<User>, String>((ref, userId) {
   final socialService = ref.read(socialServiceProvider);
   return socialService.getFollowersStream(userId);
 });
 
-final followingProvider = StreamProvider.family<List<User>, String>((ref, userId) {
+final followingProvider =
+    StreamProvider.family<List<User>, String>((ref, userId) {
   final socialService = ref.read(socialServiceProvider);
   return socialService.getFollowingStream(userId);
 });
 
-final userConversationsProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
+final userConversationsProvider =
+    StreamProvider<List<Map<String, dynamic>>>((ref) {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) return Stream.value([]);
 
@@ -251,12 +279,16 @@ final totalUnreadMessagesProvider = FutureProvider<int>((ref) {
   return messagingService.getTotalUnreadCount(currentUser.id);
 });
 
-final conversationMessagesProvider = StreamProvider.family<List<DirectMessage>, Map<String, String>>((ref, params) {
+final conversationMessagesProvider =
+    StreamProvider.family<List<DirectMessage>, Map<String, String>>(
+        (ref, params) {
   final messagingService = ref.read(messagingServiceProvider);
-  return messagingService.getConversationMessages(params['userId1']!, params['userId2']!);
+  return messagingService.getConversationMessages(
+      params['userId1']!, params['userId2']!);
 });
 
-final sendDirectMessageProvider = FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
+final sendDirectMessageProvider =
+    FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) throw Exception('User not authenticated');
 
@@ -272,23 +304,28 @@ final sendDirectMessageProvider = FutureProvider.family<void, Map<String, dynami
   );
 });
 
-final markMessagesReadProvider = FutureProvider.family<void, String>((ref, conversationId) async {
+final markMessagesReadProvider =
+    FutureProvider.family<void, String>((ref, conversationId) async {
   // Placeholder: Do nothing
 });
 
-final markMessageAsDeliveredProvider = FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
+final markMessageAsDeliveredProvider =
+    FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
   // Placeholder: Do nothing
 });
 
-final editMessageProvider = FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
+final editMessageProvider =
+    FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) throw Exception('User not authenticated');
 
   final messagingService = ref.read(messagingServiceProvider);
-  await messagingService.editMessage(params['messageId'], currentUser.id, params['newContent']);
+  await messagingService.editMessage(
+      params['messageId'], currentUser.id, params['newContent']);
 });
 
-final deleteMessageProvider = FutureProvider.family<void, Map<String, String>>((ref, params) async {
+final deleteMessageProvider =
+    FutureProvider.family<void, Map<String, String>>((ref, params) async {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) throw Exception('User not authenticated');
 
@@ -296,23 +333,28 @@ final deleteMessageProvider = FutureProvider.family<void, Map<String, String>>((
   await messagingService.deleteMessage(params['messageId']!, currentUser.id);
 });
 
-final addReactionProvider = FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
+final addReactionProvider =
+    FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) throw Exception('User not authenticated');
 
   final messagingService = ref.read(messagingServiceProvider);
-  await messagingService.addReaction(params['messageId'], currentUser.id, params['emoji']);
+  await messagingService.addReaction(
+      params['messageId'], currentUser.id, params['emoji']);
 });
 
-final removeReactionProvider = FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
+final removeReactionProvider =
+    FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) throw Exception('User not authenticated');
 
   final messagingService = ref.read(messagingServiceProvider);
-  await messagingService.removeReaction(params['messageId'], currentUser.id, params['emoji']);
+  await messagingService.removeReaction(
+      params['messageId'], currentUser.id, params['emoji']);
 });
 
-final markConversationAsReadProvider = FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
+final markConversationAsReadProvider =
+    FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
   // Placeholder: Do nothing
 });
 
@@ -321,27 +363,40 @@ final privacySettingsProvider = StreamProvider<PrivacySettings?>((ref) {
   return Stream.value(null);
 });
 
+<<<<<<< HEAD
 final notificationsProvider = StreamProvider.family<List<app_notification.Notification>, String>((ref, userId) {
   return ref.watch(firestoreServiceProvider).getNotificationsStream(userId);
+=======
+final notificationsProvider =
+    StreamProvider.family<List<app_notification.Notification>, String>(
+        (ref, userId) {
+  // Placeholder: Return empty list
+  return Stream.value([]);
+>>>>>>> origin/develop
 });
 
-final userTipsProvider = StreamProvider.family<List<Map<String, dynamic>>, String>((ref, userId) {
+final userTipsProvider =
+    StreamProvider.family<List<Map<String, dynamic>>, String>((ref, userId) {
   // Placeholder: Return empty list
   return Stream.value([]);
 });
 
-final userMediaProvider = StreamProvider.family<List<Map<String, dynamic>>, String>((ref, userId) {
+final userMediaProvider =
+    StreamProvider.family<List<Map<String, dynamic>>, String>((ref, userId) {
   // Placeholder: Return empty list
   return Stream.value([]);
 });
 
-final createRoomProvider = FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
+final createRoomProvider =
+    FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
   final currentUser = ref.watch(authStateProvider).value;
   if (currentUser == null) throw Exception('User not authenticated');
 
   // Fetch user profile to get displayName
-  final userProfile = await ref.read(firestoreServiceProvider).getUser(currentUser.uid);
-  final displayName = userProfile?.displayName ?? userProfile?.username ?? 'Unknown User';
+  final userProfile =
+      await ref.read(firestoreServiceProvider).getUser(currentUser.uid);
+  final displayName =
+      userProfile?.displayName ?? userProfile?.username ?? 'Unknown User';
 
   final firestoreService = ref.read(firestoreServiceProvider);
   final room = Room(
@@ -364,7 +419,8 @@ final createRoomProvider = FutureProvider.family<void, Map<String, dynamic>>((re
   await firestoreService.createRoom(room);
 });
 
-final sendTipProvider = FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
+final sendTipProvider =
+    FutureProvider.family<void, Map<String, dynamic>>((ref, params) async {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) throw Exception('User not authenticated');
 
@@ -384,7 +440,8 @@ final sendTipProvider = FutureProvider.family<void, Map<String, dynamic>>((ref, 
   );
 });
 
-final followUserProvider = FutureProvider.family<void, String>((ref, targetUserId) async {
+final followUserProvider =
+    FutureProvider.family<void, String>((ref, targetUserId) async {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) throw Exception('User not authenticated');
 
@@ -392,7 +449,8 @@ final followUserProvider = FutureProvider.family<void, String>((ref, targetUserI
   await socialService.followUser(currentUser.id, targetUserId);
 });
 
-final unfollowUserProvider = FutureProvider.family<void, String>((ref, targetUserId) async {
+final unfollowUserProvider =
+    FutureProvider.family<void, String>((ref, targetUserId) async {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) throw Exception('User not authenticated');
 
@@ -400,13 +458,21 @@ final unfollowUserProvider = FutureProvider.family<void, String>((ref, targetUse
   await socialService.unfollowUser(currentUser.id, targetUserId);
 });
 
+<<<<<<< HEAD
 final userRoomsProvider = StreamProvider.family<List<Room>, String>((ref, userId) {
   return ref.watch(firestoreServiceProvider)
       .getRoomsStream()
       .map((rooms) => rooms.where((r) => r.participantIds.contains(userId)).toList());
+=======
+final userRoomsProvider =
+    StreamProvider.family<List<Room>, String>((ref, userId) {
+  // Placeholder: Return empty list
+  return Stream.value([]);
+>>>>>>> origin/develop
 });
 
-final userActivityProvider = StreamProvider.family<List<Map<String, dynamic>>, String>((ref, userId) {
+final userActivityProvider =
+    StreamProvider.family<List<Map<String, dynamic>>, String>((ref, userId) {
   // Placeholder: Return empty list
   return Stream.value([]);
 });

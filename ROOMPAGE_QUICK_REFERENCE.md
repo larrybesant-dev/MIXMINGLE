@@ -9,6 +9,7 @@
 ## 🎯 What It Does
 
 Complete room interface with:
+
 - Live video grid (1-12+ users, adaptive)
 - Participant list with speaking indicators
 - Chat overlay
@@ -98,6 +99,7 @@ User taps "Leave"
 ## 🎬 Key Animations
 
 ### Tile Entry (500ms)
+
 ```dart
 FadeTransition(opacity: 0→1)
 SlideTransition(position: (0, 0.3)→(0, 0))
@@ -105,6 +107,7 @@ Result: Tiles fade in + slide up smoothly
 ```
 
 ### Speaking Ring (Live)
+
 ```dart
 border: Colors.greenAccent (3px, if speaking)
 boxShadow: Green glow (if speaking)
@@ -115,17 +118,17 @@ Result: Active speaker highlighted instantly
 
 ## 🛠️ Key Methods
 
-| Method | Returns | Purpose |
-|--------|---------|---------|
-| `_initializeAndJoinRoom()` | Future | Initialize Agora + join room |
-| `_leaveRoom()` | Future | Leave room + navigate back |
-| `_buildAppBar()` | AppBar | Header with room info |
-| `_buildBody()` | Widget | Main content (grid or error) |
-| `_buildVideoArea()` | Widget | Video grid with layout |
-| `_buildVideoTile()` | Widget | Single video tile |
-| `_buildParticipantSidebar()` | Widget | Right sidebar |
-| `_buildControlBar()` | Widget | Bottom controls |
-| `_calculateGridColumns()` | int | Optimal columns (1-4) |
+| Method                       | Returns | Purpose                      |
+| ---------------------------- | ------- | ---------------------------- |
+| `_initializeAndJoinRoom()`   | Future  | Initialize Agora + join room |
+| `_leaveRoom()`               | Future  | Leave room + navigate back   |
+| `_buildAppBar()`             | AppBar  | Header with room info        |
+| `_buildBody()`               | Widget  | Main content (grid or error) |
+| `_buildVideoArea()`          | Widget  | Video grid with layout       |
+| `_buildVideoTile()`          | Widget  | Single video tile            |
+| `_buildParticipantSidebar()` | Widget  | Right sidebar                |
+| `_buildControlBar()`         | Widget  | Bottom controls              |
+| `_calculateGridColumns()`    | int     | Optimal columns (1-4)        |
 
 ---
 
@@ -144,13 +147,13 @@ All update in real-time → UI auto-rebuilds
 
 ## 🎯 Grid Layout
 
-| Video Count | Columns | Layout |
-|------------|---------|--------|
-| 1 | 1 | Single large tile |
-| 2-3 | 2 | 2x2 grid |
-| 4-6 | 2 | 2 columns |
-| 7-9 | 3 | 3 columns |
-| 10+ | 4 | 4 columns |
+| Video Count | Columns | Layout            |
+| ----------- | ------- | ----------------- |
+| 1           | 1       | Single large tile |
+| 2-3         | 2       | 2x2 grid          |
+| 4-6         | 2       | 2 columns         |
+| 7-9         | 3       | 3 columns         |
+| 10+         | 4       | 4 columns         |
 
 Auto-adjusts as users join/leave.
 
@@ -159,12 +162,14 @@ Auto-adjusts as users join/leave.
 ## 🎨 Visual States
 
 ### Loading State
+
 ```
 🔄 Spinner
 Joining room...
 ```
 
 ### Error State
+
 ```
 ❌ Error
 Failed to join room
@@ -173,6 +178,7 @@ Failed to join room
 ```
 
 ### Success State
+
 ```
 Video Grid | Participant Sidebar
 [tile1]    | 👤 Name1 🎤 🎥
@@ -184,13 +190,13 @@ Video Grid | Participant Sidebar
 
 ## 🎙️ Control Bar Buttons
 
-| Button | States | Action |
-|--------|--------|--------|
-| Mic | Blue (on) / Grey (off) | toggleMic() |
-| Camera | Blue (on) / Grey (off) | toggleVideo() |
-| Flip | Always (if camera on) | switchCamera() |
-| Chat | Always | showVoiceRoomChat() |
-| Leave | Always Red | _leaveRoom() |
+| Button | States                 | Action              |
+| ------ | ---------------------- | ------------------- |
+| Mic    | Blue (on) / Grey (off) | toggleMic()         |
+| Camera | Blue (on) / Grey (off) | toggleVideo()       |
+| Flip   | Always (if camera on)  | switchCamera()      |
+| Chat   | Always                 | showVoiceRoomChat() |
+| Leave  | Always Red             | \_leaveRoom()       |
 
 ---
 
@@ -246,14 +252,14 @@ Navigator.push(
 
 ## 📝 Code Statistics
 
-| Metric | Value |
-|--------|-------|
-| File | voice_room_page.dart |
-| Lines | 927 |
-| Methods | 14 |
-| Widgets | 7+ |
-| Animations | 2 |
-| Providers | 3 |
+| Metric       | Value                       |
+| ------------ | --------------------------- |
+| File         | voice_room_page.dart        |
+| Lines        | 927                         |
+| Methods      | 14                          |
+| Widgets      | 7+                          |
+| Animations   | 2                           |
+| Providers    | 3                           |
 | Error States | 3 (loading, error, success) |
 
 ---

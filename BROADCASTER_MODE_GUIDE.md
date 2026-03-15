@@ -11,6 +11,7 @@ MixMingle now supports **100+ simultaneous participants** in a single room using
 ## Architecture
 
 ### Channel Profile Changes
+
 - **Old**: `ChannelProfileType.channelProfileCommunication` (group chat)
   - Limited to ~17 video streams
   - All participants are equal
@@ -22,6 +23,7 @@ MixMingle now supports **100+ simultaneous participants** in a single room using
 ### Role System
 
 #### Broadcaster Role
+
 ```dart
 // User can stream video and audio
 ClientRoleType.clientRoleBroadcaster
@@ -32,6 +34,7 @@ ClientRoleType.clientRoleBroadcaster
 ```
 
 #### Audience Role
+
 ```dart
 // User can watch and listen only
 ClientRoleType.clientRoleAudience
@@ -46,6 +49,7 @@ ClientRoleType.clientRoleAudience
 ### 1. AgoraVideoService Methods
 
 #### Switch to Broadcaster
+
 ```dart
 // User wants to start broadcasting
 await agoraService.switchToBroadcaster();
@@ -56,6 +60,7 @@ await agoraService.switchToBroadcaster();
 ```
 
 #### Switch to Audience
+
 ```dart
 // User wants to stop broadcasting
 await agoraService.switchToAudience();
@@ -66,6 +71,7 @@ await agoraService.switchToAudience();
 ```
 
 #### Check Broadcaster Capacity
+
 ```dart
 bool isFull = agoraService.isAtBroadcasterCapacity();
 // Returns true if 20+ broadcasters are active
@@ -73,6 +79,7 @@ bool isFull = agoraService.isAtBroadcasterCapacity();
 ```
 
 #### Update Active Broadcasters
+
 ```dart
 // Called from Firestore listener to sync broadcaster list
 agoraService.updateActiveBroadcasters([
@@ -118,6 +125,7 @@ rooms/{roomId}/broadcasterQueue/
 ```
 
 Flow:
+
 1. User clicks "Request to Broadcast"
 2. Request added to queue with timestamp
 3. When broadcaster goes offline, approve next in queue
@@ -217,16 +225,19 @@ service cloud.firestore {
 ## Performance Considerations
 
 ### Bandwidth
+
 - **Per Broadcaster**: ~500KB-2MB/s (depends on resolution/FPS)
 - **Per Audience**: ~500KB/s total (all streams combined)
 - **Total for 20 broadcasters**: ~20MB/s upstream needed by server
 
 ### Network Quality
+
 - Enable Agora's network quality monitoring
 - Automatically downgrade broadcaster if connection poor
 - Switch to audience mode if network degraded
 
 ### UI Rendering
+
 - Only render video tiles for active broadcasters (max 20)
 - Show participant list for all 100+ users
 - Lazy-load remote video tiles on demand
@@ -234,6 +245,7 @@ service cloud.firestore {
 ## Upgrades & Extensions
 
 ### Future Features
+
 1. **Scheduled Broadcasts**: Users can schedule when they want to broadcast
 2. **Recording**: Record all broadcaster streams (requires Composite Recording setup)
 3. **Interactive Features**: Polls, Q&A, audience reactions while watching
@@ -241,7 +253,9 @@ service cloud.firestore {
 5. **Bitrate Adaptation**: Dynamically adjust quality based on network
 
 ### Scale to 1000+
+
 For truly massive rooms (1000+ users):
+
 - Use Agora's Cloud Recording with multiple hosts
 - Implement RTMP streaming for broadcast to platforms like YouTube
 - Use CDN for video distribution instead of peer-to-peer
@@ -249,19 +263,25 @@ For truly massive rooms (1000+ users):
 ## Troubleshooting
 
 ### Issue: User becomes broadcaster but video doesn't show
+
 **Solution**:
+
 - Ensure permissions granted (camera/microphone)
 - Check that `setupLocalVideo()` called after role change
 - Verify `publishCameraTrack` and `publishMicrophoneTrack` are true
 
 ### Issue: Too many broadcasters, can't add more
+
 **Solution**:
+
 - Check `isAtBroadcasterCapacity()` before allowing switch
 - Show "Waiting for spot" UI
 - Implement queue system for fairness
 
 ### Issue: Bandwidth congestion with 20 broadcasters
+
 **Solution**:
+
 - Reduce video resolution/FPS
 - Limit to 15 broadcasters instead of 20
 - Implement adaptive bitrate (built into Agora)
@@ -269,6 +289,7 @@ For truly massive rooms (1000+ users):
 ## Statistics
 
 With current configuration:
+
 - **Participants per room**: 100+
 - **Active broadcasters**: ~20
 - **Video streams displayed**: 20 (in video grid)

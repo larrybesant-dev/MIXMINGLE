@@ -170,7 +170,10 @@ class AnalyticsDashboardWidget extends ConsumerWidget {
                 }
 
                 return Column(
-                  children: activities.take(10).map((activity) => _buildActivityItem(activity)).toList(),
+                  children: activities
+                      .take(10)
+                      .map((activity) => _buildActivityItem(activity))
+                      .toList(),
                 );
               },
               loading: () => const SizedBox(

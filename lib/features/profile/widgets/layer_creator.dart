@@ -56,11 +56,13 @@ class LayerCreator extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF1A0F00),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFFFAB00).withValues(alpha: 0.4)),
+              border: Border.all(
+                  color: const Color(0xFFFFAB00).withValues(alpha: 0.4)),
             ),
             child: Text(
               p.creatorHeadline!,
-              style: const TextStyle(color: Color(0xFFFFD07A), fontSize: 14, height: 1.5),
+              style: const TextStyle(
+                  color: Color(0xFFFFD07A), fontSize: 14, height: 1.5),
             ),
           ),
           const SizedBox(height: 12),
@@ -73,15 +75,18 @@ class LayerCreator extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFF1A0008),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xFFFF1744).withValues(alpha: 0.5)),
+              border: Border.all(
+                  color: const Color(0xFFFF1744).withValues(alpha: 0.5)),
             ),
             child: const Row(children: [
-              Icon(Icons.warning_amber_rounded, color: Color(0xFFFF1744), size: 16),
+              Icon(Icons.warning_amber_rounded,
+                  color: Color(0xFFFF1744), size: 16),
               SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Adult content — 18+ verified users only. You must verify your age to access exclusive content.',
-                  style: TextStyle(color: Color(0xFFFF8A80), fontSize: 12, height: 1.4),
+                  style: TextStyle(
+                      color: Color(0xFFFF8A80), fontSize: 12, height: 1.4),
                 ),
               ),
             ]),
@@ -101,9 +106,12 @@ class LayerCreator extends StatelessWidget {
                 end: Alignment.bottomRight,
               ),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFFFAB00).withValues(alpha: 0.8)),
+              border: Border.all(
+                  color: const Color(0xFFFFAB00).withValues(alpha: 0.8)),
               boxShadow: [
-                BoxShadow(color: const Color(0xFFFFAB00).withValues(alpha: 0.15), blurRadius: 20),
+                BoxShadow(
+                    color: const Color(0xFFFFAB00).withValues(alpha: 0.15),
+                    blurRadius: 20),
               ],
             ),
             child: Row(
@@ -114,36 +122,51 @@ class LayerCreator extends StatelessWidget {
                     color: const Color(0xFFFFAB00).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.star_outline_rounded, color: Color(0xFFFFAB00), size: 22),
+                  child: const Icon(Icons.star_outline_rounded,
+                      color: Color(0xFFFFAB00), size: 22),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
-                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    const Text(
-                      'Subscribe for Exclusive Access',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      p.subscriptionPrice != null
-                          ? '\$${p.subscriptionPrice!.toStringAsFixed(2)} / month'
-                          : 'Price TBD',
-                      style: const TextStyle(color: Color(0xFFFFAB00), fontSize: 13, fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      '${_formatCount(p.subscriberCount)} subscriber${p.subscriberCount != 1 ? 's' : ''}',
-                      style: const TextStyle(color: Color(0xFF8892A4), fontSize: 12),
-                    ),
-                  ]),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Subscribe for Exclusive Access',
+                          style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          p.subscriptionPrice != null
+                              ? '\$${p.subscriptionPrice!.toStringAsFixed(2)} / month'
+                              : 'Price TBD',
+                          style: const TextStyle(
+                              color: Color(0xFFFFAB00),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w600),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${_formatCount(p.subscriberCount)} subscriber${p.subscriberCount != 1 ? 's' : ''}',
+                          style: const TextStyle(
+                              color: Color(0xFF8892A4), fontSize: 12),
+                        ),
+                      ]),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
                   decoration: BoxDecoration(
                     color: const Color(0xFFFFAB00),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Text('SUBSCRIBE', style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 12)),
+                  child: const Text('SUBSCRIBE',
+                      style: TextStyle(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 12)),
                 ),
               ],
             ),
@@ -156,15 +179,20 @@ class LayerCreator extends StatelessWidget {
         Row(
           children: [
             if (onTip != null)
-              Expanded(child: _smallAction(Icons.volunteer_activism_outlined, 'Tip', const Color(0xFFFF4D8B), onTip!)),
+              Expanded(
+                  child: _smallAction(Icons.volunteer_activism_outlined, 'Tip',
+                      const Color(0xFFFF4D8B), onTip!)),
             if (onTip != null && (p.hasPaidRooms || p.hasContentVault))
               const SizedBox(width: 8),
             if (p.hasPaidRooms)
-              Expanded(child: _smallAction(Icons.lock_outline, 'Paid Room', const Color(0xFF9B59B6), onJoinPaidRoom ?? () {})),
-            if (p.hasPaidRooms && p.hasContentVault)
-              const SizedBox(width: 8),
+              Expanded(
+                  child: _smallAction(Icons.lock_outline, 'Paid Room',
+                      const Color(0xFF9B59B6), onJoinPaidRoom ?? () {})),
+            if (p.hasPaidRooms && p.hasContentVault) const SizedBox(width: 8),
             if (p.hasContentVault)
-              Expanded(child: _smallAction(Icons.photo_library_outlined, 'Vault', const Color(0xFF00E5CC), onViewVault ?? () {})),
+              Expanded(
+                  child: _smallAction(Icons.photo_library_outlined, 'Vault',
+                      const Color(0xFF00E5CC), onViewVault ?? () {})),
           ],
         ),
       ],
@@ -189,17 +217,22 @@ class LayerCreator extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF00C853).withValues(alpha: 0.5)),
+            border: Border.all(
+                color: const Color(0xFF00C853).withValues(alpha: 0.5)),
           ),
           child: Column(
             children: [
               Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: [
-                _earningsStat('\$${p.totalEarnings.toStringAsFixed(2)}', 'Total Earned', const Color(0xFF00C853)),
+                _earningsStat('\$${p.totalEarnings.toStringAsFixed(2)}',
+                    'Total Earned', const Color(0xFF00C853)),
                 _divV(),
-                _earningsStat('${p.subscriberCount}', 'Subscribers', const Color(0xFFFFAB00)),
+                _earningsStat('${p.subscriberCount}', 'Subscribers',
+                    const Color(0xFFFFAB00)),
                 _divV(),
                 _earningsStat(
-                  p.subscriptionPrice != null ? '\$${p.subscriptionPrice!.toStringAsFixed(2)}' : '—',
+                  p.subscriptionPrice != null
+                      ? '\$${p.subscriptionPrice!.toStringAsFixed(2)}'
+                      : '—',
                   'Price/mo',
                   const Color(0xFF4A90FF),
                 ),
@@ -212,13 +245,19 @@ class LayerCreator extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFF00C853).withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFF00C853).withValues(alpha: 0.7)),
+                    border: Border.all(
+                        color: const Color(0xFF00C853).withValues(alpha: 0.7)),
                   ),
                   child: const Center(
                     child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      Icon(Icons.account_balance_wallet_outlined, color: Color(0xFF00C853), size: 16),
+                      Icon(Icons.account_balance_wallet_outlined,
+                          color: Color(0xFF00C853), size: 16),
                       SizedBox(width: 8),
-                      Text('Withdraw Earnings', style: TextStyle(color: Color(0xFF00C853), fontWeight: FontWeight.w700, fontSize: 14)),
+                      Text('Withdraw Earnings',
+                          style: TextStyle(
+                              color: Color(0xFF00C853),
+                              fontWeight: FontWeight.w700,
+                              fontSize: 14)),
                     ]),
                   ),
                 ),
@@ -238,10 +277,13 @@ class LayerCreator extends StatelessWidget {
     return Row(children: [
       const Icon(Icons.monetization_on_outlined, size: 16, color: color),
       const SizedBox(width: 7),
-      const Text('Creator', style: TextStyle(
-        color: color, fontSize: 13, fontWeight: FontWeight.w700,
-        shadows: [Shadow(color: Color(0x88FFAB00), blurRadius: 10)],
-      )),
+      const Text('Creator',
+          style: TextStyle(
+            color: color,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            shadows: [Shadow(color: Color(0x88FFAB00), blurRadius: 10)],
+          )),
       if (p.isAdultContentEnabled) ...[
         const SizedBox(width: 8),
         Container(
@@ -249,17 +291,24 @@ class LayerCreator extends StatelessWidget {
           decoration: BoxDecoration(
             color: const Color(0xFFFF1744).withValues(alpha: 0.15),
             borderRadius: BorderRadius.circular(6),
-            border: Border.all(color: const Color(0xFFFF1744).withValues(alpha: 0.6)),
+            border: Border.all(
+                color: const Color(0xFFFF1744).withValues(alpha: 0.6)),
           ),
-          child: const Text('18+', style: TextStyle(color: Color(0xFFFF1744), fontSize: 10, fontWeight: FontWeight.w900)),
+          child: const Text('18+',
+              style: TextStyle(
+                  color: Color(0xFFFF1744),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900)),
         ),
       ],
       const SizedBox(width: 8),
-      Expanded(child: Container(height: 1, color: color.withValues(alpha: 0.2))),
+      Expanded(
+          child: Container(height: 1, color: color.withValues(alpha: 0.2))),
     ]);
   }
 
-  Widget _smallAction(IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _smallAction(
+      IconData icon, String label, Color color, VoidCallback onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -272,7 +321,9 @@ class LayerCreator extends StatelessWidget {
         child: Column(mainAxisSize: MainAxisSize.min, children: [
           Icon(icon, size: 16, color: color),
           const SizedBox(height: 4),
-          Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+          Text(label,
+              style: TextStyle(
+                  color: color, fontSize: 11, fontWeight: FontWeight.w600)),
         ]),
       ),
     );
@@ -280,13 +331,17 @@ class LayerCreator extends StatelessWidget {
 
   Widget _earningsStat(String val, String label, Color color) {
     return Column(children: [
-      Text(val, style: TextStyle(color: color, fontSize: 16, fontWeight: FontWeight.w800)),
+      Text(val,
+          style: TextStyle(
+              color: color, fontSize: 16, fontWeight: FontWeight.w800)),
       const SizedBox(height: 3),
-      Text(label, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 11)),
+      Text(label,
+          style: const TextStyle(color: Color(0xFF6B7280), fontSize: 11)),
     ]);
   }
 
-  Widget _divV() => Container(width: 1, height: 36, color: const Color(0xFF1E2D40));
+  Widget _divV() =>
+      Container(width: 1, height: 36, color: const Color(0xFF1E2D40));
 
   String _formatCount(int n) {
     if (n >= 1000000) return '${(n / 1000000).toStringAsFixed(1)}M';
@@ -305,7 +360,8 @@ class _CreatorOwnerBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF1A0F00),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xFFFFAB00).withValues(alpha: 0.4)),
+        border:
+            Border.all(color: const Color(0xFFFFAB00).withValues(alpha: 0.4)),
       ),
       child: const Row(children: [
         Icon(Icons.lock_outlined, size: 14, color: Color(0xFFFFAB00)),
@@ -328,11 +384,17 @@ class _CreatorManageRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Expanded(child: _tile(Icons.analytics_outlined, 'Analytics', const Color(0xFF4A90FF))),
+        Expanded(
+            child: _tile(Icons.analytics_outlined, 'Analytics',
+                const Color(0xFF4A90FF))),
         const SizedBox(width: 8),
-        Expanded(child: _tile(Icons.people_outline, 'Subscribers', const Color(0xFF9B59B6))),
+        Expanded(
+            child: _tile(
+                Icons.people_outline, 'Subscribers', const Color(0xFF9B59B6))),
         const SizedBox(width: 8),
-        Expanded(child: _tile(Icons.settings_outlined, 'Settings', const Color(0xFF6B7280))),
+        Expanded(
+            child: _tile(
+                Icons.settings_outlined, 'Settings', const Color(0xFF6B7280))),
       ],
     );
   }
@@ -348,7 +410,9 @@ class _CreatorManageRow extends StatelessWidget {
       child: Column(mainAxisSize: MainAxisSize.min, children: [
         Icon(icon, size: 16, color: color),
         const SizedBox(height: 4),
-        Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+        Text(label,
+            style: TextStyle(
+                color: color, fontSize: 11, fontWeight: FontWeight.w600)),
       ]),
     );
   }

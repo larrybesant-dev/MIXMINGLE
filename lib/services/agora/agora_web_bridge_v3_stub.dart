@@ -30,6 +30,7 @@ class AgoraWebBridgeV3 {
 
   static void printDebugInfo() {}
 
+<<<<<<< HEAD
   static void registerRemotePublishedCallback(
       void Function(String uid, String mediaType) callback) {}
 
@@ -44,4 +45,7 @@ class AgoraWebBridgeV3 {
   static Future<bool> pauseAudioMixing() async => false;
   static Future<bool> resumeAudioMixing() async => false;
   static Future<bool> setAudioMixingVolume(int volume) async => false;
+=======
+  static bool renewToken(String newToken) => false;
+>>>>>>> origin/develop
 }

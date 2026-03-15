@@ -9,6 +9,7 @@
 ## WHAT WAS DELIVERED (Summary)
 
 ### 📦 **Code Components** (3 files)
+
 ```
 ✅ lib/core/design_system/design_constants.dart (800 lines)
    - Hard-coded DesignColors, DesignTypography, DesignSpacing, DesignAnimations
@@ -27,6 +28,7 @@
 ```
 
 ### 🧪 **Testing & Enforcement** (2 files)
+
 ```
 ✅ test/design_constants_test.dart (400 lines)
    - 50+ unit tests validating all constants
@@ -87,6 +89,7 @@
 ## BINDING VALUES (The Rules)
 
 ### 🎨 **Colors** (You can ONLY use these)
+
 ```dart
 import 'package:mixmingle/core/design_system/design_constants.dart';
 
@@ -106,6 +109,7 @@ Colors.red                    // Material default
 ```
 
 ### ⏱️ **Animation Timings** (Non-negotiable)
+
 ```dart
 // Join Flow (BINDING - affects UX ceremony)
 DesignAnimations.joinStage1Duration      // 150ms "Entering room…"
@@ -126,6 +130,7 @@ Duration(milliseconds: 400)              // Magic number
 ```
 
 ### 📏 **Spacing** (4px scale across entire app)
+
 ```dart
 DesignSpacing.xs        // 4px  (rarely used)
 DesignSpacing.sm        // 8px
@@ -141,6 +146,7 @@ padding: 16             // Magic number
 ```
 
 ### 🔤 **Typography** (6 styles, no custom TextStyle)
+
 ```dart
 DesignTypography.heading      // 18pt bold - Room name, big titles
 DesignTypography.subheading   // 14pt w600 - Participant names
@@ -159,6 +165,7 @@ TextStyle(fontSize: 14)
 ## HOW THE SYSTEM WORKS
 
 ### 1️⃣ You Write a Widget
+
 ```dart
 class MyCard extends StatelessWidget {
   @override
@@ -179,6 +186,7 @@ class MyCard extends StatelessWidget {
 ```
 
 ### 2️⃣ Tests Verify
+
 ```bash
 flutter test test/design_constants_test.dart
 
@@ -189,6 +197,7 @@ flutter test test/design_constants_test.dart
 ```
 
 ### 3️⃣ Code Review Checks
+
 ```
 Design Compliance Checklist:
 - [ ] Uses DesignColors.* (no Colors.*, no 0xFF*)
@@ -204,6 +213,7 @@ Design Compliance Checklist:
 ```
 
 ### 4️⃣ CI/CD Enforces
+
 ```bash
 PR submitted
   ↓
@@ -221,6 +231,7 @@ If ✅ passes:
 ```
 
 ### 5️⃣ User Sees Consistent Design
+
 - 🎨 All colors are same shade of red or grayscale
 - ⏱️ All animations feel same (ceremonial, not instant)
 - 📏 All spacing is aligned (4px grid)
@@ -233,6 +244,7 @@ If ✅ passes:
 ## QUICK START (Choose Your Path)
 
 ### 🚀 **I Want to Build Something Now** (30 minutes)
+
 1. Open: `lib/features/video_room/widgets/presence_card.dart`
 2. Copy the entire widget
 3. Rename it to `MyNewWidget`
@@ -242,12 +254,14 @@ If ✅ passes:
 7. Done
 
 ### 📚 **I Need to Understand This** (1 hour)
+
 1. Read: `DESIGN_SYSTEM_QUICK_REF.md` (2 pages, fast)
 2. Read: `DESIGN_SYSTEM_INTEGRATION.md` (sections relevant to your task)
 3. Look at: `presence_card.dart` (example code)
 4. Now start building (reference quick ref while coding)
 
 ### 👥 **I'm Leading the Team** (2 hours, one-time)
+
 1. Read: `DESIGN_SYSTEM_TEAM_GUIDE.md` (onboarding for team)
 2. Add design checklist to PR template
 3. Run tests: `flutter test test/design_*_test.dart` (verify all pass)
@@ -259,20 +273,20 @@ If ✅ passes:
 
 ## FILE LOCATIONS (Everything You Need)
 
-| **I need...** | **Location** | **Type** |
-|---|---|---|
-| Hard-coded colors | `design_constants.dart` | Code |
-| Hard-coded spacing | `design_constants.dart` | Code |
-| Hard-coded animations | `design_constants.dart` | Code |
-| Example widget | `presence_card.dart` | Code |
-| Animation reusables | `design_animations.dart` | Code |
-| Color palette | `DESIGN_SYSTEM_QUICK_REF.md` | Docs |
-| Implementation guide | `DESIGN_SYSTEM_INTEGRATION.md` | Docs |
-| Team onboarding | `DESIGN_SYSTEM_TEAM_GUIDE.md` | Docs |
-| Why these choices | `DESIGN_BIBLE.md` | Docs |
-| Validation tests | `test/design_constants_test.dart` | Tests |
-| Animation tests | `test/design_animations_test.dart` | Tests |
-| Complete summary | `DESIGN_SYSTEM_DELIVERY_MANIFEST.md` | Docs |
+| **I need...**         | **Location**                         | **Type** |
+| --------------------- | ------------------------------------ | -------- |
+| Hard-coded colors     | `design_constants.dart`              | Code     |
+| Hard-coded spacing    | `design_constants.dart`              | Code     |
+| Hard-coded animations | `design_constants.dart`              | Code     |
+| Example widget        | `presence_card.dart`                 | Code     |
+| Animation reusables   | `design_animations.dart`             | Code     |
+| Color palette         | `DESIGN_SYSTEM_QUICK_REF.md`         | Docs     |
+| Implementation guide  | `DESIGN_SYSTEM_INTEGRATION.md`       | Docs     |
+| Team onboarding       | `DESIGN_SYSTEM_TEAM_GUIDE.md`        | Docs     |
+| Why these choices     | `DESIGN_BIBLE.md`                    | Docs     |
+| Validation tests      | `test/design_constants_test.dart`    | Tests    |
+| Animation tests       | `test/design_animations_test.dart`   | Tests    |
+| Complete summary      | `DESIGN_SYSTEM_DELIVERY_MANIFEST.md` | Docs     |
 
 ---
 
@@ -303,6 +317,7 @@ grep -c "DesignColors\." lib/features/video_room/widgets/presence_card.dart
 ## WHAT TO DO WITH THIS (Action Items)
 
 ### For Each Developer
+
 - [ ] Read `DESIGN_SYSTEM_QUICK_REF.md`
 - [ ] Study `presence_card.dart` pattern
 - [ ] Copy pattern for your next widget
@@ -310,18 +325,21 @@ grep -c "DesignColors\." lib/features/video_room/widgets/presence_card.dart
 - [ ] Use design constants in all new code
 
 ### For Code Reviewers
+
 - [ ] Add design compliance checklist to PR template
 - [ ] Block merges that fail design tests
 - [ ] Ask: "Does this use DesignColors, DesignTypography, DesignSpacing?"
 - [ ] Reference `presence_card.dart` if developer asks "how do I do this?"
 
 ### For QA/Testing
+
 - [ ] Verify room cards look consistent (same red accent, same spacing)
 - [ ] Verify join flow takes ≥700ms (not instant)
 - [ ] Verify animations feel ceremonial (not jerky)
 - [ ] File bugs with reference to violated constant
 
 ### For CI/CD (If using GitHub Actions)
+
 - [ ] Add `flutter test test/design_*_test.dart` to CI pipeline
 - [ ] Block PRs that fail design tests (no exceptions)
 - [ ] Report test coverage for design compliance % (track over time)
@@ -331,17 +349,20 @@ grep -c "DesignColors\." lib/features/video_room/widgets/presence_card.dart
 ## SUCCESS METRICS
 
 ### Week 1
+
 - ✅ All developers have read `DESIGN_SYSTEM_QUICK_REF.md`
 - ✅ Design tests pass: `flutter test test/design_*_test.dart`
 - ✅ First 3 widgets updated following `presence_card.dart` pattern
 
 ### Month 1
+
 - ✅ 100% of new widgets use design constants
-- ✅ 0 hardcoded colors (Color(0xFF*)) in new code
+- ✅ 0 hardcoded colors (Color(0xFF\*)) in new code
 - ✅ 0 hardcoded spacing values in new code
 - ✅ All code reviews include design checklist
 
 ### Ongoing
+
 - ✅ Design tests never fail CI/CD
 - ✅ DESIGN_BIBLE.md treated as immutable (changes go through product approval)
 - ✅ New developers onboard in <1 hour (using this guide)
@@ -352,6 +373,7 @@ grep -c "DesignColors\." lib/features/video_room/widgets/presence_card.dart
 ## WHAT'S NOT OPTIONAL
 
 ✅ **Must Do:**
+
 - Run design tests before every commit
 - Use design constants in all new widgets
 - Follow `presence_card.dart` pattern exactly
@@ -359,6 +381,7 @@ grep -c "DesignColors\." lib/features/video_room/widgets/presence_card.dart
 - Block PRs that fail design tests
 
 ❌ **Don't Do:**
+
 - Hardcode colors (Color(0xFFFF4C4C), Colors.red)
 - Hardcode spacing (EdgeInsets.all(16), padding: 12)
 - Hardcode animations (Duration(milliseconds: 150))
@@ -369,16 +392,16 @@ grep -c "DesignColors\." lib/features/video_room/widgets/presence_card.dart
 
 ## SUPPORT & ESCALATION
 
-| **Question** | **Answer** | **Document** |
-|---|---|---|
-| "What color should this be?" | Check DesignColors in design_constants.dart | design_constants.dart |
-| "How much spacing?" | Check DesignSpacing, aim for multiples of 4px | DESIGN_SYSTEM_QUICK_REF.md |
-| "How long animation?" | Check DesignAnimations | design_constants.dart |
-| "Show me how" | Reference presence_card.dart | presence_card.dart |
-| "Tests failing" | Check which constant violated, fix code | design_*_test.dart |
-| "Need new color" | Update DESIGN_BIBLE.md, add to DesignColors, add test | DESIGN_SYSTEM_INTEGRATION.md |
-| "Why 700ms join?" | Read DESIGN_BIBLE.md Section C.4 | DESIGN_BIBLE.md |
-| "How to onboard?" | Read DESIGN_SYSTEM_TEAM_GUIDE.md | DESIGN_SYSTEM_TEAM_GUIDE.md |
+| **Question**                 | **Answer**                                            | **Document**                 |
+| ---------------------------- | ----------------------------------------------------- | ---------------------------- |
+| "What color should this be?" | Check DesignColors in design_constants.dart           | design_constants.dart        |
+| "How much spacing?"          | Check DesignSpacing, aim for multiples of 4px         | DESIGN_SYSTEM_QUICK_REF.md   |
+| "How long animation?"        | Check DesignAnimations                                | design_constants.dart        |
+| "Show me how"                | Reference presence_card.dart                          | presence_card.dart           |
+| "Tests failing"              | Check which constant violated, fix code               | design\_\*\_test.dart        |
+| "Need new color"             | Update DESIGN_BIBLE.md, add to DesignColors, add test | DESIGN_SYSTEM_INTEGRATION.md |
+| "Why 700ms join?"            | Read DESIGN_BIBLE.md Section C.4                      | DESIGN_BIBLE.md              |
+| "How to onboard?"            | Read DESIGN_SYSTEM_TEAM_GUIDE.md                      | DESIGN_SYSTEM_TEAM_GUIDE.md  |
 
 ---
 
@@ -388,7 +411,7 @@ grep -c "DesignColors\." lib/features/video_room/widgets/presence_card.dart
 - [ ] You can open: `lib/core/design_system/design_constants.dart` → ✅ EXISTS
 - [ ] You can open: `lib/features/video_room/widgets/presence_card.dart` → ✅ EXISTS
 - [ ] You have: `DESIGN_SYSTEM_QUICK_REF.md` bookmarked or printed → ✅ YES
-- [ ] You understand: Use DesignColors, never Colors.* → ✅ CLEAR
+- [ ] You understand: Use DesignColors, never Colors.\* → ✅ CLEAR
 - [ ] You understand: Use DesignSpacing, never hardcode 16 → ✅ CLEAR
 - [ ] You understand: Use DesignAnimations, never Duration(150) → ✅ CLEAR
 - [ ] You understand: Copy presence_card.dart pattern for new widgets → ✅ CLEAR
@@ -398,18 +421,21 @@ grep -c "DesignColors\." lib/features/video_room/widgets/presence_card.dart
 ## TL;DR
 
 **You now have:**
+
 - Hard-coded design constants (colors, spacing, animations, typography)
 - Binding tests that block non-compliant code
 - Canonical example to copy (presence_card.dart)
 - Complete documentation (read once, refer often)
 
 **You must do:**
+
 1. Run `flutter test test/design_*_test.dart` before every commit
 2. Use only DesignColors, DesignSpacing, DesignTypography, DesignAnimations
 3. Copy presence_card.dart pattern for all new widgets
 4. Add design checklist to code review (block if not checked)
 
 **You will get:**
+
 - 🎨 Consistent design across entire app
 - ✅ Zero hardcoded values hiding issues
 - 🚀 New developers productive in <1 hour

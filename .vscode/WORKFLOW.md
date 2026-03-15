@@ -3,6 +3,7 @@
 ## Setup (one-time only)
 
 ### 1. Open workspace correctly
+
 ```powershell
 cd C:\Users\LARRY\MIXMINGLE
 code .
@@ -17,9 +18,11 @@ code .
 When VS Code prompts to install recommended extensions, **click "Install All"**.
 
 If it doesn't prompt, press:
+
 - `Ctrl+Shift+P` → `Extensions: Show Recommended Extensions` → Install these:
 
 ✅ **Essential (non-negotiable):**
+
 - Dart
 - Flutter
 - Firebase Tools (`toba.vsfire`)
@@ -27,10 +30,12 @@ If it doesn't prompt, press:
 - ESLint
 
 ⚠️ **Optional (enable later):**
+
 - Error Lens (inline errors)
 - GitLens (version control)
 
 ❌ **Do NOT install:**
+
 - AI Copilots (wait until app is stable)
 - Themes/icon packs (performance hit)
 - YAML/Prettier (conflicts with Dart formatter)
@@ -40,11 +45,13 @@ If it doesn't prompt, press:
 ### 3. Verify Flutter environment
 
 In VS Code terminal (`Ctrl+`` backtick):
+
 ```powershell
 flutter doctor -v
 ```
 
 Must show:
+
 - ✅ Flutter (Channel stable)
 - ✅ Chrome (for web debugging)
 - ✅ VS Code
@@ -79,6 +86,7 @@ This runs: `flutter clean && flutter pub get`
 ### View console logs
 
 After pressing F5, check:
+
 - **DEBUG CONSOLE** tab (bottom panel) — Flutter app logs
 - **TERMINAL** tab — Build output
 - **PROBLEMS** tab — Static analysis errors
@@ -111,6 +119,7 @@ Save manually: `Ctrl+S`
 ### Start emulators first
 
 In VS Code terminal:
+
 ```powershell
 firebase emulators:start --only auth,storage
 ```
@@ -120,6 +129,7 @@ Keep this running in one terminal tab.
 ### Launch app with emulator config
 
 `Ctrl+Shift+D` (Debug sidebar) → Select:
+
 - `🔥 Flutter: Debug with Firebase Emulators`
 
 Press F5.
@@ -129,22 +139,27 @@ Press F5.
 ## Common issues (and fixes)
 
 ### "Flutter: No device detected"
+
 → Chrome not found. Run: `flutter devices`
 → Must show `chrome (web)` in list.
 
 ### "Could not resolve path to Flutter SDK"
+
 → VS Code opened wrong folder.
 → Close VS Code. Run: `cd C:\Users\LARRY\MIXMINGLE && code .`
 
 ### "Gradle build failed" (Android)
+
 → Android config broken (known issue).
 → Stick to web (`-d chrome`) for now.
 
 ### Debug console shows nothing
+
 → Check **DEBUG CONSOLE** tab (not TERMINAL).
 → Make sure you pressed F5, not manually ran `flutter run`.
 
 ### Hot reload doesn't work
+
 → App crashed. Check DEBUG CONSOLE for stack trace.
 → Stop (Shift+F5) and restart (F5).
 

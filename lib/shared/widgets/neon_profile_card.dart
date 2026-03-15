@@ -47,7 +47,8 @@ class NeonProfileCard extends StatelessWidget {
     final wasRecentlyActive = _wasRecentlyActive(profile.updatedAt);
 
     final vibeColor = VibeTags.colorFor(profile.vibeTag);
-    final borderColor = glowOverride ?? (isLiveNow ? NeonColors.errorRed : vibeColor);
+    final borderColor =
+        glowOverride ?? (isLiveNow ? NeonColors.errorRed : vibeColor);
 
     return Container(
       padding: compact
@@ -56,7 +57,8 @@ class NeonProfileCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: NeonColors.darkCard,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: borderColor.withValues(alpha: 0.55), width: 1.5),
+        border:
+            Border.all(color: borderColor.withValues(alpha: 0.55), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: borderColor.withValues(alpha: 0.35),
@@ -65,7 +67,9 @@ class NeonProfileCard extends StatelessWidget {
           ),
         ],
       ),
-      child: compact ? _buildCompactRow(isLiveNow, wasRecentlyActive) : _buildFullCard(isLiveNow, wasRecentlyActive),
+      child: compact
+          ? _buildCompactRow(isLiveNow, wasRecentlyActive)
+          : _buildFullCard(isLiveNow, wasRecentlyActive),
     );
   }
 
@@ -175,8 +179,7 @@ class NeonProfileCard extends StatelessWidget {
             if (profile.vibeTag != null) _vibeChip(),
             if (profile.vibeTag != null && profile.countryCode != null)
               const SizedBox(width: 8),
-            if (profile.countryCode != null)
-              _flagPill(),
+            if (profile.countryCode != null) _flagPill(),
           ],
         ),
         const SizedBox(height: 8),
@@ -351,7 +354,8 @@ class _NeonAvatarRingState extends State<NeonAvatarRing>
     return AnimatedBuilder(
       animation: _pulse,
       builder: (_, __) {
-        final blurRadius = widget.isLive ? _glow.value : (widget.recentlyActive ? 10.0 : 0.0);
+        final blurRadius =
+            widget.isLive ? _glow.value : (widget.recentlyActive ? 10.0 : 0.0);
         return Stack(
           alignment: Alignment.center,
           children: [
@@ -363,7 +367,8 @@ class _NeonAvatarRingState extends State<NeonAvatarRing>
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: _ringColor.withValues(alpha: widget.isLive ? 0.7 : 0.45),
+                    color: _ringColor.withValues(
+                        alpha: widget.isLive ? 0.7 : 0.45),
                     blurRadius: blurRadius,
                     spreadRadius: 1,
                   ),
@@ -384,8 +389,9 @@ class _NeonAvatarRingState extends State<NeonAvatarRing>
             CircleAvatar(
               radius: d / 2,
               backgroundColor: NeonColors.darkBg2,
-              backgroundImage:
-                  widget.photoUrl != null ? NetworkImage(widget.photoUrl!) : null,
+              backgroundImage: widget.photoUrl != null
+                  ? NetworkImage(widget.photoUrl!)
+                  : null,
               child: widget.photoUrl == null
                   ? Text(
                       widget.displayName.isNotEmpty
@@ -405,7 +411,8 @@ class _NeonAvatarRingState extends State<NeonAvatarRing>
                 bottom: 0,
                 right: 0,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                   decoration: BoxDecoration(
                     color: NeonColors.errorRed,
                     borderRadius: BorderRadius.circular(6),

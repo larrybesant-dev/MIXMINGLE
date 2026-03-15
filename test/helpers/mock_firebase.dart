@@ -47,7 +47,8 @@ class MockFirestoreService {
     return _collections[collection]?.values.toList() ?? [];
   }
 
-  void updateDocument(String collection, String docId, Map<String, dynamic> data) {
+  void updateDocument(
+      String collection, String docId, Map<String, dynamic> data) {
     if (_collections[collection]?.containsKey(docId) ?? false) {
       _collections[collection]![docId]!.addAll(data);
     }
@@ -81,7 +82,8 @@ class MockFirestoreService {
       docs.sort((a, b) {
         final aVal = a[orderByField];
         final bVal = b[orderByField];
-        final comparison = Comparable.compare(aVal as Comparable, bVal as Comparable);
+        final comparison =
+            Comparable.compare(aVal as Comparable, bVal as Comparable);
         return descending ? -comparison : comparison;
       });
     }

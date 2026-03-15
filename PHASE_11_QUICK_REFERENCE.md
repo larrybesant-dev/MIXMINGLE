@@ -232,6 +232,7 @@ Your code is Phase 11 compliant when:
 ## 🚨 Common Mistakes to Avoid
 
 ❌ **DON'T:**
+
 ```dart
 // Direct Navigator call
 Navigator.of(context).pushNamed('/profile');
@@ -244,6 +245,7 @@ await roomRef.set(data);
 ```
 
 ✅ **DO:**
+
 ```dart
 // Safe navigation
 context.safePushNamed('/profile');

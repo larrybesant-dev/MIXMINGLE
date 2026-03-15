@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SpeedDatingResult {
@@ -10,6 +9,9 @@ class SpeedDatingResult {
   final bool matchedUserLiked;
   final bool isMutual;
   final DateTime timestamp;
+  // Denormalized for fast inbox reads
+  final String? matchedUserName;
+  final String? matchedUserAvatar;
 
   SpeedDatingResult({
     required this.id,
@@ -20,6 +22,8 @@ class SpeedDatingResult {
     required this.matchedUserLiked,
     required this.isMutual,
     required this.timestamp,
+    this.matchedUserName,
+    this.matchedUserAvatar,
   });
 
   factory SpeedDatingResult.fromMap(Map<String, dynamic> map) {
@@ -34,8 +38,11 @@ class SpeedDatingResult {
       timestamp: map['timestamp'] != null
           ? (map['timestamp'] is Timestamp
               ? (map['timestamp'] as Timestamp).toDate()
-              : DateTime.tryParse(map['timestamp'].toString()) ?? DateTime.now())
+              : DateTime.tryParse(map['timestamp'].toString()) ??
+                  DateTime.now())
           : DateTime.now(),
+      matchedUserName: map['matchedUserName'] as String?,
+      matchedUserAvatar: map['matchedUserAvatar'] as String?,
     );
   }
 
@@ -54,6 +61,8 @@ class SpeedDatingResult {
       'matchedUserLiked': matchedUserLiked,
       'isMutual': isMutual,
       'timestamp': Timestamp.fromDate(timestamp),
+      if (matchedUserName != null) 'matchedUserName': matchedUserName,
+      if (matchedUserAvatar != null) 'matchedUserAvatar': matchedUserAvatar,
     };
   }
 
@@ -66,6 +75,8 @@ class SpeedDatingResult {
     bool? matchedUserLiked,
     bool? isMutual,
     DateTime? timestamp,
+    String? matchedUserName,
+    String? matchedUserAvatar,
   }) {
     return SpeedDatingResult(
       id: id ?? this.id,
@@ -76,6 +87,8 @@ class SpeedDatingResult {
       matchedUserLiked: matchedUserLiked ?? this.matchedUserLiked,
       isMutual: isMutual ?? this.isMutual,
       timestamp: timestamp ?? this.timestamp,
+      matchedUserName: matchedUserName ?? this.matchedUserName,
+      matchedUserAvatar: matchedUserAvatar ?? this.matchedUserAvatar,
     );
   }
 
@@ -110,4 +123,3 @@ class SpeedDatingResult {
     return 'SpeedDatingResult(id: $id, roundId: $roundId, userId: $userId, matchedUserId: $matchedUserId, isMutual: $isMutual, timestamp: $timestamp)';
   }
 }
-

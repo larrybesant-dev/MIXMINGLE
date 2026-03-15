@@ -7,7 +7,8 @@ void main() {
     // Integration tests validate chat listing and messaging functionality.
     // Widget tests skipped here to avoid test environment complexity.
 
-    testWidgets('ChatListPage is properly constructed', (WidgetTester tester) async {
+    testWidgets('ChatListPage is properly constructed',
+        (WidgetTester tester) async {
       // Simplified test to ensure widget type exists
       expect(ChatListPage, isNotNull);
     });

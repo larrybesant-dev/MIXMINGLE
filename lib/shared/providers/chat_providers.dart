@@ -45,7 +45,15 @@ final typingStatusProvider = StreamProvider.family<bool, String>(
 /// Returns {isOnline: bool, lastSeen: DateTime?} for backward-compat with chat list.
 final presenceProvider = StreamProvider.family<Map<String, dynamic>, String>(
   (ref, userId) {
+<<<<<<< HEAD
     return FirebaseFirestore.instance.collection('presence').doc(userId).snapshots().map((snapshot) {
+=======
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .map((snapshot) {
+>>>>>>> origin/develop
       if (!snapshot.exists) {
         return {'isOnline': false, 'lastSeen': null};
       }
@@ -59,15 +67,23 @@ final presenceProvider = StreamProvider.family<Map<String, dynamic>, String>(
           DateTime.now().difference(lastActive) > const Duration(minutes: 10);
 
       return {
+<<<<<<< HEAD
         'isOnline': state == 'online' && !isStale,
         'lastSeen': lastActive,
+=======
+        'isOnline': data['isOnline'] ?? false,
+        'lastSeen': data['lastSeen'] != null
+            ? (data['lastSeen'] as Timestamp).toDate()
+            : null,
+>>>>>>> origin/develop
       };
     });
   },
 );
 
 /// Chat settings provider
-final chatSettingsProvider = FutureProvider.family<Map<String, dynamic>, String>(
+final chatSettingsProvider =
+    FutureProvider.family<Map<String, dynamic>, String>(
   (ref, roomId) async {
     final service = ref.watch(chatServiceProvider);
     return service.getChatSettings(roomId);
@@ -81,5 +97,3 @@ final messageCountProvider = FutureProvider.family<int, String>(
     return service.getMessageCount(roomId);
   },
 );
-
-

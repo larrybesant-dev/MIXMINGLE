@@ -44,31 +44,39 @@ class FloatingWindowWidget extends StatelessWidget {
               children: [
                 IconButton(
                   icon: Icon(
-                    controller.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
+                    controller.isPinned
+                        ? Icons.push_pin
+                        : Icons.push_pin_outlined,
                     color: Colors.white,
                     size: 16,
                   ),
                   onPressed: onPin,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.minimize, color: Colors.white, size: 16),
+                  icon:
+                      const Icon(Icons.minimize, color: Colors.white, size: 16),
                   onPressed: onMinimize,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.crop_square, color: Colors.white, size: 16),
+                  icon: const Icon(Icons.crop_square,
+                      color: Colors.white, size: 16),
                   onPressed: onMaximize,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
                 ),
                 IconButton(
                   icon: const Icon(Icons.close, color: Colors.white, size: 16),
                   onPressed: onClose,
                   padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                  constraints:
+                      const BoxConstraints(minWidth: 32, minHeight: 32),
                 ),
               ],
             ),

@@ -33,6 +33,7 @@ curl -X POST https://us-central1-mix-and-mingle-v2.cloudfunctions.net/generateAg
 ```
 
 Expected response:
+
 ```json
 {
   "result": {
@@ -53,6 +54,7 @@ firebase functions:log --tail
 ```
 
 Should see recent entries like:
+
 ```
 ✅ Generated Agora token for user [userId] in room [roomId]
 ```
@@ -64,18 +66,21 @@ Should see recent entries like:
 ### If you still get INTERNAL error:
 
 1. **Check secrets are set:**
+
    ```bash
    firebase functions:secrets:access AGORA_APP_ID
    firebase functions:secrets:access AGORA_APP_CERTIFICATE
    ```
 
 2. **Verify deployment:**
+
    ```bash
    firebase deploy --only functions:generateAgoraToken
    ```
 
 3. **Check function code:**
    Check that `functions/src/index.ts` has:
+
    ```typescript
    import { defineSecret } from "firebase-functions/params";
    const agoraAppId = defineSecret("AGORA_APP_ID");

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixmingle/shared/models/moderation_action.dart';
 
@@ -112,12 +112,14 @@ class ModStatsCard extends StatelessWidget {
       'total': logs.length,
       'bans': logs.where((l) => l.type == ModerationType.ban).length,
       'tempBans': logs.where((l) => l.type == ModerationType.tempBan).length,
-      'shadowBans': logs.where((l) => l.type == ModerationType.shadowBan).length,
+      'shadowBans':
+          logs.where((l) => l.type == ModerationType.shadowBan).length,
       'kicks': logs.where((l) => l.type == ModerationType.kick).length,
       'timeouts': logs.where((l) => l.type == ModerationType.timeout).length,
       'warnings': logs.where((l) => l.type == ModerationType.warn).length,
       'autoMod': logs.where((l) => l.isAutoModerated).length,
-      'activeBans': logs.where((l) => l.isActive && l.type == ModerationType.ban).length,
+      'activeBans':
+          logs.where((l) => l.isActive && l.type == ModerationType.ban).length,
     };
   }
 }

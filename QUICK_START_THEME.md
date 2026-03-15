@@ -7,6 +7,7 @@
 ### When You Need a Color
 
 **DO THIS** ✅
+
 ```dart
 import 'package:mix_and_mingle/core/design_system/design_constants.dart';
 
@@ -20,6 +21,7 @@ Container(
 ```
 
 **NOT THIS** ❌
+
 ```dart
 Container(
   color: const Color(0xFFFFD700),  // Bad!
@@ -65,6 +67,7 @@ DesignColors.accent90  // 90% opacity
 ### Common Patterns
 
 #### Dialog
+
 ```dart
 showDialog(
   context: context,
@@ -77,6 +80,7 @@ showDialog(
 ```
 
 #### Button
+
 ```dart
 ElevatedButton(
   style: ElevatedButton.styleFrom(
@@ -88,6 +92,7 @@ ElevatedButton(
 ```
 
 #### Card
+
 ```dart
 Card(
   child: Container(
@@ -99,6 +104,7 @@ Card(
 ```
 
 #### Page
+
 ```dart
 class MyPage extends StatelessWidget {
   @override
@@ -137,6 +143,7 @@ DesignTypography.caption       // Caption text
 > **Never ever hardcode a color with `Color(0x...)`**
 
 If you need a new color:
+
 1. Check if it exists in `DesignColors`
 2. If not, add it to `DesignColors` in `lib/core/design_system/design_constants.dart`
 3. Use the `DesignColors` constant
@@ -144,6 +151,7 @@ If you need a new color:
 ## For Designers
 
 The theme system supports:
+
 - ✅ Easy global color changes (update `DesignColors` once)
 - ✅ Consistent styling across all pages
 - ✅ Opacity variants for fine-tuned colors
@@ -152,19 +160,25 @@ The theme system supports:
 ## Common Changes
 
 ### Change Primary Color
+
 Edit `lib/core/design_system/design_constants.dart`:
+
 ```dart
 static const Color accent = Color(0xFF1E90FF); // Change this
 ```
 
 ### Change Dialog Background
+
 Edit `lib/core/design_system/design_constants.dart`:
+
 ```dart
 static const Color dialogBackground = Color(0xFF2A2A3E); // Change this
 ```
 
 ### Add New Color
+
 Edit `lib/core/design_system/design_constants.dart`:
+
 ```dart
 class DesignColors {
   // ... existing colors ...
@@ -175,6 +189,7 @@ class DesignColors {
 ```
 
 Then use it:
+
 ```dart
 Container(color: DesignColors.myNewColor)
 ```
@@ -182,12 +197,14 @@ Container(color: DesignColors.myNewColor)
 ## Tips & Tricks
 
 ### Make Color Slightly Transparent
+
 ```dart
 DesignColors.accent.withValues(alpha: 0.3)  // 30% opacity
 DesignColors.accent.withOpacity(0.5)        // 50% opacity
 ```
 
 ### Use with Gradients
+
 ```dart
 Container(
   decoration: BoxDecoration(
@@ -202,6 +219,7 @@ Container(
 ```
 
 ### Check Current Theme
+
 ```dart
 Theme.of(context).scaffoldBackgroundColor
 Theme.of(context).colorScheme.primary
@@ -211,6 +229,7 @@ Theme.of(context).textTheme.headlineSmall
 ## Validation
 
 To find any remaining hardcoded colors:
+
 ```bash
 grep -r "Color(0x" lib/ --include="*.dart" | grep -v "DesignColors"
 ```

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -23,7 +22,8 @@ final chatActionsProvider = Provider<ChatActions>((ref) {
 });
 
 // Messages provider for a specific room
-final messagesProvider = StreamProvider.family<List<ChatMessage>, String>((ref, roomId) {
+final messagesProvider =
+    StreamProvider.family<List<ChatMessage>, String>((ref, roomId) {
   final chatService = ref.watch(chatServiceProvider);
   return chatService.streamMessages(roomId);
 });
@@ -54,7 +54,8 @@ class ChatActions {
 
   ChatActions(this._chatService);
 
-  Future<void> sendMessage(String roomId, String content, {String? imageUrl}) async {
+  Future<void> sendMessage(String roomId, String content,
+      {String? imageUrl}) async {
     try {
       await _chatService.sendMessage(roomId, content, imageUrl: imageUrl);
     } catch (e) {
@@ -88,7 +89,8 @@ class ChatActions {
     }
   }
 
-  Future<void> reportMessage(String roomId, String messageId, String reason) async {
+  Future<void> reportMessage(
+      String roomId, String messageId, String reason) async {
     try {
       await _chatService.reportMessage(roomId, messageId, reason);
     } catch (e) {

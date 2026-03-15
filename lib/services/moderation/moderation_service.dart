@@ -10,7 +10,8 @@ class ModerationService {
   // ============ BLOCKING ============
 
   /// Block a user
-  Future<void> blockUser(String blockerId, String blockedUserId, {String? reason}) async {
+  Future<void> blockUser(String blockerId, String blockedUserId,
+      {String? reason}) async {
     try {
       final blockId = '${blockerId}_$blockedUserId';
 
@@ -114,7 +115,9 @@ class ModerationService {
           .limit(limit)
           .get();
 
-      return snapshot.docs.map((doc) => UserReport.fromMap({...doc.data(), 'id': doc.id})).toList();
+      return snapshot.docs
+          .map((doc) => UserReport.fromMap({...doc.data(), 'id': doc.id}))
+          .toList();
     } catch (e) {
       debugPrint('Error getting pending reports: $e');
       return [];
@@ -122,7 +125,8 @@ class ModerationService {
   }
 
   /// Review a report (for moderators)
-  Future<void> reviewReport(String reportId, String reviewerId, String action) async {
+  Future<void> reviewReport(
+      String reportId, String reviewerId, String action) async {
     try {
       await _firestore.collection('reports').doc(reportId).update({
         'status': 'reviewed',
@@ -141,7 +145,10 @@ class ModerationService {
   /// Mark message as read
   Future<void> markMessageAsRead(String messageId, String userId) async {
     try {
-      await _firestore.collection('read_receipts').doc('${messageId}_$userId').set({
+      await _firestore
+          .collection('read_receipts')
+          .doc('${messageId}_$userId')
+          .set({
         'messageId': messageId,
         'userId': userId,
         'readAt': FieldValue.serverTimestamp(),
@@ -154,9 +161,14 @@ class ModerationService {
   /// Get read receipts for a message
   Future<List<ReadReceipt>> getReadReceipts(String messageId) async {
     try {
-      final snapshot = await _firestore.collection('read_receipts').where('messageId', isEqualTo: messageId).get();
+      final snapshot = await _firestore
+          .collection('read_receipts')
+          .where('messageId', isEqualTo: messageId)
+          .get();
 
-      return snapshot.docs.map((doc) => ReadReceipt.fromMap(doc.data())).toList();
+      return snapshot.docs
+          .map((doc) => ReadReceipt.fromMap(doc.data()))
+          .toList();
     } catch (e) {
       debugPrint('Error getting read receipts: $e');
       return [];
@@ -166,7 +178,10 @@ class ModerationService {
   /// Check if message was read by user
   Future<bool> isMessageRead(String messageId, String userId) async {
     try {
-      final doc = await _firestore.collection('read_receipts').doc('${messageId}_$userId').get();
+      final doc = await _firestore
+          .collection('read_receipts')
+          .doc('${messageId}_$userId')
+          .get();
       return doc.exists;
     } catch (e) {
       debugPrint('Error checking if message is read: $e');
@@ -177,7 +192,8 @@ class ModerationService {
   // ============ PROVIDER-EXPECTED METHODS ============
 
   /// Ban user (admin action)
-  Future<void> banUser(String moderatorId, String userId, String reason, Duration duration) async {
+  Future<void> banUser(String moderatorId, String userId, String reason,
+      Duration duration) async {
     try {
       final banUntil = DateTime.now().add(duration);
 

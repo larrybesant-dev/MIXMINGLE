@@ -1,16 +1,19 @@
 # P2E Polish: Skeleton Loaders Integration Guide
 
 ## Overview
+
 This document outlines how to integrate skeleton loaders into high-traffic screens for improved perceived performance and modern UX.
 
 ## Available Skeleton Components
 
 ### Basic Building Blocks
+
 - `SkeletonAvatar` — circular placeholder for profile images
 - `SkeletonText` — rectangular line placeholder
 - `SkeletonBubble` — chat message placeholder
 
 ### Composite Components
+
 - `SkeletonTile` — list item (avatar + text)
 - `SkeletonCard` — full card (image + text)
 - `SkeletonProfileHeader` — profile header layout
@@ -18,17 +21,20 @@ This document outlines how to integrate skeleton loaders into high-traffic scree
 - `SkeletonGrid` — multiple cards
 
 ### Animation
+
 - `ShimmerSkeleton` — wraps any widget with shimmer effect
 
 ## Integration Pattern
 
 ### Step 1: Import
+
 ```dart
 import '../../shared/widgets/skeleton_loaders.dart';
 import '../../shared/widgets/async_value_view_enhanced.dart';
 ```
 
 ### Step 2: Replace AsyncValueView with skeleton
+
 ```dart
 // Old (plain loading)
 AsyncValueView(
@@ -49,16 +55,20 @@ AsyncValueViewEnhanced(
 ## High-Impact Integration Targets
 
 ### 1. Room List Screen
+
 **File**: `lib/features/room/screens/room_list_page.dart`
 **Skeleton**: `SkeletonList(itemCount: 3, showAvatar: true)`
 
 ### 2. Event List Screen
+
 **File**: `lib/features/events/screens/events_list_page.dart`
 **Skeleton**: `SkeletonGrid(itemCount: 4, crossAxisCount: 2)`
 
 ### 3. Chat Messages
+
 **File**: `lib/features/chat/screens/chat_page.dart`
 **Skeleton**:
+
 ```dart
 Column(
   children: [
@@ -70,16 +80,19 @@ Column(
 ```
 
 ### 4. Profile Header
+
 **File**: `lib/features/profile/screens/user_profile_page.dart`
 **Skeleton**: `SkeletonProfileHeader()`
 
 ### 5. Notifications/Conversations
+
 **File**: `lib/features/chat/screens/chat_list_page.dart`
 **Skeleton**: `SkeletonList(itemCount: 5, showAvatar: true)`
 
 ## Enhanced AsyncValueView Features
 
 ### Retry Counter
+
 ```dart
 AsyncValueViewEnhanced(
   value: dataAsync,
@@ -90,6 +103,7 @@ AsyncValueViewEnhanced(
 ```
 
 ### Exponential Backoff
+
 ```dart
 AsyncValueViewEnhanced(
   value: dataAsync,
@@ -101,6 +115,7 @@ AsyncValueViewEnhanced(
 ```
 
 ### Custom Skeleton
+
 ```dart
 AsyncValueViewEnhanced(
   value: dataAsync,
@@ -113,16 +128,19 @@ AsyncValueViewEnhanced(
 ## Implementation Priority
 
 ### Phase 1 (Immediate Impact)
+
 1. Room list → SkeletonList
 2. Event list → SkeletonGrid
 3. Chat messages → SkeletonBubble
 
 ### Phase 2 (Secondary)
+
 1. Profile header → SkeletonProfileHeader
 2. Chat list → SkeletonList
 3. Notifications → SkeletonList
 
 ### Phase 3 (Polish)
+
 1. Add retry counters to critical screens
 2. Enable exponential backoff for failing APIs
 3. Custom skeletons for unique layouts
@@ -130,18 +148,21 @@ AsyncValueViewEnhanced(
 ## Testing
 
 ### Verify Skeleton Display
+
 1. Simulate slow network in Chrome DevTools
 2. Navigate to room list
 3. Confirm skeleton appears for ~2s before data
 4. Confirm data smoothly replaces skeleton
 
 ### Verify Retry Logic
+
 1. Simulate offline mode
 2. Tap "Retry" multiple times
 3. Confirm retry counter increments
 4. Confirm max retry message appears
 
 ### Analytics Hooks (P2F)
+
 ```dart
 // Track skeleton display duration
 // Track retry attempts

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 /// MIXVY App-Wide Icon Constants
 /// Centralized icon definitions for consistency across the app
@@ -117,7 +117,8 @@ class AppIcons {
   // Settings & Preferences
   static const IconData theme = Icons.palette_rounded;
   static const IconData language = Icons.language_rounded;
-  static const IconData notificationSettings = Icons.notifications_active_rounded;
+  static const IconData notificationSettings =
+      Icons.notifications_active_rounded;
   static const IconData account = Icons.manage_accounts_rounded;
   static const IconData about = Icons.info_rounded;
   static const IconData terms = Icons.description_rounded;

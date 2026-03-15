@@ -100,7 +100,8 @@ class AnalyticsService {
   }
 
   /// Track user engagement
-  Future<void> trackEngagement(String action, {Map<String, dynamic>? parameters}) async {
+  Future<void> trackEngagement(String action,
+      {Map<String, dynamic>? parameters}) async {
     await _analytics.logEvent(
       name: 'engagement',
       parameters: {
@@ -129,12 +130,14 @@ class AnalyticsService {
   }
 
   /// Set current screen
-  Future<void> setCurrentScreen(String screenName, {String? screenClass}) async {
+  Future<void> setCurrentScreen(String screenName,
+      {String? screenClass}) async {
     await trackScreenView(screenName, screenClass: screenClass);
   }
 
   /// Track async value load (for provider monitoring)
-  Future<void> trackAsyncValueLoad(String providerName, String state, {dynamic error}) async {
+  Future<void> trackAsyncValueLoad(String providerName, String state,
+      {dynamic error}) async {
     await _analytics.logEvent(
       name: 'async_value_state',
       parameters: {
@@ -278,7 +281,8 @@ class AnalyticsService {
   }
 
   /// Track event (generic - delegates to logEvent)
-  Future<void> trackEvent(String eventName, {Map<String, dynamic>? parameters}) async {
+  Future<void> trackEvent(String eventName,
+      {Map<String, dynamic>? parameters}) async {
     await logEvent(eventName, parameters: parameters);
   }
 
@@ -299,5 +303,3 @@ class AnalyticsService {
     });
   }
 }
-
-

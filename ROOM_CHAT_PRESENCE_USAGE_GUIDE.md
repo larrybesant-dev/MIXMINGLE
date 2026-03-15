@@ -6,46 +6,46 @@
 /// DO NOT EDIT - This is a reference guide only.
 
 // EXAMPLE 1: Displaying Room Messages with Pagination
-/*
+/\*
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mix_and_mingle/providers/room_chat_presence_providers.dart';
 
 class RoomChatWidget extends ConsumerStatefulWidget {
-  final String roomId;
+final String roomId;
 
-  const RoomChatWidget({required this.roomId});
+const RoomChatWidget({required this.roomId});
 
-  @override
-  ConsumerState<RoomChatWidget> createState() => _RoomChatWidgetState();
+@override
+ConsumerState<RoomChatWidget> createState() => \_RoomChatWidgetState();
 }
 
-class _RoomChatWidgetState extends ConsumerState<RoomChatWidget> {
-  late ScrollController _scrollController;
+class \_RoomChatWidgetState extends ConsumerState<RoomChatWidget> {
+late ScrollController \_scrollController;
 
-  @override
-  void initState() {
-    super.initState();
-    _scrollController = ScrollController();
-    _scrollController.addListener(_onScroll);
-  }
+@override
+void initState() {
+super.initState();
+\_scrollController = ScrollController();
+\_scrollController.addListener(\_onScroll);
+}
 
-  void _onScroll() {
-    // Load previous messages when scrolling to top
-    if (_scrollController.position.pixels == _scrollController.position.minScrollExtent) {
-      ref.read(roomMessagesProvider(widget.roomId).notifier).loadPreviousMessages();
-    }
-  }
+void \_onScroll() {
+// Load previous messages when scrolling to top
+if (\_scrollController.position.pixels == \_scrollController.position.minScrollExtent) {
+ref.read(roomMessagesProvider(widget.roomId).notifier).loadPreviousMessages();
+}
+}
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
-  }
+@override
+void dispose() {
+\_scrollController.dispose();
+super.dispose();
+}
 
-  @override
-  Widget build(BuildContext context) {
-    final messagesState = ref.watch(roomMessagesProvider(widget.roomId));
+@override
+Widget build(BuildContext context) {
+final messagesState = ref.watch(roomMessagesProvider(widget.roomId));
 
     return Column(
       children: [
@@ -82,18 +82,19 @@ class _RoomChatWidgetState extends ConsumerState<RoomChatWidget> {
         ),
       ],
     );
-  }
+
+}
 }
 
 class RoomMessageInput extends ConsumerWidget {
-  final String roomId;
-  final _controller = TextEditingController();
+final String roomId;
+final \_controller = TextEditingController();
 
-  RoomMessageInput({required this.roomId});
+RoomMessageInput({required this.roomId});
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final messagesNotifier = ref.read(roomMessagesProvider(roomId).notifier);
+@override
+Widget build(BuildContext context, WidgetRef ref) {
+final messagesNotifier = ref.read(roomMessagesProvider(roomId).notifier);
 
     return Row(
       children: [
@@ -114,24 +115,25 @@ class RoomMessageInput extends ConsumerWidget {
         ),
       ],
     );
-  }
+
 }
-*/
+}
+\*/
 
 // EXAMPLE 2: Displaying Room Presence
-/*
+/\*
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mix_and_mingle/providers/room_chat_presence_providers.dart';
 
 class RoomPresenceWidget extends ConsumerWidget {
-  final String roomId;
+final String roomId;
 
-  const RoomPresenceWidget({required this.roomId});
+const RoomPresenceWidget({required this.roomId});
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final membersAsync = ref.watch(roomMembersProvider(roomId));
+@override
+Widget build(BuildContext context, WidgetRef ref) {
+final membersAsync = ref.watch(roomMembersProvider(roomId));
 
     return membersAsync.when(
       loading: () => const CircularProgressIndicator(),
@@ -164,45 +166,46 @@ class RoomPresenceWidget extends ConsumerWidget {
         );
       },
     );
-  }
+
 }
-*/
+}
+\*/
 
 // EXAMPLE 3: Managing User Presence (Online/Offline/Typing)
-/*
+/\*
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mix_and_mingle/providers/room_chat_presence_providers.dart';
 
 class PresenceManagementWidget extends ConsumerStatefulWidget {
-  final String roomId;
+final String roomId;
 
-  const PresenceManagementWidget({required this.roomId});
+const PresenceManagementWidget({required this.roomId});
 
-  @override
-  ConsumerState<PresenceManagementWidget> createState() => _PresenceManagementWidgetState();
+@override
+ConsumerState<PresenceManagementWidget> createState() => \_PresenceManagementWidgetState();
 }
 
 class _PresenceManagementWidgetState extends ConsumerState<PresenceManagementWidget> {
-  @override
-  void initState() {
-    super.initState();
-    // Mark user as online when entering room
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(localUserPresenceProvider(widget.roomId).notifier).setOnline();
-    });
-  }
+@override
+void initState() {
+super.initState();
+// Mark user as online when entering room
+WidgetsBinding.instance.addPostFrameCallback((_) {
+ref.read(localUserPresenceProvider(widget.roomId).notifier).setOnline();
+});
+}
 
-  @override
-  void dispose() {
-    // Mark user as offline when leaving room
-    ref.read(localUserPresenceProvider(widget.roomId).notifier).setOffline();
-    super.dispose();
-  }
+@override
+void dispose() {
+// Mark user as offline when leaving room
+ref.read(localUserPresenceProvider(widget.roomId).notifier).setOffline();
+super.dispose();
+}
 
-  @override
-  Widget build(BuildContext context) {
-    final presenceState = ref.watch(localUserPresenceProvider(widget.roomId));
+@override
+Widget build(BuildContext context) {
+final presenceState = ref.watch(localUserPresenceProvider(widget.roomId));
 
     return Column(
       children: [
@@ -220,56 +223,58 @@ class _PresenceManagementWidgetState extends ConsumerState<PresenceManagementWid
         ),
       ],
     );
-  }
+
 }
-*/
+}
+\*/
 
 // EXAMPLE 4: Full Room Chat Screen (Complete Integration)
-/*
+/\*
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mix_and_mingle/providers/room_chat_presence_providers.dart';
 
 class RoomChatPage extends ConsumerStatefulWidget {
-  final String roomId;
-  final String roomName;
+final String roomId;
+final String roomName;
 
-  const RoomChatPage({
-    required this.roomId,
-    required this.roomName,
-  });
+const RoomChatPage({
+required this.roomId,
+required this.roomName,
+});
 
-  @override
-  ConsumerState<RoomChatPage> createState() => _RoomChatPageState();
+@override
+ConsumerState<RoomChatPage> createState() => \_RoomChatPageState();
 }
 
-class _RoomChatPageState extends ConsumerState<RoomChatPage> {
-  late TextEditingController _messageController;
-  late ScrollController _scrollController;
+class \_RoomChatPageState extends ConsumerState<RoomChatPage> {
+late TextEditingController \_messageController;
+late ScrollController \_scrollController;
 
-  @override
-  void initState() {
-    super.initState();
-    _messageController = TextEditingController();
-    _scrollController = ScrollController();
+@override
+void initState() {
+super.initState();
+\_messageController = TextEditingController();
+\_scrollController = ScrollController();
 
     // Mark user as online when entering the room
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(localUserPresenceProvider(widget.roomId).notifier).setOnline();
     });
-  }
 
-  @override
-  void dispose() {
-    // Mark user as offline when leaving the room
-    ref.read(localUserPresenceProvider(widget.roomId).notifier).setOffline();
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
+}
 
-  void _sendMessage() {
-    if (_messageController.text.trim().isEmpty) return;
+@override
+void dispose() {
+// Mark user as offline when leaving the room
+ref.read(localUserPresenceProvider(widget.roomId).notifier).setOffline();
+\_messageController.dispose();
+\_scrollController.dispose();
+super.dispose();
+}
+
+void \_sendMessage() {
+if (\_messageController.text.trim().isEmpty) return;
 
     ref
         .read(roomMessagesProvider(widget.roomId).notifier)
@@ -281,19 +286,20 @@ class _RoomChatPageState extends ConsumerState<RoomChatPage> {
     ref
         .read(localUserPresenceProvider(widget.roomId).notifier)
         .updateLastSeen();
-  }
 
-  void _onMessageTyping(String text) {
-    // Mark as typing while user is editing
-    if (text.isNotEmpty) {
-      ref.read(localUserPresenceProvider(widget.roomId).notifier).setTyping(true);
-    }
-  }
+}
 
-  @override
-  Widget build(BuildContext context) {
-    final messagesState = ref.watch(roomMessagesProvider(widget.roomId));
-    final membersAsync = ref.watch(roomMembersProvider(widget.roomId));
+void \_onMessageTyping(String text) {
+// Mark as typing while user is editing
+if (text.isNotEmpty) {
+ref.read(localUserPresenceProvider(widget.roomId).notifier).setTyping(true);
+}
+}
+
+@override
+Widget build(BuildContext context) {
+final messagesState = ref.watch(roomMessagesProvider(widget.roomId));
+final membersAsync = ref.watch(roomMembersProvider(widget.roomId));
 
     return Scaffold(
       appBar: AppBar(
@@ -369,43 +375,44 @@ class _RoomChatPageState extends ConsumerState<RoomChatPage> {
         ],
       ),
     );
-  }
+
+}
 }
 
 class MessageBubble extends StatelessWidget {
-  final RoomMessage message;
+final RoomMessage message;
 
-  const MessageBubble({required this.message});
+const MessageBubble({required this.message});
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: Colors.grey[300],
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                message.senderName,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-              ),
-              Text(message.text),
-              Text(
-                message.createdAt.toString().substring(11, 16),
-                style: const TextStyle(fontSize: 10, color: Colors.grey),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+@override
+Widget build(BuildContext context) {
+return Padding(
+padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+child: Align(
+alignment: Alignment.centerLeft,
+child: Container(
+padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+decoration: BoxDecoration(
+color: Colors.grey[300],
+borderRadius: BorderRadius.circular(12),
+),
+child: Column(
+crossAxisAlignment: CrossAxisAlignment.start,
+children: [
+Text(
+message.senderName,
+style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+),
+Text(message.text),
+Text(
+message.createdAt.toString().substring(11, 16),
+style: const TextStyle(fontSize: 10, color: Colors.grey),
+),
+],
+),
+),
+),
+);
 }
-*/
+}
+\*/

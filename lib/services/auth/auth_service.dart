@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -29,7 +29,9 @@ class AuthService {
 
   User? get currentUser => _auth.currentUser;
 
-  Future<UserCredential?> signInWithEmailAndPassword(String email, String password, {bool rememberMe = false}) async {
+  Future<UserCredential?> signInWithEmailAndPassword(
+      String email, String password,
+      {bool rememberMe = false}) async {
     try {
       _errorTracking.log('Sign in attempt: $email');
 
@@ -54,7 +56,9 @@ class AuthService {
         await _errorTracking.setCustomKeys({
           'email': email,
           'login_method': 'email',
-          'account_created': result.user!.metadata.creationTime?.toIso8601String() ?? 'unknown',
+          'account_created':
+              result.user!.metadata.creationTime?.toIso8601String() ??
+                  'unknown',
         });
 
         // Initialize push notifications for this user
@@ -78,12 +82,14 @@ class AuthService {
       throw Exception('Sign in failed: [${e.code}] ${e.message}');
     } catch (e, stack) {
       debugPrint('ðŸ”´ Unexpected error: $e');
-      await _errorTracking.recordError(e, stack, reason: 'Unexpected sign in error');
+      await _errorTracking.recordError(e, stack,
+          reason: 'Unexpected sign in error');
       throw Exception('Sign in failed: $e');
     }
   }
 
-  Future<UserCredential?> createUserWithEmailAndPassword(String email, String password) async {
+  Future<UserCredential?> createUserWithEmailAndPassword(
+      String email, String password) async {
     try {
       _errorTracking.log('Sign up attempt: $email');
 
@@ -100,7 +106,9 @@ class AuthService {
         await _errorTracking.setCustomKeys({
           'email': email,
           'signup_method': 'email',
-          'account_created': result.user!.metadata.creationTime?.toIso8601String() ?? 'unknown',
+          'account_created':
+              result.user!.metadata.creationTime?.toIso8601String() ??
+                  'unknown',
         });
 
         // Initialize push notifications
@@ -109,10 +117,12 @@ class AuthService {
 
       return result;
     } on FirebaseAuthException catch (e, stack) {
-      await _errorTracking.recordError(e, stack, reason: 'Email sign up failed: ${e.code}');
+      await _errorTracking.recordError(e, stack,
+          reason: 'Email sign up failed: ${e.code}');
       throw Exception('Sign up failed: $e');
     } catch (e, stack) {
-      await _errorTracking.recordError(e, stack, reason: 'Unexpected sign up error');
+      await _errorTracking.recordError(e, stack,
+          reason: 'Unexpected sign up error');
       throw Exception('Sign up failed: $e');
     }
   }
@@ -157,10 +167,12 @@ class AuthService {
 
       return result;
     } on FirebaseAuthException catch (e, stack) {
-      await _errorTracking.recordError(e, stack, reason: 'Google sign in failed: ${e.code}');
+      await _errorTracking.recordError(e, stack,
+          reason: 'Google sign in failed: ${e.code}');
       throw Exception('Google sign in failed: $e');
     } catch (e, stack) {
-      await _errorTracking.recordError(e, stack, reason: 'Unexpected Google sign in error');
+      await _errorTracking.recordError(e, stack,
+          reason: 'Unexpected Google sign in error');
       throw Exception('Google sign in failed: $e');
     }
   }
@@ -181,7 +193,8 @@ class AuthService {
         onVerificationCompleted(credential);
       },
       verificationFailed: (error) {
-        _errorTracking.recordError(error, StackTrace.current, reason: 'Phone verification failed: ${error.code}');
+        _errorTracking.recordError(error, StackTrace.current,
+            reason: 'Phone verification failed: ${error.code}');
         onVerificationFailed(error);
       },
       codeSent: (String verificationId, int? resendToken) {
@@ -224,10 +237,12 @@ class AuthService {
 
       return result;
     } on FirebaseAuthException catch (e, stack) {
-      await _errorTracking.recordError(e, stack, reason: 'Phone sign in failed: ${e.code}');
+      await _errorTracking.recordError(e, stack,
+          reason: 'Phone sign in failed: ${e.code}');
       throw Exception('Phone sign in failed: $e');
     } catch (e, stack) {
-      await _errorTracking.recordError(e, stack, reason: 'Unexpected phone sign in error');
+      await _errorTracking.recordError(e, stack,
+          reason: 'Unexpected phone sign in error');
       throw Exception('Phone sign in failed: $e');
     }
   }
@@ -253,7 +268,9 @@ class AuthService {
         await _errorTracking.setCustomKeys({
           'phone': result.user!.phoneNumber ?? 'unknown',
           'signup_method': 'phone',
-          'account_created': result.user!.metadata.creationTime?.toIso8601String() ?? 'unknown',
+          'account_created':
+              result.user!.metadata.creationTime?.toIso8601String() ??
+                  'unknown',
         });
 
         // Initialize push notifications
@@ -262,10 +279,12 @@ class AuthService {
 
       return result;
     } on FirebaseAuthException catch (e, stack) {
-      await _errorTracking.recordError(e, stack, reason: 'Phone sign up failed: ${e.code}');
+      await _errorTracking.recordError(e, stack,
+          reason: 'Phone sign up failed: ${e.code}');
       throw Exception('Phone sign up failed: $e');
     } catch (e, stack) {
-      await _errorTracking.recordError(e, stack, reason: 'Unexpected phone sign up error');
+      await _errorTracking.recordError(e, stack,
+          reason: 'Unexpected phone sign up error');
       throw Exception('Phone sign up failed: $e');
     }
   }
@@ -297,7 +316,8 @@ class AuthService {
   }
 
   // Convenience aliases for common naming patterns
-  Future<UserCredential?> login(String email, String password, {bool rememberMe = false}) =>
+  Future<UserCredential?> login(String email, String password,
+          {bool rememberMe = false}) =>
       signInWithEmailAndPassword(email, password, rememberMe: rememberMe);
 
   Future<UserCredential?> signup({
@@ -407,7 +427,8 @@ class AuthService {
       return result;
     } on FirebaseAuthException catch (e) {
       if (e.code == 'credential-already-in-use') {
-        throw Exception('This Google account is already linked to another user');
+        throw Exception(
+            'This Google account is already linked to another user');
       } else if (e.code == 'provider-already-linked') {
         throw Exception('A Google account is already linked to this user');
       }
@@ -427,7 +448,8 @@ class AuthService {
     try {
       // Ensure user has at least one other sign-in method
       if (user.providerData.length <= 1) {
-        throw Exception('Cannot unlink the only sign-in method. Please link another method first.');
+        throw Exception(
+            'Cannot unlink the only sign-in method. Please link another method first.');
       }
 
       final result = await user.unlink(providerId);

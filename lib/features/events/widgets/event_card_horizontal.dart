@@ -1,4 +1,4 @@
-﻿// ignore_for_file: deprecated_member_use
+// ignore_for_file: deprecated_member_use
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -43,7 +43,8 @@ class EventCardHorizontal extends ConsumerWidget {
           children: [
             // Event image
             ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius:
+                  const BorderRadius.vertical(top: Radius.circular(16)),
               child: Stack(
                 children: [
                   // Image
@@ -62,7 +63,8 @@ class EventCardHorizontal extends ConsumerWidget {
                     top: 12,
                     left: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.black.withValues(alpha: 0.7),
                         borderRadius: BorderRadius.circular(20),
@@ -83,7 +85,8 @@ class EventCardHorizontal extends ConsumerWidget {
                     bottom: 12,
                     right: 12,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: theme.colorScheme.primary,
                         borderRadius: BorderRadius.circular(20),
@@ -118,7 +121,8 @@ class EventCardHorizontal extends ConsumerWidget {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: theme.colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(bottom: Radius.circular(16)),
+                borderRadius:
+                    const BorderRadius.vertical(bottom: Radius.circular(16)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,26 +144,30 @@ class EventCardHorizontal extends ConsumerWidget {
                       Icon(
                         Icons.calendar_today,
                         size: 14,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+                        color: theme.colorScheme.onSurface.withValues(
+                            alpha: 255, red: 255, green: 255, blue: 255),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         dateFormat.format(event.startTime),
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.6),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Icon(
                         Icons.access_time,
                         size: 14,
-                        color: theme.colorScheme.onSurface.withValues(alpha: 255, red: 255, green: 255, blue: 255),
+                        color: theme.colorScheme.onSurface.withValues(
+                            alpha: 255, red: 255, green: 255, blue: 255),
                       ),
                       const SizedBox(width: 6),
                       Text(
                         timeFormat.format(event.startTime),
                         style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                          color: theme.colorScheme.onSurface
+                              .withValues(alpha: 0.6),
                         ),
                       ),
                     ],

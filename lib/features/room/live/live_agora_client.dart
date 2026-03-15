@@ -3,6 +3,8 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart';
+import '../../../core/constants.dart';
+import '../../../services/agora/agora_platform_service.dart';
 import 'live_room_schema.dart';
 import '../../../core/platform/web_platform_view_helper.dart';
 import '../../../services/agora/agora_platform_service.dart';
@@ -79,15 +81,18 @@ class LiveAgoraClient {
 
   // ── State ─────────────────────────────────────────────────────────────────
   RtcEngine? _engine;
-  bool    _initialized      = false;
-  bool    _inChannel        = false;
+  bool _initialized = false;
+  bool _inChannel = false;
   String? _channelId;
-  int?    _localUid;
-  bool    _publishingVideo  = false;
-  bool    _publishingAudio  = false;
+  String? _lastUserId;
+  int? _localUid;
+  bool _publishingVideo = false;
+  bool _publishingAudio = false;
+  Timer? _tokenRefreshTimer;
 
   /// Uids currently in the video channel (not necessarily subscribed).
-  final Set<int> _channelUids    = {};
+  final Set<int> _channelUids = {};
+
   /// Uids we are actively receiving video from.
   final Set<int> _subscribedUids = {};
 
@@ -98,15 +103,16 @@ class LiveAgoraClient {
 
   // ── Public getters ────────────────────────────────────────────────────────
 
-  Stream<VideoEngineEvent> get events        => _events.stream;
-  bool       get isInitialized  => _initialized;
-  bool       get isInChannel    => _inChannel;
-  int?       get localUid       => _localUid;
-  String?    get channelId      => _channelId;
-  Set<int>   get channelUids    => Set.unmodifiable(_channelUids);
-  Set<int>   get subscribedUids => Set.unmodifiable(_subscribedUids);
+  Stream<VideoEngineEvent> get events => _events.stream;
+  bool get isInitialized => _initialized;
+  bool get isInChannel => _inChannel;
+  int? get localUid => _localUid;
+  String? get channelId => _channelId;
+  Set<int> get channelUids => Set.unmodifiable(_channelUids);
+  Set<int> get subscribedUids => Set.unmodifiable(_subscribedUids);
+
   /// Exposes the underlying engine for video rendering widgets.
-  RtcEngine? get engine         => kIsWeb ? null : _engine;
+  RtcEngine? get engine => kIsWeb ? null : _engine;
 
   // ── Initialize ────────────────────────────────────────────────────────────
 
@@ -128,8 +134,8 @@ class LiveAgoraClient {
       await _engine!.setVideoEncoderConfiguration(
         VideoEncoderConfiguration(
           dimensions: _dimensions(),
-          frameRate:  15,
-          bitrate:    _bitrate(),
+          frameRate: 15,
+          bitrate: _bitrate(),
           orientationMode: OrientationMode.orientationModeAdaptive,
           degradationPreference: DegradationPreference.maintainFramerate,
         ),
@@ -158,7 +164,7 @@ class LiveAgoraClient {
   Future<void> joinChannel({
     required String channelId,
     required String userId,
-    required bool   isBroadcaster,
+    required bool isBroadcaster,
   }) async {
     if (!_initialized) throw StateError('Call initialize() first.');
     if (_inChannel) return;
@@ -167,8 +173,10 @@ class LiveAgoraClient {
     final token = auth.token;
     final agoraUid = auth.uid;
     _channelId = channelId;
+    _lastUserId = userId;
 
     if (kIsWeb) {
+<<<<<<< HEAD
       // Web path: actually initialize+join via the platform bridge.
       debugPrint('[VIDEO_ENGINE] Web join — using web bridge');
       final appId = await _loadAppId();
@@ -198,6 +206,24 @@ class LiveAgoraClient {
 
       // Register JS→Dart callback for remote user publish events (diagnostic)
       _registerWebRemoteUserCallback();
+=======
+      // Web path: join via AgoraPlatformService (web bridge v3)
+      debugPrint('[VIDEO_ENGINE] Web join — using AgoraPlatformService / web bridge');
+      final appId = await _loadAppId();
+      final success = await AgoraPlatformService.joinChannel(
+        appId: appId,
+        channelName: channelId,
+        token: token,
+        uid: '0',
+      );
+      if (!success) {
+        _emit(const EngineErrorEvent('Web bridge join failed'));
+        return;
+      }
+      _inChannel = true;
+      _emit(const EngineJoinedEvent(0));
+      _startTokenRefreshTimer(channelId: channelId, userId: userId);
+>>>>>>> origin/develop
       return;
     }
 
@@ -212,16 +238,24 @@ class LiveAgoraClient {
     await _engine!.enableLocalAudio(false);
 
     await _engine!.joinChannel(
-      token:     token,
+      token: token,
       channelId: channelId,
+<<<<<<< HEAD
       uid:       agoraUid,
       options:   ChannelMediaOptions(
         channelProfile:       ChannelProfileType.channelProfileLiveBroadcasting,
         clientRoleType:       role,
         publishCameraTrack:    false,
+=======
+      uid: 0, // 0 = server-assigned uid
+      options: ChannelMediaOptions(
+        channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+        clientRoleType: role,
+        publishCameraTrack: false,
+>>>>>>> origin/develop
         publishMicrophoneTrack: false,
-        autoSubscribeVideo:   false, // ← never auto-subscribe
-        autoSubscribeAudio:   false, // ← never auto-subscribe
+        autoSubscribeVideo: false, // ← never auto-subscribe
+        autoSubscribeAudio: false, // ← never auto-subscribe
         enableAudioRecordingOrPlayout: true,
       ),
     );
@@ -232,6 +266,8 @@ class LiveAgoraClient {
 
   Future<void> leaveChannel() async {
     if (!_inChannel) return;
+    _tokenRefreshTimer?.cancel();
+    _tokenRefreshTimer = null;
     if (kIsWeb) {
       await AgoraPlatformService.leaveChannel();
       _inChannel = false;
@@ -256,8 +292,8 @@ class LiveAgoraClient {
   Future<void> setVisibleUids(List<int> visibleUids) async {
     if (!_inChannel || kIsWeb) return;
 
-    final target       = visibleUids.take(_maxTileSubscriptions).toSet();
-    final toSubscribe   = target.difference(_subscribedUids);
+    final target = visibleUids.take(_maxTileSubscriptions).toSet();
+    final toSubscribe = target.difference(_subscribedUids);
     final toUnsubscribe = _subscribedUids.difference(target);
 
     for (final uid in toUnsubscribe) {
@@ -426,6 +462,8 @@ class LiveAgoraClient {
   // ── Dispose ────────────────────────────────────────────────────────────────
 
   Future<void> dispose() async {
+    _tokenRefreshTimer?.cancel();
+    _tokenRefreshTimer = null;
     if (_inChannel) await leaveChannel();
     _events.close();
     if (!kIsWeb) {
@@ -497,15 +535,21 @@ class LiveAgoraClient {
     _engine!.registerEventHandler(
       RtcEngineEventHandler(
         onJoinChannelSuccess: (RtcConnection conn, int elapsed) {
-          _localUid  = conn.localUid;
+          _localUid = conn.localUid;
           _inChannel = true;
-          debugPrint('[VIDEO_ENGINE] Joined channel ${conn.channelId} uid=$_localUid');
+          debugPrint(
+              '[VIDEO_ENGINE] Joined channel ${conn.channelId} uid=$_localUid');
           _emit(EngineJoinedEvent(_localUid!));
+          // Start token refresh timer for long-running rooms
+          if (_channelId != null && _lastUserId != null) {
+            _startTokenRefreshTimer(
+                channelId: _channelId!, userId: _lastUserId!);
+          }
         },
         onLeaveChannel: (RtcConnection conn, RtcStats stats) {
           debugPrint('[VIDEO_ENGINE] Left channel');
-          _inChannel       = false;
-          _localUid        = null;
+          _inChannel = false;
+          _localUid = null;
           _channelUids.clear();
           _subscribedUids.clear();
           _publishingVideo = false;
@@ -546,6 +590,7 @@ class LiveAgoraClient {
           debugPrint('[VIDEO_ENGINE] Error $err: $msg');
           _emit(EngineErrorEvent('$err: $msg'));
         },
+<<<<<<< HEAD
         onConnectionStateChanged: (
           RtcConnection conn,
           ConnectionStateType state,
@@ -556,33 +601,91 @@ class LiveAgoraClient {
         },
         onAudioMixingStateChanged: (AudioMixingStateType state, AudioMixingReasonType reason) {
           _emit(AudioMixingStateEvent(state, reason));
+=======
+        onTokenPrivilegeWillExpire: (RtcConnection conn, String token) {
+          debugPrint('[VIDEO_ENGINE] Token will expire — refreshing...');
+          if (_channelId != null && _lastUserId != null) {
+            _refreshAndRenewToken(
+                channelId: _channelId!, userId: _lastUserId!);
+          }
+>>>>>>> origin/develop
         },
       ),
     );
+  }
+
+  // ── Token refresh ─────────────────────────────────────────────────────────
+
+  /// Start a periodic timer that refreshes the token ~23 hours after joining.
+  /// This covers long-running rooms (concerts, social rooms, etc.) where the
+  /// default 24-hour Agora token would otherwise expire mid-session.
+  void _startTokenRefreshTimer({
+    required String channelId,
+    required String userId,
+  }) {
+    _tokenRefreshTimer?.cancel();
+    // Refresh 1 hour before the 24h token expires
+    _tokenRefreshTimer = Timer(const Duration(hours: 23), () {
+      _refreshAndRenewToken(channelId: channelId, userId: userId);
+    });
+    debugPrint('[VIDEO_ENGINE] Token refresh timer set for 23h');
+  }
+
+  /// Re-fetch a fresh token from Cloud Functions and renew it in the engine.
+  Future<void> _refreshAndRenewToken({
+    required String channelId,
+    required String userId,
+  }) async {
+    try {
+      debugPrint('[VIDEO_ENGINE] Refreshing token for channel: $channelId');
+      final newToken = await _fetchToken(channelId: channelId, userId: userId);
+      final ok = await AgoraPlatformService.renewToken(newToken);
+      debugPrint('[VIDEO_ENGINE] Token renewed: $ok');
+      // Reschedule for the next 23h cycle
+      if (_inChannel) {
+        _startTokenRefreshTimer(channelId: channelId, userId: userId);
+      }
+    } catch (e) {
+      debugPrint('[VIDEO_ENGINE] Token refresh failed: $e');
+    }
   }
 
   // ── App ID / Token ────────────────────────────────────────────────────────
 
   String? _cachedAppId;
 
-  Future<String> _loadAppId() async {
-    if (_cachedAppId != null) return _cachedAppId!;
-    final doc = await FirebaseFirestore.instance
-        .collection('config')
-        .doc('agora')
-        .get();
-    final id = doc.data()?['appId'] as String?;
-    if (id == null || id.isEmpty) {
-      throw Exception('Agora App ID not found in Firestore config/agora.');
+  Future<String> _loadAppId() async {    if (_cachedAppId != null) return _cachedAppId!;
+
+    // Try Firestore first, fall back to .env
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('config')
+          .doc('agora')
+          .get();
+      final id = doc.data()?['appId'] as String?;
+      if (id != null && id.isNotEmpty) {
+        _cachedAppId = id;
+        return id;
+      }
+    } catch (_) {
+      // Firestore unavailable — fall through to .env fallback
     }
-    _cachedAppId = id;
-    return id;
+
+    // Fallback: read from .env (AppConstants)
+    final envId = AppConstants.agoraAppId;
+    if (envId.isNotEmpty) {
+      _cachedAppId = envId;
+      return envId;
+    }
+
+    throw Exception('Agora App ID not configured. Add to Firestore config/agora or .env.');
   }
 
   Future<({String token, int uid})> _fetchToken({
     required String channelId,
     required String userId,
   }) async {
+<<<<<<< HEAD
     for (var attempt = 1; attempt <= 2; attempt++) {
       try {
         final result = await FirebaseFunctions.instanceFor(region: 'us-central1')
@@ -613,6 +716,14 @@ class LiveAgoraClient {
         final details = e.details == null ? '' : ' (${e.details})';
         throw Exception('generateAgoraToken failed [${e.code}]: ${e.message ?? 'Unknown backend error'}$details');
       }
+=======
+    final result = await FirebaseFunctions.instanceFor(region: 'us-central1')
+      .httpsCallable('generateAgoraToken')
+      .call({'roomId': channelId, 'userId': userId}); // Endpoint: https://us-central1-mix-and-mingle-v2.cloudfunctions.net/generateAgoraToken
+    final token = (result.data as Map<String, dynamic>)['token'] as String?;
+    if (token == null || token.isEmpty) {
+      throw Exception('generateAgoraToken returned an empty token.');
+>>>>>>> origin/develop
     }
 
     throw Exception('generateAgoraToken failed after retry.');
@@ -624,9 +735,9 @@ class LiveAgoraClient {
     switch (roomType) {
       case RoomType.broadcast:
       case RoomType.concert:
-        return const VideoDimensions(width: 640, height: 360);  // 360p
+        return const VideoDimensions(width: 640, height: 360); // 360p
       default:
-        return const VideoDimensions(width: 320, height: 240);  // 240p (group)
+        return const VideoDimensions(width: 320, height: 240); // 240p (group)
     }
   }
 
@@ -634,9 +745,9 @@ class LiveAgoraClient {
     switch (roomType) {
       case RoomType.broadcast:
       case RoomType.concert:
-        return 600;   // kbps — 360p
+        return 600; // kbps — 360p
       default:
-        return 300;   // kbps — 240p, cost-optimised for group rooms
+        return 300; // kbps — 240p, cost-optimised for group rooms
     }
   }
 }

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../core/theme/neon_colors.dart';
 import '../../../shared/widgets/neon_components.dart';
@@ -157,13 +157,14 @@ class _NeonSplashPageState extends State<NeonSplashPage>
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color:
-                                    NeonColors.neonOrange.withValues(alpha: 0.7),
+                                color: NeonColors.neonOrange
+                                    .withValues(alpha: 0.7),
                                 blurRadius: 40,
                                 spreadRadius: 10,
                               ),
                               BoxShadow(
-                                color: NeonColors.neonBlue.withValues(alpha: 0.5),
+                                color:
+                                    NeonColors.neonBlue.withValues(alpha: 0.5),
                                 blurRadius: 30,
                                 spreadRadius: 6,
                               ),
@@ -178,8 +179,7 @@ class _NeonSplashPageState extends State<NeonSplashPage>
                                   colors: [
                                     NeonColors.neonOrange
                                         .withValues(alpha: 0.1),
-                                    NeonColors.neonBlue
-                                        .withValues(alpha: 0.1),
+                                    NeonColors.neonBlue.withValues(alpha: 0.1),
                                   ],
                                 ),
                                 border: Border.all(

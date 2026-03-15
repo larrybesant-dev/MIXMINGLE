@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class GroupChatParticipant {
   final String uid;
@@ -17,7 +17,8 @@ class GroupChatParticipant {
     this.joinedAt,
   });
 
-  factory GroupChatParticipant.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
+  factory GroupChatParticipant.fromDocument(
+      DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? <String, dynamic>{};
     return GroupChatParticipant(
       uid: doc.id,
@@ -35,9 +36,9 @@ class GroupChatParticipant {
       'avatarUrl': avatarUrl,
       'isMuted': isMuted,
       'isCameraOn': isCameraOn,
-      'joinedAt': joinedAt != null ? Timestamp.fromDate(joinedAt!) : FieldValue.serverTimestamp(),
+      'joinedAt': joinedAt != null
+          ? Timestamp.fromDate(joinedAt!)
+          : FieldValue.serverTimestamp(),
     };
   }
 }
-
-

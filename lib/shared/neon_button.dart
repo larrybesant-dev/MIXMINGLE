@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import '../core/theme/colors.dart';
 
 class NeonButton extends StatefulWidget {
@@ -79,12 +79,14 @@ class _NeonButtonState extends State<NeonButton>
             ),
             boxShadow: [
               BoxShadow(
-                color: glowColor.withValues(alpha: 0.3 + (_glowAnimation.value * 0.4)),
+                color: glowColor.withValues(
+                    alpha: 0.3 + (_glowAnimation.value * 0.4)),
                 blurRadius: 15 + (_glowAnimation.value * 10),
                 spreadRadius: 2 + (_glowAnimation.value * 3),
               ),
               BoxShadow(
-                color: glowColor.withValues(alpha: 0.2 + (_glowAnimation.value * 0.3)),
+                color: glowColor.withValues(
+                    alpha: 0.2 + (_glowAnimation.value * 0.3)),
                 blurRadius: 30 + (_glowAnimation.value * 15),
                 spreadRadius: 1,
               ),
@@ -95,7 +97,8 @@ class _NeonButtonState extends State<NeonButton>
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.transparent,
               shadowColor: Colors.transparent,
-              padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: widget.padding ??
+                  const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: widget.borderRadius ?? BorderRadius.circular(12),
               ),

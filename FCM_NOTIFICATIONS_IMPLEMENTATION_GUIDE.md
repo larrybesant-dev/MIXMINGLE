@@ -5,6 +5,7 @@
 This guide documents the complete Firebase Cloud Messaging notification system implementation for MixMingle, with support for messages, friend requests, group invites, video calls, and system alerts.
 
 **Status**: ✅ Production Ready (80% Complete)
+
 - ✅ Models (app_models.dart) - 320+ lines
 - ✅ Service (notification_service.dart) - 500+ lines
 - ✅ Widget (notification_widget.dart) - 300+ lines
@@ -43,13 +44,13 @@ Action Callback / Remove Notification
 
 ### Notification Type-to-Channel Mapping
 
-| Type | Channel ID | Priority | Color | Use Case |
-|------|-----------|----------|-------|----------|
-| `message` | `messages_channel` | High (1) | Green | New message arrived |
-| `friend_request` | `friend_requests_channel` | High (1) | Blue | Friend request received |
-| `group_invite` | `group_invites_channel` | High (1) | Orange | Group invitation received |
-| `video_call` | `video_calls_channel` | Max (2) | Purple | Incoming video call |
-| `system_alert` | `system_channel` | Default (0) | Grey | System notifications |
+| Type             | Channel ID                | Priority    | Color  | Use Case                  |
+| ---------------- | ------------------------- | ----------- | ------ | ------------------------- |
+| `message`        | `messages_channel`        | High (1)    | Green  | New message arrived       |
+| `friend_request` | `friend_requests_channel` | High (1)    | Blue   | Friend request received   |
+| `group_invite`   | `group_invites_channel`   | High (1)    | Orange | Group invitation received |
+| `video_call`     | `video_calls_channel`     | Max (2)     | Purple | Incoming video call       |
+| `system_alert`   | `system_channel`          | Default (0) | Grey   | System notifications      |
 
 ---
 
@@ -58,6 +59,7 @@ Action Callback / Remove Notification
 ### 1. AppNotification Model (`lib/providers/app_models.dart`)
 
 #### NotificationAction Class
+
 ```dart
 class NotificationAction {
   final String id;                    // 'accept', 'decline', 'reply', etc
@@ -68,6 +70,7 @@ class NotificationAction {
 ```
 
 #### Extended AppNotification Class
+
 ```dart
 class AppNotification {
   // Base fields
@@ -99,6 +102,7 @@ class AppNotification {
 ```
 
 **Key Features**:
+
 - Immutable data structure with copyWith() for safe updates
 - fromFCMPayload() factory for FCM message deserialization
 - Flexible metadata storage for custom data
@@ -133,6 +137,7 @@ void main() async {
 #### Platform-Specific Initialization
 
 **Web Initialization**
+
 ```dart
 Future<void> _initializeWeb() async {
   // Request browser notification permission
@@ -145,6 +150,7 @@ Future<void> _initializeWeb() async {
 ```
 
 **Native Initialization (Android/iOS)**
+
 ```dart
 Future<void> _initializeNative() async {
   // Create Android notification channels
@@ -209,6 +215,7 @@ system_channel:
 #### Message Handlers
 
 **Foreground Handler** (App is active)
+
 ```dart
 void _setupMessageHandlers() {
   // Notification arrived while app is open
@@ -229,6 +236,7 @@ void _setupMessageHandlers() {
 #### Notification Creation Methods
 
 ##### Message Notification
+
 ```dart
 Future<void> notifyNewMessage({
   required String roomId,
@@ -249,6 +257,7 @@ Future<void> notifyNewMessage({
 ```
 
 ##### Friend Request Notification
+
 ```dart
 Future<void> notifyFriendRequest({
   required String recipientId,
@@ -266,6 +275,7 @@ Future<void> notifyFriendRequest({
 ```
 
 ##### Group Invite Notification
+
 ```dart
 Future<void> notifyGroupInvite({
   required String recipientId,
@@ -286,6 +296,7 @@ Future<void> notifyGroupInvite({
 ```
 
 ##### System Alert Notification
+
 ```dart
 Future<void> sendSystemAlert({
   required String title,
@@ -666,6 +677,7 @@ Payload Validation Tests
 ```
 
 **Run Tests**:
+
 ```bash
 flutter test test/unit/notification_service_test.dart
 ```
@@ -703,6 +715,7 @@ Persistence Tests
 ```
 
 **Run Tests**:
+
 ```bash
 flutter test test/integration/notifications_integration_test.dart
 ```
@@ -770,6 +783,7 @@ end
 - Automatically configured by Flutter
 
 **APNs Setup**:
+
 1. Upload APNs certificate in Firebase Console
 2. Enable push notifications in Xcode capabilities
 3. Add background modes: Remote Notifications
@@ -795,7 +809,7 @@ messaging.onBackgroundMessage((payload) => {
   const notificationTitle = payload.notification.title;
   const notificationOptions = {
     body: payload.notification.body,
-    icon: '/favicon.ico',
+    icon: "/favicon.ico",
   };
 
   self.registration.showNotification(notificationTitle, notificationOptions);
@@ -806,8 +820,8 @@ messaging.onBackgroundMessage((payload) => {
 
 ```html
 <script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/firebase-messaging-sw.js');
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/firebase-messaging-sw.js");
   }
 </script>
 ```
@@ -822,25 +836,24 @@ messaging.onBackgroundMessage((payload) => {
 
 ```typescript
 export const onMessageCreated = functions.firestore
-  .document('messages/{conversationId}/messages/{messageId}')
+  .document("messages/{conversationId}/messages/{messageId}")
   .onCreate(async (snap, context) => {
     const message = snap.data();
     const conversationId = context.params.conversationId;
 
     // Get recipient ID
-    const conversation = await admin.firestore()
-      .collection('conversations')
+    const conversation = await admin
+      .firestore()
+      .collection("conversations")
       .doc(conversationId)
       .get();
 
-    const recipientId = conversation.data()?.participants
-      .find((p: string) => p !== message.senderId);
+    const recipientId = conversation
+      .data()
+      ?.participants.find((p: string) => p !== message.senderId);
 
     // Get recipient FCM token
-    const recipient = await admin.firestore()
-      .collection('users')
-      .doc(recipientId)
-      .get();
+    const recipient = await admin.firestore().collection("users").doc(recipientId).get();
 
     const fcmToken = recipient.data()?.fcmToken;
 
@@ -852,7 +865,7 @@ export const onMessageCreated = functions.firestore
           body: message.text.substring(0, 100),
         },
         data: {
-          notificationType: 'message',
+          notificationType: "message",
           senderId: message.senderId,
           senderName: message.senderName,
           senderAvatar: message.senderAvatar,
@@ -862,12 +875,13 @@ export const onMessageCreated = functions.firestore
     }
 
     // Store notification
-    await admin.firestore()
-      .collection('users')
+    await admin
+      .firestore()
+      .collection("users")
       .doc(recipientId)
-      .collection('notifications')
+      .collection("notifications")
       .add({
-        type: 'message',
+        type: "message",
         title: `New message from ${message.senderName}`,
         message: message.text.substring(0, 100),
         senderId: message.senderId,
@@ -889,12 +903,14 @@ export const onMessageCreated = functions.firestore
 ### Issue 1: Notifications Not Showing
 
 **Causes**:
+
 - FCM token not available
 - Channel not created (Android)
 - Browser permission denied (Web)
 - Invalid payload format
 
 **Solutions**:
+
 ```dart
 // Debug FCM token
 final token = await NotificationService().getToken();
@@ -912,11 +928,13 @@ if (!NotificationService().supportsNotifications) {
 ### Issue 2: Actions Not Executing
 
 **Causes**:
+
 - onPressed callback is null
 - Exception in callback
 - Action ID not matching
 
 **Solutions**:
+
 ```dart
 // Ensure action has callback
 NotificationAction(
@@ -937,6 +955,7 @@ NotificationAction(
 **Cause**: Default 5-second duration in NotificationWidget
 
 **Solution**:
+
 ```dart
 NotificationWidget(
   notification: notification,
@@ -1028,6 +1047,7 @@ try {
 ## Best Practices
 
 ### 1. **Always Include Actions for User Interaction**
+
 ```dart
 // Good: Provides user options
 actions: [
@@ -1040,6 +1060,7 @@ actions: null
 ```
 
 ### 2. **Use Metadata for Complex Data**
+
 ```dart
 // Good: Flexible, future-proof
 metadata: {
@@ -1053,6 +1074,7 @@ metadata: {
 ```
 
 ### 3. **Test All Notification Types**
+
 ```dart
 // Verify each type with proper channel/color
 final types = ['message', 'friend_request', 'group_invite', 'video_call', 'system_alert'];
@@ -1062,6 +1084,7 @@ for (final type in types) {
 ```
 
 ### 4. **Handle Action Errors Gracefully**
+
 ```dart
 // Good: Catch and log errors
 NotificationAction(
@@ -1079,6 +1102,7 @@ NotificationAction(
 ```
 
 ### 5. **Cleanup on Logout**
+
 ```dart
 // On user logout
 await NotificationService().deleteToken();

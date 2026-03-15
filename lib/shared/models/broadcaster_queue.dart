@@ -93,8 +93,12 @@ class BroadcasterQueue {
       'status': status,
       'queuePosition': queuePosition,
       'approvedAt': approvedAt != null ? Timestamp.fromDate(approvedAt!) : null,
-      'broadcastStartedAt': broadcastStartedAt != null ? Timestamp.fromDate(broadcastStartedAt!) : null,
-      'broadcastEndedAt': broadcastEndedAt != null ? Timestamp.fromDate(broadcastEndedAt!) : null,
+      'broadcastStartedAt': broadcastStartedAt != null
+          ? Timestamp.fromDate(broadcastStartedAt!)
+          : null,
+      'broadcastEndedAt': broadcastEndedAt != null
+          ? Timestamp.fromDate(broadcastEndedAt!)
+          : null,
     };
   }
 

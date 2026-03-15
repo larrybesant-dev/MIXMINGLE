@@ -94,7 +94,8 @@ class SpeakingPulseAnimation extends StatefulWidget {
   final Widget child;
   final bool isSpeaking;
 
-  const SpeakingPulseAnimation({super.key,
+  const SpeakingPulseAnimation({
+    super.key,
     required this.child,
     required this.isSpeaking,
   });
@@ -198,7 +199,8 @@ class NotificationAnimation extends StatefulWidget {
   final NotificationType type;
   final VoidCallback onComplete;
 
-  const NotificationAnimation({super.key,
+  const NotificationAnimation({
+    super.key,
     required this.message,
     required this.type,
     required this.onComplete,
@@ -232,7 +234,8 @@ class _NotificationAnimationState extends State<NotificationAnimation>
       begin: const Offset(0, -1),
       end: Offset.zero,
     ).animate(
-      CurvedAnimation(parent: _slideController, curve: DesignAnimations.easeOutCubic),
+      CurvedAnimation(
+          parent: _slideController, curve: DesignAnimations.easeOutCubic),
     );
 
     // Fade out after visible duration
@@ -242,7 +245,8 @@ class _NotificationAnimationState extends State<NotificationAnimation>
     );
 
     _fadeAnimation = Tween<double>(begin: 1, end: 0).animate(
-      CurvedAnimation(parent: _fadeOutController, curve: DesignAnimations.easeInCubic),
+      CurvedAnimation(
+          parent: _fadeOutController, curve: DesignAnimations.easeInCubic),
     );
 
     _slideController.forward().then((_) {
@@ -302,7 +306,8 @@ class ButtonFeedbackAnimation extends StatefulWidget {
   final Widget child;
   final VoidCallback onPressed;
 
-  const ButtonFeedbackAnimation({super.key,
+  const ButtonFeedbackAnimation({
+    super.key,
     required this.child,
     required this.onPressed,
   });
@@ -371,7 +376,8 @@ class RoomEnergyCardAnimation extends StatefulWidget {
   final int participantCount;
   final VoidCallback onTap;
 
-  const RoomEnergyCardAnimation({super.key,
+  const RoomEnergyCardAnimation({
+    super.key,
     required this.roomName,
     required this.energy,
     required this.participantCount,

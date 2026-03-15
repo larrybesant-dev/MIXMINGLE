@@ -20,18 +20,20 @@ class SoundEffectsService {
   final MusicSettingsService _settings;
 
   // Pool of players – one per event type so rapid calls don't queue.
-  final _joinPlayer     = AudioPlayer();
-  final _speakerPlayer  = AudioPlayer();
-  final _energyPlayer   = AudioPlayer();
+  final _joinPlayer = AudioPlayer();
+  final _speakerPlayer = AudioPlayer();
+  final _energyPlayer = AudioPlayer();
   final _reactionPlayer = AudioPlayer();
 
   static const double _sfxVolume = 0.35;
 
   // ── Public API ─────────────────────────────────────────────────
-  Future<void> playJoinRoom()     => _play(_joinPlayer,     'audio/join_room.mp3');
-  Future<void> playNewSpeaker()   => _play(_speakerPlayer,  'audio/new_speaker.mp3');
-  Future<void> playEnergySpike()  => _play(_energyPlayer,   'audio/energy_spike.mp3');
-  Future<void> playReaction()     => _play(_reactionPlayer, 'audio/reaction.mp3');
+  Future<void> playJoinRoom() => _play(_joinPlayer, 'audio/join_room.mp3');
+  Future<void> playNewSpeaker() =>
+      _play(_speakerPlayer, 'audio/new_speaker.mp3');
+  Future<void> playEnergySpike() =>
+      _play(_energyPlayer, 'audio/energy_spike.mp3');
+  Future<void> playReaction() => _play(_reactionPlayer, 'audio/reaction.mp3');
 
   // ── Internal helper ────────────────────────────────────────────
   Future<void> _play(AudioPlayer player, String assetPath) async {

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'colors.dart';
 
 /// Neon Glow Box - elevated card with glow effect
@@ -102,7 +102,8 @@ class NeonText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final defaultStyle = Theme.of(context).textTheme.titleLarge ?? const TextStyle();
+    final defaultStyle =
+        Theme.of(context).textTheme.titleLarge ?? const TextStyle();
     final mergedStyle = (style ?? defaultStyle).copyWith(
       shadows: [
         BoxShadow(
@@ -336,7 +337,12 @@ class _AnimatedNeonBorderState extends State<AnimatedNeonBorder>
             boxShadow: [
               BoxShadow(
                 color: widget.color.withValues(
-                  alpha: 0.3 + (0.4 * (0.5 + 0.5 * Curves.easeInOut.transform(_controller.value))),
+                  alpha: 0.3 +
+                      (0.4 *
+                          (0.5 +
+                              0.5 *
+                                  Curves.easeInOut
+                                      .transform(_controller.value))),
                 ),
                 blurRadius: 12,
                 spreadRadius: 2,
@@ -348,7 +354,12 @@ class _AnimatedNeonBorderState extends State<AnimatedNeonBorder>
               borderRadius: BorderRadius.circular(widget.borderRadius),
               border: Border.all(
                 color: widget.color.withValues(
-                  alpha: 0.4 + (0.6 * (0.5 + 0.5 * Curves.easeInOut.transform(_controller.value))),
+                  alpha: 0.4 +
+                      (0.6 *
+                          (0.5 +
+                              0.5 *
+                                  Curves.easeInOut
+                                      .transform(_controller.value))),
                 ),
                 width: widget.borderWidth,
               ),

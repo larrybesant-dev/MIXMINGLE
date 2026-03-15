@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixmingle/shared/models/moderation_action.dart';
@@ -16,10 +16,12 @@ class ModeratorDashboardPage extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ModeratorDashboardPage> createState() => _ModeratorDashboardPageState();
+  ConsumerState<ModeratorDashboardPage> createState() =>
+      _ModeratorDashboardPageState();
 }
 
-class _ModeratorDashboardPageState extends ConsumerState<ModeratorDashboardPage> with SingleTickerProviderStateMixin {
+class _ModeratorDashboardPageState extends ConsumerState<ModeratorDashboardPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -77,7 +79,9 @@ class _ModeratorDashboardPageState extends ConsumerState<ModeratorDashboardPage>
           .limit(1000)
           .get();
 
-      final logs = snapshot.docs.map((doc) => ModerationAction.fromFirestore(doc)).toList();
+      final logs = snapshot.docs
+          .map((doc) => ModerationAction.fromFirestore(doc))
+          .toList();
 
       // Convert to CSV
       final csv = _convertToCSV(logs);
@@ -109,7 +113,8 @@ class _ModeratorDashboardPageState extends ConsumerState<ModeratorDashboardPage>
     final buffer = StringBuffer();
 
     // Header
-    buffer.writeln('Timestamp,Type,Target User,Moderator,Reason,Expires At,Auto-Moderated');
+    buffer.writeln(
+        'Timestamp,Type,Target User,Moderator,Reason,Expires At,Auto-Moderated');
 
     // Data rows
     for (final log in logs) {

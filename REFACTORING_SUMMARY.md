@@ -9,6 +9,7 @@
 ## Executive Summary
 
 This refactoring ensures design consistency across the Flutter application by replacing hardcoded style values with design system constants. All critical widget files have been updated to use the unified design system defined in:
+
 - `lib/core/design_system/design_constants.dart` (DesignColors, DesignSpacing, DesignTypography, DesignAnimations, etc.)
 
 **Key Result:** Consistent UI styling across the entire app with a single source of truth for all design decisions.
@@ -18,10 +19,12 @@ This refactoring ensures design consistency across the Flutter application by re
 ## Files Refactored ✅
 
 ### Core Application Files
+
 1. **lib/app.dart**
    - ❌ `SizedBox(height: 20)` → ⚠️ `SizedBox(height: DesignSpacing.xl)` with TODO comment (20 doesn't exactly map to any constant: closest are lg:16, xl:24)
 
 ### Core UI Components
+
 2. **lib/home_simple.dart** (613 lines, 25+ hardcoded values)
    - ✅ `padding: EdgeInsets.all(24.0)` → `EdgeInsets.all(DesignSpacing.xxl)`
    - ✅ `SizedBox(height: 8)` → `SizedBox(height: DesignSpacing.sm)`
@@ -38,12 +41,14 @@ This refactoring ensures design consistency across the Flutter application by re
      - fontSize 10 (no match; added TODO, suggest caption 12)
 
 ### Feature: Splash Screen
+
 3. **lib/features/app/screens/splash_screen.dart**
    - ✅ `SizedBox(height: 20)` → `SizedBox(height: DesignSpacing.xl)` with TODO comment
    - ⚠️ `fontSize: 32` → Added TODO (no exact match; closest: heading 18)
    - ⚠️ `Color(0xFF00E6FF)` → Added TODO (custom cyan color, not in DesignColors)
 
 ### Feature: Profile Editing
+
 4. **lib/features/edit_profile/edit_profile_page.dart** (794 lines, 40+ hardcoded values)
    - ✅ `padding: EdgeInsets.all(24.0)` → `EdgeInsets.all(DesignSpacing.xxl)`
    - ✅ `SizedBox(height: 16)` → `SizedBox(height: DesignSpacing.lg)`
@@ -54,6 +59,7 @@ This refactoring ensures design consistency across the Flutter application by re
    - ⚠️ `Icon size: 48` → Added TODO (closest: DesignSpacing.avatarLarge 48)
 
 ### Feature: Reporting
+
 5. **lib/features/reporting/report_dialog.dart** (291 lines)
    - ✅ Added import: `import '../../core/design_system/design_constants.dart'`
    - ✅ `padding: EdgeInsets.all(20)` → `padding: EdgeInsets.all(DesignSpacing.lg)`
@@ -66,6 +72,7 @@ This refactoring ensures design consistency across the Flutter application by re
    - ⚠️ Icon `size: 28` → Added TODO
 
 ### Feature: Withdrawal
+
 6. **lib/features/withdrawal/withdrawal_page.dart**
    - ✅ Added import: `import '../../core/design_system/design_constants.dart'`
    - ✅ `padding: EdgeInsets.all(16.0)` → `padding: EdgeInsets.all(DesignSpacing.lg)`
@@ -73,6 +80,7 @@ This refactoring ensures design consistency across the Flutter application by re
    - ✅ `SizedBox(height: 24)` → `SizedBox(height: DesignSpacing.xl)`
 
 ### Feature: Voice Room - Advanced Mic Control
+
 7. **lib/features/voice_room/widgets/advanced_mic_control_widget.dart** (336 lines)
    - ✅ `padding: EdgeInsets.all(20)` → `padding: EdgeInsets.all(DesignSpacing.lg)`
    - ✅ `SizedBox(height: 20)` → `SizedBox(height: DesignSpacing.xl)`
@@ -87,6 +95,7 @@ This refactoring ensures design consistency across the Flutter application by re
    - ⚠️ Multiple custom font sizes → Added TODO comments for unmatched values
 
 ### Feature: Profile Page
+
 8. **lib/features/profile_page.dart** (366 lines)
    - ✅ `padding: EdgeInsets.all(16.0)` → `padding: EdgeInsets.all(DesignSpacing.lg)`
 
@@ -95,6 +104,7 @@ This refactoring ensures design consistency across the Flutter application by re
 ## Design System Constants Used
 
 ### DesignSpacing Constants
+
 ```dart
 static const double xs = 4;      // Extra small
 static const double sm = 8;      // Small
@@ -105,6 +115,7 @@ static const double xxl = 32;    // Extra extra large
 ```
 
 ### DesignColors Constants
+
 - `accent` - Bright blue (0xFF1E90FF) - Primary brand color
 - `secondary` - Orange (0xFFFF9500)
 - `tertiary` - Dark purple/magenta (0xFF8B1538)
@@ -114,6 +125,7 @@ static const double xxl = 32;    // Extra extra large
 - And opacity variants (accent5, accent10, accent20, accent30, etc.)
 
 ### DesignTypography Constants
+
 ```dart
 static const TextStyle heading = TextStyle(fontSize: 18, fontWeight: FontWeight.bold, ...)
 static const TextStyle subheading = TextStyle(fontSize: 14, fontWeight: FontWeight.w600, ...)
@@ -165,6 +177,7 @@ static const TextStyle button = TextStyle(fontSize: 14, fontWeight: FontWeight.w
 ## Patterns Applied
 
 ### 1. Spacing Replacements
+
 ```dart
 // Before
 const SizedBox(height: 16.0)
@@ -174,6 +187,7 @@ const SizedBox(height: DesignSpacing.lg)
 ```
 
 ### 2. Padding Replacements
+
 ```dart
 // Before
 padding: const EdgeInsets.all(16.0)
@@ -189,6 +203,7 @@ padding: const EdgeInsets.symmetric(horizontal: DesignSpacing.lg, vertical: Desi
 ```
 
 ### 3. Border Radius Replacements
+
 ```dart
 // Before
 borderRadius: BorderRadius.circular(12)
@@ -198,12 +213,14 @@ borderRadius: BorderRadius.circular(DesignSpacing.cardBorderRadius)
 ```
 
 ### 4. Import Addition
+
 ```dart
 // Added to all refactored feature files
 import '../../core/design_system/design_constants.dart';
 ```
 
 ### 5. TODO Comment Pattern
+
 ```dart
 // TODO: No matching constant for [value] - closest is [suggestion]
 ```
@@ -225,6 +242,7 @@ These files have hardcoded values but weren't fully processed due to scope. Reco
 ## Impact Analysis
 
 ### ✅ Benefits Achieved:
+
 - **Single Source of Truth:** All style values now reference design constants
 - **Consistency:** UI will be uniform across the application
 - **Maintainability:** Design changes require updates in one place (design_constants.dart)
@@ -232,6 +250,7 @@ These files have hardcoded values but weren't fully processed due to scope. Reco
 - **Type Safety:** Prevents typos in hardcoded values
 
 ### ⚠️ Known Deviations:
+
 - Some custom font sizes and border radius values couldn't be mapped directly
 - These have been marked with TODO comments for design review
 - Icon sizes mostly use custom values - recommend establishing icon size constants
@@ -254,6 +273,7 @@ These files have hardcoded values but weren't fully processed due to scope. Reco
 ## Verification Commands
 
 To find remaining hardcoded values:
+
 ```bash
 # Search for hardcoded colors
 flutter analyze | grep "Color(0x"

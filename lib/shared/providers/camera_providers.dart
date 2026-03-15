@@ -1,4 +1,3 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/camera_state.dart';
 import '../../services/camera/camera_service.dart';
@@ -21,5 +20,3 @@ final activeCameraCountProvider = FutureProvider.family<int, String>(
 
 // Note: State management for spotlight can be done in widgets or via service callbacks
 // For now, these are placeholders - actual state will be managed locally in widgets
-
-

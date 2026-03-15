@@ -1,4 +1,3 @@
-﻿
 import 'package:flutter/material.dart';
 import '../../../core/design_system/design_constants.dart';
 
@@ -164,7 +163,8 @@ class MembershipBadge extends StatelessWidget {
         color: tier.backgroundColor,
         borderRadius: BorderRadius.circular(DesignSpacing.cardBorderRadius),
         border: Border.all(
-          color: tier.color.withValues(alpha: tier == MembershipTier.free ? 0.3 : 0.6),
+          color: tier.color
+              .withValues(alpha: tier == MembershipTier.free ? 0.3 : 0.6),
           width: 1,
         ),
       ),
@@ -195,6 +195,3 @@ class MembershipBadge extends StatelessWidget {
     );
   }
 }
-
-
-

@@ -9,34 +9,40 @@ import '../models/post.dart';
 import 'user_providers.dart'; // For profileServiceProvider + presenceServiceProvider
 
 // Service providers
-final socialGraphServiceProvider = Provider<SocialGraphService>((ref) => SocialGraphService());
+final socialGraphServiceProvider =
+    Provider<SocialGraphService>((ref) => SocialGraphService());
 
 // Followers list provider (stream of user IDs)
-final followersIdsProvider = StreamProvider.family<List<String>, String>((ref, userId) {
+final followersIdsProvider =
+    StreamProvider.family<List<String>, String>((ref, userId) {
   final service = ref.watch(socialGraphServiceProvider);
   return service.watchFollowers(userId);
 });
 
 // Following list provider (stream of user IDs)
-final followingIdsProvider = StreamProvider.family<List<String>, String>((ref, userId) {
+final followingIdsProvider =
+    StreamProvider.family<List<String>, String>((ref, userId) {
   final service = ref.watch(socialGraphServiceProvider);
   return service.watchFollowing(userId);
 });
 
 // Mutual friends list provider (stream of user IDs)
-final mutualFriendsIdsProvider = StreamProvider.family<List<String>, String>((ref, userId) {
+final mutualFriendsIdsProvider =
+    StreamProvider.family<List<String>, String>((ref, userId) {
   final service = ref.watch(socialGraphServiceProvider);
   return service.watchMutualFriends(userId);
 });
 
 // Is following provider (stream of bool)
-final isFollowingProvider = StreamProvider.family<bool, String>((ref, targetUserId) {
+final isFollowingProvider =
+    StreamProvider.family<bool, String>((ref, targetUserId) {
   final service = ref.watch(socialGraphServiceProvider);
   return service.watchIsFollowing(targetUserId);
 });
 
 // Follower profiles provider (FutureProvider for simplicity)
-final followerProfilesProvider = FutureProvider.family<List<UserProfile>, String>((ref, userId) async {
+final followerProfilesProvider =
+    FutureProvider.family<List<UserProfile>, String>((ref, userId) async {
   final service = ref.watch(socialGraphServiceProvider);
   final profileService = ref.watch(profileServiceProvider);
 
@@ -59,7 +65,8 @@ final followerProfilesProvider = FutureProvider.family<List<UserProfile>, String
 });
 
 // Following profiles provider
-final followingProfilesProvider = FutureProvider.family<List<UserProfile>, String>((ref, userId) async {
+final followingProfilesProvider =
+    FutureProvider.family<List<UserProfile>, String>((ref, userId) async {
   final service = ref.watch(socialGraphServiceProvider);
   final profileService = ref.watch(profileServiceProvider);
 
@@ -82,7 +89,8 @@ final followingProfilesProvider = FutureProvider.family<List<UserProfile>, Strin
 });
 
 // Mutual friends profiles provider
-final mutualFriendsProfilesProvider = FutureProvider.family<List<UserProfile>, String>((ref, userId) async {
+final mutualFriendsProfilesProvider =
+    FutureProvider.family<List<UserProfile>, String>((ref, userId) async {
   final service = ref.watch(socialGraphServiceProvider);
   final profileService = ref.watch(profileServiceProvider);
 
@@ -107,22 +115,35 @@ final mutualFriendsProfilesProvider = FutureProvider.family<List<UserProfile>, S
 // suggestedUsersProvider lives in discovery_providers.dart (StreamProvider)
 // import 'package:mixmingle/shared/providers/discovery_providers.dart'
 
+<<<<<<< HEAD
 // Presence provider — moved to user_providers.dart to avoid duplicate symbol.
 // Use userPresenceProvider(uid) from user_providers.dart (exported via all_providers.dart).
+=======
+// Presence provider (using existing presence service)
+final userPresenceProvider =
+    StreamProvider.family<UserPresence?, String>((ref, userId) {
+  final service = ref.watch(presenceServiceProvider);
+  return service.getUserPresence(userId);
+});
+>>>>>>> origin/develop
 
 // Follower/following counts
-final followerCountProvider = FutureProvider.family<int, String>((ref, userId) async {
+final followerCountProvider =
+    FutureProvider.family<int, String>((ref, userId) async {
   final service = ref.watch(socialGraphServiceProvider);
   return service.getFollowerCount(userId);
 });
 
-final followingCountProvider = FutureProvider.family<int, String>((ref, userId) async {
+final followingCountProvider =
+    FutureProvider.family<int, String>((ref, userId) async {
   final service = ref.watch(socialGraphServiceProvider);
   return service.getFollowingCount(userId);
 });
 
 // Follow action provider (for UI interactions)
-final followActionProvider = FutureProvider.family<void, ({String userId, bool follow})>((ref, params) async {
+final followActionProvider =
+    FutureProvider.family<void, ({String userId, bool follow})>(
+        (ref, params) async {
   final service = ref.watch(socialGraphServiceProvider);
 
   if (params.follow) {
@@ -135,6 +156,7 @@ final followActionProvider = FutureProvider.family<void, ({String userId, bool f
   ref.invalidate(isFollowingProvider(params.userId));
   ref.invalidate(followerCountProvider(params.userId));
 });
+<<<<<<< HEAD
 
 // Following feed provider — posts from users the current user follows + own posts.
 // Uses the users/{uid}/following subcollection.
@@ -216,3 +238,5 @@ final activeFriendsProvider = StreamProvider<List<UserPresence>>((ref) {
           .toList());
 });
 
+=======
+>>>>>>> origin/develop

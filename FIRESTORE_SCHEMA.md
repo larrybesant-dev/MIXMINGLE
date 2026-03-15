@@ -7,6 +7,7 @@
 ---
 
 ## Table of Contents
+
 1. [Collections Overview](#collections-overview)
 2. [Core Collections](#core-collections)
 3. [Social & Matching](#social--matching)
@@ -22,28 +23,28 @@
 
 ## Collections Overview
 
-| Collection | Document Count | Primary Use |
-|------------|---------------|-------------|
-| `users` | ~10K | Core user data |
-| `user_profiles` | ~10K | Extended profile info |
-| `user_presence` | ~10K | Real-time online status |
-| `rooms` | ~1K | Live video/voice/text rooms |
-| `messages` | ~1M | Room chat messages |
-| `direct_messages` | ~500K | One-on-one messages |
-| `chat_rooms` | ~50K | DM conversations metadata |
-| `events` | ~5K | User-created events |
-| `speed_dating_sessions` | ~10K | Speed dating sessions |
-| `speed_dating_rounds` | ~30K | Speed dating rounds |
-| `speed_dating_results` | ~100K | Speed dating outcomes |
-| `notifications` | ~100K | User notifications |
-| `subscriptions` | ~1K | Premium subscriptions |
-| `withdrawal_requests` | ~500 | Payout requests |
-| `activities` | ~50K | Activity feed |
-| `matches` | ~20K | Dating matches |
-| `matching_profiles` | ~10K | Matching algorithm data |
-| `reports` | ~1K | User reports |
-| `blocks` | ~5K | Blocked users |
-| `media` | ~50K | Media uploads |
+| Collection              | Document Count | Primary Use                 |
+| ----------------------- | -------------- | --------------------------- |
+| `users`                 | ~10K           | Core user data              |
+| `user_profiles`         | ~10K           | Extended profile info       |
+| `user_presence`         | ~10K           | Real-time online status     |
+| `rooms`                 | ~1K            | Live video/voice/text rooms |
+| `messages`              | ~1M            | Room chat messages          |
+| `direct_messages`       | ~500K          | One-on-one messages         |
+| `chat_rooms`            | ~50K           | DM conversations metadata   |
+| `events`                | ~5K            | User-created events         |
+| `speed_dating_sessions` | ~10K           | Speed dating sessions       |
+| `speed_dating_rounds`   | ~30K           | Speed dating rounds         |
+| `speed_dating_results`  | ~100K          | Speed dating outcomes       |
+| `notifications`         | ~100K          | User notifications          |
+| `subscriptions`         | ~1K            | Premium subscriptions       |
+| `withdrawal_requests`   | ~500           | Payout requests             |
+| `activities`            | ~50K           | Activity feed               |
+| `matches`               | ~20K           | Dating matches              |
+| `matching_profiles`     | ~10K           | Matching algorithm data     |
+| `reports`               | ~1K            | User reports                |
+| `blocks`                | ~5K            | Blocked users               |
+| `media`                 | ~50K           | Media uploads               |
 
 ---
 
@@ -57,41 +58,42 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | User ID (matches auth UID) |
-| `email` | string | ✅ | - | User email address |
-| `displayName` | string | ⬜ | null | Display name |
-| `username` | string | ✅ | - | Unique username (3-20 chars) |
-| `nickname` | string | ⬜ | null | Optional nickname |
-| `photoUrl` | string | ⬜ | null | Profile photo URL |
-| `avatarUrl` | string | ✅ | '' | Avatar image URL |
-| `bio` | string | ✅ | '' | User biography |
-| `location` | string | ✅ | '' | Location string |
-| `interests` | array<string> | ✅ | [] | User interests/hobbies |
-| `statusMessage` | string | ✅ | 'Available' | Custom status |
-| `isOnline` | boolean | ✅ | false | Online status |
-| `lastSeen` | timestamp | ⬜ | null | Last activity timestamp |
-| `membershipTier` | string | ✅ | 'free' | Tier: free/premium/vip |
-| `badges` | array<string> | ✅ | [] | Achievement badges |
-| `coinBalance` | number | ✅ | 0 | Virtual currency balance |
-| `followersCount` | number | ✅ | 0 | Follower count |
-| `followingCount` | number | ✅ | 0 | Following count |
-| `totalTipsReceived` | number | ✅ | 0 | Total tips received |
-| `liveSessionsHosted` | number | ✅ | 0 | Rooms hosted |
-| `socialLinks` | map<string, string> | ✅ | {} | Social media links |
-| `featuredRoomId` | string | ⬜ | null | Featured room ID |
-| `featuredContentUrl` | string | ⬜ | null | Featured content |
-| `topGifts` | array<map> | ✅ | [] | Top gifts received |
-| `recentMediaUrls` | array<string> | ✅ | [] | Recent media |
-| `recentActivity` | array<map> | ✅ | [] | Recent activities |
-| `lookingFor` | string | ⬜ | null | What user seeks |
-| `minAgePreference` | number | ⬜ | null | Min age preference |
-| `maxAgePreference` | number | ⬜ | null | Max age preference |
-| `maxDistancePreference` | number | ⬜ | null | Max distance (miles) |
-| `createdAt` | timestamp | ✅ | serverTimestamp | Account creation |
+| Field                   | Type                | Required | Default         | Description                  |
+| ----------------------- | ------------------- | -------- | --------------- | ---------------------------- |
+| `id`                    | string              | ✅       | -               | User ID (matches auth UID)   |
+| `email`                 | string              | ✅       | -               | User email address           |
+| `displayName`           | string              | ⬜       | null            | Display name                 |
+| `username`              | string              | ✅       | -               | Unique username (3-20 chars) |
+| `nickname`              | string              | ⬜       | null            | Optional nickname            |
+| `photoUrl`              | string              | ⬜       | null            | Profile photo URL            |
+| `avatarUrl`             | string              | ✅       | ''              | Avatar image URL             |
+| `bio`                   | string              | ✅       | ''              | User biography               |
+| `location`              | string              | ✅       | ''              | Location string              |
+| `interests`             | array<string>       | ✅       | []              | User interests/hobbies       |
+| `statusMessage`         | string              | ✅       | 'Available'     | Custom status                |
+| `isOnline`              | boolean             | ✅       | false           | Online status                |
+| `lastSeen`              | timestamp           | ⬜       | null            | Last activity timestamp      |
+| `membershipTier`        | string              | ✅       | 'free'          | Tier: free/premium/vip       |
+| `badges`                | array<string>       | ✅       | []              | Achievement badges           |
+| `coinBalance`           | number              | ✅       | 0               | Virtual currency balance     |
+| `followersCount`        | number              | ✅       | 0               | Follower count               |
+| `followingCount`        | number              | ✅       | 0               | Following count              |
+| `totalTipsReceived`     | number              | ✅       | 0               | Total tips received          |
+| `liveSessionsHosted`    | number              | ✅       | 0               | Rooms hosted                 |
+| `socialLinks`           | map<string, string> | ✅       | {}              | Social media links           |
+| `featuredRoomId`        | string              | ⬜       | null            | Featured room ID             |
+| `featuredContentUrl`    | string              | ⬜       | null            | Featured content             |
+| `topGifts`              | array<map>          | ✅       | []              | Top gifts received           |
+| `recentMediaUrls`       | array<string>       | ✅       | []              | Recent media                 |
+| `recentActivity`        | array<map>          | ✅       | []              | Recent activities            |
+| `lookingFor`            | string              | ⬜       | null            | What user seeks              |
+| `minAgePreference`      | number              | ⬜       | null            | Min age preference           |
+| `maxAgePreference`      | number              | ⬜       | null            | Max age preference           |
+| `maxDistancePreference` | number              | ⬜       | null            | Max distance (miles)         |
+| `createdAt`             | timestamp           | ✅       | serverTimestamp | Account creation             |
 
 **Example Document:**
+
 ```json
 {
   "id": "user123",
@@ -115,12 +117,14 @@
 ```
 
 **Validation Rules:**
+
 - `email` must be valid email format
 - `username` must be 3-20 characters, alphanumeric + underscore
 - `membershipTier` must be one of: free, premium, vip
 - `coinBalance` must be >= 0
 
 **Required Indexes:**
+
 - `isOnline ASC, lookingForSpeedDate ASC`
 - `membershipTier ASC, createdAt DESC`
 
@@ -134,41 +138,42 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | User ID |
-| `email` | string | ✅ | - | User email |
-| `displayName` | string | ⬜ | null | Display name |
-| `nickname` | string | ⬜ | null | Nickname |
-| `photoUrl` | string | ⬜ | null | Main photo |
-| `galleryPhotos` | array<string> | ⬜ | null | Photo gallery |
-| `interests` | array<string> | ⬜ | null | Interests |
-| `location` | string | ⬜ | null | Location string |
-| `latitude` | number | ⬜ | null | GPS latitude |
-| `longitude` | number | ⬜ | null | GPS longitude |
-| `birthday` | timestamp | ⬜ | null | Birth date |
-| `gender` | string | ⬜ | null | Gender identity |
-| `pronouns` | string | ⬜ | null | Preferred pronouns |
-| `bio` | string | ⬜ | null | Biography |
-| `lookingFor` | array<string> | ⬜ | null | What seeking: friends, dating, etc |
-| `relationshipType` | string | ⬜ | null | casual, serious, long-term |
-| `minAgePreference` | number | ⬜ | null | Min age for matches |
-| `maxAgePreference` | number | ⬜ | null | Max age for matches |
-| `preferredGenders` | array<string> | ⬜ | null | Gender preferences |
-| `personalityPrompts` | map<string, string> | ⬜ | null | Profile prompts |
-| `musicTastes` | array<string> | ⬜ | null | Music preferences |
-| `lifestylePrompts` | map<string, boolean> | ⬜ | null | Lifestyle choices |
-| `isPhotoVerified` | boolean | ⬜ | null | Photo verification |
-| `isPhoneVerified` | boolean | ⬜ | null | Phone verification |
-| `isEmailVerified` | boolean | ⬜ | null | Email verification |
-| `isIdVerified` | boolean | ⬜ | null | ID verification |
-| `socialLinks` | map<string, string> | ⬜ | null | Social profiles |
-| `verifiedOnlyMode` | boolean | ⬜ | null | Only match verified |
-| `privateMode` | boolean | ⬜ | null | Private profile |
-| `createdAt` | timestamp | ✅ | serverTimestamp | Profile created |
-| `updatedAt` | timestamp | ✅ | serverTimestamp | Last updated |
+| Field                | Type                 | Required | Default         | Description                        |
+| -------------------- | -------------------- | -------- | --------------- | ---------------------------------- |
+| `id`                 | string               | ✅       | -               | User ID                            |
+| `email`              | string               | ✅       | -               | User email                         |
+| `displayName`        | string               | ⬜       | null            | Display name                       |
+| `nickname`           | string               | ⬜       | null            | Nickname                           |
+| `photoUrl`           | string               | ⬜       | null            | Main photo                         |
+| `galleryPhotos`      | array<string>        | ⬜       | null            | Photo gallery                      |
+| `interests`          | array<string>        | ⬜       | null            | Interests                          |
+| `location`           | string               | ⬜       | null            | Location string                    |
+| `latitude`           | number               | ⬜       | null            | GPS latitude                       |
+| `longitude`          | number               | ⬜       | null            | GPS longitude                      |
+| `birthday`           | timestamp            | ⬜       | null            | Birth date                         |
+| `gender`             | string               | ⬜       | null            | Gender identity                    |
+| `pronouns`           | string               | ⬜       | null            | Preferred pronouns                 |
+| `bio`                | string               | ⬜       | null            | Biography                          |
+| `lookingFor`         | array<string>        | ⬜       | null            | What seeking: friends, dating, etc |
+| `relationshipType`   | string               | ⬜       | null            | casual, serious, long-term         |
+| `minAgePreference`   | number               | ⬜       | null            | Min age for matches                |
+| `maxAgePreference`   | number               | ⬜       | null            | Max age for matches                |
+| `preferredGenders`   | array<string>        | ⬜       | null            | Gender preferences                 |
+| `personalityPrompts` | map<string, string>  | ⬜       | null            | Profile prompts                    |
+| `musicTastes`        | array<string>        | ⬜       | null            | Music preferences                  |
+| `lifestylePrompts`   | map<string, boolean> | ⬜       | null            | Lifestyle choices                  |
+| `isPhotoVerified`    | boolean              | ⬜       | null            | Photo verification                 |
+| `isPhoneVerified`    | boolean              | ⬜       | null            | Phone verification                 |
+| `isEmailVerified`    | boolean              | ⬜       | null            | Email verification                 |
+| `isIdVerified`       | boolean              | ⬜       | null            | ID verification                    |
+| `socialLinks`        | map<string, string>  | ⬜       | null            | Social profiles                    |
+| `verifiedOnlyMode`   | boolean              | ⬜       | null            | Only match verified                |
+| `privateMode`        | boolean              | ⬜       | null            | Private profile                    |
+| `createdAt`          | timestamp            | ✅       | serverTimestamp | Profile created                    |
+| `updatedAt`          | timestamp            | ✅       | serverTimestamp | Last updated                       |
 
 **Example Document:**
+
 ```json
 {
   "id": "user123",
@@ -178,7 +183,7 @@
   "galleryPhotos": ["https://...", "https://..."],
   "location": "New York, NY",
   "latitude": 40.7128,
-  "longitude": -74.0060,
+  "longitude": -74.006,
   "birthday": "1995-06-15T00:00:00Z",
   "gender": "male",
   "pronouns": "he/him",
@@ -206,12 +211,14 @@
 ```
 
 **Validation Rules:**
+
 - `minAgePreference` must be >= 18 and <= maxAgePreference
 - `maxAgePreference` must be >= minAgePreference and <= 100
 - `latitude` must be between -90 and 90
 - `longitude` must be between -180 and 180
 
 **Required Indexes:**
+
 - `latitude ASC, longitude ASC`
 - `gender ASC, createdAt DESC`
 
@@ -225,15 +232,16 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `userId` | string | ✅ | - | User ID |
-| `status` | string | ✅ | 'offline' | online/away/offline/busy |
-| `lastSeen` | timestamp | ✅ | serverTimestamp | Last activity |
-| `currentRoomId` | string | ⬜ | null | Current room if in one |
-| `statusMessage` | string | ⬜ | null | Custom status text |
+| Field           | Type      | Required | Default         | Description              |
+| --------------- | --------- | -------- | --------------- | ------------------------ |
+| `userId`        | string    | ✅       | -               | User ID                  |
+| `status`        | string    | ✅       | 'offline'       | online/away/offline/busy |
+| `lastSeen`      | timestamp | ✅       | serverTimestamp | Last activity            |
+| `currentRoomId` | string    | ⬜       | null            | Current room if in one   |
+| `statusMessage` | string    | ⬜       | null            | Custom status text       |
 
 **Example Document:**
+
 ```json
 {
   "userId": "user123",
@@ -245,10 +253,12 @@
 ```
 
 **Validation Rules:**
+
 - `status` must be one of: online, away, offline, busy
 - Auto-updated via Cloud Functions on disconnect
 
 **Required Indexes:**
+
 - `status ASC, lastSeen DESC`
 
 ---
@@ -263,23 +273,24 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `userId` | string | ✅ | - | User ID |
-| `displayName` | string | ✅ | - | Display name |
-| `photoUrl` | string | ⬜ | null | Profile photo |
-| `age` | number | ✅ | - | User age |
-| `latitude` | number | ✅ | - | GPS latitude |
-| `longitude` | number | ✅ | - | GPS longitude |
-| `answers` | map | ✅ | - | Questionnaire answers |
-| `lastActive` | timestamp | ✅ | serverTimestamp | Last active |
-| `createdAt` | timestamp | ✅ | serverTimestamp | Created timestamp |
-| `isActive` | boolean | ✅ | true | Active for matching |
-| `blockedUserIds` | array<string> | ✅ | [] | Blocked users |
-| `likedUserIds` | array<string> | ✅ | [] | Liked users |
-| `passedUserIds` | array<string> | ✅ | [] | Passed users |
+| Field            | Type          | Required | Default         | Description           |
+| ---------------- | ------------- | -------- | --------------- | --------------------- |
+| `userId`         | string        | ✅       | -               | User ID               |
+| `displayName`    | string        | ✅       | -               | Display name          |
+| `photoUrl`       | string        | ⬜       | null            | Profile photo         |
+| `age`            | number        | ✅       | -               | User age              |
+| `latitude`       | number        | ✅       | -               | GPS latitude          |
+| `longitude`      | number        | ✅       | -               | GPS longitude         |
+| `answers`        | map           | ✅       | -               | Questionnaire answers |
+| `lastActive`     | timestamp     | ✅       | serverTimestamp | Last active           |
+| `createdAt`      | timestamp     | ✅       | serverTimestamp | Created timestamp     |
+| `isActive`       | boolean       | ✅       | true            | Active for matching   |
+| `blockedUserIds` | array<string> | ✅       | []              | Blocked users         |
+| `likedUserIds`   | array<string> | ✅       | []              | Liked users           |
+| `passedUserIds`  | array<string> | ✅       | []              | Passed users          |
 
 **Example Document:**
+
 ```json
 {
   "userId": "user123",
@@ -287,7 +298,7 @@
   "photoUrl": "https://...",
   "age": 28,
   "latitude": 40.7128,
-  "longitude": -74.0060,
+  "longitude": -74.006,
   "answers": {
     "minAge": 25,
     "maxAge": 35,
@@ -303,6 +314,7 @@
 ```
 
 **Required Indexes:**
+
 - `isActive ASC, lastActive DESC`
 - `age ASC, latitude ASC, longitude ASC`
 
@@ -316,18 +328,19 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Match ID |
-| `userId1` | string | ✅ | - | First user ID |
-| `userId2` | string | ✅ | - | Second user ID |
-| `matchScore` | number | ✅ | 0 | Compatibility score (0-100) |
-| `conversationId` | string | ⬜ | null | Chat conversation ID |
-| `status` | string | ✅ | 'active' | active/archived/blocked |
-| `matchedAt` | timestamp | ✅ | serverTimestamp | Match timestamp |
-| `lastInteractionAt` | timestamp | ⬜ | null | Last message time |
+| Field               | Type      | Required | Default         | Description                 |
+| ------------------- | --------- | -------- | --------------- | --------------------------- |
+| `id`                | string    | ✅       | -               | Match ID                    |
+| `userId1`           | string    | ✅       | -               | First user ID               |
+| `userId2`           | string    | ✅       | -               | Second user ID              |
+| `matchScore`        | number    | ✅       | 0               | Compatibility score (0-100) |
+| `conversationId`    | string    | ⬜       | null            | Chat conversation ID        |
+| `status`            | string    | ✅       | 'active'        | active/archived/blocked     |
+| `matchedAt`         | timestamp | ✅       | serverTimestamp | Match timestamp             |
+| `lastInteractionAt` | timestamp | ⬜       | null            | Last message time           |
 
 **Example Document:**
+
 ```json
 {
   "id": "match123",
@@ -342,6 +355,7 @@
 ```
 
 **Required Indexes:**
+
 - `userId1 ASC, matchedAt DESC`
 - `userId2 ASC, matchedAt DESC`
 - `status ASC, matchedAt DESC`
@@ -358,33 +372,34 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Room ID |
-| `name` | string | ✅ | - | Room name |
-| `title` | string | ✅ | - | Room title |
-| `description` | string | ✅ | '' | Room description |
-| `hostId` | string | ✅ | - | Host user ID |
-| `hostName` | string | ✅ | - | Host display name |
-| `roomType` | string | ✅ | 'text' | text/voice/video |
-| `category` | string | ✅ | '' | Room category |
-| `tags` | array<string> | ✅ | [] | Search tags |
-| `privacy` | string | ✅ | 'public' | public/private |
-| `status` | string | ✅ | 'live' | live/ended |
-| `isActive` | boolean | ✅ | false | Active status |
-| `isLive` | boolean | ✅ | false | Currently live |
-| `participantIds` | array<string> | ✅ | [] | Current participants |
-| `speakers` | array<string> | ✅ | [] | Speakers list |
-| `listeners` | array<string> | ✅ | [] | Listeners list |
-| `moderators` | array<string> | ✅ | [] | Moderator IDs |
-| `bannedUsers` | array<string> | ✅ | [] | Banned user IDs |
-| `viewerCount` | number | ✅ | 0 | Current viewer count |
-| `thumbnailUrl` | string | ⬜ | null | Room thumbnail |
-| `agoraChannelName` | string | ⬜ | null | Agora channel name |
-| `allowSpeakerRequests` | boolean | ✅ | true | Allow speaker requests |
-| `createdAt` | timestamp | ✅ | serverTimestamp | Created timestamp |
+| Field                  | Type          | Required | Default         | Description            |
+| ---------------------- | ------------- | -------- | --------------- | ---------------------- |
+| `id`                   | string        | ✅       | -               | Room ID                |
+| `name`                 | string        | ✅       | -               | Room name              |
+| `title`                | string        | ✅       | -               | Room title             |
+| `description`          | string        | ✅       | ''              | Room description       |
+| `hostId`               | string        | ✅       | -               | Host user ID           |
+| `hostName`             | string        | ✅       | -               | Host display name      |
+| `roomType`             | string        | ✅       | 'text'          | text/voice/video       |
+| `category`             | string        | ✅       | ''              | Room category          |
+| `tags`                 | array<string> | ✅       | []              | Search tags            |
+| `privacy`              | string        | ✅       | 'public'        | public/private         |
+| `status`               | string        | ✅       | 'live'          | live/ended             |
+| `isActive`             | boolean       | ✅       | false           | Active status          |
+| `isLive`               | boolean       | ✅       | false           | Currently live         |
+| `participantIds`       | array<string> | ✅       | []              | Current participants   |
+| `speakers`             | array<string> | ✅       | []              | Speakers list          |
+| `listeners`            | array<string> | ✅       | []              | Listeners list         |
+| `moderators`           | array<string> | ✅       | []              | Moderator IDs          |
+| `bannedUsers`          | array<string> | ✅       | []              | Banned user IDs        |
+| `viewerCount`          | number        | ✅       | 0               | Current viewer count   |
+| `thumbnailUrl`         | string        | ⬜       | null            | Room thumbnail         |
+| `agoraChannelName`     | string        | ⬜       | null            | Agora channel name     |
+| `allowSpeakerRequests` | boolean       | ✅       | true            | Allow speaker requests |
+| `createdAt`            | timestamp     | ✅       | serverTimestamp | Created timestamp      |
 
 **Example Document:**
+
 ```json
 {
   "id": "room123",
@@ -413,12 +428,14 @@
 ```
 
 **Validation Rules:**
+
 - `roomType` must be one of: text, voice, video
 - `privacy` must be one of: public, private
 - `status` must be one of: live, ended
 - `hostId` must be in `participantIds`
 
 **Required Indexes:**
+
 - `isLive ASC, createdAt DESC`
 - `category ASC, isLive ASC, createdAt DESC`
 - `hostId ASC, createdAt DESC`
@@ -433,28 +450,29 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Message ID |
-| `roomId` | string | ✅ | - | Parent room ID |
-| `senderId` | string | ✅ | - | Sender user ID |
-| `senderName` | string | ✅ | '' | Sender display name |
-| `senderAvatarUrl` | string | ✅ | '' | Sender avatar |
-| `content` | string | ✅ | - | Message content |
-| `type` | string | ✅ | 'text' | text/image/video/audio |
-| `mediaUrl` | string | ⬜ | null | Media URL if applicable |
-| `thumbnailUrl` | string | ⬜ | null | Thumbnail URL |
-| `metadata` | map | ⬜ | null | Additional metadata |
-| `mentionedUserIds` | array<string> | ✅ | [] | Mentioned users |
-| `reactions` | array<string> | ✅ | [] | Reaction emojis |
-| `status` | string | ✅ | 'sent' | sending/sent/delivered/read |
-| `replyToMessageId` | string | ⬜ | null | Reply to message ID |
-| `isEdited` | boolean | ✅ | false | Edited flag |
-| `editedAt` | timestamp | ⬜ | null | Edit timestamp |
-| `isTyping` | boolean | ✅ | false | Typing indicator |
-| `timestamp` | timestamp | ✅ | serverTimestamp | Message timestamp |
+| Field              | Type          | Required | Default         | Description                 |
+| ------------------ | ------------- | -------- | --------------- | --------------------------- |
+| `id`               | string        | ✅       | -               | Message ID                  |
+| `roomId`           | string        | ✅       | -               | Parent room ID              |
+| `senderId`         | string        | ✅       | -               | Sender user ID              |
+| `senderName`       | string        | ✅       | ''              | Sender display name         |
+| `senderAvatarUrl`  | string        | ✅       | ''              | Sender avatar               |
+| `content`          | string        | ✅       | -               | Message content             |
+| `type`             | string        | ✅       | 'text'          | text/image/video/audio      |
+| `mediaUrl`         | string        | ⬜       | null            | Media URL if applicable     |
+| `thumbnailUrl`     | string        | ⬜       | null            | Thumbnail URL               |
+| `metadata`         | map           | ⬜       | null            | Additional metadata         |
+| `mentionedUserIds` | array<string> | ✅       | []              | Mentioned users             |
+| `reactions`        | array<string> | ✅       | []              | Reaction emojis             |
+| `status`           | string        | ✅       | 'sent'          | sending/sent/delivered/read |
+| `replyToMessageId` | string        | ⬜       | null            | Reply to message ID         |
+| `isEdited`         | boolean       | ✅       | false           | Edited flag                 |
+| `editedAt`         | timestamp     | ⬜       | null            | Edit timestamp              |
+| `isTyping`         | boolean       | ✅       | false           | Typing indicator            |
+| `timestamp`        | timestamp     | ✅       | serverTimestamp | Message timestamp           |
 
 **Example Document:**
+
 ```json
 {
   "id": "msg123",
@@ -474,6 +492,7 @@
 ```
 
 **Required Indexes:**
+
 - `roomId ASC, timestamp DESC`
 - `senderId ASC, timestamp DESC`
 
@@ -487,25 +506,26 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Message ID |
-| `conversationId` | string | ✅ | - | Conversation ID |
-| `senderId` | string | ✅ | - | Sender user ID |
-| `receiverId` | string | ✅ | - | Receiver user ID |
-| `type` | string | ✅ | 'text' | text/image/video/audio/file |
-| `content` | string | ✅ | - | Message content |
-| `mediaUrl` | string | ⬜ | null | Media URL |
-| `thumbnailUrl` | string | ⬜ | null | Thumbnail URL |
-| `metadata` | map | ⬜ | null | Additional data |
-| `status` | string | ✅ | 'sent' | sending/sent/delivered/read |
-| `timestamp` | timestamp | ✅ | serverTimestamp | Sent timestamp |
-| `readAt` | timestamp | ⬜ | null | Read timestamp |
-| `isEdited` | boolean | ✅ | false | Edited flag |
-| `editedAt` | timestamp | ⬜ | null | Edit timestamp |
-| `reactions` | map<string, array<string>> | ✅ | {} | Emoji reactions |
+| Field            | Type                       | Required | Default         | Description                 |
+| ---------------- | -------------------------- | -------- | --------------- | --------------------------- |
+| `id`             | string                     | ✅       | -               | Message ID                  |
+| `conversationId` | string                     | ✅       | -               | Conversation ID             |
+| `senderId`       | string                     | ✅       | -               | Sender user ID              |
+| `receiverId`     | string                     | ✅       | -               | Receiver user ID            |
+| `type`           | string                     | ✅       | 'text'          | text/image/video/audio/file |
+| `content`        | string                     | ✅       | -               | Message content             |
+| `mediaUrl`       | string                     | ⬜       | null            | Media URL                   |
+| `thumbnailUrl`   | string                     | ⬜       | null            | Thumbnail URL               |
+| `metadata`       | map                        | ⬜       | null            | Additional data             |
+| `status`         | string                     | ✅       | 'sent'          | sending/sent/delivered/read |
+| `timestamp`      | timestamp                  | ✅       | serverTimestamp | Sent timestamp              |
+| `readAt`         | timestamp                  | ⬜       | null            | Read timestamp              |
+| `isEdited`       | boolean                    | ✅       | false           | Edited flag                 |
+| `editedAt`       | timestamp                  | ⬜       | null            | Edit timestamp              |
+| `reactions`      | map<string, array<string>> | ✅       | {}              | Emoji reactions             |
 
 **Example Document:**
+
 ```json
 {
   "id": "dm123",
@@ -525,6 +545,7 @@
 ```
 
 **Required Indexes:**
+
 - `conversationId ASC, timestamp DESC`
 - `senderId ASC, timestamp DESC`
 - `receiverId ASC, timestamp DESC`
@@ -539,16 +560,17 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Chat room ID |
-| `participants` | array<string> | ✅ | - | Participant user IDs |
-| `lastMessage` | string | ✅ | '' | Last message preview |
-| `lastMessageTime` | timestamp | ✅ | serverTimestamp | Last message time |
-| `unreadCounts` | map<string, number> | ✅ | {} | Unread count per user |
-| `isTyping` | boolean | ✅ | false | Typing indicator |
+| Field             | Type                | Required | Default         | Description           |
+| ----------------- | ------------------- | -------- | --------------- | --------------------- |
+| `id`              | string              | ✅       | -               | Chat room ID          |
+| `participants`    | array<string>       | ✅       | -               | Participant user IDs  |
+| `lastMessage`     | string              | ✅       | ''              | Last message preview  |
+| `lastMessageTime` | timestamp           | ✅       | serverTimestamp | Last message time     |
+| `unreadCounts`    | map<string, number> | ✅       | {}              | Unread count per user |
+| `isTyping`        | boolean             | ✅       | false           | Typing indicator      |
 
 **Example Document:**
+
 ```json
 {
   "id": "user123_user456",
@@ -563,6 +585,7 @@
 ```
 
 **Required Indexes:**
+
 - `participants ARRAY_CONTAINS, lastMessageTime DESC`
 
 ---
@@ -577,25 +600,26 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Event ID |
-| `title` | string | ✅ | - | Event title |
-| `description` | string | ✅ | - | Event description |
-| `hostId` | string | ✅ | - | Host user ID |
-| `startTime` | timestamp | ✅ | - | Event start time |
-| `endTime` | timestamp | ✅ | - | Event end time |
-| `location` | string | ✅ | - | Location string |
-| `latitude` | number | ✅ | - | GPS latitude |
-| `longitude` | number | ✅ | - | GPS longitude |
-| `category` | string | ✅ | 'General' | Event category |
-| `imageUrl` | string | ✅ | '' | Event image |
-| `attendees` | array<string> | ✅ | [] | Attendee user IDs |
-| `maxAttendees` | number | ✅ | 10 | Max capacity |
-| `isPublic` | boolean | ✅ | true | Public visibility |
-| `createdAt` | timestamp | ✅ | serverTimestamp | Created timestamp |
+| Field          | Type          | Required | Default         | Description       |
+| -------------- | ------------- | -------- | --------------- | ----------------- |
+| `id`           | string        | ✅       | -               | Event ID          |
+| `title`        | string        | ✅       | -               | Event title       |
+| `description`  | string        | ✅       | -               | Event description |
+| `hostId`       | string        | ✅       | -               | Host user ID      |
+| `startTime`    | timestamp     | ✅       | -               | Event start time  |
+| `endTime`      | timestamp     | ✅       | -               | Event end time    |
+| `location`     | string        | ✅       | -               | Location string   |
+| `latitude`     | number        | ✅       | -               | GPS latitude      |
+| `longitude`    | number        | ✅       | -               | GPS longitude     |
+| `category`     | string        | ✅       | 'General'       | Event category    |
+| `imageUrl`     | string        | ✅       | ''              | Event image       |
+| `attendees`    | array<string> | ✅       | []              | Attendee user IDs |
+| `maxAttendees` | number        | ✅       | 10              | Max capacity      |
+| `isPublic`     | boolean       | ✅       | true            | Public visibility |
+| `createdAt`    | timestamp     | ✅       | serverTimestamp | Created timestamp |
 
 **Example Document:**
+
 ```json
 {
   "id": "event123",
@@ -617,6 +641,7 @@
 ```
 
 **Required Indexes:**
+
 - `startTime ASC, isPublic ASC`
 - `hostId ASC, startTime ASC`
 - `category ASC, startTime ASC`
@@ -631,22 +656,23 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Session ID |
-| `userId1` | string | ✅ | - | First user ID |
-| `userId2` | string | ✅ | - | Second user ID |
-| `roomId` | string | ✅ | - | Video room ID |
-| `status` | string | ✅ | 'waiting' | waiting/matched/inProgress/completed/cancelled |
-| `durationMinutes` | number | ✅ | 10 | Session duration |
-| `user1Decision` | string | ✅ | 'pending' | like/pass/pending |
-| `user2Decision` | string | ✅ | 'pending' | like/pass/pending |
-| `isMatch` | boolean | ✅ | false | Mutual match flag |
-| `createdAt` | timestamp | ✅ | serverTimestamp | Created timestamp |
-| `startedAt` | timestamp | ⬜ | null | Started timestamp |
-| `endedAt` | timestamp | ⬜ | null | Ended timestamp |
+| Field             | Type      | Required | Default         | Description                                    |
+| ----------------- | --------- | -------- | --------------- | ---------------------------------------------- |
+| `id`              | string    | ✅       | -               | Session ID                                     |
+| `userId1`         | string    | ✅       | -               | First user ID                                  |
+| `userId2`         | string    | ✅       | -               | Second user ID                                 |
+| `roomId`          | string    | ✅       | -               | Video room ID                                  |
+| `status`          | string    | ✅       | 'waiting'       | waiting/matched/inProgress/completed/cancelled |
+| `durationMinutes` | number    | ✅       | 10              | Session duration                               |
+| `user1Decision`   | string    | ✅       | 'pending'       | like/pass/pending                              |
+| `user2Decision`   | string    | ✅       | 'pending'       | like/pass/pending                              |
+| `isMatch`         | boolean   | ✅       | false           | Mutual match flag                              |
+| `createdAt`       | timestamp | ✅       | serverTimestamp | Created timestamp                              |
+| `startedAt`       | timestamp | ⬜       | null            | Started timestamp                              |
+| `endedAt`         | timestamp | ⬜       | null            | Ended timestamp                                |
 
 **Example Document:**
+
 ```json
 {
   "id": "session123",
@@ -665,6 +691,7 @@
 ```
 
 **Required Indexes:**
+
 - `participants ARRAY_CONTAINS, status ASC`
 - `status ASC, createdAt DESC`
 
@@ -678,20 +705,21 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Round ID |
-| `eventId` | string | ✅ | - | Parent event ID |
-| `participants` | array<string> | ✅ | - | Participant user IDs |
-| `startTime` | timestamp | ✅ | - | Round start time |
-| `roundDurationMinutes` | number | ✅ | 5 | Round duration |
-| `currentRound` | number | ✅ | 1 | Current round number |
-| `totalRounds` | number | ✅ | 3 | Total rounds |
-| `matches` | map<string, array<string>> | ✅ | {} | User pairings |
-| `isActive` | boolean | ✅ | false | Active status |
-| `createdAt` | timestamp | ✅ | serverTimestamp | Created timestamp |
+| Field                  | Type                       | Required | Default         | Description          |
+| ---------------------- | -------------------------- | -------- | --------------- | -------------------- |
+| `id`                   | string                     | ✅       | -               | Round ID             |
+| `eventId`              | string                     | ✅       | -               | Parent event ID      |
+| `participants`         | array<string>              | ✅       | -               | Participant user IDs |
+| `startTime`            | timestamp                  | ✅       | -               | Round start time     |
+| `roundDurationMinutes` | number                     | ✅       | 5               | Round duration       |
+| `currentRound`         | number                     | ✅       | 1               | Current round number |
+| `totalRounds`          | number                     | ✅       | 3               | Total rounds         |
+| `matches`              | map<string, array<string>> | ✅       | {}              | User pairings        |
+| `isActive`             | boolean                    | ✅       | false           | Active status        |
+| `createdAt`            | timestamp                  | ✅       | serverTimestamp | Created timestamp    |
 
 **Example Document:**
+
 ```json
 {
   "id": "round123",
@@ -711,6 +739,7 @@
 ```
 
 **Required Indexes:**
+
 - `eventId ASC, startTime ASC`
 - `isActive ASC, startTime ASC`
 
@@ -724,18 +753,19 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Result ID |
-| `roundId` | string | ✅ | - | Round ID |
-| `userId` | string | ✅ | - | User ID |
-| `matchedUserId` | string | ✅ | - | Matched user ID |
-| `userLiked` | boolean | ✅ | false | User liked match |
-| `matchedUserLiked` | boolean | ✅ | false | Other user liked |
-| `isMutual` | boolean | ✅ | false | Mutual match |
-| `timestamp` | timestamp | ✅ | serverTimestamp | Result timestamp |
+| Field              | Type      | Required | Default         | Description      |
+| ------------------ | --------- | -------- | --------------- | ---------------- |
+| `id`               | string    | ✅       | -               | Result ID        |
+| `roundId`          | string    | ✅       | -               | Round ID         |
+| `userId`           | string    | ✅       | -               | User ID          |
+| `matchedUserId`    | string    | ✅       | -               | Matched user ID  |
+| `userLiked`        | boolean   | ✅       | false           | User liked match |
+| `matchedUserLiked` | boolean   | ✅       | false           | Other user liked |
+| `isMutual`         | boolean   | ✅       | false           | Mutual match     |
+| `timestamp`        | timestamp | ✅       | serverTimestamp | Result timestamp |
 
 **Example Document:**
+
 ```json
 {
   "id": "result123",
@@ -750,6 +780,7 @@
 ```
 
 **Required Indexes:**
+
 - `roundId ASC, timestamp ASC`
 - `userId ASC, isMutual ASC`
 
@@ -765,21 +796,22 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Subscription ID |
-| `userId` | string | ✅ | - | User ID |
-| `tier` | string | ✅ | - | basic/premium/vip |
-| `startDate` | timestamp | ✅ | - | Start date |
-| `endDate` | timestamp | ✅ | - | End date |
-| `status` | string | ✅ | - | active/cancelled/expired/paused |
-| `autoRenew` | boolean | ✅ | true | Auto-renewal |
-| `price` | number | ✅ | - | Price paid |
-| `paymentMethod` | string | ✅ | - | Payment method |
-| `cancelledAt` | timestamp | ⬜ | null | Cancellation date |
-| `renewedAt` | timestamp | ⬜ | null | Last renewal date |
+| Field           | Type      | Required | Default | Description                     |
+| --------------- | --------- | -------- | ------- | ------------------------------- |
+| `id`            | string    | ✅       | -       | Subscription ID                 |
+| `userId`        | string    | ✅       | -       | User ID                         |
+| `tier`          | string    | ✅       | -       | basic/premium/vip               |
+| `startDate`     | timestamp | ✅       | -       | Start date                      |
+| `endDate`       | timestamp | ✅       | -       | End date                        |
+| `status`        | string    | ✅       | -       | active/cancelled/expired/paused |
+| `autoRenew`     | boolean   | ✅       | true    | Auto-renewal                    |
+| `price`         | number    | ✅       | -       | Price paid                      |
+| `paymentMethod` | string    | ✅       | -       | Payment method                  |
+| `cancelledAt`   | timestamp | ⬜       | null    | Cancellation date               |
+| `renewedAt`     | timestamp | ⬜       | null    | Last renewal date               |
 
 **Example Document:**
+
 ```json
 {
   "id": "sub123",
@@ -797,6 +829,7 @@
 ```
 
 **Required Indexes:**
+
 - `userId ASC, status ASC`
 - `status ASC, endDate ASC`
 
@@ -810,33 +843,34 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Request ID |
-| `userId` | string | ✅ | - | User ID |
-| `userName` | string | ✅ | - | User name |
-| `coinAmount` | number | ✅ | - | Coins to withdraw |
-| `usdAmount` | number | ✅ | - | USD value |
-| `platformFee` | number | ✅ | - | Platform fee |
-| `payoutAmount` | number | ✅ | - | Final payout |
-| `status` | string | ✅ | 'pending' | pending/processing/completed/failed/cancelled |
-| `stripeAccountId` | string | ⬜ | null | Stripe account |
-| `stripeTransferId` | string | ⬜ | null | Stripe transfer ID |
-| `failureReason` | string | ⬜ | null | Failure reason |
-| `requestedAt` | timestamp | ✅ | serverTimestamp | Request time |
-| `processedAt` | timestamp | ⬜ | null | Processed time |
-| `completedAt` | timestamp | ⬜ | null | Completed time |
+| Field              | Type      | Required | Default         | Description                                   |
+| ------------------ | --------- | -------- | --------------- | --------------------------------------------- |
+| `id`               | string    | ✅       | -               | Request ID                                    |
+| `userId`           | string    | ✅       | -               | User ID                                       |
+| `userName`         | string    | ✅       | -               | User name                                     |
+| `coinAmount`       | number    | ✅       | -               | Coins to withdraw                             |
+| `usdAmount`        | number    | ✅       | -               | USD value                                     |
+| `platformFee`      | number    | ✅       | -               | Platform fee                                  |
+| `payoutAmount`     | number    | ✅       | -               | Final payout                                  |
+| `status`           | string    | ✅       | 'pending'       | pending/processing/completed/failed/cancelled |
+| `stripeAccountId`  | string    | ⬜       | null            | Stripe account                                |
+| `stripeTransferId` | string    | ⬜       | null            | Stripe transfer ID                            |
+| `failureReason`    | string    | ⬜       | null            | Failure reason                                |
+| `requestedAt`      | timestamp | ✅       | serverTimestamp | Request time                                  |
+| `processedAt`      | timestamp | ⬜       | null            | Processed time                                |
+| `completedAt`      | timestamp | ⬜       | null            | Completed time                                |
 
 **Example Document:**
+
 ```json
 {
   "id": "withdraw123",
   "userId": "user123",
   "userName": "John Doe",
   "coinAmount": 10000,
-  "usdAmount": 100.00,
-  "platformFee": 10.00,
-  "payoutAmount": 90.00,
+  "usdAmount": 100.0,
+  "platformFee": 10.0,
+  "payoutAmount": 90.0,
   "status": "completed",
   "stripeAccountId": "acct_123",
   "stripeTransferId": "tr_123",
@@ -847,6 +881,7 @@
 ```
 
 **Required Indexes:**
+
 - `userId ASC, requestedAt DESC`
 - `status ASC, requestedAt DESC`
 
@@ -862,21 +897,22 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Report ID |
-| `reporterId` | string | ✅ | - | Reporter user ID |
-| `reportedUserId` | string | ✅ | - | Reported user ID |
-| `reportedMessageId` | string | ⬜ | null | Message ID if applicable |
-| `reportedRoomId` | string | ⬜ | null | Room ID if applicable |
-| `type` | string | ✅ | - | spam/harassment/inappropriateContent/hateSpeech/violence/scam/other |
-| `description` | string | ✅ | - | Report description |
-| `status` | string | ✅ | 'pending' | pending/reviewed/resolved |
-| `reviewedBy` | string | ⬜ | null | Admin user ID |
-| `reviewedAt` | timestamp | ⬜ | null | Review timestamp |
-| `createdAt` | timestamp | ✅ | serverTimestamp | Report timestamp |
+| Field               | Type      | Required | Default         | Description                                                         |
+| ------------------- | --------- | -------- | --------------- | ------------------------------------------------------------------- |
+| `id`                | string    | ✅       | -               | Report ID                                                           |
+| `reporterId`        | string    | ✅       | -               | Reporter user ID                                                    |
+| `reportedUserId`    | string    | ✅       | -               | Reported user ID                                                    |
+| `reportedMessageId` | string    | ⬜       | null            | Message ID if applicable                                            |
+| `reportedRoomId`    | string    | ⬜       | null            | Room ID if applicable                                               |
+| `type`              | string    | ✅       | -               | spam/harassment/inappropriateContent/hateSpeech/violence/scam/other |
+| `description`       | string    | ✅       | -               | Report description                                                  |
+| `status`            | string    | ✅       | 'pending'       | pending/reviewed/resolved                                           |
+| `reviewedBy`        | string    | ⬜       | null            | Admin user ID                                                       |
+| `reviewedAt`        | timestamp | ⬜       | null            | Review timestamp                                                    |
+| `createdAt`         | timestamp | ✅       | serverTimestamp | Report timestamp                                                    |
 
 **Example Document:**
+
 ```json
 {
   "id": "report123",
@@ -894,6 +930,7 @@
 ```
 
 **Required Indexes:**
+
 - `reportedUserId ASC, createdAt DESC`
 - `status ASC, createdAt DESC`
 
@@ -907,15 +944,16 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Block ID |
-| `blockerId` | string | ✅ | - | Blocker user ID |
-| `blockedUserId` | string | ✅ | - | Blocked user ID |
-| `reason` | string | ⬜ | null | Block reason |
-| `blockedAt` | timestamp | ✅ | serverTimestamp | Block timestamp |
+| Field           | Type      | Required | Default         | Description     |
+| --------------- | --------- | -------- | --------------- | --------------- |
+| `id`            | string    | ✅       | -               | Block ID        |
+| `blockerId`     | string    | ✅       | -               | Blocker user ID |
+| `blockedUserId` | string    | ✅       | -               | Blocked user ID |
+| `reason`        | string    | ⬜       | null            | Block reason    |
+| `blockedAt`     | timestamp | ✅       | serverTimestamp | Block timestamp |
 
 **Example Document:**
+
 ```json
 {
   "id": "block123",
@@ -927,6 +965,7 @@
 ```
 
 **Required Indexes:**
+
 - `blockerId ASC, blockedAt DESC`
 - `blockedUserId ASC, blockedAt DESC`
 
@@ -942,18 +981,19 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Activity ID |
-| `userId` | string | ✅ | - | User ID |
-| `userName` | string | ✅ | - | User name |
-| `userPhotoUrl` | string | ⬜ | null | User photo |
-| `type` | string | ✅ | - | joinedRoom/hostedRoom/attendedEvent/etc |
-| `description` | string | ✅ | - | Activity description |
-| `timestamp` | timestamp | ✅ | serverTimestamp | Activity timestamp |
-| `metadata` | map | ⬜ | null | Additional data |
+| Field          | Type      | Required | Default         | Description                             |
+| -------------- | --------- | -------- | --------------- | --------------------------------------- |
+| `id`           | string    | ✅       | -               | Activity ID                             |
+| `userId`       | string    | ✅       | -               | User ID                                 |
+| `userName`     | string    | ✅       | -               | User name                               |
+| `userPhotoUrl` | string    | ⬜       | null            | User photo                              |
+| `type`         | string    | ✅       | -               | joinedRoom/hostedRoom/attendedEvent/etc |
+| `description`  | string    | ✅       | -               | Activity description                    |
+| `timestamp`    | timestamp | ✅       | serverTimestamp | Activity timestamp                      |
+| `metadata`     | map       | ⬜       | null            | Additional data                         |
 
 **Example Document:**
+
 ```json
 {
   "id": "activity123",
@@ -971,6 +1011,7 @@
 ```
 
 **Required Indexes:**
+
 - `userId ASC, timestamp DESC`
 - `type ASC, timestamp DESC`
 
@@ -984,22 +1025,23 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Notification ID |
-| `userId` | string | ✅ | - | Recipient user ID |
-| `type` | string | ✅ | - | roomInvite/reaction/newFollower/tip/message/system |
-| `title` | string | ✅ | - | Notification title |
-| `message` | string | ✅ | - | Notification message |
-| `senderId` | string | ⬜ | null | Sender user ID |
-| `senderName` | string | ⬜ | null | Sender name |
-| `roomId` | string | ⬜ | null | Room ID |
-| `roomName` | string | ⬜ | null | Room name |
-| `data` | map | ⬜ | null | Additional data |
-| `isRead` | boolean | ✅ | false | Read status |
-| `timestamp` | timestamp | ✅ | serverTimestamp | Notification time |
+| Field        | Type      | Required | Default         | Description                                        |
+| ------------ | --------- | -------- | --------------- | -------------------------------------------------- |
+| `id`         | string    | ✅       | -               | Notification ID                                    |
+| `userId`     | string    | ✅       | -               | Recipient user ID                                  |
+| `type`       | string    | ✅       | -               | roomInvite/reaction/newFollower/tip/message/system |
+| `title`      | string    | ✅       | -               | Notification title                                 |
+| `message`    | string    | ✅       | -               | Notification message                               |
+| `senderId`   | string    | ⬜       | null            | Sender user ID                                     |
+| `senderName` | string    | ⬜       | null            | Sender name                                        |
+| `roomId`     | string    | ⬜       | null            | Room ID                                            |
+| `roomName`   | string    | ⬜       | null            | Room name                                          |
+| `data`       | map       | ⬜       | null            | Additional data                                    |
+| `isRead`     | boolean   | ✅       | false           | Read status                                        |
+| `timestamp`  | timestamp | ✅       | serverTimestamp | Notification time                                  |
 
 **Example Document:**
+
 ```json
 {
   "id": "notif123",
@@ -1017,6 +1059,7 @@
 ```
 
 **Required Indexes:**
+
 - `userId ASC, timestamp DESC`
 - `userId ASC, isRead ASC, timestamp DESC`
 
@@ -1030,19 +1073,20 @@
 
 **Fields:**
 
-| Field | Type | Required | Default | Description |
-|-------|------|----------|---------|-------------|
-| `id` | string | ✅ | - | Media ID |
-| `userId` | string | ✅ | - | Uploader user ID |
-| `type` | string | ✅ | - | image/video/audio/file |
-| `url` | string | ✅ | - | Media URL |
-| `thumbnailUrl` | string | ⬜ | null | Thumbnail URL |
-| `title` | string | ⬜ | null | Media title |
-| `description` | string | ⬜ | null | Media description |
-| `metadata` | map | ⬜ | null | File metadata |
-| `uploadedAt` | timestamp | ✅ | serverTimestamp | Upload timestamp |
+| Field          | Type      | Required | Default         | Description            |
+| -------------- | --------- | -------- | --------------- | ---------------------- |
+| `id`           | string    | ✅       | -               | Media ID               |
+| `userId`       | string    | ✅       | -               | Uploader user ID       |
+| `type`         | string    | ✅       | -               | image/video/audio/file |
+| `url`          | string    | ✅       | -               | Media URL              |
+| `thumbnailUrl` | string    | ⬜       | null            | Thumbnail URL          |
+| `title`        | string    | ⬜       | null            | Media title            |
+| `description`  | string    | ⬜       | null            | Media description      |
+| `metadata`     | map       | ⬜       | null            | File metadata          |
+| `uploadedAt`   | timestamp | ✅       | serverTimestamp | Upload timestamp       |
 
 **Example Document:**
+
 ```json
 {
   "id": "media123",
@@ -1061,6 +1105,7 @@
 ```
 
 **Required Indexes:**
+
 - `userId ASC, uploadedAt DESC`
 - `type ASC, uploadedAt DESC`
 
@@ -1077,15 +1122,15 @@
     {
       "collectionGroup": "users",
       "fields": [
-        {"fieldPath": "isOnline", "order": "ASCENDING"},
-        {"fieldPath": "lookingForSpeedDate", "order": "ASCENDING"}
+        { "fieldPath": "isOnline", "order": "ASCENDING" },
+        { "fieldPath": "lookingForSpeedDate", "order": "ASCENDING" }
       ]
     },
     {
       "collectionGroup": "users",
       "fields": [
-        {"fieldPath": "membershipTier", "order": "ASCENDING"},
-        {"fieldPath": "createdAt", "order": "DESCENDING"}
+        { "fieldPath": "membershipTier", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
 
@@ -1093,16 +1138,16 @@
     {
       "collectionGroup": "rooms",
       "fields": [
-        {"fieldPath": "isLive", "order": "ASCENDING"},
-        {"fieldPath": "createdAt", "order": "DESCENDING"}
+        { "fieldPath": "isLive", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "rooms",
       "fields": [
-        {"fieldPath": "category", "order": "ASCENDING"},
-        {"fieldPath": "isLive", "order": "ASCENDING"},
-        {"fieldPath": "createdAt", "order": "DESCENDING"}
+        { "fieldPath": "category", "order": "ASCENDING" },
+        { "fieldPath": "isLive", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
 
@@ -1110,8 +1155,8 @@
     {
       "collectionGroup": "messages",
       "fields": [
-        {"fieldPath": "roomId", "order": "ASCENDING"},
-        {"fieldPath": "timestamp", "order": "DESCENDING"}
+        { "fieldPath": "roomId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
       ]
     },
 
@@ -1119,8 +1164,8 @@
     {
       "collectionGroup": "direct_messages",
       "fields": [
-        {"fieldPath": "conversationId", "order": "ASCENDING"},
-        {"fieldPath": "timestamp", "order": "DESCENDING"}
+        { "fieldPath": "conversationId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
       ]
     },
 
@@ -1128,8 +1173,8 @@
     {
       "collectionGroup": "notifications",
       "fields": [
-        {"fieldPath": "userId", "order": "ASCENDING"},
-        {"fieldPath": "timestamp", "order": "DESCENDING"}
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
       ]
     },
 
@@ -1137,8 +1182,8 @@
     {
       "collectionGroup": "events",
       "fields": [
-        {"fieldPath": "startTime", "order": "ASCENDING"},
-        {"fieldPath": "isPublic", "order": "ASCENDING"}
+        { "fieldPath": "startTime", "order": "ASCENDING" },
+        { "fieldPath": "isPublic", "order": "ASCENDING" }
       ]
     },
 
@@ -1146,8 +1191,8 @@
     {
       "collectionGroup": "speed_dating_sessions",
       "fields": [
-        {"fieldPath": "participants", "arrayConfig": "CONTAINS"},
-        {"fieldPath": "status", "order": "ASCENDING"}
+        { "fieldPath": "participants", "arrayConfig": "CONTAINS" },
+        { "fieldPath": "status", "order": "ASCENDING" }
       ]
     },
 
@@ -1155,8 +1200,8 @@
     {
       "collectionGroup": "activities",
       "fields": [
-        {"fieldPath": "userId", "order": "ASCENDING"},
-        {"fieldPath": "timestamp", "order": "DESCENDING"}
+        { "fieldPath": "userId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "DESCENDING" }
       ]
     }
   ]
@@ -1195,36 +1240,42 @@
 #### User Collections
 
 **users**
+
 - **Create**: Own profile only, with validation (email, displayName, username required)
 - **Read**: Own profile or any profile if own profile is complete
 - **Update**: Own profile only, cannot change email/username, coinBalance can only increase
 - **Delete**: ❌ Forbidden
 
 **user_profiles**
+
 - **Create**: Own profile only
 - **Read**: Own profile or any if completed profile + not blocked
 - **Update**: Own profile only, age preferences must be valid (18-100)
 - **Delete**: ❌ Forbidden
 
 **user_presence**
+
 - **Read**: All authenticated users
 - **Write**: Own presence only, status must be valid (online/away/offline/busy)
 
 #### Matching & Social
 
 **matching_profiles**
+
 - **Create**: Own profile, age >= 18
 - **Read**: Active profiles only, not blocked
 - **Update**: Own profile, age must stay >= 18
 - **Delete**: Own profile only
 
 **matches**
+
 - **Create**: Must involve self, users must be different, score 0-100
 - **Read**: Only if you're one of the matched users
 - **Update**: Only participants, limited fields
 - **Delete**: Only participants
 
 **blocks**
+
 - **Create**: Own blocks only, cannot block self
 - **Read**: Own blocks only
 - **Delete**: Own blocks only
@@ -1232,6 +1283,7 @@
 #### Communication
 
 **rooms**
+
 - **Create**: Completed profile required, must be host, full validation
 - **Read**: Authenticated users not banned from room
 - **Update**:
@@ -1240,17 +1292,20 @@
 - **Delete**: Host only
 
 **rooms/{roomId}/messages**
+
 - **Create**: Room members only, 500 char limit
 - **Read**: Room members only
 - **Update**: Own messages within 5 minutes, reactions only
 - **Delete**: Own messages or room moderators
 
 **chat_rooms**
+
 - **Create**: Must have 2 participants, mutual not blocked
 - **Read**: Participants only
 - **Update**: Participants only, cannot change participants list
 
 **direct_messages**
+
 - **Create**: Must be matched OR premium user, not blocked, 2000 char limit
 - **Read**: Sender or receiver only
 - **Update**: Sender can edit (limited fields), receiver can mark as read
@@ -1259,24 +1314,28 @@
 #### Events & Speed Dating
 
 **events**
+
 - **Create**: ⚠️ **ADMIN ONLY**, full validation, capacity 1-1000, future dates
 - **Read**: Public events OR host OR attendees
 - **Update**: Host can update OR users can join if under capacity
 - **Delete**: Host or admin only
 
 **speed_dating_sessions**
+
 - **Create**: Must be one of the participants, different users, duration 3-30 min
 - **Read**: Participants only
 - **Update**: Participants can update own decision (like/pass)
 - **Delete**: Participants only
 
 **speed_dating_rounds**
+
 - **Create**: ⚠️ **ADMIN ONLY**, >= 2 participants
 - **Read**: Event participants only
 - **Update**: Event participants, cannot change core fields
 - **Delete**: Admin only
 
 **speed_dating_results**
+
 - **Create**: Own results only, different users
 - **Read**: Involved users only
 - **Update/Delete**: ❌ Forbidden
@@ -1284,22 +1343,26 @@
 #### Monetization
 
 **subscriptions**
+
 - **Read**: Own subscription only
 - **Write**: ❌ Server-side only (Cloud Functions)
 
 **withdrawal_requests**
+
 - **Create**: Must have sufficient coins, pending status
 - **Read**: Own requests or admin
 - **Update**: Admin only, cannot change amount
 - **Delete**: Own requests if pending status
 
 **coin_transactions**
+
 - **Read**: Own transactions only
 - **Write**: ❌ Server-side only
 
 #### Moderation & Safety
 
 **reports**
+
 - **Create**: Cannot report self, valid type, pending status, 1000 char limit
 - **Read**: Reporter or moderators
 - **Update**: Moderators only, status changes
@@ -1308,12 +1371,14 @@
 #### Media & Uploads
 
 **media**
+
 - **Create**: Completed profile, valid type, 50MB limit for free users
 - **Read**: Own media or any if completed profile
 - **Update**: Own media, metadata/description only
 - **Delete**: Own media or admin
 
 **shared_files**
+
 - **Create**: 50MB limit
 - **Read**: All authenticated users
 - **Delete**: Own files only
@@ -1321,12 +1386,14 @@
 #### Notifications & Activities
 
 **notifications**
+
 - **Create**: ❌ Server-side only
 - **Read**: Own notifications only
 - **Update**: Own notifications, can mark as read
 - **Delete**: Own notifications only
 
 **activities**
+
 - **Create**: Own activities, valid type
 - **Read**: All authenticated users with completed profile
 - **Update/Delete**: Own activities only
@@ -1334,6 +1401,7 @@
 ### Key Security Patterns
 
 1. **Ownership Enforcement**
+
    ```javascript
    function isOwner(userId) {
      return request.auth.uid == userId;
@@ -1341,6 +1409,7 @@
    ```
 
 2. **Match-Based Access**
+
    ```javascript
    function isMatchedWith(otherUserId) {
      return exists(/databases/$(database)/documents/matches/$(request.auth.uid + '_' + otherUserId)) ||
@@ -1349,20 +1418,25 @@
    ```
 
 3. **Capacity Enforcement**
+
    ```javascript
    // In events update rule
-   request.resource.data.attendees.size() <= resource.data.maxAttendees
+   request.resource.data.attendees.size() <= resource.data.maxAttendees;
    ```
 
 4. **Participant Verification**
+
    ```javascript
    function isSpeedDatingParticipant(sessionId) {
-     return (request.auth.uid == get(...sessions/$(sessionId)).data.userId1 ||
-             request.auth.uid == get(...sessions/$(sessionId)).data.userId2);
+     return (
+       request.auth.uid == get(...(sessions / $(sessionId))).data.userId1 ||
+       request.auth.uid == get(...(sessions / $(sessionId))).data.userId2
+     );
    }
    ```
 
 5. **Admin-Only Operations**
+
    ```javascript
    function isAdmin() {
      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
@@ -1392,6 +1466,7 @@
 ### Admin Dashboard Access
 
 Protected routes requiring admin role in Firestore:
+
 - `/admin` - Admin dashboard
 - Event creation functionality
 - Report moderation
@@ -1404,9 +1479,9 @@ Protected routes requiring admin role in Firestore:
 
 ## Schema Version History
 
-| Version | Date | Changes |
-|---------|------|---------|
-| 1.0 | 2026-01-24 | Initial comprehensive schema |
+| Version | Date       | Changes                      |
+| ------- | ---------- | ---------------------------- |
+| 1.0     | 2026-01-24 | Initial comprehensive schema |
 
 ---
 

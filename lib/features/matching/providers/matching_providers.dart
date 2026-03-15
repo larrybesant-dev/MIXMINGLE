@@ -17,7 +17,8 @@ final matchServiceProvider = Provider<MatchService>((ref) {
 });
 
 /// Provider for generated matches (new algorithm)
-final generatedMatchesProvider = StreamProvider.autoDispose<List<MatchModel>>((ref) {
+final generatedMatchesProvider =
+    StreamProvider.autoDispose<List<MatchModel>>((ref) {
   final authState = ref.watch(authStateProvider);
   final user = authState.value;
 
@@ -30,7 +31,8 @@ final generatedMatchesProvider = StreamProvider.autoDispose<List<MatchModel>>((r
 });
 
 /// Provider for mutual matches
-final mutualMatchesProvider = StreamProvider.autoDispose<List<MatchHistoryModel>>((ref) {
+final mutualMatchesProvider =
+    StreamProvider.autoDispose<List<MatchHistoryModel>>((ref) {
   final authState = ref.watch(authStateProvider);
   final user = authState.value;
 
@@ -43,7 +45,8 @@ final mutualMatchesProvider = StreamProvider.autoDispose<List<MatchHistoryModel>
 });
 
 /// Provider for match history
-final matchHistoryProvider = StreamProvider.autoDispose<List<MatchHistoryModel>>((ref) {
+final matchHistoryProvider =
+    StreamProvider.autoDispose<List<MatchHistoryModel>>((ref) {
   final authState = ref.watch(authStateProvider);
   final user = authState.value;
 
@@ -61,11 +64,15 @@ final matchingServiceProvider = Provider<MatchingService>((ref) {
 });
 
 /// Provider for current user's matching profile
-final currentMatchingProfileProvider = FutureProvider<MatchingProfile?>((ref) async {
+final currentMatchingProfileProvider =
+    FutureProvider<MatchingProfile?>((ref) async {
   final currentUser = await ref.watch(currentUserProvider.future);
   if (currentUser == null) return null;
 
-  final doc = await FirebaseFirestore.instance.collection('matching_profiles').doc(currentUser.id).get();
+  final doc = await FirebaseFirestore.instance
+      .collection('matching_profiles')
+      .doc(currentUser.id)
+      .get();
 
   if (!doc.exists) return null;
 
@@ -97,11 +104,15 @@ final matchStatisticsProvider = FutureProvider<MatchStatistics?>((ref) async {
 });
 
 /// Provider for calculating match score with specific user
-final matchScoreProvider = FutureProvider.family<MatchScore?, String>((ref, targetUserId) async {
+final matchScoreProvider =
+    FutureProvider.family<MatchScore?, String>((ref, targetUserId) async {
   final currentProfile = await ref.watch(currentMatchingProfileProvider.future);
   if (currentProfile == null) return null;
 
-  final targetDoc = await FirebaseFirestore.instance.collection('matching_profiles').doc(targetUserId).get();
+  final targetDoc = await FirebaseFirestore.instance
+      .collection('matching_profiles')
+      .doc(targetUserId)
+      .get();
 
   if (!targetDoc.exists) return null;
 
@@ -128,7 +139,14 @@ class MatchFilterNotifier extends Notifier<MatchesFilter> {
 }
 
 /// State provider for match filter settings
+<<<<<<< HEAD
 final matchFilterProvider = NotifierProvider<MatchFilterNotifier, MatchesFilter>(MatchFilterNotifier.new);
+=======
+final matchFilterProvider =
+    NotifierProvider<MatchFilterNotifier, MatchesFilter>(
+  () => MatchFilterNotifier(),
+);
+>>>>>>> origin/develop
 
 /// Provider for top matches (convenience provider)
 final topMatchesProvider = FutureProvider<List<RankedMatch>>((ref) async {
@@ -155,8 +173,10 @@ final matchesStreamProvider = StreamProvider<List<RankedMatch>>((ref) async* {
   );
 
   // Listen for profile changes and recalculate
-  await for (final _
-      in FirebaseFirestore.instance.collection('matching_profiles').where('isActive', isEqualTo: true).snapshots()) {
+  await for (final _ in FirebaseFirestore.instance
+      .collection('matching_profiles')
+      .where('isActive', isEqualTo: true)
+      .snapshots()) {
     yield await matchingService.findMatches(
       profile,
       limit: filter.limit,
@@ -177,7 +197,8 @@ final likedMatchesProvider = FutureProvider<List<RankedMatch>>((ref) async {
 });
 
 /// Provider for mutual matches (ranked)
-final rankedMutualMatchesProvider = FutureProvider<List<RankedMatch>>((ref) async {
+final rankedMutualMatchesProvider =
+    FutureProvider<List<RankedMatch>>((ref) async {
   final profile = await ref.watch(currentMatchingProfileProvider.future);
   if (profile == null) return [];
 
@@ -188,7 +209,10 @@ final rankedMutualMatchesProvider = FutureProvider<List<RankedMatch>>((ref) asyn
 
   for (final match in allMatches) {
     // Check if they also liked us
-    final theirDoc = await FirebaseFirestore.instance.collection('matching_profiles').doc(match.userId).get();
+    final theirDoc = await FirebaseFirestore.instance
+        .collection('matching_profiles')
+        .doc(match.userId)
+        .get();
 
     if (theirDoc.exists) {
       final theirProfile = MatchingProfile.fromJson(theirDoc.data()!);
@@ -225,5 +249,3 @@ class MatchesFilter {
     );
   }
 }
-
-

@@ -14,12 +14,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Neon palette keyed by vibe name — same as rooms/home pages.
 const kVibeColorPalette = <String, Color>{
-  'Chill':      Color(0xFF4A90FF),
-  'Hype':       Color(0xFFFF4D8B),
-  'Deep Talk':  Color(0xFF8B5CF6),
+  'Chill': Color(0xFF4A90FF),
+  'Hype': Color(0xFFFF4D8B),
+  'Deep Talk': Color(0xFF8B5CF6),
   'Late Night': Color(0xFF6366F1),
-  'Study':      Color(0xFF00E5CC),
-  'Party':      Color(0xFFFFAB00),
+  'Study': Color(0xFF00E5CC),
+  'Party': Color(0xFFFFAB00),
 };
 
 /// Default accent when no vibe context is active.
@@ -56,5 +56,4 @@ final vibeGlowProvider = Provider<List<BoxShadow>>((ref) {
 });
 
 /// Convenience: returns palette color for any vibe key, or default.
-Color vibeColor(String? vibe) =>
-    kVibeColorPalette[vibe] ?? _kDefaultAccent;
+Color vibeColor(String? vibe) => kVibeColorPalette[vibe] ?? _kDefaultAccent;

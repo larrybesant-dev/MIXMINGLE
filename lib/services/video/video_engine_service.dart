@@ -27,22 +27,27 @@ class VideoEngineService implements IVideoEngine {
     } else {
       _engine = AgoraMobileEngine();
     }
-    debugPrint('ðŸŽ¥ VideoEngineService initialized for ${kIsWeb ? 'Web' : 'Mobile'}');
+    debugPrint(
+        'ðŸŽ¥ VideoEngineService initialized for ${kIsWeb ? 'Web' : 'Mobile'}');
   }
 
   @override
-  Future<void> init(String appId, {String? token}) => _engine.init(appId, token: token);
+  Future<void> init(String appId, {String? token}) =>
+      _engine.init(appId, token: token);
 
   @override
-  Future<void> joinChannel({required String channel, required int uid, required String token}) =>
+  Future<void> joinChannel(
+          {required String channel, required int uid, required String token}) =>
       _engine.joinChannel(channel: channel, uid: uid, token: token);
 
   @override
   Future<void> leaveChannel() => _engine.leaveChannel();
 
   @override
-  Future<void> enableLocalTracks({bool enableAudio = true, bool enableVideo = true}) =>
-      _engine.enableLocalTracks(enableAudio: enableAudio, enableVideo: enableVideo);
+  Future<void> enableLocalTracks(
+          {bool enableAudio = true, bool enableVideo = true}) =>
+      _engine.enableLocalTracks(
+          enableAudio: enableAudio, enableVideo: enableVideo);
 
   @override
   Future<void> setAudioMuted(bool muted) => _engine.setAudioMuted(muted);

@@ -1,6 +1,7 @@
 # Android Build Troubleshooting Guide
 
 ## Problem
+
 ```
 Execution failed for task ':app:compileFlutterBuildRelease'.
 > Process 'command 'C:\Users\LARRY\flutter\bin\flutter.bat'' finished with non-zero exit value 1
@@ -19,6 +20,7 @@ flutter build appbundle --release -v
 ```
 
 **Look for:**
+
 - Missing dependencies
 - Version conflicts
 - Kotlin/Java compile errors
@@ -209,25 +211,28 @@ flutter build appbundle --release -v
 ## 5️⃣ Common Plugin Issues
 
 ### Agora SDK
+
 - Ensure `agora_uikit` or `agora_rtc_engine` is latest
 - Check version in `pubspec.yaml`
 
 ```yaml
 dependencies:
-  agora_rtc_engine: ^6.2.0  # or latest
-  agora_uikit: ^1.3.0       # or latest
+  agora_rtc_engine: ^6.2.0 # or latest
+  agora_uikit: ^1.3.0 # or latest
 ```
 
 ### Stripe
+
 - Ensure `flutter_stripe` is latest
 - Android SDK 21+
 
 ```yaml
 dependencies:
-  flutter_stripe: ^10.0.0  # or latest
+  flutter_stripe: ^10.0.0 # or latest
 ```
 
 ### Firebase
+
 - Ensure all Firebase plugins match versions
 - Recent versions require Gradle 8.2+
 
@@ -286,6 +291,7 @@ flutter build appbundle --release -v
 ## Next Steps
 
 1. **Run verbose build**:
+
    ```powershell
    flutter build appbundle --release -v 2>&1 | Tee-Object -FilePath android_build_verbose.log
    ```
@@ -295,6 +301,7 @@ flutter build appbundle --release -v
 3. **Apply relevant fix** from sections above
 
 4. **Test APK**:
+
    ```powershell
    flutter build apk --release
    ```

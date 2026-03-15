@@ -1,18 +1,19 @@
 # PHASE 1: Quick Reference Card
+
 **One-page summary — Print this**
 
 ---
 
 ## The 6 Fixes
 
-| Fix | File | Change | Time |
-|-----|------|--------|------|
-| 1 | auth_providers.dart | Verify export (✓ done) | 5m |
-| 2 | lib/**/*.dart | `../../` → `package:` imports | 30m |
-| 3 | firestore.indexes.json | Add 3 composite indexes | 30m |
-| 4 | chat_message.dart | Add roomId, roomType fields | 60m |
-| 5 | event.dart, etc | `String` → `DateTime` | 45m |
-| 6 | all_providers.dart | Verify all exports | 30m |
+| Fix | File                   | Change                        | Time |
+| --- | ---------------------- | ----------------------------- | ---- |
+| 1   | auth_providers.dart    | Verify export (✓ done)        | 5m   |
+| 2   | lib/\*_/_.dart         | `../../` → `package:` imports | 30m  |
+| 3   | firestore.indexes.json | Add 3 composite indexes       | 30m  |
+| 4   | chat_message.dart      | Add roomId, roomType fields   | 60m  |
+| 5   | event.dart, etc        | `String` → `DateTime`         | 45m  |
+| 6   | all_providers.dart     | Verify all exports            | 30m  |
 
 **Total: 4-5 hours**
 
@@ -42,12 +43,14 @@ firebase deploy --only firestore:indexes
 ## Import Pattern
 
 **Wrong:**
+
 ```dart
 import '../../shared/models/user.dart';
 import '../../../features/room/page.dart';
 ```
 
 **Right:**
+
 ```dart
 import 'package:mix_and_mingle/shared/models/user.dart';
 import 'package:mix_and_mingle/features/room/page.dart';
@@ -58,12 +61,14 @@ import 'package:mix_and_mingle/features/room/page.dart';
 ## DateTime Pattern
 
 **Wrong:**
+
 ```dart
 final String startTime;  // ❌
 int.parse(event.startTime)  // ❌
 ```
 
 **Right:**
+
 ```dart
 final DateTime startTime;  // ✅
 event.startTime.isAfter(DateTime.now())  // ✅
@@ -85,6 +90,7 @@ rooms: isActive ▲ + category ▲ + viewCount ▼
 ## ChatMessage Fields
 
 **Add to model:**
+
 ```dart
 final String? roomId;        // null for DM, room ID for room chat
 final String roomType;       // 'dm' or 'room'
@@ -177,4 +183,3 @@ flutter build web --release --web-renderer html
 ---
 
 **Start with:** [PHASE_1_EXECUTION_CHECKLIST.md](PHASE_1_EXECUTION_CHECKLIST.md)
-

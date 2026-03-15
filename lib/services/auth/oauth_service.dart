@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // OAUTH AUTHENTICATION SERVICE - DISABLED FOR LAUNCH
 // ============================================================================
 // OAuth functionality temporarily disabled to ship with Email/Password only
@@ -55,7 +55,8 @@ class OAuthService {
 
   OAuthService() {
     // _initializeGoogleSignIn();
-    debugPrint('[OAuth] OAuth features disabled for launch - Email/Password only');
+    debugPrint(
+        '[OAuth] OAuth features disabled for launch - Email/Password only');
   }
 
   // DISABLED FOR LAUNCH

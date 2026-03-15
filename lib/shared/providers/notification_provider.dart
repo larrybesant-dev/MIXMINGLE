@@ -1,10 +1,12 @@
-﻿// Notifications Provider - Manages app notifications and alerts with FCM Integration
+// Notifications Provider - Manages app notifications and alerts with FCM Integration
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/utils/app_logger.dart';
 import 'app_models.dart';
+
 /// Callback type for notification actions
-typedef NotificationActionCallback = Future<void> Function(String actionId, AppNotification notification);
+typedef NotificationActionCallback = Future<void> Function(
+    String actionId, AppNotification notification);
 
 /// Notifications notifier with FCM integration
 class NotificationsNotifier extends Notifier<List<AppNotification>> {
@@ -123,7 +125,8 @@ class NotificationsNotifier extends Notifier<List<AppNotification>> {
       //   },
       // );
     } catch (e) {
-      AppLogger.warning('Notification analytics tracking failed (non-fatal): $e');
+      AppLogger.warning(
+          'Notification analytics tracking failed (non-fatal): $e');
     }
   }
 
@@ -291,7 +294,3 @@ final filteredNotificationsProvider =
     }).toList();
   },
 );
-
-
-
-

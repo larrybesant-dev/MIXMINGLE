@@ -181,8 +181,8 @@ screenshots:
   ios:
     sizes:
       - "6.5 inch (iPhone 14 Pro Max)" # 1284 x 2778
-      - "5.5 inch (iPhone 8 Plus)"     # 1242 x 2208
-      - "12.9 inch (iPad Pro)"         # 2048 x 2732
+      - "5.5 inch (iPhone 8 Plus)" # 1242 x 2208
+      - "12.9 inch (iPad Pro)" # 2048 x 2732
 
     required_screens:
       - name: "Onboarding"

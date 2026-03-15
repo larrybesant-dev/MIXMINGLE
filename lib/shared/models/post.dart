@@ -1,11 +1,11 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Types of posts
 enum PostType {
   text,
   image,
   video,
-  roomShare,   // Sharing a live room
+  roomShare, // Sharing a live room
   achievement, // User achievement/badge
 }
 
@@ -222,5 +222,3 @@ class Comment {
     return 'now';
   }
 }
-
-

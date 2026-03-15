@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Activity {
   final String id;
   final String userId;
@@ -30,7 +32,7 @@ class Activity {
         orElse: () => ActivityType.other,
       ),
       description: map['description'] ?? '',
-      timestamp: map['timestamp'] != null ? DateTime.parse(map['timestamp']) : DateTime.now(),
+      timestamp: _parseTimestamp(map['timestamp']),
       metadata: map['metadata'],
     );
   }
@@ -43,7 +45,7 @@ class Activity {
       'userPhotoUrl': userPhotoUrl,
       'type': type.toString().split('.').last,
       'description': description,
-      'timestamp': timestamp.toIso8601String(),
+      'timestamp': Timestamp.fromDate(timestamp),
       'metadata': metadata,
     };
   }
@@ -119,6 +121,13 @@ class Activity {
         description.hashCode ^
         timestamp.hashCode ^
         (metadata?.hashCode ?? 0);
+  }
+
+  static DateTime _parseTimestamp(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is Timestamp) return value.toDate();
+    if (value is String) return DateTime.parse(value);
+    return DateTime.now();
   }
 
   @override

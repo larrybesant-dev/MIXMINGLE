@@ -66,7 +66,9 @@ class AgoraParticipant {
       hasVideo: json['hasVideo'] as bool? ?? false,
       hasAudio: json['hasAudio'] as bool? ?? true,
       isSpeaking: json['isSpeaking'] as bool? ?? false,
-      joinedAt: json['joinedAt'] != null ? DateTime.parse(json['joinedAt'] as String) : DateTime.now(),
+      joinedAt: json['joinedAt'] != null
+          ? DateTime.parse(json['joinedAt'] as String)
+          : DateTime.now(),
     );
   }
 
@@ -85,5 +87,3 @@ class AgoraParticipant {
         'hasVideo: $hasVideo, hasAudio: $hasAudio, isSpeaking: $isSpeaking)';
   }
 }
-
-

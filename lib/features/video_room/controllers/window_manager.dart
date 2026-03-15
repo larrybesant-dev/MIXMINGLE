@@ -38,8 +38,8 @@ class WindowManager {
   // Focus management
   VideoWindowController? getTopWindow() {
     if (_windows.isEmpty) return null;
-    return _windows.reduce((a, b) =>
-      a.windowState.zIndex > b.windowState.zIndex ? a : b);
+    return _windows
+        .reduce((a, b) => a.windowState.zIndex > b.windowState.zIndex ? a : b);
   }
 
   void focusWindow(VideoWindowController window) {
@@ -84,11 +84,15 @@ class WindowManager {
 
   // Get windows by state
   List<VideoWindowController> getFloatingWindows() {
-    return _windows.where((w) => w.windowState.mode == WindowMode.floating).toList();
+    return _windows
+        .where((w) => w.windowState.mode == WindowMode.floating)
+        .toList();
   }
 
   List<VideoWindowController> getMinimizedWindows() {
-    return _windows.where((w) => w.windowState.mode == WindowMode.minimized).toList();
+    return _windows
+        .where((w) => w.windowState.mode == WindowMode.minimized)
+        .toList();
   }
 
   List<VideoWindowController> getPinnedWindows() {
@@ -96,8 +100,10 @@ class WindowManager {
   }
 
   // Collision detection
-  bool checkCollision(VideoWindowController window, Offset position, Size size) {
-    final rect = Rect.fromLTWH(position.dx, position.dy, size.width, size.height);
+  bool checkCollision(
+      VideoWindowController window, Offset position, Size size) {
+    final rect =
+        Rect.fromLTWH(position.dx, position.dy, size.width, size.height);
     for (final other in _windows) {
       if (other == window) continue;
       final otherRect = Rect.fromLTWH(
@@ -117,7 +123,11 @@ class WindowManager {
     if (windows.isEmpty) return;
 
     final count = windows.length;
-    final cols = count <= 4 ? 2 : count <= 9 ? 3 : 4;
+    final cols = count <= 4
+        ? 2
+        : count <= 9
+            ? 3
+            : 4;
     final rows = (count / cols).ceil();
 
     final tileWidth = containerSize.width / cols;

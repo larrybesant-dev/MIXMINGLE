@@ -3,8 +3,13 @@
 
 import 'package:flutter/material.dart';
 
+<<<<<<< HEAD
 class MixMingleTheme {  // kept for legacy stub compatibility
     static TextStyle get body => const TextStyle(fontSize: 14);
+=======
+class MixMingleTheme {
+  static TextStyle get body => const TextStyle(fontSize: 14);
+>>>>>>> origin/develop
   static ThemeData get light => ThemeData.light();
   static ThemeData get dark => ThemeData.dark();
   static double get spacing => 8.0;

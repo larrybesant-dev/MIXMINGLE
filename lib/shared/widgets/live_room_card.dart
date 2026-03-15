@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/core/theme/colors.dart';
 import 'package:mixmingle/shared/providers/user_providers.dart';
@@ -31,7 +31,8 @@ class LiveRoomCard extends ConsumerStatefulWidget {
   ConsumerState<LiveRoomCard> createState() => _LiveRoomCardState();
 }
 
-class _LiveRoomCardState extends ConsumerState<LiveRoomCard> with SingleTickerProviderStateMixin {
+class _LiveRoomCardState extends ConsumerState<LiveRoomCard>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -63,12 +64,15 @@ class _LiveRoomCardState extends ConsumerState<LiveRoomCard> with SingleTickerPr
     // Fetch the actual host display name from Firestore
     String displayDjName = widget.djName;
     if (widget.room != null) {
-      final hostProfileAsync = ref.watch(userProfileProvider(widget.room!.hostId));
+      final hostProfileAsync =
+          ref.watch(userProfileProvider(widget.room!.hostId));
       displayDjName = hostProfileAsync.when(
         data: (profile) {
-          if (profile?.displayName != null && profile!.displayName!.isNotEmpty) {
+          if (profile?.displayName != null &&
+              profile!.displayName!.isNotEmpty) {
             return profile.displayName!;
-          } else if (profile?.nickname != null && profile!.nickname!.isNotEmpty) {
+          } else if (profile?.nickname != null &&
+              profile!.nickname!.isNotEmpty) {
             return profile.nickname!;
           }
           return widget.djName;
@@ -120,7 +124,8 @@ class _LiveRoomCardState extends ConsumerState<LiveRoomCard> with SingleTickerPr
                             children: [
                               if (widget.isLive) ...[
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8, vertical: 4),
                                   decoration: BoxDecoration(
                                     color: ClubColors.glowingRed,
                                     borderRadius: BorderRadius.circular(12),
@@ -226,7 +231,8 @@ class _EqualizerBars extends StatefulWidget {
   State<_EqualizerBars> createState() => _EqualizerBarsState();
 }
 
-class _EqualizerBarsState extends State<_EqualizerBars> with TickerProviderStateMixin {
+class _EqualizerBarsState extends State<_EqualizerBars>
+    with TickerProviderStateMixin {
   late List<AnimationController> _controllers;
   late List<Animation<double>> _animations;
 

@@ -55,7 +55,9 @@ class VoiceRoomControls extends ConsumerWidget {
                 width: 12,
                 height: 12,
                 decoration: BoxDecoration(
-                  color: room.isLive ? theme.colorScheme.primary : theme.colorScheme.error,
+                  color: room.isLive
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.error,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -63,7 +65,9 @@ class VoiceRoomControls extends ConsumerWidget {
               Text(
                 room.isLive ? 'Live' : 'Ended',
                 style: TextStyle(
-                  color: room.isLive ? theme.colorScheme.primary : theme.colorScheme.error,
+                  color: room.isLive
+                      ? theme.colorScheme.primary
+                      : theme.colorScheme.error,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -100,8 +104,9 @@ class VoiceRoomControls extends ConsumerWidget {
                 // Mute/Unmute Button
                 Expanded(
                   child: Tooltip(
-                    message:
-                        agoraService.isMicMuted ? 'Unmute your microphone (Ctrl+M)' : 'Mute your microphone (Ctrl+M)',
+                    message: agoraService.isMicMuted
+                        ? 'Unmute your microphone (Ctrl+M)'
+                        : 'Mute your microphone (Ctrl+M)',
                     child: ElevatedButton.icon(
                       onPressed: () => agoraService.toggleMic(),
                       icon: Icon(
@@ -113,7 +118,9 @@ class VoiceRoomControls extends ConsumerWidget {
                         style: TextStyle(color: theme.colorScheme.onPrimary),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: agoraService.isMicMuted ? theme.colorScheme.error : theme.colorScheme.primary,
+                        backgroundColor: agoraService.isMicMuted
+                            ? theme.colorScheme.error
+                            : theme.colorScheme.primary,
                       ),
                     ),
                   ),
@@ -126,25 +133,32 @@ class VoiceRoomControls extends ConsumerWidget {
                         ? Tooltip(
                             message: 'End your speaking turn',
                             child: ElevatedButton.icon(
-                              onPressed: () => _endTurn(context, roomService, currentUserId),
-                              icon: Icon(Icons.stop_circle_outlined, color: theme.colorScheme.onError),
+                              onPressed: () =>
+                                  _endTurn(context, roomService, currentUserId),
+                              icon: Icon(Icons.stop_circle_outlined,
+                                  color: theme.colorScheme.onError),
                               label: Text(
                                 'End Turn',
-                                style: TextStyle(color: theme.colorScheme.onError),
+                                style:
+                                    TextStyle(color: theme.colorScheme.onError),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: theme.colorScheme.error.withValues(alpha: 0.7),
+                                backgroundColor: theme.colorScheme.error
+                                    .withValues(alpha: 0.7),
                               ),
                             ),
                           )
                         : Tooltip(
                             message: 'Stop speaking and become a listener',
                             child: ElevatedButton.icon(
-                              onPressed: () => roomService.stopSpeaking(room.id, currentUserId),
-                              icon: Icon(Icons.headphones, color: theme.colorScheme.onPrimary),
+                              onPressed: () => roomService.stopSpeaking(
+                                  room.id, currentUserId),
+                              icon: Icon(Icons.headphones,
+                                  color: theme.colorScheme.onPrimary),
                               label: Text(
                                 'Stop Speaking',
-                                style: TextStyle(color: theme.colorScheme.onPrimary),
+                                style: TextStyle(
+                                    color: theme.colorScheme.onPrimary),
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: theme.colorScheme.secondary,
@@ -155,15 +169,19 @@ class VoiceRoomControls extends ConsumerWidget {
                 else if (isListener)
                   Expanded(
                     child: room.turnBased
-                        ? _buildRaiseHandButton(context, roomService, currentUserId, room, theme)
+                        ? _buildRaiseHandButton(
+                            context, roomService, currentUserId, room, theme)
                         : Tooltip(
                             message: 'Request permission to speak in this room',
                             child: ElevatedButton.icon(
-                              onPressed: () => roomService.requestToSpeak(room.id, currentUserId),
-                              icon: Icon(Icons.mic, color: theme.colorScheme.onPrimary),
+                              onPressed: () => roomService.requestToSpeak(
+                                  room.id, currentUserId),
+                              icon: Icon(Icons.mic,
+                                  color: theme.colorScheme.onPrimary),
                               label: Text(
                                 'Request to Speak',
-                                style: TextStyle(color: theme.colorScheme.onPrimary),
+                                style: TextStyle(
+                                    color: theme.colorScheme.onPrimary),
                               ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: theme.colorScheme.tertiary,
@@ -216,7 +234,8 @@ class VoiceRoomControls extends ConsumerWidget {
                       message: 'Give the current speaker 30 more seconds',
                       child: ElevatedButton.icon(
                         onPressed: onExtendTime,
-                        icon: Icon(Icons.add_circle_outline, color: theme.colorScheme.onPrimary),
+                        icon: Icon(Icons.add_circle_outline,
+                            color: theme.colorScheme.onPrimary),
                         label: Text(
                           'Extend +30s',
                           style: TextStyle(color: theme.colorScheme.onPrimary),
@@ -232,7 +251,8 @@ class VoiceRoomControls extends ConsumerWidget {
                       message: 'Move to the next speaker in queue',
                       child: ElevatedButton.icon(
                         onPressed: onSkipSpeaker,
-                        icon: Icon(Icons.fast_forward, color: theme.colorScheme.onPrimary),
+                        icon: Icon(Icons.fast_forward,
+                            color: theme.colorScheme.onPrimary),
                         label: Text(
                           'Skip',
                           style: TextStyle(color: theme.colorScheme.onPrimary),
@@ -245,10 +265,13 @@ class VoiceRoomControls extends ConsumerWidget {
                   // Grant Next from Queue
                   if (room.speakerQueue.isNotEmpty)
                     Tooltip(
-                      message: 'Grant speaking turn to next person in queue (${room.speakerQueue.length} waiting)',
+                      message:
+                          'Grant speaking turn to next person in queue (${room.speakerQueue.length} waiting)',
                       child: ElevatedButton.icon(
-                        onPressed: () => _grantNextSpeaker(context, roomService, currentUserId),
-                        icon: Icon(Icons.skip_next, color: theme.colorScheme.onPrimary),
+                        onPressed: () => _grantNextSpeaker(
+                            context, roomService, currentUserId),
+                        icon: Icon(Icons.skip_next,
+                            color: theme.colorScheme.onPrimary),
                         label: Text(
                           'Next Speaker',
                           style: TextStyle(color: theme.colorScheme.onPrimary),
@@ -260,10 +283,13 @@ class VoiceRoomControls extends ConsumerWidget {
                     ),
                   // Manual Grant Turn
                   Tooltip(
-                    message: 'Manually grant speaking turn to a specific person',
+                    message:
+                        'Manually grant speaking turn to a specific person',
                     child: ElevatedButton.icon(
-                      onPressed: () => _showGrantTurnDialog(context, roomService),
-                      icon: Icon(Icons.pan_tool, color: theme.colorScheme.onPrimary),
+                      onPressed: () =>
+                          _showGrantTurnDialog(context, roomService),
+                      icon: Icon(Icons.pan_tool,
+                          color: theme.colorScheme.onPrimary),
                       label: Text(
                         'Grant Turn',
                         style: TextStyle(color: theme.colorScheme.onPrimary),
@@ -280,7 +306,8 @@ class VoiceRoomControls extends ConsumerWidget {
                   message: 'Invite people to join this room',
                   child: ElevatedButton.icon(
                     onPressed: () => _showInviteDialog(context),
-                    icon: Icon(Icons.person_add, color: theme.colorScheme.onPrimary),
+                    icon: Icon(Icons.person_add,
+                        color: theme.colorScheme.onPrimary),
                     label: Text(
                       'Invite',
                       style: TextStyle(color: theme.colorScheme.onPrimary),
@@ -296,7 +323,8 @@ class VoiceRoomControls extends ConsumerWidget {
                   message: 'Configure room settings and preferences',
                   child: ElevatedButton.icon(
                     onPressed: () => _showRoomSettings(context, ref),
-                    icon: Icon(Icons.settings, color: theme.colorScheme.onSurface),
+                    icon: Icon(Icons.settings,
+                        color: theme.colorScheme.onSurface),
                     label: Text(
                       'Settings',
                       style: TextStyle(color: theme.colorScheme.onSurface),
@@ -339,7 +367,8 @@ class VoiceRoomControls extends ConsumerWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('End Room'),
-        content: const Text('Are you sure you want to end this room? This action cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to end this room? This action cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
@@ -453,7 +482,8 @@ class VoiceRoomControls extends ConsumerWidget {
                           child: const Text('Cancel'),
                         ),
                         TextButton(
-                          onPressed: () => Navigator.pop(context, controller.text.trim()),
+                          onPressed: () =>
+                              Navigator.pop(context, controller.text.trim()),
                           child: const Text('Save'),
                         ),
                       ],
@@ -465,7 +495,8 @@ class VoiceRoomControls extends ConsumerWidget {
                   await roomService.updateRoomTitle(room.id, newTitle);
                   // ignore: use_build_context_synchronously
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Room title updated successfully')),
+                    const SnackBar(
+                        content: Text('Room title updated successfully')),
                   );
                 }
               },
@@ -478,7 +509,8 @@ class VoiceRoomControls extends ConsumerWidget {
                 final newDescription = await showDialog<String>(
                   context: context,
                   builder: (context) {
-                    final controller = TextEditingController(text: room.description);
+                    final controller =
+                        TextEditingController(text: room.description);
                     return AlertDialog(
                       title: const Text('Edit Room Description'),
                       content: TextField(
@@ -494,7 +526,8 @@ class VoiceRoomControls extends ConsumerWidget {
                           child: const Text('Cancel'),
                         ),
                         TextButton(
-                          onPressed: () => Navigator.pop(context, controller.text.trim()),
+                          onPressed: () =>
+                              Navigator.pop(context, controller.text.trim()),
                           child: const Text('Save'),
                         ),
                       ],
@@ -503,7 +536,8 @@ class VoiceRoomControls extends ConsumerWidget {
                 );
 
                 if (newDescription != null) {
-                  await roomService.updateRoomDescription(room.id, newDescription);
+                  await roomService.updateRoomDescription(
+                      room.id, newDescription);
                   // Refresh or notify
                 }
               },
@@ -547,7 +581,8 @@ class VoiceRoomControls extends ConsumerWidget {
   }
 
   void _showGrantTurnDialog(BuildContext context, dynamic roomService) {
-    final speakersNotHavingTurn = room.speakers.where((s) => s != room.currentSpeakerId).toList();
+    final speakersNotHavingTurn =
+        room.speakers.where((s) => s != room.currentSpeakerId).toList();
 
     if (speakersNotHavingTurn.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -573,16 +608,19 @@ class VoiceRoomControls extends ConsumerWidget {
                 itemBuilder: (context, index) {
                   final userId = speakersNotHavingTurn[index];
                   return ListTile(
-                    title: Text(userId), // In production, resolve to display name
+                    title:
+                        Text(userId), // In production, resolve to display name
                     trailing: const Icon(Icons.check_circle_outline),
                     onTap: () async {
                       try {
-                        await roomService.grantTurn(room.id, currentUserId, userId);
+                        await roomService.grantTurn(
+                            room.id, currentUserId, userId);
                         // ignore: use_build_context_synchronously
                         Navigator.of(context).pop();
                         // ignore: use_build_context_synchronously
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Turn granted successfully')),
+                          const SnackBar(
+                              content: Text('Turn granted successfully')),
                         );
                       } catch (e) {
                         // ignore: use_build_context_synchronously
@@ -607,7 +645,8 @@ class VoiceRoomControls extends ConsumerWidget {
     );
   }
 
-  Future<void> _endTurn(BuildContext context, dynamic roomService, String userId) async {
+  Future<void> _endTurn(
+      BuildContext context, dynamic roomService, String userId) async {
     try {
       await roomService.endTurn(room.id, userId);
       // ignore: use_build_context_synchronously
@@ -644,7 +683,8 @@ class VoiceRoomControls extends ConsumerWidget {
             await roomService.raiseHand(room.id, userId);
             // ignore: use_build_context_synchronously
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Hand raised - waiting for moderator')),
+              const SnackBar(
+                  content: Text('Hand raised - waiting for moderator')),
             );
           }
         } catch (e) {
@@ -663,12 +703,14 @@ class VoiceRoomControls extends ConsumerWidget {
         style: TextStyle(color: theme.colorScheme.onPrimary),
       ),
       style: ElevatedButton.styleFrom(
-        backgroundColor: hasHandRaised ? Colors.red.shade700 : theme.colorScheme.tertiary,
+        backgroundColor:
+            hasHandRaised ? Colors.red.shade700 : theme.colorScheme.tertiary,
       ),
     );
   }
 
-  Future<void> _grantNextSpeaker(BuildContext context, dynamic roomService, String userId) async {
+  Future<void> _grantNextSpeaker(
+      BuildContext context, dynamic roomService, String userId) async {
     try {
       await roomService.grantTurnFromQueue(room.id, userId);
       // ignore: use_build_context_synchronously
@@ -702,7 +744,8 @@ class VoiceRoomControls extends ConsumerWidget {
             children: [
               Text(
                 'â±ï¸',
-                style: TextStyle(fontSize: 12, color: theme.colorScheme.onPrimary),
+                style:
+                    TextStyle(fontSize: 12, color: theme.colorScheme.onPrimary),
               ),
               const SizedBox(width: 4),
               Text(

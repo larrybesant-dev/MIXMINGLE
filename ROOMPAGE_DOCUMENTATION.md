@@ -77,18 +77,21 @@ RoomPage._VoiceRoomPageState
 ## 📐 Widget Tree
 
 ### 1. **Scaffold**
-   - `backgroundColor: Colors.black`
-   - App-bar + body + bottom-bar layout
+
+- `backgroundColor: Colors.black`
+- App-bar + body + bottom-bar layout
 
 ### 2. **AppBar** (`_buildAppBar`)
-   - **Left**: Back button (leaves room)
-   - **Title**: Room name + participant count + category
-   - **Right**: Participant list toggle
+
+- **Left**: Back button (leaves room)
+- **Title**: Room name + participant count + category
+- **Right**: Participant list toggle
 
 ### 3. **Body** (`_buildBody`)
-   - **Loading State**: Spinner + "Joining room..."
-   - **Error State**: Error icon + message + retry button
-   - **Success State**: Row with video grid + optional sidebar
+
+- **Loading State**: Spinner + "Joining room..."
+- **Error State**: Error icon + message + retry button
+- **Success State**: Row with video grid + optional sidebar
 
 #### 3a. **Video Grid** (`_buildVideoArea`)
 
@@ -103,6 +106,7 @@ Dynamic grid layout based on active cameras:
 ```
 
 Each tile shows:
+
 - **Video stream** (local or remote)
 - **Name tag** (bottom left)
 - **Speaking indicator** (animated green ring)
@@ -113,6 +117,7 @@ Each tile shows:
 #### 3b. **Participant Sidebar** (`_buildParticipantSidebar`)
 
 Right sidebar (280px wide):
+
 - **Header**: "Participants (N)"
 - **List**: All participants with:
   - Avatar (initials + speaking ring)
@@ -124,6 +129,7 @@ Right sidebar (280px wide):
 ### 4. **Control Bar** (`_buildControlBar`)
 
 Bottom bar (SafeArea protected):
+
 - **Mic Toggle**: Blue if unmuted, grey if muted
 - **Camera Toggle**: Blue if on, grey if off
 - **Flip Camera**: Only if camera is on
@@ -142,7 +148,7 @@ Bottom bar (SafeArea protected):
 3. Call _initializeAndJoinRoom()
 ```
 
-### Initialization (_initializeAndJoinRoom)
+### Initialization (\_initializeAndJoinRoom)
 
 ```
 1. Check if already joining/joined → return early
@@ -157,7 +163,7 @@ Bottom bar (SafeArea protected):
 10. Log success
 ```
 
-### On Tap "Leave" (_leaveRoom)
+### On Tap "Leave" (\_leaveRoom)
 
 ```
 1. Add system message "You left the room"
@@ -334,15 +340,18 @@ Speaking users get a green border + glow effect.
 ## 📱 Responsive Design
 
 ### Desktop/Tablet
+
 - **Video grid**: Takes up main area
 - **Participant sidebar**: 280px fixed width on right
 - **Can toggle sidebar** via icon in app-bar
 
 ### Mobile (landscape)
+
 - **Video grid**: Takes up main area
 - **Participant sidebar**: Toggled on/off (overlays grid when open)
 
 ### Mobile (portrait)
+
 - **Video grid**: Takes up full width (above control bar)
 - **Participant sidebar**: Hidden (can toggle to overlay)
 - **Control bar**: Bottom (SafeArea protected)
@@ -351,47 +360,56 @@ Speaking users get a green border + glow effect.
 
 ## 🛠️ Key Methods
 
-### _buildAppBar(context, participantCount, currentUser)
+### \_buildAppBar(context, participantCount, currentUser)
+
 Returns: `PreferredSizeWidget`
 
 Shows room name, participant count, and toggle buttons.
 
-### _buildBody(participants, videoTiles, agoraService)
+### \_buildBody(participants, videoTiles, agoraService)
+
 Returns: `Widget`
 
 Main layout. Shows loading → error → success states.
 
-### _buildVideoArea(videoTiles, agoraService, participants)
+### \_buildVideoArea(videoTiles, agoraService, participants)
+
 Returns: `Widget`
 
 Adaptive grid of video tiles, or "no cameras" placeholder.
 
-### _buildVideoTile(uid, agoraService, participant)
+### \_buildVideoTile(uid, agoraService, participant)
+
 Returns: `Widget`
 
 Single video tile with overlays (name, mute badge, speaking ring).
 
-### _buildParticipantSidebar(participants)
+### \_buildParticipantSidebar(participants)
+
 Returns: `Widget`
 
 Right sidebar with participant list.
 
-### _buildParticipantListItem(participant)
+### \_buildParticipantListItem(participant)
+
 Returns: `Widget`
 
 Individual participant row with avatar, name, status, indicators.
 
-### _buildControlBar(agoraService, currentUser)
+### \_buildControlBar(agoraService, currentUser)
+
 Returns: `Widget`
 
 Bottom control bar with buttons.
 
-### _buildControlButton(icon, label, isActive, isLeave, onPressed)
+### \_buildControlButton(icon, label, isActive, isLeave, onPressed)
+
 Returns: `Widget`
 
 Single control button with icon and label.
 
-### _calculateGridColumns(count)
+### \_calculateGridColumns(count)
+
 Returns: `int`
 
 Optimal number of grid columns based on video count.
@@ -512,6 +530,7 @@ for (final room in rooms) {
 ## ✅ Checklist - What's Included
 
 ### Core Features
+
 - [x] Video grid (adaptive layout)
 - [x] Participant list (sidebar)
 - [x] Live indicators (speaking, mute, no-video)
@@ -520,6 +539,7 @@ for (final room in rooms) {
 - [x] App bar (room info, toggles)
 
 ### State & Lifecycle
+
 - [x] Init Agora on mount
 - [x] Join room automatically
 - [x] Leave room on navigation
@@ -528,6 +548,7 @@ for (final room in rooms) {
 - [x] Error states with retry
 
 ### UX/Visual
+
 - [x] Loading spinner while joining
 - [x] Error screen with message
 - [x] Tile entry animations (fade + slide)
@@ -538,6 +559,7 @@ for (final room in rooms) {
 - [x] Gradient overlays for readability
 
 ### Production Ready
+
 - [x] No placeholders
 - [x] Proper error handling
 - [x] Debug logging

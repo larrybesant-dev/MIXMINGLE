@@ -198,7 +198,8 @@ class PresenceNotificationService {
         '[PresenceNotification] Updated friends list: ${friendIds.length} friends',
       );
     } catch (e) {
-      AppLogger.error('[PresenceNotification] Failed to update friends list: $e');
+      AppLogger.error(
+          '[PresenceNotification] Failed to update friends list: $e');
     }
   }
 
@@ -222,7 +223,8 @@ class PresenceNotificationService {
           'friendId': e.key,
           'friendName': e.value.friendName,
           'lastSeenState': e.value.lastSeenState.displayText,
-          'lastNotificationTime': e.value.lastNotificationTime.toIso8601String(),
+          'lastNotificationTime':
+              e.value.lastNotificationTime.toIso8601String(),
         };
       }).toList(),
     };
@@ -252,7 +254,3 @@ final managedFriendPresenceNotificationsProvider =
 
   return Future.value(null);
 });
-
-
-
-

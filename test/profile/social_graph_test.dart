@@ -46,11 +46,19 @@ void main() {
             .set({'followedAt': FieldValue.serverTimestamp()});
 
         // Assert
-        final followingDoc =
-            await fakeFirestore.collection('users').doc(userId1).collection('following').doc(userId2).get();
+        final followingDoc = await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('following')
+            .doc(userId2)
+            .get();
 
-        final followerDoc =
-            await fakeFirestore.collection('users').doc(userId2).collection('followers').doc(userId1).get();
+        final followerDoc = await fakeFirestore
+            .collection('users')
+            .doc(userId2)
+            .collection('followers')
+            .doc(userId1)
+            .get();
 
         expect(followingDoc.exists, isTrue);
         expect(followerDoc.exists, isTrue);
@@ -66,13 +74,27 @@ void main() {
             .set({'followedAt': FieldValue.serverTimestamp()});
 
         // Act
-        await fakeFirestore.collection('users').doc(userId1).collection('following').doc(userId2).delete();
+        await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('following')
+            .doc(userId2)
+            .delete();
 
-        await fakeFirestore.collection('users').doc(userId2).collection('followers').doc(userId1).delete();
+        await fakeFirestore
+            .collection('users')
+            .doc(userId2)
+            .collection('followers')
+            .doc(userId1)
+            .delete();
 
         // Assert
-        final followingDoc =
-            await fakeFirestore.collection('users').doc(userId1).collection('following').doc(userId2).get();
+        final followingDoc = await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('following')
+            .doc(userId2)
+            .get();
 
         expect(followingDoc.exists, isFalse);
       });
@@ -94,7 +116,11 @@ void main() {
             .set({'followedAt': FieldValue.serverTimestamp()});
 
         // Act
-        final snapshot = await fakeFirestore.collection('users').doc(userId1).collection('followers').get();
+        final snapshot = await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('followers')
+            .get();
 
         // Assert
         expect(snapshot.docs.length, 2);
@@ -117,7 +143,11 @@ void main() {
             .set({'followedAt': FieldValue.serverTimestamp()});
 
         // Act
-        final snapshot = await fakeFirestore.collection('users').doc(userId1).collection('following').get();
+        final snapshot = await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('following')
+            .get();
 
         // Assert
         expect(snapshot.docs.length, 2);
@@ -140,7 +170,11 @@ void main() {
             .set({'followedAt': FieldValue.serverTimestamp()});
 
         // Act
-        final snapshot = await fakeFirestore.collection('users').doc(userId1).collection('followers').get();
+        final snapshot = await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('followers')
+            .get();
 
         final count = snapshot.docs.length;
 
@@ -168,11 +202,19 @@ void main() {
             .set({'followedAt': FieldValue.serverTimestamp()});
 
         // Act - Check if both follow each other
-        final user1FollowsUser2 =
-            await fakeFirestore.collection('users').doc(userId1).collection('following').doc(userId2).get();
+        final user1FollowsUser2 = await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('following')
+            .doc(userId2)
+            .get();
 
-        final user2FollowsUser1 =
-            await fakeFirestore.collection('users').doc(userId2).collection('following').doc(userId1).get();
+        final user2FollowsUser1 = await fakeFirestore
+            .collection('users')
+            .doc(userId2)
+            .collection('following')
+            .doc(userId1)
+            .get();
 
         final areFriends = user1FollowsUser2.exists && user2FollowsUser1.exists;
 
@@ -211,14 +253,22 @@ void main() {
             .set({'followedAt': FieldValue.serverTimestamp()});
 
         // Act - Get all following
-        final followingSnapshot = await fakeFirestore.collection('users').doc(userId1).collection('following').get();
+        final followingSnapshot = await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('following')
+            .get();
 
         // Check which are mutual
         final List<String> friends = [];
         for (final doc in followingSnapshot.docs) {
           final otherId = doc.id;
-          final followsBack =
-              await fakeFirestore.collection('users').doc(otherId).collection('following').doc(userId1).get();
+          final followsBack = await fakeFirestore
+              .collection('users')
+              .doc(otherId)
+              .collection('following')
+              .doc(userId1)
+              .get();
 
           if (followsBack.exists) {
             friends.add(otherId);
@@ -260,12 +310,24 @@ void main() {
 
       test('should get online users', () async {
         // Arrange
-        await fakeFirestore.collection('users').doc(userId1).update({'isOnline': true});
-        await fakeFirestore.collection('users').doc(userId2).update({'isOnline': true});
-        await fakeFirestore.collection('users').doc(userId3).update({'isOnline': false});
+        await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .update({'isOnline': true});
+        await fakeFirestore
+            .collection('users')
+            .doc(userId2)
+            .update({'isOnline': true});
+        await fakeFirestore
+            .collection('users')
+            .doc(userId3)
+            .update({'isOnline': false});
 
         // Act
-        final snapshot = await fakeFirestore.collection('users').where('isOnline', isEqualTo: true).get();
+        final snapshot = await fakeFirestore
+            .collection('users')
+            .where('isOnline', isEqualTo: true)
+            .get();
 
         // Assert
         expect(snapshot.docs.length, 2);
@@ -283,7 +345,12 @@ void main() {
             .set({'blockedAt': FieldValue.serverTimestamp()});
 
         // Assert
-        final doc = await fakeFirestore.collection('users').doc(userId1).collection('blocked').doc(userId2).get();
+        final doc = await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('blocked')
+            .doc(userId2)
+            .get();
 
         expect(doc.exists, isTrue);
       });
@@ -298,10 +365,20 @@ void main() {
             .set({'blockedAt': FieldValue.serverTimestamp()});
 
         // Act
-        await fakeFirestore.collection('users').doc(userId1).collection('blocked').doc(userId2).delete();
+        await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('blocked')
+            .doc(userId2)
+            .delete();
 
         // Assert
-        final doc = await fakeFirestore.collection('users').doc(userId1).collection('blocked').doc(userId2).get();
+        final doc = await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('blocked')
+            .doc(userId2)
+            .get();
 
         expect(doc.exists, isFalse);
       });
@@ -316,7 +393,12 @@ void main() {
             .set({'blockedAt': FieldValue.serverTimestamp()});
 
         // Act
-        final doc = await fakeFirestore.collection('users').doc(userId1).collection('blocked').doc(userId2).get();
+        final doc = await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('blocked')
+            .doc(userId2)
+            .get();
 
         final isBlocked = doc.exists;
 
@@ -349,13 +431,27 @@ void main() {
             .set({'blockedAt': FieldValue.serverTimestamp()});
 
         // Remove follow relationships
-        await fakeFirestore.collection('users').doc(userId1).collection('following').doc(userId2).delete();
+        await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('following')
+            .doc(userId2)
+            .delete();
 
-        await fakeFirestore.collection('users').doc(userId2).collection('following').doc(userId1).delete();
+        await fakeFirestore
+            .collection('users')
+            .doc(userId2)
+            .collection('following')
+            .doc(userId1)
+            .delete();
 
         // Assert
-        final followingDoc =
-            await fakeFirestore.collection('users').doc(userId1).collection('following').doc(userId2).get();
+        final followingDoc = await fakeFirestore
+            .collection('users')
+            .doc(userId1)
+            .collection('following')
+            .doc(userId2)
+            .get();
 
         expect(followingDoc.exists, isFalse);
       });

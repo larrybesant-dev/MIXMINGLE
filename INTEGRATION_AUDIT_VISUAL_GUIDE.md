@@ -441,4 +441,3 @@ firebase functions:call generateAgoraToken \
 **END OF VISUAL REFERENCE GUIDE**
 
 Use this page to quickly understand the integration and locate specific issues.
-

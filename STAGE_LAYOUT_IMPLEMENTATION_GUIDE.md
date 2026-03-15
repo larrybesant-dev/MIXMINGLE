@@ -1,4 +1,3 @@
-
 # 🎭 Stage Layout UI Implementation - Complete Guide
 
 **Status:** ✅ **COMPLETE & PRODUCTION READY**
@@ -57,6 +56,7 @@ EnhancedStageLayout - Professional spotlight + gallery
 ### 1. Spotlight Section (Featured Speaker)
 
 **Visual:**
+
 - Large, centered video tile with rounded corners (16px radius)
 - Border styling:
   - **Speaking:** Green accent border (3px) with glow shadow
@@ -66,11 +66,13 @@ EnhancedStageLayout - Professional spotlight + gallery
 - Top-right: "🎯 Your Turn" badge for current user (if they're speaking)
 
 **Animations:**
+
 - Scale: 0.95 → 1.0 (400ms, easeOutCubic)
 - Fade: 0.8 → 1.0 (400ms, easeInOut)
 - Triggers on speaker change for smooth transitions
 
 **Status Indicators:**
+
 - Speaking indicator (animated equalizer icon) - Green
 - Mute badge (red circle + mic-off icon) - Top-right
 - Video-off badge (grey circle + camera-off icon) - Top-right
@@ -79,12 +81,14 @@ EnhancedStageLayout - Professional spotlight + gallery
 ### 2. Gallery Section (Participant Thumbnails)
 
 **Visual:**
+
 - Horizontal scrolling list of participant tiles
 - Each tile: 120px wide × 160px tall
 - Rounded corners (12px radius)
 - Auto-growing based on participant count
 
 **Tile Features:**
+
 - Speaker indicator: Green border + glow
 - Name tag: Bottom center, overlaid on gradient
 - Status badges: Top-right (mute/video-off)
@@ -92,6 +96,7 @@ EnhancedStageLayout - Professional spotlight + gallery
 - Hover/tap animations
 
 **Scrolling:**
+
 - Horizontal scroll with keyboard/mouse/touch support
 - Smooth momentum scrolling
 - Shows 3-4 tiles at once depending on screen width
@@ -99,6 +104,7 @@ EnhancedStageLayout - Professional spotlight + gallery
 ### 3. Smooth Transitions
 
 **Speaker Change Animation:**
+
 ```
 Speaker 1 → Speaker 2
 ├─ Previous spotlight fades to 80% opacity
@@ -109,6 +115,7 @@ Speaker 1 → Speaker 2
 ```
 
 **Gallery Updates:**
+
 - Adding participant: Appears with fade-in
 - Participant speaking: Border animates to green with 200ms duration
 - Participant muted: Border animates to grey
@@ -117,13 +124,14 @@ Speaker 1 → Speaker 2
 
 **Three States Per Participant:**
 
-| State | Indicator | Color |
-|-------|-----------|-------|
-| **Has Audio & Video** | Normal border | Grey/Green (if speaking) |
-| **Mute (No Audio)** | Mic-off badge | Red |
-| **Camera Off (No Video)** | Camera-off badge | Grey |
+| State                     | Indicator        | Color                    |
+| ------------------------- | ---------------- | ------------------------ |
+| **Has Audio & Video**     | Normal border    | Grey/Green (if speaking) |
+| **Mute (No Audio)**       | Mic-off badge    | Red                      |
+| **Camera Off (No Video)** | Camera-off badge | Grey                     |
 
 **Implementation:**
+
 ```dart
 // Status badges on each tile
 if (!participant.hasAudio)
@@ -139,6 +147,7 @@ if (participant.isSpeaking)
 ### 5. Turn-Based Mode Badge
 
 **"Your Turn" Badge:**
+
 - Shows only on spotlight for current user
 - Pink accent with border: `Colors.pinkAccent`
 - Text: "🎯 Your Turn"
@@ -230,16 +239,19 @@ if (_turnBased && participants.isNotEmpty) {
 ## 📱 Responsive Behavior
 
 **Desktop (>1200px):**
+
 - Spotlight: Full available space
 - Gallery: 4-5 tiles visible
 - Chat overlay: Right sidebar (320px)
 
 **Tablet (768px-1200px):**
+
 - Spotlight: 70% of space
 - Gallery: 3-4 tiles visible
 - Chat overlay: Bottom-right (320x400px)
 
 **Mobile (<768px):**
+
 - Spotlight: Full width
 - Gallery: 2-3 tiles visible
 - Chat overlay: Full-screen modal
@@ -249,12 +261,14 @@ if (_turnBased && participants.isNotEmpty) {
 ## 🔄 State Management
 
 ### Speaker Changes
+
 - **Trigger:** Turn-based room updates speaker via Firestore
 - **Action:** EnhancedStageLayout detects speakerId change
 - **Result:** Smooth 400ms transition animation
 - **Duration:** <500ms total update-to-render time
 
 ### Participant Lifecycle
+
 ```
 Join Room
 ├─ Participant added to AgoraParticipant map
@@ -277,6 +291,7 @@ Leave Room
 ## 🎨 Design System Integration
 
 **Colors Used:**
+
 - Primary accent: `Colors.amber.shade700` - Stage badge border
 - Speaking indicator: `Colors.greenAccent` - Active speaker border
 - Your turn badge: `Colors.pinkAccent` - Current speaker badge
@@ -286,11 +301,13 @@ Leave Room
 - Text: `Colors.white` - Primary text on video
 
 **Typography:**
+
 - Spotlight name: 18pt, W700 (bold)
 - Gallery name: 11pt, W600 (semi-bold)
 - Badge text: 12-13pt, W600 (semi-bold)
 
 **Spacing:**
+
 - Spotlight margin: 12px all sides
 - Gallery margin: 8px horizontal, 8px vertical
 - Tile margin: 6px horizontal
@@ -301,16 +318,19 @@ Leave Room
 ## 📊 Performance Notes
 
 **Rendering:**
+
 - AnimationController: Single instance for spotlight fade/scale
 - Rebuild frequency: Only on participant changes or speaker swap
 - No unnecessary rebuilds in gallery (using separated state)
 
 **Memory:**
+
 - AgoraVideoView widgets: Lightweight wrappers around RTC engine
 - No video frame buffers stored in Flutter (handled by native)
 - Gallery scroll view: Efficient horizontal scroll (not nested GridView)
 
 **Network:**
+
 - Video streams: Agora's adaptive bitrate handles this
 - State updates: Firestore listeners only for room/speaker changes
 - Chat overlay: Separate provider, doesn't impact video rendering
@@ -320,6 +340,7 @@ Leave Room
 ## 🧪 Testing Scenarios
 
 ### Turn-Based Mode
+
 1. **Join room in turn-based mode** → Spotlight empty, gallery shows participants
 2. **Speaker assigned** → Smooth transition to spotlight
 3. **Speaker change** → Smooth fade/scale animation
@@ -327,12 +348,14 @@ Leave Room
 5. **Speaker timer countdown** → Status visible in badge (future enhancement)
 
 ### Participant State Changes
+
 1. **Participant mutes** → Red mic-off badge appears instantly
 2. **Participant turns off camera** → Grey camera-off badge appears
 3. **Participant speaks** → Green speaking ring animates on
 4. **Participant leaves** → Tile removed from gallery with fade-out
 
 ### Gallery Interactions
+
 1. **Scroll gallery** → Smooth horizontal scroll with momentum
 2. **Tap participant** → `onTileTapped` callback fired
 3. **Gallery overflow** → Scrollbar appears on hover (web)
@@ -357,18 +380,21 @@ Leave Room
 ## 📝 Implementation Notes
 
 **Why EnhancedStageLayout?**
+
 - Clean separation of concerns (video layout vs. chat/controls)
 - Reusable for other room types (1-on-1 calls, group chats)
 - Smooth animations improve perceived performance
 - Professional appearance matches competitive apps (Clubhouse, Agora, Twitter Spaces)
 
 **Key Decisions:**
+
 - **65/35 split** - Spotlight gets majority (professional video platform standard)
 - **Horizontal gallery** - More natural than vertical, better for widescreen
 - **400ms transitions** - Smooth but not slow; matches Material Design guidelines
 - **Agora direct integration** - No separate video rendering, uses native streams
 
 **Known Limitations:**
+
 - Gallery doesn't show participant names when scrolled (future: sticky labels)
 - No pinch-to-zoom on spotlight (could add later)
 - Chat overlay positioning assumes minimum 1280px width (mobile: full-screen modal)
@@ -378,6 +404,7 @@ Leave Room
 ## 📦 Deliverable Summary
 
 **What You Get:**
+
 - ✅ Production-ready stage layout component
 - ✅ Real-time Agora video integration
 - ✅ Smooth animation system
@@ -387,6 +414,7 @@ Leave Room
 - ✅ Zero analysis warnings
 
 **Ready for:**
+
 - Deploy to Firebase Hosting
 - User testing & feedback
 - Performance monitoring

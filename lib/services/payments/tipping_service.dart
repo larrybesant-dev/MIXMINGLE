@@ -2,7 +2,8 @@ import 'package:cloud_functions/cloud_functions.dart';
 import '../../shared/models/tip.dart';
 
 class TippingService {
-  final FirebaseFunctions _functions = FirebaseFunctions.instanceFor(region: 'us-central1');
+  final FirebaseFunctions _functions =
+      FirebaseFunctions.instanceFor(region: 'us-central1');
 
   Future<void> sendTip(Tip tip) async {
     try {
@@ -43,5 +44,3 @@ class TippingService {
     }
   }
 }
-
-

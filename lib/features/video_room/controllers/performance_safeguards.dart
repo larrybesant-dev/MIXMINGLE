@@ -17,15 +17,12 @@ class PerformanceSafeguards {
   }
 
   static void enforcePublisherLimit(List<PublisherController> publishers) {
-    final activePublishers = publishers
-        .where((p) => p.isPublishing)
-        .toList();
+    final activePublishers = publishers.where((p) => p.isPublishing).toList();
 
     if (activePublishers.length > maxPublishers) {
       // Disable oldest publishers
-      activePublishers
-          .sort((a, b) => a.publisherState.lastPublishedAt!
-              .compareTo(b.publisherState.lastPublishedAt!));
+      activePublishers.sort((a, b) => a.publisherState.lastPublishedAt!
+          .compareTo(b.publisherState.lastPublishedAt!));
 
       for (int i = maxPublishers; i < activePublishers.length; i++) {
         activePublishers[i].stopPublishing();
@@ -96,7 +93,9 @@ class PerformanceSafeguards {
     bool isLowBandwidth,
     bool autoDisable,
   ) {
-    if (isLowBandwidth && autoDisable && publisher.publisherState.isVideoEnabled) {
+    if (isLowBandwidth &&
+        autoDisable &&
+        publisher.publisherState.isVideoEnabled) {
       publisher.toggleVideo();
     }
   }
@@ -141,4 +140,3 @@ class PerformanceSafeguards {
     }
   }
 }
-

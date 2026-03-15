@@ -183,7 +183,9 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
                   minHeight: 18,
                 ),
                 child: Text(
-                  widget.unreadCount > 99 ? '99+' : widget.unreadCount.toString(),
+                  widget.unreadCount > 99
+                      ? '99+'
+                      : widget.unreadCount.toString(),
                   style: DesignTypography.caption.copyWith(
                     color: DesignColors.white,
                     fontSize: 10,
@@ -283,7 +285,8 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
     return Container(
       margin: const EdgeInsets.only(bottom: DesignSpacing.sm),
       child: Row(
-        mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
           if (!isCurrentUser)
             Container(
@@ -298,7 +301,9 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
               ),
               child: Center(
                 child: Text(
-                  message.senderName.isNotEmpty ? message.senderName[0].toUpperCase() : '?',
+                  message.senderName.isNotEmpty
+                      ? message.senderName[0].toUpperCase()
+                      : '?',
                   style: DesignTypography.caption.copyWith(
                     color: DesignColors.white,
                     fontWeight: FontWeight.bold,
@@ -306,7 +311,6 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
                 ),
               ),
             ),
-
           Flexible(
             child: Container(
               padding: const EdgeInsets.all(DesignSpacing.sm),
@@ -333,7 +337,9 @@ class _ChatOverlayWidgetState extends State<ChatOverlayWidget>
                   Text(
                     message.content,
                     style: DesignTypography.body.copyWith(
-                      color: isCurrentUser ? DesignColors.white : DesignColors.textPrimary,
+                      color: isCurrentUser
+                          ? DesignColors.white
+                          : DesignColors.textPrimary,
                     ),
                   ),
                   Text(

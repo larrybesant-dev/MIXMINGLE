@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -60,7 +60,9 @@ class BadgeDefinition {
       ),
       criteria: Map<String, dynamic>.from(map['criteria'] ?? {}),
       maxAwarded: map['maxAwarded'],
-      expiresAt: map['expiresAt'] != null ? (map['expiresAt'] as Timestamp).toDate() : null,
+      expiresAt: map['expiresAt'] != null
+          ? (map['expiresAt'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -147,11 +149,15 @@ class BadgeService {
   Future<List<BadgeDefinition>> getAllBadgeDefinitions() async {
     try {
       final snapshot = await _firestore.collection('badges').get();
-      final badges = snapshot.docs.map((doc) => BadgeDefinition.fromMap(doc.data())).toList();
+      final badges = snapshot.docs
+          .map((doc) => BadgeDefinition.fromMap(doc.data()))
+          .toList();
 
       // Include predefined badges that aren't in Firestore yet
       final existingIds = badges.map((b) => b.id).toSet();
-      final missingBadges = predefinedBadges.where((badge) => !existingIds.contains(badge.id)).toList();
+      final missingBadges = predefinedBadges
+          .where((badge) => !existingIds.contains(badge.id))
+          .toList();
 
       return [...badges, ...missingBadges];
     } catch (e) {
@@ -246,7 +252,8 @@ class BadgeService {
   }
 
   /// Update user's badge list in their profile
-  Future<void> _updateUserBadges(String userId, String badgeId, {required bool add}) async {
+  Future<void> _updateUserBadges(String userId, String badgeId,
+      {required bool add}) async {
     final userRef = _firestore.collection('users').doc(userId);
 
     if (add) {
@@ -271,12 +278,14 @@ final allBadgesProvider = FutureProvider<List<BadgeDefinition>>((ref) {
   return badgeService.getAllBadgeDefinitions();
 });
 
-final userBadgesProvider = FutureProvider.family<List<UserBadge>, String>((ref, userId) {
+final userBadgesProvider =
+    FutureProvider.family<List<UserBadge>, String>((ref, userId) {
   final badgeService = ref.watch(badgeServiceProvider);
   return badgeService.getUserBadges(userId);
 });
 
-final badgeDefinitionProvider = FutureProvider.family<BadgeDefinition?, String>((ref, badgeId) {
+final badgeDefinitionProvider =
+    FutureProvider.family<BadgeDefinition?, String>((ref, badgeId) {
   final badgeService = ref.watch(badgeServiceProvider);
   return badgeService.getBadgeDefinition(badgeId);
 });

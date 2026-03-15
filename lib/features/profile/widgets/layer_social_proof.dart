@@ -40,7 +40,8 @@ class LayerSocialProof extends StatelessWidget {
               GestureDetector(
                 onTap: onViewFollowers,
                 child: _bigStat(
-                  _formatCount(p.hideFollowers && !isOwner ? 0 : p.followersCount),
+                  _formatCount(
+                      p.hideFollowers && !isOwner ? 0 : p.followersCount),
                   'Followers',
                   const Color(0xFF4A90FF),
                   hidden: p.hideFollowers && !isOwner,
@@ -49,10 +50,12 @@ class LayerSocialProof extends StatelessWidget {
               _divV(),
               GestureDetector(
                 onTap: onViewFollowing,
-                child: _bigStat(_formatCount(p.followingCount), 'Following', const Color(0xFF9B59B6)),
+                child: _bigStat(_formatCount(p.followingCount), 'Following',
+                    const Color(0xFF9B59B6)),
               ),
               _divV(),
-              _bigStat(_formatCount(p.mutualsCount), 'Mutuals', const Color(0xFFFF4D8B)),
+              _bigStat(_formatCount(p.mutualsCount), 'Mutuals',
+                  const Color(0xFFFF4D8B)),
             ],
           ),
         ),
@@ -103,7 +106,8 @@ class LayerSocialProof extends StatelessWidget {
             border: Border.all(color: const Color(0xFF1E2D40)),
           ),
           child: Row(children: [
-            const Icon(Icons.calendar_today_outlined, size: 14, color: Color(0xFF6B7280)),
+            const Icon(Icons.calendar_today_outlined,
+                size: 14, color: Color(0xFF6B7280)),
             const SizedBox(width: 8),
             Text(
               'Member since ${_formatJoined(p.createdAt)}',
@@ -115,13 +119,18 @@ class LayerSocialProof extends StatelessWidget {
     );
   }
 
-  Widget _bigStat(String val, String label, Color color, {bool hidden = false}) {
+  Widget _bigStat(String val, String label, Color color,
+      {bool hidden = false}) {
     return Column(children: [
       hidden
-          ? const Icon(Icons.visibility_off_outlined, color: Color(0xFF6B7280), size: 18)
-          : Text(val, style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.w800)),
+          ? const Icon(Icons.visibility_off_outlined,
+              color: Color(0xFF6B7280), size: 18)
+          : Text(val,
+              style: TextStyle(
+                  color: color, fontSize: 20, fontWeight: FontWeight.w800)),
       const SizedBox(height: 3),
-      Text(label, style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
+      Text(label,
+          style: const TextStyle(color: Color(0xFF6B7280), fontSize: 12)),
     ]);
   }
 
@@ -136,27 +145,37 @@ class LayerSocialProof extends StatelessWidget {
       child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
         Icon(icon, size: 20, color: color),
         const SizedBox(height: 6),
-        Text(val, style: TextStyle(color: color, fontSize: 15, fontWeight: FontWeight.w800)),
+        Text(val,
+            style: TextStyle(
+                color: color, fontSize: 15, fontWeight: FontWeight.w800)),
         const SizedBox(height: 2),
         Text(label,
             textAlign: TextAlign.center,
-            style: const TextStyle(color: Color(0xFF6B7280), fontSize: 10, height: 1.3)),
+            style: const TextStyle(
+                color: Color(0xFF6B7280), fontSize: 10, height: 1.3)),
       ]),
     );
   }
 
-  Widget _divV() => Container(width: 1, height: 40, color: const Color(0xFF1E2D40));
+  Widget _divV() =>
+      Container(width: 1, height: 40, color: const Color(0xFF1E2D40));
 
   Widget _sectionHeader(IconData icon, String title, Color color) {
     return Row(children: [
       Icon(icon, size: 16, color: color),
       const SizedBox(width: 7),
-      Text(title, style: TextStyle(
-        color: color, fontSize: 13, fontWeight: FontWeight.w700,
-        shadows: [Shadow(color: color.withValues(alpha: 0.5), blurRadius: 10)],
-      )),
+      Text(title,
+          style: TextStyle(
+            color: color,
+            fontSize: 13,
+            fontWeight: FontWeight.w700,
+            shadows: [
+              Shadow(color: color.withValues(alpha: 0.5), blurRadius: 10)
+            ],
+          )),
       const SizedBox(width: 8),
-      Expanded(child: Container(height: 1, color: color.withValues(alpha: 0.2))),
+      Expanded(
+          child: Container(height: 1, color: color.withValues(alpha: 0.2))),
     ]);
   }
 
@@ -167,7 +186,20 @@ class LayerSocialProof extends StatelessWidget {
   }
 
   String _formatJoined(DateTime dt) {
-    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec'
+    ];
     return '${months[dt.month - 1]} ${dt.year}';
   }
 }

@@ -21,6 +21,7 @@ This final stage provides comprehensive testing strategies, security best practi
 **Coverage Goal:** 80%+ for critical services
 
 **Critical Services to Test:**
+
 1. **AuthService** - Registration, login, logout, password reset
 2. **CoinEconomyService** - Add coins, spend coins, balance tracking
 3. **TippingService** - Send tips, receive tips, validation
@@ -31,6 +32,7 @@ This final stage provides comprehensive testing strategies, security best practi
 8. **MembershipService** - Tier checks, upgrade, downgrade
 
 **Example Unit Test:**
+
 ```dart
 // test/services/coin_economy_service_test.dart
 import 'package:flutter_test/flutter_test.dart';
@@ -94,6 +96,7 @@ void main() {
 ```
 
 **Run Unit Tests:**
+
 ```bash
 flutter test test/services/
 ```
@@ -107,6 +110,7 @@ flutter test test/services/
 **Coverage Goal:** All critical screens tested
 
 **Critical Screens to Test:**
+
 1. **NeonLoginPage** - Form validation, submit button, error states
 2. **MembershipUpgradeScreen** - Tier selection, purchase flow
 3. **CoinStoreScreen** - Package selection, purchase confirmation
@@ -114,6 +118,7 @@ flutter test test/services/
 5. **AdminDashboardPage** - Report list, resolve/dismiss actions
 
 **Example Widget Test:**
+
 ```dart
 // test/widgets/membership_upgrade_screen_test.dart
 import 'package:flutter/material.dart';
@@ -171,6 +176,7 @@ void main() {
 ```
 
 **Run Widget Tests:**
+
 ```bash
 flutter test test/widgets/
 ```
@@ -184,6 +190,7 @@ flutter test test/widgets/
 **Devices:** iOS Simulator, Android Emulator, Chrome
 
 **Critical Flows to Test:**
+
 1. **Auth Flow:** Signup → Age Gate → Onboarding → Home
 2. **Room Flow:** Home → Create Room → Start Room → Leave Room
 3. **Chat Flow:** Speed Dating Match → Chat → Send Message
@@ -191,6 +198,7 @@ flutter test test/widgets/
 5. **Moderation Flow:** Report User → Admin Review → Ban User
 
 **Example Integration Test:**
+
 ```dart
 // integration_test/auth_flow_test.dart
 import 'package:flutter/material.dart';
@@ -249,6 +257,7 @@ void main() {
 ```
 
 **Run Integration Tests:**
+
 ```bash
 flutter test integration_test/
 flutter drive --driver=test_driver/integration_test.dart --target=integration_test/auth_flow_test.dart
@@ -261,6 +270,7 @@ flutter drive --driver=test_driver/integration_test.dart --target=integration_te
 ### Authentication Security
 
 **Firebase Auth Rules:**
+
 ```javascript
 // Email verification required for sensitive actions
 if (request.auth.token.email_verified == false) {
@@ -274,6 +284,7 @@ if (request.auth.token.age < 18) {
 ```
 
 **Password Requirements:**
+
 - Minimum 8 characters
 - At least 1 uppercase letter
 - At least 1 lowercase letter
@@ -281,6 +292,7 @@ if (request.auth.token.age < 18) {
 - At least 1 special character
 
 **Implementation:**
+
 ```dart
 bool isPasswordStrong(String password) {
   final hasUppercase = password.contains(RegExp(r'[A-Z]'));
@@ -298,6 +310,7 @@ bool isPasswordStrong(String password) {
 ### Firestore Security Rules
 
 **User Privacy:**
+
 ```javascript
 rules_version = '2';
 service cloud.firestore {
@@ -394,6 +407,7 @@ service cloud.firestore {
 ### API Key Security
 
 **Never Commit Secrets:**
+
 ```dart
 // ❌ WRONG
 const agoraAppId = 'ec1b578586d24976a89d787d9ee4d5c7';
@@ -407,6 +421,7 @@ final appId = config.data()!['appId'] as String;
 ```
 
 **Environment Variables:**
+
 ```bash
 # .env (NOT committed to Git)
 AGORA_APP_ID=ec1b578586d24976a89d787d9ee4d5c7
@@ -420,6 +435,7 @@ STRIPE_API_KEY=your_stripe_key_here
 ### Content Security
 
 **XSS Prevention:**
+
 ```dart
 // Sanitize user input before displaying
 String sanitizeHtml(String input) {
@@ -433,6 +449,7 @@ String sanitizeHtml(String input) {
 ```
 
 **URL Validation:**
+
 ```dart
 bool isValidUrl(String url) {
   try {
@@ -449,12 +466,14 @@ bool isValidUrl(String url) {
 ## 🛡️ Safety Features Audit
 
 ### ✅ Age Verification
+
 - [x] Date of birth required at signup
 - [x] Age calculated and validated (18+ only)
 - [x] AgeVerifiedGuard on all routes
 - [x] Age gate redirect if not verified
 
 ### ✅ Reporting System
+
 - [x] 7 report types (spam, harassment, inappropriate, hate speech, violence, scam, other)
 - [x] Report submission with evidence upload
 - [x] Admin dashboard for report review
@@ -462,12 +481,14 @@ bool isValidUrl(String url) {
 - [x] Ban user from report
 
 ### ✅ Blocking System
+
 - [x] Block/unblock users
 - [x] Blocked users list view
 - [x] Blocked users cannot see profile, send messages, join rooms
 - [x] Block removes follow relationships
 
 ### ✅ Auto-Moderation
+
 - [x] AI toxicity detection (SafetyAIService)
 - [x] Profanity filter
 - [x] Spam detection
@@ -475,6 +496,7 @@ bool isValidUrl(String url) {
 - [x] Auto-flag high-risk content
 
 ### ✅ Network Trust System
+
 - [x] Global ban propagation
 - [x] Cross-platform safety signals
 - [x] Trust profiles (0-100 score)
@@ -482,6 +504,7 @@ bool isValidUrl(String url) {
 - [x] Evidence attachment support
 
 ### ✅ Room Safety
+
 - [x] Host controls (mute, kick, ban)
 - [x] Moderator role assignment
 - [x] Lock room (no new joins)
@@ -489,6 +512,7 @@ bool isValidUrl(String url) {
 - [x] Private room (invite-only)
 
 ### ✅ Chat Safety
+
 - [x] Block prevents DMs
 - [x] Report messages
 - [x] Delete own messages
@@ -501,6 +525,7 @@ bool isValidUrl(String url) {
 ### Firestore Query Optimization
 
 **Use Indexes:**
+
 ```dart
 // ✅ GOOD - Uses index
 final rooms = await _firestore
@@ -518,6 +543,7 @@ final rooms = await _firestore
 ```
 
 **Pagination:**
+
 ```dart
 // Paginate with lastDocument
 DocumentSnapshot? lastDocument;
@@ -547,6 +573,7 @@ Future<List<Room>> loadMore() async {
 ### Caching Strategy
 
 **Riverpod Caching:**
+
 ```dart
 // Cache user profile for 5 minutes
 final userProfileProvider = FutureProvider.family.autoDispose<UserProfile, String>((ref, userId) async {
@@ -568,6 +595,7 @@ final userProfileProvider = FutureProvider.family.autoDispose<UserProfile, Strin
 ```
 
 **Firestore Offline Persistence:**
+
 ```dart
 // Enable offline persistence (already enabled in main.dart)
 await FirebaseFirestore.instance.enablePersistence();
@@ -582,6 +610,7 @@ await FirebaseFirestore.instance.settings = const Settings(
 ### Image Optimization
 
 **Lazy Loading:**
+
 ```dart
 ListView.builder(
   itemCount: users.length,
@@ -598,6 +627,7 @@ ListView.builder(
 ```
 
 **Progressive Loading:**
+
 ```dart
 CachedNetworkImage(
   imageUrl: highResUrl,
@@ -611,6 +641,7 @@ CachedNetworkImage(
 ### Memory Management
 
 **Dispose Streams:**
+
 ```dart
 class MyWidget extends StatefulWidget {
   @override
@@ -683,6 +714,7 @@ class _MyWidgetState extends State<MyWidget> {
 - [ ] **Build uploaded to App Store Connect**
 
 **Build & Upload:**
+
 ```bash
 flutter build ios --release
 open ios/Runner.xcworkspace
@@ -707,6 +739,7 @@ open ios/Runner.xcworkspace
 - [ ] **App Bundle built and uploaded**
 
 **Build & Upload:**
+
 ```bash
 flutter build appbundle --release
 # Upload to Play Console: production > releases > create release
@@ -726,6 +759,7 @@ flutter build appbundle --release
 - [ ] **Open Graph tags added** (social sharing)
 
 **Build & Deploy:**
+
 ```bash
 flutter build web --release --web-renderer canvaskit
 firebase deploy --only hosting
@@ -758,6 +792,7 @@ firebase deploy --only hosting
 ### Firebase Analytics Events
 
 **Track These Events:**
+
 ```dart
 AnalyticsService.instance.trackEngagement('user_signup');
 AnalyticsService.instance.trackEngagement('room_created');
@@ -774,6 +809,7 @@ AnalyticsService.instance.trackEngagement('premium_upgrade');
 ### Crashlytics Reporting
 
 **Catch & Report Errors:**
+
 ```dart
 try {
   await riskyOperation();
@@ -788,6 +824,7 @@ try {
 ### Performance Monitoring
 
 **Trace Critical Operations:**
+
 ```dart
 final trace = FirebasePerformance.instance.newTrace('load_rooms');
 await trace.start();
@@ -809,24 +846,28 @@ try {
 ### 🎉 What We Built (10 Stages)
 
 **Stage 1: Onboarding & Auth**
+
 - Email/password authentication
 - Google & Apple Sign-In
 - Age gate (18+ verification)
 - Profile creation with photos & interests
 
 **Stage 2: Home & Rooms**
+
 - Real-time voice/video rooms (Agora RTC)
 - Room creation & discovery
 - Participant management (host, speaker, listener)
 - Room chat with mentions & reactions
 
 **Stage 3: Speed Dating**
+
 - Matchmaking queue with preferences
 - 3-minute video sessions
 - Like/pass decisions
 - Mutual match chat unlocking
 
 **Stage 4: Chat System**
+
 - Direct messaging between users
 - Real-time message delivery
 - Image/video sharing
@@ -834,6 +875,7 @@ try {
 - Typing indicators
 
 **Stage 5: Presence & Social Graph**
+
 - Online/offline status
 - Follow/unfollow system
 - Followers/following lists
@@ -841,6 +883,7 @@ try {
 - Social profile analytics
 
 **Stage 6: Monetization & Premium**
+
 - Virtual coin economy (6 packages: $0.99-$79.99)
 - 3-tier membership (Free, VIP $9.99, VIP+ $19.99)
 - RevenueCat integration
@@ -849,6 +892,7 @@ try {
 - Premium feature gates
 
 **Stage 7: Moderation & Admin**
+
 - 7-type reporting system
 - Block/unblock users
 - Admin dashboard for report review
@@ -857,6 +901,7 @@ try {
 - Room moderation (mute, kick, ban)
 
 **Stage 8: Routing & Navigation**
+
 - 30+ named routes
 - Age verification guard
 - Profile completion guard
@@ -864,6 +909,7 @@ try {
 - Error handling (404, missing args)
 
 **Stage 9: Firestore Schema**
+
 - 41+ collections documented
 - 7 subcollections documented
 - Complete schema with types
@@ -872,6 +918,7 @@ try {
 - Query examples
 
 **Stage 10: Testing & Safety** (This Document)
+
 - Unit testing strategy
 - Widget testing examples
 - Integration testing flows
@@ -885,6 +932,7 @@ try {
 ## 🚀 Ready to Launch
 
 **All systems operational:**
+
 - ✅ 100% Feature Complete (Stages 1-10)
 - ✅ Comprehensive Documentation (10 markdown files, 9000+ lines)
 - ✅ Production Code (50+ services, 80+ screens)

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import '../../core/theme/neon_colors.dart';
 
@@ -356,6 +355,7 @@ class NeonInputField extends StatefulWidget {
   final Color focusGlowColor;
   final IconData? prefixIcon;
   final int maxLines;
+  final int? maxLength;
   final TextInputType keyboardType;
   final bool obscureText;
 
@@ -367,6 +367,7 @@ class NeonInputField extends StatefulWidget {
     this.focusGlowColor = NeonColors.neonBlue,
     this.prefixIcon,
     this.maxLines = 1,
+    this.maxLength,
     this.keyboardType = TextInputType.text,
     this.obscureText = false,
   });
@@ -437,6 +438,10 @@ class _NeonInputFieldState extends State<NeonInputField>
             maxLines: widget.maxLines,
             minLines: widget.maxLines > 1 ? 1 : null,
             obscureText: widget.obscureText,
+            maxLength: widget.maxLength,
+            buildCounter: widget.maxLength != null
+                ? null
+                : (_, {required currentLength, required isFocused, maxLength}) => null,
             style: const TextStyle(
               color: NeonColors.textPrimary,
               fontSize: 16,
@@ -572,5 +577,3 @@ class NeonBadge extends StatelessWidget {
     );
   }
 }
-
-

@@ -9,14 +9,22 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
+<<<<<<< HEAD
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+=======
+import 'package:flutter/services.dart';
+>>>>>>> origin/develop
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import '../../core/design_system/design_constants.dart';
 import '../../shared/models/post.dart';
+import '../../shared/widgets/skeleton_loaders.dart';
 import '../../services/social/social_feed_service.dart';
 import '../../shared/providers/feed_providers.dart';
 import 'create_post_dialog.dart';
+import '../../core/analytics/analytics_service.dart';
+import '../../app/app_routes.dart';
 
+<<<<<<< HEAD
 // ─────────────────────────────────────────────────────────────
 // UTILITY
 // ─────────────────────────────────────────────────────────────
@@ -33,31 +41,50 @@ String _fmtCount(int n) {
 // ─────────────────────────────────────────────────────────────
 
 class SocialFeedPage extends ConsumerStatefulWidget {
+=======
+/// Social Feed Page
+/// Three-tab Facebook-style feed: Global · Friends · Room Highlights
+class SocialFeedPage extends StatefulWidget {
+>>>>>>> origin/develop
   const SocialFeedPage({super.key});
 
   @override
   ConsumerState<SocialFeedPage> createState() => _SocialFeedPageState();
 }
 
+<<<<<<< HEAD
 class _SocialFeedPageState extends ConsumerState<SocialFeedPage>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   final ScrollController _forYouScroller = ScrollController();
   final ScrollController _followingScroller = ScrollController();
+=======
+class _SocialFeedPageState extends State<SocialFeedPage>
+    with SingleTickerProviderStateMixin {
+  final SocialFeedService _feedService = SocialFeedService.instance;
+  late final TabController _tabController;
+>>>>>>> origin/develop
   String? _currentUserId;
 
   @override
   void initState() {
     super.initState();
+<<<<<<< HEAD
     _tabController = TabController(length: 2, vsync: this);
     _currentUserId = fb.FirebaseAuth.instance.currentUser?.uid;
     _forYouScroller.addListener(_onForYouScroll);
     _followingScroller.addListener(_onFollowingScroll);
+=======
+    _tabController = TabController(length: 3, vsync: this);
+    _currentUserId = fb.FirebaseAuth.instance.currentUser?.uid;
+    AnalyticsService.instance.logScreenView(screenName: 'screen_feed');
+>>>>>>> origin/develop
   }
 
   @override
   void dispose() {
     _tabController.dispose();
+<<<<<<< HEAD
     _forYouScroller.dispose();
     _followingScroller.dispose();
     super.dispose();
@@ -80,6 +107,11 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage>
     }
   }
 
+=======
+    super.dispose();
+  }
+
+>>>>>>> origin/develop
   void _showCreatePostDialog() {
     if (_currentUserId == null) return;
     showDialog(
@@ -88,7 +120,12 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage>
     );
   }
 
+<<<<<<< HEAD
   void _openPostDetail(Post post) {
+=======
+  void _showComments(Post post) {
+    AnalyticsService.instance.logFeedPostCommented(postId: post.id);
+>>>>>>> origin/develop
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -121,7 +158,13 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage>
 
   Future<void> _toggleLike(Post post) async {
     if (_currentUserId == null) return;
+<<<<<<< HEAD
     await SocialFeedService.instance.toggleLike(post.id, _currentUserId!);
+=======
+    HapticFeedback.lightImpact();
+    await _feedService.toggleLike(post.id, _currentUserId!);
+    AnalyticsService.instance.logFeedPostLiked(postId: post.id);
+>>>>>>> origin/develop
   }
 
   @override
@@ -131,7 +174,11 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage>
       appBar: AppBar(
         backgroundColor: DesignColors.surfaceDefault,
         elevation: 0,
+<<<<<<< HEAD
         centerTitle: true,
+=======
+        automaticallyImplyLeading: false,
+>>>>>>> origin/develop
         title: const Text(
           'FEED',
           style: TextStyle(
@@ -140,6 +187,7 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage>
             letterSpacing: 2,
           ),
         ),
+<<<<<<< HEAD
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: DesignColors.accent,
@@ -194,11 +242,66 @@ class _SocialFeedPageState extends ConsumerState<SocialFeedPage>
         onPressed: _showCreatePostDialog,
         backgroundColor: DesignColors.accent,
         child: const Icon(Icons.add, color: DesignColors.white),
+=======
+        centerTitle: true,
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: DesignColors.accent,
+          indicatorWeight: 3,
+          labelColor: DesignColors.accent,
+          unselectedLabelColor: DesignColors.textGray,
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w700,
+            fontSize: 12,
+            letterSpacing: 0.5,
+          ),
+          tabs: const [
+            Tab(icon: Icon(Icons.public, size: 16), text: 'Global'),
+            Tab(icon: Icon(Icons.group, size: 16), text: 'Friends'),
+            Tab(icon: Icon(Icons.live_tv, size: 16), text: 'Rooms'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          _FeedTab(
+            stream: _feedService.getGlobalFeedStream(),
+            currentUserId: _currentUserId,
+            onLike: _toggleLike,
+            onComment: _showComments,
+            onTip: _showTipDialog,
+            emptyMessage: 'No posts yet — be the first!',
+          ),
+          _FeedTab(
+            stream: _currentUserId != null
+                ? _feedService.getFriendsFeedStream(_currentUserId!)
+                : const Stream.empty(),
+            currentUserId: _currentUserId,
+            onLike: _toggleLike,
+            onComment: _showComments,
+            onTip: _showTipDialog,
+            emptyMessage: 'Follow people to see their posts here.',
+          ),
+          _FeedTab(
+            stream: _feedService.getRoomHighlightsFeedStream(),
+            currentUserId: _currentUserId,
+            onLike: _toggleLike,
+            onComment: _showComments,
+            onTip: _showTipDialog,
+            emptyMessage: 'No room highlights yet.\nGo live and share the moment!',
+          ),
+        ],
+      ),
+      floatingActionButton: _NeonPulseFab(
+        onTap: _showCreatePostDialog,
+>>>>>>> origin/develop
       ),
     );
   }
 }
 
+<<<<<<< HEAD
 // ─────────────────────────────────────────────────────────────
 // TRENDING RAIL
 // ─────────────────────────────────────────────────────────────
@@ -258,11 +361,192 @@ class _TrendingRail extends ConsumerWidget {
       },
       loading: () => const SizedBox.shrink(),
       error: (_, __) => const SizedBox.shrink(),
+=======
+
+// ============================================================
+// NEON PULSE FAB
+// ============================================================
+
+class _NeonPulseFab extends StatefulWidget {
+  final VoidCallback onTap;
+  const _NeonPulseFab({required this.onTap});
+
+  @override
+  State<_NeonPulseFab> createState() => _NeonPulseFabState();
+}
+
+class _NeonPulseFabState extends State<_NeonPulseFab>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse;
+  late final Animation<double> _scaleAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulse = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat(reverse: true);
+    _scaleAnim = Tween<double>(begin: 1.0, end: 1.35).animate(
+      CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const accent = DesignColors.accent;
+    return GestureDetector(
+      onTap: widget.onTap,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Outer pulse ring
+          AnimatedBuilder(
+            animation: _scaleAnim,
+            builder: (_, __) => Transform.scale(
+              scale: _scaleAnim.value,
+              child: Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: accent.withValues(
+                        alpha: (1.4 - _scaleAnim.value).clamp(0.0, 0.5)),
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // FAB core
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: const LinearGradient(
+                colors: [Color(0xFF4A90FF), Color(0xFFFF4D8B)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.45),
+                  blurRadius: 16,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: const Icon(Icons.add, color: Colors.white, size: 28),
+          ),
+        ],
+      ),
+>>>>>>> origin/develop
     );
   }
 }
 
+<<<<<<< HEAD
 class _TrendingPostCard extends StatelessWidget {
+=======
+// ============================================================
+// _FEED TAB — StreamBuilder-powered list for one tab
+// ============================================================
+
+class _FeedTab extends StatelessWidget {
+  final Stream<List<Post>> stream;
+  final String? currentUserId;
+  final Future<void> Function(Post) onLike;
+  final void Function(Post) onComment;
+  final void Function(Post) onTip;
+  final String emptyMessage;
+
+  const _FeedTab({
+    required this.stream,
+    required this.currentUserId,
+    required this.onLike,
+    required this.onComment,
+    required this.onTip,
+    required this.emptyMessage,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<List<Post>>(
+      stream: stream,
+      builder: (ctx, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return ListView.builder(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            itemCount: 4,
+            itemBuilder: (_, __) => const SkeletonTile(
+              showAvatar: true,
+              textLines: 3,
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          );
+        }
+        final posts = snapshot.data ?? [];
+        if (posts.isEmpty) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.feed_outlined,
+                      size: 72,
+                      color: DesignColors.textGray.withValues(alpha: 0.4)),
+                  const SizedBox(height: 16),
+                  Text(
+                    emptyMessage,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: DesignColors.textGray.withValues(alpha: 0.65),
+                      fontSize: 15,
+                      height: 1.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: () => Future.delayed(const Duration(milliseconds: 300)),
+          color: DesignColors.accent,
+          backgroundColor: DesignColors.surfaceLight,
+          child: ListView.builder(
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            itemCount: posts.length,
+            itemBuilder: (ctx, i) => _PostCard(
+              post: posts[i],
+              currentUserId: currentUserId,
+              onLike: () => onLike(posts[i]),
+              onComment: () => onComment(posts[i]),
+              onTip: () => onTip(posts[i]),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+// ============================================================
+// POST CARD WIDGET
+// ============================================================
+
+class _PostCard extends StatelessWidget {
+>>>>>>> origin/develop
   final Post post;
   final VoidCallback onTap;
   const _TrendingPostCard({required this.post, required this.onTap});
@@ -696,6 +980,7 @@ class _PostCard extends StatelessWidget {
               ),
             ),
 
+<<<<<<< HEAD
             // ── Content ────────────────────────────────────────
             if (post.content.isNotEmpty)
               Padding(
@@ -720,6 +1005,16 @@ class _PostCard extends StatelessWidget {
               ),
 
             // ── Actions ────────────────────────────────────────
+=======
+          // Reactions bar
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: _EmojiReactionBar(postId: post.id),
+          ),
+
+          // Image (if any)
+          if (post.imageUrl != null && post.imageUrl!.isNotEmpty)
+>>>>>>> origin/develop
             Padding(
               padding: const EdgeInsets.all(12),
               child: Row(
@@ -812,6 +1107,7 @@ class _AchievementBadge extends StatelessWidget {
           Text('WIN',
               style: TextStyle(
                   color: DesignColors.gold,
+<<<<<<< HEAD
                   fontSize: 10,
                   fontWeight: FontWeight.bold)),
         ],
@@ -911,6 +1207,26 @@ class _VideoThumb extends StatelessWidget {
                           fontWeight: FontWeight.bold)),
                 ],
               ),
+=======
+                  onTap: onTip,
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => showModalBottomSheet(
+                    context: context,
+                    backgroundColor: DesignColors.surfaceDefault,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(20)),
+                    ),
+                    builder: (_) => _PostShareSheet(post: post),
+                  ),
+                  icon: const Icon(Icons.share_outlined),
+                  color: DesignColors.textGray,
+                  iconSize: 20,
+                ),
+              ],
+>>>>>>> origin/develop
             ),
           ),
         ],
@@ -1041,12 +1357,43 @@ class _PostDetailSheetState extends State<_PostDetailSheet> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
+<<<<<<< HEAD
             Expanded(
               child: ListView(
                 controller: scrollController,
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 children: [
                   const SizedBox(height: 12),
+=======
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Comments',
+                  style: TextStyle(
+                    color: DesignColors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.close, color: DesignColors.textGray),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: StreamBuilder<List<Comment>>(
+              stream: _feedService.getCommentsStream(widget.post.id),
+              builder: (ctx, snapshot) {
+                if (!snapshot.hasData) {
+                  return const Center(
+                    child:
+                        CircularProgressIndicator(color: DesignColors.accent),
+                  );
+                }
+>>>>>>> origin/develop
 
                   // Post header
                   Row(
@@ -1387,6 +1734,7 @@ class _TipDialogState extends State<_TipDialog> {
       fromUserId: widget.fromUserId,
       coinAmount: _selectedAmount,
     );
+<<<<<<< HEAD
     if (!mounted) return;
     Navigator.pop(context);
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -1395,6 +1743,22 @@ class _TipDialogState extends State<_TipDialog> {
           : 'Failed to send tip. Check your balance.'),
       backgroundColor: success ? DesignColors.success : DesignColors.error,
     ));
+=======
+
+    if (mounted) {
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            success
+                ? 'Sent $_selectedAmount coins to ${widget.post.userName}!'
+                : 'Failed to send tip. Check your balance.',
+          ),
+          backgroundColor: success ? DesignColors.success : DesignColors.error,
+        ),
+      );
+    }
+>>>>>>> origin/develop
   }
 
   @override
@@ -1462,6 +1826,229 @@ class _TipDialogState extends State<_TipDialog> {
                             fontWeight: FontWeight.bold, fontSize: 15)),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// EMOJI REACTION BAR  (local state — 4 emoji reactions per post)
+// ============================================================
+
+class _EmojiReactionBar extends StatefulWidget {
+  final String postId;
+  const _EmojiReactionBar({required this.postId});
+
+  @override
+  State<_EmojiReactionBar> createState() => _EmojiReactionBarState();
+}
+
+class _EmojiReactionBarState extends State<_EmojiReactionBar> {
+  static const _emojis = ['❤️', '😂', '🔥', '😮'];
+  final Map<String, int> _counts = {'❤️': 0, '😂': 0, '🔥': 0, '😮': 0};
+  String? _mine;
+
+  void _react(String emoji) {
+    HapticFeedback.lightImpact();
+    setState(() {
+      if (_mine == emoji) {
+        // un-react
+        _counts[emoji] = (_counts[emoji]! - 1).clamp(0, 9999);
+        _mine = null;
+      } else {
+        if (_mine != null) _counts[_mine!] = (_counts[_mine!]! - 1).clamp(0, 9999);
+        _counts[emoji] = _counts[emoji]! + 1;
+        _mine = emoji;
+      }
+    });
+    AnalyticsService.instance.logEvent(
+      name: 'feed_reaction_tapped',
+      parameters: {'post_id': widget.postId, 'emoji': emoji},
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: Row(
+        children: _emojis.map((e) {
+          final count = _counts[e]!;
+          final isActive = _mine == e;
+          return Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: GestureDetector(
+              onTap: () => _react(e),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? DesignColors.accent.withValues(alpha: 0.18)
+                      : DesignColors.surfaceDefault,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isActive
+                        ? DesignColors.accent.withValues(alpha: 0.55)
+                        : DesignColors.divider,
+                  ),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(e, style: const TextStyle(fontSize: 14)),
+                    if (count > 0) ...[
+                      const SizedBox(width: 4),
+                      Text(
+                        '$count',
+                        style: TextStyle(
+                          color: isActive
+                              ? DesignColors.accent
+                              : DesignColors.textGray,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// POST SHARE SHEET  (Share to Chat / Share to Room)
+// ============================================================
+
+class _PostShareSheet extends StatelessWidget {
+  final Post post;
+  const _PostShareSheet({required this.post});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 32),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Text(
+                'Share Post',
+                style: TextStyle(
+                  color: DesignColors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 18,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.close, color: DesignColors.textGray),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _ShareOption(
+            icon: Icons.chat_bubble_outline,
+            color: const Color(0xFF4A90FF),
+            label: 'Share to Chat',
+            subtitle: 'Send this post to a friend',
+            onTap: () {
+              Navigator.pop(context);
+              AnalyticsService.instance.logEvent(
+                name: 'feed_share_to_chat',
+                parameters: {'post_id': post.id},
+              );
+              Navigator.pushNamed(context, AppRoutes.chats);
+            },
+          ),
+          const SizedBox(height: 10),
+          _ShareOption(
+            icon: Icons.graphic_eq,
+            color: const Color(0xFFFF4D8B),
+            label: 'Share to Room',
+            subtitle: 'Drop this post into a live room',
+            onTap: () {
+              Navigator.pop(context);
+              AnalyticsService.instance.logEvent(
+                name: 'feed_share_to_room',
+                parameters: {'post_id': post.id},
+              );
+              Navigator.pushNamed(context, AppRoutes.discoverRooms);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ShareOption extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String label;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _ShareOption({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(label,
+                      style: const TextStyle(
+                          color: DesignColors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14)),
+                  Text(subtitle,
+                      style: TextStyle(
+                          color:
+                              DesignColors.textGray.withValues(alpha: 0.7),
+                          fontSize: 12)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: color.withValues(alpha: 0.7)),
           ],
         ),
       ),

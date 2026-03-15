@@ -259,8 +259,14 @@ class WelcomeRoomConfig {
 
   const WelcomeRoomConfig({
     this.isEnabled = true,
+<<<<<<< HEAD
     this.roomTitle = 'Welcome to MIXVY Lounges! 🎉',
     this.roomDescription = 'A friendly place for new members to meet the community and learn the ropes.',
+=======
+    this.roomTitle = 'Welcome to Mix & Mingle! ðŸŽ‰',
+    this.roomDescription =
+        'A friendly place for new members to meet the community and learn the ropes.',
+>>>>>>> origin/develop
     this.maxRoomCapacity = 50,
     this.autoCreateIfNone = true,
     this.welcomeMessages = const [

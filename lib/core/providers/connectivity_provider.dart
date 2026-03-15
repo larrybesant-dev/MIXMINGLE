@@ -4,17 +4,20 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/connectivity_state.dart';
 import '../utils/app_logger.dart';
+import '../analytics/analytics_service.dart';
 
 /// Singleton to track network connectivity status
 /// Simple, lightweight, no provider dependencies
 class ConnectivityNotifier {
-  static final ConnectivityNotifier _instance = ConnectivityNotifier._internal();
+  static final ConnectivityNotifier _instance =
+      ConnectivityNotifier._internal();
   factory ConnectivityNotifier() => _instance;
   ConnectivityNotifier._internal() {
     _startMonitoring();
   }
 
-  final ValueNotifier<ConnectivityState> _state = ValueNotifier(ConnectivityState.online());
+  final ValueNotifier<ConnectivityState> _state =
+      ValueNotifier(ConnectivityState.online());
   Timer? _monitorTimer;
   bool _lastKnownStatus = true;
 
@@ -33,6 +36,15 @@ class ConnectivityNotifier {
 
   /// Check actual internet connectivity
   Future<void> _checkConnectivity() async {
+    // On web, dart:io DNS lookup is unavailable — assume online and rely
+    // on Firebase/service errors to trigger reportOffline().
+    if (kIsWeb) {
+      if (!_lastKnownStatus) {
+        _lastKnownStatus = true;
+        reportOnline();
+      }
+      return;
+    }
     try {
       final result = await InternetAddress.lookup('google.com')
           .timeout(const Duration(seconds: 5));
@@ -59,6 +71,7 @@ class ConnectivityNotifier {
     if (_state.value.isOnline) {
       _state.value = ConnectivityState.offline(message);
       AppLogger.warning('Connection lost: ${message ?? "Unknown reason"}');
+      AnalyticsService.instance.logOfflineModeEntered();
     }
   }
 
@@ -67,6 +80,7 @@ class ConnectivityNotifier {
     if (!_state.value.isOnline) {
       _state.value = ConnectivityState.online();
       AppLogger.info('Connection restored');
+      AnalyticsService.instance.logOfflineModeExited();
     }
   }
 

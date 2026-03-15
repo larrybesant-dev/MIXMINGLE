@@ -45,6 +45,7 @@ This document explains the FCM (Firebase Cloud Messaging) notification system th
 ## Flow Diagrams
 
 ### Initialization Flow
+
 ```
 App Startup
     ↓
@@ -60,6 +61,7 @@ _initializePresence(): FcmNotificationService.initialize()
 ```
 
 ### Friend Online Notification Flow
+
 ```
 Friend A goes online
     ↓
@@ -83,6 +85,7 @@ User receives: "📱 Friend A is now online"
 ```
 
 ### Room Invitation Flow
+
 ```
 User A right-clicks Friend B
     ↓
@@ -112,6 +115,7 @@ User B sees notification → taps → joins room
 ## Notification Types
 
 ### 1. Friend Online
+
 ```json
 {
   "userId": "friendX",           // Recipient (who sees the notification)
@@ -125,6 +129,7 @@ User B sees notification → taps → joins room
 ```
 
 ### 2. Friend Offline
+
 ```json
 {
   "userId": "friendX",
@@ -138,6 +143,7 @@ User B sees notification → taps → joins room
 ```
 
 ### 3. Room Invitation
+
 ```json
 {
   "userId": "invitedUserId",
@@ -177,6 +183,7 @@ match /notifications/{notificationId} {
 ## Firebase Cloud Functions (Optional but Recommended)
 
 For a production app, you should have a Cloud Function that:
+
 1. Listens to notification documents being created
 2. Looks up user's FCM tokens
 3. Sends actual push notifications via FCM Admin SDK
@@ -184,22 +191,19 @@ For a production app, you should have a Cloud Function that:
 **Example Cloud Function** (`functions/index.js`):
 
 ```javascript
-const functions = require('firebase-functions');
-const admin = require('firebase-admin');
+const functions = require("firebase-functions");
+const admin = require("firebase-admin");
 
 admin.initializeApp();
 
 exports.sendNotificationOnCreate = functions.firestore
-  .document('notifications/{notificationId}')
+  .document("notifications/{notificationId}")
   .onCreate(async (snap, context) => {
     const notification = snap.data();
     const userId = notification.userId;
 
     // Get user's FCM tokens
-    const userDoc = await admin.firestore()
-      .collection('users')
-      .doc(userId)
-      .get();
+    const userDoc = await admin.firestore().collection("users").doc(userId).get();
 
     const fcmTokens = userDoc.data().fcmTokens || [];
 
@@ -216,17 +220,17 @@ exports.sendNotificationOnCreate = functions.firestore
       },
       data: {
         type: notification.type,
-        friendId: notification.friendId || '',
-        roomId: notification.roomId || '',
-        invitedByUserId: notification.invitedByUserId || '',
+        friendId: notification.friendId || "",
+        roomId: notification.roomId || "",
+        invitedByUserId: notification.invitedByUserId || "",
       },
       webpush: {
         fcmOptions: {
-          link: 'https://mixmingle.com', // Your app URL
+          link: "https://mixmingle.com", // Your app URL
         },
         notification: {
-          icon: 'https://mixmingle.com/icon.png',
-          badge: 'https://mixmingle.com/badge.png',
+          icon: "https://mixmingle.com/icon.png",
+          badge: "https://mixmingle.com/badge.png",
         },
       },
     };
@@ -246,11 +250,13 @@ exports.sendNotificationOnCreate = functions.firestore
 ## Setup Instructions
 
 ### 1. Enable FCM in Firebase Console
+
 - Go to: Firebase Console → Project Settings → Cloud Messaging
 - Copy your **Server Key** and **Sender ID**
 - Store securely (needed for Cloud Functions)
 
 ### 2. Register FCM Token in App
+
 Add to your main app initialization or auth gate:
 
 ```dart
@@ -267,6 +273,7 @@ await FirebaseFirestore.instance
 ```
 
 ### 3. Deploy Cloud Function (if using automated notifications)
+
 ```bash
 cd functions
 npm install
@@ -274,6 +281,7 @@ firebase deploy --only functions
 ```
 
 ### 4. Test Notifications
+
 ```dart
 // Manually send test notification via Firestore
 await FirebaseFirestore.instance.collection('notifications').add({
@@ -292,6 +300,7 @@ await FirebaseFirestore.instance.collection('notifications').add({
 ## Integration Points
 
 ### 1. When Friends List Loads
+
 In `friends_sidebar_widget.dart` or app initialization:
 
 ```dart
@@ -303,6 +312,7 @@ presenceNotificationService.initialize(
 ```
 
 ### 2. When User Goes Online (Presence Service)
+
 After `presenceService.goOnline()`, call:
 
 ```dart
@@ -314,6 +324,7 @@ fcmService.notifyFriendOnline(
 ```
 
 ### 3. Room Invitation (Friend Card Context Menu)
+
 When user selects "Invite to Room":
 
 ```dart
@@ -331,11 +342,13 @@ fcmService.notifyRoomInvitation(
 ## Throttling & Rate Limiting
 
 **PresenceNotificationService** automatically throttles:
+
 - Max 1 notification per friend per 15 seconds
 - Only on significant state changes (online/offline, not idle/away)
 - Prevents notification spam if user status flickers
 
 Customize in `presence_notification_service.dart`:
+
 ```dart
 static const Duration throttleDuration = Duration(seconds: 15);
 ```
@@ -345,25 +358,29 @@ static const Duration throttleDuration = Duration(seconds: 15);
 ## Testing
 
 ### Local Testing (Without Cloud Functions)
+
 1. Notifications are created in Firestore
 2. Use Firebase Console or script to simulate Cloud Function
 3. App will receive and log notifications via FCM handlers
 
 ### Web Platform Notes
+
 - FCM on web requires HTTPS
 - Notifications appear in browser notification center
 - Use Service Worker for background notifications (auto-setup by firebase_messaging)
 
 ### Mobile Testing
+
 - Notifications appear in system notification tray
-- Foreground messages: Handle in FcmNotificationService._handleForegroundMessage()
-- Background messages: Handled by _firebaseMessagingBackgroundHandler in main.dart
+- Foreground messages: Handle in FcmNotificationService.\_handleForegroundMessage()
+- Background messages: Handled by \_firebaseMessagingBackgroundHandler in main.dart
 
 ---
 
 ## Debug & Troubleshooting
 
 ### Enable Debug Logging
+
 ```dart
 AppLogger.debug('[FCM] Debug message');
 AppLogger.info('[FCM] Info message');
@@ -372,17 +389,20 @@ AppLogger.error('[FCM] Error message');
 ```
 
 ### Check FCM Token
+
 ```dart
 final token = await FirebaseMessaging.instance.getToken();
 print('FCM Token: $token');
 ```
 
 ### Verify Notification in Firestore
+
 - Open Firebase Console → Firestore
 - Check `/notifications/{userId}` for created documents
 - Verify `createdAt` timestamp is recent
 
 ### Cloud Function Logs
+
 ```bash
 firebase functions:log --only sendNotificationOnCreate
 ```
@@ -392,6 +412,7 @@ firebase functions:log --only sendNotificationOnCreate
 ## Security Considerations
 
 ### Do's ✅
+
 - ✅ Validate userId matches authenticated user
 - ✅ Throttle notifications to prevent spam
 - ✅ Only send notifications between friends
@@ -399,6 +420,7 @@ firebase functions:log --only sendNotificationOnCreate
 - ✅ Use server-side Cloud Functions for authorization
 
 ### Don'ts ❌
+
 - ❌ Don't put passwords/tokens in notification data
 - ❌ Don't send notifications to unauthenticated users
 - ❌ Don't allow user to send notifications to anyone (only their friends)
@@ -409,6 +431,7 @@ firebase functions:log --only sendNotificationOnCreate
 ## Performance Metrics
 
 **Typical Notification Latency**:
+
 - User goes online → Firestore updated: ~100ms
 - Listener detects change: ~500ms
 - Cloud Function triggers: ~1s
@@ -416,6 +439,7 @@ firebase functions:log --only sendNotificationOnCreate
 - User receives: ~5-10s total
 
 **Optimization Tips**:
+
 1. Use batched updates for multiple friends
 2. Defer non-critical notifications (use scheduled tasks)
 3. Monitor FCM quota (see Firebase Console)
@@ -426,12 +450,14 @@ firebase functions:log --only sendNotificationOnCreate
 ## Files Modified / Created
 
 **Created**:
+
 - ✅ `lib/services/fcm_notification_service.dart` - FCM initialization + methods
 - ✅ `lib/services/presence_notification_service.dart` - Friend presence monitoring
 
 **Modified**:
+
 - ✅ `lib/main.dart` - Added FCM imports + ProviderScope wrapping
-- ✅ `lib/auth_gate_root.dart` - Initialize FCM in _initializePresence()
+- ✅ `lib/auth_gate_root.dart` - Initialize FCM in \_initializePresence()
 - ✅ `lib/services/firestore_service.dart` - Added 3 notification methods (Message 5)
 - ✅ `lib/models/notification_item.dart` - Updated NotificationType enum (Message 5)
 

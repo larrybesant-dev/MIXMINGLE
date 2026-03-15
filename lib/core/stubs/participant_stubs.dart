@@ -5,5 +5,8 @@ class ParticipantModel {
   final bool isHost;
   final bool isScreenSharing;
   final bool hasError;
-  const ParticipantModel({this.isHost = false, this.isScreenSharing = false, this.hasError = false});
+  const ParticipantModel(
+      {this.isHost = false,
+      this.isScreenSharing = false,
+      this.hasError = false});
 }

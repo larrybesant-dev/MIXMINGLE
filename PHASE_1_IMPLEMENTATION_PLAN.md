@@ -1,4 +1,5 @@
 # PHASE 1: Foundation Fixes — Implementation Plan
+
 **Execution Time: 4-5 hours**
 **Status: Ready to execute**
 
@@ -22,14 +23,17 @@ Phase 1 establishes the foundation for all other fixes. Everything else depends 
 ## Fix #1: Export authServiceProvider — 5 minutes
 
 ### Current Status
+
 ✅ **Already Done** — `authServiceProvider` is properly exported in `all_providers.dart`
 
 ### What This Did
+
 - Chat authentication now accessible
 - DM features can verify sender identity
 - Session management wired correctly
 
 ### Verification
+
 ```bash
 flutter analyze
 # Should show 0 errors related to authServiceProvider
@@ -42,9 +46,11 @@ flutter analyze
 ## Fix #2: Fix Import Paths — 30 minutes
 
 ### The Problem
+
 Some files use relative imports that go too many levels up, or mix relative and absolute imports.
 
 **Example:**
+
 ```dart
 // ❌ Wrong (found in some files)
 import '../../../shared/models/user.dart';
@@ -56,6 +62,7 @@ import 'package:mix_and_mingle/shared/models/user.dart';
 ### How to Fix This
 
 #### Step 1: Find all relative imports
+
 ```bash
 cd c:\Users\LARRY\MIXMINGLE
 grep -r "import '\.\./\.\./\.\." lib/ --include="*.dart" | head -20
@@ -66,29 +73,35 @@ This will show you any imports that go up 3+ levels.
 #### Step 2: Replace with package imports
 
 **In VS Code:**
+
 1. Open **Find and Replace** (Ctrl+H)
 2. **Find:** `import '../../\.\./`
 3. **Replace:** `import 'package:mix_and_mingle/`
 4. Click **Replace All**
 
 **Then:**
+
 1. **Find:** `import '../\.\./\.\./`
 2. **Replace:** `import 'package:mix_and_mingle/`
 3. Click **Replace All**
 
 #### Step 3: Verify import paths
+
 ```bash
 flutter analyze
 # Look for any import-related errors
 ```
 
 ### Files to Check
+
 Run this to identify files with problematic imports:
+
 ```bash
 grep -r "import '\.\./" lib/ --include="*.dart" | grep -E "\.\./\.\./\.\." | cut -d: -f1 | sort | uniq
 ```
 
 ### Verification
+
 ```bash
 flutter clean && flutter pub get && flutter analyze
 # Should have 0 "unresolved import" errors
@@ -101,11 +114,13 @@ flutter clean && flutter pub get && flutter analyze
 ## Fix #3: Add Firestore Composite Indexes — 30 minutes
 
 ### The Problem
+
 Firestore queries with multiple `where()` + `orderBy()` clauses fail in production without composite indexes. They work locally due to the emulator.
 
 ### Queries That Need Indexes
 
 #### Index 1: Speed Dating Matching
+
 ```
 Collection: speedDatingRounds
 Fields:
@@ -115,6 +130,7 @@ Fields:
 ```
 
 #### Index 2: Leaderboard / Coin Rankings
+
 ```
 Collection: users
 Fields:
@@ -123,6 +139,7 @@ Fields:
 ```
 
 #### Index 3: Room Discovery
+
 ```
 Collection: rooms
 Fields:
@@ -134,6 +151,7 @@ Fields:
 ### How to Create Indexes
 
 #### Option A: Via Firebase Console (Recommended for first-time)
+
 1. Go to [Firebase Console](https://console.firebase.google.com)
 2. Select your Mix & Mingle project
 3. Go to **Firestore Database** → **Indexes**
@@ -144,6 +162,7 @@ Fields:
    - Click **Create Index**
 
 #### Option B: Via Firebase CLI
+
 Add to `firestore.indexes.json`:
 
 ```json
@@ -180,11 +199,13 @@ Add to `firestore.indexes.json`:
 ```
 
 Then deploy:
+
 ```bash
 firebase deploy --only firestore:indexes
 ```
 
 ### Verification
+
 Go to Firebase Console → **Firestore Database** → **Indexes** and verify all 3 appear as "Enabled" (may take a few minutes).
 
 **After completing:** ✅ Mark as done
@@ -194,16 +215,20 @@ Go to Firebase Console → **Firestore Database** → **Indexes** and verify all
 ## Fix #4: Consolidate ChatMessage Types — 60 minutes
 
 ### The Problem
+
 The codebase has TWO message types:
+
 - `ChatMessage` (in `lib/shared/models/`)
 - `VoiceRoomChatMessage` (in `lib/shared/models/` or features)
 
 They're incompatible but used interchangeably, causing:
+
 - Type mismatches at runtime
 - Serialization errors
 - Confusing imports
 
 ### The Solution
+
 Use only `ChatMessage` everywhere. Add a `roomType` field to distinguish DM vs room messages.
 
 ### Step 1: Update ChatMessage Model
@@ -211,11 +236,13 @@ Use only `ChatMessage` everywhere. Add a `roomType` field to distinguish DM vs r
 **File:** `lib/shared/models/chat_message.dart`
 
 Current structure (read the file first):
+
 ```bash
 cat lib/shared/models/chat_message.dart
 ```
 
 Add these fields:
+
 ```dart
 class ChatMessage {
   final String id;
@@ -235,6 +262,7 @@ class ChatMessage {
 ### Step 2: Delete VoiceRoomChatMessage
 
 Find where it's defined:
+
 ```bash
 grep -r "class VoiceRoomChatMessage" lib/
 ```
@@ -286,6 +314,7 @@ Map<String, dynamic> toJson() => {
 **File:** `lib/services/chat_service.dart`
 
 Update method signatures:
+
 ```dart
 // Instead of multiple methods, use one:
 Future<void> sendMessage(ChatMessage message) async {
@@ -328,6 +357,7 @@ final chatMessagesProvider = StreamProvider.family<List<ChatMessage>, String>((r
 ```
 
 ### Verification
+
 ```bash
 flutter clean && flutter pub get && flutter analyze
 # Should show 0 errors related to ChatMessage or message types
@@ -343,18 +373,22 @@ flutter test
 ## Fix #5: Fix DateTime Fields — 45 minutes
 
 ### The Problem
+
 Some models use `String` for date fields instead of `DateTime`, causing:
+
 - Can't do date math (e.g., `event.endTime - event.startTime`)
 - Serialization/deserialization errors
 - Comparison bugs
 
 ### Files to Check
+
 ```bash
 grep -r "final.*Time.*String" lib/shared/models/ --include="*.dart"
 grep -r "final.*Date.*String" lib/shared/models/ --include="*.dart"
 ```
 
 ### Common Files Affected
+
 - `lib/shared/models/event.dart`
 - `lib/shared/models/speed_dating_round.dart`
 - `lib/shared/models/room.dart`
@@ -362,6 +396,7 @@ grep -r "final.*Date.*String" lib/shared/models/ --include="*.dart"
 ### Fix Pattern
 
 #### Before:
+
 ```dart
 class Event {
   final String startTime;  // ❌ Wrong
@@ -375,6 +410,7 @@ class Event {
 ```
 
 #### After:
+
 ```dart
 class Event {
   final DateTime startTime;  // ✅ Correct
@@ -388,6 +424,7 @@ class Event {
 ### Step-by-Step Fix
 
 #### Step 1: Find all DateTime string fields
+
 ```bash
 grep -rn "final String.*[Tt]ime" lib/shared/models/ --include="*.dart"
 grep -rn "final String.*[Dd]ate" lib/shared/models/ --include="*.dart"
@@ -398,12 +435,14 @@ grep -rn "final String.*[Dd]ate" lib/shared/models/ --include="*.dart"
 **In `lib/shared/models/event.dart`:**
 
 Replace:
+
 ```dart
 final String startTime;
 final String endTime;
 ```
 
 With:
+
 ```dart
 final DateTime startTime;
 final DateTime endTime;
@@ -412,6 +451,7 @@ final DateTime endTime;
 #### Step 3: Update factory methods
 
 **Before:**
+
 ```dart
 factory Event.fromJson(Map<String, dynamic> json) {
   return Event(
@@ -422,6 +462,7 @@ factory Event.fromJson(Map<String, dynamic> json) {
 ```
 
 **After:**
+
 ```dart
 factory Event.fromJson(Map<String, dynamic> json) {
   return Event(
@@ -434,6 +475,7 @@ factory Event.fromJson(Map<String, dynamic> json) {
 #### Step 4: Update toJson methods
 
 **Before:**
+
 ```dart
 Map<String, dynamic> toJson() => {
   'startTime': startTime,
@@ -442,6 +484,7 @@ Map<String, dynamic> toJson() => {
 ```
 
 **After:**
+
 ```dart
 Map<String, dynamic> toJson() => {
   'startTime': Timestamp.fromDate(startTime),
@@ -452,6 +495,7 @@ Map<String, dynamic> toJson() => {
 #### Step 5: Update any code that uses these fields
 
 Find all usages:
+
 ```bash
 grep -rn "\.startTime" lib/ --include="*.dart" | head -20
 grep -rn "\.endTime" lib/ --include="*.dart" | head -20
@@ -460,22 +504,26 @@ grep -rn "\.endTime" lib/ --include="*.dart" | head -20
 For each usage, verify it's comparing DateTimes, not parsing strings:
 
 **Before:**
+
 ```dart
 if (int.parse(event.startTime) > timestamp) { ... }
 ```
 
 **After:**
+
 ```dart
 if (event.startTime.isAfter(DateTime.now())) { ... }
 ```
 
 ### Models to Check
+
 - [ ] `event.dart` — startTime, endTime
 - [ ] `speed_dating_round.dart` — startTime, endTime, roundStartTime
 - [ ] `room.dart` — createdAt
 - [ ] Any others with "time" or "date" in the name
 
 ### Verification
+
 ```bash
 flutter clean && flutter pub get && flutter analyze
 # Check for any type mismatches
@@ -491,6 +539,7 @@ flutter test
 ## Fix #6: Provider Export Audit — 30 minutes
 
 ### The Problem
+
 Some providers defined in feature modules or services aren't properly exported, causing "provider not found" errors at runtime.
 
 ### What We're Looking For
@@ -508,6 +557,7 @@ grep -rn "final .*Provider\|^class.*Notifier\|^class.*Controller" lib/ --include
 ### Step 2: Check if each is exported
 
 For each provider found, verify it's:
+
 1. Either exported in `all_providers.dart`
 2. Or intentionally private (starts with `_`)
 3. Or local to the feature module
@@ -517,6 +567,7 @@ For each provider found, verify it's:
 **File:** `lib/providers/all_providers.dart`
 
 Pattern:
+
 ```dart
 // ✅ Correct - this provider is exported
 export 'auth_providers.dart';
@@ -531,16 +582,19 @@ export 'room_providers.dart' hide roomServiceProvider;
 ### Common Issues to Look For
 
 **Issue 1: Feature module providers not exported**
+
 ```bash
 grep -r "final.*Provider" lib/features/ --include="*.dart" | grep -v "lib/features/matching\|lib/features/rooms"
 ```
 
 If you find any, add them to `all_providers.dart`:
+
 ```dart
 export '../features/[feature]/providers/[file].dart';
 ```
 
 **Issue 2: Service providers not exported**
+
 ```bash
 grep -r "final.*Provider.*Service" lib/services/ --include="*.dart"
 ```
@@ -548,6 +602,7 @@ grep -r "final.*Provider.*Service" lib/services/ --include="*.dart"
 Services should have their providers in `lib/providers/` not in `lib/services/`, but if they're in services, export them.
 
 **Issue 3: Hidden providers that should be exported**
+
 ```bash
 grep "hide" lib/providers/all_providers.dart
 ```
@@ -576,6 +631,7 @@ void main() {
 ```
 
 Run:
+
 ```bash
 flutter test test/providers_accessibility_test.dart
 ```
@@ -596,6 +652,7 @@ flutter test test/providers_accessibility_test.dart
 ## ✅ Verification: Phase 1 Complete
 
 Run this final check:
+
 ```bash
 cd c:\Users\LARRY\MIXMINGLE
 flutter clean
@@ -612,9 +669,9 @@ If you see errors, they fall into one of the 6 categories above — go back and 
 ## 🎉 Phase 1 Done — What's Next?
 
 Once all 6 fixes pass verification, you've completed:
+
 - ✅ Type safety (consolidated message types, correct DateTime fields)
 - ✅ Proper wiring (all providers exported, correct imports)
 - ✅ Production readiness (Firestore indexes in place)
 
 **You're ready for Phase 2: Concurrency Hardening** — where we add transactions and eliminate race conditions.
-

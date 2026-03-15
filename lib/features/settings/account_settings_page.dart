@@ -9,13 +9,15 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 // Conditional imports for web-only functionality
-import 'account_settings_web_stub.dart' if (dart.library.html) 'account_settings_web.dart';
+import 'account_settings_web_stub.dart'
+    if (dart.library.html) 'account_settings_web.dart';
 
 class AccountSettingsPage extends ConsumerStatefulWidget {
   const AccountSettingsPage({super.key});
 
   @override
-  ConsumerState<AccountSettingsPage> createState() => _AccountSettingsPageState();
+  ConsumerState<AccountSettingsPage> createState() =>
+      _AccountSettingsPageState();
 }
 
 class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
@@ -142,7 +144,8 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
   Future<void> _deleteAccount() async {
     // First, get validation warnings
     try {
-      final warnings = await ref.read(authServiceProvider).validateAccountDeletion();
+      final warnings =
+          await ref.read(authServiceProvider).validateAccountDeletion();
 
       if (!mounted) return;
 
@@ -392,14 +395,20 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
                 ),
                 const SizedBox(height: 16),
                 _buildExportSummaryRow('Profile Information', '1 record'),
-                if (summary['events_created'] != null && summary['events_created']! > 0)
-                  _buildExportSummaryRow('Events Created', '${summary['events_created']} events'),
-                if (summary['messages_sent'] != null && summary['messages_sent']! > 0)
-                  _buildExportSummaryRow('Messages Sent', '${summary['messages_sent']} messages'),
+                if (summary['events_created'] != null &&
+                    summary['events_created']! > 0)
+                  _buildExportSummaryRow(
+                      'Events Created', '${summary['events_created']} events'),
+                if (summary['messages_sent'] != null &&
+                    summary['messages_sent']! > 0)
+                  _buildExportSummaryRow(
+                      'Messages Sent', '${summary['messages_sent']} messages'),
                 if (summary['following'] != null && summary['following']! > 0)
-                  _buildExportSummaryRow('Following', '${summary['following']} users'),
+                  _buildExportSummaryRow(
+                      'Following', '${summary['following']} users'),
                 if (summary['followers'] != null && summary['followers']! > 0)
-                  _buildExportSummaryRow('Followers', '${summary['followers']} users'),
+                  _buildExportSummaryRow(
+                      'Followers', '${summary['followers']} users'),
                 _buildExportSummaryRow('Reports & Blocks', 'All records'),
                 _buildExportSummaryRow('Subscription Data', 'If applicable'),
                 const SizedBox(height: 16),
@@ -449,7 +458,8 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
       if (!mounted) return;
 
       // Download the file
-      _downloadJsonFile(jsonData, 'mixmingle_data_export_${DateTime.now().millisecondsSinceEpoch}.json');
+      _downloadJsonFile(jsonData,
+          'mixmingle_data_export_${DateTime.now().millisecondsSinceEpoch}.json');
 
       if (mounted) {
         ScaffoldMessenger.of(context).clearSnackBars();
@@ -503,7 +513,8 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
       // For now, just show the user they need to implement this
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Mobile download not yet implemented. Use web version.'),
+          content:
+              Text('Mobile download not yet implemented. Use web version.'),
         ),
       );
     }
@@ -538,7 +549,9 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
                     _buildInfoRow('User ID', user?.id ?? 'Unknown'),
                     _buildInfoRow(
                       'Member Since',
-                      user != null ? DateFormat.yMMMM().format(user.createdAt) : 'Unknown',
+                      user != null
+                          ? DateFormat.yMMMM().format(user.createdAt)
+                          : 'Unknown',
                     ),
                   ],
                 ),
@@ -682,7 +695,16 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
                     leading: const Icon(Icons.privacy_tip),
                     title: const Text('Privacy Settings'),
                     trailing: const Icon(Icons.chevron_right),
+<<<<<<< HEAD
                     onTap: () => Navigator.pushNamed(context, AppRoutes.privacySettings),
+=======
+                    onTap: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                            content: Text('Privacy settings coming soon')),
+                      );
+                    },
+>>>>>>> origin/develop
                   ),
                 ],
               ),
@@ -706,12 +728,14 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
                   ),
                   const Divider(height: 1),
                   ListTile(
-                    leading: Icon(Icons.delete_forever, color: Colors.red.shade700),
+                    leading:
+                        Icon(Icons.delete_forever, color: Colors.red.shade700),
                     title: Text(
                       'Delete Account',
                       style: TextStyle(color: Colors.red.shade700),
                     ),
-                    subtitle: const Text('Permanently delete your account and data'),
+                    subtitle:
+                        const Text('Permanently delete your account and data'),
                     onTap: _isDeleting ? null : _deleteAccount,
                     trailing: _isDeleting
                         ? const SizedBox(
@@ -800,7 +824,9 @@ class _AccountSettingsPageState extends ConsumerState<AccountSettingsPage> {
       subtitle: Text(isLinked ? 'Connected' : 'Not connected'),
       trailing: isLinked
           ? TextButton(
-              onPressed: _isLinking ? null : () => _unlinkProvider(providerId, providerName),
+              onPressed: _isLinking
+                  ? null
+                  : () => _unlinkProvider(providerId, providerName),
               style: TextButton.styleFrom(foregroundColor: Colors.red),
               child: const Text('Unlink'),
             )

@@ -58,7 +58,8 @@ class MinimizedWindowWidget extends StatelessWidget {
 
           // Controls
           IconButton(
-            icon: const Icon(Icons.restore, color: DesignColors.white, size: 16),
+            icon:
+                const Icon(Icons.restore, color: DesignColors.white, size: 16),
             onPressed: onRestore,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 32, minHeight: 32),

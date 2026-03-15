@@ -55,8 +55,7 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
       vsync: this,
     );
 
-    _themeToggleAnimation =
-        Tween<double>(begin: 0, end: 1).animate(
+    _themeToggleAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(parent: _themeToggleController, curve: AppCurves.easeOut),
     );
   }
@@ -226,7 +225,9 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
         if (result == 'quality_low') {
           ref.read(videoQualityProvider.notifier).setQuality(VideoQuality.low);
         } else if (result == 'quality_medium') {
-          ref.read(videoQualityProvider.notifier).setQuality(VideoQuality.medium);
+          ref
+              .read(videoQualityProvider.notifier)
+              .setQuality(VideoQuality.medium);
         } else if (result == 'quality_high') {
           ref.read(videoQualityProvider.notifier).setQuality(VideoQuality.high);
         }
@@ -292,7 +293,8 @@ class _TopBarWidgetState extends ConsumerState<TopBarWidget>
   }
 
   /// Builds the settings menu
-  Widget _buildSettingsMenu(BuildContext context, WidgetRef ref, bool darkMode) {
+  Widget _buildSettingsMenu(
+      BuildContext context, WidgetRef ref, bool darkMode) {
     return PopupMenuButton<String>(
       icon: Icon(
         Icons.more_vert,

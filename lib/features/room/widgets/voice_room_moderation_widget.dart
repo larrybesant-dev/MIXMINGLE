@@ -25,7 +25,8 @@ class RoomModerationWidget extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<RoomModerationWidget> createState() => _RoomModerationWidgetState();
+  ConsumerState<RoomModerationWidget> createState() =>
+      _RoomModerationWidgetState();
 }
 
 class _RoomModerationWidgetState extends ConsumerState<RoomModerationWidget> {
@@ -60,7 +61,8 @@ class _RoomModerationWidgetState extends ConsumerState<RoomModerationWidget> {
       );
     }
 
-    final moderationLogsAsync = ref.watch(moderationLogsProvider(widget.roomId));
+    final moderationLogsAsync =
+        ref.watch(moderationLogsProvider(widget.roomId));
     final mutedUsersAsync = ref.watch(mutedUsersProvider(widget.roomId));
     final bannedUsersAsync = ref.watch(bannedUsersProvider(widget.roomId));
     final moderationService = ref.read(roomModerationServiceProvider);
@@ -294,7 +296,8 @@ class _RoomModerationWidgetState extends ConsumerState<RoomModerationWidget> {
                               vertical: 4,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFF4C4C).withValues(alpha: 0.2),
+                              color: const Color(0xFFFF4C4C)
+                                  .withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(

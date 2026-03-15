@@ -133,4 +133,11 @@ windows/flutter/ephemeral/
 windows/flutter/ephemeral-backup-*/
 
 
+<<<<<<< HEAD
 .vscode/templates
+=======
+# Android build outputs (too large for GitHub)
+android/app/build/
+android/build/
+
+>>>>>>> origin/develop

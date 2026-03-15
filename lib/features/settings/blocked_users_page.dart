@@ -153,8 +153,11 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
               return Card(
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                    child: photoUrl == null ? Text(displayName.substring(0, 1).toUpperCase()) : null,
+                    backgroundImage:
+                        photoUrl != null ? NetworkImage(photoUrl) : null,
+                    child: photoUrl == null
+                        ? Text(displayName.substring(0, 1).toUpperCase())
+                        : null,
                   ),
                   title: Text(displayName),
                   subtitle: blockedAt != null
@@ -180,7 +183,9 @@ class _BlockedUsersPageState extends ConsumerState<BlockedUsersPage> {
                         tooltip: 'View Profile',
                       ),
                       TextButton(
-                        onPressed: _isUnblocking ? null : () => _unblockUser(user['id'], displayName),
+                        onPressed: _isUnblocking
+                            ? null
+                            : () => _unblockUser(user['id'], displayName),
                         child: const Text('Unblock'),
                       ),
                     ],

@@ -11,7 +11,8 @@ class CameraPermissionException implements Exception {
 }
 
 class CameraPermissionService {
-  static final CameraPermissionService _instance = CameraPermissionService._internal();
+  static final CameraPermissionService _instance =
+      CameraPermissionService._internal();
   factory CameraPermissionService() => _instance;
   CameraPermissionService._internal();
 
@@ -44,7 +45,8 @@ class CameraPermissionService {
       if (existing.docs.isNotEmpty) {
         final permission = CameraPermission.fromMap(existing.docs.first.data());
         if (permission.isActive) {
-          throw CameraPermissionException('You already have an active permission');
+          throw CameraPermissionException(
+              'You already have an active permission');
         } else if (permission.status == CameraPermissionStatus.pending) {
           throw CameraPermissionException('Request already pending');
         }
@@ -68,7 +70,8 @@ class CameraPermissionService {
       await _createNotification(
         userId: ownerId,
         title: 'Camera Permission Request',
-        body: '${currentUser.displayName ?? 'Someone'} wants to view your camera',
+        body:
+            '${currentUser.displayName ?? 'Someone'} wants to view your camera',
         data: {
           'type': 'camera_permission_request',
           'permissionId': permissionRef.id,
@@ -76,7 +79,8 @@ class CameraPermissionService {
         },
       );
 
-      debugPrint('âœ… Camera permission requested: ${currentUser.uid} -> $ownerId');
+      debugPrint(
+          'âœ… Camera permission requested: ${currentUser.uid} -> $ownerId');
       return permissionRef.id;
     } catch (e) {
       debugPrint('âŒ Error requesting camera permission: $e');
@@ -92,7 +96,10 @@ class CameraPermissionService {
     }
 
     try {
-      final permissionDoc = await _firestore.collection('camera_permissions').doc(permissionId).get();
+      final permissionDoc = await _firestore
+          .collection('camera_permissions')
+          .doc(permissionId)
+          .get();
 
       if (!permissionDoc.exists) {
         throw CameraPermissionException('Permission request not found');
@@ -101,7 +108,8 @@ class CameraPermissionService {
       final permission = CameraPermission.fromMap(permissionDoc.data()!);
 
       if (permission.ownerId != currentUser.uid) {
-        throw CameraPermissionException('You can only grant your own permissions');
+        throw CameraPermissionException(
+            'You can only grant your own permissions');
       }
 
       await permissionDoc.reference.update({
@@ -136,7 +144,10 @@ class CameraPermissionService {
     }
 
     try {
-      final permissionDoc = await _firestore.collection('camera_permissions').doc(permissionId).get();
+      final permissionDoc = await _firestore
+          .collection('camera_permissions')
+          .doc(permissionId)
+          .get();
 
       if (!permissionDoc.exists) {
         throw CameraPermissionException('Permission request not found');
@@ -145,7 +156,8 @@ class CameraPermissionService {
       final permission = CameraPermission.fromMap(permissionDoc.data()!);
 
       if (permission.ownerId != currentUser.uid) {
-        throw CameraPermissionException('You can only deny your own permissions');
+        throw CameraPermissionException(
+            'You can only deny your own permissions');
       }
 
       await permissionDoc.reference.update({
@@ -168,7 +180,10 @@ class CameraPermissionService {
     }
 
     try {
-      final permissionDoc = await _firestore.collection('camera_permissions').doc(permissionId).get();
+      final permissionDoc = await _firestore
+          .collection('camera_permissions')
+          .doc(permissionId)
+          .get();
 
       if (!permissionDoc.exists) {
         throw CameraPermissionException('Permission not found');
@@ -177,7 +192,8 @@ class CameraPermissionService {
       final permission = CameraPermission.fromMap(permissionDoc.data()!);
 
       if (permission.ownerId != currentUser.uid) {
-        throw CameraPermissionException('You can only revoke your own permissions');
+        throw CameraPermissionException(
+            'You can only revoke your own permissions');
       }
 
       await permissionDoc.reference.update({
@@ -256,7 +272,9 @@ class CameraPermissionService {
         .where('status', isEqualTo: 'pending')
         .orderBy('requestedAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => CameraPermission.fromMap(doc.data())).toList());
+        .map((snapshot) => snapshot.docs
+            .map((doc) => CameraPermission.fromMap(doc.data()))
+            .toList());
   }
 
   /// Get granted permissions for current user (permissions they've given)
@@ -272,8 +290,10 @@ class CameraPermissionService {
         .where('status', isEqualTo: 'granted')
         .orderBy('respondedAt', descending: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => CameraPermission.fromMap(doc.data())).where((p) => p.isActive).toList());
+        .map((snapshot) => snapshot.docs
+            .map((doc) => CameraPermission.fromMap(doc.data()))
+            .where((p) => p.isActive)
+            .toList());
   }
 
   /// Get my permissions (permissions I have to view others' cameras)
@@ -289,8 +309,10 @@ class CameraPermissionService {
         .where('status', isEqualTo: 'granted')
         .orderBy('respondedAt', descending: true)
         .snapshots()
-        .map((snapshot) =>
-            snapshot.docs.map((doc) => CameraPermission.fromMap(doc.data())).where((p) => p.isActive).toList());
+        .map((snapshot) => snapshot.docs
+            .map((doc) => CameraPermission.fromMap(doc.data()))
+            .where((p) => p.isActive)
+            .toList());
   }
 
   /// Create notification helper

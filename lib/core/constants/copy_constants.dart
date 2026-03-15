@@ -6,7 +6,6 @@ library;
 class CopyConstants {
   // Add any missing project-specific imports if needed
 
-
   // ============================================================================
   // 1ï¸âƒ£ SPLASH & ONBOARDING
   // ============================================================================
@@ -34,15 +33,20 @@ class CopyConstants {
   static const String loginSignUp = 'Create an account';
 
   // Login Error Messages
-  static const String loginErrorEmptyFields = 'We need both your email and password ðŸ‘†';
-  static const String loginErrorUserNotFound = 'Hmm, we don\'t recognize that email. Mind double-checking?';
-  static const String loginErrorWrongPassword = 'Wrong password. Give it another shot?';
-  static const String loginErrorNetwork = 'Can\'t reach our servers right now. Check your connection and try again.';
+  static const String loginErrorEmptyFields =
+      'We need both your email and password ðŸ‘†';
+  static const String loginErrorUserNotFound =
+      'Hmm, we don\'t recognize that email. Mind double-checking?';
+  static const String loginErrorWrongPassword =
+      'Wrong password. Give it another shot?';
+  static const String loginErrorNetwork =
+      'Can\'t reach our servers right now. Check your connection and try again.';
   static const String loginErrorGeneric = 'Login failed. Try again?';
 
   // Login Loading States
   static const String loginLoadingMessage = 'Signing you in...';
-  static const String loginSuccessMessage = 'Welcome back! Loading your room...';
+  static const String loginSuccessMessage =
+      'Welcome back! Loading your room...';
 
   // ============================================================================
   // 3ï¸âƒ£ SIGNUP SCREEN
@@ -66,15 +70,20 @@ class CopyConstants {
   static const String signupSignIn = 'Sign in here';
 
   // Signup Error Messages
-  static const String signupErrorEmptyFields = 'Oops â€” we need all the info ðŸ‘†';
-  static const String signupErrorShortPassword = 'Your password needs at least 6 characters';
-  static const String signupErrorEmailTaken = 'That email\'s already taken. Want to log in instead?';
-  static const String signupErrorNetwork = 'Can\'t connect right now. Try again in a sec?';
+  static const String signupErrorEmptyFields =
+      'Oops â€” we need all the info ðŸ‘†';
+  static const String signupErrorShortPassword =
+      'Your password needs at least 6 characters';
+  static const String signupErrorEmailTaken =
+      'That email\'s already taken. Want to log in instead?';
+  static const String signupErrorNetwork =
+      'Can\'t connect right now. Try again in a sec?';
   static const String signupErrorGeneric = 'Signup failed. Try again?';
 
   // Signup Loading States
   static const String signupLoadingMessage = 'Creating your account...';
-  static const String signupSuccessMessage = 'Welcome to the party! ðŸŽŠ Setting up your profile...';
+  static const String signupSuccessMessage =
+      'Welcome to the party! ðŸŽŠ Setting up your profile...';
 
   // ============================================================================
   // 4ï¸âƒ£ HOME SCREEN
@@ -134,7 +143,8 @@ class CopyConstants {
 
   // Empty States
   static const String browseEmptyTitle = 'Looks quiet...';
-  static const String browseEmptyMessage = 'Why not break the silence? Start a room.';
+  static const String browseEmptyMessage =
+      'Why not break the silence? Start a room.';
   static const String browseEmptyButton = 'Launch a room';
 
   // Room Card
@@ -172,14 +182,20 @@ class CopyConstants {
   // 7ï¸âƒ£ ERRORS & VALIDATION
   // ============================================================================
 
-  static const String errorGeneric = 'Oops â€” something went wrong. Mind trying again?';
-  static const String errorNetwork = 'Can\'t reach the server right now. Check your connection?';
-  static const String errorPermission = 'We need your permission for this one. Check your settings?';
-  static const String errorNotFound = 'This doesn\'t exist anymore... but something else might surprise you';
+  static const String errorGeneric =
+      'Oops â€” something went wrong. Mind trying again?';
+  static const String errorNetwork =
+      'Can\'t reach the server right now. Check your connection?';
+  static const String errorPermission =
+      'We need your permission for this one. Check your settings?';
+  static const String errorNotFound =
+      'This doesn\'t exist anymore... but something else might surprise you';
   static const String errorTimeout = 'Taking too long. Try again?';
   static const String errorConnectionLost = 'Lost connection. Reconnecting...';
-  static const String errorRoomFull = 'That room\'s packed right now. Try another?';
-  static const String errorUserBlocked = 'They\'ve blocked messages. Respect that.';
+  static const String errorRoomFull =
+      'That room\'s packed right now. Try another?';
+  static const String errorUserBlocked =
+      'They\'ve blocked messages. Respect that.';
   static const String errorAlreadyInRoom = 'You\'re already in this room!';
 
   // ============================================================================
@@ -187,22 +203,28 @@ class CopyConstants {
   // ============================================================================
 
   static const String emptyNoEventsTitle = 'No events yet';
-  static const String emptyNoEventsMessage = 'Start planning. Get people excited. Make it happen.';
+  static const String emptyNoEventsMessage =
+      'Start planning. Get people excited. Make it happen.';
   static const String emptyNoEventsButton = 'Start an event';
 
   static const String emptyNoUsersTitle = 'No one yet';
-  static const String emptyNoUsersMessage = 'Keep exploring. Your person is out there.';
-  static const String emptyNoUsersSubtitle = 'Ready to mingle? Jump into a room.';
+  static const String emptyNoUsersMessage =
+      'Keep exploring. Your person is out there.';
+  static const String emptyNoUsersSubtitle =
+      'Ready to mingle? Jump into a room.';
 
   static const String emptyNoRoomsTitle = 'No rooms live right now';
-  static const String emptyNoRoomsMessage = 'Why wait? Go live and start the party.';
+  static const String emptyNoRoomsMessage =
+      'Why wait? Go live and start the party.';
   static const String emptyNoRoomsButton = 'Start a room';
 
   static const String emptyNoMatches = 'No one yet';
-  static const String emptyNoMatchesMessage = 'Keep exploring. Your person is out there.';
+  static const String emptyNoMatchesMessage =
+      'Keep exploring. Your person is out there.';
 
   static const String emptyNotificationsTitle = 'All caught up!';
-  static const String emptyNotificationsMessage = 'You\'re not missing anything. Yet ðŸ˜‰';
+  static const String emptyNotificationsMessage =
+      'You\'re not missing anything. Yet ðŸ˜‰';
 
   // ============================================================================
   // 9ï¸âƒ£ BUTTONS & ACTIONS
@@ -266,8 +288,10 @@ class CopyConstants {
   static const String settingsDeleteAccount = 'Delete everything';
 
   // Settings Messages
-  static const String settingsLogoutMessage = 'You\'ll be able to come back anytime.';
-  static const String settingsDeleteWarning = 'This is permanent. We\'ll delete everything.';
+  static const String settingsLogoutMessage =
+      'You\'ll be able to come back anytime.';
+  static const String settingsDeleteWarning =
+      'This is permanent. We\'ll delete everything.';
 
   // ============================================================================
   // 1ï¸âƒ£0ï¸âƒ£ + 1ï¸âƒ£ LOADING & WAITING STATES
@@ -313,8 +337,3 @@ class CopyConstants {
    * - Show too many options at once
    */
 }
-
-
-
-
-

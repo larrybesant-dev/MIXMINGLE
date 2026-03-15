@@ -4,10 +4,15 @@ import '../../helpers/network_degradation_harness.dart';
 
 void main() {
   group('Multi-User Network Chaos', () {
-    testWidgets('Room state consistent with 2–6 users, one degraded', (tester) async {
+    testWidgets('Room state consistent with 2–6 users, one degraded',
+        (tester) async {
       // Simulate 6 users, one with degraded network
       final stableHarness = NetworkDegradationHarness();
-      final chaosHarness = NetworkDegradationHarness(packetLossRate: 0.4, minLatencyMs: 500, maxLatencyMs: 2000, logger: print);
+      final chaosHarness = NetworkDegradationHarness(
+          packetLossRate: 0.4,
+          minLatencyMs: 500,
+          maxLatencyMs: 2000,
+          logger: print);
       // Simulate stable users
       for (int i = 0; i < 5; i++) {
         await stableHarness.runWithConditions(() async {
@@ -24,7 +29,8 @@ void main() {
     });
 
     testWidgets('No ghost users or stuck indicators', (tester) async {
-      final harness = NetworkDegradationHarness(simulateDisconnect: true, reconnectLoops: 3, logger: print);
+      final harness = NetworkDegradationHarness(
+          simulateDisconnect: true, reconnectLoops: 3, logger: print);
       await harness.runWithConditions(() async {
         // Simulate user disconnect/reconnect
         // ...existing code...

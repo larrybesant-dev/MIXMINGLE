@@ -1,5 +1,6 @@
-﻿/// Unified video engine models for Web + Mobile parity
+/// Unified video engine models for Web + Mobile parity
 library;
+
 import 'package:flutter/foundation.dart';
 
 /// Represents a remote user in the channel
@@ -19,15 +20,15 @@ class RemoteUser {
 
   @override
   String toString() =>
-    'RemoteUser(uid=$uid, audio=$audioEnabled, video=$videoEnabled)';
+      'RemoteUser(uid=$uid, audio=$audioEnabled, video=$videoEnabled)';
 
   @override
   bool operator ==(Object other) =>
-    identical(this, other) ||
-    other is RemoteUser &&
-      uid == other.uid &&
-      audioEnabled == other.audioEnabled &&
-      videoEnabled == other.videoEnabled;
+      identical(this, other) ||
+      other is RemoteUser &&
+          uid == other.uid &&
+          audioEnabled == other.audioEnabled &&
+          videoEnabled == other.videoEnabled;
 
   @override
   int get hashCode => Object.hash(uid, audioEnabled, videoEnabled);
@@ -50,7 +51,7 @@ class LocalMediaState {
 
   @override
   String toString() =>
-    'LocalMediaState(audio=$audioEnabled, video=$videoEnabled, camera=$cameraOn, mic=$micOn)';
+      'LocalMediaState(audio=$audioEnabled, video=$videoEnabled, camera=$cameraOn, mic=$micOn)';
 }
 
 /// Represents channel connection state

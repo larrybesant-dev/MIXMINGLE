@@ -1,4 +1,3 @@
-﻿
 // Chat Messages Provider - Manages chat messages for rooms and direct messages
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/chat_message.dart';
@@ -113,7 +112,8 @@ class ChatMessagesNotifier extends Notifier<List<ChatMessage>> {
 }
 
 /// Chat messages provider
-final chatMessagesProvider = NotifierProvider<ChatMessagesNotifier, List<ChatMessage>>(
+final chatMessagesProvider =
+    NotifierProvider<ChatMessagesNotifier, List<ChatMessage>>(
   () => ChatMessagesNotifier(),
 );
 
@@ -137,7 +137,3 @@ final messagesByUserProvider = Provider<Map<String, List<ChatMessage>>>((ref) {
 
   return grouped;
 });
-
-
-
-

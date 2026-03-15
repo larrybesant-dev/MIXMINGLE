@@ -102,7 +102,8 @@ class AgoraTokenCache {
 
     if (cached != null && cached.isValid) {
       if (kDebugMode) {
-        debugPrint('[AgoraTokenCache] Cache HIT: $key (${cached.secondsRemaining}s remaining)');
+        debugPrint(
+            '[AgoraTokenCache] Cache HIT: $key (${cached.secondsRemaining}s remaining)');
       }
       return cached;
     }
@@ -119,7 +120,8 @@ class AgoraTokenCache {
     final key = '${token.roomId}:${token.userId}';
     _cache[key] = token;
     if (kDebugMode) {
-      debugPrint('[AgoraTokenCache] Cached token: $key (${token.secondsRemaining}s TTL)');
+      debugPrint(
+          '[AgoraTokenCache] Cached token: $key (${token.secondsRemaining}s TTL)');
     }
   }
 
@@ -142,7 +144,8 @@ class AgoraTokenCache {
     _cache.removeWhere((_, token) => token.isExpired);
     final after = _cache.length;
     if (before != after) {
-      debugPrint('[AgoraTokenCache] Cleaned: Removed ${before - after} expired tokens');
+      debugPrint(
+          '[AgoraTokenCache] Cleaned: Removed ${before - after} expired tokens');
     }
   }
 

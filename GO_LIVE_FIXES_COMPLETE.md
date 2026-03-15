@@ -31,6 +31,7 @@ if (state['initialized'] != true) {
 **Problem**: Browsers won't prompt again once denied, causing silent Agora failures
 
 **Solution**:
+
 - Created `MediaPermissionsHelper` utility
 - Added explicit permission check **before** joining Agora channel
 - Located in: `lib/utils/media_permissions_helper.dart`
@@ -45,6 +46,7 @@ await MediaPermissionsHelper.ensureMediaPermissions(
 ```
 
 **Impact**:
+
 - Users see clear permission prompt
 - Join **stops** if permissions denied
 - Clear error message to fix permissions
@@ -76,6 +78,7 @@ await MediaPermissionsHelper.ensureMediaPermissions(
 **Problem**: Timer could be manipulated client-side
 
 **Solution**:
+
 - Sessions created with `endTime` timestamp (4 minutes)
 - Firestore rules enforce: `request.time < resource.data.endTime`
 - Users can ONLY update decisions while session active
@@ -95,6 +98,7 @@ final endTime = now.add(const Duration(minutes: 4));
 ### 5. ✅ CLEAN BUILD & DEPLOY
 
 **Executed**:
+
 ```bash
 flutter clean
 flutter pub get
@@ -164,23 +168,27 @@ These can be added **after** real users validate the core experience.
 ## 🚨 WHAT TO DO IF ISSUES OCCUR
 
 ### Agora Join Fails
+
 1. Open browser console (F12)
 2. Look for `[AgoraBridge]` logs
 3. Check if permissions were granted
 4. Try in incognito with fresh permissions
 
 ### Permissions Denied
+
 1. Clear browser permissions: `chrome://settings/content/camera`
 2. Clear site data: `chrome://settings/content/all`
 3. Reload in incognito
 4. Click "Allow" when prompted
 
 ### Firestore Permission Denied
+
 1. Check if user is signed in (auth token valid)
 2. Verify email is verified (if required)
 3. Check browser console for specific collection error
 
 ### Speed Dating Timer Issues
+
 1. Check browser time is synced (not off by minutes)
 2. Verify Firestore timestamps are server-generated
 3. Session should auto-expire after 4 minutes

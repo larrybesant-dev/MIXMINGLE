@@ -5,6 +5,7 @@
 ## ⚡ Features at a Glance
 
 ### ✨ UI/UX
+
 - 📱 **Fully Responsive**: Mobile, tablet, desktop layouts
 - 🎨 **Dark/Light Mode**: Toggle themes
 - 🎥 **Video Grid**: Adaptive layout for any participant count
@@ -14,6 +15,7 @@
 - 📢 **Smart Notifications**: Multiple types, auto-dismiss
 
 ### 🎮 Video Features
+
 - 📹 **Video Management**: Per-participant camera/audio control
 - 🎙️ **Mute/Unmute**: Individual participant control
 - 🎬 **Screen Sharing**: Indicator and status
@@ -22,6 +24,7 @@
 - 🔋 **Battery Optimization**: Auto-adjust quality
 
 ### 👨‍👩‍👧‍👦 Friends & Groups
+
 - 🟢 **Online Status**: Real-time presence indicators
 - ⭐ **Favorites**: Pin friends and groups
 - 🔍 **Search/Filter**: Quick access to contacts
@@ -31,6 +34,7 @@
 - 📊 **Participant Count**: See who's in each group
 
 ### 💬 Chat Features
+
 - 📝 **Text Messages**: Full message history
 - 😊 **Emojis**: 16 popular emoji picker
 - 🎨 **Stickers**: 8 quick stickers
@@ -40,6 +44,7 @@
 - 📜 **Scrollable History**: Full message context
 
 ### 🔔 Notifications
+
 - 👋 **Friend Requests**: When someone adds you
 - 💌 **Messages**: New message alerts
 - 📞 **Video Calls**: Incoming call notifications
@@ -48,6 +53,7 @@
 - 🎯 **Action Buttons**: Quick navigation
 
 ### 🎁 Engagement
+
 - 🌟 **Pin Favorites**: Long-press video tiles
 - ⭐ **Star Friends**: Quick access to favorites
 - 🎬 **Activity Tracking**: See who's online
@@ -58,6 +64,7 @@
 ## 🚀 Getting Started
 
 ### Requirements
+
 - Flutter SDK 3.3.0+
 - Dart 3.0+
 - Chrome for web testing
@@ -84,6 +91,7 @@ flutter run -d chrome --release
 ```
 
 ### First Time Setup
+
 1. Log in with test account
 2. Navigate to `/video-chat` route
 3. See mock data with 6 friends, 5 groups, 3 video participants
@@ -130,7 +138,9 @@ Documentation/
 ## 🎯 Key Features Explained
 
 ### 1. Video Grid
+
 The responsive video grid automatically adjusts based on screen size and participant count:
+
 - **1 participant**: Full screen
 - **2-4 participants**: 2x2 grid
 - **5-9 participants**: 3x3 grid
@@ -139,7 +149,9 @@ The responsive video grid automatically adjusts based on screen size and partici
 **Long-press** any video to pin it (shows pink border).
 
 ### 2. Friends Sidebar
+
 Manage your contacts:
+
 - **Search**: Find friends by name
 - **Online Indicator**: Green/gray dot shows status
 - **Unread Badge**: Number shows unread messages
@@ -147,7 +159,9 @@ Manage your contacts:
 - **Last Seen**: Timestamp tells you when they were active
 
 ### 3. Groups Management
+
 Join and create groups:
+
 - **Browse**: See all available groups
 - **Filter**: Show only joined groups
 - **Create**: New group with name/description
@@ -155,7 +169,9 @@ Join and create groups:
 - **Unread**: Badge shows unread messages
 
 ### 4. Chat Box
+
 Rich messaging experience:
+
 - **Text**: Type and send messages
 - **Emoji**: 😊 button shows 16 popular emojis
 - **Stickers**: 🎨 button shows 8 stickers
@@ -164,7 +180,9 @@ Rich messaging experience:
 - **Timestamps**: Each message shows when sent
 
 ### 5. Top Navigation
+
 Quick access to controls:
+
 - **Live Indicator**: Shows active participants
 - **Video Quality**: Change quality (Low/Medium/High)
 - **Notifications**: 🔔 bell shows unread count
@@ -176,6 +194,7 @@ Quick access to controls:
 ## 🧪 Testing
 
 ### Quick Test (5 minutes)
+
 ```bash
 # Run app
 flutter run -d chrome
@@ -192,6 +211,7 @@ flutter run -d chrome
 ```
 
 ### Comprehensive Testing
+
 See [VIDEO_CHAT_TESTING_GUIDE.md](VIDEO_CHAT_TESTING_GUIDE.md) for 120+ detailed test cases.
 
 ---
@@ -199,18 +219,21 @@ See [VIDEO_CHAT_TESTING_GUIDE.md](VIDEO_CHAT_TESTING_GUIDE.md) for 120+ detailed
 ## 📱 Responsive Behavior
 
 ### Desktop (1200px+)
+
 - Friends sidebar on left (320px)
 - Video grid in center (3-4 columns)
 - Groups sidebar on right (320px)
 - Full feature visibility
 
 ### Tablet (600-1200px)
+
 - One sidebar visible (collapsible)
 - Video grid adjusts (2 columns)
 - Better touch targets
 - Optimized spacing
 
 ### Mobile (<600px)
+
 - Sidebar toggle buttons
 - Single video column
 - Tab-based navigation
@@ -221,14 +244,18 @@ See [VIDEO_CHAT_TESTING_GUIDE.md](VIDEO_CHAT_TESTING_GUIDE.md) for 120+ detailed
 ## 🔧 Customization
 
 ### Change Colors
+
 Edit `core/theme/neon_theme.dart`:
+
 ```dart
 static const Color primary = Colors.pink; // Change here
 static const Color secondary = Colors.blue;
 ```
 
 ### Add More Emojis
+
 Edit `chat_box_widget.dart`:
+
 ```dart
 final List<String> _emojis = [
   '😀', '😂', '😍', '🥰', // Add more here
@@ -236,7 +263,9 @@ final List<String> _emojis = [
 ```
 
 ### Customize Mock Data
+
 Edit individual provider files:
+
 ```dart
 List<Friend> _generateMockFriends() {
   return [/* Add your friends here */];
@@ -248,6 +277,7 @@ List<Friend> _generateMockFriends() {
 ## 🚀 Deployment
 
 ### Firebase Hosting (Recommended)
+
 ```bash
 # Build
 flutter build web --release
@@ -257,6 +287,7 @@ firebase deploy --only hosting
 ```
 
 ### Custom Server
+
 ```bash
 # Build
 flutter build web --release
@@ -271,24 +302,26 @@ See [DEPLOYMENT_AND_QUICK_START.md](DEPLOYMENT_AND_QUICK_START.md) for detailed 
 
 ## 📚 Documentation
 
-| Document | Purpose |
-|----------|---------|
-| [Complete Guide](VIDEO_CHAT_COMPLETE_GUIDE.md) | Features, API, examples |
-| [Quick Start](DEPLOYMENT_AND_QUICK_START.md) | Setup & deployment |
-| [Testing Guide](VIDEO_CHAT_TESTING_GUIDE.md) | QA & test cases |
-| [Developer Reference](VIDEO_CHAT_DEVELOPER_REFERENCE.md) | Code patterns & APIs |
-| [Implementation Summary](VIDEO_CHAT_IMPLEMENTATION_SUMMARY.md) | Project overview |
+| Document                                                       | Purpose                 |
+| -------------------------------------------------------------- | ----------------------- |
+| [Complete Guide](VIDEO_CHAT_COMPLETE_GUIDE.md)                 | Features, API, examples |
+| [Quick Start](DEPLOYMENT_AND_QUICK_START.md)                   | Setup & deployment      |
+| [Testing Guide](VIDEO_CHAT_TESTING_GUIDE.md)                   | QA & test cases         |
+| [Developer Reference](VIDEO_CHAT_DEVELOPER_REFERENCE.md)       | Code patterns & APIs    |
+| [Implementation Summary](VIDEO_CHAT_IMPLEMENTATION_SUMMARY.md) | Project overview        |
 
 ---
 
 ## 💻 Code Examples
 
 ### Navigate to Video Chat
+
 ```dart
 Navigator.pushNamed(context, AppRoutes.videoChat);
 ```
 
 ### Send a Message
+
 ```dart
 ref.read(chatMessagesProvider.notifier).sendMessage(
   senderId: 'user1',
@@ -299,11 +332,13 @@ ref.read(chatMessagesProvider.notifier).sendMessage(
 ```
 
 ### Toggle Friend Favorite
+
 ```dart
 ref.read(friendsProvider.notifier).toggleFavorite('friend_id');
 ```
 
 ### Show Notification
+
 ```dart
 ref.read(notificationsProvider.notifier)
     .friendRequest('Alex Johnson', 'user1');
@@ -316,6 +351,7 @@ See [VIDEO_CHAT_DEVELOPER_REFERENCE.md](VIDEO_CHAT_DEVELOPER_REFERENCE.md) for m
 ## 🎓 Learning Resources
 
 This project demonstrates:
+
 - ✅ Riverpod state management
 - ✅ Provider composition
 - ✅ Responsive Flutter Web design
@@ -334,6 +370,7 @@ Perfect for learning Flutter Web best practices!
 ## 🐛 Troubleshooting
 
 ### App won't start
+
 ```bash
 flutter clean
 flutter pub get
@@ -341,14 +378,17 @@ flutter run -d chrome
 ```
 
 ### Sidebars hidden
+
 - Click sidebar toggle buttons in top bar
 - Or check `friendsSidebarCollapsedProvider` state
 
 ### Messages not showing
+
 - Check `chatMessagesProvider` is being watched
 - Ensure sending with correct message type
 
 ### Responsive layout broken
+
 - Resize browser window
 - Check MediaQuery breakpoints
 - Verify Flutter Web is updated
@@ -358,6 +398,7 @@ flutter run -d chrome
 ## 🔄 Integration with Real Services
 
 ### Next: WebRTC/Agora
+
 ```dart
 // Currently using mock participants
 // Replace with real video streams:
@@ -366,6 +407,7 @@ final agoraEngine = await RtcEngine.createAgoraRtcEngine();
 ```
 
 ### Next: Firebase Backend
+
 ```dart
 // Currently using mock data
 // Replace with Firestore:
@@ -374,6 +416,7 @@ final friends = await FirebaseFirestore.instance
 ```
 
 ### Next: Push Notifications
+
 ```dart
 // Currently local notifications only
 // Add FCM:
@@ -384,17 +427,17 @@ final token = await FirebaseMessaging.instance.getToken();
 
 ## 📊 Statistics
 
-| Metric | Value |
-|--------|-------|
-| Lines of Code | 2,760+ |
-| UI Widgets | 12 |
-| Providers | 20+ |
-| Features | 50+ |
-| Documentation | 1,900+ lines |
-| Test Cases | 120+ |
-| Mock Friends | 6 |
-| Mock Groups | 5 |
-| Mock Participants | 3 |
+| Metric            | Value        |
+| ----------------- | ------------ |
+| Lines of Code     | 2,760+       |
+| UI Widgets        | 12           |
+| Providers         | 20+          |
+| Features          | 50+          |
+| Documentation     | 1,900+ lines |
+| Test Cases        | 120+         |
+| Mock Friends      | 6            |
+| Mock Groups       | 5            |
+| Mock Participants | 3            |
 
 ---
 
@@ -427,14 +470,17 @@ final token = await FirebaseMessaging.instance.getToken();
 ## 📞 Support
 
 ### Documentation
+
 - Read [Complete Guide](VIDEO_CHAT_COMPLETE_GUIDE.md) for API reference
 - Check [Developer Reference](VIDEO_CHAT_DEVELOPER_REFERENCE.md) for code examples
 - Review [Implementation Summary](VIDEO_CHAT_IMPLEMENTATION_SUMMARY.md) for overview
 
 ### Common Issues
+
 see [Troubleshooting](#-troubleshooting) section above
 
 ### Contributing
+
 Guidelines coming soon!
 
 ---
@@ -448,6 +494,7 @@ This is part of the MixMingle project. See LICENSE file.
 ## 🏆 Credits
 
 Built with:
+
 - **Flutter**: UI framework
 - **Riverpod**: State management
 - **Firebase**: Backend services
@@ -458,6 +505,7 @@ Built with:
 ## 🚀 Status
 
 ✅ **Production Ready**
+
 - All features implemented
 - Fully tested
 - Comprehensive documentation

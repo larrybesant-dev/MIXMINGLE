@@ -1,4 +1,4 @@
-﻿/// Message types for voice room chat
+/// Message types for voice room chat
 enum MessageType {
   text, // Regular text message
   system, // System notifications (join/leave/kick/ban)
@@ -16,7 +16,8 @@ class VoiceRoomChatMessage {
   final MessageType type;
   final bool isDeleted;
   final String? userAvatar;
-  final Map<String, dynamic>? metadata; // For additional data (sticker ID, etc.)
+  final Map<String, dynamic>?
+      metadata; // For additional data (sticker ID, etc.)
 
   const VoiceRoomChatMessage({
     required this.id,
@@ -110,7 +111,8 @@ class VoiceRoomChatMessage {
   }
 
   /// Create from Firestore document
-  factory VoiceRoomChatMessage.fromFirestore(String docId, Map<String, dynamic> data) {
+  factory VoiceRoomChatMessage.fromFirestore(
+      String docId, Map<String, dynamic> data) {
     return VoiceRoomChatMessage(
       id: docId,
       userId: data['senderId'] as String,
@@ -163,5 +165,3 @@ class VoiceRoomChatMessage {
     );
   }
 }
-
-

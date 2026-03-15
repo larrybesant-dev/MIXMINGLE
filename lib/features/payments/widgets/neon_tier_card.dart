@@ -93,8 +93,10 @@ class _NeonTierCardState extends State<NeonTierCard>
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [
-                        widget.tier.primaryColor.withAlpha(isHighlighted ? 38 : 26),
-                        widget.tier.secondaryColor.withAlpha(isHighlighted ? 38 : 26),
+                        widget.tier.primaryColor
+                            .withAlpha(isHighlighted ? 38 : 26),
+                        widget.tier.secondaryColor
+                            .withAlpha(isHighlighted ? 38 : 26),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -103,13 +105,15 @@ class _NeonTierCardState extends State<NeonTierCard>
                     border: Border.all(
                       color: widget.isSelected
                           ? widget.tier.primaryColor
-                          : widget.tier.primaryColor.withAlpha(isHighlighted ? 102 : 51),
+                          : widget.tier.primaryColor
+                              .withAlpha(isHighlighted ? 102 : 51),
                       width: widget.isSelected ? 2 : 1,
                     ),
                     boxShadow: [
                       if (isHighlighted)
                         BoxShadow(
-                          color: widget.tier.primaryColor.withAlpha((50 + 50 * glowIntensity).round()),
+                          color: widget.tier.primaryColor
+                              .withAlpha((50 + 50 * glowIntensity).round()),
                           blurRadius: 16 + 8 * glowIntensity,
                           spreadRadius: 0,
                         ),
@@ -148,10 +152,12 @@ class _NeonTierCardState extends State<NeonTierCard>
                                   Container(
                                     padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
-                                      color: widget.tier.primaryColor.withAlpha(51),
+                                      color: widget.tier.primaryColor
+                                          .withAlpha(51),
                                       borderRadius: BorderRadius.circular(12),
                                       border: Border.all(
-                                        color: widget.tier.primaryColor.withAlpha(102),
+                                        color: widget.tier.primaryColor
+                                            .withAlpha(102),
                                         width: 1,
                                       ),
                                     ),
@@ -166,7 +172,8 @@ class _NeonTierCardState extends State<NeonTierCard>
                                   // Tier name and price
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Row(
                                           children: [
@@ -192,7 +199,8 @@ class _NeonTierCardState extends State<NeonTierCard>
                                                 ? '${pricing.yearlyPriceDisplay}/year'
                                                 : '${pricing.monthlyPriceDisplay}/month',
                                             style: TextStyle(
-                                              color: Colors.white.withAlpha(179),
+                                              color:
+                                                  Colors.white.withAlpha(179),
                                               fontSize: 14,
                                             ),
                                           ),
@@ -207,7 +215,8 @@ class _NeonTierCardState extends State<NeonTierCard>
                                       decoration: BoxDecoration(
                                         color: widget.isCurrentTier
                                             ? Colors.green.withAlpha(51)
-                                            : widget.tier.primaryColor.withAlpha(51),
+                                            : widget.tier.primaryColor
+                                                .withAlpha(51),
                                         shape: BoxShape.circle,
                                       ),
                                       child: Icon(
@@ -228,7 +237,8 @@ class _NeonTierCardState extends State<NeonTierCard>
                               // Benefits list
                               ...widget.tier.benefits.take(4).map((benefit) {
                                 return Padding(
-                                  padding: const EdgeInsets.symmetric(vertical: 4),
+                                  padding:
+                                      const EdgeInsets.symmetric(vertical: 4),
                                   child: Row(
                                     children: [
                                       NeonCheckmark(
@@ -257,7 +267,8 @@ class _NeonTierCardState extends State<NeonTierCard>
                                   child: Text(
                                     '+ ${widget.tier.benefits.length - 4} more benefits',
                                     style: TextStyle(
-                                      color: widget.tier.primaryColor.withAlpha(179),
+                                      color: widget.tier.primaryColor
+                                          .withAlpha(179),
                                       fontSize: 12,
                                       fontStyle: FontStyle.italic,
                                     ),
@@ -273,10 +284,12 @@ class _NeonTierCardState extends State<NeonTierCard>
                                     vertical: 6,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFF00FF88).withAlpha(26),
+                                    color:
+                                        const Color(0xFF00FF88).withAlpha(26),
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(
-                                      color: const Color(0xFF00FF88).withAlpha(77),
+                                      color:
+                                          const Color(0xFF00FF88).withAlpha(77),
                                       width: 1,
                                     ),
                                   ),
@@ -430,8 +443,7 @@ class _SpotlightPainter extends CustomPainter {
     );
 
     final rect = Rect.fromLTWH(startX, 0, width, size.height);
-    final paint = Paint()
-      ..shader = gradient.createShader(rect);
+    final paint = Paint()..shader = gradient.createShader(rect);
 
     canvas.drawRect(rect, paint);
   }

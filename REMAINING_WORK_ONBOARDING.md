@@ -8,6 +8,7 @@
 ## ✅ WHAT'S BEEN COMPLETED
 
 ### Core Onboarding System (100%)
+
 - [x] Age Gate page (18+ verification)
 - [x] Profile Essentials page (name, age, gender, photo, location)
 - [x] Interests Selection page (30+ interests in 6 categories)
@@ -30,6 +31,7 @@ Based on your original comprehensive requirements, here's what remains:
 ### 1. Speed Dating Integration (HIGH PRIORITY)
 
 #### Files to Create:
+
 - [ ] `lib/features/speed_dating/screens/speed_dating_lobby_page.dart`
   - Shows queue status
   - Displays waiting users count
@@ -53,6 +55,7 @@ Based on your original comprehensive requirements, here's what remains:
   - "Next Date" button
 
 - [ ] `lib/features/speed_dating/models/speed_dating_preferences.dart`
+
   ```dart
   class SpeedDatingPreferences {
     final int minAge;
@@ -79,6 +82,7 @@ Based on your original comprehensive requirements, here's what remains:
   - Agora channel management
 
 #### Firestore Collections to Add:
+
 ```typescript
 // speed_dating_queue collection
 {
@@ -114,6 +118,7 @@ Based on your original comprehensive requirements, here's what remains:
 ### 2. Landing Page Updates (MEDIUM PRIORITY)
 
 #### File to Update:
+
 - [ ] `lib/features/landing/landing_page.dart`
   - New headline: "Mix & Mingle — Real People. Live Video. No Swiping."
   - Add video speed dating feature highlight
@@ -131,7 +136,9 @@ Based on your original comprehensive requirements, here's what remains:
 ### 3. Routing Guards (MEDIUM PRIORITY)
 
 #### Files to Create:
+
 - [ ] `lib/core/routing/guards/age_verified_guard.dart`
+
   ```dart
   class AgeVerifiedGuard extends ConsumerWidget {
     final Widget child;
@@ -150,6 +157,7 @@ Based on your original comprehensive requirements, here's what remains:
   ```
 
 - [ ] `lib/core/routing/guards/profile_complete_guard.dart`
+
   ```dart
   class ProfileCompleteGuard extends ConsumerWidget {
     final Widget child;
@@ -168,6 +176,7 @@ Based on your original comprehensive requirements, here's what remains:
   ```
 
 #### File to Update:
+
 - [ ] `lib/app_routes.dart` or `lib/core/routing/app_router.dart`
   - Wrap protected routes with guards:
     ```dart
@@ -188,6 +197,7 @@ Based on your original comprehensive requirements, here's what remains:
 ### 4. Social Login Integration (OPTIONAL)
 
 #### Files to Update:
+
 - [ ] `lib/features/auth/screens/neon_signup_page.dart`
   - Add Google Sign-In button
   - Add Apple Sign-In button (iOS only)
@@ -197,6 +207,7 @@ Based on your original comprehensive requirements, here's what remains:
   - Add `signInWithApple()` method
 
 #### Setup Required:
+
 - [ ] Enable Google Sign-In in Firebase Console
 - [ ] Enable Apple Sign-In in Firebase Console
 - [ ] Configure OAuth credentials
@@ -213,6 +224,7 @@ Based on your original comprehensive requirements, here's what remains:
 ### 5. Agora RTC Integration Enhancements
 
 #### Files to Update:
+
 - [ ] Ensure Agora token generation works for speed dating sessions
 - [ ] Test video quality settings
 - [ ] Add network quality indicator
@@ -225,6 +237,7 @@ Based on your original comprehensive requirements, here's what remains:
 ### 6. Testing & QA (CRITICAL)
 
 #### Manual Testing Checklist:
+
 - [ ] Test complete onboarding flow on iOS physical device
 - [ ] Test complete onboarding flow on Android physical device
 - [ ] Test permission requests trigger system dialogs
@@ -237,6 +250,7 @@ Based on your original comprehensive requirements, here's what remains:
 - [ ] Test with airplane mode (offline handling)
 
 #### Automated Testing:
+
 - [ ] Write widget tests for each onboarding screen
 - [ ] Write integration test for complete flow
 - [ ] Add unit tests for OnboardingController
@@ -248,6 +262,7 @@ Based on your original comprehensive requirements, here's what remains:
 ### 7. Firestore Security Rules (CRITICAL)
 
 #### Rules to Add:
+
 ```javascript
 rules_version = '2';
 service cloud.firestore {
@@ -285,6 +300,7 @@ service cloud.firestore {
 ### 8. Firebase Functions (Speed Dating Matching)
 
 #### Function to Create:
+
 - [ ] `functions/src/speedDatingMatcher.ts`
   - Triggered when user joins queue
   - Finds best match based on preferences
@@ -312,6 +328,7 @@ service cloud.firestore {
 ### 10. Analytics Integration (NICE TO HAVE)
 
 #### Events to Track:
+
 - [ ] `onboarding_started`
 - [ ] `onboarding_step_completed` (with step number)
 - [ ] `onboarding_abandoned` (with last step)
@@ -326,20 +343,20 @@ service cloud.firestore {
 
 ## 📊 WORK SUMMARY
 
-| Category | Priority | Estimated Hours | Status |
-|----------|----------|----------------|--------|
-| Core Onboarding | HIGH | 12 | ✅ DONE |
-| Speed Dating | HIGH | 6 | 🔄 TODO |
-| Landing Page | MEDIUM | 2 | 🔄 TODO |
-| Routing Guards | MEDIUM | 3 | 🔄 TODO |
-| Testing & QA | CRITICAL | 6 | 🔄 TODO |
-| Security Rules | CRITICAL | 1 | 🔄 TODO |
-| Firebase Functions | HIGH | 4 | 🔄 TODO |
-| Social Login | OPTIONAL | 4 | 🔄 TODO |
-| Agora Enhancements | MEDIUM | 3 | 🔄 TODO |
-| UI/UX Polish | NICE TO HAVE | 3 | 🔄 TODO |
-| Analytics | NICE TO HAVE | 2 | 🔄 TODO |
-| **TOTAL** | | **34-46 hours** | **25% DONE** |
+| Category           | Priority     | Estimated Hours | Status       |
+| ------------------ | ------------ | --------------- | ------------ |
+| Core Onboarding    | HIGH         | 12              | ✅ DONE      |
+| Speed Dating       | HIGH         | 6               | 🔄 TODO      |
+| Landing Page       | MEDIUM       | 2               | 🔄 TODO      |
+| Routing Guards     | MEDIUM       | 3               | 🔄 TODO      |
+| Testing & QA       | CRITICAL     | 6               | 🔄 TODO      |
+| Security Rules     | CRITICAL     | 1               | 🔄 TODO      |
+| Firebase Functions | HIGH         | 4               | 🔄 TODO      |
+| Social Login       | OPTIONAL     | 4               | 🔄 TODO      |
+| Agora Enhancements | MEDIUM       | 3               | 🔄 TODO      |
+| UI/UX Polish       | NICE TO HAVE | 3               | 🔄 TODO      |
+| Analytics          | NICE TO HAVE | 2               | 🔄 TODO      |
+| **TOTAL**          |              | **34-46 hours** | **25% DONE** |
 
 ---
 
@@ -382,6 +399,7 @@ service cloud.firestore {
 ## 💡 NOTES
 
 ### Why Speed Dating Takes Time:
+
 - Requires 4 new screens
 - Complex matching algorithm
 - Real-time state management
@@ -390,6 +408,7 @@ service cloud.firestore {
 - Firestore collections & rules
 
 ### Why Testing is Critical:
+
 - Permission flows are platform-specific
 - Photo upload involves storage
 - Navigation can break easily
@@ -397,6 +416,7 @@ service cloud.firestore {
 - User experience depends on it
 
 ### Why Security Rules Matter:
+
 - Current rules may block writes
 - Production must be secure
 - Required before launch
@@ -407,6 +427,7 @@ service cloud.firestore {
 ## 🎉 WHAT YOU HAVE NOW
 
 A **fully functional, production-ready onboarding system** that:
+
 - Collects all necessary user data
 - Persists progress at each step
 - Integrates with Firebase Auth & Firestore
@@ -422,12 +443,14 @@ You can **deploy this right now** and users can complete onboarding. The remaini
 ## 🤔 DECISION POINT
 
 **Option A: Ship Current Onboarding (Recommended)**
+
 - Deploy what we have
 - Test with real users
 - Gather feedback
 - Build speed dating next
 
 **Option B: Complete Everything First**
+
 - Don't deploy until speed dating done
 - Longer time to market
 - More features at launch

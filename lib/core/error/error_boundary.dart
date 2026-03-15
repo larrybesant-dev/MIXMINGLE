@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../theme/colors.dart';
@@ -87,8 +87,9 @@ class ErrorBoundaryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final errorMessage =
-        kDebugMode ? errorDetails.exceptionAsString() : 'An unexpected error occurred. Please try again.';
+    final errorMessage = kDebugMode
+        ? errorDetails.exceptionAsString()
+        : 'An unexpected error occurred. Please try again.';
 
     return SafeArea(
       child: Padding(

@@ -17,14 +17,16 @@ enum NotificationType {
 
 /// Service to handle push notifications with FCM
 class PushNotificationService {
-  static final PushNotificationService _instance = PushNotificationService._internal();
+  static final PushNotificationService _instance =
+      PushNotificationService._internal();
   factory PushNotificationService() => _instance;
   PushNotificationService._internal();
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
 
   bool _initialized = false;
   String? _fcmToken;
@@ -62,7 +64,8 @@ class PushNotificationService {
         FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
         // Handle background message taps
-        FirebaseMessaging.onMessageOpenedApp.listen(_handleBackgroundMessageTap);
+        FirebaseMessaging.onMessageOpenedApp
+            .listen(_handleBackgroundMessageTap);
 
         // Handle notification when app is terminated
         final initialMessage = await _messaging.getInitialMessage();
@@ -81,7 +84,8 @@ class PushNotificationService {
 
   /// Initialize local notifications for foreground display
   Future<void> _initializeLocalNotifications() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -149,7 +153,8 @@ class PushNotificationService {
             channelDescription: 'Default notification channel',
             importance: Importance.high,
             priority: Priority.high,
-            icon: message.notification?.android?.smallIcon ?? '@mipmap/ic_launcher',
+            icon: message.notification?.android?.smallIcon ??
+                '@mipmap/ic_launcher',
           ),
           iOS: const DarwinNotificationDetails(
             presentAlert: true,
@@ -172,7 +177,8 @@ class PushNotificationService {
   }
 
   /// Handle local notification tap
-  Future<void> _handleLocalNotificationTap(NotificationResponse response) async {
+  Future<void> _handleLocalNotificationTap(
+      NotificationResponse response) async {
     debugPrint('Local notification tapped: ${response.payload}');
     if (response.payload != null) {
       // Parse payload and navigate

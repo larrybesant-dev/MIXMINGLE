@@ -41,19 +41,19 @@ class WeeklyPayoutReport {
   });
 
   Map<String, dynamic> toMap() => {
-    'reportId': reportId,
-    'creatorId': creatorId,
-    'weekStart': weekStart.toIso8601String(),
-    'weekEnd': weekEnd.toIso8601String(),
-    'totalEarnings': totalEarnings,
-    'totalPlatformFees': totalPlatformFees,
-    'netEarnings': netEarnings,
-    'payoutAmount': payoutAmount,
-    'earningsBySource': earningsBySource,
-    'transactionCount': transactionCount,
-    'status': status,
-    'generatedAt': generatedAt.toIso8601String(),
-  };
+        'reportId': reportId,
+        'creatorId': creatorId,
+        'weekStart': weekStart.toIso8601String(),
+        'weekEnd': weekEnd.toIso8601String(),
+        'totalEarnings': totalEarnings,
+        'totalPlatformFees': totalPlatformFees,
+        'netEarnings': netEarnings,
+        'payoutAmount': payoutAmount,
+        'earningsBySource': earningsBySource,
+        'transactionCount': transactionCount,
+        'status': status,
+        'generatedAt': generatedAt.toIso8601String(),
+      };
 
   factory WeeklyPayoutReport.fromMap(Map<String, dynamic> map) {
     return WeeklyPayoutReport(
@@ -117,30 +117,40 @@ class MonthlyCreatorSummary {
 
   String get monthName {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December'
     ];
     return months[month - 1];
   }
 
   Map<String, dynamic> toMap() => {
-    'reportId': reportId,
-    'creatorId': creatorId,
-    'year': year,
-    'month': month,
-    'totalEarnings': totalEarnings,
-    'netEarnings': netEarnings,
-    'totalPayouts': totalPayouts,
-    'pendingBalance': pendingBalance,
-    'earningsBySource': earningsBySource,
-    'metrics': metrics,
-    'currentTier': currentTier,
-    'tierChanged': tierChanged,
-    'previousTier': previousTier,
-    'followerChange': followerChange,
-    'engagementScore': engagementScore,
-    'generatedAt': generatedAt.toIso8601String(),
-  };
+        'reportId': reportId,
+        'creatorId': creatorId,
+        'year': year,
+        'month': month,
+        'totalEarnings': totalEarnings,
+        'netEarnings': netEarnings,
+        'totalPayouts': totalPayouts,
+        'pendingBalance': pendingBalance,
+        'earningsBySource': earningsBySource,
+        'metrics': metrics,
+        'currentTier': currentTier,
+        'tierChanged': tierChanged,
+        'previousTier': previousTier,
+        'followerChange': followerChange,
+        'engagementScore': engagementScore,
+        'generatedAt': generatedAt.toIso8601String(),
+      };
 
   factory MonthlyCreatorSummary.fromMap(Map<String, dynamic> map) {
     return MonthlyCreatorSummary(
@@ -171,7 +181,8 @@ class MonthlyCreatorSummary {
 /// Service for generating creator payout reports
 class CreatorPayoutReport {
   static CreatorPayoutReport? _instance;
-  static CreatorPayoutReport get instance => _instance ??= CreatorPayoutReport._();
+  static CreatorPayoutReport get instance =>
+      _instance ??= CreatorPayoutReport._();
 
   CreatorPayoutReport._();
 
@@ -230,7 +241,8 @@ class CreatorPayoutReport {
     final payoutsSnapshot = await _payoutsCollection
         .where('creatorId', isEqualTo: creatorId)
         .where('status', isEqualTo: 'completed')
-        .where('requestedAt', isGreaterThanOrEqualTo: weekStart.toIso8601String())
+        .where('requestedAt',
+            isGreaterThanOrEqualTo: weekStart.toIso8601String())
         .where('requestedAt', isLessThanOrEqualTo: weekEnd.toIso8601String())
         .get();
 
@@ -240,7 +252,8 @@ class CreatorPayoutReport {
     }
 
     // Generate report
-    final reportId = '${creatorId}_${weekEnd.toIso8601String().substring(0, 10)}';
+    final reportId =
+        '${creatorId}_${weekEnd.toIso8601String().substring(0, 10)}';
     final report = WeeklyPayoutReport(
       reportId: reportId,
       creatorId: creatorId,
@@ -291,7 +304,8 @@ class CreatorPayoutReport {
     // Get earnings for the month
     final earningsSnapshot = await _earningsCollection
         .where('creatorId', isEqualTo: creatorId)
-        .where('timestamp', isGreaterThanOrEqualTo: monthStart.toIso8601String())
+        .where('timestamp',
+            isGreaterThanOrEqualTo: monthStart.toIso8601String())
         .where('timestamp', isLessThanOrEqualTo: monthEnd.toIso8601String())
         .get();
 
@@ -314,7 +328,8 @@ class CreatorPayoutReport {
     final payoutsSnapshot = await _payoutsCollection
         .where('creatorId', isEqualTo: creatorId)
         .where('status', isEqualTo: 'completed')
-        .where('requestedAt', isGreaterThanOrEqualTo: monthStart.toIso8601String())
+        .where('requestedAt',
+            isGreaterThanOrEqualTo: monthStart.toIso8601String())
         .where('requestedAt', isLessThanOrEqualTo: monthEnd.toIso8601String())
         .get();
 
@@ -325,13 +340,17 @@ class CreatorPayoutReport {
 
     // Calculate metrics
     final currentFollowers = (creatorData['followerCount'] as int?) ?? 0;
-    final previousFollowers = (creatorData['previousMonthFollowers'] as int?) ?? currentFollowers;
+    final previousFollowers =
+        (creatorData['previousMonthFollowers'] as int?) ?? currentFollowers;
     final followerChange = currentFollowers - previousFollowers;
 
     // Get engagement metrics
-    final roomsHosted = await _getMonthlyRoomsHosted(creatorId, monthStart, monthEnd);
-    final avgParticipants = await _getAvgParticipants(creatorId, monthStart, monthEnd);
-    final totalMinutesStreamed = await _getTotalMinutesStreamed(creatorId, monthStart, monthEnd);
+    final roomsHosted =
+        await _getMonthlyRoomsHosted(creatorId, monthStart, monthEnd);
+    final avgParticipants =
+        await _getAvgParticipants(creatorId, monthStart, monthEnd);
+    final totalMinutesStreamed =
+        await _getTotalMinutesStreamed(creatorId, monthStart, monthEnd);
 
     final engagementScore = _calculateEngagementScore(
       roomsHosted: roomsHosted,
@@ -346,7 +365,8 @@ class CreatorPayoutReport {
     final tierChanged = tierChangedAt != null &&
         tierChangedAt.toDate().isAfter(monthStart) &&
         tierChangedAt.toDate().isBefore(monthEnd);
-    final previousTier = tierChanged ? (creatorData['previousTier'] as String?) : null;
+    final previousTier =
+        tierChanged ? (creatorData['previousTier'] as String?) : null;
 
     // Generate summary
     final reportId = '${creatorId}_${targetYear}_$targetMonth';
@@ -439,9 +459,8 @@ class CreatorPayoutReport {
     final errors = <String>[];
 
     // Get all active creators
-    final creatorsSnapshot = await _creatorsCollection
-        .where('status', isEqualTo: 'active')
-        .get();
+    final creatorsSnapshot =
+        await _creatorsCollection.where('status', isEqualTo: 'active').get();
 
     for (final doc in creatorsSnapshot.docs) {
       try {
@@ -599,9 +618,12 @@ class PayoutReportCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-                _buildMetric(context, 'Gross', '\$${report.totalEarnings.toStringAsFixed(2)}'),
-                _buildMetric(context, 'Net', '\$${report.netEarnings.toStringAsFixed(2)}'),
-                _buildMetric(context, 'Paid Out', '\$${report.payoutAmount.toStringAsFixed(2)}'),
+                _buildMetric(context, 'Gross',
+                    '\$${report.totalEarnings.toStringAsFixed(2)}'),
+                _buildMetric(context, 'Net',
+                    '\$${report.netEarnings.toStringAsFixed(2)}'),
+                _buildMetric(context, 'Paid Out',
+                    '\$${report.payoutAmount.toStringAsFixed(2)}'),
               ],
             ),
             const SizedBox(height: 16),
@@ -621,14 +643,14 @@ class PayoutReportCard extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.grey,
-          ),
+                color: Colors.grey,
+              ),
         ),
         Text(
           value,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-          ),
+                fontWeight: FontWeight.bold,
+              ),
         ),
       ],
     );

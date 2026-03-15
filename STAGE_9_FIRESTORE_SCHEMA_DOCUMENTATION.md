@@ -10,6 +10,7 @@
 ## 🎯 Overview
 
 This document provides a **complete reference** for all Firestore collections and subcollections used in the Mix & Mingle platform. The schema supports:
+
 - User authentication and profiles
 - Social graph (follow/unfollow relationships)
 - Real-time voice/video rooms with Agora RTC
@@ -26,11 +27,13 @@ This document provides a **complete reference** for all Firestore collections an
 ## 📚 Top-Level Collections
 
 ### 1. `users`
+
 **Purpose:** Core user profiles and account data
 **Document ID:** Firebase Auth UID
 **Security:** User can read/write own document, others can read public fields
 
 **Schema:**
+
 ```typescript
 {
   id: string;                     // Firebase Auth UID
@@ -73,11 +76,13 @@ This document provides a **complete reference** for all Firestore collections an
 ```
 
 **Subcollections:**
+
 - `users/{userId}/following` - Users this user follows
 - `users/{userId}/followers` - Users following this user
 - `users/{userId}/blocked` - Blocked users (alternative to array)
 
 **Indexes Required:**
+
 ```
 Collection: users
 - username (ASC)
@@ -89,48 +94,56 @@ Collection: users
 ---
 
 ### 2. `users/{userId}/following`
+
 **Purpose:** Track users this user follows
 **Document ID:** Target user ID
 **Schema:**
+
 ```typescript
 {
-  timestamp: Timestamp;           // When follow occurred
+  timestamp: Timestamp; // When follow occurred
 }
 ```
 
 ---
 
 ### 3. `users/{userId}/followers`
+
 **Purpose:** Track users following this user
 **Document ID:** Follower user ID
 **Schema:**
+
 ```typescript
 {
-  timestamp: Timestamp;           // When follow occurred
+  timestamp: Timestamp; // When follow occurred
 }
 ```
 
 ---
 
 ### 4. `users/{userId}/blocked`
+
 **Purpose:** Track blocked users (alternative to array in user doc)
 **Document ID:** Blocked user ID
 **Schema:**
+
 ```typescript
 {
-  blockedAt: Timestamp;           // When block occurred
-  reason: string | null;          // Optional reason
+  blockedAt: Timestamp; // When block occurred
+  reason: string | null; // Optional reason
 }
 ```
 
 ---
 
 ### 5. `rooms`
+
 **Purpose:** Voice/video rooms powered by Agora RTC
 **Document ID:** Auto-generated room ID
 **Security:** Read: all authenticated users, Write: host only
 
 **Schema:**
+
 ```typescript
 {
   id: string;                     // Room ID
@@ -160,11 +173,13 @@ Collection: users
 ```
 
 **Subcollections:**
+
 - `rooms/{roomId}/participants` - Room participants with roles
 - `rooms/{roomId}/messages` - Room chat messages (deprecated)
 - `rooms/{roomId}/events` - Room events log
 
 **Indexes Required:**
+
 ```
 Collection: rooms
 - ended (ASC), startedAt (DESC)
@@ -175,30 +190,34 @@ Collection: rooms
 ---
 
 ### 6. `rooms/{roomId}/participants`
+
 **Purpose:** Track room participants with roles and status
 **Document ID:** User ID
 **Schema:**
+
 ```typescript
 {
-  userId: string;                 // User ID
-  displayName: string;            // Display name
-  avatarUrl: string;              // Photo URL
-  role: string;                   // "host" | "cohost" | "speaker" | "listener" | "moderator"
-  isMuted: boolean;               // Muted status
-  isOnCam: boolean;               // Camera on
-  handRaised: boolean;            // Hand raised for turn
-  approved: boolean;              // Approved to speak
-  joinedAt: Timestamp;            // Join timestamp
-  lastActiveAt: number;           // Last activity (ms since epoch)
+  userId: string; // User ID
+  displayName: string; // Display name
+  avatarUrl: string; // Photo URL
+  role: string; // "host" | "cohost" | "speaker" | "listener" | "moderator"
+  isMuted: boolean; // Muted status
+  isOnCam: boolean; // Camera on
+  handRaised: boolean; // Hand raised for turn
+  approved: boolean; // Approved to speak
+  joinedAt: Timestamp; // Join timestamp
+  lastActiveAt: number; // Last activity (ms since epoch)
 }
 ```
 
 ---
 
 ### 7. `room_messages`
+
 **Purpose:** Global room messages collection (preferred over subcollection)
 **Document ID:** Auto-generated message ID
 **Schema:**
+
 ```typescript
 {
   id: string;                     // Message ID
@@ -222,6 +241,7 @@ Collection: rooms
 ```
 
 **Indexes Required:**
+
 ```
 Collection: room_messages
 - roomId (ASC), timestamp (ASC)
@@ -231,26 +251,30 @@ Collection: room_messages
 ---
 
 ### 8. `rooms/{roomId}/events`
+
 **Purpose:** Room event log (user joined, left, promoted, etc.)
 **Document ID:** Auto-generated event ID
 **Schema:**
+
 ```typescript
 {
-  type: string;                   // "user_joined" | "user_left" | "role_changed" | "room_locked"
-  userId: string | null;          // User involved (if applicable)
+  type: string; // "user_joined" | "user_left" | "role_changed" | "room_locked"
+  userId: string | null; // User involved (if applicable)
   metadata: Map<string, dynamic>; // Event-specific data
-  timestamp: Timestamp;           // Event timestamp
+  timestamp: Timestamp; // Event timestamp
 }
 ```
 
 ---
 
 ### 9. `chats`
+
 **Purpose:** Direct message threads between users
 **Document ID:** Auto-generated chat ID
 **Security:** Read/write by participants only
 
 **Schema:**
+
 ```typescript
 {
   id: string;                     // Chat ID
@@ -270,9 +294,11 @@ Collection: room_messages
 ```
 
 **Subcollections:**
+
 - `chats/{chatId}/messages` - Chat messages
 
 **Indexes Required:**
+
 ```
 Collection: chats
 - participantIds (ARRAY_CONTAINS), lastMessageTime (DESC)
@@ -281,9 +307,11 @@ Collection: chats
 ---
 
 ### 10. `chats/{chatId}/messages`
+
 **Purpose:** Messages within a chat thread
 **Document ID:** Auto-generated message ID
 **Schema:**
+
 ```typescript
 {
   id: string;                     // Message ID
@@ -302,6 +330,7 @@ Collection: chats
 ```
 
 **Indexes Required:**
+
 ```
 Collection group: messages
 - senderId (ASC), timestamp (DESC)
@@ -310,9 +339,11 @@ Collection group: messages
 ---
 
 ### 11. `speed_dating_queue`
+
 **Purpose:** Users waiting for speed dating matches
 **Document ID:** User ID
 **Schema:**
+
 ```typescript
 {
   userId: string;                 // User ID
@@ -329,6 +360,7 @@ Collection group: messages
 ```
 
 **Indexes Required:**
+
 ```
 Collection: speed_dating_queue
 - status (ASC), enteredAt (ASC)
@@ -338,30 +370,33 @@ Collection: speed_dating_queue
 ---
 
 ### 12. `speed_dating_sessions`
+
 **Purpose:** Active speed dating sessions (3-minute video chats)
 **Document ID:** Auto-generated session ID
 **Schema:**
+
 ```typescript
 {
-  id: string;                     // Session ID
-  user1Id: string;                // First user ID
-  user2Id: string;                // Second user ID
-  user1Name: string;              // First user display name
-  user2Name: string;              // Second user display name
-  user1Photo: string;             // First user photo URL
-  user2Photo: string;             // Second user photo URL
-  user1Decision: string | null;   // "like" | "pass" | null
-  user2Decision: string | null;   // "like" | "pass" | null
-  status: string;                 // "active" | "ended" | "matched" | "no_match"
-  agoraChannelName: string;       // Agora channel name
-  agoraAppId: string;             // Agora app ID
-  startedAt: Timestamp;           // Session start time
-  endedAt: Timestamp | null;      // Session end time
-  duration: number;               // Duration in seconds (default 180)
+  id: string; // Session ID
+  user1Id: string; // First user ID
+  user2Id: string; // Second user ID
+  user1Name: string; // First user display name
+  user2Name: string; // Second user display name
+  user1Photo: string; // First user photo URL
+  user2Photo: string; // Second user photo URL
+  user1Decision: string | null; // "like" | "pass" | null
+  user2Decision: string | null; // "like" | "pass" | null
+  status: string; // "active" | "ended" | "matched" | "no_match"
+  agoraChannelName: string; // Agora channel name
+  agoraAppId: string; // Agora app ID
+  startedAt: Timestamp; // Session start time
+  endedAt: Timestamp | null; // Session end time
+  duration: number; // Duration in seconds (default 180)
 }
 ```
 
 **Indexes Required:**
+
 ```
 Collection: speed_dating_sessions
 - user1Id (ASC), startedAt (DESC)
@@ -372,21 +407,24 @@ Collection: speed_dating_sessions
 ---
 
 ### 13. `speed_dating_decisions`
+
 **Purpose:** Historical speed dating decisions for analytics
 **Document ID:** Auto-generated decision ID
 **Schema:**
+
 ```typescript
 {
-  sessionId: string;              // Session ID
-  userId: string;                 // User who made decision
-  targetUserId: string;           // Target user
-  decision: string;               // "like" | "pass"
-  decidedAt: Timestamp;           // Decision timestamp
-  wasMatch: boolean;              // Both liked each other
+  sessionId: string; // Session ID
+  userId: string; // User who made decision
+  targetUserId: string; // Target user
+  decision: string; // "like" | "pass"
+  decidedAt: Timestamp; // Decision timestamp
+  wasMatch: boolean; // Both liked each other
 }
 ```
 
 **Indexes Required:**
+
 ```
 Collection: speed_dating_decisions
 - userId (ASC), decidedAt (DESC)
@@ -396,20 +434,23 @@ Collection: speed_dating_decisions
 ---
 
 ### 14. `user_presence`
+
 **Purpose:** Real-time user online status
 **Document ID:** User ID
 **Schema:**
+
 ```typescript
 {
-  userId: string;                 // User ID
-  status: number;                 // 0=offline, 1=online, 2=away, 3=busy
-  roomId: string | null;          // Current room ID
-  isTyping: boolean;              // Typing indicator
-  lastSeen: Timestamp;            // Last activity timestamp
+  userId: string; // User ID
+  status: number; // 0=offline, 1=online, 2=away, 3=busy
+  roomId: string | null; // Current room ID
+  isTyping: boolean; // Typing indicator
+  lastSeen: Timestamp; // Last activity timestamp
 }
 ```
 
 **Indexes Required:**
+
 ```
 Collection: user_presence
 - roomId (ASC), status (ASC)
@@ -418,9 +459,11 @@ Collection: user_presence
 ---
 
 ### 15. `reports`
+
 **Purpose:** User-generated reports for moderation
 **Document ID:** Auto-generated report ID
 **Schema:**
+
 ```typescript
 {
   id: string;                     // Report ID
@@ -441,6 +484,7 @@ Collection: user_presence
 ```
 
 **Indexes Required:**
+
 ```
 Collection: reports
 - status (ASC), createdAt (DESC)
@@ -451,27 +495,31 @@ Collection: reports
 ---
 
 ### 16. `banned_users`
+
 **Purpose:** Banned user records (separate from user doc)
 **Document ID:** User ID
 **Schema:**
+
 ```typescript
 {
-  userId: string;                 // Banned user ID
-  reason: string;                 // Ban reason
-  banType: string;                // "permanent" | "temporary"
-  expiresAt: Timestamp | null;    // Expiry (null = permanent)
-  bannedBy: string;               // Admin user ID
-  bannedAt: Timestamp;            // Ban timestamp
-  appealStatus: string | null;    // "pending" | "approved" | "denied" | null
+  userId: string; // Banned user ID
+  reason: string; // Ban reason
+  banType: string; // "permanent" | "temporary"
+  expiresAt: Timestamp | null; // Expiry (null = permanent)
+  bannedBy: string; // Admin user ID
+  bannedAt: Timestamp; // Ban timestamp
+  appealStatus: string | null; // "pending" | "approved" | "denied" | null
 }
 ```
 
 ---
 
 ### 17. `coins_transactions`
+
 **Purpose:** Virtual coin purchase and spend history
 **Document ID:** Auto-generated transaction ID
 **Schema:**
+
 ```typescript
 {
   id: string;                     // Transaction ID
@@ -491,6 +539,7 @@ Collection: reports
 ```
 
 **Indexes Required:**
+
 ```
 Collection: coins_transactions
 - userId (ASC), timestamp (DESC)
@@ -500,44 +549,49 @@ Collection: coins_transactions
 ---
 
 ### 18. `gifts`
+
 **Purpose:** Gift catalog (predefined gifts users can send)
 **Document ID:** Gift ID
 **Schema:**
+
 ```typescript
 {
-  id: string;                     // Gift ID
-  name: string;                   // Gift name ("Rose", "Diamond Ring", etc.)
-  category: string;               // "flowers" | "jewelry" | "food" | "drinks" | "animals" | "special"
-  coinCost: number;               // Cost in coins
-  iconUrl: string;                // Icon image URL
-  animationType: string;          // "fadeIn" | "slideUp" | "bounce" | "sparkle" | "heartExplosion" | "fireworks"
-  rarity: string;                 // "common" | "rare" | "epic" | "legendary"
-  isActive: boolean;              // Available for purchase
-  createdAt: Timestamp;           // Added to catalog
+  id: string; // Gift ID
+  name: string; // Gift name ("Rose", "Diamond Ring", etc.)
+  category: string; // "flowers" | "jewelry" | "food" | "drinks" | "animals" | "special"
+  coinCost: number; // Cost in coins
+  iconUrl: string; // Icon image URL
+  animationType: string; // "fadeIn" | "slideUp" | "bounce" | "sparkle" | "heartExplosion" | "fireworks"
+  rarity: string; // "common" | "rare" | "epic" | "legendary"
+  isActive: boolean; // Available for purchase
+  createdAt: Timestamp; // Added to catalog
 }
 ```
 
 ---
 
 ### 19. `gift_transactions`
+
 **Purpose:** Gift send history
 **Document ID:** Auto-generated transaction ID
 **Schema:**
+
 ```typescript
 {
-  id: string;                     // Transaction ID
-  giftId: string;                 // Gift ID
-  senderId: string;               // Sender user ID
-  recipientId: string;            // Recipient user ID
-  roomId: string | null;          // Room ID (if sent in room)
-  coinCost: number;               // Coins spent
-  message: string | null;         // Optional message
-  isAnonymous: boolean;           // Anonymous gift
-  sentAt: Timestamp;              // Sent timestamp
+  id: string; // Transaction ID
+  giftId: string; // Gift ID
+  senderId: string; // Sender user ID
+  recipientId: string; // Recipient user ID
+  roomId: string | null; // Room ID (if sent in room)
+  coinCost: number; // Coins spent
+  message: string | null; // Optional message
+  isAnonymous: boolean; // Anonymous gift
+  sentAt: Timestamp; // Sent timestamp
 }
 ```
 
 **Indexes Required:**
+
 ```
 Collection: gift_transactions
 - recipientId (ASC), sentAt (DESC)
@@ -548,24 +602,27 @@ Collection: gift_transactions
 ---
 
 ### 20. `subscriptions`
+
 **Purpose:** Premium membership subscriptions (RevenueCat)
 **Document ID:** User ID
 **Schema:**
+
 ```typescript
 {
-  userId: string;                 // User ID
-  tier: string;                   // "free" | "vip" | "vip_plus"
-  productId: string;              // RevenueCat product ID
-  purchaseDate: Timestamp;        // Purchase date
-  expiryDate: Timestamp;          // Expiry date
-  autoRenew: boolean;             // Auto-renewal enabled
-  isActive: boolean;              // Active subscription
-  platform: string;               // "ios" | "android" | "web"
-  transactionId: string;          // Store transaction ID
+  userId: string; // User ID
+  tier: string; // "free" | "vip" | "vip_plus"
+  productId: string; // RevenueCat product ID
+  purchaseDate: Timestamp; // Purchase date
+  expiryDate: Timestamp; // Expiry date
+  autoRenew: boolean; // Auto-renewal enabled
+  isActive: boolean; // Active subscription
+  platform: string; // "ios" | "android" | "web"
+  transactionId: string; // Store transaction ID
 }
 ```
 
 **Indexes Required:**
+
 ```
 Collection: subscriptions
 - userId (ASC)
@@ -575,24 +632,27 @@ Collection: subscriptions
 ---
 
 ### 21. `notifications`
+
 **Purpose:** User notifications (in-app)
 **Document ID:** Auto-generated notification ID
 **Schema:**
+
 ```typescript
 {
-  id: string;                     // Notification ID
-  userId: string;                 // Recipient user ID
-  type: string;                   // "follow" | "match" | "message" | "gift" | "room_invite" | "system"
-  title: string;                  // Notification title
-  body: string;                   // Notification body
-  imageUrl: string | null;        // Optional image
-  actionUrl: string | null;       // Deep link
-  isRead: boolean;                // Read status
-  createdAt: Timestamp;           // Notification timestamp
+  id: string; // Notification ID
+  userId: string; // Recipient user ID
+  type: string; // "follow" | "match" | "message" | "gift" | "room_invite" | "system"
+  title: string; // Notification title
+  body: string; // Notification body
+  imageUrl: string | null; // Optional image
+  actionUrl: string | null; // Deep link
+  isRead: boolean; // Read status
+  createdAt: Timestamp; // Notification timestamp
 }
 ```
 
 **Indexes Required:**
+
 ```
 Collection: notifications
 - userId (ASC), createdAt (DESC)
@@ -602,98 +662,110 @@ Collection: notifications
 ---
 
 ### 22. `roomInvitations`
+
 **Purpose:** Room invitations
 **Document ID:** Auto-generated invitation ID
 **Schema:**
+
 ```typescript
 {
-  roomId: string;                 // Room ID
-  inviterId: string;              // Inviter user ID
-  invitedUserId: string;          // Invited user ID
-  status: string;                 // "pending" | "accepted" | "declined"
-  createdAt: Timestamp;           // Invitation timestamp
+  roomId: string; // Room ID
+  inviterId: string; // Inviter user ID
+  invitedUserId: string; // Invited user ID
+  status: string; // "pending" | "accepted" | "declined"
+  createdAt: Timestamp; // Invitation timestamp
 }
 ```
 
 ---
 
 ### 23. `pricing_tiers`
+
 **Purpose:** Dynamic pricing for coin packages
 **Document ID:** Tier ID
 **Schema:**
+
 ```typescript
 {
-  id: string;                     // Tier ID
-  coins: number;                  // Coin amount
-  priceUsd: number;               // Price in USD
-  bonusCoins: number;             // Bonus coins (VIP+ gets 20% extra)
-  popularBadge: boolean;          // "Most Popular" badge
-  isActive: boolean;              // Available for sale
+  id: string; // Tier ID
+  coins: number; // Coin amount
+  priceUsd: number; // Price in USD
+  bonusCoins: number; // Bonus coins (VIP+ gets 20% extra)
+  popularBadge: boolean; // "Most Popular" badge
+  isActive: boolean; // Available for sale
 }
 ```
 
 ---
 
 ### 24. `creators`
+
 **Purpose:** Creator program participants
 **Document ID:** User ID
 **Schema:**
+
 ```typescript
 {
-  userId: string;                 // Creator user ID
-  status: string;                 // "pending" | "approved" | "rejected" | "suspended"
-  tier: string;                   // "bronze" | "silver" | "gold" | "platinum"
-  commissionRate: number;         // Revenue share % (0.0-1.0)
-  totalEarnings: number;          // Lifetime earnings in USD
-  pendingPayout: number;          // Unpaid earnings
+  userId: string; // Creator user ID
+  status: string; // "pending" | "approved" | "rejected" | "suspended"
+  tier: string; // "bronze" | "silver" | "gold" | "platinum"
+  commissionRate: number; // Revenue share % (0.0-1.0)
+  totalEarnings: number; // Lifetime earnings in USD
+  pendingPayout: number; // Unpaid earnings
   lastPayoutDate: Timestamp | null; // Last payout date
-  roomsHostedCount: number;       // Total rooms hosted
-  engagementScore: number;        // Engagement score (0-100)
-  appliedAt: Timestamp;           // Application date
-  approvedAt: Timestamp | null;   // Approval date
+  roomsHostedCount: number; // Total rooms hosted
+  engagementScore: number; // Engagement score (0-100)
+  appliedAt: Timestamp; // Application date
+  approvedAt: Timestamp | null; // Approval date
 }
 ```
 
 ---
 
 ### 25. `creator_earnings`
+
 **Purpose:** Creator earnings transactions
 **Document ID:** Auto-generated earning ID
 **Schema:**
+
 ```typescript
 {
-  creatorId: string;              // Creator user ID
-  type: string;                   // "gift" | "tip" | "subscription_share"
-  amount: number;                 // Earnings in USD
-  coinAmount: number | null;      // Coins involved
-  roomId: string | null;          // Room ID if applicable
-  timestamp: Timestamp;           // Earning timestamp
+  creatorId: string; // Creator user ID
+  type: string; // "gift" | "tip" | "subscription_share"
+  amount: number; // Earnings in USD
+  coinAmount: number | null; // Coins involved
+  roomId: string | null; // Room ID if applicable
+  timestamp: Timestamp; // Earning timestamp
 }
 ```
 
 ---
 
 ### 26. `creator_payouts`
+
 **Purpose:** Creator payout history
 **Document ID:** Auto-generated payout ID
 **Schema:**
+
 ```typescript
 {
-  creatorId: string;              // Creator user ID
-  amount: number;                 // Payout amount in USD
-  method: string;                 // "paypal" | "stripe" | "bank_transfer"
-  status: string;                 // "pending" | "processing" | "completed" | "failed"
-  initiatedAt: Timestamp;         // Payout initiation
-  completedAt: Timestamp | null;  // Payout completion
+  creatorId: string; // Creator user ID
+  amount: number; // Payout amount in USD
+  method: string; // "paypal" | "stripe" | "bank_transfer"
+  status: string; // "pending" | "processing" | "completed" | "failed"
+  initiatedAt: Timestamp; // Payout initiation
+  completedAt: Timestamp | null; // Payout completion
 }
 ```
 
 ---
 
 ### 27. `liveops_events`
+
 **Purpose:** Live events (daily/weekly challenges)
 **Document ID:** Event ID
 **Schema:**
+
 ```typescript
 {
   id: string;                     // Event ID
@@ -713,82 +785,92 @@ Collection: notifications
 ---
 
 ### 28. `liveops_offers`
+
 **Purpose:** Limited-time coin package offers
 **Document ID:** Offer ID
 **Schema:**
+
 ```typescript
 {
-  id: string;                     // Offer ID
-  packageId: string;              // Coin package ID
-  discountPercent: number;        // Discount %
-  bonusCoins: number;             // Bonus coins
-  startDate: Timestamp;           // Offer start
-  endDate: Timestamp;             // Offer end
-  isActive: boolean;              // Active status
+  id: string; // Offer ID
+  packageId: string; // Coin package ID
+  discountPercent: number; // Discount %
+  bonusCoins: number; // Bonus coins
+  startDate: Timestamp; // Offer start
+  endDate: Timestamp; // Offer end
+  isActive: boolean; // Active status
 }
 ```
 
 ---
 
 ### 29. `federated_identities`
+
 **Purpose:** Cross-platform federated user identities
 **Document ID:** Auto-generated identity ID
 **Schema:**
+
 ```typescript
 {
-  localUserId: string;            // Local user ID
-  partnerId: string;              // Partner app ID
-  remoteUserId: string;           // User ID in partner app
-  displayName: string;            // Display name
-  avatarUrl: string | null;       // Avatar URL
-  claims: Map<string, dynamic>;   // Additional claims
-  federatedAt: Timestamp;         // Federation timestamp
-  lastSyncAt: Timestamp;          // Last sync timestamp
+  localUserId: string; // Local user ID
+  partnerId: string; // Partner app ID
+  remoteUserId: string; // User ID in partner app
+  displayName: string; // Display name
+  avatarUrl: string | null; // Avatar URL
+  claims: Map<string, dynamic>; // Additional claims
+  federatedAt: Timestamp; // Federation timestamp
+  lastSyncAt: Timestamp; // Last sync timestamp
 }
 ```
 
 ---
 
 ### 30. `federation_partners`
+
 **Purpose:** Partner apps in federation network
 **Document ID:** Partner ID
 **Schema:**
+
 ```typescript
 {
-  id: string;                     // Partner ID
-  name: string;                   // Partner app name
-  apiKey: string;                 // API key
-  status: string;                 // "active" | "inactive" | "suspended"
-  trustScore: number;             // Trust score (0-100)
-  addedAt: Timestamp;             // Partnership start
+  id: string; // Partner ID
+  name: string; // Partner app name
+  apiKey: string; // API key
+  status: string; // "active" | "inactive" | "suspended"
+  trustScore: number; // Trust score (0-100)
+  addedAt: Timestamp; // Partnership start
 }
 ```
 
 ---
 
 ### 31. `moderation_signals`
+
 **Purpose:** Cross-platform safety signals
 **Document ID:** Auto-generated signal ID
 **Schema:**
+
 ```typescript
 {
-  partnerId: string;              // Partner app ID
-  subjectUserId: string;          // User ID
-  signalType: string;             // "ban" | "warning" | "flag"
-  severity: string;               // "low" | "medium" | "high" | "critical"
-  description: string;            // Signal description
+  partnerId: string; // Partner app ID
+  subjectUserId: string; // User ID
+  signalType: string; // "ban" | "warning" | "flag"
+  severity: string; // "low" | "medium" | "high" | "critical"
+  description: string; // Signal description
   evidence: Map<string, dynamic>; // Evidence data
-  receivedAt: Timestamp;          // Signal received timestamp
-  expiresAt: Timestamp | null;    // Expiry (null = permanent)
+  receivedAt: Timestamp; // Signal received timestamp
+  expiresAt: Timestamp | null; // Expiry (null = permanent)
 }
 ```
 
 ---
 
 ### 32. `bans`
+
 **Purpose:** Global ban records (Network Trust System)
 **Document ID:** Auto-generated ban ID
 **Schema:**
+
 ```typescript
 {
   userId: string;                 // Banned user ID
@@ -807,9 +889,11 @@ Collection: notifications
 ---
 
 ### 33. `appeals`
+
 **Purpose:** Ban appeals
 **Document ID:** Auto-generated appeal ID
 **Schema:**
+
 ```typescript
 {
   banId: string;                  // Ban ID
@@ -826,56 +910,63 @@ Collection: notifications
 ---
 
 ### 34. `trust_profiles`
+
 **Purpose:** User trust scores (Network Trust System)
 **Document ID:** User ID
 **Schema:**
+
 ```typescript
 {
-  userId: string;                 // User ID
-  trustScore: number;             // Trust score (0-100)
-  reportCount: number;            // Reports received
-  warningCount: number;           // Warnings received
-  banCount: number;               // Bans received
-  positiveSignals: number;        // Positive interactions
-  lastUpdated: Timestamp;         // Last update timestamp
+  userId: string; // User ID
+  trustScore: number; // Trust score (0-100)
+  reportCount: number; // Reports received
+  warningCount: number; // Warnings received
+  banCount: number; // Bans received
+  positiveSignals: number; // Positive interactions
+  lastUpdated: Timestamp; // Last update timestamp
 }
 ```
 
 ---
 
 ### 35. `safety_signals`
+
 **Purpose:** AI-detected safety signals
 **Document ID:** Auto-generated signal ID
 **Schema:**
+
 ```typescript
 {
-  userId: string;                 // User ID
-  type: string;                   // "toxicity" | "profanity" | "spam" | "harassment"
-  score: number;                  // AI confidence score (0-1)
-  context: string;                // "message" | "profile" | "room"
-  contextId: string;              // Message ID, room ID, etc.
-  content: string;                // Flagged content
-  autoActioned: boolean;          // Automatic action taken
-  reviewedBy: string | null;      // Admin user ID
-  timestamp: Timestamp;           // Detection timestamp
+  userId: string; // User ID
+  type: string; // "toxicity" | "profanity" | "spam" | "harassment"
+  score: number; // AI confidence score (0-1)
+  context: string; // "message" | "profile" | "room"
+  contextId: string; // Message ID, room ID, etc.
+  content: string; // Flagged content
+  autoActioned: boolean; // Automatic action taken
+  reviewedBy: string | null; // Admin user ID
+  timestamp: Timestamp; // Detection timestamp
 }
 ```
 
 ---
 
 ### 36. `usernames`
+
 **Purpose:** Username uniqueness registry
 **Document ID:** Normalized username (lowercase, no spaces)
 **Schema:**
+
 ```typescript
 {
-  userId: string;                 // User ID who owns username
-  originalUsername: string;       // Original casing
-  claimedAt: Timestamp;           // Claim timestamp
+  userId: string; // User ID who owns username
+  originalUsername: string; // Original casing
+  claimedAt: Timestamp; // Claim timestamp
 }
 ```
 
 **Composite Indexes Required:**
+
 ```
 Collection: usernames
 - userId (ASC)
@@ -884,31 +975,36 @@ Collection: usernames
 ---
 
 ### 37. `config`
+
 **Purpose:** System configuration (Agora tokens, feature flags)
 **Document ID:** Config key (e.g., "agora")
 **Schema:**
+
 ```typescript
 {
-  key: string;                    // Config key
-  value: Map<string, dynamic>;    // Config value (varies)
-  updatedAt: Timestamp;           // Last update
+  key: string; // Config key
+  value: Map<string, dynamic>; // Config value (varies)
+  updatedAt: Timestamp; // Last update
 }
 ```
 
 **Example: `config/agora`**
+
 ```typescript
 {
   appId: "ec1b578586d24976a89d787d9ee4d5c7";
-  certificate: string;            // Agora certificate
-  tokenExpirySeconds: 3600;       // Token TTL
+  certificate: string; // Agora certificate
+  tokenExpirySeconds: 3600; // Token TTL
 }
 ```
 
 ---
 
 ### 38. `analytics_*` Collections
+
 **Purpose:** Analytics and insights data
 **Collections:**
+
 - `analytics_dau` - Daily Active Users
 - `analytics_platform` - Platform metrics
 - `analytics_creator` - Creator metrics
@@ -916,27 +1012,31 @@ Collection: usernames
 - `analytics_federation` - Federation metrics
 
 **Common Schema (DAU example):**
+
 ```typescript
 {
-  date: Timestamp;                // Date
-  totalUsers: number;             // Total DAU
-  newUsers: number;               // New users
-  returningUsers: number;         // Returning users
-  avgSessionDuration: number;     // Avg session (seconds)
-  platform: {                     // Platform breakdown
+  date: Timestamp; // Date
+  totalUsers: number; // Total DAU
+  newUsers: number; // New users
+  returningUsers: number; // Returning users
+  avgSessionDuration: number; // Avg session (seconds)
+  platform: {
+    // Platform breakdown
     ios: number;
     android: number;
     web: number;
-  };
+  }
 }
 ```
 
 ---
 
 ### 39. `social_profiles`
+
 **Purpose:** AI-generated social graph profiles
 **Document ID:** User ID
 **Schema:**
+
 ```typescript
 {
   userId: string;                 // User ID
@@ -951,9 +1051,11 @@ Collection: usernames
 ---
 
 ### 40. `recommendations`
+
 **Purpose:** AI friend recommendations
 **Document ID:** Auto-generated recommendation ID
 **Schema:**
+
 ```typescript
 {
   userId: string;                 // User ID
@@ -968,9 +1070,11 @@ Collection: usernames
 ---
 
 ### 41. `detected_communities`
+
 **Purpose:** AI-detected user communities
 **Document ID:** Community ID
 **Schema:**
+
 ```typescript
 {
   id: string;                     // Community ID
@@ -986,20 +1090,24 @@ Collection: usernames
 ## 🔒 Security Rules Summary
 
 ### Public Read, Private Write
+
 - `users` - Read: all auth, Write: own doc only
 - `rooms` - Read: all auth, Write: host only
 - `chats` - Read/Write: participants only
 
 ### Admin Only
+
 - `reports` - Write: any auth, Read: admin only
 - `banned_users` - Read/Write: admin only
 - `moderation_signals` - Read/Write: admin/system only
 
 ### Service Only (Cloud Functions)
+
 - `analytics_*` - Write: Cloud Functions only
 - `config` - Write: Admin/Functions only
 
 **Example Rule (users collection):**
+
 ```javascript
 match /users/{userId} {
   allow read: if request.auth != null;
@@ -1012,6 +1120,7 @@ match /users/{userId} {
 ## 📊 Critical Indexes
 
 ### Composite Indexes (Must Create in Firestore Console)
+
 ```
 Collection: rooms
 - ended (ASC), participantCount (DESC), startedAt (DESC)
@@ -1032,6 +1141,7 @@ Collection: notifications
 ```
 
 **Auto-Generated vs Manual:**
+
 - Single-field indexes: Auto-created by Firestore on first query
 - Composite indexes: Must be manually created or created via error link
 
@@ -1040,6 +1150,7 @@ Collection: notifications
 ## 🚀 Query Examples
 
 ### Get Active Rooms
+
 ```dart
 final rooms = await FirebaseFirestore.instance
     .collection('rooms')
@@ -1050,6 +1161,7 @@ final rooms = await FirebaseFirestore.instance
 ```
 
 ### Get User's Chats
+
 ```dart
 final chats = await FirebaseFirestore.instance
     .collection('chats')
@@ -1059,6 +1171,7 @@ final chats = await FirebaseFirestore.instance
 ```
 
 ### Get Pending Reports (Admin)
+
 ```dart
 final reports = await FirebaseFirestore.instance
     .collection('reports')
@@ -1068,6 +1181,7 @@ final reports = await FirebaseFirestore.instance
 ```
 
 ### Get User Coin Transactions
+
 ```dart
 final transactions = await FirebaseFirestore.instance
     .collection('coins_transactions')
@@ -1078,6 +1192,7 @@ final transactions = await FirebaseFirestore.instance
 ```
 
 ### Get Room Participants
+
 ```dart
 final participants = await FirebaseFirestore.instance
     .collection('rooms')
@@ -1092,14 +1207,18 @@ final participants = await FirebaseFirestore.instance
 ## 🔧 Migration Notes
 
 ### From Array to Subcollection
+
 **Blocked Users:**
+
 - OLD: `users.blockedUsers: string[]`
 - NEW: `users/{userId}/blocked/{blockedUserId}`
 - **Why:** Better scalability, can store block metadata (reason, timestamp)
 - **Migration:** Run Cloud Function to populate subcollection from array
 
 ### Collection vs Subcollection
+
 **Room Messages:**
+
 - OLD: `rooms/{roomId}/messages/{messageId}` (subcollection)
 - NEW: `room_messages/{messageId}` (top-level with roomId field)
 - **Why:** Better query performance, simpler security rules
@@ -1110,6 +1229,7 @@ final participants = await FirebaseFirestore.instance
 ## ✅ Stage 9 Complete
 
 **Firestore schema is production-ready:**
+
 - ✅ 41+ Top-Level Collections Documented
 - ✅ 7 Subcollections Documented
 - ✅ Complete Schema Definitions with Types
@@ -1119,6 +1239,7 @@ final participants = await FirebaseFirestore.instance
 - ✅ Migration Notes for Schema Evolution
 
 **All Collections from Stages 1-8:**
+
 - Stage 1: `users`, `usernames`, `config`
 - Stage 2: `rooms`, `room_messages`, `user_presence`
 - Stage 3: `speed_dating_queue`, `speed_dating_sessions`, `speed_dating_decisions`

@@ -3,21 +3,27 @@
 ## 🔴 Gradle Errors - Quick Fixes
 
 ### Error: "Gradle 7.x not compatible"
+
 **Solution:**
+
 ```powershell
 # Edit android/gradle/wrapper/gradle-wrapper.properties
 gradle-7.x-all.zip  →  gradle-8.2-all.zip
 ```
 
 ### Error: "Android Gradle plugin version X incompatible"
+
 **Solution:**
+
 ```gradle
 // android/build.gradle
 classpath 'com.android.tools.build:gradle:8.2.0'  // Update to 8.2.0
 ```
 
 ### Error: "compileSdkVersion too old"
+
 **Solution:**
+
 ```gradle
 // android/app/build.gradle
 compileSdkVersion 34  // Must be 34 or higher
@@ -30,6 +36,7 @@ targetSdkVersion 34   // Match compileSdk
 ## 🔴 Plugin Errors - Quick Fixes
 
 ### Error: "Agora plugin not found / Build failure"
+
 ```powershell
 # Update pubspec.yaml
 flutter pub upgrade agora_rtc_engine agora_uikit
@@ -44,6 +51,7 @@ flutter build apk --release
 ```
 
 ### Error: "Stripe integration broken"
+
 ```powershell
 # Update Stripe
 flutter pub upgrade flutter_stripe
@@ -57,6 +65,7 @@ flutter build apk --release
 ```
 
 ### Error: "Firebase plugins mismatch"
+
 ```powershell
 # Upgrade all Firebase plugins together
 flutter pub upgrade firebase_core firebase_auth cloud_firestore firebase_functions
@@ -71,8 +80,11 @@ flutter build apk --release
 ## 🔴 Signing / Key Errors - Quick Fixes
 
 ### Error: "key.properties not found"
+
 **Solution:**
+
 1. Create `android/key.properties`:
+
 ```properties
 storeFile=../keystore.jks
 storePassword=your_password
@@ -81,6 +93,7 @@ keyPassword=your_password
 ```
 
 2. Update `android/app/build.gradle`:
+
 ```gradle
 signingConfigs {
     release {
@@ -105,6 +118,7 @@ buildTypes {
 ```
 
 ### Error: "Invalid keystore / password incorrect"
+
 ```powershell
 # Recreate keystore
 keytool -genkey -v -keystore ../keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias release
@@ -115,8 +129,10 @@ keytool -genkey -v -keystore ../keystore.jks -keyalg RSA -keysize 2048 -validity
 ## 🔴 ProGuard / Minification Errors - Quick Fixes
 
 ### Error: "ProGuard configuration error"
+
 **Solution:**
 Create/update `android/app/proguard-rules.pro`:
+
 ```proguard
 # Agora
 -keep class io.agora.** { *; }
@@ -137,6 +153,7 @@ Create/update `android/app/proguard-rules.pro`:
 ```
 
 **In `android/app/build.gradle`:**
+
 ```gradle
 buildTypes {
     release {
@@ -153,6 +170,7 @@ buildTypes {
 ## 🔴 Kotlin / Java Compile Errors - Quick Fixes
 
 ### Error: "Java version incompatible"
+
 ```gradle
 // android/app/build.gradle
 compileOptions {
@@ -166,6 +184,7 @@ kotlinOptions {
 ```
 
 ### Error: "Kotlin version X not compatible"
+
 ```gradle
 // android/build.gradle
 ext.kotlin_version = '1.9.0'
@@ -176,6 +195,7 @@ ext.kotlin_version = '1.9.0'
 ## 🔴 Memory / NDK Errors - Quick Fixes
 
 ### Error: "Out of memory during build"
+
 ```powershell
 # Windows: Increase heap size
 # Set environment variable:
@@ -188,6 +208,7 @@ flutter build apk --release
 ```
 
 ### Error: "NDK version mismatch"
+
 ```gradle
 // android/app/build.gradle
 android {
@@ -246,6 +267,7 @@ Select-String -Path "full_debug.log" -Pattern "ERROR|FAILED|error" | Head -20
 ---
 
 **Use this when:**
+
 1. Running `diagnose-android-build.ps1` identifies specific error
 2. Need quick fix for known issue
 3. Gradle/plugin/SDK version mismatch

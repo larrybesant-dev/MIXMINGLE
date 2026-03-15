@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum WithdrawalStatus {
   pending,
@@ -58,8 +58,12 @@ class WithdrawalRequest {
       stripeTransferId: map['stripeTransferId'],
       failureReason: map['failureReason'],
       requestedAt: (map['requestedAt'] as Timestamp).toDate(),
-      processedAt: map['processedAt'] != null ? (map['processedAt'] as Timestamp).toDate() : null,
-      completedAt: map['completedAt'] != null ? (map['completedAt'] as Timestamp).toDate() : null,
+      processedAt: map['processedAt'] != null
+          ? (map['processedAt'] as Timestamp).toDate()
+          : null,
+      completedAt: map['completedAt'] != null
+          ? (map['completedAt'] as Timestamp).toDate()
+          : null,
     );
   }
 
@@ -77,8 +81,10 @@ class WithdrawalRequest {
       'stripeTransferId': stripeTransferId,
       'failureReason': failureReason,
       'requestedAt': Timestamp.fromDate(requestedAt),
-      'processedAt': processedAt != null ? Timestamp.fromDate(processedAt!) : null,
-      'completedAt': completedAt != null ? Timestamp.fromDate(completedAt!) : null,
+      'processedAt':
+          processedAt != null ? Timestamp.fromDate(processedAt!) : null,
+      'completedAt':
+          completedAt != null ? Timestamp.fromDate(completedAt!) : null,
     };
   }
 
@@ -159,5 +165,3 @@ class WithdrawalRequest {
     return 'WithdrawalRequest(id: $id, userId: $userId, coinAmount: $coinAmount, usdAmount: \$$usdAmount, status: $status, requestedAt: $requestedAt)';
   }
 }
-
-

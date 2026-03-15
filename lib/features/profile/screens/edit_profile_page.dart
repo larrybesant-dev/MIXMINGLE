@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
@@ -36,9 +36,14 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   Future<void> _lookupZip(String zip) async {
     if (zip.length != 5) return;
-    setState(() { _zipLooking = true; _zipError = null; _zipResolvedCity = null; });
+    setState(() {
+      _zipLooking = true;
+      _zipError = null;
+      _zipResolvedCity = null;
+    });
     try {
-      final res = await http.get(Uri.parse('https://api.zippopotam.us/us/$zip'));
+      final res =
+          await http.get(Uri.parse('https://api.zippopotam.us/us/$zip'));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body) as Map<String, dynamic>;
         final places = data['places'] as List<dynamic>;
@@ -46,18 +51,28 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
           final city = places[0]['place name'] as String;
           final state = places[0]['state abbreviation'] as String;
           final resolved = '$city, $state';
-          setState(() { _zipResolvedCity = resolved; _zipError = null; });
+          setState(() {
+            _zipResolvedCity = resolved;
+            _zipError = null;
+          });
           _locationController.text = resolved;
         }
       } else {
-        setState(() { _zipError = 'ZIP code not found'; });
+        setState(() {
+          _zipError = 'ZIP code not found';
+        });
       }
     } catch (_) {
-      setState(() { _zipError = 'Could not look up ZIP code'; });
+      setState(() {
+        _zipError = 'Could not look up ZIP code';
+      });
     } finally {
-      setState(() { _zipLooking = false; });
+      setState(() {
+        _zipLooking = false;
+      });
     }
   }
+
   final _instagramController = TextEditingController();
   final _tiktokController = TextEditingController();
   final _snapchatController = TextEditingController();
@@ -91,6 +106,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   // ─── Section 5 – What You're Into ───────────────────────────
   List<String> _selectedInterests = [];
   List<String> _selectedMusicTastes = [];
+  String? _selectedVibeTag;
+  List<String> _selectedMusicGenres = [];
 
   // ─── Section 6 – What You're Looking For ────────────────────
   List<String> _lookingFor = [];
@@ -121,36 +138,88 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   ];
 
   static const List<String> _availableInterests = [
-    'Music', 'Sports', 'Gaming', 'Movies', 'Travel', 'Food',
-    'Art', 'Reading', 'Dancing', 'Technology', 'Fitness', 'Photography',
-    'Hiking', 'Cooking', 'Fashion', 'Comedy', 'Yoga', 'Cars',
-    'Anime', 'Podcasts', 'Astrology', 'Board Games',
+    'Music',
+    'Sports',
+    'Gaming',
+    'Movies',
+    'Travel',
+    'Food',
+    'Art',
+    'Reading',
+    'Dancing',
+    'Technology',
+    'Fitness',
+    'Photography',
+    'Hiking',
+    'Cooking',
+    'Fashion',
+    'Comedy',
+    'Yoga',
+    'Cars',
+    'Anime',
+    'Podcasts',
+    'Astrology',
+    'Board Games',
   ];
 
   static const List<String> _availableMusicTastes = [
-    'Hip-Hop', 'R&B', 'Pop', 'Afrobeats', 'Reggae', 'House',
-    'EDM', 'Jazz', 'Rock', 'Latin', 'Soul', 'Dancehall',
-    'Gospel', 'Country', 'Amapiano', 'Drill',
+    'Hip-Hop',
+    'R&B',
+    'Pop',
+    'Afrobeats',
+    'Reggae',
+    'House',
+    'EDM',
+    'Jazz',
+    'Rock',
+    'Latin',
+    'Soul',
+    'Dancehall',
+    'Gospel',
+    'Country',
+    'Amapiano',
+    'Drill',
   ];
 
   static const List<String> _genderOptions = [
-    'Man', 'Woman', 'Non-binary', 'Genderqueer', 'Agender', 'Prefer not to say',
+    'Man',
+    'Woman',
+    'Non-binary',
+    'Genderqueer',
+    'Agender',
+    'Prefer not to say',
   ];
 
   static const List<String> _pronounsOptions = [
-    'he/him', 'she/her', 'they/them', 'he/they', 'she/they', 'any',
+    'he/him',
+    'she/her',
+    'they/them',
+    'he/they',
+    'she/they',
+    'any',
   ];
 
   static const List<String> _lookingForOptions = [
-    'Friends', 'Dating', 'Networking', 'Activity Partners', 'Casual', 'Long-term',
+    'Friends',
+    'Dating',
+    'Networking',
+    'Activity Partners',
+    'Casual',
+    'Long-term',
   ];
 
   static const List<String> _relationshipTypeOptions = [
-    'Casual', 'Serious', 'Long-term', 'Open to anything',
+    'Casual',
+    'Serious',
+    'Long-term',
+    'Open to anything',
   ];
 
   static const List<String> _preferredGendersOptions = [
-    'Men', 'Women', 'Non-binary', 'Everyone',
+    'Men',
+    'Women',
+    'Non-binary',
+    'Everyone',
   ];
 
   static const Map<String, String> _lifestyleLabels = {
@@ -202,6 +271,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
     _selectedInterests = List<String>.from(profile.interests ?? []);
     _selectedMusicTastes = List<String>.from(profile.musicTastes ?? []);
+    _selectedVibeTag = profile.vibeTag;
+    _selectedMusicGenres = List<String>.from(profile.musicGenres ?? []);
 
     _lookingFor = List<String>.from(profile.lookingFor ?? []);
     _relationshipType = profile.relationshipType;
@@ -222,8 +293,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   }
 
   // ─── Photo uploads ───────────────────────────────────────────
-  Future<void> _pickAndUploadAvatar(String userId, UserProfile currentProfile) async {
-    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+  Future<void> _pickAndUploadAvatar(
+      String userId, UserProfile currentProfile) async {
+    final picked =
+        await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (picked == null) return;
     setState(() => _isUploading = true);
     try {
@@ -232,7 +305,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       final url = await controller.uploadAvatar(picked, userId);
       if (url == null) throw Exception('Upload returned null URL');
       if (!mounted) return;
-      await profileService.updateUserProfile(currentProfile.copyWith(photoUrl: url));
+      await profileService
+          .updateUserProfile(currentProfile.copyWith(photoUrl: url));
       ref.invalidate(currentUserProfileProvider);
       if (mounted) _showSuccess('Avatar updated');
     } catch (e) {
@@ -242,8 +316,10 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     }
   }
 
-  Future<void> _pickAndUploadCoverPhoto(String userId, UserProfile currentProfile) async {
-    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+  Future<void> _pickAndUploadCoverPhoto(
+      String userId, UserProfile currentProfile) async {
+    final picked =
+        await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
     if (picked == null) return;
     setState(() => _isUploading = true);
     try {
@@ -252,7 +328,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       final url = await controller.uploadCoverPhoto(picked, userId);
       if (url == null) throw Exception('Upload returned null URL');
       if (!mounted) return;
-      await profileService.updateUserProfile(currentProfile.copyWith(coverPhotoUrl: url));
+      await profileService
+          .updateUserProfile(currentProfile.copyWith(coverPhotoUrl: url));
       ref.invalidate(currentUserProfileProvider);
       if (mounted) _showSuccess('Cover photo updated');
     } catch (e) {
@@ -264,7 +341,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   Future<void> _addGalleryPhoto(UserProfile profile) async {
     if (_galleryPhotos.length >= 6) return;
-    final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 75);
+    final picked =
+        await picker.pickImage(source: ImageSource.gallery, imageQuality: 75);
     if (picked == null) return;
     setState(() => _isUploading = true);
     try {
@@ -277,7 +355,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       if (url == null) throw Exception('Upload failed');
       if (!mounted) return;
       setState(() => _galleryPhotos.add(url));
-      await profileService.updateUserProfile(profile.copyWith(galleryPhotos: _galleryPhotos));
+      await profileService
+          .updateUserProfile(profile.copyWith(galleryPhotos: _galleryPhotos));
       ref.invalidate(currentUserProfileProvider);
       if (mounted) _showSuccess('Photo added');
     } catch (e) {
@@ -300,16 +379,25 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       }
 
       final Map<String, String> links = {};
-      if (_instagramController.text.trim().isNotEmpty) links['instagram'] = _instagramController.text.trim();
-      if (_tiktokController.text.trim().isNotEmpty) links['tiktok'] = _tiktokController.text.trim();
-      if (_snapchatController.text.trim().isNotEmpty) links['snapchat'] = _snapchatController.text.trim();
-      if (_twitterController.text.trim().isNotEmpty) links['twitter'] = _twitterController.text.trim();
+      if (_instagramController.text.trim().isNotEmpty) {
+        links['instagram'] = _instagramController.text.trim();
+      }
+      if (_tiktokController.text.trim().isNotEmpty) {
+        links['tiktok'] = _tiktokController.text.trim();
+      }
+      if (_snapchatController.text.trim().isNotEmpty) {
+        links['snapchat'] = _snapchatController.text.trim();
+      }
+      if (_twitterController.text.trim().isNotEmpty) {
+        links['twitter'] = _twitterController.text.trim();
+      }
 
       final updatedProfile = UserProfile(
         id: currentProfile.id,
         email: currentProfile.email,
         displayName: _displayNameController.text.trim().isNotEmpty
-            ? ValidationHelpers.sanitizeInput(_displayNameController.text.trim())
+            ? ValidationHelpers.sanitizeInput(
+                _displayNameController.text.trim())
             : currentProfile.displayName,
         nickname: _nicknameController.text.trim().isNotEmpty
             ? ValidationHelpers.sanitizeInput(_nicknameController.text.trim())
@@ -330,11 +418,17 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         relationshipType: _relationshipType,
         minAgePreference: _minAge,
         maxAgePreference: _maxAge,
-        preferredGenders: _preferredGenders.isNotEmpty ? _preferredGenders : null,
+        preferredGenders:
+            _preferredGenders.isNotEmpty ? _preferredGenders : null,
         interests: _selectedInterests.isNotEmpty ? _selectedInterests : null,
-        musicTastes: _selectedMusicTastes.isNotEmpty ? _selectedMusicTastes : null,
+        musicTastes:
+            _selectedMusicTastes.isNotEmpty ? _selectedMusicTastes : null,
+        vibeTag: _selectedVibeTag,
+        musicGenres:
+            _selectedMusicGenres.isNotEmpty ? _selectedMusicGenres : null,
         personalityPrompts: prompts.isNotEmpty ? prompts : null,
-        lifestylePrompts: _lifestylePrompts.isNotEmpty ? _lifestylePrompts : null,
+        lifestylePrompts:
+            _lifestylePrompts.isNotEmpty ? _lifestylePrompts : null,
         socialLinks: links.isNotEmpty ? links : null,
         isPhotoVerified: currentProfile.isPhotoVerified,
         isPhoneVerified: currentProfile.isPhoneVerified,
@@ -368,7 +462,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   void _showSuccess(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Row(children: [
-        const Icon(Icons.check_circle_outline, color: DesignColors.success, size: 20),
+        const Icon(Icons.check_circle_outline,
+            color: DesignColors.success, size: 20),
         const SizedBox(width: 10),
         Text(msg, style: const TextStyle(color: DesignColors.white)),
       ]),
@@ -383,7 +478,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       content: Row(children: [
         const Icon(Icons.error_outline, color: DesignColors.error, size: 20),
         const SizedBox(width: 10),
-        Expanded(child: Text(msg, style: const TextStyle(color: DesignColors.white))),
+        Expanded(
+            child:
+                Text(msg, style: const TextStyle(color: DesignColors.white))),
       ]),
       backgroundColor: DesignColors.surfaceLight,
       behavior: SnackBarBehavior.floating,
@@ -410,7 +507,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
           data: (profile) {
             if (profile == null) {
               return const Center(
-                child: Text('Profile not found', style: TextStyle(color: DesignColors.white)),
+                child: Text('Profile not found',
+                    style: TextStyle(color: DesignColors.white)),
               );
             }
             _initializeFields(profile);
@@ -431,7 +529,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       ),
       title: Text(
         'Edit Profile',
-        style: DesignTypography.heading.copyWith(shadows: DesignColors.primaryGlow),
+        style: DesignTypography.heading
+            .copyWith(shadows: DesignColors.primaryGlow),
       ),
     );
   }
@@ -499,14 +598,16 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                   label: 'Gender',
                   options: _genderOptions,
                   selected: _gender != null ? [_gender!] : [],
-                  onTap: (v) => setState(() => _gender = (_gender == v) ? null : v),
+                  onTap: (v) =>
+                      setState(() => _gender = (_gender == v) ? null : v),
                 ),
                 const SizedBox(height: 12),
                 _buildChipSelector(
                   label: 'Pronouns',
                   options: _pronounsOptions,
                   selected: _pronouns != null ? [_pronouns!] : [],
-                  onTap: (v) => setState(() => _pronouns = (_pronouns == v) ? null : v),
+                  onTap: (v) =>
+                      setState(() => _pronouns = (_pronouns == v) ? null : v),
                 ),
               ],
             ),
@@ -557,6 +658,36 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         : _selectedMusicTastes.add(v);
                   }),
                 ),
+                const SizedBox(height: 16),
+                // ── Energy Vibe (single-select) ──
+                _buildChipSelector(
+                  label: 'Your Energy Vibe',
+                  options: const [
+                    'Chill', 'Hype', 'Deep Talk', 'Romantic',
+                    'Funny', 'Creative', 'Adventurous', 'Spiritual'
+                  ],
+                  selected:
+                      _selectedVibeTag != null ? [_selectedVibeTag!] : [],
+                  onTap: (v) => setState(
+                      () => _selectedVibeTag =
+                          (_selectedVibeTag == v) ? null : v),
+                ),
+                const SizedBox(height: 16),
+                // ── Music Genres (multi-select) ──
+                _buildChipSelectorMulti(
+                  label: 'Favourite Genres',
+                  options: const [
+                    'Hip-Hop', 'R&B', 'Pop', 'Afrobeats', 'Dancehall',
+                    'House', 'Techno', 'Reggae', 'Jazz', 'Soul',
+                    'Lo-Fi', 'Drill', 'Amapiano', 'Gospel', 'Country'
+                  ],
+                  selected: _selectedMusicGenres,
+                  onToggle: (v) => setState(() {
+                    _selectedMusicGenres.contains(v)
+                        ? _selectedMusicGenres.remove(v)
+                        : _selectedMusicGenres.add(v);
+                  }),
+                ),
               ],
             ),
 
@@ -580,7 +711,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 _buildChipSelector(
                   label: 'Relationship Type',
                   options: _relationshipTypeOptions,
-                  selected: _relationshipType != null ? [_relationshipType!] : [],
+                  selected:
+                      _relationshipType != null ? [_relationshipType!] : [],
                   onTap: (v) => setState(() =>
                       _relationshipType = (_relationshipType == v) ? null : v),
                 ),
@@ -621,7 +753,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                             ),
                           )
                         : _zipResolvedCity != null
-                            ? const Icon(Icons.check_circle, color: Colors.green)
+                            ? const Icon(Icons.check_circle,
+                                color: Colors.green)
                             : null,
                     errorText: _zipError,
                   ),
@@ -649,7 +782,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       const SizedBox(width: 4),
                       Text(
                         _zipResolvedCity!,
-                        style: const TextStyle(color: Colors.green, fontSize: 13),
+                        style:
+                            const TextStyle(color: Colors.green, fontSize: 13),
                       ),
                     ],
                   ),
@@ -675,8 +809,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 _buildSocialField('snapchat', _snapchatController,
                     Icons.circle_outlined, 'Snapchat username'),
                 const SizedBox(height: 12),
-                _buildSocialField('twitter', _twitterController,
-                    Icons.tag, 'X / Twitter handle'),
+                _buildSocialField('twitter', _twitterController, Icons.tag,
+                    'X / Twitter handle'),
               ],
             ),
 
@@ -728,7 +862,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(title,
-                            style: DesignTypography.subheading.copyWith(color: color)),
+                            style: DesignTypography.subheading
+                                .copyWith(color: color)),
                         if (subtitle != null) ...[
                           const SizedBox(height: 2),
                           Text(subtitle,
@@ -775,12 +910,14 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
-        hintStyle: TextStyle(color: DesignColors.textGray.withValues(alpha: 0.6)),
+        hintStyle:
+            TextStyle(color: DesignColors.textGray.withValues(alpha: 0.6)),
         labelStyle: const TextStyle(color: DesignColors.textGray),
         prefixIcon: Icon(icon, color: DesignColors.accent, size: 20),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: DesignColors.accent.withValues(alpha: 0.3)),
+          borderSide:
+              BorderSide(color: DesignColors.accent.withValues(alpha: 0.3)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -824,10 +961,12 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               child: CircleAvatar(
                 radius: 52,
                 backgroundColor: DesignColors.surfaceDefault,
-                backgroundImage:
-                    profile.photoUrl != null ? NetworkImage(profile.photoUrl!) : null,
+                backgroundImage: profile.photoUrl != null
+                    ? NetworkImage(profile.photoUrl!)
+                    : null,
                 child: profile.photoUrl == null
-                    ? const Icon(Icons.person, size: 52, color: DesignColors.textGray)
+                    ? const Icon(Icons.person,
+                        size: 52, color: DesignColors.textGray)
                     : null,
               ),
             ),
@@ -858,7 +997,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       ),
                     ],
                   ),
-                  child: const Icon(Icons.camera_alt, size: 16, color: DesignColors.white),
+                  child: const Icon(Icons.camera_alt,
+                      size: 16, color: DesignColors.white),
                 ),
               ),
             ),
@@ -873,7 +1013,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               const SizedBox(height: 4),
               Text(
                 'Square photo recommended.\nShows on your profile card & in rooms.',
-                style: DesignTypography.caption.copyWith(color: DesignColors.textGray),
+                style: DesignTypography.caption
+                    .copyWith(color: DesignColors.textGray),
               ),
               const SizedBox(height: 8),
               TextButton.icon(
@@ -884,7 +1025,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 label: Text(_isUploading ? 'Uploading…' : 'Change Photo'),
                 style: TextButton.styleFrom(
                   foregroundColor: DesignColors.accent,
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
@@ -901,7 +1043,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   Widget _buildCoverPhotoButton(UserProfile profile) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: _isUploading ? null : () => _pickAndUploadCoverPhoto(profile.id, profile),
+      onTap: _isUploading
+          ? null
+          : () => _pickAndUploadCoverPhoto(profile.id, profile),
       child: Container(
         height: 80,
         decoration: BoxDecoration(
@@ -910,7 +1054,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               color: DesignColors.accent.withValues(alpha: 0.4), width: 1),
           image: profile.coverPhotoUrl != null
               ? DecorationImage(
-                  image: NetworkImage(profile.coverPhotoUrl!), fit: BoxFit.cover)
+                  image: NetworkImage(profile.coverPhotoUrl!),
+                  fit: BoxFit.cover)
               : null,
           color: DesignColors.surfaceDefault,
         ),
@@ -923,8 +1068,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         color: DesignColors.accent, size: 20),
                     const SizedBox(width: 8),
                     Text('Upload Cover Photo',
-                        style:
-                            DesignTypography.body.copyWith(color: DesignColors.accent)),
+                        style: DesignTypography.body
+                            .copyWith(color: DesignColors.accent)),
                   ],
                 ),
               )
@@ -1057,7 +1202,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
         ),
         child: Row(
           children: [
-            const Icon(Icons.cake_outlined, color: DesignColors.accent, size: 20),
+            const Icon(Icons.cake_outlined,
+                color: DesignColors.accent, size: 20),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -1129,7 +1275,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(label,
-            style: DesignTypography.body.copyWith(color: DesignColors.textGray)),
+            style:
+                DesignTypography.body.copyWith(color: DesignColors.textGray)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -1148,9 +1295,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                       : DesignColors.surfaceDefault,
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: isSelected
-                        ? DesignColors.accent
-                        : DesignColors.divider,
+                    color:
+                        isSelected ? DesignColors.accent : DesignColors.divider,
                     width: isSelected ? 1.5 : 1,
                   ),
                 ),
@@ -1161,9 +1307,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                         ? DesignColors.accent
                         : DesignColors.textGray,
                     fontSize: 13,
-                    fontWeight: isSelected
-                        ? FontWeight.w600
-                        : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.w600 : FontWeight.normal,
                   ),
                 ),
               ),
@@ -1202,8 +1347,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             onTap: () => _showPromptPicker(index),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
@@ -1267,8 +1411,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 filled: true,
                 fillColor: DesignColors.surfaceDefault,
                 counterStyle: const TextStyle(color: DesignColors.textGray),
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 12),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               ),
             ),
           ],
@@ -1304,8 +1448,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             ),
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
-              child: Text('Choose a Prompt',
-                  style: DesignTypography.subheading),
+              child:
+                  Text('Choose a Prompt', style: DesignTypography.subheading),
             ),
             Expanded(
               child: ListView.builder(
@@ -1332,8 +1476,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                     onTap: alreadyUsed
                         ? null
                         : () {
-                            setState(
-                                () => _selectedPromptQuestions[index] = q);
+                            setState(() => _selectedPromptQuestions[index] = q);
                             Navigator.pop(ctx);
                           },
                   );
@@ -1375,8 +1518,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             value: isOn,
             onChanged: (v) => setState(() => _lifestylePrompts[key] = v),
             activeThumbColor: DesignColors.secondary,
-            activeTrackColor:
-                DesignColors.secondary.withValues(alpha: 0.4),
+            activeTrackColor: DesignColors.secondary.withValues(alpha: 0.4),
             inactiveTrackColor: DesignColors.divider,
             inactiveThumbColor: DesignColors.textGray,
           ),
@@ -1406,8 +1548,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
             ),
             Expanded(
               child: RangeSlider(
-                values:
-                    RangeValues(_minAge.toDouble(), _maxAge.toDouble()),
+                values: RangeValues(_minAge.toDouble(), _maxAge.toDouble()),
                 min: 18,
                 max: 80,
                 divisions: 62,

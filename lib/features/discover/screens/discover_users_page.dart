@@ -1,4 +1,4 @@
-﻿// lib/features/discover_users/discover_users_page.dart
+// lib/features/discover_users/discover_users_page.dart
 //
 // Discover Users – card-swipe deck + search/browse tab bar.
 //
@@ -15,7 +15,10 @@ import '../../../shared/providers/user_providers.dart';
 import '../../../shared/models/user_profile.dart';
 import '../../../shared/widgets/social_graph_widgets.dart';
 import '../../../shared/widgets/club_background.dart';
+import '../../../shared/widgets/offline_widgets.dart';
 import '../../../core/design_system/design_constants.dart';
+import 'package:mixmingle/core/analytics/analytics_service.dart';
+import 'package:mixmingle/core/analytics/analytics_events.dart';
 
 class DiscoverUsersPage extends ConsumerStatefulWidget {
   const DiscoverUsersPage({super.key});
@@ -35,6 +38,7 @@ class _DiscoverUsersPageState extends ConsumerState<DiscoverUsersPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    AnalyticsService.instance.logScreenView(screenName: 'screen_discover');
   }
 
   @override
@@ -46,15 +50,28 @@ class _DiscoverUsersPageState extends ConsumerState<DiscoverUsersPage>
 
   Future<void> _performSearch(String query) async {
     if (query.trim().isEmpty) {
-      setState(() { _searchResults = []; _isSearching = false; });
+      setState(() {
+        _searchResults = [];
+        _isSearching = false;
+      });
       return;
     }
     setState(() => _isSearching = true);
     try {
       final results = await ref.read(profileServiceProvider).searchUsers(query);
-      if (mounted) setState(() { _searchResults = results; _isSearching = false; });
+      if (mounted) {
+        setState(() {
+          _searchResults = results;
+          _isSearching = false;
+        });
+      }
     } catch (_) {
-      if (mounted) setState(() { _searchResults = []; _isSearching = false; });
+      if (mounted) {
+        setState(() {
+          _searchResults = [];
+          _isSearching = false;
+        });
+      }
     }
   }
 
@@ -81,22 +98,30 @@ class _DiscoverUsersPageState extends ConsumerState<DiscoverUsersPage>
             indicatorWeight: 2,
             labelColor: DesignColors.accent,
             unselectedLabelColor: DesignColors.white.withValues(alpha: 0.5),
-            labelStyle: DesignTypography.button.copyWith(fontSize: 12, letterSpacing: 1.5),
+            labelStyle: DesignTypography.button
+                .copyWith(fontSize: 12, letterSpacing: 1.5),
             tabs: const [
               Tab(text: 'SWIPE'),
               Tab(text: 'BROWSE'),
             ],
           ),
         ),
-        body: TabBarView(
-          controller: _tabController,
+        body: Column(
           children: [
-            _SwipeTab(onOpenBrowse: () => _tabController.animateTo(1)),
-            _BrowseTab(
-              searchController: _searchController,
-              searchResults: _searchResults,
-              isSearching: _isSearching,
-              onSearch: _performSearch,
+            const OfflineBanner(),
+            Expanded(
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _SwipeTab(onOpenBrowse: () => _tabController.animateTo(1)),
+                  _BrowseTab(
+                    searchController: _searchController,
+                    searchResults: _searchResults,
+                    isSearching: _isSearching,
+                    onSearch: _performSearch,
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -148,7 +173,11 @@ class _SwipeTabState extends ConsumerState<_SwipeTab>
   static const double _maxAngleDeg = 12;
 
   void _onDragStart(DragStartDetails _) {
-    setState(() { _isDragging = true; _snapCtrl.stop(); _dragOffset = Offset.zero; });
+    setState(() {
+      _isDragging = true;
+      _snapCtrl.stop();
+      _dragOffset = Offset.zero;
+    });
   }
 
   void _onDragUpdate(DragUpdateDetails d) {
@@ -166,23 +195,26 @@ class _SwipeTabState extends ConsumerState<_SwipeTab>
 
   void _snapBack() {
     final start = _dragOffset;
-    _snapAnim =
-        Tween<Offset>(begin: start, end: Offset.zero).animate(
-            CurvedAnimation(parent: _snapCtrl, curve: Curves.elasticOut));
+    _snapAnim = Tween<Offset>(begin: start, end: Offset.zero)
+        .animate(CurvedAnimation(parent: _snapCtrl, curve: Curves.elasticOut));
     _snapCtrl.forward(from: 0).then((_) {
-      setState(() { _dragOffset = Offset.zero; _isDragging = false; });
+      setState(() {
+        _dragOffset = Offset.zero;
+        _isDragging = false;
+      });
     });
   }
 
   void _flyOut(bool liked, UserProfile user) async {
     final end = Offset(liked ? 600 : -600, _dragOffset.dy * 1.5);
-    _snapAnim = Tween<Offset>(begin: _dragOffset, end: end).animate(
-        CurvedAnimation(parent: _snapCtrl, curve: Curves.easeIn));
+    _snapAnim = Tween<Offset>(begin: _dragOffset, end: end)
+        .animate(CurvedAnimation(parent: _snapCtrl, curve: Curves.easeIn));
     await _snapCtrl.forward(from: 0);
 
     if (liked) {
       try {
         await ref.read(socialGraphServiceProvider).followUser(user.id);
+        AnalyticsService.instance.logDiscoverUserLiked(userId: user.id);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(SnackBar(
             content: Text('You liked ${user.displayName ?? 'them'}!'),
@@ -192,6 +224,8 @@ class _SwipeTabState extends ConsumerState<_SwipeTab>
           ));
         }
       } catch (_) {}
+    } else {
+      AnalyticsService.instance.logEngagement(AnalyticsEvents.discoverUserViewed, params: {'user_id': user.id});
     }
 
     setState(() {
@@ -208,7 +242,8 @@ class _SwipeTabState extends ConsumerState<_SwipeTab>
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (_, __) => _buildError(),
       data: (allUsers) {
-        final users = allUsers.where((u) => !_dismissed.contains(u.id)).toList();
+        final users =
+            allUsers.where((u) => !_dismissed.contains(u.id)).toList();
         if (users.isEmpty) return _buildEmpty();
         return _buildDeck(users);
       },
@@ -226,8 +261,8 @@ class _SwipeTabState extends ConsumerState<_SwipeTab>
         // Counter
         Text(
           '${users.length} people nearby',
-          style: DesignTypography.caption.copyWith(
-              color: DesignColors.white.withValues(alpha: 0.5)),
+          style: DesignTypography.caption
+              .copyWith(color: DesignColors.white.withValues(alpha: 0.5)),
         ),
         const SizedBox(height: 12),
 
@@ -343,8 +378,8 @@ class _SwipeTabState extends ConsumerState<_SwipeTab>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.favorite_border_rounded, size: 72,
-              color: DesignColors.accent.withValues(alpha: 0.4)),
+          Icon(Icons.favorite_border_rounded,
+              size: 72, color: DesignColors.accent.withValues(alpha: 0.4)),
           const SizedBox(height: 20),
           Text('You\'ve seen everyone!',
               style: DesignTypography.subheading
@@ -492,7 +527,8 @@ class _ProfileCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (user.isPhotoVerified == true || user.isEmailVerified == true)
+                      if (user.isPhotoVerified == true ||
+                          user.isEmailVerified == true)
                         const Padding(
                           padding: EdgeInsets.only(left: 6),
                           child: Icon(Icons.verified_rounded,
@@ -510,7 +546,8 @@ class _ProfileCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(user.location!,
                             style: TextStyle(
-                                color: DesignColors.white.withValues(alpha: 0.7),
+                                color:
+                                    DesignColors.white.withValues(alpha: 0.7),
                                 fontSize: 13)),
                       ],
                     ),
@@ -529,22 +566,27 @@ class _ProfileCard extends StatelessWidget {
                     Wrap(
                       spacing: 6,
                       runSpacing: 4,
-                      children: user.interests!.take(4).map((tag) => Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: DesignColors.accent.withValues(alpha: 0.2),
-                          border: Border.all(
-                              color: DesignColors.accent.withValues(alpha: 0.6),
-                              width: 1),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(tag,
-                            style: const TextStyle(
-                                color: DesignColors.white,
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600)),
-                      )).toList(),
+                      children: user.interests!
+                          .take(4)
+                          .map((tag) => Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: DesignColors.accent
+                                      .withValues(alpha: 0.2),
+                                  border: Border.all(
+                                      color: DesignColors.accent
+                                          .withValues(alpha: 0.6),
+                                      width: 1),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(tag,
+                                    style: const TextStyle(
+                                        color: DesignColors.white,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600)),
+                              ))
+                          .toList(),
                     ),
                   ],
                 ],
@@ -559,12 +601,11 @@ class _ProfileCard extends StatelessWidget {
                 child: Transform.rotate(
                   angle: -0.25,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: DesignColors.success.withValues(alpha: 0.15),
-                      border: Border.all(
-                          color: DesignColors.success, width: 3),
+                      border: Border.all(color: DesignColors.success, width: 3),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text('LIKE',
@@ -585,12 +626,11 @@ class _ProfileCard extends StatelessWidget {
                 child: Transform.rotate(
                   angle: 0.25,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 6),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                     decoration: BoxDecoration(
                       color: DesignColors.error.withValues(alpha: 0.15),
-                      border: Border.all(
-                          color: DesignColors.error, width: 3),
+                      border: Border.all(color: DesignColors.error, width: 3),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text('NOPE',
@@ -678,8 +718,8 @@ class _BrowseTab extends ConsumerWidget {
             style: const TextStyle(color: DesignColors.white),
             decoration: InputDecoration(
               hintText: 'Search by name...',
-              hintStyle: TextStyle(
-                  color: DesignColors.white.withValues(alpha: 0.4)),
+              hintStyle:
+                  TextStyle(color: DesignColors.white.withValues(alpha: 0.4)),
               prefixIcon: Icon(Icons.search,
                   color: DesignColors.accent.withValues(alpha: 0.7)),
               suffixIcon: searchController.text.isNotEmpty
@@ -693,8 +733,8 @@ class _BrowseTab extends ConsumerWidget {
               fillColor: DesignColors.surfaceLight,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide:
-                    BorderSide(color: DesignColors.accent.withValues(alpha: 0.3)),
+                borderSide: BorderSide(
+                    color: DesignColors.accent.withValues(alpha: 0.3)),
               ),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -731,17 +771,18 @@ class _BrowseTab extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(Icons.search_off,
-                size: 60,
-                color: DesignColors.white.withValues(alpha: 0.3)),
+                size: 60, color: DesignColors.white.withValues(alpha: 0.3)),
             const SizedBox(height: 12),
             Text('No users found',
-                style: DesignTypography.body
-                    .copyWith(color: DesignColors.white.withValues(alpha: 0.6))),
+                style: DesignTypography.body.copyWith(
+                    color: DesignColors.white.withValues(alpha: 0.6))),
           ],
         ),
       );
     }
     return ListView.builder(
+      physics: const BouncingScrollPhysics(
+          parent: AlwaysScrollableScrollPhysics()),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       itemCount: searchResults.length,
       itemBuilder: (_, i) => _UserCard(user: searchResults[i]),
@@ -756,22 +797,24 @@ class _BrowseTab extends ConsumerWidget {
         child: TextButton(
           onPressed: () => ref.invalidate(suggestedUsersProvider),
           child: Text('Retry',
-              style: DesignTypography.button
-                  .copyWith(color: DesignColors.accent)),
+              style:
+                  DesignTypography.button.copyWith(color: DesignColors.accent)),
         ),
       ),
       data: (users) {
         if (users.isEmpty) {
           return Center(
             child: Text('No suggestions yet',
-                style: DesignTypography.body
-                    .copyWith(color: DesignColors.white.withValues(alpha: 0.5))),
+                style: DesignTypography.body.copyWith(
+                    color: DesignColors.white.withValues(alpha: 0.5))),
           );
         }
         return RefreshIndicator(
           color: DesignColors.accent,
           onRefresh: () async => ref.invalidate(suggestedUsersProvider),
           child: ListView.builder(
+            physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics()),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             itemCount: users.length,
             itemBuilder: (_, i) => _UserCard(user: users[i]),
@@ -805,9 +848,8 @@ class _UserCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundImage: user.photoUrl != null
-                    ? NetworkImage(user.photoUrl!)
-                    : null,
+                backgroundImage:
+                    user.photoUrl != null ? NetworkImage(user.photoUrl!) : null,
                 backgroundColor: DesignColors.surfaceDefault,
                 child: user.photoUrl == null
                     ? Text(
@@ -833,8 +875,8 @@ class _UserCard extends StatelessWidget {
               children: [
                 Text(
                   user.displayName ?? user.nickname ?? 'Unknown',
-                  style: DesignTypography.body.copyWith(
-                      fontWeight: FontWeight.bold),
+                  style: DesignTypography.body
+                      .copyWith(fontWeight: FontWeight.bold),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -850,20 +892,25 @@ class _UserCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Wrap(
                     spacing: 5,
-                    children: user.interests!.take(3).map((interest) => Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 3),
-                      decoration: BoxDecoration(
-                        color: DesignColors.gold.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                            color: DesignColors.gold.withValues(alpha: 0.4),
-                            width: 1),
-                      ),
-                      child: Text(interest,
-                          style: const TextStyle(
-                              color: DesignColors.gold, fontSize: 11)),
-                    )).toList(),
+                    children: user.interests!
+                        .take(3)
+                        .map((interest) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color:
+                                    DesignColors.gold.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                    color: DesignColors.gold
+                                        .withValues(alpha: 0.4),
+                                    width: 1),
+                              ),
+                              child: Text(interest,
+                                  style: const TextStyle(
+                                      color: DesignColors.gold, fontSize: 11)),
+                            ))
+                        .toList(),
                   ),
                 ],
               ],

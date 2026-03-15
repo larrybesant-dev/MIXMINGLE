@@ -1,10 +1,20 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+<<<<<<< HEAD
 import '../../shared/widgets/glow_text.dart';
 import '../../shared/widgets/neon_button.dart';
 import '../../models/user.dart';
 import '../../features/chat/chat_screen.dart';
 // Add any other necessary imports for providers and custom widgets
+=======
+import '../../shared/providers/providers.dart';
+import '../../shared/models/user.dart';
+import '../../shared/club_background.dart';
+import '../../shared/glow_text.dart';
+import '../../shared/neon_button.dart';
+import '../messages/chat_screen.dart';
+import '../profile/widgets/friend_request_button.dart';
+>>>>>>> origin/develop
 
 class UserProfilePage extends ConsumerWidget {
   final String userId;
@@ -183,6 +193,16 @@ class UserProfilePage extends ConsumerWidget {
 
         // Follow Button (only show if not own profile)
         if (!isOwnProfile) _buildFollowButton(user, ref),
+
+        // Friend Button (only show if not own profile)
+        if (!isOwnProfile) ...[
+          const SizedBox(height: 12),
+          FriendRequestButton(
+            targetUserId: user.id,
+            targetUserName: user.displayName,
+            targetUserAvatarUrl: user.avatarUrl.isNotEmpty ? user.avatarUrl : null,
+          ),
+        ],
       ],
     );
   }
@@ -392,7 +412,8 @@ class UserProfilePage extends ConsumerWidget {
             runSpacing: 8,
             children: user.interests.map((interest) {
               return Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: const Color(0xFFFF4C4C).withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(20),

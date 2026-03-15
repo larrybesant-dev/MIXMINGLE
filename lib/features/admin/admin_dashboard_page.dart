@@ -1,5 +1,8 @@
+<<<<<<< HEAD
 ﻿// ignore_for_file: unused_element
 import 'package:cloud_firestore/cloud_firestore.dart';
+=======
+>>>>>>> origin/develop
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/models/report.dart' show ReportType;
@@ -7,7 +10,11 @@ import 'package:mixmingle/shared/models/moderation.dart' show UserReport;
 import 'package:mixmingle/shared/widgets/club_background.dart';
 import 'package:mixmingle/shared/widgets/glow_text.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
+<<<<<<< HEAD
 import 'package:mixmingle/services/admin/admin_service.dart';
+=======
+import 'ads_admin_page.dart';
+>>>>>>> origin/develop
 
 class AdminDashboardPage extends ConsumerStatefulWidget {
   const AdminDashboardPage({super.key});
@@ -47,6 +54,7 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
           ),
           backgroundColor: Colors.transparent,
           elevation: 0,
+<<<<<<< HEAD
           bottom: TabBar(
             controller: _tabs,
             indicatorColor: Colors.purpleAccent,
@@ -76,6 +84,166 @@ class _AdminDashboardPageState extends ConsumerState<AdminDashboardPage>
             _GlobalBansTab(),
             _AnalyticsTab(),
             _AdminLogsTab(),
+=======
+        ),
+        body: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Stats Cards
+              Row(
+                children: [
+                  Expanded(
+                      child: _buildStatCard('Total Reports', '0', Icons.flag)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child: _buildStatCard('Pending', '0', Icons.pending)),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Ad Manager shortcut
+              _buildNavCard(
+                context,
+                title: 'Ad Manager',
+                subtitle: 'Manage advertisers, creatives & promo codes',
+                icon: Icons.campaign_outlined,
+                color: const Color(0xFFFF4C4C),
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => const AdsAdminPage(),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // Pending Reports
+              const GlowText(
+                text: 'Pending Reports',
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              const SizedBox(height: 12),
+
+              FutureBuilder<List<UserReport>>(
+                future: moderationService.getPendingReports(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  }
+
+                  final reports = snapshot.data ?? [];
+                  if (reports.isEmpty) {
+                    return const Card(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: Center(
+                          child: Text('No pending reports'),
+                        ),
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    children: reports
+                        .map((report) => _buildReportCard(report))
+                        .toList(),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavCard(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: color.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title,
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15)),
+                  const SizedBox(height: 2),
+                  Text(subtitle,
+                      style: const TextStyle(
+                          color: Colors.white60, fontSize: 12)),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios,
+                color: Colors.white30, size: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, String value, IconData icon) {
+    return Card(
+      color: Colors.white.withValues(alpha: 0.1),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Icon(icon, color: const Color(0xFFFF4C4C), size: 32),
+            const SizedBox(height: 8),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              title,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 12,
+              ),
+            ),
+>>>>>>> origin/develop
           ],
         ),
       ),
@@ -699,12 +867,21 @@ class _AdminTextField extends StatelessWidget {
   }
 }
 
+<<<<<<< HEAD
 class _Btn extends StatelessWidget {
   final String label;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
   const _Btn(this.label, this.icon, this.color, this.onTap);
+=======
+  Future<void> _reviewReport(UserReport report, String status) async {
+    try {
+      final moderationService = ref.read(moderationServiceProvider);
+      final currentUser = ref.read(authServiceProvider).currentUser;
+      await moderationService.reviewReport(
+          report.id, currentUser?.uid ?? 'admin', status);
+>>>>>>> origin/develop
 
   @override
   Widget build(BuildContext context) {

@@ -11,6 +11,7 @@ import 'package:mixmingle/shared/widgets/follow_button.dart';
 import 'package:mixmingle/shared/widgets/presence_indicator.dart';
 import 'package:mixmingle/services/events/reporting_service.dart' as reporting;
 import 'package:mixmingle/features/reporting/report_dialog.dart';
+<<<<<<< HEAD
 import 'package:mixmingle/features/start_conversation.dart';
 import 'package:mixmingle/shared/providers/friend_request_provider.dart';
 import 'package:mixmingle/services/social/friend_service.dart';
@@ -24,16 +25,31 @@ final userStoriesProvider =
     StreamProvider.autoDispose.family<List<StoryModel>, String>(
   (ref, userId) => StoriesService.instance.watchUserStories(userId),
 );
+=======
+import 'package:mixmingle/core/analytics/analytics_service.dart';
+>>>>>>> origin/develop
 
-class UserProfilePage extends ConsumerWidget {
+class UserProfilePage extends ConsumerStatefulWidget {
   final String userId;
 
   const UserProfilePage({super.key, required this.userId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<UserProfilePage> createState() => _UserProfilePageState();
+}
+
+class _UserProfilePageState extends ConsumerState<UserProfilePage> {
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.instance.logScreenView(screenName: 'screen_profile');
+    AnalyticsService.instance.logDiscoverUserViewed(userId: widget.userId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider).value;
-    final profileUserId = userId;
+    final profileUserId = widget.userId;
     final isOwnProfile = profileUserId == currentUser?.id;
 
     final profileAsync = ref.watch(userProfileProvider(profileUserId));
@@ -69,13 +85,15 @@ class UserProfilePage extends ConsumerWidget {
                       IconButton(
                         icon: const Icon(Icons.edit),
                         onPressed: () {
-                          Navigator.of(context).pushNamed(AppRoutes.editProfile);
+                          Navigator.of(context)
+                              .pushNamed(AppRoutes.editProfile);
                         },
                       ),
                     if (!isOwnProfile)
                       IconButton(
                         icon: const Icon(Icons.more_vert),
-                        onPressed: () => _showOptionsMenu(context, ref, profileUserId),
+                        onPressed: () =>
+                            _showOptionsMenu(context, ref, profileUserId),
                       ),
                   ],
                   flexibleSpace: FlexibleSpaceBar(
@@ -89,8 +107,14 @@ class UserProfilePage extends ConsumerWidget {
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
                               colors: [
-                                Theme.of(context).colorScheme.primary.withValues(alpha: 0.3),
-                                Theme.of(context).colorScheme.secondary.withValues(alpha: 0.3),
+                                Theme.of(context)
+                                    .colorScheme
+                                    .primary
+                                    .withValues(alpha: 0.3),
+                                Theme.of(context)
+                                    .colorScheme
+                                    .secondary
+                                    .withValues(alpha: 0.3),
                               ],
                             ),
                           ),
@@ -99,7 +123,9 @@ class UserProfilePage extends ConsumerWidget {
                         Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            SizedBox(height: Responsive.responsiveSpacing(context, 60)),
+                            SizedBox(
+                                height:
+                                    Responsive.responsiveSpacing(context, 60)),
                             // Profile image
                             AppAnimations.scaleIn(
                               child: Stack(
@@ -111,12 +137,15 @@ class UserProfilePage extends ConsumerWidget {
                                       tablet: 75.0,
                                       desktop: 90.0,
                                     ),
-                                    backgroundImage:
-                                        profile.profileImageUrl != null ? NetworkImage(profile.profileImageUrl!) : null,
+                                    backgroundImage: profile.profileImageUrl !=
+                                            null
+                                        ? NetworkImage(profile.profileImageUrl!)
+                                        : null,
                                     child: profile.profileImageUrl == null
                                         ? Icon(
                                             Icons.person,
-                                            size: Responsive.responsiveIconSize(context, 60),
+                                            size: Responsive.responsiveIconSize(
+                                                context, 60),
                                           )
                                         : null,
                                   ),
@@ -132,35 +161,50 @@ class UserProfilePage extends ConsumerWidget {
                                 ],
                               ),
                             ),
-                            SizedBox(height: Responsive.responsiveSpacing(context, 16)),
+                            SizedBox(
+                                height:
+                                    Responsive.responsiveSpacing(context, 16)),
                             // Username
                             AppAnimations.fadeIn(
                               child: Text(
                                 profile.username ?? 'User',
                                 style: TextStyle(
-                                  fontSize: Responsive.responsiveFontSize(context, 28),
+                                  fontSize: Responsive.responsiveFontSize(
+                                      context, 28),
                                   fontWeight: FontWeight.bold,
                                   color: Colors.white,
                                   shadows: [
                                     Shadow(
                                       offset: const Offset(0, 1),
                                       blurRadius: 3.0,
-                                      color: Colors.black.withValues(alpha: 0.5),
+                                      color:
+                                          Colors.black.withValues(alpha: 0.5),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
                             if (profile.age != null || profile.location != null)
-                              SizedBox(height: Responsive.responsiveSpacing(context, 8)),
+                              SizedBox(
+                                  height:
+                                      Responsive.responsiveSpacing(context, 8)),
                             AppAnimations.fadeIn(
                               child: Text(
                                 [
+<<<<<<< HEAD
                                   if (profile.age != null) '${profile.age} years old',
                                   if (profile.location != null) profile.location,
                                 ].join(' • '),
+=======
+                                  if (profile.age != null)
+                                    '${profile.age} years old',
+                                  if (profile.location != null)
+                                    profile.location,
+                                ].join(' â€¢ '),
+>>>>>>> origin/develop
                                 style: TextStyle(
-                                  fontSize: Responsive.responsiveFontSize(context, 16),
+                                  fontSize: Responsive.responsiveFontSize(
+                                      context, 16),
                                   color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
@@ -203,24 +247,34 @@ class UserProfilePage extends ConsumerWidget {
                                       children: [
                                         Icon(
                                           Icons.info_outline,
-                                          size: Responsive.responsiveIconSize(context, 20),
-                                          color: Theme.of(context).colorScheme.primary,
+                                          size: Responsive.responsiveIconSize(
+                                              context, 20),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
                                         ),
-                                        SizedBox(width: Responsive.responsiveSpacing(context, 8)),
+                                        SizedBox(
+                                            width: Responsive.responsiveSpacing(
+                                                context, 8)),
                                         Text(
                                           'About',
                                           style: TextStyle(
-                                            fontSize: Responsive.responsiveFontSize(context, 18),
+                                            fontSize:
+                                                Responsive.responsiveFontSize(
+                                                    context, 18),
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       ],
                                     ),
-                                    SizedBox(height: Responsive.responsiveSpacing(context, 12)),
+                                    SizedBox(
+                                        height: Responsive.responsiveSpacing(
+                                            context, 12)),
                                     Text(
                                       profile.bio!,
                                       style: TextStyle(
-                                        fontSize: Responsive.responsiveFontSize(context, 16),
+                                        fontSize: Responsive.responsiveFontSize(
+                                            context, 16),
                                         height: 1.5,
                                       ),
                                     ),
@@ -229,11 +283,14 @@ class UserProfilePage extends ConsumerWidget {
                               ),
                             ),
                           ),
-                          SizedBox(height: Responsive.responsiveSpacing(context, 16)),
+                          SizedBox(
+                              height:
+                                  Responsive.responsiveSpacing(context, 16)),
                         ],
 
                         // Interests
-                        if (profile.interests != null && profile.interests!.isNotEmpty) ...[
+                        if (profile.interests != null &&
+                            profile.interests!.isNotEmpty) ...[
                           AppAnimations.slideInFromBottom(
                             beginOffset: 30,
                             child: Card(
@@ -246,27 +303,40 @@ class UserProfilePage extends ConsumerWidget {
                                       children: [
                                         Icon(
                                           Icons.favorite_outline,
-                                          size: Responsive.responsiveIconSize(context, 20),
-                                          color: Theme.of(context).colorScheme.primary,
+                                          size: Responsive.responsiveIconSize(
+                                              context, 20),
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary,
                                         ),
-                                        SizedBox(width: Responsive.responsiveSpacing(context, 8)),
+                                        SizedBox(
+                                            width: Responsive.responsiveSpacing(
+                                                context, 8)),
                                         Text(
                                           'Interests',
                                           style: TextStyle(
-                                            fontSize: Responsive.responsiveFontSize(context, 18),
+                                            fontSize:
+                                                Responsive.responsiveFontSize(
+                                                    context, 18),
                                             fontWeight: FontWeight.bold,
                                           ),
                                         ),
                                       ],
                                     ),
-                                    SizedBox(height: Responsive.responsiveSpacing(context, 12)),
+                                    SizedBox(
+                                        height: Responsive.responsiveSpacing(
+                                            context, 12)),
                                     Wrap(
                                       spacing: 8,
                                       runSpacing: 8,
-                                      children: profile.interests!.map((interest) {
+                                      children:
+                                          profile.interests!.map((interest) {
                                         return Chip(
                                           label: Text(interest),
-                                          backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+                                          backgroundColor: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withValues(alpha: 0.2),
                                         );
                                       }).toList(),
                                     ),
@@ -275,7 +345,9 @@ class UserProfilePage extends ConsumerWidget {
                               ),
                             ),
                           ),
-                          SizedBox(height: Responsive.responsiveSpacing(context, 16)),
+                          SizedBox(
+                              height:
+                                  Responsive.responsiveSpacing(context, 16)),
                         ],
 
                         // Stats
@@ -283,7 +355,8 @@ class UserProfilePage extends ConsumerWidget {
                           beginOffset: 40,
                           child: _buildStatsCard(context, ref, profileUserId),
                         ),
-                        SizedBox(height: Responsive.responsiveSpacing(context, 100)),
+                        SizedBox(
+                            height: Responsive.responsiveSpacing(context, 100)),
                       ],
                     ),
                   ),
@@ -292,8 +365,9 @@ class UserProfilePage extends ConsumerWidget {
             );
           },
         ),
-        bottomNavigationBar:
-            !isOwnProfile && currentUser != null ? _buildActionButtons(context, ref, profileUserId) : null,
+        bottomNavigationBar: !isOwnProfile && currentUser != null
+            ? _buildActionButtons(context, ref, profileUserId)
+            : null,
       ),
     );
   }
@@ -367,14 +441,16 @@ class UserProfilePage extends ConsumerWidget {
           label,
           style: TextStyle(
             fontSize: Responsive.responsiveFontSize(context, 14),
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
+            color:
+                Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildActionButtons(BuildContext context, WidgetRef ref, String userId) {
+  Widget _buildActionButtons(
+      BuildContext context, WidgetRef ref, String userId) {
     final currentUser = ref.watch(currentUserProvider).value;
     final friendStatus = ref.watch(friendStatusProvider(userId)).value ?? FriendRequestStatus.none;
 
@@ -397,7 +473,8 @@ class UserProfilePage extends ConsumerWidget {
             // Follow button row
             if (currentUser != null)
               Padding(
-                padding: EdgeInsets.only(bottom: Responsive.responsiveSpacing(context, 12)),
+                padding: EdgeInsets.only(
+                    bottom: Responsive.responsiveSpacing(context, 12)),
                 child: SizedBox(
                   width: double.infinity,
                   child: FollowButton(
@@ -428,7 +505,9 @@ class UserProfilePage extends ConsumerWidget {
                 Expanded(
                   child: OutlinedButton.icon(
                     onPressed: () async {
-                      await ref.read(matchControllerProvider.notifier).like(userId);
+                      await ref
+                          .read(matchControllerProvider.notifier)
+                          .like(userId);
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(content: Text('Like sent!')),
@@ -506,7 +585,9 @@ class UserProfilePage extends ConsumerWidget {
                 Navigator.pop(context);
                 final currentUser = await ref.read(currentUserProvider.future);
                 if (currentUser != null) {
-                  await ref.read(moderationControllerProvider.notifier).blockUser(currentUser.id, userId);
+                  await ref
+                      .read(moderationControllerProvider.notifier)
+                      .blockUser(currentUser.id, userId);
                 }
                 if (context.mounted) {
                   Navigator.of(context).pop();
@@ -523,7 +604,8 @@ class UserProfilePage extends ConsumerWidget {
                 Navigator.pop(context);
 
                 // Get user profile for name
-                final profile = await ref.read(userProfileProvider(userId).future);
+                final profile =
+                    await ref.read(userProfileProvider(userId).future);
 
                 if (context.mounted) {
                   final submitted = await showReportDialog(

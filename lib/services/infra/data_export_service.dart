@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -80,7 +80,10 @@ class DataExportService {
   /// Exports all events created by the user
   Future<List<Map<String, dynamic>>> _exportUserEvents(String userId) async {
     try {
-      final snapshot = await _firestore.collection('events').where('createdBy', isEqualTo: userId).get();
+      final snapshot = await _firestore
+          .collection('events')
+          .where('createdBy', isEqualTo: userId)
+          .get();
 
       return snapshot.docs
           .map((doc) => {
@@ -103,8 +106,10 @@ class DataExportService {
           .orderBy('timestamp', descending: true)
           .get();
 
-      final conversationsSnapshot =
-          await _firestore.collection('conversations').where('participants', arrayContains: userId).get();
+      final conversationsSnapshot = await _firestore
+          .collection('conversations')
+          .where('participants', arrayContains: userId)
+          .get();
 
       return {
         'sent_messages': messagesSnapshot.docs
@@ -127,9 +132,13 @@ class DataExportService {
   }
 
   /// Exports events the user has joined
-  Future<List<Map<String, dynamic>>> _exportEventParticipations(String userId) async {
+  Future<List<Map<String, dynamic>>> _exportEventParticipations(
+      String userId) async {
     try {
-      final snapshot = await _firestore.collection('events').where('participants', arrayContains: userId).get();
+      final snapshot = await _firestore
+          .collection('events')
+          .where('participants', arrayContains: userId)
+          .get();
 
       return snapshot.docs
           .map((doc) => {
@@ -148,9 +157,15 @@ class DataExportService {
   /// Exports follow relationships
   Future<Map<String, dynamic>> _exportFollowRelationships(String userId) async {
     try {
-      final followingSnapshot = await _firestore.collection('follows').where('followerId', isEqualTo: userId).get();
+      final followingSnapshot = await _firestore
+          .collection('follows')
+          .where('followerId', isEqualTo: userId)
+          .get();
 
-      final followersSnapshot = await _firestore.collection('follows').where('followingId', isEqualTo: userId).get();
+      final followersSnapshot = await _firestore
+          .collection('follows')
+          .where('followingId', isEqualTo: userId)
+          .get();
 
       return {
         'following': followingSnapshot.docs
@@ -175,9 +190,15 @@ class DataExportService {
   /// Exports reports submitted by and against the user
   Future<Map<String, dynamic>> _exportUserReports(String userId) async {
     try {
-      final submittedSnapshot = await _firestore.collection('reports').where('reporterId', isEqualTo: userId).get();
+      final submittedSnapshot = await _firestore
+          .collection('reports')
+          .where('reporterId', isEqualTo: userId)
+          .get();
 
-      final receivedSnapshot = await _firestore.collection('reports').where('reportedUserId', isEqualTo: userId).get();
+      final receivedSnapshot = await _firestore
+          .collection('reports')
+          .where('reportedUserId', isEqualTo: userId)
+          .get();
 
       return {
         'submitted_reports': submittedSnapshot.docs
@@ -204,9 +225,15 @@ class DataExportService {
   /// Exports blocked users
   Future<Map<String, dynamic>> _exportUserBlocks(String userId) async {
     try {
-      final blockedByUserSnapshot = await _firestore.collection('blocks').where('blockerId', isEqualTo: userId).get();
+      final blockedByUserSnapshot = await _firestore
+          .collection('blocks')
+          .where('blockerId', isEqualTo: userId)
+          .get();
 
-      final blockedUserSnapshot = await _firestore.collection('blocks').where('blockedUserId', isEqualTo: userId).get();
+      final blockedUserSnapshot = await _firestore
+          .collection('blocks')
+          .where('blockedUserId', isEqualTo: userId)
+          .get();
 
       return {
         'users_you_blocked': blockedByUserSnapshot.docs
@@ -231,7 +258,8 @@ class DataExportService {
   /// Exports subscription data
   Future<Map<String, dynamic>?> _exportSubscriptionData(String userId) async {
     try {
-      final doc = await _firestore.collection('subscriptions').doc(userId).get();
+      final doc =
+          await _firestore.collection('subscriptions').doc(userId).get();
       if (!doc.exists) return null;
 
       return _sanitizeTimestamps(doc.data()!);
@@ -247,7 +275,8 @@ class DataExportService {
       // If you store any analytics in Firestore, export it here
       // Otherwise, return null or minimal data
       return {
-        'note': 'Analytics data is processed by Firebase Analytics and not stored in exportable format',
+        'note':
+            'Analytics data is processed by Firebase Analytics and not stored in exportable format',
         'user_id': userId,
       };
     } catch (e) {
@@ -286,20 +315,34 @@ class DataExportService {
       final summary = <String, int>{};
 
       // Count events
-      final eventsCount = await _firestore.collection('events').where('createdBy', isEqualTo: userId).count().get();
+      final eventsCount = await _firestore
+          .collection('events')
+          .where('createdBy', isEqualTo: userId)
+          .count()
+          .get();
       summary['events_created'] = eventsCount.count ?? 0;
 
       // Count messages
-      final messagesCount = await _firestore.collection('messages').where('senderId', isEqualTo: userId).count().get();
+      final messagesCount = await _firestore
+          .collection('messages')
+          .where('senderId', isEqualTo: userId)
+          .count()
+          .get();
       summary['messages_sent'] = messagesCount.count ?? 0;
 
       // Count follows
-      final followingCount =
-          await _firestore.collection('follows').where('followerId', isEqualTo: userId).count().get();
+      final followingCount = await _firestore
+          .collection('follows')
+          .where('followerId', isEqualTo: userId)
+          .count()
+          .get();
       summary['following'] = followingCount.count ?? 0;
 
-      final followersCount =
-          await _firestore.collection('follows').where('followingId', isEqualTo: userId).count().get();
+      final followersCount = await _firestore
+          .collection('follows')
+          .where('followingId', isEqualTo: userId)
+          .count()
+          .get();
       summary['followers'] = followersCount.count ?? 0;
 
       return summary;

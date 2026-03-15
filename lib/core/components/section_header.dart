@@ -42,7 +42,8 @@ class SectionHeader extends StatelessWidget {
 
     final accent = showAccent
         ? Container(
-            margin: EdgeInsets.only(top: subtitle != null ? Spacing.xs : Spacing.xs),
+            margin: EdgeInsets.only(
+                top: subtitle != null ? Spacing.xs : Spacing.xs),
             height: 3,
             width: accentWidth,
             decoration: const BoxDecoration(
@@ -95,7 +96,9 @@ class SectionHeader extends StatelessWidget {
     return Padding(
       padding: padding ?? const EdgeInsets.symmetric(vertical: Spacing.sm),
       child: Row(
-        crossAxisAlignment: subtitle != null ? CrossAxisAlignment.start : CrossAxisAlignment.center,
+        crossAxisAlignment: subtitle != null
+            ? CrossAxisAlignment.start
+            : CrossAxisAlignment.center,
         children: [
           Expanded(child: titleBlock),
           if (trailing != null)

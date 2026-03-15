@@ -5,6 +5,7 @@ Thank you for contributing! Please read this guide before opening a PR.
 ---
 
 ## Table of Contents
+
 1. [Development setup](#development-setup)
 2. [Branch and commit conventions](#branch-and-commit-conventions)
 3. [Pre-commit checks](#pre-commit-checks)
@@ -39,14 +40,14 @@ Requirements: Flutter 3.24.3 (stable), Java 17, Dart 3.x
 
 ## Branch and commit conventions
 
-| Branch | Purpose |
-|--------|---------|
-| `main` | Production; protected; requires PR + passing CI |
-| `develop` | Integration branch; protected; requires PR + passing CI |
-| `feat/<name>` | New features |
-| `fix/<name>` | Bug fixes |
-| `chore/<name>` | Maintenance, deps, lint |
-| `lint-stage-<n>` | Staged lint re-enable (see below) |
+| Branch           | Purpose                                                 |
+| ---------------- | ------------------------------------------------------- |
+| `main`           | Production; protected; requires PR + passing CI         |
+| `develop`        | Integration branch; protected; requires PR + passing CI |
+| `feat/<name>`    | New features                                            |
+| `fix/<name>`     | Bug fixes                                               |
+| `chore/<name>`   | Maintenance, deps, lint                                 |
+| `lint-stage-<n>` | Staged lint re-enable (see below)                       |
 
 Commit messages follow [Conventional Commits](https://www.conventionalcommits.org/):
 
@@ -166,10 +167,10 @@ flutter build web
 Lint rules are being re-enabled incrementally to avoid a large disruptive
 change. Do not re-enable rules outside the designated stage PR.
 
-| Stage | Branch | Rules |
-|-------|--------|-------|
-| Stage 1 | `lint-stage-1` | `prefer_const_constructors`, `prefer_final_fields` |
-| Stage 2 | `lint-stage-2` | `unused_local_variable`, `unused_element`, `unused_field` |
+| Stage   | Branch         | Rules                                                                    |
+| ------- | -------------- | ------------------------------------------------------------------------ |
+| Stage 1 | `lint-stage-1` | `prefer_const_constructors`, `prefer_final_fields`                       |
+| Stage 2 | `lint-stage-2` | `unused_local_variable`, `unused_element`, `unused_field`                |
 | Stage 3 | `lint-stage-3` | Remove `lib/**_web.dart` from `analyzer.exclude`; full platform analysis |
 
 Workflow per stage:
@@ -191,11 +192,11 @@ git commit -m "chore(lint): re-enable stage N rules"
 
 Every PR targeting `main` or `develop` must pass:
 
-| Check | Workflow | Failure mode |
-|-------|----------|-------------|
+| Check                              | Workflow | Failure mode |
+| ---------------------------------- | -------- | ------------ |
 | `flutter analyze --no-fatal-infos` | `ci.yml` | Blocks merge |
-| `flutter test test/unit/` | `ci.yml` | Blocks merge |
-| No build artifacts in repo | `ci.yml` | Blocks merge |
+| `flutter test test/unit/`          | `ci.yml` | Blocks merge |
+| No build artifacts in repo         | `ci.yml` | Blocks merge |
 
 The `build-android-apk` job runs on PRs only and uploads the APK as a build
 artifact. It uses a dual-path copy step to handle the AGP 8.x output-directory

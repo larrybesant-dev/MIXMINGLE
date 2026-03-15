@@ -62,7 +62,8 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
 
     _arrivalController = AnimationController(
       vsync: this,
-      duration: DesignAnimations.presenceSlideInDuration, // 250ms per DESIGN_BIBLE
+      duration:
+          DesignAnimations.presenceSlideInDuration, // 250ms per DESIGN_BIBLE
     );
 
     _slideAnimation = Tween<Offset>(
@@ -88,7 +89,8 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
   void _initializeSpeakingAnimation() {
     _speakingController = AnimationController(
       vsync: this,
-      duration: DesignAnimations.speakingPulseDuration, // 200ms per DESIGN_BIBLE
+      duration:
+          DesignAnimations.speakingPulseDuration, // 200ms per DESIGN_BIBLE
     );
 
     if (widget.participant.isSpeaking) {
@@ -103,7 +105,8 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
     // Update speaking animation if state changed
     if (widget.participant.isSpeaking && !oldWidget.participant.isSpeaking) {
       _speakingController.repeat(reverse: true);
-    } else if (!widget.participant.isSpeaking && oldWidget.participant.isSpeaking) {
+    } else if (!widget.participant.isSpeaking &&
+        oldWidget.participant.isSpeaking) {
       _speakingController.stop();
     }
   }
@@ -145,8 +148,7 @@ class _ParticipantCardWidgetState extends State<ParticipantCardWidget>
         // âœ… Use DesignBorders, DesignShadows, DesignColors
         decoration: BoxDecoration(
           border: DesignBorders.cardDefault,
-          borderRadius:
-              BorderRadius.circular(DesignSpacing.cardBorderRadius),
+          borderRadius: BorderRadius.circular(DesignSpacing.cardBorderRadius),
           color: DesignColors.accent,
           boxShadow: const [DesignShadows.subtle],
         ),

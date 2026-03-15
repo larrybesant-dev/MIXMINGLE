@@ -41,18 +41,18 @@ class SafetyCheckResult {
   });
 
   Map<String, dynamic> toMap() => {
-    'id': id,
-    'type': type.name,
-    'contentId': contentId,
-    'userId': userId,
-    'confidenceScore': confidenceScore,
-    'isFlagged': isFlagged,
-    'severity': severity.name,
-    'detectedIssues': detectedIssues,
-    'categoryScores': categoryScores,
-    'recommendedAction': recommendedAction.name,
-    'timestamp': timestamp.toIso8601String(),
-  };
+        'id': id,
+        'type': type.name,
+        'contentId': contentId,
+        'userId': userId,
+        'confidenceScore': confidenceScore,
+        'isFlagged': isFlagged,
+        'severity': severity.name,
+        'detectedIssues': detectedIssues,
+        'categoryScores': categoryScores,
+        'recommendedAction': recommendedAction.name,
+        'timestamp': timestamp.toIso8601String(),
+      };
 }
 
 enum SafetyCheckType {
@@ -106,14 +106,14 @@ class AccountRiskAssessment {
   });
 
   Map<String, dynamic> toMap() => {
-    'userId': userId,
-    'overallRiskScore': overallRiskScore,
-    'riskLevel': riskLevel.name,
-    'riskFactors': riskFactors,
-    'flags': flags,
-    'recommendedActions': recommendedActions.map((a) => a.name).toList(),
-    'assessedAt': assessedAt.toIso8601String(),
-  };
+        'userId': userId,
+        'overallRiskScore': overallRiskScore,
+        'riskLevel': riskLevel.name,
+        'riskFactors': riskFactors,
+        'flags': flags,
+        'recommendedActions': recommendedActions.map((a) => a.name).toList(),
+        'assessedAt': assessedAt.toIso8601String(),
+      };
 }
 
 enum RiskLevel {
@@ -191,8 +191,10 @@ class SafetyAIService {
       _firestore.collection('banned_users');
 
   // Stream controllers
-  final _safetyAlertController = StreamController<SafetyCheckResult>.broadcast();
-  final _riskAlertController = StreamController<AccountRiskAssessment>.broadcast();
+  final _safetyAlertController =
+      StreamController<SafetyCheckResult>.broadcast();
+  final _riskAlertController =
+      StreamController<AccountRiskAssessment>.broadcast();
 
   /// Stream of safety alerts
   Stream<SafetyCheckResult> get safetyAlerts => _safetyAlertController.stream;
@@ -225,7 +227,8 @@ class SafetyAIService {
     // In production, this would call an AI/ML service
     final analysisResult = await _analyzeTextForToxicity(content);
 
-    final isFlagged = analysisResult['toxicityScore']! >= _config.toxicityThreshold;
+    final isFlagged =
+        analysisResult['toxicityScore']! >= _config.toxicityThreshold;
     final severity = _calculateSeverity(analysisResult['toxicityScore']!);
 
     final result = SafetyCheckResult(
@@ -278,7 +281,8 @@ class SafetyAIService {
   }) async {
     final analysisResult = await _analyzeForHarassment(content, targetUserId);
 
-    final isFlagged = analysisResult['harassmentScore']! >= _config.harassmentThreshold;
+    final isFlagged =
+        analysisResult['harassmentScore']! >= _config.harassmentThreshold;
     final severity = _calculateSeverity(analysisResult['harassmentScore']!);
 
     final result = SafetyCheckResult(
@@ -464,7 +468,8 @@ class SafetyAIService {
     // Check account age
     final createdAt = userData['createdAt'] as Timestamp?;
     if (createdAt != null) {
-      final accountAgeHours = DateTime.now().difference(createdAt.toDate()).inHours;
+      final accountAgeHours =
+          DateTime.now().difference(createdAt.toDate()).inHours;
       if (accountAgeHours < 24) {
         riskFactors['new_account'] = 0.3;
         flags.add('account_less_than_24h');
@@ -474,13 +479,15 @@ class SafetyAIService {
     // Check previous violations
     final warningsSnapshot = await _userWarningsCollection
         .where('userId', isEqualTo: userId)
-        .where('createdAt', isGreaterThan:
-            Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 30))))
+        .where('createdAt',
+            isGreaterThan: Timestamp.fromDate(
+                DateTime.now().subtract(const Duration(days: 30))))
         .get();
 
     if (warningsSnapshot.docs.isNotEmpty) {
       final warningCount = warningsSnapshot.docs.length;
-      riskFactors['previous_warnings'] = (warningCount / _config.maxWarningsBeforeBan).clamp(0.0, 1.0);
+      riskFactors['previous_warnings'] =
+          (warningCount / _config.maxWarningsBeforeBan).clamp(0.0, 1.0);
       flags.add('has_recent_warnings:$warningCount');
     }
 
@@ -501,8 +508,9 @@ class SafetyAIService {
     final reportsSnapshot = await _firestore
         .collection('reports')
         .where('reportedUserId', isEqualTo: userId)
-        .where('createdAt', isGreaterThan:
-            Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 7))))
+        .where('createdAt',
+            isGreaterThan: Timestamp.fromDate(
+                DateTime.now().subtract(const Duration(days: 7))))
         .get();
 
     if (reportsSnapshot.docs.isNotEmpty) {
@@ -568,16 +576,20 @@ class SafetyAIService {
   }) async {
     // Run all checks in parallel
     final results = await Future.wait([
-      detectToxicity(content: content, contentId: contentId, type: type, userId: userId),
-      detectHarassment(content: content, contentId: contentId, type: type, userId: userId),
-      detectSpam(content: content, contentId: contentId, type: type, userId: userId),
+      detectToxicity(
+          content: content, contentId: contentId, type: type, userId: userId),
+      detectHarassment(
+          content: content, contentId: contentId, type: type, userId: userId),
+      detectSpam(
+          content: content, contentId: contentId, type: type, userId: userId),
     ]);
 
     // Find the most severe result
     SafetyCheckResult? mostSevere;
     for (final result in results) {
       if (result.isFlagged) {
-        if (mostSevere == null || result.severity.index > mostSevere.severity.index) {
+        if (mostSevere == null ||
+            result.severity.index > mostSevere.severity.index) {
           mostSevere = result;
         }
       }
@@ -622,7 +634,8 @@ class SafetyAIService {
     };
   }
 
-  Future<Map<String, dynamic>> _analyzeForHarassment(String content, String? targetId) async {
+  Future<Map<String, dynamic>> _analyzeForHarassment(
+      String content, String? targetId) async {
     await Future.delayed(const Duration(milliseconds: 50));
 
     double harassment = 0;
@@ -649,7 +662,8 @@ class SafetyAIService {
     };
   }
 
-  Future<Map<String, dynamic>> _analyzeForSpam(String content, String? userId) async {
+  Future<Map<String, dynamic>> _analyzeForSpam(
+      String content, String? userId) async {
     await Future.delayed(const Duration(milliseconds: 50));
 
     double spam = 0;
@@ -750,7 +764,8 @@ class SafetyAIService {
     return RiskLevel.minimal;
   }
 
-  List<SafetyAction> _determineRiskActions(RiskLevel level, List<String> flags) {
+  List<SafetyAction> _determineRiskActions(
+      RiskLevel level, List<String> flags) {
     switch (level) {
       case RiskLevel.critical:
         return [SafetyAction.permaBan, SafetyAction.escalate];
@@ -765,7 +780,8 @@ class SafetyAIService {
     }
   }
 
-  Future<void> _handleAutoModeration(String userId, SafetyCheckResult result) async {
+  Future<void> _handleAutoModeration(
+      String userId, SafetyCheckResult result) async {
     // Add warning
     await _userWarningsCollection.add({
       'userId': userId,
@@ -779,8 +795,9 @@ class SafetyAIService {
     // Check if user should be banned
     final warningsSnapshot = await _userWarningsCollection
         .where('userId', isEqualTo: userId)
-        .where('createdAt', isGreaterThan:
-            Timestamp.fromDate(DateTime.now().subtract(const Duration(days: 30))))
+        .where('createdAt',
+            isGreaterThan: Timestamp.fromDate(
+                DateTime.now().subtract(const Duration(days: 30))))
         .get();
 
     if (warningsSnapshot.docs.length >= _config.maxWarningsBeforeBan ||
@@ -825,5 +842,3 @@ class SafetyAIService {
     _riskAlertController.close();
   }
 }
-
-

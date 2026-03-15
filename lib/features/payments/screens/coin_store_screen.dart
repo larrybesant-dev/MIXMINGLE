@@ -376,7 +376,8 @@ class _CoinStoreScreenState extends ConsumerState<CoinStoreScreen>
     // Show success message
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ref.read(purchaseProvider).successMessage ?? 'Coins added!'),
+        content:
+            Text(ref.read(purchaseProvider).successMessage ?? 'Coins added!'),
         backgroundColor: const Color(0xFF00FF88),
       ),
     );
@@ -552,19 +553,23 @@ class _CoinRainPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final particle in particles) {
-      final adjustedProgress = ((progress - particle.delay) / (1 - particle.delay)).clamp(0.0, 1.0);
+      final adjustedProgress =
+          ((progress - particle.delay) / (1 - particle.delay)).clamp(0.0, 1.0);
 
       if (adjustedProgress <= 0) continue;
 
       final x = particle.startX * size.width;
-      final y = -particle.size + adjustedProgress * (size.height + particle.size * 2) * particle.speed;
+      final y = -particle.size +
+          adjustedProgress * (size.height + particle.size * 2) * particle.speed;
 
       // Fade out at the end
-      final opacity = adjustedProgress < 0.8 ? 1.0 : 1.0 - (adjustedProgress - 0.8) / 0.2;
+      final opacity =
+          adjustedProgress < 0.8 ? 1.0 : 1.0 - (adjustedProgress - 0.8) / 0.2;
 
       canvas.save();
       canvas.translate(x, y);
-      canvas.rotate(particle.rotation + progress * particle.rotationSpeed * math.pi);
+      canvas.rotate(
+          particle.rotation + progress * particle.rotationSpeed * math.pi);
 
       // Draw coin
       final paint = Paint()
@@ -575,7 +580,8 @@ class _CoinRainPainter extends CustomPainter {
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-        ).createShader(Rect.fromCenter(center: Offset.zero, width: particle.size, height: particle.size));
+        ).createShader(Rect.fromCenter(
+            center: Offset.zero, width: particle.size, height: particle.size));
 
       canvas.drawCircle(Offset.zero, particle.size / 2, paint);
 
@@ -735,17 +741,15 @@ class _TransactionItem extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: (isPositive
-                    ? const Color(0xFF00FF88)
-                    : const Color(0xFFFF7A3C))
-                .withAlpha(26),
+            color:
+                (isPositive ? const Color(0xFF00FF88) : const Color(0xFFFF7A3C))
+                    .withAlpha(26),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
             transaction.type.icon,
-            color: isPositive
-                ? const Color(0xFF00FF88)
-                : const Color(0xFFFF7A3C),
+            color:
+                isPositive ? const Color(0xFF00FF88) : const Color(0xFFFF7A3C),
             size: 20,
           ),
         ),
@@ -780,9 +784,8 @@ class _TransactionItem extends StatelessWidget {
         Text(
           '${isPositive ? '+' : ''}${transaction.amount}',
           style: TextStyle(
-            color: isPositive
-                ? const Color(0xFF00FF88)
-                : const Color(0xFFFF7A3C),
+            color:
+                isPositive ? const Color(0xFF00FF88) : const Color(0xFFFF7A3C),
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),

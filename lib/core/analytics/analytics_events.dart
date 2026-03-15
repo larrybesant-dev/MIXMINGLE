@@ -1,4 +1,4 @@
-﻿/// Analytics Events Constants
+/// Analytics Events Constants
 ///
 /// All analytics event names and parameter keys used throughout the app.
 /// Consistent naming ensures clean analytics data and easy reporting.
@@ -15,6 +15,9 @@ class AnalyticsEvents {
   static const String onboardingCompleted = 'onboarding_completed';
   static const String onboardingSkipped = 'onboarding_skipped';
   static const String onboardingStepViewed = 'onboarding_step_viewed';
+  static const String onboardingStepCompleted = 'onboarding_step_completed';
+  static const String ageVerified = 'age_verified';
+  static const String profileCompleted = 'profile_completed';
 
   // ============================================================
   // AUTH EVENTS
@@ -117,6 +120,47 @@ class AnalyticsEvents {
   static const String errorOccurred = 'error_occurred';
   static const String networkError = 'network_error';
   static const String permissionDenied = 'permission_denied';
+  static const String errorFirestoreWrite = 'error_firestore_write';
+  static const String errorFirestoreRead = 'error_firestore_read';
+  static const String retryTapped = 'retry_tapped';
+  static const String offlineModeEntered = 'offline_mode_entered';
+  static const String offlineModeExited = 'offline_mode_exited';
+
+  // ============================================================
+  // FUNNEL EVENTS
+  // ============================================================
+  static const String firstRoomJoin = 'first_room_join';
+  static const String firstChatSent = 'first_chat_sent';
+  static const String firstMatch = 'first_match';
+  static const String firstFriendAdded = 'first_friend_added';
+  static const String firstAdImpression = 'first_ad_impression';
+  static const String firstAdClick = 'first_ad_click';
+  static const String activationCompleted = 'activation_completed';
+
+  // ============================================================
+  // DEEP ENGAGEMENT EVENTS
+  // ============================================================
+  static const String chatMessageSent = 'chat_message_sent';
+  static const String chatReactionAdded = 'chat_reaction_added';
+  static const String feedPostViewed = 'feed_post_viewed';
+  static const String feedPostLiked = 'feed_post_liked';
+  static const String feedPostCommented = 'feed_post_commented';
+  static const String matchTileOpened = 'match_tile_opened';
+  static const String matchMessageButtonTapped = 'match_message_button_tapped';
+  static const String friendRequestSent = 'friend_request_sent';
+  static const String friendRequestAccepted = 'friend_request_accepted';
+  static const String discoverUserViewed = 'discover_user_viewed';
+  static const String discoverUserLiked = 'discover_user_liked';
+  static const String discoverUserSuperliked = 'discover_user_superliked';
+  static const String speedDatingRoundStarted = 'speed_dating_round_started';
+  static const String speedDatingMatchCreated = 'speed_dating_match_created';
+
+  // ============================================================
+  // ADS EVENTS
+  // ============================================================
+  static const String adImpression = 'ad_impression';
+  static const String adClick = 'ad_click';
+  static const String adSkipped = 'ad_skipped';
 }
 
 /// Parameter keys for analytics events
@@ -168,6 +212,16 @@ class AnalyticsParams {
   static const String loadTime = 'load_time';
   static const String latency = 'latency';
   static const String frameDropRate = 'frame_drop_rate';
+
+  // Ad params
+  static const String adId = 'ad_id';
+  static const String advertiserId = 'advertiser_id';
+  static const String placement = 'placement';
+
+  // Content params
+  static const String chatId = 'chat_id';
+  static const String postId = 'post_id';
+  static const String matchId = 'match_id';
 }
 
 /// User properties for analytics
@@ -182,5 +236,3 @@ class AnalyticsUserProperties {
   static const String totalCoinsSpent = 'total_coins_spent';
   static const String isVip = 'is_vip';
 }
-
-

@@ -9,6 +9,7 @@
 ## 🎯 Deliverables
 
 ### Social Graph Features
+
 ✅ **Follow/Unfollow System** - One-tap follow with batch writes
 ✅ **Followers List** - Real-time list of followers
 ✅ **Following List** - Real-time list of users being followed
@@ -18,6 +19,7 @@
 ✅ **Suggested Users** - Smart recommendations based on interests
 
 ### Presence System
+
 ✅ **Online/Offline Tracking** - Real-time status updates
 ✅ **Away/Busy Status** - 4 presence states (Online, Away, Busy, Offline)
 ✅ **Last Seen Timestamp** - Track when user was last active
@@ -26,6 +28,7 @@
 ✅ **Auto-heartbeat System** - 30-second presence updates
 
 ### Technical Implementation
+
 ✅ **Firestore Subcollections** - Scalable follow relationship storage
 ✅ **Batch Operations** - Atomic follow/unfollow with counter updates
 ✅ **StreamProviders** - Real-time reactive UI updates
@@ -61,22 +64,25 @@ lib/
 ## 🗄️ Firestore Schema
 
 ### Subcollection: `users/{userId}/followers/{followerId}`
+
 ```javascript
 {
-  timestamp: Timestamp
+  timestamp: Timestamp;
   // followerId is the document ID
 }
 ```
 
 ### Subcollection: `users/{userId}/following/{followingId}`
+
 ```javascript
 {
-  timestamp: Timestamp
+  timestamp: Timestamp;
   // followingId is the document ID
 }
 ```
 
 ### User Document: `users/{userId}`
+
 ```javascript
 {
   id: "userId",
@@ -92,6 +98,7 @@ lib/
 ```
 
 ### Collection: `user_presence/{userId}` (Separate collection)
+
 ```javascript
 {
   userId: "userId",
@@ -110,27 +117,35 @@ lib/
 ### Social Graph Providers
 
 #### followersIdsProvider
+
 ```dart
 final followersIdsProvider = StreamProvider.family<List<String>, String>
 ```
+
 **Returns:** Real-time list of follower user IDs
 **Usage:**
+
 ```dart
 final followersAsync = ref.watch(followersIdsProvider(userId));
 ```
 
 #### followingIdsProvider
+
 ```dart
 final followingIdsProvider = StreamProvider.family<List<String>, String>
 ```
+
 **Returns:** Real-time list of following user IDs
 
 #### isFollowingProvider
+
 ```dart
 final isFollowingProvider = StreamProvider.family<bool, String>
 ```
+
 **Returns:** Real-time follow status check
 **Usage:**
+
 ```dart
 final isFollowingAsync = ref.watch(isFollowingProvider(targetUserId));
 if (isFollowingAsync.value ?? false) {
@@ -139,49 +154,63 @@ if (isFollowingAsync.value ?? false) {
 ```
 
 #### followerProfilesProvider
+
 ```dart
 final followerProfilesProvider = FutureProvider.family<List<UserProfile>, String>
 ```
+
 **Returns:** Full UserProfile objects for all followers
 **Note:** Converts follower IDs to complete profile data
 
 #### followingProfilesProvider
+
 ```dart
 final followingProfilesProvider = FutureProvider.family<List<UserProfile>, String>
 ```
+
 **Returns:** Full UserProfile objects for all following
 
 #### mutualFriendsIdsProvider
+
 ```dart
 final mutualFriendsIdsProvider = StreamProvider.family<List<String>, String>
 ```
+
 **Returns:** User IDs where both users follow each other
 
 #### suggestedUsersProvider
+
 ```dart
 final suggestedUsersProvider = FutureProvider<List<UserProfile>>
 ```
+
 **Returns:** Suggested users based on:
+
 - Common interests
 - Nearby location
 - Not already following
 - Sorted by relevance
 
 #### followerCountProvider / followingCountProvider
+
 ```dart
 final followerCountProvider = FutureProvider.family<int, String>
 final followingCountProvider = FutureProvider.family<int, String>
 ```
+
 **Returns:** Fast cached counts from user document
 
 ### Presence Providers
 
 #### userPresenceProvider
+
 ```dart
 final userPresenceProvider = StreamProvider.family<UserPresence?, String>
 ```
+
 **Returns:** Real-time presence status for a user
 **Usage:**
+
 ```dart
 final presenceAsync = ref.watch(userPresenceProvider(userId));
 presenceAsync.when(
@@ -200,56 +229,72 @@ presenceAsync.when(
 ### SocialGraphService
 
 #### Follow User
+
 ```dart
 Future<void> followUser(String targetUserId)
 ```
+
 **Batch operations:**
+
 1. Add to current user's following subcollection
 2. Add to target user's followers subcollection
 3. Increment followingCount for current user
 4. Increment followersCount for target user
 
 **Errors:**
+
 - `'User not authenticated'` - No logged-in user
 - `'Cannot follow yourself'` - Target is current user
 
 #### Unfollow User
+
 ```dart
 Future<void> unfollowUser(String targetUserId)
 ```
+
 **Batch operations:**
+
 1. Remove from current user's following
 2. Remove from target user's followers
 3. Decrement both counters
 
 #### Check Follow Status
+
 ```dart
 Future<bool> isFollowing(String targetUserId)
 Stream<bool> watchIsFollowing(String targetUserId)
 ```
+
 **Returns:** `true` if current user follows target
 
 #### Get Followers/Following
+
 ```dart
 Future<List<String>> getFollowers(String userId)
 Stream<List<String>> watchFollowers(String userId)
 Future<List<String>> getFollowing(String userId)
 Stream<List<String>> watchFollowing(String userId)
 ```
+
 **Returns:** List of user IDs, ordered by timestamp (newest first)
 
 #### Get Mutual Friends
+
 ```dart
 Future<List<String>> getMutualFriends(String userId)
 Stream<List<String>> watchMutualFriends(String userId)
 ```
+
 **Algorithm:** Intersection of followers and following lists
 
 #### Get Suggested Users
+
 ```dart
 Future<List<UserProfile>> getSuggestedUsers({int limit = 20})
 ```
+
 **Algorithm:**
+
 1. Get current user's interests
 2. Query users not followed by current user
 3. Calculate similarity score based on:
@@ -263,10 +308,12 @@ Future<List<UserProfile>> getSuggestedUsers({int limit = 20})
 ## 🎨 UI Screens
 
 ### FollowersListPage
+
 **Location:** `lib/features/profile/screens/followers_list_page.dart`
 **Route:** `/followers?userId={userId}&displayName={displayName}`
 
 **Features:**
+
 - Real-time follower list
 - Avatar with presence indicator
 - Follower count display
@@ -275,10 +322,12 @@ Future<List<UserProfile>> getSuggestedUsers({int limit = 20})
 - Pull to refresh
 
 ### FollowingListPage
+
 **Location:** `lib/features/profile/screens/following_list_page.dart`
 **Route:** `/following?userId={userId}&displayName={displayName}`
 
 **Features:**
+
 - Real-time following list
 - Presence indicators
 - Bio preview
@@ -287,10 +336,12 @@ Future<List<UserProfile>> getSuggestedUsers({int limit = 20})
 - Pull to refresh
 
 ### SuggestedUsersPage
+
 **Location:** `lib/features/profile/screens/suggested_users_page.dart`
 **Route:** `/discover`
 
 **Features:**
+
 - Smart user recommendations
 - Interest tags display (up to 5)
 - One-tap follow/unfollow
@@ -304,33 +355,40 @@ Future<List<UserProfile>> getSuggestedUsers({int limit = 20})
 ## 🎨 Widget Components
 
 ### FollowButton
+
 **Location:** `lib/shared/widgets/follow_button.dart`
 
 **Props:**
+
 - `currentUserId: String` - Current user ID
 - `targetUserId: String` - User to follow/unfollow
 - `onFollowStateChanged: VoidCallback?` - Callback after action
 
 **Features:**
+
 - Real-time follow status
 - Loading state
 - Success/error SnackBar
 - Prevents double-tap
 
 ### PresenceIndicator
+
 **Location:** `lib/shared/widgets/presence_indicator.dart`
 
 **Props:**
+
 - `userId: String` - User to show status for
 - `size: double` - Dot size (default: 10)
 
 **Colors:**
+
 - 🟢 **Green** - Online
 - 🟡 **Yellow** - Away
 - 🔴 **Red** - Busy
 - ⚪ **Gray** - Offline
 
 **Usage:**
+
 ```dart
 Stack(
   children: [
@@ -349,6 +407,7 @@ Stack(
 ## 🚀 Usage Examples
 
 ### Follow a User
+
 ```dart
 final service = ref.read(socialGraphServiceProvider);
 await service.followUser(targetUserId);
@@ -359,6 +418,7 @@ ref.invalidate(followerCountProvider(targetUserId));
 ```
 
 ### Unfollow a User
+
 ```dart
 await service.unfollowUser(targetUserId);
 
@@ -367,6 +427,7 @@ ref.invalidate(followerCountProvider(targetUserId));
 ```
 
 ### Check if Following
+
 ```dart
 final isFollowingAsync = ref.watch(isFollowingProvider(targetUserId));
 isFollowingAsync.when(
@@ -379,6 +440,7 @@ isFollowingAsync.when(
 ```
 
 ### Display Followers List
+
 ```dart
 final followersAsync = ref.watch(followerProfilesProvider(userId));
 followersAsync.when(
@@ -404,6 +466,7 @@ followersAsync.when(
 ```
 
 ### Navigate to Followers/Following
+
 ```dart
 // Followers
 Navigator.push(
@@ -486,12 +549,15 @@ function onlyUpdatingFollowCounters(newData, oldData) {
 ## 🐛 Known Issues & Workarounds
 
 ### Issue: Follower count not updating immediately
+
 **Solution:** Providers automatically refresh after follow/unfollow. If stuck, call `ref.invalidate(followerCountProvider(userId))`.
 
 ### Issue: Suggested users show already-followed users
+
 **Solution:** Service filters out followed users. If appearing, invalidate cache: `ref.invalidate(suggestedUsersProvider)`.
 
 ### Issue: Presence stuck on 'online' after app close
+
 **Solution:** Implement `onDispose()` in presence service to set offline status. Auto-timeout after 5 minutes of inactivity.
 
 ---
@@ -525,6 +591,7 @@ function onlyUpdatingFollowCounters(newData, oldData) {
 ## ✅ Stage 5 Complete
 
 **Social graph and presence system is production-ready and fully integrated with:**
+
 - ✅ Onboarding (Stage 1)
 - ✅ Home & Rooms (Stage 2)
 - ✅ Speed Dating (Stage 3)
@@ -534,4 +601,3 @@ function onlyUpdatingFollowCounters(newData, oldData) {
 - ✅ Riverpod State Management
 
 **Ready to proceed to Stage 6: Monetization & Premium Features**
-

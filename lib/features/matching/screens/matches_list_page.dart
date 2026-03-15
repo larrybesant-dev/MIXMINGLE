@@ -17,7 +17,8 @@ class MatchesPage extends ConsumerStatefulWidget {
   ConsumerState<MatchesPage> createState() => _MatchesPageState();
 }
 
-class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProviderStateMixin {
+class _MatchesPageState extends ConsumerState<MatchesPage>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
   @override
@@ -414,6 +415,7 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
     );
   }
 
+<<<<<<< HEAD
   Widget _buildIncomingLikeTile(BuildContext context, UserProfile profile) {
     final displayName = profile.displayName ?? profile.nickname ?? 'Anonymous';
     final photoUrl = profile.photoUrl;
@@ -452,6 +454,78 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                           Responsive.responsiveFontSize(context, 16),
                       fontWeight: FontWeight.bold,
                     ),
+=======
+  Widget _buildMatchCard(BuildContext context, Match match) {
+    final otherUserId = match.user1Id == ref.read(currentUserProvider).value?.id
+        ? match.user2Id
+        : match.user1Id;
+    final userProfileAsync = ref.watch(userProfileProvider(otherUserId));
+
+    return userProfileAsync.when(
+      data: (profile) {
+        if (profile == null) return const SizedBox.shrink();
+
+        return Card(
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: () {
+              Navigator.of(context).pushNamed(
+                AppRoutes.chat,
+                arguments: {
+                  'userId': otherUserId,
+                  'username': profile.username,
+                },
+              );
+            },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      profile.profileImageUrl != null
+                          ? Image.network(
+                              profile.profileImageUrl!,
+                              fit: BoxFit.cover,
+                            )
+                          : Container(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .primary
+                                  .withValues(alpha: 0.1),
+                              child: Icon(
+                                Icons.person,
+                                size:
+                                    Responsive.responsiveIconSize(context, 60),
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                            ),
+                      if (profile.isOnline)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Text(
+                              'Online',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+>>>>>>> origin/develop
                   ),
                   if (profile.bio != null)
                     Text(
@@ -464,6 +538,7 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
                             .onSurface
                             .withValues(alpha: 0.6),
                       ),
+<<<<<<< HEAD
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -522,6 +597,135 @@ class _MatchesPageState extends ConsumerState<MatchesPage> with SingleTickerProv
               ],
             ),
           ],
+=======
+                      if (profile.age != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          '${profile.age} years old',
+                          style: TextStyle(
+                            fontSize:
+                                Responsive.responsiveFontSize(context, 12),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => const Card(
+        child: Center(child: CircularProgressIndicator()),
+      ),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildLikeCard(BuildContext context, Match like) {
+    final otherUserId = like.user1Id == ref.read(currentUserProvider).value?.id
+        ? like.user2Id
+        : like.user1Id;
+    final userProfileAsync = ref.watch(userProfileProvider(otherUserId));
+
+    return userProfileAsync.when(
+      data: (profile) {
+        if (profile == null) return const SizedBox.shrink();
+
+        return Card(
+          margin: EdgeInsets.only(
+            bottom: Responsive.responsiveSpacing(context, 12),
+          ),
+          child: Padding(
+            padding: Responsive.responsivePadding(context),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: Responsive.responsiveValue(
+                    context: context,
+                    mobile: 30.0,
+                    tablet: 35.0,
+                    desktop: 40.0,
+                  ),
+                  backgroundImage: profile.profileImageUrl != null
+                      ? NetworkImage(profile.profileImageUrl!)
+                      : null,
+                  child: profile.profileImageUrl == null
+                      ? Icon(
+                          Icons.person,
+                          size: Responsive.responsiveIconSize(context, 30),
+                        )
+                      : null,
+                ),
+                SizedBox(width: Responsive.responsiveSpacing(context, 16)),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile.username ?? 'User',
+                        style: TextStyle(
+                          fontSize: Responsive.responsiveFontSize(context, 16),
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (profile.bio != null)
+                        Text(
+                          profile.bio!,
+                          style: TextStyle(
+                            fontSize:
+                                Responsive.responsiveFontSize(context, 14),
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.6),
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                    ],
+                  ),
+                ),
+                SizedBox(width: Responsive.responsiveSpacing(context, 16)),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.close, color: Colors.grey),
+                      onPressed: () async {
+                        await ref
+                            .read(matchControllerProvider.notifier)
+                            .reject(otherUserId);
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.favorite,
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                      onPressed: () async {
+                        await ref
+                            .read(matchControllerProvider.notifier)
+                            .accept(otherUserId);
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+      loading: () => const Card(
+        child: ListTile(
+          leading: CircleAvatar(child: Icon(Icons.person)),
+          title: Text('Loading...'),
+>>>>>>> origin/develop
         ),
       ),
     );

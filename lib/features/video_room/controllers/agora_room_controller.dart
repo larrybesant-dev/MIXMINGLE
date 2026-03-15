@@ -19,8 +19,6 @@ import '../../../services/room/room_firestore_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/providers/agora_provider.dart';
 
-
-
 /// Exception thrown when room operations fail
 class RoomControllerException implements Exception {
   final String message;
@@ -31,7 +29,6 @@ class RoomControllerException implements Exception {
   @override
   String toString() => 'RoomControllerException: $message';
 }
-
 
 /// Immutable state for the Agora room
 class AgoraRoomState {
@@ -119,7 +116,8 @@ class AgoraRoomNotifier extends Notifier<AgoraRoomState> {
         final energy = _calculateEnergy(participants);
         state = state.copyWith(participants: participants, energy: energy);
         if (kDebugMode) {
-          print('[RoomNotifier] Participants: ${participants.length}, Energy: ${energy.toStringAsFixed(1)}');
+          print(
+              '[RoomNotifier] Participants: ${participants.length}, Energy: ${energy.toStringAsFixed(1)}');
         }
       },
       onError: (e) {
@@ -132,7 +130,8 @@ class AgoraRoomNotifier extends Notifier<AgoraRoomState> {
     if (participants.isEmpty) return 0.0;
     final speakingCount = participants.where((p) => p.isSpeaking).length;
     final totalCount = participants.length;
-    return ((speakingCount / totalCount) * 5.0 + (totalCount * 0.5)).clamp(0.0, 10.0);
+    return ((speakingCount / totalCount) * 5.0 + (totalCount * 0.5))
+        .clamp(0.0, 10.0);
   }
 
   String getEnergyLabel() {
@@ -147,11 +146,15 @@ class AgoraRoomNotifier extends Notifier<AgoraRoomState> {
     try {
       await ref.read(joinFlowProvider.notifier).startJoinFlow();
       if (!_agora.isInitialized) await _agora.initialize();
-      await _agora.joinChannel(token: agoraToken, channelId: _roomId, uid: _userId);
-      final selfParticipant = Participant(uid: _userId, name: _userName, isSpeaking: false, isPresent: true);
+      await _agora.joinChannel(
+          token: agoraToken, channelId: _roomId, uid: _userId);
+      final selfParticipant = Participant(
+          uid: _userId, name: _userName, isSpeaking: false, isPresent: true);
       await _firestore.updateParticipant(_roomId, selfParticipant);
       state = state.copyWith(isInRoom: true);
-      if (kDebugMode) print('[RoomNotifier] Joined room: $_roomId as $_userName');
+      if (kDebugMode) {
+        print('[RoomNotifier] Joined room: $_roomId as $_userName');
+      }
     } catch (e) {
       ref.read(joinFlowProvider.notifier).setError(e.toString());
       if (kDebugMode) print('[RoomNotifier] Join failed: $e');
@@ -177,7 +180,9 @@ class AgoraRoomNotifier extends Notifier<AgoraRoomState> {
       final newMicMuted = !state.isMicMuted;
       await _agora.setMicrophoneMuted(newMicMuted);
       state = state.copyWith(isMicMuted: newMicMuted);
-      if (kDebugMode) print('[RoomNotifier] Mic: ${newMicMuted ? "MUTED" : "ACTIVE"}');
+      if (kDebugMode) {
+        print('[RoomNotifier] Mic: ${newMicMuted ? "MUTED" : "ACTIVE"}');
+      }
     } catch (e) {
       if (kDebugMode) print('[RoomNotifier] Mic toggle failed: $e');
       throw RoomControllerException('Failed to toggle microphone', e);
@@ -189,7 +194,9 @@ class AgoraRoomNotifier extends Notifier<AgoraRoomState> {
       final newVideoMuted = !state.isVideoMuted;
       await _agora.setVideoCameraMuted(newVideoMuted);
       state = state.copyWith(isVideoMuted: newVideoMuted);
-      if (kDebugMode) print('[RoomNotifier] Video: ${newVideoMuted ? "DISABLED" : "ACTIVE"}');
+      if (kDebugMode) {
+        print('[RoomNotifier] Video: ${newVideoMuted ? "DISABLED" : "ACTIVE"}');
+      }
     } catch (e) {
       if (kDebugMode) print('[RoomNotifier] Video toggle failed: $e');
       throw RoomControllerException('Failed to toggle video', e);
@@ -200,10 +207,12 @@ class AgoraRoomNotifier extends Notifier<AgoraRoomState> {
     try {
       final self = state.participants.firstWhere(
         (p) => p.uid == _userId,
-        orElse: () => Participant(uid: _userId, name: _userName, isSpeaking: speaking),
+        orElse: () =>
+            Participant(uid: _userId, name: _userName, isSpeaking: speaking),
       );
       if (self.isSpeaking != speaking) {
-        await _firestore.updateParticipant(_roomId, self.copyWith(isSpeaking: speaking));
+        await _firestore.updateParticipant(
+            _roomId, self.copyWith(isSpeaking: speaking));
       }
     } catch (e) {
       if (kDebugMode) print('[RoomNotifier] Set speaking failed: $e');
@@ -211,7 +220,9 @@ class AgoraRoomNotifier extends Notifier<AgoraRoomState> {
   }
 
   Future<void> _leaveRoomSilent() async {
-    try { await leaveRoom(); } catch (e) {
+    try {
+      await leaveRoom();
+    } catch (e) {
       if (kDebugMode) print('[RoomNotifier] Cleanup error: $e');
     }
   }

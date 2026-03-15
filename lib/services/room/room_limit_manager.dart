@@ -26,7 +26,7 @@ class RoomLimitManager extends ChangeNotifier {
   int get maxPublishers => FeatureFlags.maxConcurrentAgoraConnections;
 
   RoomLimitManager({FirebaseFirestore? firestore})
-    : _firestore = firestore ?? FirebaseFirestore.instance;
+      : _firestore = firestore ?? FirebaseFirestore.instance;
 
   // ============================================================================
   // PUBLIC INTERFACE
@@ -39,10 +39,8 @@ class RoomLimitManager extends ChangeNotifier {
       final isAtCapacity = activePublishers.length >= maxPublishers;
 
       if (isAtCapacity) {
-        AppLogger.warning(
-          'ðŸ”´ Room $roomId is at capacity: '
-          '${activePublishers.length}/$maxPublishers publishers'
-        );
+        AppLogger.warning('ðŸ”´ Room $roomId is at capacity: '
+            '${activePublishers.length}/$maxPublishers publishers');
       }
 
       return isAtCapacity;
@@ -80,7 +78,7 @@ class RoomLimitManager extends ChangeNotifier {
       }
 
       final activeBroadcasters =
-        List<String>.from(roomDoc.data()?['activeBroadcasters'] ?? []);
+          List<String>.from(roomDoc.data()?['activeBroadcasters'] ?? []);
 
       // Cache the result
       _roomPublishers[roomId] = activeBroadcasters;
@@ -117,10 +115,8 @@ class RoomLimitManager extends ChangeNotifier {
 
       // Check if at capacity
       if (currentPublishers.length >= maxPublishers) {
-        AppLogger.warning(
-          'âŒ Cannot add publisher: room at capacity '
-          '(${currentPublishers.length}/$maxPublishers)'
-        );
+        AppLogger.warning('âŒ Cannot add publisher: room at capacity '
+            '(${currentPublishers.length}/$maxPublishers)');
         return false;
       }
 
@@ -135,10 +131,8 @@ class RoomLimitManager extends ChangeNotifier {
       _roomPublishers[roomId] = updatedPublishers;
       notifyListeners();
 
-      AppLogger.info(
-        'âœ… Added publisher: $userId '
-        '(${updatedPublishers.length}/$maxPublishers)'
-      );
+      AppLogger.info('âœ… Added publisher: $userId '
+          '(${updatedPublishers.length}/$maxPublishers)');
 
       return true;
     } catch (e) {
@@ -158,9 +152,8 @@ class RoomLimitManager extends ChangeNotifier {
       }
 
       // Remove from Firestore
-      final updatedPublishers = currentPublishers
-          .where((id) => id != userId)
-          .toList();
+      final updatedPublishers =
+          currentPublishers.where((id) => id != userId).toList();
 
       await _firestore.collection('rooms').doc(roomId).update({
         'activeBroadcasters': updatedPublishers,
@@ -171,10 +164,8 @@ class RoomLimitManager extends ChangeNotifier {
       _roomPublishers[roomId] = updatedPublishers;
       notifyListeners();
 
-      AppLogger.info(
-        'âœ… Removed publisher: $userId '
-        '(${updatedPublishers.length}/$maxPublishers)'
-      );
+      AppLogger.info('âœ… Removed publisher: $userId '
+          '(${updatedPublishers.length}/$maxPublishers)');
     } catch (e) {
       AppLogger.error('Error removing publisher: $e');
     }
@@ -226,10 +217,11 @@ class RoomLimitManager extends ChangeNotifier {
     // This prevents degradation when approaching the 12-publisher limit
 
     final videoBitrate = <String, int>{
-      'high': 2500,    // > 8 publishers: 2.5 Mbps per stream
-      'medium': 1500,  // 5-8 publishers: 1.5 Mbps per stream
-      'low': 800,      // < 5 publishers: 800 kbps per stream
-    }[_getBandwidthTier(publisherCount)] ?? 1500;
+          'high': 2500, // > 8 publishers: 2.5 Mbps per stream
+          'medium': 1500, // 5-8 publishers: 1.5 Mbps per stream
+          'low': 800, // < 5 publishers: 800 kbps per stream
+        }[_getBandwidthTier(publisherCount)] ??
+        1500;
 
     return {
       'video': videoBitrate,
@@ -263,7 +255,9 @@ class RoomLimitManager extends ChangeNotifier {
       if (publisherCount >= (maxPublishers * 0.9).ceil()) {
         // Downgrade the last 1/3 of streams to lower resolution
         final downgradeCount = (allRemoteUids.length / 3).ceil();
-        return allRemoteUids.skip(allRemoteUids.length - downgradeCount).toList();
+        return allRemoteUids
+            .skip(allRemoteUids.length - downgradeCount)
+            .toList();
       }
 
       return [];
@@ -281,11 +275,11 @@ class RoomLimitManager extends ChangeNotifier {
   Future<void> logRoomMetrics(String roomId) async {
     try {
       final publisherCount = await getPublisherCount(roomId);
-      final utilizationPercent = (publisherCount / maxPublishers * 100).toStringAsFixed(1);
+      final utilizationPercent =
+          (publisherCount / maxPublishers * 100).toStringAsFixed(1);
 
       AppLogger.info(
-        'ðŸ“Š Room $roomId capacity: $publisherCount/$maxPublishers ($utilizationPercent%)'
-      );
+          'ðŸ“Š Room $roomId capacity: $publisherCount/$maxPublishers ($utilizationPercent%)');
     } catch (e) {
       AppLogger.error('Error logging room metrics: $e');
     }
@@ -297,7 +291,7 @@ class RoomLimitManager extends ChangeNotifier {
     return _firestore.collection('rooms').doc(roomId).snapshots().map((doc) {
       if (!doc.exists) return 0;
       final activeBroadcasters =
-        List<String>.from(doc.data()?['activeBroadcasters'] ?? []);
+          List<String>.from(doc.data()?['activeBroadcasters'] ?? []);
 
       // Update cache
       _roomPublishers[roomId] = activeBroadcasters;

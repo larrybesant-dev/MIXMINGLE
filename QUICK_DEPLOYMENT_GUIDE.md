@@ -3,6 +3,7 @@
 ## Overview
 
 Your Mix & Mingle video chat application is a **production-grade Paltalk-style system** with:
+
 - ✅ Multi-user video grid (adaptive layout for 1-100+ participants)
 - ✅ Real-time Firestore state synchronization
 - ✅ Agora RTC 6.2.2 integration (Web + Mobile)
@@ -38,6 +39,7 @@ flutter build web --release
 ```
 
 Then deploy to Firebase Hosting:
+
 ```bash
 firebase hosting:channel:deploy live
 ```
@@ -53,12 +55,14 @@ Double-click: `build-and-run-web.bat`
 ### 1. Frontend Layer (Flutter)
 
 **Main Components:**
+
 - `lib/features/room/screens/voice_room_page.dart` - Main room UI (2,692 lines)
 - `lib/services/agora_video_service.dart` - Agora integration (997 lines)
 - `lib/services/room_service.dart` - Room operations (1,152 lines)
 - `lib/providers/room_providers.dart` - Riverpod state (539 lines)
 
 **Key Features:**
+
 - Real-time video grid with adaptive layout
 - Participant list with live indicators
 - Control bar (mic, camera, flip, chat, leave)
@@ -68,12 +72,14 @@ Double-click: `build-and-run-web.bat`
 ### 2. Backend Layer (Firebase)
 
 **Services:**
+
 - **Firebase Auth:** Secure user authentication
 - **Firestore:** Real-time room state and participant data
 - **Cloud Functions:** Agora token generation
 - **Cloud Storage:** Profile images and recordings
 
 **Database Structure:**
+
 ```
 /rooms/{roomId}
   - id, name, title, description
@@ -98,6 +104,7 @@ Double-click: `build-and-run-web.bat`
 ### 3. Real-Time Agora Integration
 
 **Join Sequence:**
+
 1. User clicks "Join Room"
 2. Request Agora token from backend (Cloud Function)
 3. Initialize Agora RTC engine
@@ -107,6 +114,7 @@ Double-click: `build-and-run-web.bat`
 7. Render remote users as they join
 
 **Event Handlers:**
+
 ```dart
 onUserJoined            → Add user to grid
 onUserOffline           → Remove user from grid
@@ -121,7 +129,9 @@ onTokenPrivilegeWillExpire → Refresh token before expiry
 ## Critical Security Fixes Applied (7/7)
 
 ### ✅ Fix #1: Safe Auth State Management
+
 **File:** `lib/features/room/screens/voice_room_page.dart` (Line 51-55)
+
 ```dart
 // BEFORE (UNSAFE):
 User? get currentUser => ref.watch(authStateProvider).value;  // Can crash!
@@ -132,12 +142,15 @@ User? get currentUser => ref.watch(authStateProvider).maybeWhen(
   orElse: () => null,
 );
 ```
+
 **Impact:** Prevents null pointer exceptions when auth state is loading
 
 ---
 
 ### ✅ Fix #2: Agora Token Refresh Before Cloud Functions
+
 **File:** `lib/services/agora_token_service.dart`
+
 ```dart
 // Refresh token to ensure fresh Firebase context for Cloud Functions
 final idToken = await currentUser.getIdToken(true);
@@ -146,12 +159,15 @@ final result = await _functions.httpsCallable('generateAgoraToken').call({
   'uid': currentUser.id,
 });
 ```
+
 **Impact:** Fixes 401 authentication errors on web platform
 
 ---
 
 ### ✅ Fix #3: Room Authorization Validation
+
 **File:** `lib/services/room_service.dart` (Line 200+)
+
 ```dart
 Future<void> deleteRoom(String roomId, String currentUserId) async {
   final room = await _firestore.collection('rooms').doc(roomId).get();
@@ -165,12 +181,15 @@ Future<void> deleteRoom(String roomId, String currentUserId) async {
   await _firestore.collection('rooms').doc(roomId).delete();
 }
 ```
+
 **Impact:** Prevents unauthorized room deletion
 
 ---
 
 ### ✅ Fix #4: Widget Mounted Safety After Async Operations
+
 **File:** `lib/features/room/screens/voice_room_page.dart` (Multiple locations)
+
 ```dart
 // BEFORE (UNSAFE):
 await agoraService.joinRoom(roomId);
@@ -182,12 +201,15 @@ if (mounted) {
   setState(() { _isJoined = true; });
 }
 ```
+
 **Impact:** Prevents "setState() during build" errors
 
 ---
 
 ### ✅ Fix #5: ErrorBoundary Build Phase Safety
+
 **File:** `lib/core/error/error_boundary.dart` (Line 47-58)
+
 ```dart
 // Defer setState to avoid "setState during build" error
 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -198,12 +220,15 @@ WidgetsBinding.instance.addPostFrameCallback((_) {
   }
 });
 ```
+
 **Impact:** Prevents error handler from crashing with setState error
 
 ---
 
 ### ✅ Fix #6: Directionality Context for Error UI
+
 **File:** `lib/core/error/error_boundary.dart` (Line 98+)
+
 ```dart
 return Directionality(
   textDirection: TextDirection.ltr,
@@ -214,12 +239,15 @@ return Directionality(
   ),
 );
 ```
+
 **Impact:** Prevents "No Directionality widget found" error in error display
 
 ---
 
 ### ✅ Fix #7: Riverpod Access Deferred in initState
+
 **File:** `lib/features/room/screens/voice_room_page.dart` (Line 95-155)
+
 ```dart
 // Defer Riverpod operations to after first frame
 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -229,6 +257,7 @@ WidgetsBinding.instance.addPostFrameCallback((_) {
   });
 });
 ```
+
 **Impact:** Prevents "deactivated widget's ancestor" error during initState
 
 ---
@@ -236,6 +265,7 @@ WidgetsBinding.instance.addPostFrameCallback((_) {
 ## Testing & Deployment
 
 ### Pre-Deployment Checklist
+
 - [x] All 7 security fixes applied
 - [x] Code syntax validated
 - [x] Firestore rules deployed live

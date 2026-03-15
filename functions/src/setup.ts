@@ -1,6 +1,6 @@
-import * as functions from 'firebase-functions/v2';
-import { defineSecret } from 'firebase-functions/params';
-import * as admin from 'firebase-admin';
+import * as functions from "firebase-functions/v2";
+import { defineSecret } from "firebase-functions/params";
+import * as admin from "firebase-admin";
 
 const agoraAppId = defineSecret("AGORA_APP_ID");
 const agoraAppCertificate = defineSecret("AGORA_APP_CERTIFICATE");
@@ -14,24 +14,27 @@ export const initializeAgoraConfig = functions.https.onRequest(
       const appId = agoraAppId.value();
       const appCertificate = agoraAppCertificate.value();
 
-      await db.collection('config').doc('agora').set({
-        appId: appId,
-        appCertificate: appCertificate,
-        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-        updatedBy: 'initializeAgoraConfig',
-      }, { merge: true });
+      await db.collection("config").doc("agora").set(
+        {
+          appId: appId,
+          appCertificate: appCertificate,
+          updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+          updatedBy: "initializeAgoraConfig",
+        },
+        { merge: true },
+      );
 
       res.status(200).json({
         success: true,
-        message: 'Agora config initialized',
+        message: "Agora config initialized",
       });
     } catch (error) {
-      functions.logger.error('Failed to initialize Agora config', error);
+      functions.logger.error("Failed to initialize Agora config", error);
       res.status(500).json({
         success: false,
-        message: 'Failed to initialize Agora config',
+        message: "Failed to initialize Agora config",
         error: error instanceof Error ? error.message : String(error),
       });
     }
-  }
+  },
 );

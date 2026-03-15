@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Manages user safety features including blocking, reporting, and moderation
 class UserSafetyService {
@@ -7,7 +7,12 @@ class UserSafetyService {
   /// Block a user to prevent any interaction
   Future<void> blockUser(String userId, String blockedUserId) async {
     try {
-      await _firestore.collection('users').doc(userId).collection('blocked_users').doc(blockedUserId).set({
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('blocked_users')
+          .doc(blockedUserId)
+          .set({
         'blocked_user_id': blockedUserId,
         'blocked_at': FieldValue.serverTimestamp(),
       });
@@ -19,7 +24,12 @@ class UserSafetyService {
   /// Unblock a user
   Future<void> unblockUser(String userId, String blockedUserId) async {
     try {
-      await _firestore.collection('users').doc(userId).collection('blocked_users').doc(blockedUserId).delete();
+      await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('blocked_users')
+          .doc(blockedUserId)
+          .delete();
     } catch (e) {
       throw Exception('Failed to unblock user: $e');
     }
@@ -28,7 +38,12 @@ class UserSafetyService {
   /// Check if a user is blocked
   Future<bool> isUserBlocked(String userId, String targetUserId) async {
     try {
-      final doc = await _firestore.collection('users').doc(userId).collection('blocked_users').doc(targetUserId).get();
+      final doc = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('blocked_users')
+          .doc(targetUserId)
+          .get();
       return doc.exists;
     } catch (e) {
       return false;
@@ -38,8 +53,14 @@ class UserSafetyService {
   /// Get list of blocked users
   Future<List<String>> getBlockedUsers(String userId) async {
     try {
-      final snapshot = await _firestore.collection('users').doc(userId).collection('blocked_users').get();
-      return snapshot.docs.map((doc) => doc['blocked_user_id'] as String).toList();
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(userId)
+          .collection('blocked_users')
+          .get();
+      return snapshot.docs
+          .map((doc) => doc['blocked_user_id'] as String)
+          .toList();
     } catch (e) {
       return [];
     }
@@ -122,5 +143,3 @@ class UserSafetyService {
     return bannedWords.any((word) => lowerText.contains(word));
   }
 }
-
-

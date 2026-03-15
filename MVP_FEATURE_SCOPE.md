@@ -3,6 +3,7 @@
 ## ✅ MVP Features (Launch v1.0.1+2)
 
 ### Authentication & Onboarding
+
 - ✅ Email/Password registration
 - ✅ Google Sign-In integration
 - ✅ Apple Sign-In integration
@@ -13,6 +14,7 @@
 - ✅ Password reset
 
 ### Core Video Chat
+
 - ✅ Live voice rooms
 - ✅ Video chat (Agora RTC)
 - ✅ Screen sharing
@@ -24,6 +26,7 @@
 - ✅ Room capacity limits
 
 ### Messaging
+
 - ✅ In-room chat messages
 - ✅ Direct messaging between users
 - ✅ Message history
@@ -32,6 +35,7 @@
 - ✅ Read receipts
 
 ### User Profiles
+
 - ✅ View profile information
 - ✅ Edit own profile
 - ✅ Upload profile photo
@@ -39,6 +43,7 @@
 - ✅ Verification badges (optional)
 
 ### Safety & Moderation
+
 - ✅ Block/unblock users
 - ✅ Report user functionality
 - ✅ Report room functionality
@@ -47,18 +52,21 @@
 - ✅ Moderation dashboard
 
 ### Social Features
+
 - ✅ Follow/unfollow users
 - ✅ User presence (online/offline)
 - ✅ Favorites/bookmarks
 - ✅ Social graph
 
 ### Notifications
+
 - ✅ Push notifications (Firebase Cloud Messaging)
 - ✅ In-app notifications
 - ✅ Notification preferences
 - ✅ Email notifications (optional)
 
 ### Platform Support
+
 - ✅ Web (Chrome, Firefox, Safari, Edge)
 - ✅ iOS (iPhone)
 - ✅ Android (Phone & Tablet)
@@ -68,6 +76,7 @@
 ## ⏳ Phase 2 Features (Post-MVP)
 
 ### Premium Features
+
 - [ ] Paid tiers/subscriptions
 - [ ] Virtual gifts/tipping
 - [ ] Tip notifications
@@ -75,12 +84,14 @@
 - [ ] Exclusive rooms
 
 ### Advanced Matching
+
 - [ ] Advanced matching algorithms
 - [ ] Personality compatibility
 - [ ] Speed dating events
 - [ ] Event-based rooms
 
 ### Content & Entertainment
+
 - [ ] Event hosting
 - [ ] Scheduled performances
 - [ ] Broadcasting mode (1-to-many)
@@ -88,6 +99,7 @@
 - [ ] Playlist sharing
 
 ### Social Enhancements
+
 - [ ] Groups/communities
 - [ ] Clubs/organizations
 - [ ] Event calendar
@@ -95,6 +107,7 @@
 - [ ] Leaderboards
 
 ### Monetization
+
 - [ ] In-app currency
 - [ ] Coin economy
 - [ ] Payment integrations (Stripe, Apple Pay, Google Pay)
@@ -102,6 +115,7 @@
 - [ ] Revenue sharing
 
 ### Analytics & Insights
+
 - [ ] Advanced analytics dashboard
 - [ ] Creator stats
 - [ ] Room analytics
@@ -131,6 +145,7 @@ The following features will NOT be in the initial release:
 ## Known Limitations (MVP)
 
 ### Technical
+
 - Maximum 50 concurrent users per room
 - 30-day message history retention
 - 5GB storage per user
@@ -138,6 +153,7 @@ The following features will NOT be in the initial release:
 - No offline message queuing
 
 ### Feature Limitations
+
 - Basic AI moderation only
 - Manual admin review required for reports
 - No scheduled events (for MVP)
@@ -147,27 +163,27 @@ The following features will NOT be in the initial release:
 
 ## Success Metrics (MVP)
 
-| Metric | Target | Notes |
-|--------|--------|-------|
-| Daily Active Users | 100+ | First week target |
-| New Users/Day | 50+ | Growth rate |
-| Retention D1 | >60% | Critical metric |
-| Retention D7 | >30% | Good indicator |
-| Video Chat Success | >95% | Connection rate |
-| Avg Session Duration | 15+ min | Engagement |
-| User Satisfaction | 4.0+ stars | App Store rating |
-| Crash Rate | <1% | Stability |
+| Metric               | Target     | Notes             |
+| -------------------- | ---------- | ----------------- |
+| Daily Active Users   | 100+       | First week target |
+| New Users/Day        | 50+        | Growth rate       |
+| Retention D1         | >60%       | Critical metric   |
+| Retention D7         | >30%       | Good indicator    |
+| Video Chat Success   | >95%       | Connection rate   |
+| Avg Session Duration | 15+ min    | Engagement        |
+| User Satisfaction    | 4.0+ stars | App Store rating  |
+| Crash Rate           | <1%        | Stability         |
 
 ---
 
 ## Timeline
 
-| Phase | Duration | Focus |
-|-------|----------|-------|
-| MVP | Jan-Mar 2026 | Launch, stabilize, gather feedback |
+| Phase   | Duration     | Focus                               |
+| ------- | ------------ | ----------------------------------- |
+| MVP     | Jan-Mar 2026 | Launch, stabilize, gather feedback  |
 | Phase 2 | Apr-Jun 2026 | Advanced matching, premium features |
-| Phase 3 | Jul-Sep 2026 | Monetization, creator tools |
-| Phase 4 | Oct-Dec 2026 | Scale, optimize, expand platforms |
+| Phase 3 | Jul-Sep 2026 | Monetization, creator tools         |
+| Phase 4 | Oct-Dec 2026 | Scale, optimize, expand platforms   |
 
 ---
 

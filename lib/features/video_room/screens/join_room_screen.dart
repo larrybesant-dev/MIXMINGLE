@@ -115,7 +115,8 @@ class _JoinRoomScreenState extends State<JoinRoomScreen>
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: DesignColors.accent.withValues(alpha: 0.3),
+                                    color: DesignColors.accent
+                                        .withValues(alpha: 0.3),
                                     blurRadius: 20,
                                     spreadRadius: 5,
                                   ),
@@ -184,7 +185,8 @@ class _JoinRoomScreenState extends State<JoinRoomScreen>
                             Text(
                               'Please ensure your camera and microphone are ready',
                               style: DesignTypography.caption.copyWith(
-                                color: DesignColors.white.withValues(alpha: 0.7),
+                                color:
+                                    DesignColors.white.withValues(alpha: 0.7),
                               ),
                               textAlign: TextAlign.center,
                             ),

@@ -217,9 +217,11 @@ class WebhookHandler {
   final _random = Random.secure();
 
   // Stream controllers
-  final _deliveryController = StreamController<WebhookDeliveryResult>.broadcast();
+  final _deliveryController =
+      StreamController<WebhookDeliveryResult>.broadcast();
 
-  Stream<WebhookDeliveryResult> get deliveryStream => _deliveryController.stream;
+  Stream<WebhookDeliveryResult> get deliveryStream =>
+      _deliveryController.stream;
 
   // Collections
   CollectionReference<Map<String, dynamic>> get _webhooksCollection =>
@@ -366,7 +368,8 @@ class WebhookHandler {
         _deliveryController.add(result);
       }
 
-      debugPrint('âœ… [WebhookHandler] Dispatched to ${results.length} webhooks');
+      debugPrint(
+          'âœ… [WebhookHandler] Dispatched to ${results.length} webhooks');
       return results;
     } catch (e) {
       debugPrint('âŒ [WebhookHandler] Event dispatch failed: $e');
@@ -384,10 +387,8 @@ class WebhookHandler {
 
     try {
       // Get webhook secret
-      final secretDoc = await _firestore
-          .collection('webhook_secrets')
-          .doc(webhook.id)
-          .get();
+      final secretDoc =
+          await _firestore.collection('webhook_secrets').doc(webhook.id).get();
       final secret = secretDoc.data()?['secret'] as String? ?? '';
 
       // Create payload
@@ -403,7 +404,8 @@ class WebhookHandler {
       await Future.delayed(const Duration(milliseconds: 100));
 
       final responseTime = DateTime.now().difference(startTime);
-      final success = _random.nextDouble() > 0.05; // 95% success rate simulation
+      final success =
+          _random.nextDouble() > 0.05; // 95% success rate simulation
 
       final result = WebhookDeliveryResult(
         webhookId: webhook.id,
@@ -464,9 +466,8 @@ class WebhookHandler {
 
   /// Get webhooks for an app
   Future<List<WebhookRegistration>> getWebhooksForApp(String appId) async {
-    final snapshot = await _webhooksCollection
-        .where('appId', isEqualTo: appId)
-        .get();
+    final snapshot =
+        await _webhooksCollection.where('appId', isEqualTo: appId).get();
 
     return snapshot.docs
         .map((doc) => WebhookRegistration.fromMap(doc.data()))
@@ -518,9 +519,11 @@ class WebhookHandler {
       totalDeliveries: deliveries.length,
       successfulDeliveries: successful,
       failedDeliveries: failed,
-      successRate: deliveries.isEmpty ? 0 : successful / deliveries.length * 100,
+      successRate:
+          deliveries.isEmpty ? 0 : successful / deliveries.length * 100,
       averageResponseTime: Duration(
-        milliseconds: deliveries.isEmpty ? 0 : totalResponseTime ~/ deliveries.length,
+        milliseconds:
+            deliveries.isEmpty ? 0 : totalResponseTime ~/ deliveries.length,
       ),
       deliveriesByEvent: deliveriesByEvent,
     );
@@ -532,7 +535,8 @@ class WebhookHandler {
     String signature,
     String secret,
   ) {
-    final expectedSignature = _signPayload(jsonDecode(payload) as Map<String, dynamic>, secret);
+    final expectedSignature =
+        _signPayload(jsonDecode(payload) as Map<String, dynamic>, secret);
     return signature == expectedSignature;
   }
 

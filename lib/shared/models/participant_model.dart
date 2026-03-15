@@ -37,12 +37,12 @@ class ParticipantModel {
   }
 
   Map<String, dynamic> toMap() => {
-    'role': role,
-    'isMuted': isMuted,
-    'isCameraOn': isCameraOn,
-    'joinedAt': Timestamp.fromDate(joinedAt),
-    'isScreenSharing': isScreenSharing,
-    'isSpotlighted': isSpotlighted,
-    'hasError': hasError,
-  };
+        'role': role,
+        'isMuted': isMuted,
+        'isCameraOn': isCameraOn,
+        'joinedAt': Timestamp.fromDate(joinedAt),
+        'isScreenSharing': isScreenSharing,
+        'isSpotlighted': isSpotlighted,
+        'hasError': hasError,
+      };
 }

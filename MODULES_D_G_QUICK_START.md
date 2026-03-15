@@ -9,10 +9,12 @@
 ## 🎯 MODULE BREAKDOWN
 
 ### **Module D: Moderation Tools** (1.5K LOC)
+
 **Priority**: P1
 **Dependencies**: Room Model, User Model
 
 #### Features
+
 - ✅ Auto-moderation rules (keyword filters, spam detection)
 - ✅ Shadow ban (user can't see/chat)
 - ✅ Kick/ban users
@@ -21,6 +23,7 @@
 - ✅ Approved user list
 
 #### Files to Create
+
 ```
 lib/shared/models/moderation_rule.dart
 lib/services/moderation_service.dart
@@ -30,6 +33,7 @@ lib/features/room/widgets/user_actions_menu.dart
 ```
 
 #### Database Schema
+
 ```firestore
 rooms/{roomId}/
   moderation/
@@ -53,10 +57,12 @@ rooms/{roomId}/
 ---
 
 ### **Module E: Room Management** (1.2K LOC)
+
 **Priority**: P2
 **Dependencies**: Room Model, Chat Settings
 
 #### Features
+
 - ✅ Room themes (dark/light/custom)
 - ✅ MOTD (Message of the Day)
 - ✅ Capacity management
@@ -65,6 +71,7 @@ rooms/{roomId}/
 - ✅ Welcome messages
 
 #### Files to Create
+
 ```
 lib/shared/models/room_settings.dart
 lib/shared/models/room_theme.dart
@@ -74,6 +81,7 @@ lib/features/room/widgets/room_settings_panel.dart
 ```
 
 #### Database Schema
+
 ```firestore
 rooms/{roomId}/
   settings/
@@ -90,10 +98,12 @@ rooms/{roomId}/
 ---
 
 ### **Module F: Presence System** (800 LOC)
+
 **Priority**: P2
 **Dependencies**: User Model, Rooms
 
 #### Features
+
 - ✅ Real-time user status (online/idle/away)
 - ✅ Idle detection (3min → idle, 15min → away)
 - ✅ Last seen timestamp
@@ -102,6 +112,7 @@ rooms/{roomId}/
 - ✅ User activity feed
 
 #### Files to Create
+
 ```
 lib/shared/models/user_presence.dart
 lib/services/presence_service.dart
@@ -110,6 +121,7 @@ lib/features/room/widgets/user_status_indicator.dart
 ```
 
 #### Database Schema
+
 ```firestore
 users/{uid}/
   presence/
@@ -124,10 +136,12 @@ users/{uid}/
 ---
 
 ### **Module G: Gamification** (1.5K LOC)
+
 **Priority**: P3
 **Dependencies**: User Model, Chat
 
 #### Features
+
 - ✅ XP system (message +1, speak +5, broadcast +10)
 - ✅ Levels (1-100)
 - ✅ Badges (Talker, Listener, VIP, Moderator, etc.)
@@ -136,6 +150,7 @@ users/{uid}/
 - ✅ Gifts (animations + notifications)
 
 #### Files to Create
+
 ```
 lib/shared/models/user_stats.dart
 lib/shared/models/badge.dart
@@ -147,6 +162,7 @@ lib/features/room/widgets/gift_sender.dart
 ```
 
 #### Database Schema
+
 ```firestore
 users/{uid}/
   stats/
@@ -172,6 +188,7 @@ rooms/{roomId}/
 ## 📋 IMPLEMENTATION ROADMAP
 
 ### **Phase 1: Moderation (Day 1-1.5)**
+
 1. Create `moderation_rule.dart` model
 2. Create `moderation_service.dart` with:
    - `addAutoModerationRule()`
@@ -182,6 +199,7 @@ rooms/{roomId}/
 4. Deploy & test
 
 ### **Phase 2: Room Management (Day 2)**
+
 1. Create `room_settings.dart` model
 2. Create `room_settings_service.dart` with:
    - `updateTheme()`
@@ -190,6 +208,7 @@ rooms/{roomId}/
 3. Deploy & test
 
 ### **Phase 3: Presence (Day 2.5)**
+
 1. Create `user_presence.dart` model
 2. Create `presence_service.dart` with:
    - `updateStatus()`
@@ -199,6 +218,7 @@ rooms/{roomId}/
 4. Deploy & test
 
 ### **Phase 4: Gamification (Day 3-4)**
+
 1. Create `user_stats.dart` and `badge.dart` models
 2. Create `gamification_service.dart` with:
    - `awardXP()`
@@ -213,6 +233,7 @@ rooms/{roomId}/
 ## 🔧 QUICK SCAFFOLDING
 
 ### Moderation Service Example
+
 ```dart
 class ModerationService {
   Future<void> addAutoModerationRule(
@@ -234,6 +255,7 @@ class ModerationService {
 ```
 
 ### Gamification Service Example
+
 ```dart
 class GamificationService {
   Future<void> awardXP(
@@ -265,6 +287,7 @@ class GamificationService {
 ## 📊 TESTING STRATEGY
 
 For each module:
+
 1. Create test data in Firestore
 2. Test service methods locally
 3. Test UI rendering

@@ -1,3 +1,4 @@
+import 'package:mixmingle/core/constants.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
@@ -21,8 +22,12 @@ class BroadcasterService {
       final profile = await _profileService.getUserProfile(user.uid);
 
       // Check current queue status for this user
-      final existingDoc =
-          await _firestore.collection('rooms').doc(roomId).collection('broadcasterQueue').doc(user.uid).get();
+      final existingDoc = await _firestore
+          .collection(AppConstants.roomsCollection)
+          .doc(roomId)
+          .collection('broadcasterQueue')
+          .doc(user.uid)
+          .get();
 
       // If already in queue, return existing
       if (existingDoc.exists) {
@@ -41,7 +46,7 @@ class BroadcasterService {
 
       // Get current queue length
       final queueSnapshot = await _firestore
-          .collection('rooms')
+          .collection(AppConstants.roomsCollection)
           .doc(roomId)
           .collection('broadcasterQueue')
           .where('status', whereIn: ['pending', 'approved']).get();
@@ -66,7 +71,8 @@ class BroadcasterService {
           .doc(user.uid)
           .set(queueEntry.toFirestore());
 
-      debugPrint('ðŸ“¡ Broadcaster request submitted. Queue position: $queuePosition');
+      debugPrint(
+          'ðŸ“¡ Broadcaster request submitted. Queue position: $queuePosition');
 
       return queueEntry;
     } catch (e) {
@@ -81,7 +87,12 @@ class BroadcasterService {
     if (user == null) throw Exception('Not authenticated');
 
     try {
-      await _firestore.collection('rooms').doc(roomId).collection('broadcasterQueue').doc(user.uid).delete();
+      await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('broadcasterQueue')
+          .doc(user.uid)
+          .delete();
 
       debugPrint('âŒ Broadcast request cancelled');
     } catch (e) {
@@ -148,7 +159,12 @@ class BroadcasterService {
     if (user == null) return null;
 
     try {
-      final doc = await _firestore.collection('rooms').doc(roomId).collection('broadcasterQueue').doc(user.uid).get();
+      final doc = await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('broadcasterQueue')
+          .doc(user.uid)
+          .get();
 
       if (!doc.exists) return null;
 
@@ -169,7 +185,12 @@ class BroadcasterService {
     String newStatus,
   ) async {
     try {
-      await _firestore.collection('rooms').doc(roomId).collection('broadcasterQueue').doc(userId).update({
+      await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('broadcasterQueue')
+          .doc(userId)
+          .update({
         'status': newStatus,
         if (newStatus == 'approved') 'approvedAt': Timestamp.now(),
         if (newStatus == 'broadcasting') 'broadcastStartedAt': Timestamp.now(),
@@ -236,7 +257,12 @@ class BroadcasterService {
       // This would be called via Cloud Function in production
       // The function uses Agora REST API to start composite recording
 
-      await _firestore.collection('rooms').doc(roomId).collection('broadcasterQueue').doc(userId).update({
+      await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('broadcasterQueue')
+          .doc(userId)
+          .update({
         'broadcastStartedAt': Timestamp.now(),
         'isRecording': true,
         'recordingStartedAt': Timestamp.now(),
@@ -253,7 +279,12 @@ class BroadcasterService {
   /// Call this when user stops broadcasting
   Future<void> stopRecording(String roomId, String userId) async {
     try {
-      await _firestore.collection('rooms').doc(roomId).collection('broadcasterQueue').doc(userId).update({
+      await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('broadcasterQueue')
+          .doc(userId)
+          .update({
         'broadcastEndedAt': Timestamp.now(),
         'isRecording': false,
         'recordingEndedAt': Timestamp.now(),

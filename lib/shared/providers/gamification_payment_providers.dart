@@ -1,4 +1,3 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../services/gamification/gamification_service.dart';
 import '../../services/gamification/badge_service.dart';
@@ -12,15 +11,19 @@ import '../models/subscription.dart';
 import 'auth_providers.dart';
 
 /// Service providers
-final gamificationServiceProvider = Provider<GamificationService>((ref) => GamificationService());
+final gamificationServiceProvider =
+    Provider<GamificationService>((ref) => GamificationService());
 
 final badgeServiceProvider = Provider<BadgeService>((ref) => BadgeService());
 
-final paymentServiceProvider = Provider<PaymentService>((ref) => PaymentService());
+final paymentServiceProvider =
+    Provider<PaymentService>((ref) => PaymentService());
 
-final subscriptionServiceProvider = Provider<SubscriptionService>((ref) => SubscriptionService());
+final subscriptionServiceProvider =
+    Provider<SubscriptionService>((ref) => SubscriptionService());
 
-final analyticsServiceProvider = Provider<AnalyticsService>((ref) => AnalyticsService());
+final analyticsServiceProvider =
+    Provider<AnalyticsService>((ref) => AnalyticsService());
 
 /// ============================================================================
 /// GAMIFICATION PROVIDERS
@@ -93,7 +96,8 @@ final userBadgesProvider = StreamProvider<List<UserBadge>>((ref) async* {
 });
 
 /// Available achievements provider
-final availableAchievementsProvider = FutureProvider<List<Achievement>>((ref) async {
+final availableAchievementsProvider =
+    FutureProvider<List<Achievement>>((ref) async {
   final gamificationService = ref.watch(gamificationServiceProvider);
   return gamificationService.getAvailableAchievements();
 });
@@ -116,13 +120,16 @@ final xpToNextLevelProvider = StreamProvider<int>((ref) async* {
 });
 
 /// Leaderboard provider
-final leaderboardProvider = FutureProvider.family<List<Map<String, dynamic>>, String>((ref, category) async {
+final leaderboardProvider =
+    FutureProvider.family<List<Map<String, dynamic>>, String>(
+        (ref, category) async {
   final gamificationService = ref.watch(gamificationServiceProvider);
   return gamificationService.getLeaderboard(category, 50);
 });
 
 /// Gamification controller
-final gamificationControllerProvider = NotifierProvider<GamificationController, AsyncValue<void>>(() {
+final gamificationControllerProvider =
+    NotifierProvider<GamificationController, AsyncValue<void>>(() {
   return GamificationController();
 });
 
@@ -211,7 +218,8 @@ class GamificationController extends Notifier<AsyncValue<void>> {
 /// ============================================================================
 
 /// Payment methods provider
-final paymentMethodsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final paymentMethodsProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) return [];
 
@@ -221,7 +229,8 @@ final paymentMethodsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) 
 });
 
 /// Payment history provider
-final paymentHistoryProvider = FutureProvider<List<Map<String, dynamic>>>((ref) async {
+final paymentHistoryProvider =
+    FutureProvider<List<Map<String, dynamic>>>((ref) async {
   final currentUser = await ref.watch(currentUserProvider.future);
   if (currentUser == null) {
     return [];
@@ -238,7 +247,8 @@ final paymentHistoryProvider = FutureProvider<List<Map<String, dynamic>>>((ref) 
 });
 
 /// Payment controller
-final paymentControllerProvider = NotifierProvider<PaymentController, AsyncValue<void>>(() {
+final paymentControllerProvider =
+    NotifierProvider<PaymentController, AsyncValue<void>>(() {
   return PaymentController();
 });
 
@@ -336,7 +346,8 @@ class PaymentController extends Notifier<AsyncValue<void>> {
 /// ============================================================================
 
 /// Analytics controller
-final analyticsControllerProvider = NotifierProvider<AnalyticsController, AsyncValue<void>>(() {
+final analyticsControllerProvider =
+    NotifierProvider<AnalyticsController, AsyncValue<void>>(() {
   return AnalyticsController();
 });
 
@@ -350,7 +361,8 @@ class AnalyticsController extends Notifier<AsyncValue<void>> {
   }
 
   /// Log event
-  Future<void> logEvent(String eventName, Map<String, dynamic>? parameters) async {
+  Future<void> logEvent(
+      String eventName, Map<String, dynamic>? parameters) async {
     try {
       await _analyticsService.logEvent(
         eventName,
@@ -378,7 +390,8 @@ class AnalyticsController extends Notifier<AsyncValue<void>> {
 
       await _analyticsService.setUserId(currentUser.id);
       for (final entry in properties.entries) {
-        await _analyticsService.setUserProperty(entry.key, entry.value.toString());
+        await _analyticsService.setUserProperty(
+            entry.key, entry.value.toString());
       }
     } catch (e) {
       // Don't fail on analytics errors
@@ -433,7 +446,8 @@ class AnalyticsController extends Notifier<AsyncValue<void>> {
 }
 
 /// User analytics provider (dashboard stats)
-final userAnalyticsProvider = StreamProvider<Map<String, dynamic>>((ref) async* {
+final userAnalyticsProvider =
+    StreamProvider<Map<String, dynamic>>((ref) async* {
   final currentUser = ref.watch(currentUserProvider).value;
   if (currentUser == null) {
     yield {};
@@ -485,7 +499,8 @@ final hasActiveSubscriptionProvider = FutureProvider<bool>((ref) async {
 });
 
 /// Subscription packages provider
-final subscriptionPackagesProvider = FutureProvider<List<SubscriptionPackage>>((ref) async {
+final subscriptionPackagesProvider =
+    FutureProvider<List<SubscriptionPackage>>((ref) async {
   // Return hardcoded packages for now
   // Returns hardcoded packages; extend when backend subscription management is added
   return [
@@ -535,7 +550,8 @@ final subscriptionPackagesProvider = FutureProvider<List<SubscriptionPackage>>((
 });
 
 /// Subscription controller
-final subscriptionControllerProvider = NotifierProvider<SubscriptionController, AsyncValue<void>>(() {
+final subscriptionControllerProvider =
+    NotifierProvider<SubscriptionController, AsyncValue<void>>(() {
   return SubscriptionController();
 });
 
@@ -592,7 +608,8 @@ class SubscriptionController extends Notifier<AsyncValue<void>> {
   Future<void> renewSubscription(String subscriptionId) async {
     state = const AsyncValue.loading();
     try {
-      await _subscriptionService.renewSubscription(subscriptionId, const Duration(days: 30));
+      await _subscriptionService.renewSubscription(
+          subscriptionId, const Duration(days: 30));
 
       // Invalidate subscription provider to refresh
       ref.invalidate(userSubscriptionProvider);
@@ -604,5 +621,3 @@ class SubscriptionController extends Notifier<AsyncValue<void>> {
     }
   }
 }
-
-

@@ -1,7 +1,7 @@
-import { HMSReactiveStore } from '@100mslive/hms-video-store';
+import { HMSReactiveStore } from "@100mslive/hms-video-store";
 
 // Initialize the 100ms SDK and expose it globally
-console.log('🎥 Initializing 100ms SDK...');
+console.log("🎥 Initializing 100ms SDK...");
 
 // Create the reactive store
 const hmsStore = new HMSReactiveStore();
@@ -17,8 +17,8 @@ window.hmsActions = hmsActions;
 window.hmsNotifications = hmsNotifications;
 window.HMSReactiveStore = HMSReactiveStore;
 
-console.log('✅ 100ms SDK initialized and exposed globally');
-console.log('Available: window.hmsStore, window.hmsActions, window.hmsNotifications');
+console.log("✅ 100ms SDK initialized and exposed globally");
+console.log("Available: window.hmsStore, window.hmsActions, window.hmsNotifications");
 
 // Export for bundler (won't be used by Flutter but good practice)
 export { hmsStore, hmsActions, hmsNotifications };

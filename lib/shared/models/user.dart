@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class User {
@@ -36,6 +35,7 @@ class User {
   final String membershipTier;
   final List<String> badges;
 
+<<<<<<< HEAD
   // ── 18+ AGE GATE ────────────────────────────────────────────
   /// ISO-8601 birthdate stored at signup, immutable thereafter.
   final DateTime? birthdate;
@@ -44,6 +44,10 @@ class User {
   final bool profileComplete;
   /// Age in full years at signup moment (defensive cache).
   final int? ageAtSignup;
+=======
+  // ONBOARDING
+  final bool onboardingComplete;
+>>>>>>> origin/develop
 
   User({
     required this.id,
@@ -77,10 +81,14 @@ class User {
     this.lastSeen,
     required this.membershipTier,
     required this.badges,
+<<<<<<< HEAD
     this.birthdate,
     this.ageVerified = false,
     this.profileComplete = false,
     this.ageAtSignup,
+=======
+    this.onboardingComplete = false,
+>>>>>>> origin/develop
   });
 
       factory User.fromJson(Map<String, dynamic> json) {
@@ -125,6 +133,7 @@ class User {
           : null,
       membershipTier: json['membershipTier'] ?? 'free',
       badges: List<String>.from(json['badges'] ?? []),
+<<<<<<< HEAD
       birthdate: json['birthdate'] != null
           ? (json['birthdate'] is Timestamp
               ? (json['birthdate'] as Timestamp).toDate()
@@ -133,6 +142,9 @@ class User {
       ageVerified: json['ageVerified'] as bool? ?? false,
         profileComplete: json['profileComplete'] as bool? ?? false,
       ageAtSignup: json['ageAtSignup'] as int?,
+=======
+      onboardingComplete: json['onboardingComplete'] as bool? ?? false,
+>>>>>>> origin/develop
     );
   }
 
@@ -169,10 +181,14 @@ class User {
       'lastSeen': lastSeen?.toIso8601String(),
       'membershipTier': membershipTier,
       'badges': badges,
+<<<<<<< HEAD
       if (birthdate != null) 'birthdate': Timestamp.fromDate(birthdate!),
       'ageVerified': ageVerified,
       'profileComplete': profileComplete,
       if (ageAtSignup != null) 'ageAtSignup': ageAtSignup,
+=======
+      'onboardingComplete': onboardingComplete,
+>>>>>>> origin/develop
     };
   }
 
@@ -190,4 +206,3 @@ class User {
     return User.fromMap(data);
   }
 }
-

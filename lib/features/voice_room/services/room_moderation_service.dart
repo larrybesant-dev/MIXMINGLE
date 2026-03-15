@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Moderation action enum
@@ -42,7 +42,9 @@ class ModerationLog {
       action: ModerationAction.values[data['action'] ?? 0],
       reason: data['reason'] ?? '',
       timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      duration: data['duration'] != null ? Duration(seconds: data['duration'] as int) : null,
+      duration: data['duration'] != null
+          ? Duration(seconds: data['duration'] as int)
+          : null,
     );
   }
 
@@ -70,7 +72,11 @@ class RoomModerationService {
     required String targetUserId,
     required String reason,
   }) async {
-    await _firestore.collection('rooms').doc(roomId).collection('moderation_logs').add({
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('moderation_logs')
+        .add({
       'roomId': roomId,
       'moderatorId': moderatorId,
       'targetUserId': targetUserId,
@@ -88,7 +94,11 @@ class RoomModerationService {
     required String reason,
     Duration? duration,
   }) async {
-    await _firestore.collection('rooms').doc(roomId).collection('moderation_logs').add({
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('moderation_logs')
+        .add({
       'roomId': roomId,
       'moderatorId': moderatorId,
       'targetUserId': targetUserId,
@@ -99,7 +109,12 @@ class RoomModerationService {
     });
 
     // Update user's mute status in room
-    await _firestore.collection('rooms').doc(roomId).collection('muted_users').doc(targetUserId).set({
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('muted_users')
+        .doc(targetUserId)
+        .set({
       'muteTime': FieldValue.serverTimestamp(),
       'duration': duration?.inSeconds,
       'reason': reason,
@@ -108,7 +123,12 @@ class RoomModerationService {
 
   /// Unmute a user
   Future<void> unmuteUser(String roomId, String targetUserId) async {
-    await _firestore.collection('rooms').doc(roomId).collection('muted_users').doc(targetUserId).delete();
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('muted_users')
+        .doc(targetUserId)
+        .delete();
   }
 
   /// Kick a user from room
@@ -118,7 +138,11 @@ class RoomModerationService {
     required String targetUserId,
     required String reason,
   }) async {
-    await _firestore.collection('rooms').doc(roomId).collection('moderation_logs').add({
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('moderation_logs')
+        .add({
       'roomId': roomId,
       'moderatorId': moderatorId,
       'targetUserId': targetUserId,
@@ -128,7 +152,12 @@ class RoomModerationService {
     });
 
     // Remove user from room
-    await _firestore.collection('rooms').doc(roomId).collection('participants').doc(targetUserId).delete();
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(targetUserId)
+        .delete();
   }
 
   /// Ban a user from room
@@ -139,7 +168,11 @@ class RoomModerationService {
     required String reason,
     Duration? duration,
   }) async {
-    await _firestore.collection('rooms').doc(roomId).collection('moderation_logs').add({
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('moderation_logs')
+        .add({
       'roomId': roomId,
       'moderatorId': moderatorId,
       'targetUserId': targetUserId,
@@ -153,7 +186,12 @@ class RoomModerationService {
     await _firestore.collection('rooms').doc(roomId).collection('participants').doc(targetUserId).delete();
 
     // Add to banned list
-    await _firestore.collection('rooms').doc(roomId).collection('banned_users').doc(targetUserId).set({
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('banned_users')
+        .doc(targetUserId)
+        .set({
       'banTime': FieldValue.serverTimestamp(),
       'duration': duration?.inSeconds,
       'reason': reason,
@@ -162,6 +200,7 @@ class RoomModerationService {
 
   /// Unban a user
   Future<void> unbanUser(String roomId, String targetUserId) async {
+<<<<<<< HEAD
     // Remove from both the subcollection and the root-doc bannedUsers array so
     // joinVoiceRoom's ban check no longer blocks the user.
     await Future.wait([
@@ -175,6 +214,14 @@ class RoomModerationService {
         'bannedUsers': FieldValue.arrayRemove([targetUserId]),
       }),
     ]);
+=======
+    await _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('banned_users')
+        .doc(targetUserId)
+        .delete();
+>>>>>>> origin/develop
   }
 
   /// Get moderation logs for a room
@@ -187,14 +234,21 @@ class RoomModerationService {
         .limit(50)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => ModerationLog.fromFirestore(doc)).toList();
+      return snapshot.docs
+          .map((doc) => ModerationLog.fromFirestore(doc))
+          .toList();
     });
   }
 
   /// Check if user is muted
   Future<bool> isUserMuted(String roomId, String userId) async {
     try {
-      final doc = await _firestore.collection('rooms').doc(roomId).collection('muted_users').doc(userId).get();
+      final doc = await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('muted_users')
+          .doc(userId)
+          .get();
 
       if (!doc.exists) return false;
 
@@ -213,7 +267,12 @@ class RoomModerationService {
   /// Check if user is banned
   Future<bool> isUserBanned(String roomId, String userId) async {
     try {
-      final doc = await _firestore.collection('rooms').doc(roomId).collection('banned_users').doc(userId).get();
+      final doc = await _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('banned_users')
+          .doc(userId)
+          .get();
 
       if (!doc.exists) return false;
 
@@ -231,14 +290,32 @@ class RoomModerationService {
 
   /// Get muted users in room
   Stream<List<String>> getMutedUsersStream(String roomId) {
+<<<<<<< HEAD
     return _firestore.collection('rooms').doc(roomId).collection('muted_users').limit(200).snapshots().map((snapshot) {
+=======
+    return _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('muted_users')
+        .snapshots()
+        .map((snapshot) {
+>>>>>>> origin/develop
       return snapshot.docs.map((doc) => doc.id).toList();
     });
   }
 
   /// Get banned users in room
   Stream<List<String>> getBannedUsersStream(String roomId) {
+<<<<<<< HEAD
     return _firestore.collection('rooms').doc(roomId).collection('banned_users').limit(200).snapshots().map((snapshot) {
+=======
+    return _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('banned_users')
+        .snapshots()
+        .map((snapshot) {
+>>>>>>> origin/develop
       return snapshot.docs.map((doc) => doc.id).toList();
     });
   }
@@ -250,21 +327,22 @@ final roomModerationServiceProvider = Provider<RoomModerationService>((ref) {
 });
 
 /// Provider for moderation logs
-final moderationLogsProvider = StreamProvider.family<List<ModerationLog>, String>((ref, roomId) {
+final moderationLogsProvider =
+    StreamProvider.family<List<ModerationLog>, String>((ref, roomId) {
   final service = ref.watch(roomModerationServiceProvider);
   return service.getModerationLogsStream(roomId);
 });
 
 /// Provider for muted users
-final mutedUsersProvider = StreamProvider.family<List<String>, String>((ref, roomId) {
+final mutedUsersProvider =
+    StreamProvider.family<List<String>, String>((ref, roomId) {
   final service = ref.watch(roomModerationServiceProvider);
   return service.getMutedUsersStream(roomId);
 });
 
 /// Provider for banned users
-final bannedUsersProvider = StreamProvider.family<List<String>, String>((ref, roomId) {
+final bannedUsersProvider =
+    StreamProvider.family<List<String>, String>((ref, roomId) {
   final service = ref.watch(roomModerationServiceProvider);
   return service.getBannedUsersStream(roomId);
 });
-
-

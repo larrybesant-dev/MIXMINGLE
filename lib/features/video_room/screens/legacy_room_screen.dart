@@ -31,13 +31,19 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+<<<<<<< HEAD
         title: Text('MIXVY Lounge', style: Theme.of(context).textTheme.titleLarge),
+=======
+        title: Text('Mix & Mingle Room',
+            style: Theme.of(context).textTheme.titleLarge),
+>>>>>>> origin/develop
         backgroundColor: Colors.black87,
         elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline, color: Colors.blueAccent),
-            onPressed: () => setState(() => _showDiagnostics = !_showDiagnostics),
+            onPressed: () =>
+                setState(() => _showDiagnostics = !_showDiagnostics),
           ),
           IconButton(
             icon: const Icon(Icons.exit_to_app, color: Colors.redAccent),
@@ -50,20 +56,25 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
           AgoraVideoPreview(channelName: widget.channelName, uid: widget.uid),
           if (_showDiagnostics && _diagnosticsResult != null)
             Positioned(
-              top: 16, right: 16,
+              top: 16,
+              right: 16,
               child: _DiagnosticsOverlay(result: _diagnosticsResult!),
             ),
           Positioned(
-            bottom: 16, left: 0, right: 0,
+            bottom: 16,
+            left: 0,
+            right: 0,
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: Icon(_isMuted ? Icons.mic_off : Icons.mic, color: Colors.white),
+                  icon: Icon(_isMuted ? Icons.mic_off : Icons.mic,
+                      color: Colors.white),
                   onPressed: () => setState(() => _isMuted = !_isMuted),
                 ),
                 IconButton(
-                  icon: Icon(_isCameraOn ? Icons.videocam : Icons.videocam_off, color: Colors.white),
+                  icon: Icon(_isCameraOn ? Icons.videocam : Icons.videocam_off,
+                      color: Colors.white),
                   onPressed: () => setState(() => _isCameraOn = !_isCameraOn),
                 ),
                 IconButton(
@@ -79,8 +90,11 @@ class _RoomScreenState extends ConsumerState<RoomScreen> {
   }
 
   Future<void> _leaveRoom() async {
-    try { await ref.read(agoraServiceProvider).leaveChannel(); }
-    catch (e) { debugPrint('[RoomScreen] Leave error: $e'); }
+    try {
+      await ref.read(agoraServiceProvider).leaveChannel();
+    } catch (e) {
+      debugPrint('[RoomScreen] Leave error: $e');
+    }
     if (mounted) Navigator.of(context).pop();
   }
 }
@@ -98,13 +112,21 @@ class _DiagnosticsOverlay extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Agora Diagnostics', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            const Text('Agora Diagnostics',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            Text('Permissions OK: ${result.permissionsOk}', style: const TextStyle(color: Colors.white70)),
-            Text('Platform Supported: ${result.platformSupported}', style: const TextStyle(color: Colors.white70)),
-            ...result.warnings.map((w) => Text('Warning: $w', style: const TextStyle(color: Colors.orange))),
-            ...result.errors.map((e) => Text('Error: $e', style: const TextStyle(color: Colors.red))),
-            if (result.isHealthy) const Text('Status: Healthy', style: TextStyle(color: Colors.green)),
+            Text('Permissions OK: ${result.permissionsOk}',
+                style: const TextStyle(color: Colors.white70)),
+            Text('Platform Supported: ${result.platformSupported}',
+                style: const TextStyle(color: Colors.white70)),
+            ...result.warnings.map((w) => Text('Warning: $w',
+                style: const TextStyle(color: Colors.orange))),
+            ...result.errors.map((e) =>
+                Text('Error: $e', style: const TextStyle(color: Colors.red))),
+            if (result.isHealthy)
+              const Text('Status: Healthy',
+                  style: TextStyle(color: Colors.green)),
           ],
         ),
       ),

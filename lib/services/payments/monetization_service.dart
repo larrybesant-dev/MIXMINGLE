@@ -10,8 +10,13 @@ class MonetizationService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   final List<SubscriptionPlanModel> plans = [
-    SubscriptionPlanModel(id: 'free', name: 'Free', price: 0.0, features: ['Basic Rooms']),
-    SubscriptionPlanModel(id: 'premium', name: 'Premium', price: 9.99, features: ['Screen Share', 'Reactions', 'Breakout Rooms']),
+    SubscriptionPlanModel(
+        id: 'free', name: 'Free', price: 0.0, features: ['Basic Rooms']),
+    SubscriptionPlanModel(
+        id: 'premium',
+        name: 'Premium',
+        price: 9.99,
+        features: ['Screen Share', 'Reactions', 'Breakout Rooms']),
   ];
 
   EntitlementModel getUserEntitlement(String userId) {
@@ -21,7 +26,8 @@ class MonetizationService {
 
   /// Submit a withdrawal request for the currently authenticated user.
   /// Validates identity server-side via Firestore rules (userId must match auth.uid).
-  Future<void> submitWithdrawal({required int amount, required String email}) async {
+  Future<void> submitWithdrawal(
+      {required int amount, required String email}) async {
     final user = _auth.currentUser;
     if (user == null) throw Exception('Not authenticated');
     if (amount <= 0) throw Exception('Amount must be greater than zero');

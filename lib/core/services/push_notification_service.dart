@@ -17,7 +17,8 @@ class PushNotificationService {
   static final FirebaseMessaging _fcm = FirebaseMessaging.instance;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static final FirebaseAuth _auth = FirebaseAuth.instance;
-  static final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
+  static final FlutterLocalNotificationsPlugin _localNotifications =
+      FlutterLocalNotificationsPlugin();
 
   static bool _initialized = false;
   static GlobalKey<NavigatorState>? _navigatorKey;
@@ -54,7 +55,8 @@ class PushNotificationService {
       FirebaseMessaging.onMessage.listen(_handleForegroundMessage);
 
       // Handle background messages
-      FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+      FirebaseMessaging.onBackgroundMessage(
+          _firebaseMessagingBackgroundHandler);
 
       // Handle notification taps
       FirebaseMessaging.onMessageOpenedApp.listen(_handleNotificationTap);
@@ -77,7 +79,8 @@ class PushNotificationService {
     try {
       // Skip on web - requires user gesture
       if (kIsWeb) {
-        AppLogger.info('Skipping notification permission on web (requires user gesture)');
+        AppLogger.info(
+            'Skipping notification permission on web (requires user gesture)');
         return;
       }
 
@@ -91,7 +94,8 @@ class PushNotificationService {
         provisional: false,
       );
 
-      AppLogger.info('Notification permission: ${settings.authorizationStatus}');
+      AppLogger.info(
+          'Notification permission: ${settings.authorizationStatus}');
     } catch (e, stack) {
       AppLogger.error('Error requesting notification permission', e, stack);
     }
@@ -99,7 +103,8 @@ class PushNotificationService {
 
   /// Initialize local notifications (for foreground display)
   static Future<void> _initializeLocalNotifications() async {
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosSettings = DarwinInitializationSettings(
       requestAlertPermission: false,
       requestBadgePermission: false,
@@ -460,7 +465,10 @@ class PushNotificationService {
 
   static Future<void> _navigateToRoom(String roomId) async {
     try {
-      final roomDoc = await FirebaseFirestore.instance.collection('rooms').doc(roomId).get();
+      final roomDoc = await FirebaseFirestore.instance
+          .collection('rooms')
+          .doc(roomId)
+          .get();
       if (!roomDoc.exists) {
         AppLogger.error('Room not found: $roomId');
         return;

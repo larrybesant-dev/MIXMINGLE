@@ -9,7 +9,9 @@
 ## 📦 WHAT'S BEEN BUILT
 
 ### Backend (Cloud Functions - 806 lines)
+
 ✅ **speedDatingComplete.ts** - Comprehensive Cloud Functions system:
+
 - `matchSpeedDating` - Scheduled matcher (runs every 30s)
 - `generateSpeedDatingToken` - Secure Agora token generation
 - `submitSpeedDatingDecision` - Decision handling + match creation
@@ -19,13 +21,16 @@
 - `endSpeedDatingSession` - Cleanup on completion
 
 ### Frontend Providers (585 lines)
+
 ✅ **speed_dating_queue_cloud.dart** - Queue provider using Cloud Functions
 ✅ **speed_dating_session_cloud.dart** - Session provider with backend tokens
 
 ### Frontend Screens
+
 ✅ **speed_dating_lobby_cloud.dart** - Complete lobby with preferences, queue count, animations
 
 ### Security
+
 ✅ **firestore_speed_dating.rules** - Production Firestore rules
 
 ---
@@ -49,6 +54,7 @@ firebase deploy --only functions
 ```
 
 **Expected Output**:
+
 ```
 ✔  functions[matchSpeedDating(us-central1)] Successful create operation.
 ✔  functions[generateSpeedDatingToken(us-central1)] Successful create operation.
@@ -71,7 +77,7 @@ export {
   leaveSpeedDatingSession,
   autoExpireSpeedDatingSessions,
   endSpeedDatingSession,
-} from './speedDatingComplete';
+} from "./speedDatingComplete";
 ```
 
 ### Step 3: Deploy Firestore Rules
@@ -89,12 +95,14 @@ firebase deploy --only firestore:rules
 #### 4A. Update Provider Imports
 
 **Before** (old client-side matching):
+
 ```dart
 import '../providers/speed_dating_queue_provider.dart';
 import '../providers/speed_dating_session_provider.dart';
 ```
 
 **After** (new Cloud Functions):
+
 ```dart
 import '../providers/speed_dating_queue_cloud.dart';
 import '../providers/speed_dating_session_cloud.dart';
@@ -139,14 +147,16 @@ GoRoute(
 #### 4C. Install Dependencies
 
 Ensure `pubspec.yaml` has:
+
 ```yaml
 dependencies:
-  cloud_functions: ^4.0.0  # Cloud Functions callable
-  agora_rtc_engine: ^6.0.0  # Agora video
-  confetti: ^0.7.0  # Match celebration
+  cloud_functions: ^4.0.0 # Cloud Functions callable
+  agora_rtc_engine: ^6.0.0 # Agora video
+  confetti: ^0.7.0 # Match celebration
 ```
 
 Run:
+
 ```powershell
 flutter pub get
 ```
@@ -484,22 +494,26 @@ Located in `speedDatingComplete.ts > areCompatible()`:
 ```typescript
 function areCompatible(user1: QueueEntry, user2: QueueEntry): boolean {
   // 1. Age check
-  if (user1.age < user2.preferences.minAge ||
-      user1.age > user2.preferences.maxAge) return false;
-  if (user2.age < user1.preferences.minAge ||
-      user2.age > user1.preferences.maxAge) return false;
+  if (user1.age < user2.preferences.minAge || user1.age > user2.preferences.maxAge) return false;
+  if (user2.age < user1.preferences.minAge || user2.age > user1.preferences.maxAge) return false;
 
   // 2. Gender preferences
-  if (!user2.preferences.genderPreferences.includes('Any') &&
-      !user2.preferences.genderPreferences.includes(user1.gender)) return false;
-  if (!user1.preferences.genderPreferences.includes('Any') &&
-      !user1.preferences.genderPreferences.includes(user2.gender)) return false;
+  if (
+    !user2.preferences.genderPreferences.includes("Any") &&
+    !user2.preferences.genderPreferences.includes(user1.gender)
+  )
+    return false;
+  if (
+    !user1.preferences.genderPreferences.includes("Any") &&
+    !user1.preferences.genderPreferences.includes(user2.gender)
+  )
+    return false;
 
   // 3. Sexuality matching
-  if (user1.sexuality === 'straight' && user2.sexuality === 'straight') {
+  if (user1.sexuality === "straight" && user2.sexuality === "straight") {
     if (user1.gender === user2.gender) return false;
   }
-  if (user1.sexuality === 'gay' && user2.sexuality === 'gay') {
+  if (user1.sexuality === "gay" && user2.sexuality === "gay") {
     if (user1.gender !== user2.gender) return false;
   }
 
@@ -590,25 +604,33 @@ flutter run -d chrome --no-hot
 ## 🐛 TROUBLESHOOTING
 
 ### Issue: "No matches found"
+
 **Solution**:
+
 - Check Firestore Rules deployed
 - Check users meet compatibility criteria
 - Check matchSpeedDating function logs
 
 ### Issue: "Token generation failed"
+
 **Solution**:
+
 - Verify Agora config: `firebase functions:config:get agora`
 - Should show: `agora.appid` and `agora.cert`
 - Re-deploy functions
 
 ### Issue: "Video not loading"
+
 **Solution**:
+
 - Check Agora App ID matches Firebase config
 - Check token expiration (1 hour)
 - Check browser camera permissions
 
 ### Issue: "Session expired immediately"
+
 **Solution**:
+
 - Check server time vs client time
 - Check autoExpireSpeedDatingSessions not over-aggressive
 - Session should last 5 minutes (300000ms)
@@ -692,6 +714,7 @@ export const matchSpeedDating = onSchedule({
 ## 📝 CHANGELOG
 
 ### v2.0 (Production Ready)
+
 - ✅ Server-authoritative matching (not client-side)
 - ✅ Backend Agora token generation (secure)
 - ✅ Scheduled matcher (Cloud Functions)
@@ -702,6 +725,7 @@ export const matchSpeedDating = onSchedule({
 - ✅ Production frontend providers
 
 ### v1.0 (Deprecated)
+
 - ❌ Client-side matching (insecure)
 - ❌ Hardcoded Agora credentials (exposed)
 - ❌ Manual session creation
@@ -720,6 +744,7 @@ A: Yes! Add fields to `QueueEntry` interface and `joinSpeedDatingQueue` validati
 
 **Q: How do I increase session duration?**
 A: Edit `createSpeedDatingSession()`:
+
 ```typescript
 const duration = 10 * 60 * 1000; // 10 minutes instead of 5
 ```
@@ -734,6 +759,7 @@ A: Remove `matchSpeedDating` export from `index.ts` or delete Cloud Scheduler jo
 Your production-ready video speed dating feature is complete. Copy-paste the code, deploy, and test!
 
 **Next Steps**:
+
 1. Deploy Cloud Functions
 2. Update frontend imports to use `_cloud.dart` providers
 3. Test with 2 users

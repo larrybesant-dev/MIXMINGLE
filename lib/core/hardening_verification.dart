@@ -1,4 +1,4 @@
-﻿// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print
 
 /// PHASE 7 - HARDENING & VERIFICATION
 ///
@@ -321,7 +321,3 @@ class ProductionReadinessChecklist {
 void main() {
   ProductionReadinessChecklist.printChecklist();
 }
-
-
-
-

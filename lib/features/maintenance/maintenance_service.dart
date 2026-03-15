@@ -41,18 +41,18 @@ class MaintenanceResult {
   });
 
   Map<String, dynamic> toMap() => {
-    'taskId': taskId,
-    'taskType': taskType.name,
-    'success': success,
-    'itemsProcessed': itemsProcessed,
-    'itemsArchived': itemsArchived,
-    'itemsDeleted': itemsDeleted,
-    'durationMs': duration.inMilliseconds,
-    'error': error,
-    'startedAt': startedAt.toIso8601String(),
-    'completedAt': completedAt.toIso8601String(),
-    'details': details,
-  };
+        'taskId': taskId,
+        'taskType': taskType.name,
+        'success': success,
+        'itemsProcessed': itemsProcessed,
+        'itemsArchived': itemsArchived,
+        'itemsDeleted': itemsDeleted,
+        'durationMs': duration.inMilliseconds,
+        'error': error,
+        'startedAt': startedAt.toIso8601String(),
+        'completedAt': completedAt.toIso8601String(),
+        'details': details,
+      };
 }
 
 /// Maintenance task types
@@ -109,15 +109,15 @@ class BackupResult {
   });
 
   Map<String, dynamic> toMap() => {
-    'backupId': backupId,
-    'type': type.name,
-    'collectionsBackedUp': collectionsBackedUp,
-    'totalDocuments': totalDocuments,
-    'sizeBytes': sizeBytes,
-    'location': location,
-    'success': success,
-    'completedAt': completedAt.toIso8601String(),
-  };
+        'backupId': backupId,
+        'type': type.name,
+        'collectionsBackedUp': collectionsBackedUp,
+        'totalDocuments': totalDocuments,
+        'sizeBytes': sizeBytes,
+        'location': location,
+        'success': success,
+        'completedAt': completedAt.toIso8601String(),
+      };
 }
 
 /// Backup types
@@ -145,18 +145,19 @@ class KeyRotationResult {
   });
 
   Map<String, dynamic> toMap() => {
-    'keyType': keyType,
-    'rotated': rotated,
-    'previousRotation': previousRotation?.toIso8601String(),
-    'newRotation': newRotation.toIso8601String(),
-    'error': error,
-  };
+        'keyType': keyType,
+        'rotated': rotated,
+        'previousRotation': previousRotation?.toIso8601String(),
+        'newRotation': newRotation.toIso8601String(),
+        'error': error,
+      };
 }
 
 /// Long-term maintenance automation service
 class MaintenanceService {
   static MaintenanceService? _instance;
-  static MaintenanceService get instance => _instance ??= MaintenanceService._();
+  static MaintenanceService get instance =>
+      _instance ??= MaintenanceService._();
 
   MaintenanceService._();
 
@@ -167,8 +168,10 @@ class MaintenanceService {
   ArchiveConfig _config = const ArchiveConfig();
 
   // Stream controllers
-  final _maintenanceController = StreamController<MaintenanceResult>.broadcast();
-  Stream<MaintenanceResult> get maintenanceStream => _maintenanceController.stream;
+  final _maintenanceController =
+      StreamController<MaintenanceResult>.broadcast();
+  Stream<MaintenanceResult> get maintenanceStream =>
+      _maintenanceController.stream;
 
   // Collections
   CollectionReference<Map<String, dynamic>> get _roomsCollection =>
@@ -207,7 +210,8 @@ class MaintenanceService {
     final taskId = _generateTaskId();
     final startedAt = DateTime.now();
 
-    debugPrint('ðŸ“¦ [MaintenanceService] Starting room archival (taskId: $taskId)');
+    debugPrint(
+        'ðŸ“¦ [MaintenanceService] Starting room archival (taskId: $taskId)');
 
     final threshold = ageThreshold ?? _config.roomAgeThreshold;
     final batch = batchSize ?? _config.batchSize;
@@ -227,7 +231,8 @@ class MaintenanceService {
           .get();
 
       itemsProcessed = oldRoomsQuery.docs.length;
-      debugPrint('ðŸ“¦ [MaintenanceService] Found $itemsProcessed rooms to archive');
+      debugPrint(
+          'ðŸ“¦ [MaintenanceService] Found $itemsProcessed rooms to archive');
 
       if (!isDryRun) {
         final writeBatch = _firestore.batch();
@@ -306,7 +311,8 @@ class MaintenanceService {
     final taskId = _generateTaskId();
     final startedAt = DateTime.now();
 
-    debugPrint('ðŸ§¹ [MaintenanceService] Starting asset cleanup (taskId: $taskId)');
+    debugPrint(
+        'ðŸ§¹ [MaintenanceService] Starting asset cleanup (taskId: $taskId)');
 
     final threshold = unusedThreshold ?? const Duration(days: 30);
     final batch = batchSize ?? _config.batchSize;
@@ -326,7 +332,8 @@ class MaintenanceService {
           .get();
 
       itemsProcessed = unusedQuery.docs.length;
-      debugPrint('ðŸ§¹ [MaintenanceService] Found $itemsProcessed unused assets');
+      debugPrint(
+          'ðŸ§¹ [MaintenanceService] Found $itemsProcessed unused assets');
 
       if (!isDryRun) {
         final writeBatch = _firestore.batch();
@@ -360,7 +367,8 @@ class MaintenanceService {
       await _logMaintenance(result);
       _maintenanceController.add(result);
 
-      debugPrint('âœ… [MaintenanceService] Cleaned $itemsDeleted unused assets');
+      debugPrint(
+          'âœ… [MaintenanceService] Cleaned $itemsDeleted unused assets');
       return result;
     } catch (e) {
       final result = MaintenanceResult(
@@ -394,7 +402,8 @@ class MaintenanceService {
   }) async {
     debugPrint('ðŸ”‘ [MaintenanceService] Starting key rotation');
 
-    final typesToRotate = keyTypes ?? ['api_key', 'webhook_secret', 'encryption_key'];
+    final typesToRotate =
+        keyTypes ?? ['api_key', 'webhook_secret', 'encryption_key'];
     final force = forceRotation ?? false;
     final results = <KeyRotationResult>[];
 
@@ -440,7 +449,8 @@ class MaintenanceService {
             newRotation: lastRotation,
           ));
 
-          debugPrint('â­ï¸ [MaintenanceService] Skipped key rotation: $keyType (not due)');
+          debugPrint(
+              'â­ï¸ [MaintenanceService] Skipped key rotation: $keyType (not due)');
         }
       } catch (e) {
         results.add(KeyRotationResult(
@@ -450,7 +460,8 @@ class MaintenanceService {
           error: e.toString(),
         ));
 
-        debugPrint('âŒ [MaintenanceService] Failed to rotate key $keyType: $e');
+        debugPrint(
+            'âŒ [MaintenanceService] Failed to rotate key $keyType: $e');
       }
     }
 
@@ -487,15 +498,17 @@ class MaintenanceService {
     List<String>? collections,
   }) async {
     final backupId = _generateBackupId();
-    debugPrint('ðŸ’¾ [MaintenanceService] Starting backup (id: $backupId, type: ${type.name})');
+    debugPrint(
+        'ðŸ’¾ [MaintenanceService] Starting backup (id: $backupId, type: ${type.name})');
 
-    final collectionsToBackup = collections ?? [
-      'users',
-      'rooms',
-      'subscriptions',
-      'payments',
-      'creator_profiles',
-    ];
+    final collectionsToBackup = collections ??
+        [
+          'users',
+          'rooms',
+          'subscriptions',
+          'payments',
+          'creator_profiles',
+        ];
 
     int totalDocuments = 0;
     int estimatedSize = 0;
@@ -544,7 +557,8 @@ class MaintenanceService {
         'documents': totalDocuments,
       });
 
-      debugPrint('âœ… [MaintenanceService] Backup completed: $totalDocuments documents');
+      debugPrint(
+          'âœ… [MaintenanceService] Backup completed: $totalDocuments documents');
       return result;
     } catch (e) {
       debugPrint('âŒ [MaintenanceService] Backup failed: $e');
@@ -586,9 +600,8 @@ class MaintenanceService {
 
     try {
       // Check for orphaned room participants
-      final participants = await _firestore.collection('room_participants')
-          .limit(1000)
-          .get();
+      final participants =
+          await _firestore.collection('room_participants').limit(1000).get();
 
       for (final doc in participants.docs) {
         itemsProcessed++;
@@ -635,7 +648,8 @@ class MaintenanceService {
       await _logMaintenance(result);
       _maintenanceController.add(result);
 
-      debugPrint('âœ… [MaintenanceService] Integrity check complete: ${issues.length} issues found');
+      debugPrint(
+          'âœ… [MaintenanceService] Integrity check complete: ${issues.length} issues found');
       return result;
     } catch (e) {
       final result = MaintenanceResult(
@@ -709,8 +723,10 @@ class MaintenanceService {
         itemsDeleted: data['itemsDeleted'] as int? ?? 0,
         duration: Duration(milliseconds: data['durationMs'] as int? ?? 0),
         error: data['error'] as String?,
-        startedAt: DateTime.tryParse(data['startedAt'] as String? ?? '') ?? DateTime.now(),
-        completedAt: DateTime.tryParse(data['completedAt'] as String? ?? '') ?? DateTime.now(),
+        startedAt: DateTime.tryParse(data['startedAt'] as String? ?? '') ??
+            DateTime.now(),
+        completedAt: DateTime.tryParse(data['completedAt'] as String? ?? '') ??
+            DateTime.now(),
         details: (data['details'] as Map<String, dynamic>?) ?? {},
       );
     }).toList();

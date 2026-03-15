@@ -32,7 +32,7 @@ class AdaptiveGridEngine {
       final usedWidth = cols * tileWidth + (cols - 1) * spacing;
       final usedHeight = rows * tileHeight + (rows - 1) * spacing;
       final wasteScore = (containerSize.width - usedWidth) +
-                        (containerSize.height - usedHeight);
+          (containerSize.height - usedHeight);
 
       final totalScore = ratioScore * 100 + wasteScore;
 
@@ -52,7 +52,8 @@ class AdaptiveGridEngine {
   }
 
   // Apply grid layout to windows
-  void applyGridLayout(List<VideoWindowController> windows, Size containerSize) {
+  void applyGridLayout(
+      List<VideoWindowController> windows, Size containerSize) {
     final layout = calculateLayout(windows.length, containerSize);
 
     for (int i = 0; i < windows.length; i++) {
@@ -105,7 +106,8 @@ class AdaptiveGridEngine {
   }
 
   // Auto-resize tiles based on content
-  void autoResizeTiles(List<VideoWindowController> windows, Size containerSize) {
+  void autoResizeTiles(
+      List<VideoWindowController> windows, Size containerSize) {
     // Calculate layout for future use (grid metrics available if needed)
     calculateLayout(windows.length, containerSize);
     applyGridLayout(windows, containerSize);
@@ -128,12 +130,12 @@ class GridLayout {
   });
 
   factory GridLayout.empty() => GridLayout(
-    columns: 0,
-    rows: 0,
-    tileWidth: 0,
-    tileHeight: 0,
-    spacing: 0,
-  );
+        columns: 0,
+        rows: 0,
+        tileWidth: 0,
+        tileHeight: 0,
+        spacing: 0,
+      );
 
   bool get isEmpty => columns == 0;
 }

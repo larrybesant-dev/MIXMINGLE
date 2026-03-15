@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/utils/app_logger.dart';
 import 'video_room_controller.dart';
@@ -50,7 +50,8 @@ class _VideoRoomViewState extends ConsumerState<VideoRoomView> {
   @override
   Widget build(BuildContext context) {
     // Access the video room controller
-    final roomKey = (appId: widget.appId, roomId: widget.roomId, userId: widget.userId);
+    final roomKey =
+        (appId: widget.appId, roomId: widget.roomId, userId: widget.userId);
     final videoRoom = ref.read(videoRoomProvider(roomKey).notifier);
     final videoRoomState = ref.watch(videoRoomProvider(roomKey));
 
@@ -69,7 +70,9 @@ class _VideoRoomViewState extends ConsumerState<VideoRoomView> {
           ),
           // Camera toggle
           IconButton(
-            icon: Icon(videoRoomState.cameraEnabled ? Icons.videocam : Icons.videocam_off),
+            icon: Icon(videoRoomState.cameraEnabled
+                ? Icons.videocam
+                : Icons.videocam_off),
             onPressed: videoRoomState.isJoined
                 ? () => videoRoom.toggleCamera().catchError((e) {
                       AppLogger.error('Camera toggle failed: $e');
@@ -90,7 +93,8 @@ class _VideoRoomViewState extends ConsumerState<VideoRoomView> {
     );
   }
 
-  Future<void> _handleLeaveRoom(BuildContext context, VideoRoomNotifier controller) async {
+  Future<void> _handleLeaveRoom(
+      BuildContext context, VideoRoomNotifier controller) async {
     if (!context.mounted) return;
     try {
       await controller.leaveRoom();
@@ -185,7 +189,8 @@ class VideoRoomBody extends StatelessWidget {
               Expanded(
                 child: state.remoteUserCount > 0
                     ? GridView.builder(
-                        gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                        gridDelegate:
+                            const SliverGridDelegateWithMaxCrossAxisExtent(
                           maxCrossAxisExtent: 300,
                           childAspectRatio: 1,
                         ),
@@ -197,9 +202,12 @@ class VideoRoomBody extends StatelessWidget {
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(Icons.videocam, size: 48, color: DesignColors.accent),
+                                  const Icon(Icons.videocam,
+                                      size: 48, color: DesignColors.accent),
                                   const SizedBox(height: 8),
-                                  Text('User ${index + 1}', style: const TextStyle(color: DesignColors.white)),
+                                  Text('User ${index + 1}',
+                                      style: const TextStyle(
+                                          color: DesignColors.white)),
                                 ],
                               ),
                             ),
@@ -212,11 +220,13 @@ class VideoRoomBody extends StatelessWidget {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.videocam_off, size: 64, color: DesignColors.accent),
+                              Icon(Icons.videocam_off,
+                                  size: 64, color: DesignColors.accent),
                               SizedBox(height: 16),
                               Text(
                                 'Waiting for participants...',
-                                style: TextStyle(color: DesignColors.white, fontSize: 16),
+                                style: TextStyle(
+                                    color: DesignColors.white, fontSize: 16),
                               ),
                             ],
                           ),
@@ -238,9 +248,13 @@ class VideoRoomBody extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
-                          state.cameraEnabled ? Icons.videocam : Icons.videocam_off,
+                          state.cameraEnabled
+                              ? Icons.videocam
+                              : Icons.videocam_off,
                           size: 32,
-                          color: state.cameraEnabled ? DesignColors.accent : DesignColors.gold,
+                          color: state.cameraEnabled
+                              ? DesignColors.accent
+                              : DesignColors.gold,
                         ),
                         const SizedBox(height: 4),
                         const Text(

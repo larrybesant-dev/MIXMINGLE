@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 
 /// Centralized error tracking service with Firebase Crashlytics
 class ErrorTrackingService {
-  static final ErrorTrackingService _instance = ErrorTrackingService._internal();
+  static final ErrorTrackingService _instance =
+      ErrorTrackingService._internal();
   factory ErrorTrackingService() => _instance;
   ErrorTrackingService._internal();
 
@@ -196,7 +197,8 @@ class ErrorTrackingService {
   }
 
   /// Check if Crashlytics collection is enabled
-  bool get isCrashlyticsCollectionEnabled => _crashlytics.isCrashlyticsCollectionEnabled;
+  bool get isCrashlyticsCollectionEnabled =>
+      _crashlytics.isCrashlyticsCollectionEnabled;
 }
 
 /// Error tracking mixin for widgets

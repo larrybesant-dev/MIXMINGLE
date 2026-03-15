@@ -17,12 +17,16 @@ class Block {
 
   // Validation
   bool isValid() {
-    return id.isNotEmpty && blockerId.isNotEmpty && blockedUserId.isNotEmpty && blockerId != blockedUserId;
+    return id.isNotEmpty &&
+        blockerId.isNotEmpty &&
+        blockedUserId.isNotEmpty &&
+        blockerId != blockedUserId;
   }
 
   // Check if this block affects a specific user relationship
   bool blocks(String userId1, String userId2) {
-    return (blockerId == userId1 && blockedUserId == userId2) || (blockerId == userId2 && blockedUserId == userId1);
+    return (blockerId == userId1 && blockedUserId == userId2) ||
+        (blockerId == userId2 && blockedUserId == userId1);
   }
 
   // fromJson

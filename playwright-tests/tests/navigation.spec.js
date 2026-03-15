@@ -1,49 +1,49 @@
 // playwright-tests/tests/navigation.spec.js
-import { test, expect } from '@playwright/test';
+import { test, expect } from "@playwright/test";
 
-test.describe('Navigation and Page Loading Tests', () => {
+test.describe("Navigation and Page Loading Tests", () => {
   test.setTimeout(60000);
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto("/");
     await page.waitForTimeout(3000); // Wait for splash
   });
 
-  test('should navigate through all main pages successfully', async ({ page }) => {
-    console.log('🧭 Testing main navigation flow');
+  test("should navigate through all main pages successfully", async ({ page }) => {
+    console.log("🧭 Testing main navigation flow");
 
     // Define navigation targets
     const navigationTargets = [
       {
-        button: 'text=Home',
-        expectedTexts: ['Welcome', 'Mix & Mingle', 'Dashboard'],
-        name: 'Home'
+        button: "text=Home",
+        expectedTexts: ["Welcome", "Mix & Mingle", "Dashboard"],
+        name: "Home",
       },
       {
-        button: 'text=Browse Rooms',
-        expectedTexts: ['Rooms', 'Live Rooms', 'Discover Rooms', 'Create Room'],
-        name: 'Browse Rooms'
+        button: "text=Browse Rooms",
+        expectedTexts: ["Rooms", "Live Rooms", "Discover Rooms", "Create Room"],
+        name: "Browse Rooms",
       },
       {
-        button: 'text=Discover Users',
-        expectedTexts: ['Users', 'Discover Users', 'Find People', 'Search users'],
-        name: 'Discover Users'
+        button: "text=Discover Users",
+        expectedTexts: ["Users", "Discover Users", "Find People", "Search users"],
+        name: "Discover Users",
       },
       {
-        button: 'text=Messages',
-        expectedTexts: ['Messages', 'Chat', 'Conversations', 'No messages yet'],
-        name: 'Messages'
+        button: "text=Messages",
+        expectedTexts: ["Messages", "Chat", "Conversations", "No messages yet"],
+        name: "Messages",
       },
       {
-        button: 'text=Settings',
-        expectedTexts: ['Settings', 'Preferences', 'Account', 'Privacy'],
-        name: 'Settings'
+        button: "text=Settings",
+        expectedTexts: ["Settings", "Preferences", "Account", "Privacy"],
+        name: "Settings",
       },
       {
-        button: 'text=Profile',
-        expectedTexts: ['Profile', 'Edit Profile', '@', 'followers'],
-        name: 'Profile'
-      }
+        button: "text=Profile",
+        expectedTexts: ["Profile", "Edit Profile", "@", "followers"],
+        name: "Profile",
+      },
     ];
 
     let successfulNavigations = 0;
@@ -58,7 +58,12 @@ test.describe('Navigation and Page Loading Tests', () => {
         // Check if page loaded correctly
         let pageLoaded = false;
         for (const expectedText of target.expectedTexts) {
-          if (await page.locator(`text=${expectedText}`).isVisible({ timeout: 3000 }).catch(() => false)) {
+          if (
+            await page
+              .locator(`text=${expectedText}`)
+              .isVisible({ timeout: 3000 })
+              .catch(() => false)
+          ) {
             pageLoaded = true;
             break;
           }
@@ -79,15 +84,17 @@ test.describe('Navigation and Page Loading Tests', () => {
       }
     }
 
-    console.log(`📊 Navigation test results: ${successfulNavigations}/${navigationTargets.length} pages loaded successfully`);
+    console.log(
+      `📊 Navigation test results: ${successfulNavigations}/${navigationTargets.length} pages loaded successfully`,
+    );
     expect(successfulNavigations).toBeGreaterThan(0); // At least some navigation should work
   });
 
-  test('should handle browser back/forward navigation', async ({ page }) => {
-    console.log('🔄 Testing browser navigation');
+  test("should handle browser back/forward navigation", async ({ page }) => {
+    console.log("🔄 Testing browser navigation");
 
     // Navigate to a few pages
-    const pages = ['text=Home', 'text=Browse Rooms', 'text=Discover Users'];
+    const pages = ["text=Home", "text=Browse Rooms", "text=Discover Users"];
 
     for (const pageSelector of pages) {
       const button = page.locator(pageSelector);
@@ -103,24 +110,24 @@ test.describe('Navigation and Page Loading Tests', () => {
 
     // Should be on previous page
     const currentUrl = page.url();
-    expect(currentUrl).toContain('http://127.0.0.1:3000');
+    expect(currentUrl).toContain("http://127.0.0.1:3000");
 
     // Test forward navigation
     await page.goForward();
     await page.waitForTimeout(1000);
 
-    console.log('   ✅ Browser navigation working');
+    console.log("   ✅ Browser navigation working");
   });
 
-  test('should handle deep linking and direct URL access', async ({ page }) => {
-    console.log('🔗 Testing direct URL access');
+  test("should handle deep linking and direct URL access", async ({ page }) => {
+    console.log("🔗 Testing direct URL access");
 
     // Test direct access to different routes (if app supports routing)
     const testUrls = [
-      'http://127.0.0.1:3000/',
-      'http://127.0.0.1:3000/#/home',
-      'http://127.0.0.1:3000/#/rooms',
-      'http://127.0.0.1:3000/#/users'
+      "http://127.0.0.1:3000/",
+      "http://127.0.0.1:3000/#/home",
+      "http://127.0.0.1:3000/#/rooms",
+      "http://127.0.0.1:3000/#/users",
     ];
 
     for (const url of testUrls) {
@@ -129,7 +136,7 @@ test.describe('Navigation and Page Loading Tests', () => {
         await page.waitForTimeout(2000);
 
         // Should not crash and should show some content
-        const bodyContent = await page.locator('body').textContent();
+        const bodyContent = await page.locator("body").textContent();
         expect(bodyContent && bodyContent.length > 0).toBeTruthy();
 
         console.log(`   ✅ ${url} accessible`);
@@ -139,11 +146,11 @@ test.describe('Navigation and Page Loading Tests', () => {
     }
   });
 
-  test('should handle page refresh without breaking', async ({ page }) => {
-    console.log('🔄 Testing page refresh stability');
+  test("should handle page refresh without breaking", async ({ page }) => {
+    console.log("🔄 Testing page refresh stability");
 
     // Navigate to home
-    await page.locator('text=Home').click();
+    await page.locator("text=Home").click();
     await page.waitForTimeout(2000);
 
     // Refresh page
@@ -151,22 +158,22 @@ test.describe('Navigation and Page Loading Tests', () => {
     await page.waitForTimeout(3000);
 
     // App should still be functional
-    const appStillWorks = await page.locator('text=Mix & Mingle').isVisible({ timeout: 5000 });
+    const appStillWorks = await page.locator("text=Mix & Mingle").isVisible({ timeout: 5000 });
     expect(appStillWorks).toBeTruthy();
 
-    console.log('   ✅ Page refresh handled correctly');
+    console.log("   ✅ Page refresh handled correctly");
   });
 
-  test('should display loading states appropriately', async ({ page }) => {
-    console.log('⏳ Testing loading states');
+  test("should display loading states appropriately", async ({ page }) => {
+    console.log("⏳ Testing loading states");
 
     // Navigate to different pages and check for loading indicators
     const navigationButtons = [
-      'text=Home',
-      'text=Browse Rooms',
-      'text=Discover Users',
-      'text=Messages',
-      'text=Settings'
+      "text=Home",
+      "text=Browse Rooms",
+      "text=Discover Users",
+      "text=Messages",
+      "text=Settings",
     ];
 
     for (const buttonSelector of navigationButtons) {
@@ -176,12 +183,12 @@ test.describe('Navigation and Page Loading Tests', () => {
 
         // Look for loading indicators (spinners, skeletons, etc.)
         const loadingIndicators = [
-          page.locator('.loading'),
-          page.locator('.spinner'),
-          page.locator('text=Loading'),
-          page.locator('text=Please wait'),
+          page.locator(".loading"),
+          page.locator(".spinner"),
+          page.locator("text=Loading"),
+          page.locator("text=Please wait"),
           page.locator('[aria-label="loading"]'),
-          page.locator('circular-progress-indicator')
+          page.locator("circular-progress-indicator"),
         ];
 
         let loadingFound = false;
@@ -205,6 +212,6 @@ test.describe('Navigation and Page Loading Tests', () => {
       }
     }
 
-    console.log('   ✅ Loading states handled appropriately');
+    console.log("   ✅ Loading states handled appropriately");
   });
 });

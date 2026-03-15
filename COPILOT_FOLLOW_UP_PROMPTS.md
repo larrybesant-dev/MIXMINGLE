@@ -35,6 +35,7 @@ unified.
 8. Works with Firebase token generation
 
 **Output:**
+
 - Refactored AgoraService class
 - List of files that can be deleted or consolidated
 - Updated call sites (files that import/use Agora)
@@ -57,12 +58,14 @@ race conditions.
 You are a Firebase architect optimizing Firestore operations in a Flutter app.
 
 I want to ensure all Firestore operations in this app are:
+
 - Atomic (all-or-nothing, no partial updates)
 - Free of race conditions (no simultaneous writes to same document)
 - Properly cleaned up (no orphaned documents)
 - Efficient (batched where possible)
 
 **Current flows:**
+
 1. joinRoom() writes participant doc
 2. leaveRoom() deletes participant doc
 3. sendMessage() writes message doc
@@ -70,6 +73,7 @@ I want to ensure all Firestore operations in this app are:
 5. Real-time listeners sync state to UI
 
 **Your goal:**
+
 1. Identify any race conditions (e.g., two simultaneous writes)
 2. Identify any orphaned documents (participants without cleanup)
 3. Optimize with Firestore transactions where needed
@@ -77,6 +81,7 @@ I want to ensure all Firestore operations in this app are:
 5. Ensure cleanup on app crash (TTL? Cleanup function?)
 
 **Output:**
+
 - List of identified issues
 - Proposed fixes (code snippets for each)
 - Firestore rules needed (if any)
@@ -103,6 +108,7 @@ video calling.
 SDK. Mobile uses the native plugin.
 
 **Your goal:**
+
 1. Ensure waitForBridgeReady() correctly polls for JS SDK availability
 2. Ensure timeout handling (what if JS SDK never loads?)
 3. Ensure graceful fallback if JS bridge unavailable
@@ -114,6 +120,7 @@ SDK. Mobile uses the native plugin.
 9. Clean up resources on page unload
 
 **Output:**
+
 - Proposed improvements to JS bridge loading
 - Error handling strategies
 - Browser compatibility checks
@@ -134,6 +141,7 @@ Use this to generate comprehensive tests for your critical flows.
 You are a Flutter test engineer creating a test suite for a video calling app.
 
 I want integration tests that verify:
+
 1. Join flow (auth → token → Agora → Firestore)
 2. Leave flow (Agora → Firestore cleanup)
 3. Web vs mobile platform routing
@@ -142,6 +150,7 @@ I want integration tests that verify:
 6. Error handling (network failure, permission denied, etc.)
 
 **Your goal:**
+
 1. Create test_drivers for web, Android, iOS
 2. Create integration test scenarios
 3. Mock Firestore and Agora responses
@@ -149,6 +158,7 @@ I want integration tests that verify:
 5. Verify Firestore cleanup on leave
 
 **Output:**
+
 - Test file structure
 - Sample integration test (join flow)
 - Mocking strategy
@@ -169,6 +179,7 @@ Use this to identify and fix performance bottlenecks.
 You are a Flutter performance engineer optimizing a video calling app.
 
 I want to profile and optimize:
+
 1. App startup time (splash screen → login → lobby)
 2. Join time (tap room → video appears)
 3. Leave time (tap leave → back to lobby)
@@ -177,6 +188,7 @@ I want to profile and optimize:
 6. Battery drain (video encoding, screen activity)
 
 **Your goal:**
+
 1. Identify long-running operations
 2. Identify memory leaks or excessive allocations
 3. Optimize Firestore queries (indexes, pagination)
@@ -184,6 +196,7 @@ I want to profile and optimize:
 5. Optimize Agora settings (resolution, framerate, bitrate)
 
 **Output:**
+
 - Profiling results (before/after timings)
 - Identified bottlenecks
 - Recommended optimizations (code snippets)
@@ -204,6 +217,7 @@ Use this to audit security and privacy.
 You are a security engineer auditing a video calling app.
 
 I want to verify:
+
 1. No sensitive data in logs or Crashlytics
 2. Firestore rules enforce user access (can't read other users' data)
 3. Cloud Functions validate user permission
@@ -214,6 +228,7 @@ I want to verify:
 8. HTTPS/wss used everywhere
 
 **Your goal:**
+
 1. Scan for hardcoded credentials
 2. Verify Firestore rules are enforced
 3. Check Crashlytics custom key usage
@@ -222,6 +237,7 @@ I want to verify:
 6. Check WebRTC setup
 
 **Output:**
+
 - Security checklist (pass/fail for each item)
 - Identified vulnerabilities
 - Recommended fixes
@@ -236,6 +252,7 @@ HOW TO USE THESE FOLLOW-UP PROMPTS
 ================================================================================
 
 **Workflow:**
+
 1. Use MASTER PROMPT first (full scan + fixes)
 2. Use FOLLOW-UP PROMPT 1-2 for architecture cleanup
 3. Use FOLLOW-UP PROMPT 3 for web hardening
@@ -244,11 +261,13 @@ HOW TO USE THESE FOLLOW-UP PROMPTS
 6. Use FOLLOW-UP PROMPT 6 for security
 
 **Timing:**
+
 - Each prompt: 5–15 minutes in Copilot
 - Full sequence: 1–2 hours
 - Output: actionable fixes you can implement
 
 **Next Steps:**
+
 1. Copy MASTER PROMPT into Copilot Chat
 2. Review the output
 3. Apply the fixes (or ask Copilot to implement)

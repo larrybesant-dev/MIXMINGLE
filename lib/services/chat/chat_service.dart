@@ -1,8 +1,10 @@
 // lib/services/chat_service.dart
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../shared/models/chat_message.dart';
 import '../../shared/models/chat_room.dart';
+import '../../features/match_inbox/services/match_inbox_service.dart';
 
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -15,10 +17,14 @@ class ChatService {
 
     try {
       // Get all chat rooms for the user
-      final query = _firestore.collection('chatRooms').where('participants', arrayContains: user.uid);
+      final query = _firestore
+          .collection('chatRooms')
+          .where('participants', arrayContains: user.uid);
 
       final snapshot = await query.get();
-      final rooms = snapshot.docs.map((doc) => ChatRoom.fromMap(doc.data()..['id'] = doc.id)).toList();
+      final rooms = snapshot.docs
+          .map((doc) => ChatRoom.fromMap(doc.data()..['id'] = doc.id))
+          .toList();
 
       // Sort by last message time in memory
       rooms.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
@@ -71,7 +77,12 @@ class ChatService {
 
     try {
       final message = ChatMessage(
-        id: _firestore.collection('chatRooms').doc(roomId).collection('messages').doc().id,
+        id: _firestore
+            .collection('chatRooms')
+            .doc(roomId)
+            .collection('messages')
+            .doc()
+            .id,
         roomId: roomId,
         senderId: user.uid,
         senderName: senderName,
@@ -82,14 +93,37 @@ class ChatService {
       );
 
       // Add message to subcollection
-      await _firestore.collection('chatRooms').doc(roomId).collection('messages').doc(message.id).set(message.toMap());
+      await _firestore
+          .collection('chatRooms')
+          .doc(roomId)
+          .collection('messages')
+          .doc(message.id)
+          .set(message.toMap());
 
-      // Update chat room's last message
-      await _firestore.collection('chatRooms').doc(roomId).update({
+      // Update chat room's last message.
+      // Derive the receiver's UID from the roomId (format: "uid1_uid2", sorted).
+      // Only the receiver's unread count is incremented; the sender's stays at 0.
+      final parts = roomId.split('_');
+      final receiverUid =
+          parts.length == 2 ? parts.firstWhere((p) => p != user.uid, orElse: () => parts[0]) : null;
+
+      final updatePayload = <String, dynamic>{
         'lastMessage': content,
         'lastMessageTime': Timestamp.fromDate(message.timestamp),
-        'unreadCounts': FieldValue.increment(1), // This would need to be more specific per user
-      });
+      };
+      if (receiverUid != null && receiverUid.isNotEmpty) {
+        updatePayload['unreadCounts.$receiverUid'] = FieldValue.increment(1);
+      }
+
+      await _firestore.collection('chatRooms').doc(roomId).update(updatePayload);
+
+      // ── Update match inbox last-interaction timestamp (non-blocking) ──────
+      // Only applies to DM rooms (format: uid1_uid2). Keeps MatchTile timeago fresh.
+      if (receiverUid != null && receiverUid.isNotEmpty) {
+        MatchInboxService.instance
+            .updateLastInteraction(user.uid, receiverUid)
+            .catchError((_) {});
+      }
     } catch (e) {
       throw Exception('Failed to send message: $e');
     }
@@ -106,7 +140,11 @@ class ChatService {
           .limit(limit);
 
       final snapshot = await query.get();
-      return snapshot.docs.map((doc) => ChatMessage.fromMap(doc.data()..['id'] = doc.id)).toList().reversed.toList();
+      return snapshot.docs
+          .map((doc) => ChatMessage.fromMap(doc.data()..['id'] = doc.id))
+          .toList()
+          .reversed
+          .toList();
     } catch (e) {
       throw Exception('Failed to get messages: $e');
     }
@@ -160,21 +198,32 @@ class ChatService {
     final user = _auth.currentUser;
     if (user == null) return Stream.value([]);
 
-    try {
-      return _firestore
-          .collection('chatRooms')
-          .where('participants', arrayContains: user.uid)
-          .snapshots()
-          .map((snapshot) {
-        final rooms = snapshot.docs.map((doc) => ChatRoom.fromMap(doc.data()..['id'] = doc.id)).toList();
+    // Use a StreamController so we can swallow permission / empty-collection
+    // errors and emit an empty list instead of propagating an error event.
+    final controller = StreamController<List<ChatRoom>>.broadcast();
 
-        // Sort by last message time in memory
-        rooms.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
-        return rooms;
-      }).handleError((error) => Stream.value([]));
-    } catch (e) {
-      return Stream.value([]);
-    }
+    final sub = _firestore
+        .collection('chatRooms')
+        .where('participants', arrayContains: user.uid)
+        .snapshots()
+        .listen(
+      (snapshot) {
+        try {
+          final rooms = snapshot.docs
+              .map((doc) => ChatRoom.fromMap(doc.data()..['id'] = doc.id))
+              .toList();
+          rooms.sort((a, b) => b.lastMessageTime.compareTo(a.lastMessageTime));
+          controller.add(rooms);
+        } catch (e) {
+          controller.add([]);
+        }
+      },
+      onError: (_) => controller.add([]),
+      onDone: () => controller.close(),
+    );
+
+    controller.onCancel = () => sub.cancel();
+    return controller.stream;
   }
 
   // Stream messages for a chat room
@@ -185,7 +234,9 @@ class ChatService {
         .collection('messages')
         .orderBy('timestamp')
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => ChatMessage.fromMap(doc.data()..['id'] = doc.id)).toList());
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ChatMessage.fromMap(doc.data()..['id'] = doc.id))
+            .toList());
   }
 
   // Stream typing status for a chat room
@@ -203,7 +254,12 @@ class ChatService {
     if (user == null) return;
 
     try {
-      await _firestore.collection('chatRooms').doc(roomId).collection('messages').doc(messageId).update({
+      await _firestore
+          .collection('chatRooms')
+          .doc(roomId)
+          .collection('messages')
+          .doc(messageId)
+          .update({
         'deletedBy': FieldValue.arrayUnion([user.uid]),
       });
     } catch (e) {
@@ -212,7 +268,8 @@ class ChatService {
   }
 
   // Report message
-  Future<void> reportMessage(String roomId, String messageId, String reason) async {
+  Future<void> reportMessage(
+      String roomId, String messageId, String reason) async {
     final user = _auth.currentUser;
     if (user == null) return;
 
@@ -230,7 +287,8 @@ class ChatService {
   }
 
   // Convenience alias for common naming pattern
-  Stream<List<ChatMessage>> messagesStream(String roomId) => streamMessages(roomId);
+  Stream<List<ChatMessage>> messagesStream(String roomId) =>
+      streamMessages(roomId);
 
   // Stream pinned messages for a chat room
   Stream<List<ChatMessage>> streamPinnedMessages(String roomId) {
@@ -241,7 +299,9 @@ class ChatService {
         .where('isPinned', isEqualTo: true)
         .orderBy('timestamp', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => ChatMessage.fromMap(doc.data()..['id'] = doc.id)).toList());
+        .map((snapshot) => snapshot.docs
+            .map((doc) => ChatMessage.fromMap(doc.data()..['id'] = doc.id))
+            .toList());
   }
 
   // Get chat settings for a room
@@ -257,7 +317,12 @@ class ChatService {
   // Get message count for a chat room
   Future<int> getMessageCount(String roomId) async {
     try {
-      final snapshot = await _firestore.collection('chatRooms').doc(roomId).collection('messages').count().get();
+      final snapshot = await _firestore
+          .collection('chatRooms')
+          .doc(roomId)
+          .collection('messages')
+          .count()
+          .get();
       return snapshot.count ?? 0;
     } catch (e) {
       return 0;
@@ -432,5 +497,3 @@ class ChatService {
     });
   }
 }
-
-

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../shared/providers/room_providers.dart';
 import '../../../shared/providers/auth_providers.dart';
@@ -13,10 +13,12 @@ class CreateRoomPageComplete extends ConsumerStatefulWidget {
   const CreateRoomPageComplete({super.key});
 
   @override
-  ConsumerState<CreateRoomPageComplete> createState() => _CreateRoomPageCompleteState();
+  ConsumerState<CreateRoomPageComplete> createState() =>
+      _CreateRoomPageCompleteState();
 }
 
-class _CreateRoomPageCompleteState extends ConsumerState<CreateRoomPageComplete> {
+class _CreateRoomPageCompleteState
+    extends ConsumerState<CreateRoomPageComplete> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -61,9 +63,9 @@ class _CreateRoomPageCompleteState extends ConsumerState<CreateRoomPageComplete>
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => RoomAccessWrapper(
-            room: room,
-            userId: currentUser.id,
-          ),
+              room: room,
+              userId: currentUser.id,
+            ),
           ),
         );
       }
@@ -228,7 +230,8 @@ class _CreateRoomPageCompleteState extends ConsumerState<CreateRoomPageComplete>
                       isExpanded: true,
                       dropdownColor: const Color(0xFF1E1E2F),
                       style: const TextStyle(color: Colors.white, fontSize: 16),
-                      icon: const Icon(Icons.arrow_drop_down, color: Colors.white),
+                      icon: const Icon(Icons.arrow_drop_down,
+                          color: Colors.white),
                       items: categories.map((category) {
                         return DropdownMenuItem(
                           value: category,
@@ -271,7 +274,9 @@ class _CreateRoomPageCompleteState extends ConsumerState<CreateRoomPageComplete>
                     IconButton(
                       onPressed: _tags.length < 5 ? _addTag : null,
                       icon: const Icon(Icons.add_circle),
-                      color: _tags.length < 5 ? const Color(0xFFFF4C4C) : Colors.grey,
+                      color: _tags.length < 5
+                          ? const Color(0xFFFF4C4C)
+                          : Colors.grey,
                       iconSize: 36,
                     ),
                   ],
@@ -286,7 +291,8 @@ class _CreateRoomPageCompleteState extends ConsumerState<CreateRoomPageComplete>
                         label: Text(tag),
                         deleteIcon: const Icon(Icons.close, size: 16),
                         onDeleted: () => _removeTag(tag),
-                        backgroundColor: const Color(0xFFFF4C4C).withValues(alpha: 0.2),
+                        backgroundColor:
+                            const Color(0xFFFF4C4C).withValues(alpha: 0.2),
                         deleteIconColor: Colors.white,
                         labelStyle: const TextStyle(color: Colors.white),
                       );
@@ -338,7 +344,8 @@ class _CreateRoomPageCompleteState extends ConsumerState<CreateRoomPageComplete>
                           height: 20,
                           width: 20,
                           child: CircularProgressIndicator(
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.white),
                             strokeWidth: 2,
                           ),
                         )
@@ -400,7 +407,8 @@ class _CreateRoomPageCompleteState extends ConsumerState<CreateRoomPageComplete>
               hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
               border: InputBorder.none,
               contentPadding: const EdgeInsets.all(16),
-              counterStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+              counterStyle:
+                  TextStyle(color: Colors.white.withValues(alpha: 0.5)),
             ),
             validator: validator,
           ),
@@ -430,7 +438,9 @@ class _CreateRoomPageCompleteState extends ConsumerState<CreateRoomPageComplete>
           color: isSelected ? null : Colors.white.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFFFF4C4C) : Colors.white.withValues(alpha: 0.2),
+            color: isSelected
+                ? const Color(0xFFFF4C4C)
+                : Colors.white.withValues(alpha: 0.2),
             width: 1.5,
           ),
           boxShadow: isSelected

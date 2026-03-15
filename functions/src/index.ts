@@ -4,22 +4,89 @@ import { defineSecret } from "firebase-functions/params";
 import * as logger from "firebase-functions/logger";
 import { RtcTokenBuilder, RtcRole } from "agora-token";
 import * as admin from "firebase-admin";
+import { defineSecret } from "firebase-functions/params";
 
-const agoraAppIdSecret = defineSecret("AGORA_APP_ID");
-const agoraAppCertSecret = defineSecret("AGORA_APP_CERTIFICATE");
 
-// Initialize Firebase Admin
-admin.initializeApp();
-
-// Generate Agora RTC token for video chat
+// ─────────────────────────────────────────────────────────────────────────────
+// generateAgoraToken — called from Flutter via FirebaseFunctions.httpsCallable
+// Input:  { roomId: string, userId: string }
+// Output: { token, uid, appId, channelName, role, expiresAt }
+// ─────────────────────────────────────────────────────────────────────────────
 export const generateAgoraToken = onCall(
   {
     region: "us-central1",
     cors: true,
+<<<<<<< HEAD
     secrets: [agoraAppIdSecret, agoraAppCertSecret],
+=======
+    secrets: [AGORA_APP_ID, AGORA_APP_CERTIFICATE],
+>>>>>>> origin/develop
   },
   async (request) => {
+    const callerUid = request.auth?.uid;
+
+    // ── 1. Auth check ──────────────────────────────────────────────────────
+    if (!callerUid) {
+      logger.error("generateAgoraToken: unauthenticated call");
+      throw new HttpsError("unauthenticated", "Authentication required.");
+    }
+
+    const { roomId, userId } = request.data as { roomId?: string; userId?: string };
+
+    logger.info("generateAgoraToken: request received", {
+      callerUid,
+      roomId: roomId ?? "MISSING",
+      userId: userId ?? "MISSING",
+    });
+
+    // ── 2. Input validation ────────────────────────────────────────────────
+    if (!roomId || typeof roomId !== "string" || roomId.trim() === "") {
+      throw new HttpsError(
+        "invalid-argument",
+        "roomId is required and must be a non-empty string.",
+      );
+    }
+    if (!userId || typeof userId !== "string" || userId.trim() === "") {
+      throw new HttpsError(
+        "invalid-argument",
+        "userId is required and must be a non-empty string.",
+      );
+    }
+
+    // ── 3. Enforce caller == userId (prevent token theft) ─────────────────
+    if (callerUid !== userId) {
+      logger.error("generateAgoraToken: auth mismatch — REJECTED", {
+        callerUid,
+        requestedUserId: userId,
+        roomId,
+      });
+      throw new HttpsError("permission-denied", "Cannot generate a token for a different user.");
+    }
+
+    // ── 4. Agora credentials ───────────────────────────────────────────────
+    const appId = AGORA_APP_ID.value();
+    const appCertificate = AGORA_APP_CERTIFICATE.value();
+    if (!appId || !appCertificate) {
+      logger.error("generateAgoraToken: AGORA secrets not set");
+      throw new HttpsError("internal", "Server configuration error: Agora secrets missing.");
+    }
+
+    if (!appId || appId.trim() === "") {
+      logger.error("generateAgoraToken: AGORA_APP_ID is not set in environment");
+      throw new HttpsError("internal", "Server configuration error: Agora App ID is missing.");
+    }
+    if (!appCertificate || appCertificate.trim() === "") {
+      logger.error("generateAgoraToken: AGORA_APP_CERTIFICATE is not set in environment");
+      throw new HttpsError(
+        "internal",
+        "Server configuration error: Agora App Certificate is missing.",
+      );
+    }
+
+    // ── 5. Firestore room lookup ───────────────────────────────────────────
+    let roomData: FirebaseFirestore.DocumentData;
     try {
+<<<<<<< HEAD
       // Log auth context for debugging
       logger.debug('Callable request verification passed');
       logger.debug(`Auth context - UID: ${request.auth?.uid || 'NONE'}, Token: ${request.auth?.token ? 'PRESENT' : 'MISSING'}`);
@@ -59,8 +126,22 @@ export const generateAgoraToken = onCall(
       const roomSnap = await admin.firestore().collection('rooms').doc(roomId).get();
       if (!roomSnap.exists) {
         throw new HttpsError('not-found', 'Room not found');
+=======
+      const roomSnap = await admin.firestore().collection("rooms").doc(roomId).get();
+      if (!roomSnap.exists) {
+        logger.warn(`generateAgoraToken: room '${roomId}' not found`);
+        throw new HttpsError("not-found", `Room '${roomId}' does not exist.`);
+>>>>>>> origin/develop
       }
+      roomData = roomSnap.data()!;
+    } catch (err) {
+      // Re-throw HttpsErrors; wrap Firestore errors
+      if (err instanceof HttpsError) throw err;
+      logger.error("generateAgoraToken: Firestore read failed", { err, roomId });
+      throw new HttpsError("internal", "Failed to read room data from Firestore.");
+    }
 
+<<<<<<< HEAD
       const roomData = roomSnap.data() || {};
       const isLive = roomData.isLive === true;
       const isActive = roomData.isActive !== false;
@@ -79,8 +160,42 @@ export const generateAgoraToken = onCall(
 
       if (roomEnded) {
         throw new HttpsError('failed-precondition', 'Room has ended');
-      }
+=======
+    // ── 6. Room-level access guards ────────────────────────────────────────
+    const isLive: boolean = roomData["isLive"] === true;
+    const status: string = roomData["status"] ?? "";
+    const bannedUsers: string[] = roomData["bannedUsers"] ?? [];
+    const kickedUsers: string[] = roomData["kickedUsers"] ?? [];
+    const hostId: string = roomData["hostId"] ?? "";
+    const moderators: string[] = roomData["moderators"] ?? roomData["admins"] ?? [];
+    const speakers: string[] = roomData["speakers"] ?? [];
+    const isPrivate: boolean = roomData["privacy"] === "private" || roomData["isPrivate"] === true;
 
+    if (!isLive || status === "ended") {
+      throw new HttpsError("failed-precondition", "Room has ended or is no longer live.");
+    }
+    if (bannedUsers.includes(userId)) {
+      throw new HttpsError("permission-denied", "You have been banned from this room.");
+    }
+    if (kickedUsers.includes(userId)) {
+      throw new HttpsError("permission-denied", "You were removed from this room.");
+    }
+    if (isPrivate && hostId !== userId && !moderators.includes(userId)) {
+      // Check participant sub-collection
+      const partSnap = await admin
+        .firestore()
+        .collection("rooms")
+        .doc(roomId)
+        .collection("participants")
+        .doc(userId)
+        .get();
+      if (!partSnap.exists) {
+        throw new HttpsError("permission-denied", "Access denied: this is a private room.");
+>>>>>>> origin/develop
+      }
+    }
+
+<<<<<<< HEAD
       if (bannedUsers.includes(userId)) {
         throw new HttpsError('permission-denied', 'User is banned from this room');
       }
@@ -113,29 +228,41 @@ export const generateAgoraToken = onCall(
           'Agora credentials are placeholders. Configure AGORA_APP_ID and AGORA_APP_CERTIFICATE secrets.'
         );
       }
+=======
+    // ── 7. Determine role ──────────────────────────────────────────────────
+    const isBroadcaster =
+      userId === hostId || moderators.includes(userId) || speakers.includes(userId);
+    const agoraRole = isBroadcaster ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
 
-      // Generate UID from userId (convert string to number)
-      const uid = Math.abs(hashCode(userId));
+    // ── 8. Derive stable numeric Agora UID from Firebase UID ───────────────
+    const uid = Math.abs(_hashToUid(userId)) % 100_000;
 
-      // Token expires in 24 hours
-      const expirationTimeInSeconds = 86400;
-      const currentTimestamp = Math.floor(Date.now() / 1000);
-      const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
+    // ── 9. Build token — use RELATIVE seconds, NOT absolute epoch ──────────
+    //  agora-token v2: tokenExpire and privilegeExpire are seconds from NOW
+    const TOKEN_EXPIRE_SECS = 86_400; // 24 hours
 
-      // Determine role: host/mod/speaker = publisher; others = audience
-      const isBroadcaster = userId === hostId || moderators.includes(userId) || speakers.includes(userId);
-      const agoraRole = isBroadcaster ? RtcRole.PUBLISHER : RtcRole.SUBSCRIBER;
+    logger.info("generateAgoraToken: building token", {
+      callerUid,
+      roomId,
+      uid,
+      role: isBroadcaster ? "PUBLISHER" : "SUBSCRIBER",
+      tokenExpireSecs: TOKEN_EXPIRE_SECS,
+      appIdSet: true,
+    });
+>>>>>>> origin/develop
 
-      // Build token with role
-      const token = RtcTokenBuilder.buildTokenWithUid(
+    let token: string;
+    try {
+      token = RtcTokenBuilder.buildTokenWithUid(
         appId,
         appCertificate,
-        roomId,
-        uid,
+        roomId, // channelName
+        uid, // numeric Agora UID
         agoraRole,
-        privilegeExpiredTs,
-        privilegeExpiredTs
+        TOKEN_EXPIRE_SECS, // tokenExpire  — relative seconds ✅
+        TOKEN_EXPIRE_SECS, // privilegeExpire — relative seconds ✅
       );
+<<<<<<< HEAD
 
       const normalizedToken = typeof token === 'string' ? token.trim() : '';
       if (!normalizedToken) {
@@ -170,27 +297,68 @@ export const generateAgoraToken = onCall(
         'internal',
         `Failed to generate Agora token: ${error instanceof Error ? error.message : String(error)}`
       );
+=======
+    } catch (err) {
+      logger.error("generateAgoraToken: RtcTokenBuilder failed", { err });
+      throw new HttpsError("internal", "Token generation failed — check Agora credentials.");
+>>>>>>> origin/develop
     }
-  }
+
+    if (!token || token.trim() === "") {
+      logger.error("generateAgoraToken: builder returned empty token");
+      throw new HttpsError("internal", "Token generation produced an empty result.");
+    }
+
+    const expiresAtMs = (Math.floor(Date.now() / 1000) + TOKEN_EXPIRE_SECS) * 1000;
+
+    logger.info("generateAgoraToken: ✅ token issued", {
+      callerUid,
+      roomId,
+      uid,
+      role: isBroadcaster ? "broadcaster" : "audience",
+      expiresAt: new Date(expiresAtMs).toISOString(),
+    });
+
+    return {
+      token,
+      uid,
+      appId,
+      channelName: roomId,
+      role: isBroadcaster ? "broadcaster" : "audience",
+      expiresAt: expiresAtMs,
+    };
+  },
 );
 
-/**
- * Simple hash function to convert string to number
- */
-function hashCode(str: string): number {
+/** Deterministic hash of a Firebase UID string → 32-bit signed integer */
+function _hashToUid(str: string): number {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
-    const char = str.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
+    hash = (Math.imul(31, hash) + str.charCodeAt(i)) | 0;
   }
   return hash;
 }
 
 // Export match functions
+<<<<<<< HEAD
 export { generateUserMatches, handleLike, handlePass, refreshDailyMatches } from './matches';
 export { checkRateLimit } from './rateLimit';
 export { storiesCleanup } from './storiesCleanup';
+=======
+export { generateUserMatches, handleLike, handlePass, refreshDailyMatches } from "./matches";
+
+// Export speed dating functions (Phase 1 hardened)
+export {
+  matchSpeedDating,
+  generateSpeedDatingAgoraToken,
+  submitSpeedDatingDecision,
+  endSpeedDatingSession,
+  leaveSpeedDatingSession,
+  joinSpeedDatingQueue,
+  leaveSpeedDatingQueue,
+  autoExpireSpeedDatingSessions,
+} from "./speedDatingComplete";
+>>>>>>> origin/develop
 
 // ─────────────────────────────────────────────────────────────────────────────
 // ROOM CLEANUP — runs every hour, marks stale live rooms as 'ended'
@@ -212,13 +380,9 @@ export const cleanupStaleRooms = onSchedule(
     const now = admin.firestore.Timestamp.now();
 
     // Rooms live > 6 hours
-    const staleCutoff = admin.firestore.Timestamp.fromMillis(
-      now.toMillis() - 6 * 60 * 60 * 1000
-    );
+    const staleCutoff = admin.firestore.Timestamp.fromMillis(now.toMillis() - 6 * 60 * 60 * 1000);
     // Rooms not updated in > 30 minutes
-    const inactiveCutoff = admin.firestore.Timestamp.fromMillis(
-      now.toMillis() - 30 * 60 * 1000
-    );
+    const inactiveCutoff = admin.firestore.Timestamp.fromMillis(now.toMillis() - 30 * 60 * 1000);
 
     const snapshot = await db
       .collection("rooms")
@@ -260,7 +424,7 @@ export const cleanupStaleRooms = onSchedule(
     } else {
       logger.info("cleanupStaleRooms: all live rooms are still active");
     }
-  }
+  },
 );
 
 // ROLE GOVERNANCE — set Firebase Custom Claims + Firestore role

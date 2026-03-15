@@ -7,7 +7,8 @@ void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   group('Speed Dating Flow Integration Tests', () {
-    testWidgets('should join speed dating session', (WidgetTester tester) async {
+    testWidgets('should join speed dating session',
+        (WidgetTester tester) async {
       // Arrange
       app.main();
       await tester.pumpAndSettle(Duration(seconds: 2));
@@ -108,7 +109,8 @@ void main() {
       }
     });
 
-    testWidgets('should leave speed dating session', (WidgetTester tester) async {
+    testWidgets('should leave speed dating session',
+        (WidgetTester tester) async {
       // Arrange
       app.main();
       await tester.pumpAndSettle();

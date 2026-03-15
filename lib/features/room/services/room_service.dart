@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mixmingle/shared/models/room.dart';
 import 'category_service.dart';
 
@@ -38,7 +38,9 @@ class RoomService {
     );
 
     // Save to Firestore
-    final docRef = await _firestore.collection(_collectionName).add(roomWithCategory.toFirestore());
+    final docRef = await _firestore
+        .collection(_collectionName)
+        .add(roomWithCategory.toFirestore());
 
     // Return room with Firestore-generated ID
     return roomWithCategory.copyWith(id: docRef.id);
@@ -70,7 +72,10 @@ class RoomService {
       category: category,
     );
 
-    await _firestore.collection(_collectionName).doc(room.id).update(updatedRoom.toFirestore());
+    await _firestore
+        .collection(_collectionName)
+        .doc(room.id)
+        .update(updatedRoom.toFirestore());
   }
 
   /// Fetches a single room by ID.
@@ -102,7 +107,11 @@ class RoomService {
 
   /// Fetches all rooms as a stream.
   Stream<List<Room>> fetchAllRooms() {
-    return _firestore.collection(_collectionName).orderBy('createdAt', descending: true).snapshots().map((snapshot) {
+    return _firestore
+        .collection(_collectionName)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) {
       return snapshot.docs.map((doc) => Room.fromFirestore(doc)).toList();
     });
   }
@@ -143,7 +152,8 @@ class RoomService {
     }
 
     // Get room to verify authorization
-    final roomDoc = await _firestore.collection(_collectionName).doc(roomId).get();
+    final roomDoc =
+        await _firestore.collection(_collectionName).doc(roomId).get();
     if (!roomDoc.exists) {
       throw Exception('Room not found');
     }
@@ -151,7 +161,8 @@ class RoomService {
     final room = Room.fromFirestore(roomDoc);
 
     // Check if user is host or moderator
-    final isAuthorized = room.hostId == currentUserId || room.moderators.contains(currentUserId);
+    final isAuthorized =
+        room.hostId == currentUserId || room.moderators.contains(currentUserId);
     if (!isAuthorized) {
       throw Exception('Only room host or moderators can delete rooms');
     }
@@ -225,5 +236,3 @@ class RoomService {
     });
   }
 }
-
-

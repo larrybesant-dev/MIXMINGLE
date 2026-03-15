@@ -1,11 +1,12 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:async';
 
 /// Manages active Firestore listeners to prevent excessive subscriptions
 /// Only listens to rooms/data the user is actively using
 class ActiveListenerManager {
-  static final ActiveListenerManager _instance = ActiveListenerManager._internal();
+  static final ActiveListenerManager _instance =
+      ActiveListenerManager._internal();
   factory ActiveListenerManager() => _instance;
   ActiveListenerManager._internal();
 
@@ -37,21 +38,24 @@ class ActiveListenerManager {
       subscription.cancel();
       if (kDebugMode) {
         debugPrint('[ListenerManager] Unregistered: $listenerId');
-        debugPrint('[ListenerManager] Total active: ${_activeListeners.length}');
+        debugPrint(
+            '[ListenerManager] Total active: ${_activeListeners.length}');
       }
     }
   }
 
   /// Unregister all listeners matching a pattern
   void unregisterPattern(String pattern) {
-    final toRemove = _activeListeners.keys.where((id) => id.contains(pattern)).toList();
+    final toRemove =
+        _activeListeners.keys.where((id) => id.contains(pattern)).toList();
 
     for (final id in toRemove) {
       unregisterListener(id);
     }
 
     if (kDebugMode) {
-      debugPrint('[ListenerManager] Unregistered $pattern: removed ${toRemove.length} listeners');
+      debugPrint(
+          '[ListenerManager] Unregistered $pattern: removed ${toRemove.length} listeners');
     }
   }
 
@@ -101,19 +105,26 @@ class SmartRoomListener {
         debugPrint('[SmartRoomListener] Already listening to room: $roomId');
       }
       // Return a dummy subscription that does nothing
-      return _firestore.collection('rooms').doc(roomId).snapshots().take(0).listen((_) {});
+      return _firestore
+          .collection('rooms')
+          .doc(roomId)
+          .snapshots()
+          .take(0)
+          .listen((_) {});
     }
 
     _listeningRooms.add(roomId);
 
-    final subscription = _firestore.collection('rooms').doc(roomId).snapshots().listen(
+    final subscription =
+        _firestore.collection('rooms').doc(roomId).snapshots().listen(
       (snapshot) {
         if (snapshot.exists) {
           onUpdate(snapshot.data());
         }
       },
       onError: (error) {
-        debugPrint('[SmartRoomListener] Error listening to room $roomId: $error');
+        debugPrint(
+            '[SmartRoomListener] Error listening to room $roomId: $error');
       },
     );
 
@@ -146,10 +157,16 @@ class SmartRoomListener {
     String roomId, {
     required Function(List<DocumentSnapshot>) onUpdate,
   }) {
-    final subscription = _firestore.collection('rooms').doc(roomId).collection('participants').snapshots().listen(
+    final subscription = _firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .snapshots()
+        .listen(
       (snapshot) => onUpdate(snapshot.docs),
       onError: (error) {
-        debugPrint('[SmartRoomListener] Error listening to participants $roomId: $error');
+        debugPrint(
+            '[SmartRoomListener] Error listening to participants $roomId: $error');
       },
     );
 

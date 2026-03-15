@@ -20,12 +20,20 @@ class SocialService {
       throw Exception('Cannot follow yourself');
     }
 
+<<<<<<< HEAD
     final existingDoc = await _firestore
         .collection('users')
         .doc(followerId)
         .collection('following')
         .doc(followingId)
         .get();
+=======
+    final relationshipId = Following.createId(followerId, followingId);
+
+    // Check if already following
+    final existingDoc =
+        await _firestore.collection('followings').doc(relationshipId).get();
+>>>>>>> origin/develop
 
     if (existingDoc.exists) {
       throw Exception('Already following this user');
@@ -82,12 +90,20 @@ class SocialService {
 
   /// Unfollow a user
   Future<void> unfollowUser(String followerId, String followingId) async {
+<<<<<<< HEAD
     final doc = await _firestore
         .collection('users')
         .doc(followerId)
         .collection('following')
         .doc(followingId)
         .get();
+=======
+    final relationshipId = Following.createId(followerId, followingId);
+
+    // Check if following exists
+    final doc =
+        await _firestore.collection('followings').doc(relationshipId).get();
+>>>>>>> origin/develop
 
     if (!doc.exists) {
       throw Exception('Not following this user');
@@ -121,12 +137,18 @@ class SocialService {
 
   /// Check if user A is following user B
   Future<bool> isFollowing(String followerId, String followingId) async {
+<<<<<<< HEAD
     final doc = await _firestore
         .collection('users')
         .doc(followerId)
         .collection('following')
         .doc(followingId)
         .get();
+=======
+    final relationshipId = Following.createId(followerId, followingId);
+    final doc =
+        await _firestore.collection('followings').doc(relationshipId).get();
+>>>>>>> origin/develop
     return doc.exists;
   }
 
@@ -143,15 +165,30 @@ class SocialService {
 
   /// Get followers of a user
   Future<List<User>> getFollowers(String userId) async {
+<<<<<<< HEAD
     final snapshot = await _firestore
         .collection('users')
         .doc(userId)
         .collection('followers')
         .get();
+=======
+    final querySnapshot = await _firestore
+        .collection('followings')
+        .where('followingId', isEqualTo: userId)
+        .get();
+
+    final followerIds = querySnapshot.docs
+        .map((doc) => doc.data()['followerId'] as String)
+        .toList();
+>>>>>>> origin/develop
 
     final followerIds = snapshot.docs.map((doc) => doc.id).toList();
     if (followerIds.isEmpty) return [];
 
+<<<<<<< HEAD
+=======
+    // Get user details for followers
+>>>>>>> origin/develop
     final usersQuery = await _firestore
         .collection('users')
         .where(FieldPath.documentId, whereIn: followerIds)
@@ -162,15 +199,30 @@ class SocialService {
 
   /// Get users that a user is following
   Future<List<User>> getFollowing(String userId) async {
+<<<<<<< HEAD
     final snapshot = await _firestore
         .collection('users')
         .doc(userId)
         .collection('following')
         .get();
+=======
+    final querySnapshot = await _firestore
+        .collection('followings')
+        .where('followerId', isEqualTo: userId)
+        .get();
+
+    final followingIds = querySnapshot.docs
+        .map((doc) => doc.data()['followingId'] as String)
+        .toList();
+>>>>>>> origin/develop
 
     final followingIds = snapshot.docs.map((doc) => doc.id).toList();
     if (followingIds.isEmpty) return [];
 
+<<<<<<< HEAD
+=======
+    // Get user details for following
+>>>>>>> origin/develop
     final usersQuery = await _firestore
         .collection('users')
         .where(FieldPath.documentId, whereIn: followingIds)
@@ -184,19 +236,39 @@ class SocialService {
     final followers = await getFollowers(userId);
     final following = await getFollowing(userId);
     final followingIds = following.map((user) => user.id).toSet();
-    return followers.where((follower) => followingIds.contains(follower.id)).toList();
+    return followers
+        .where((follower) => followingIds.contains(follower.id))
+        .toList();
   }
 
   /// Get follower count for a user
   Future<int> getFollowerCount(String userId) async {
+<<<<<<< HEAD
     final doc = await _firestore.collection('users').doc(userId).get();
     return (doc.data()?['followersCount'] as int?) ?? 0;
+=======
+    final querySnapshot = await _firestore
+        .collection('followings')
+        .where('followingId', isEqualTo: userId)
+        .count()
+        .get();
+    return querySnapshot.count ?? 0;
+>>>>>>> origin/develop
   }
 
   /// Get following count for a user
   Future<int> getFollowingCount(String userId) async {
+<<<<<<< HEAD
     final doc = await _firestore.collection('users').doc(userId).get();
     return (doc.data()?['followingCount'] as int?) ?? 0;
+=======
+    final querySnapshot = await _firestore
+        .collection('followings')
+        .where('followerId', isEqualTo: userId)
+        .count()
+        .get();
+    return querySnapshot.count ?? 0;
+>>>>>>> origin/develop
   }
 
   /// Real-time stream of followers
@@ -207,12 +279,25 @@ class SocialService {
         .collection('followers')
         .snapshots()
         .asyncMap((snapshot) async {
+<<<<<<< HEAD
       final followerIds = snapshot.docs.map((doc) => doc.id).toList();
       if (followerIds.isEmpty) return <User>[];
+=======
+      final followerIds = snapshot.docs
+          .map((doc) => doc.data()['followerId'] as String)
+          .toList();
+
+      if (followerIds.isEmpty) return [];
+
+>>>>>>> origin/develop
       final usersQuery = await _firestore
           .collection('users')
           .where(FieldPath.documentId, whereIn: followerIds)
           .get();
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/develop
       return usersQuery.docs.map((doc) => User.fromMap(doc.data())).toList();
     });
   }
@@ -225,12 +310,25 @@ class SocialService {
         .collection('following')
         .snapshots()
         .asyncMap((snapshot) async {
+<<<<<<< HEAD
       final followingIds = snapshot.docs.map((doc) => doc.id).toList();
       if (followingIds.isEmpty) return <User>[];
+=======
+      final followingIds = snapshot.docs
+          .map((doc) => doc.data()['followingId'] as String)
+          .toList();
+
+      if (followingIds.isEmpty) return [];
+
+>>>>>>> origin/develop
       final usersQuery = await _firestore
           .collection('users')
           .where(FieldPath.documentId, whereIn: followingIds)
           .get();
+<<<<<<< HEAD
+=======
+
+>>>>>>> origin/develop
       return usersQuery.docs.map((doc) => User.fromMap(doc.data())).toList();
     });
   }

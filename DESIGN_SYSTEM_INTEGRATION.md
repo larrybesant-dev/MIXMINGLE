@@ -24,6 +24,7 @@
 ### Rule 1: All Colors Must Use DesignColors
 
 ❌ **FORBIDDEN:**
+
 ```dart
 // DO NOT USE hardcoded colors
 Container(
@@ -39,6 +40,7 @@ Container(
 ```
 
 ✅ **REQUIRED:**
+
 ```dart
 import 'package:mixmingle/core/design_system/design_constants.dart';
 
@@ -51,6 +53,7 @@ Container(
 ### Rule 2: All Typography Must Use DesignTypography
 
 ❌ **FORBIDDEN:**
+
 ```dart
 Text(
   'Room Name',
@@ -59,6 +62,7 @@ Text(
 ```
 
 ✅ **REQUIRED:**
+
 ```dart
 Text(
   'Room Name',
@@ -69,6 +73,7 @@ Text(
 ### Rule 3: All Animation Durations Must Use DesignAnimations
 
 ❌ **FORBIDDEN:**
+
 ```dart
 AnimationController(
   duration: Duration(milliseconds: 150),  // Magic number
@@ -77,6 +82,7 @@ AnimationController(
 ```
 
 ✅ **REQUIRED:**
+
 ```dart
 AnimationController(
   duration: DesignAnimations.joinStage1Duration,  // 150ms per DESIGN_BIBLE
@@ -87,6 +93,7 @@ AnimationController(
 ### Rule 4: All Spacing Must Use DesignSpacing
 
 ❌ **FORBIDDEN:**
+
 ```dart
 Padding(
   padding: EdgeInsets.all(16),  // Magic number
@@ -95,6 +102,7 @@ Padding(
 ```
 
 ✅ **REQUIRED:**
+
 ```dart
 Padding(
   padding: EdgeInsets.all(DesignSpacing.lg),  // 16px, explicit intent
@@ -105,6 +113,7 @@ Padding(
 ### Rule 5: No Material Defaults in Custom Widgets
 
 ❌ **FORBIDDEN:**
+
 ```dart
 Card(  // Material Card
   child: ListTile(  // Material ListTile
@@ -114,6 +123,7 @@ Card(  // Material Card
 ```
 
 ✅ **REQUIRED:**
+
 ```dart
 Container(
   padding: EdgeInsets.all(DesignSpacing.cardPadding),
@@ -252,6 +262,7 @@ class RoomCard extends StatelessWidget {
 ```
 
 **Key Points:**
+
 1. ✅ All colors from `DesignColors`
 2. ✅ All typography from `DesignTypography`
 3. ✅ All spacing from `DesignSpacing`
@@ -478,6 +489,7 @@ flutter test test/design_constants_test.dart
 ```
 
 **These tests verify:**
+
 - ✅ Accent color is exactly `#FF4C4C`
 - ✅ Join flow timings are binding (150ms, 400ms, 400ms)
 - ✅ All colors are grayscale or accent (no random colors)
@@ -493,6 +505,7 @@ flutter test test/design_animations_test.dart
 ```
 
 **These tests verify:**
+
 - ✅ `SpeakingPulseAnimation` scales when isSpeaking=true
 - ✅ `NotificationAnimation` auto-dismisses after proper duration
 - ✅ `RoomEnergyCardAnimation` shows correct energy label
@@ -525,6 +538,7 @@ testWidgets('room card matches golden', (WidgetTester tester) async {
 ```
 
 Run with:
+
 ```bash
 flutter test --update-goldens
 ```
@@ -536,6 +550,7 @@ flutter test --update-goldens
 Before any UI/UX merge, QA must verify:
 
 ### Color Compliance
+
 - [ ] Only colors used are from `DesignColors`
 - [ ] Accent is ONLY used for CTAs, energy indicators, errors
 - [ ] Neutral palette is white/gray only
@@ -543,12 +558,14 @@ Before any UI/UX merge, QA must verify:
 - [ ] Search codebase: no `0xFF` color literals
 
 ### Typography Compliance
+
 - [ ] All text uses `DesignTypography.*` styles
 - [ ] No hardcoded `fontSize` or `fontWeight`
 - [ ] No Material `TextStyle` defaults
 - [ ] Search codebase: no `TextStyle(fontSize: ...)` in custom widgets
 
 ### Animation Compliance
+
 - [ ] Join flow: Entering = 150ms, Connecting ≥ 400ms, Live = 400ms
 - [ ] Presence animations: < 300ms total
 - [ ] Speaking pulse: continuous, 200ms per cycle
@@ -556,12 +573,14 @@ Before any UI/UX merge, QA must verify:
 - [ ] All `AnimationController` durations use `DesignAnimations.*`
 
 ### Spacing Compliance
+
 - [ ] No hardcoded padding/margin values
 - [ ] Cards: 16px padding (`DesignSpacing.lg`)
 - [ ] Card spacing: 12px between cards (`DesignSpacing.md`)
 - [ ] Button min height: 44pt minimum
 
 ### Layout Compliance
+
 - [ ] No Material `Card` widgets (use `Container` + `BoxDecoration`)
 - [ ] No Material `ListTile` (use custom layout)
 - [ ] No Material `AppBar` (use custom header if needed)
@@ -569,6 +588,7 @@ Before any UI/UX merge, QA must verify:
 - [ ] All shadows from `DesignShadows.*`
 
 ### Video Room Specific
+
 - [ ] Room discovery cards use `RoomEnergyCardAnimation`
 - [ ] Join flow shows all 3 phases (entering, connecting, live)
 - [ ] Presence arrivals/departures show notifications
@@ -677,11 +697,13 @@ const customAccentLight = Color(0xFFFF6B6B);
 ```
 
 **Never approved deviations:**
+
 - ❌ "Just needed a different shade"
 - ❌ "No time to update constants"
 - ❌ "It looked better this way"
 
 **Always requires documentation:**
+
 - ✅ New status colors (approved by product)
 - ✅ New animation timings (affects UX)
 - ✅ Accessibility adjustments (contrast, sizing)
@@ -693,6 +715,7 @@ const customAccentLight = Color(0xFFFF6B6B);
 **THE RULE:** All Flutter widgets must reference design system constants.
 
 **THE ENFORCEMENT:**
+
 - ✅ Unit tests verify constant values
 - ✅ Widget tests verify animation timing
 - ✅ Code review checklist enforces compliance
@@ -700,6 +723,7 @@ const customAccentLight = Color(0xFFFF6B6B);
 - ✅ Golden tests verify visual output (optional)
 
 **THE OUTCOME:**
+
 - Consistent design across all screens
 - Binding animation timings nobody can accidentally break
 - Traceable decisions (every color, spacing, timing has a reason)

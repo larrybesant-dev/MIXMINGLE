@@ -1,3 +1,4 @@
+import '../../core/constants.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../shared/models/room_video_state_model.dart';
@@ -24,14 +25,13 @@ class VideoSubscriptionService {
   // Subscribe to participants
   void subscribeToParticipants(ParticipantsCallback callback) {
     _participantsSubscription = _firestore
-        .collection('rooms')
-        .doc(roomId)
-        .collection('participants')
-        .snapshots()
-        .listen((snapshot) {
-      final participants = snapshot.docs
-          .map((doc) => Participant.fromJson(doc.data()))
-          .toList();
+      .collection(AppConstants.roomsCollection)
+      .doc(roomId)
+      .collection('participants')
+      .snapshots()
+      .listen((snapshot) {
+      final participants =
+          snapshot.docs.map((doc) => Participant.fromJson(doc.data())).toList();
       callback(participants);
     });
   }
@@ -39,12 +39,12 @@ class VideoSubscriptionService {
   // Subscribe to video state
   void subscribeToVideoState(VideoStateCallback callback) {
     _videoStateSubscription = _firestore
-        .collection('rooms')
-        .doc(roomId)
-        .collection('videoState')
-        .doc('current')
-        .snapshots()
-        .listen((snapshot) {
+      .collection(AppConstants.roomsCollection)
+      .doc(roomId)
+      .collection('videoState')
+      .doc('current')
+      .snapshots()
+      .listen((snapshot) {
       if (snapshot.exists) {
         final state = RoomVideoStateModel.fromJson(snapshot.data()!);
         callback(state);
@@ -108,5 +108,3 @@ class VideoSubscriptionService {
     unsubscribe();
   }
 }
-
-

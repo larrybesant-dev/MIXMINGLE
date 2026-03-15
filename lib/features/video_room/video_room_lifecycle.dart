@@ -1,7 +1,12 @@
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:permission_handler/permission_handler.dart';
 import '../../core/utils/app_logger.dart';
+<<<<<<< HEAD
 import '../../services/agora/agora_platform_service.dart'; // Ensures AgoraPlatformService is available
+=======
+import '../../services/agora/agora_platform_service.dart';
+
+>>>>>>> origin/develop
 /// Manages video room lifecycle: init â†’ join â†’ leave â†’ cleanup
 class VideoRoomLifecycle {
   final String appId;
@@ -43,13 +48,20 @@ class VideoRoomLifecycle {
   Future<bool> requestPermissions() async {
     if (kIsWeb) {
       // Web browser handles permissions via browser dialog
-      debugPrint('[VIDEO_ROOM] Web platform - browser will request permissions');
+      debugPrint(
+          '[VIDEO_ROOM] Web platform - browser will request permissions');
       return true;
     }
 
     try {
+<<<<<<< HEAD
       debugPrint('[VIDEO_ROOM] Requesting camera and microphone permissions...');
       AppLogger.info('Requesting camera & microphone permissions...');
+=======
+      debugPrint(
+          '[VIDEO_ROOM] Requesting camera and microphone permissions...');
+      AppLogger.info('ðŸ” Requesting camera & microphone permissions...');
+>>>>>>> origin/develop
 
       final cameraStatus = await Permission.camera.request();
       final micStatus = await Permission.microphone.request();

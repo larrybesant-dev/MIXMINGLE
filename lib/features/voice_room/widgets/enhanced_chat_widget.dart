@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/features/room/services/enhanced_chat_service.dart';
 
@@ -43,7 +43,8 @@ class _EnhancedChatWidgetState extends ConsumerState<EnhancedChatWidget> {
   @override
   Widget build(BuildContext context) {
     final messagesAsync = ref.watch(chatMessagesProvider(widget.roomId));
-    final pinnedMessagesAsync = ref.watch(pinnedChatMessagesProvider(widget.roomId));
+    final pinnedMessagesAsync =
+        ref.watch(pinnedChatMessagesProvider(widget.roomId));
     final chatService = ref.read(enhancedChatServiceProvider);
 
     return Container(
@@ -91,7 +92,9 @@ class _EnhancedChatWidgetState extends ConsumerState<EnhancedChatWidget> {
                   ],
                 ),
                 pinnedMessagesAsync.whenData((pinnedMessages) {
-                      if (pinnedMessages.isEmpty) return const SizedBox.shrink();
+                      if (pinnedMessages.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
                       return InkWell(
                         onTap: () {
                           setState(() => _showPinned = !_showPinned);
@@ -102,21 +105,27 @@ class _EnhancedChatWidgetState extends ConsumerState<EnhancedChatWidget> {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: _showPinned ? const Color(0xFFFF4C4C) : Colors.transparent,
+                            color: _showPinned
+                                ? const Color(0xFFFF4C4C)
+                                : Colors.transparent,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Row(
                             children: [
                               Icon(
                                 Icons.push_pin,
-                                color: _showPinned ? Colors.white : const Color(0xFFFF4C4C),
+                                color: _showPinned
+                                    ? Colors.white
+                                    : const Color(0xFFFF4C4C),
                                 size: 14,
                               ),
                               const SizedBox(width: 4),
                               Text(
                                 '${pinnedMessages.length}',
                                 style: TextStyle(
-                                  color: _showPinned ? Colors.white : const Color(0xFFFF4C4C),
+                                  color: _showPinned
+                                      ? Colors.white
+                                      : const Color(0xFFFF4C4C),
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -197,7 +206,8 @@ class _EnhancedChatWidgetState extends ConsumerState<EnhancedChatWidget> {
                     return _buildMessageBubble(
                       messages[index],
                       chatService,
-                      isCurrentUser: messages[index].userId == widget.currentUserId,
+                      isCurrentUser:
+                          messages[index].userId == widget.currentUserId,
                     );
                   },
                 );
@@ -292,19 +302,26 @@ class _EnhancedChatWidgetState extends ConsumerState<EnhancedChatWidget> {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
-        mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (!isCurrentUser)
             CircleAvatar(
               radius: 16,
-              backgroundImage: message.userAvatarUrl.isNotEmpty ? NetworkImage(message.userAvatarUrl) : null,
-              child: message.userAvatarUrl.isEmpty ? Text(message.userName[0].toUpperCase()) : null,
+              backgroundImage: message.userAvatarUrl.isNotEmpty
+                  ? NetworkImage(message.userAvatarUrl)
+                  : null,
+              child: message.userAvatarUrl.isEmpty
+                  ? Text(message.userName[0].toUpperCase())
+                  : null,
             ),
           const SizedBox(width: 8),
           Flexible(
             child: Column(
-              crossAxisAlignment: isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isCurrentUser
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               children: [
                 if (!isCurrentUser)
                   Text(
@@ -316,9 +333,12 @@ class _EnhancedChatWidgetState extends ConsumerState<EnhancedChatWidget> {
                     ),
                   ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   decoration: BoxDecoration(
-                    color: isCurrentUser ? const Color(0xFFFF4C4C) : Colors.grey[800],
+                    color: isCurrentUser
+                        ? const Color(0xFFFF4C4C)
+                        : Colors.grey[800],
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -337,7 +357,8 @@ class _EnhancedChatWidgetState extends ConsumerState<EnhancedChatWidget> {
                           child: Wrap(
                             spacing: 4,
                             children: message.reactions
-                                .map((emoji) => Text(emoji, style: const TextStyle(fontSize: 14)))
+                                .map((emoji) => Text(emoji,
+                                    style: const TextStyle(fontSize: 14)))
                                 .toList(),
                           ),
                         ),
@@ -362,8 +383,12 @@ class _EnhancedChatWidgetState extends ConsumerState<EnhancedChatWidget> {
                           chatService.pinMessage(widget.roomId, message.id);
                         },
                         child: Icon(
-                          message.isPinned ? Icons.push_pin : Icons.push_pin_outlined,
-                          color: message.isPinned ? const Color(0xFFFF4C4C) : Colors.grey,
+                          message.isPinned
+                              ? Icons.push_pin
+                              : Icons.push_pin_outlined,
+                          color: message.isPinned
+                              ? const Color(0xFFFF4C4C)
+                              : Colors.grey,
                           size: 14,
                         ),
                       ),

@@ -1,4 +1,4 @@
-﻿class ConnectivityState {
+class ConnectivityState {
   final bool isOnline;
   final String? errorMessage;
   final DateTime? lastOfflineAt;
@@ -29,5 +29,3 @@
     );
   }
 }
-
-

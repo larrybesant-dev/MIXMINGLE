@@ -1,4 +1,4 @@
-﻿/// Live Monitoring Dashboard Widget
+/// Live Monitoring Dashboard Widget
 ///
 /// Displays key app health metrics with color-coded status indicators.
 library;
@@ -171,9 +171,9 @@ class _OverallHealthBanner extends StatelessWidget {
               Text(
                 _getStatusText(status),
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: _getStatusColor(status),
-                  fontWeight: FontWeight.bold,
-                ),
+                      color: _getStatusColor(status),
+                      fontWeight: FontWeight.bold,
+                    ),
               ),
             ],
           ),
@@ -258,7 +258,8 @@ class _MetricsGrid extends StatelessWidget {
               child: _MetricCard(
                 title: 'D7 Retention',
                 value: '${retentionMetrics.d7Retention.toStringAsFixed(1)}%',
-                subtitle: 'DAU/MAU: ${retentionMetrics.stickiness.toStringAsFixed(1)}%',
+                subtitle:
+                    'DAU/MAU: ${retentionMetrics.stickiness.toStringAsFixed(1)}%',
                 icon: Icons.trending_up,
                 status: retentionMetrics.status,
                 details: [
@@ -347,8 +348,8 @@ class _MetricCard extends StatelessWidget {
                   child: Text(
                     title,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w500,
-                    ),
+                          fontWeight: FontWeight.w500,
+                        ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -360,27 +361,27 @@ class _MetricCard extends StatelessWidget {
             Text(
               value,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: _getStatusColor(status),
-              ),
+                    fontWeight: FontWeight.bold,
+                    color: _getStatusColor(status),
+                  ),
             ),
             const SizedBox(height: 4),
             Text(
               subtitle,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Colors.grey[600],
-              ),
+                    color: Colors.grey[600],
+                  ),
             ),
             if (details.isNotEmpty) ...[
               const SizedBox(height: 8),
               const Divider(height: 1),
               const SizedBox(height: 8),
               ...details.map((detail) => Text(
-                detail,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[500],
-                ),
-              )),
+                    detail,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[500],
+                        ),
+                  )),
             ],
           ],
         ),
@@ -434,8 +435,8 @@ class _ActiveUsersCard extends StatelessWidget {
             Text(
               'Active Users',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
             Row(
@@ -489,15 +490,15 @@ class _UserCountTile extends StatelessWidget {
         Text(
           _formatCount(count),
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: color,
-          ),
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
         ),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Colors.grey[600],
-          ),
+                color: Colors.grey[600],
+              ),
         ),
       ],
     );
@@ -538,8 +539,8 @@ class _FailureBreakdownCard extends StatelessWidget {
             Text(
               'Failure Breakdown',
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             const SizedBox(height: 16),
             ...sortedEntries.map((entry) {

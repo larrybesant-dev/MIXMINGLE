@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Advanced Microphone Control Service
 ///
@@ -71,7 +71,8 @@ class AdvancedMicService {
 }
 
 /// Provider for Advanced Mic Service
-final advancedMicServiceProvider = NotifierProvider<AdvancedMicServiceNotifier, AdvancedMicServiceState>(
+final advancedMicServiceProvider =
+    NotifierProvider<AdvancedMicServiceNotifier, AdvancedMicServiceState>(
   AdvancedMicServiceNotifier.new,
 );
 
@@ -158,12 +159,13 @@ class AdvancedMicServiceState {
   }) {
     return AdvancedMicServiceState(
       volumeLevel: volumeLevel ?? this.volumeLevel,
-      echoCancellationEnabled: echoCancellationEnabled ?? this.echoCancellationEnabled,
-      noiseSuppressionEnabled: noiseSuppressionEnabled ?? this.noiseSuppressionEnabled,
-      autoGainControlEnabled: autoGainControlEnabled ?? this.autoGainControlEnabled,
+      echoCancellationEnabled:
+          echoCancellationEnabled ?? this.echoCancellationEnabled,
+      noiseSuppressionEnabled:
+          noiseSuppressionEnabled ?? this.noiseSuppressionEnabled,
+      autoGainControlEnabled:
+          autoGainControlEnabled ?? this.autoGainControlEnabled,
       soundMode: soundMode ?? this.soundMode,
     );
   }
 }
-
-

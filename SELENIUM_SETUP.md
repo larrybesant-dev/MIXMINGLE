@@ -23,11 +23,13 @@
 ### 1. Install ChromeDriver (if not already present)
 
 **Option A: Chocolatey (fastest)**
+
 ```powershell
 choco install chromedriver -y
 ```
 
 **Option B: Manual install**
+
 1. Check Chrome version: `chrome://version`
 2. Download matching ChromeDriver: https://chromedriver.chromium.org/downloads
 3. Place `chromedriver.exe` in `C:\Windows\System32` (or add to PATH)
@@ -35,17 +37,20 @@ choco install chromedriver -y
 ### 2. Get Selenium WebDriver DLL
 
 **Option A: NuGet (recommended)**
+
 ```powershell
 # In MIXMINGLE directory
 Install-Package Selenium.WebDriver -ProviderName NuGet -Destination . -Force
 ```
 
 Then copy `WebDriver.dll` to the MIXMINGLE root:
+
 ```powershell
 Copy-Item ".\Selenium.WebDriver.*\lib\netstandard2.0\WebDriver.dll" . -Force
 ```
 
 **Option B: Download directly**
+
 1. Go to: https://www.nuget.org/packages/Selenium.WebDriver
 2. Download `.nupkg` → rename to `.zip` → extract
 3. Copy `lib\netstandard2.0\WebDriver.dll` to `C:\Users\LARRY\MIXMINGLE\`
@@ -57,6 +62,7 @@ Copy-Item ".\Selenium.WebDriver.*\lib\netstandard2.0\WebDriver.dll" . -Force
 ```
 
 Expected output:
+
 ```
 ✅ Chrome found: v131.x.x
 ✅ ChromeDriver found: v131.x.x
@@ -70,6 +76,7 @@ Expected output:
 ## Usage
 
 ### Basic diagnostics
+
 ```powershell
 # Test local dev server
 .\run_browser_diagnostics.ps1
@@ -113,6 +120,7 @@ Stop-SeleniumDriver -Driver $Driver
 ## What this fixes
 
 ### Before (your original code)
+
 ```powershell
 $Driver = New-Object OpenQA.Selenium.Chrome.ChromeDriver  # might fail silently
 $logs = $Driver.Manage().Logs.GetLog("browser")  # ❌ null-valued expression
@@ -120,6 +128,7 @@ $Driver.Quit()  # ❌ null-valued expression
 ```
 
 ### After (this module)
+
 ```powershell
 $Driver = Initialize-SeleniumDriver  # validates environment first, fails loudly
 
@@ -138,18 +147,23 @@ Stop-SeleniumDriver -Driver $Driver  # null-guarded internally
 ## Troubleshooting
 
 ### "WebDriver.dll not found"
+
 → Run step 2 above (install Selenium.WebDriver package)
 
 ### "ChromeDriver not found in PATH"
+
 → Run step 1 above (install ChromeDriver)
 
 ### "Version mismatch detected"
+
 → Update ChromeDriver to match Chrome version:
+
 ```powershell
 choco upgrade chromedriver -y
 ```
 
 ### "Cannot bind argument to parameter 'Path'"
+
 → You're in the wrong directory. Run from `C:\Users\LARRY\MIXMINGLE`
 
 ---
@@ -157,6 +171,7 @@ choco upgrade chromedriver -y
 ## Logs location
 
 All test outputs go to `test_logs/`:
+
 - `browser_console_log.txt` — Full browser console output
 - `browser_console_error.txt` — Logs captured on navigation failure
 - `screenshot_YYYYMMDD_HHMMSS.png` — Visual state of the page

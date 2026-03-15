@@ -23,7 +23,8 @@ class MembershipService {
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
-  final core_analytics.AnalyticsService _coreAnalytics = core_analytics.AnalyticsService.instance;
+  final core_analytics.AnalyticsService _coreAnalytics =
+      core_analytics.AnalyticsService.instance;
   final CrashlyticsService _crashlytics = CrashlyticsService.instance;
 
   String? _currentUserId;
@@ -39,7 +40,8 @@ class MembershipService {
 
   /// Stream of membership tier changes
   Stream<MembershipTier> get membershipStream {
-    _membershipStreamController ??= StreamController<MembershipTier>.broadcast();
+    _membershipStreamController ??=
+        StreamController<MembershipTier>.broadcast();
     return _membershipStreamController!.stream;
   }
 
@@ -72,7 +74,8 @@ class MembershipService {
     if (_currentUserId == null) return;
 
     try {
-      final doc = await _firestore.collection('users').doc(_currentUserId).get();
+      final doc =
+          await _firestore.collection('users').doc(_currentUserId).get();
       final data = doc.data();
 
       if (data != null) {
@@ -114,7 +117,8 @@ class MembershipService {
         );
         // Track VIP conversion funnel
         if (tier == MembershipTier.vip || tier == MembershipTier.vipPlus) {
-          await _coreAnalytics.logVipConversionFunnelStep(step: 'converted', tier: tier.firestoreValue);
+          await _coreAnalytics.logVipConversionFunnelStep(
+              step: 'converted', tier: tier.firestoreValue);
         }
       } else if (previousTier.isHigherThan(tier)) {
         await _logEvent('membership_downgraded', {
@@ -125,6 +129,55 @@ class MembershipService {
           tier: tier.firestoreValue,
           previousTier: previousTier.firestoreValue,
         );
+<<<<<<< HEAD
+=======
+      }
+
+      debugPrint(
+          'âœ… [Membership] Synced tier to Firestore: ${tier.displayName}');
+    } catch (e) {
+      debugPrint('âŒ [Membership] Failed to sync tier: $e');
+    }
+  }
+
+  /// Update coin balance in Firestore
+  Future<bool> updateCoinBalance(int change, CoinTransactionType type,
+      {String? description}) async {
+    if (_currentUserId == null) return false;
+
+    try {
+      final newBalance = _coinBalance + change;
+      if (newBalance < 0) {
+        debugPrint('âš ï¸ [Membership] Insufficient coins');
+        return false;
+      }
+
+      // Update balance
+      await _firestore.collection('users').doc(_currentUserId).update({
+        'coinBalance': newBalance,
+      });
+
+      // Log transaction
+      await _firestore
+          .collection('users')
+          .doc(_currentUserId)
+          .collection('coinTransactions')
+          .add({
+        'type': type.value,
+        'amount': change,
+        'description': description,
+        'balanceAfter': newBalance,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+
+      _coinBalance = newBalance;
+      _coinBalanceStreamController?.add(_coinBalance);
+
+      debugPrint(
+          'âœ… [Membership] Coin balance updated: $change -> $newBalance');
+      return true;
+    } catch (e) {
+>>>>>>> origin/develop
       debugPrint('âŒ [Membership] Failed to update coins: $e');
       return false;
     }
@@ -140,9 +193,11 @@ class MembershipService {
   }
 
   /// Deduct coins (for gifts, spotlight, etc.)
-  Future<bool> deductCoins(int amount, CoinTransactionType type, {String? description}) async {
+  Future<bool> deductCoins(int amount, CoinTransactionType type,
+      {String? description}) async {
     if (_coinBalance < amount) {
-      debugPrint('âš ï¸ [Membership] Insufficient coins: $_coinBalance < $amount');
+      debugPrint(
+          'âš ï¸ [Membership] Insufficient coins: $_coinBalance < $amount');
       return false;
     }
     return updateCoinBalance(-amount, type, description: description);
@@ -195,7 +250,8 @@ class MembershipService {
   }
 
   /// Get coin transaction history
-  Future<List<CoinTransaction>> getCoinTransactionHistory({int limit = 20}) async {
+  Future<List<CoinTransaction>> getCoinTransactionHistory(
+      {int limit = 20}) async {
     if (_currentUserId == null) return [];
 
     try {
@@ -247,7 +303,8 @@ class MembershipService {
   }
 
   /// Log coin purchase completed
-  Future<void> logCoinPurchaseCompleted(CoinPackage package, int totalCoins) async {
+  Future<void> logCoinPurchaseCompleted(
+      CoinPackage package, int totalCoins) async {
     await _logEvent('coin_purchase_completed', {
       'package_id': package.id,
       'coins': totalCoins,

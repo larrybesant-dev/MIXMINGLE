@@ -2,8 +2,8 @@ library;
 
 import 'package:flutter/material.dart';
 import '../../core/design_system/design_constants.dart';
-/// UI Constants - Centralized theme, spacing, and animation constants
 
+/// UI Constants - Centralized theme, spacing, and animation constants
 
 /// Animation durations for smooth transitions
 class AnimationDurations {
@@ -14,13 +14,25 @@ class AnimationDurations {
 }
 
 /// Spacing values for consistent layout
+/// Aligned with DesignSpacing and AppSpacing (Layout Guide §1)
 class Spacing {
+  /// 4 px — tiny gaps, icon padding
   static const double xs = 4;
+
+  /// 8 px — small gaps, label spacing
   static const double sm = 8;
-  static const double md = 16;
-  static const double lg = 24;
-  static const double xl = 32;
-  static const double xxl = 48;
+
+  /// 12 px — standard padding inside cards
+  static const double md = 12;
+
+  /// 16 px — default page padding
+  static const double lg = 16;
+
+  /// 24 px — section spacing
+  static const double xl = 24;
+
+  /// 32 px — large headers, top spacing
+  static const double xxl = 32;
 }
 
 /// Border radius values
@@ -193,21 +205,40 @@ class AppCurves {
 }
 
 /// Size constants for common widgets
+/// Aligned with Layout Guide §3
 class WidgetSizes {
   // Heights
-  static const double topBarHeight = 56;
+  static const double topBarHeight = 64; // 56–72 (Layout Guide §4)
+  static const double bottomNavHeight = 64; // Layout Guide §4
+  static const double controlBarHeight = 72; // Room controls (Layout Guide §6)
   static const double sidebarWidth = 320;
   static const double sidebarWidthMobile = 280;
   static const double videoTileMinSize = 150;
   static const double chatBoxHeight = 200;
-  static const double buttonHeight = 40;
-  static const double inputFieldHeight = 44;
 
-  // Button sizes
+  /// Primary button height — 48–56 px (Layout Guide §3)
+  static const double buttonHeight = 52;
+  static const double buttonHeightSm = 44;
+
+  /// Input field height — 48 px (Layout Guide §3)
+  static const double inputFieldHeight = 48;
+
+  // Icon sizes
   static const double smallIconSize = 16;
   static const double mediumIconSize = 24;
-  static const double largeIconSize = 32;
-  static const double extraLargeIconSize = 48;
+  static const double largeIconSize = 28; // 28–32 (Layout Guide §3)
+  static const double extraLargeIconSize = 32;
+
+  // Avatar sizes (diameters)
+  static const double avatarHero = 108; // Profile hero
+  static const double avatarLarge = 64;
+  static const double avatarMedium = 48;
+  static const double avatarSmall = 40;
+
+  // Border radii
+  static const double cardBorderRadius = 18; // 16–20 (Layout Guide §3)
+  static const double buttonBorderRadius = 14; // 12–16
+  static const double chipBorderRadius = 17;
 }
 
 /// Z-index values for stacking context

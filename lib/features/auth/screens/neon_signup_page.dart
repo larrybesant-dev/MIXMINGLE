@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿  import 'package:flutter/material.dart';
   import 'package:firebase_auth/firebase_auth.dart';
   import 'package:cloud_firestore/cloud_firestore.dart';
@@ -12,6 +13,14 @@
 
   int _onboardingStep = 1;
   bool _showWelcomeOverlay = false;
+=======
+import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../../../app/app_routes.dart';
+import '../../../core/theme/neon_colors.dart';
+import '../../../shared/widgets/neon_components.dart';
+>>>>>>> origin/develop
 
 /// ============================================================================
 /// NEON SIGNUP SCREEN - Electric Lounge Brand
@@ -99,7 +108,12 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
         'uid': userCredential.user!.uid,
         'email': _emailController.text.trim(),
         'username': _usernameController.text.trim(),
+<<<<<<< HEAD
         'displayName': _usernameController.text.trim(),
+=======
+        'displayName':
+            _usernameController.text.trim(), // Add displayName for auth gate
+>>>>>>> origin/develop
         'createdAt': FieldValue.serverTimestamp(),
         'profileImageUrl': '',
         'bio': '',
@@ -111,6 +125,7 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
         if (ageAtSignup != null) 'ageAtSignup': ageAtSignup,
       });
 
+<<<<<<< HEAD
       // Mark profile as complete after signup
         await FirebaseFirestore.instance
           .collection('users')
@@ -131,13 +146,16 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
       ref.read(ageGateProvider.notifier).reset();
 
       debugPrint('âœ… [Signup] Account created. Navigating to /app...');
+=======
+      debugPrint('✅ [Signup] Account created. Navigating to /create-profile...');
+>>>>>>> origin/develop
       if (mounted) {
         setState(() {
           _showWelcomeOverlay = true;
         });
         await Future.delayed(const Duration(seconds: 2));
         Navigator.of(context).pushNamedAndRemoveUntil(
-          '/app',
+          AppRoutes.createProfile,
           (route) => false,
         );
       }
@@ -345,6 +363,104 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
                                 ),
                               ],
                             ),
+<<<<<<< HEAD
+=======
+                          ),
+                        if (_errorMessage != null) const SizedBox(height: 16),
+
+                        // Form
+                        Form(
+                          key: _formKey,
+                          child: Column(
+                            children: [
+                              // Username field
+                              NeonInputField(
+                                controller: _usernameController,
+                                hint: 'Choose a username',
+                                label: 'Username',
+                                prefixIcon: Icons.person_outline,
+                                focusGlowColor: NeonColors.neonBlue,
+                                maxLength: 30,
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Email field
+                              NeonInputField(
+                                controller: _emailController,
+                                hint: 'Enter your email',
+                                label: 'Email',
+                                prefixIcon: Icons.email_outlined,
+                                focusGlowColor: NeonColors.neonBlue,
+                                keyboardType: TextInputType.emailAddress,
+                                maxLength: 254,
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Password field
+                              _buildPasswordField(),
+                              const SizedBox(height: 16),
+
+                              // Confirm password field
+                              _buildConfirmPasswordField(),
+                              const SizedBox(height: 24),
+
+                              // Sign up button
+                              NeonButton(
+                                label: _isLoading
+                                    ? 'CREATING ACCOUNT...'
+                                    : 'SIGN UP',
+                                onPressed: _handleSignup,
+                                glowColor: NeonColors.neonBlue,
+                                isLoading: _isLoading,
+                                height: 54,
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Terms agreement
+                              _buildTermsCheckbox(),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Divider
+                        NeonDivider(
+                          startColor:
+                              NeonColors.neonBlue.withValues(alpha: 0.2),
+                          endColor:
+                              NeonColors.neonPurple.withValues(alpha: 0.2),
+                          height: 1.5,
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        // Sign in link
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text(
+                              'Already have an account? ',
+                              style: TextStyle(
+                                color: NeonColors.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () =>
+                                  Navigator.of(context).pushNamed('/login'),
+                              child: const Text(
+                                'Sign in',
+                                style: TextStyle(
+                                  color: NeonColors.neonOrange,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.bold,
+                                  decoration: TextDecoration.underline,
+                                ),
+                              ),
+                            ),
+>>>>>>> origin/develop
                           ],
                         ),
                       ),
@@ -579,7 +695,8 @@ class _NeonSignupPageState extends ConsumerState<NeonSignupPage> {
           height: 24,
           child: Checkbox(
             value: _agreeToTerms,
-            onChanged: (value) => setState(() => _agreeToTerms = value ?? false),
+            onChanged: (value) =>
+                setState(() => _agreeToTerms = value ?? false),
             fillColor: WidgetStateProperty.resolveWith<Color>(
               (states) {
                 if (states.contains(WidgetState.selected)) {

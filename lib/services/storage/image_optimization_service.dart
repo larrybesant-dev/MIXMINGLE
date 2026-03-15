@@ -19,7 +19,8 @@ class ImageOptimizationService {
       ThumbnailSize.large,
     ],
   }) async {
-    return await PerformanceLogger.measureAsync('uploadImageWithThumbnails', () async {
+    return await PerformanceLogger.measureAsync('uploadImageWithThumbnails',
+        () async {
       final urls = <String, String>{};
 
       // Upload original
@@ -46,7 +47,8 @@ class ImageOptimizationService {
   }
 
   /// Generates a thumbnail from an image
-  Future<Uint8List?> _generateThumbnail(img.Image image, ThumbnailSize size) async {
+  Future<Uint8List?> _generateThumbnail(
+      img.Image image, ThumbnailSize size) async {
     return await compute(_generateThumbnailIsolate, {
       'image': image,
       'size': size,
@@ -109,7 +111,8 @@ class ImageOptimizationService {
         } catch (e) {
           // Ignore if thumbnail doesn't exist
           if (kDebugMode) {
-            AppLogger.warning('Could not delete thumbnail', 'Path: $path, Size: ${size.name}');
+            AppLogger.warning('Could not delete thumbnail',
+                'Path: $path, Size: ${size.name}');
           }
         }
       }
@@ -123,7 +126,8 @@ class ImageOptimizationService {
 
   /// Optimizes an existing image file before upload
   /// Reduces file size while maintaining acceptable quality
-  Future<File> optimizeImage(File imageFile, {int maxWidth = 1920, int quality = 85}) async {
+  Future<File> optimizeImage(File imageFile,
+      {int maxWidth = 1920, int quality = 85}) async {
     return await PerformanceLogger.measureAsync('optimizeImage', () async {
       final imageBytes = await imageFile.readAsBytes();
       final image = img.decodeImage(imageBytes);
@@ -132,7 +136,8 @@ class ImageOptimizationService {
 
       // Resize if needed
       final resized = image.width > maxWidth
-          ? img.copyResize(image, width: maxWidth, interpolation: img.Interpolation.linear)
+          ? img.copyResize(image,
+              width: maxWidth, interpolation: img.Interpolation.linear)
           : image;
 
       // Encode with quality compression
@@ -140,14 +145,16 @@ class ImageOptimizationService {
 
       // Write to temporary file
       final tempDir = imageFile.parent;
-      final tempPath = '${tempDir.path}/optimized_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final tempPath =
+          '${tempDir.path}/optimized_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final optimizedFile = File(tempPath);
       await optimizedFile.writeAsBytes(optimized);
 
       if (kDebugMode) {
         final originalSize = imageBytes.length / 1024; // KB
         final optimizedSize = optimized.length / 1024; // KB
-        final reduction = ((originalSize - optimizedSize) / originalSize * 100).toStringAsFixed(1);
+        final reduction = ((originalSize - optimizedSize) / originalSize * 100)
+            .toStringAsFixed(1);
         AppLogger.info(
             'Image optimized: ${originalSize.toStringAsFixed(1)}KB â†’ ${optimizedSize.toStringAsFixed(1)}KB ($reduction% reduction)');
       }
@@ -169,5 +176,3 @@ enum ThumbnailSize {
   final int height;
   final int quality;
 }
-
-

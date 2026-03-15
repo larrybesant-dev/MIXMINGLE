@@ -29,6 +29,7 @@ class RoomModel {
 
   factory RoomModel.fromDoc(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+<<<<<<< HEAD
     final participantsMap = (data['participants'] as Map<String, dynamic>? ?? {})
       .map((uid, p) => MapEntry(uid, ParticipantModel.fromMap(uid, p)));
     // Ensure ownerId is always present in admins after deserialization.
@@ -40,6 +41,11 @@ class RoomModel {
         !resolvedAdmins.contains(resolvedOwnerId)) {
       resolvedAdmins.add(resolvedOwnerId);
     }
+=======
+    final participantsMap =
+        (data['participants'] as Map<String, dynamic>? ?? {})
+            .map((uid, p) => MapEntry(uid, ParticipantModel.fromMap(uid, p)));
+>>>>>>> origin/develop
     return RoomModel(
       roomId: doc.id,
       hostId: data['hostId'] ?? '',

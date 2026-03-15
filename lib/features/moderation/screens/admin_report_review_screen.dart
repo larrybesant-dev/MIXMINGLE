@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../services/report_service.dart';
 
@@ -44,7 +44,8 @@ class _AdminReportReviewScreenState extends State<AdminReportReviewScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.check_circle_outline, size: 64, color: Colors.green),
+                  Icon(Icons.check_circle_outline,
+                      size: 64, color: Colors.green),
                   SizedBox(height: 16),
                   Text('No open reports'),
                 ],
@@ -184,7 +185,8 @@ class _ReportCardState extends State<_ReportCard> {
         );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('User banned and report marked as reviewed')),
+            const SnackBar(
+                content: Text('User banned and report marked as reviewed')),
           );
         }
       } catch (e) {
@@ -230,12 +232,15 @@ class _ReportCardState extends State<_ReportCard> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _DetailRow('Reporter ID', widget.data['reporterId'] ?? 'Unknown'),
-                  _DetailRow('Reported User ID', widget.data['reportedUserId'] ?? 'Unknown'),
+                  _DetailRow(
+                      'Reporter ID', widget.data['reporterId'] ?? 'Unknown'),
+                  _DetailRow('Reported User ID',
+                      widget.data['reportedUserId'] ?? 'Unknown'),
                   if (widget.data['roomId'] != null)
                     _DetailRow('Room ID', widget.data['roomId']),
                   _DetailRow('Reason', widget.data['reason'] ?? 'None'),
-                  _DetailRow('Timestamp', _formatTimestamp(widget.data['timestamp'])),
+                  _DetailRow(
+                      'Timestamp', _formatTimestamp(widget.data['timestamp'])),
                   const SizedBox(height: 8),
                   const Text(
                     'Details:',

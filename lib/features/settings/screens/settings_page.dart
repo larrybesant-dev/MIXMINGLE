@@ -7,13 +7,28 @@ import 'package:mixmingle/core/routing/app_routes.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mixmingle/shared/providers/all_providers.dart';
 import 'package:mixmingle/shared/widgets/async_value_view_enhanced.dart';
+<<<<<<< HEAD
 import 'package:mixmingle/shared/providers/providers.dart' show themeProvider;
+=======
+import 'package:mixmingle/core/analytics/analytics_service.dart';
+>>>>>>> origin/develop
 
-class SettingsPage extends ConsumerWidget {
+class SettingsPage extends ConsumerStatefulWidget {
   const SettingsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SettingsPage> createState() => _SettingsPageState();
+}
+
+class _SettingsPageState extends ConsumerState<SettingsPage> {
+  @override
+  void initState() {
+    super.initState();
+    AnalyticsService.instance.logScreenView(screenName: 'screen_settings');
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentUserAsync = ref.watch(currentUserProvider);
     final subscriptionAsync = ref.watch(userSubscriptionProvider);
 
@@ -34,10 +49,12 @@ class SettingsPage extends ConsumerWidget {
               Card(
                 child: ListTile(
                   leading: CircleAvatar(
-                    backgroundImage: currentUser?.photoUrl != null && currentUser?.photoUrl?.isNotEmpty == true
+                    backgroundImage: currentUser?.photoUrl != null &&
+                            currentUser?.photoUrl?.isNotEmpty == true
                         ? NetworkImage(currentUser!.photoUrl!) as ImageProvider
                         : null,
-                    child: (currentUser?.photoUrl == null || currentUser?.photoUrl?.isEmpty == true)
+                    child: (currentUser?.photoUrl == null ||
+                            currentUser?.photoUrl?.isEmpty == true)
                         ? const Icon(Icons.person)
                         : null,
                   ),
@@ -58,7 +75,8 @@ class SettingsPage extends ConsumerWidget {
                     return Card(
                       color: Colors.purple.shade50,
                       child: ListTile(
-                        leading: Icon(Icons.star, color: Colors.purple.shade700),
+                        leading:
+                            Icon(Icons.star, color: Colors.purple.shade700),
                         title: Text(
                           '${subscription.tier.name.toUpperCase()} Member',
                           style: TextStyle(
@@ -66,7 +84,8 @@ class SettingsPage extends ConsumerWidget {
                             color: Colors.purple.shade900,
                           ),
                         ),
-                        subtitle: Text('${subscription.daysRemaining} days remaining'),
+                        subtitle: Text(
+                            '${subscription.daysRemaining} days remaining'),
                         trailing: const Icon(Icons.chevron_right),
                         onTap: () {
                           Navigator.of(context).pushNamed('/subscription');
@@ -78,7 +97,8 @@ class SettingsPage extends ConsumerWidget {
                     child: ListTile(
                       leading: const Icon(Icons.card_membership),
                       title: const Text('Free Plan'),
-                      subtitle: const Text('Upgrade to unlock premium features'),
+                      subtitle:
+                          const Text('Upgrade to unlock premium features'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         Navigator.of(context).pushNamed('/subscription');
@@ -121,7 +141,8 @@ class SettingsPage extends ConsumerWidget {
                       title: const Text('Account Settings'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
-                        Navigator.of(context).pushNamed(AppRoutes.accountSettings);
+                        Navigator.of(context)
+                            .pushNamed(AppRoutes.accountSettings);
                       },
                     ),
                     const Divider(height: 1),
@@ -154,7 +175,8 @@ class SettingsPage extends ConsumerWidget {
                       title: const Text('Privacy Settings'),
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
-                        Navigator.of(context).pushNamed(AppRoutes.privacySettings);
+                        Navigator.of(context)
+                            .pushNamed(AppRoutes.privacySettings);
                       },
                     ),
                     const Divider(height: 1),
@@ -185,7 +207,8 @@ class SettingsPage extends ConsumerWidget {
                   title: const Text('Notification Settings'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                    Navigator.of(context).pushNamed(AppRoutes.notificationSettings);
+                    Navigator.of(context)
+                        .pushNamed(AppRoutes.notificationSettings);
                   },
                 ),
               ),
@@ -206,6 +229,7 @@ class SettingsPage extends ConsumerWidget {
                   subtitle: const Text('Light'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
+<<<<<<< HEAD
                     final currentTheme = ref.read(themeProvider);
                     showDialog<void>(
                       context: context,
@@ -247,6 +271,12 @@ class SettingsPage extends ConsumerWidget {
                           ),
                         ],
                       ),
+=======
+                    // TODO: Implement theme settings
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                          content: Text('Theme settings coming soon')),
+>>>>>>> origin/develop
                     );
                   },
                 ),
@@ -270,7 +300,8 @@ class SettingsPage extends ConsumerWidget {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Help center coming soon')),
+                          const SnackBar(
+                              content: Text('Help center coming soon')),
                         );
                       },
                     ),
@@ -329,7 +360,8 @@ class SettingsPage extends ConsumerWidget {
                           ),
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(true),
-                            style: TextButton.styleFrom(foregroundColor: Colors.red),
+                            style: TextButton.styleFrom(
+                                foregroundColor: Colors.red),
                             child: const Text('Logout'),
                           ),
                         ],

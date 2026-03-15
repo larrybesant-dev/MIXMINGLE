@@ -10,10 +10,12 @@
 ## PHASE 2A: CRITICAL FIXES (P0) - 2-3 Hours
 
 ### Fix #1: Agora Web Bridge Missing Import
+
 **File:** `lib/services/agora_web_bridge_v2.dart`
 **Issue:** `allowInterop` not found (line 209)
 **Root Cause:** Missing `import 'dart:js_util'` for interop utilities
 **Action:**
+
 ```dart
 // ADD this import at top of file:
 import 'dart:js_util' as js_util;
@@ -23,26 +25,31 @@ final onSuccess = js.allowInterop((dynamic result) { ... })
 // TO:
 final onSuccess = js_util.allowInterop((dynamic result) { ... })
 ```
+
 **Verification:** Run `flutter analyze lib/services/agora_web_bridge_v2.dart`
 
 ---
 
 ### Fix #2: AppLogger.warn() → .warning()
+
 **File:** `lib/services/agora_platform_service.dart`
 **Issue:** Line 67 calls undefined `AppLogger.warn()`
 **Root Cause:** Method is named `warning()` not `warn()`
 **Action:**
+
 ```dart
 // CHANGE line 67 from:
 AppLogger.warn('⚠️ Failed to enable local tracks');
 // TO:
 AppLogger.warning('⚠️ Failed to enable local tracks');
 ```
+
 **Verification:** Build web target: `flutter build web --release 2>&1 | grep -i error`
 
 ---
 
 ### Fix #3: Reorder enableLocalTracks After Join
+
 **File:** `lib/services/agora_platform_service.dart`
 **Issue:** Lines 58-75 - enableLocalTracks called before permissions granted
 **Root Cause:** Browser permission prompt happens during `joinChannel`, not before
@@ -64,6 +71,7 @@ AppLogger.warning('⚠️ Failed to enable local tracks');
 ```
 
 **Detailed Change:**
+
 ```dart
 if (kIsWeb) {
   _consoleLog('✅ WEB PATH: Initializing AgoraWebBridgeV2');
@@ -102,6 +110,7 @@ if (kIsWeb) {
 ```
 
 **Verification:**
+
 - Test web join flow
 - Verify browser prompts for permissions
 - Verify local video appears
@@ -109,7 +118,9 @@ if (kIsWeb) {
 ---
 
 ### Fix #4: Verify Build After Critical Fixes
+
 **Command:**
+
 ```bash
 flutter pub get
 flutter analyze lib/services/agora_web_bridge_v2.dart lib/services/agora_platform_service.dart
@@ -117,6 +128,7 @@ flutter build web --release 2>&1 | tail -20
 ```
 
 **Expected Output:**
+
 ```
 ✅ No errors
 ✅ Build successful
@@ -127,9 +139,11 @@ flutter build web --release 2>&1 | tail -20
 ## PHASE 2B: CORE FEATURES & CLEANUP (P1) - 5-8 Hours
 
 ### Sprint 1: Agora Web Remote User Handling
+
 **ETA:** 3-4 hours
 
 #### 1B.1 Add Remote Video Event Forwarding (JS Bridge)
+
 **File:** `web/index.html`
 **Current Status:** JS bridge has init/join but no remote user events
 **Action:** Add event listeners in the agoraWeb bridge
@@ -142,8 +156,8 @@ window.agoraWeb.onRemoteUserPublished = null;
 window.agoraWeb.onRemoteUserUnpublished = null;
 
 // After client.join() succeeds, attach event listeners:
-client.on('user-published', async (remoteUser, mediaType) => {
-  log('Remote user published:', remoteUser.uid, mediaType);
+client.on("user-published", async (remoteUser, mediaType) => {
+  log("Remote user published:", remoteUser.uid, mediaType);
 
   // Fire callback to Dart
   if (window.agoraWeb.onRemoteUserPublished) {
@@ -151,46 +165,46 @@ client.on('user-published', async (remoteUser, mediaType) => {
       window.agoraWeb.onRemoteUserPublished({
         uid: remoteUser.uid,
         mediaType: mediaType,
-        displayName: remoteUser.videoTrack ? 'has_video' : 'audio_only'
+        displayName: remoteUser.videoTrack ? "has_video" : "audio_only",
       });
     } catch (e) {
-      console.error('[BRIDGE] Error in onRemoteUserPublished callback:', e);
+      console.error("[BRIDGE] Error in onRemoteUserPublished callback:", e);
     }
   }
 
   // Auto-subscribe to remote user
   try {
     await client.subscribe(remoteUser, mediaType);
-    log('Subscribed to remote user:', remoteUser.uid, mediaType);
+    log("Subscribed to remote user:", remoteUser.uid, mediaType);
 
     // If video, play it
-    if (mediaType === 'video' && remoteUser.videoTrack) {
+    if (mediaType === "video" && remoteUser.videoTrack) {
       const videoTrack = remoteUser.videoTrack;
       // Create container for this user's video
       const containerId = `remote-video-${remoteUser.uid}`;
       let container = document.getElementById(containerId);
 
       if (!container) {
-        container = document.createElement('div');
+        container = document.createElement("div");
         container.id = containerId;
-        container.style.width = 'auto';
-        container.style.height = 'auto';
+        container.style.width = "auto";
+        container.style.height = "auto";
         document.body.appendChild(container);
       }
 
       videoTrack.play(container);
-      log('Playing video for remote user:', remoteUser.uid);
+      log("Playing video for remote user:", remoteUser.uid);
     }
   } catch (err) {
-    console.error('[BRIDGE] Error subscribing to remote user:', err);
+    console.error("[BRIDGE] Error subscribing to remote user:", err);
   }
 });
 
-client.on('user-unpublished', (remoteUser, mediaType) => {
-  log('Remote user unpublished:', remoteUser.uid, mediaType);
+client.on("user-unpublished", (remoteUser, mediaType) => {
+  log("Remote user unpublished:", remoteUser.uid, mediaType);
 
   // Stop playing video
-  if (mediaType === 'video' && remoteUser.videoTrack) {
+  if (mediaType === "video" && remoteUser.videoTrack) {
     remoteUser.videoTrack.stop();
   }
 
@@ -199,16 +213,17 @@ client.on('user-unpublished', (remoteUser, mediaType) => {
     try {
       window.agoraWeb.onRemoteUserUnpublished({
         uid: remoteUser.uid,
-        mediaType: mediaType
+        mediaType: mediaType,
       });
     } catch (e) {
-      console.error('[BRIDGE] Error in onRemoteUserUnpublished callback:', e);
+      console.error("[BRIDGE] Error in onRemoteUserUnpublished callback:", e);
     }
   }
 });
 ```
 
 #### 1B.2 Wire Remote User Events in Dart
+
 **File:** `lib/services/agora_video_service.dart`
 **Action:** Add initialization of JS callbacks for web
 
@@ -258,7 +273,9 @@ void _setupWebRemoteUserCallbacks() {
 ```
 
 #### 1B.3 Test Remote User Flow
+
 **Test Steps:**
+
 1. Open two browsers to same room
 2. First joins successfully
 3. Second joins
@@ -269,9 +286,11 @@ void _setupWebRemoteUserCallbacks() {
 ---
 
 ### Sprint 2: Firestore Schema & Rules
+
 **ETA:** 2-3 hours
 
 #### 2B.1 Create FIRESTORE_SCHEMA.md
+
 **File:** `FIRESTORE_SCHEMA.md`
 **Content:** Document all collections, fields, validation rules
 
@@ -281,11 +300,13 @@ void _setupWebRemoteUserCallbacks() {
 ## Collections
 
 ### users/
+
 Stores user profile data.
 
 **Primary Key:** userId (Firebase Auth UID)
 
 **Fields:**
+
 - displayName: string (required, indexed)
 - email: string (required, indexed)
 - photoURL: string (optional)
@@ -296,9 +317,11 @@ Stores user profile data.
 - recentActivity: array (computed)
 
 **Sub-collections:**
+
 - blocked/{blockedUserId} - Users this user has blocked
 
 **Rules:**
+
 - Only the user can read/write their own document
 - Only the user can manage their blocked list
 - displayName must be 1-50 characters
@@ -308,11 +331,13 @@ Stores user profile data.
 ---
 
 ### rooms/
+
 Stores video chat room metadata.
 
 **Primary Key:** roomId (auto-generated)
 
 **Fields:**
+
 - hostId: string (required, indexed)
 - title: string (required)
 - description: string (optional)
@@ -323,6 +348,7 @@ Stores video chat room metadata.
 - tags: array (optional)
 
 **Sub-collections:**
+
 - participants/{userId} - Participants currently in room
   - joinedAt: timestamp
   - displayName: string
@@ -335,6 +361,7 @@ Stores video chat room metadata.
   - reactions: map
 
 **Rules:**
+
 - Anyone can read active rooms
 - Only host can write room metadata
 - Authenticated users can create rooms
@@ -346,20 +373,22 @@ Stores video chat room metadata.
 ---
 
 ### messages/
+
 Global message log (optional separate collection).
 
 **Primary Key:** messageId (auto-generated)
 
 **Rules:**
+
 - Only host/mods can delete
 - Author can edit own messages
 - Read-only for room participants
-
 ```
 
 **File Location:** Root of project as `FIRESTORE_SCHEMA.md`
 
 #### 2B.2 Create firestore.rules
+
 **File:** `firestore.rules`
 **Content:** Implement Firestore security rules
 
@@ -434,12 +463,14 @@ service cloud.firestore {
 ```
 
 **Deployment:**
+
 ```bash
 # Use Firebase CLI:
 firebase deploy --only firestore:rules
 ```
 
 #### 2B.3 Centralize Firestore Collection Names
+
 **File:** Create `lib/core/constants/firestore_collections.dart`
 
 ```dart
@@ -492,6 +523,7 @@ abstract class MessageFields {
 ```
 
 **Usage in Code:**
+
 ```dart
 // BEFORE (scattered):
 _firestore.collection('users').doc(userId).get();
@@ -505,9 +537,11 @@ _firestore.collection(FirestoreCollections.users).doc(userId).get();
 ---
 
 ### Sprint 3: Code Cleanup (Service Layer)
+
 **ETA:** 2-3 hours
 
 #### 3B.1 Archive Deprecated Files
+
 **Action:** Create `lib/services/legacy/` folder and move old files
 
 ```bash
@@ -535,6 +569,7 @@ New implementations:
 ---
 
 #### 3B.2 Verify No Imports from Legacy
+
 **Action:** Search codebase for imports from legacy files
 
 ```bash
@@ -547,9 +582,11 @@ grep -r "agora_web_bridge_v2_old\|agora_service\.dart\.deprecated" lib/
 ## PHASE 2C: PRODUCTION HARDENING (P2) - 5-10 Hours
 
 ### Sprint 1: Test Coverage
+
 **ETA:** 3-4 hours
 
 #### 1C.1 Add Web Platform Tests
+
 **File:** `test/services/agora_web_bridge_v2_test.dart`
 
 ```dart
@@ -576,6 +613,7 @@ void main() {
 ```
 
 #### 1C.2 Add Room Flow Integration Test
+
 **File:** `integration_test/agora_room_flow_test.dart`
 
 ```dart
@@ -606,9 +644,11 @@ void main() {
 ---
 
 ### Sprint 2: Documentation
+
 **ETA:** 1-2 hours
 
 #### 2C.1 Create ARCHITECTURE_OVERVIEW.md
+
 **File:** Located at root
 
 ```markdown
@@ -617,17 +657,18 @@ void main() {
 ## Application Structure
 
 ### Layers
-
 ```
+
 UI Layer (Screens/Widgets)
-        ↓
+↓
 State Management Layer (Riverpod Providers)
-        ↓
+↓
 Service Layer (Business Logic)
-        ↓
+↓
 Adapter Layer (Platform-specific)
-        ↓
+↓
 External Services (Firebase, Agora, etc.)
+
 ```
 
 ### Key Directories
@@ -656,26 +697,28 @@ External Services (Firebase, Agora, etc.)
 ### Data Flow Example: Joining a Room
 
 ```
+
 Room Page (UI)
-    ↓ trigger joinRoom()
+↓ trigger joinRoom()
 Room Provider (Riverpod)
-    ↓ call service
+↓ call service
 AgoraVideoService
-    ↓ check auth
+↓ check auth
 AuthService
-    ↓ fetch token
+↓ fetch token
 AgoraTokenService → Cloud Function
-    ↓ initialize
+↓ initialize
 AgoraPlatformService (Web/Native router)
-    ↓
+↓
 Web: AgoraWebBridgeV2 → JS Bridge
 Native: agora_rtc_engine
-    ↓
+↓
 Firestore: Add to participants
-    ↓
+↓
 Success: Update provider state
 Room UI updates
-```
+
+````
 
 ## Platform-Specific Implementation
 
@@ -700,11 +743,12 @@ if (kIsWeb) {
   // Native-specific code
   await _engine!.joinChannel(...);
 }
-```
+````
 
 ## State Management: Riverpod Pattern
 
 ### Service Providers (StateNotifierProvider)
+
 ```dart
 final agoraVideoServiceProvider = StateNotifierProvider((ref) {
   return AgoraVideoService();
@@ -712,6 +756,7 @@ final agoraVideoServiceProvider = StateNotifierProvider((ref) {
 ```
 
 ### Data Providers (FutureProvider)
+
 ```dart
 final userProvider = FutureProvider<User>((ref) async {
   return await userService.getUser();
@@ -719,6 +764,7 @@ final userProvider = FutureProvider<User>((ref) async {
 ```
 
 ### Watchers
+
 ```dart
 ref.watch(agoraVideoServiceProvider).joinRoom();
 ```
@@ -726,18 +772,21 @@ ref.watch(agoraVideoServiceProvider).joinRoom();
 ## Design System
 
 ### Theme: NeonTheme
+
 - Dark navy background
 - Neon orange (#FF7A3C) - primary
 - Neon blue (#00D9FF) - secondary
 - Neon purple (#BD00FF) - accent
 
 ### Components
+
 - NeonButton - Primary CTAs with glow
 - NeonCard - Cards with neon borders
 - NeonText - Text with glow effect
 - MixMingleLogo - Official branding
 
 ### Color Usage
+
 - Orange: Actions, emphasis, energy
 - Blue: Secondary actions, trust, connection
 - Purple: Premium features, special states
@@ -745,16 +794,19 @@ ref.watch(agoraVideoServiceProvider).joinRoom();
 ## Testing Strategy
 
 ### Unit Tests
+
 - Service logic (token generation, room creation)
 - Model serialization (toMap/fromMap)
 - Utility functions
 
 ### Widget Tests
+
 - Individual screen components
 - Button interactions
 - Form validation
 
 ### Integration Tests
+
 - End-to-end flows (auth → room → video → leave)
 - Firebase integration
 - Platform-specific code paths
@@ -762,16 +814,19 @@ ref.watch(agoraVideoServiceProvider).joinRoom();
 ## Security Practices
 
 ### Authentication
+
 - Firebase Auth for identity
 - ID token refresh before sensitive operations
 - Session persistence with remember-me option
 
 ### Data Access
+
 - Firestore rules enforce access control
 - User can only access own data
 - Room participants validated server-side
 
 ### API Security
+
 - Agora tokens time-limited
 - Token generated server-side only
 - No hardcoded secrets in app
@@ -779,12 +834,14 @@ ref.watch(agoraVideoServiceProvider).joinRoom();
 ## Error Handling
 
 ### Error Types
+
 - **AuthException** - Auth failures
 - **NetworkException** - Network errors
 - **AgoraException** - Video chat failures
 - **FirestoreException** - Database errors
 
 ### Error Recovery
+
 - Automatic retry with exponential backoff
 - User-friendly error messages
 - Detailed logging for debugging
@@ -792,19 +849,23 @@ ref.watch(agoraVideoServiceProvider).joinRoom();
 ## Performance Optimizations
 
 ### Lazy Loading
+
 - Providers only initialized when needed
 - Images optimized with lazy loading
 
 ### Caching
+
 - Firestore query results cached
 - User data cached in auth state
 
 ### Memory Management
+
 - Proper cleanup in dispose() methods
 - Agora track cleanup on leave
 - No memory leaks in listeners
 
 [Continued in actual file...]
+
 ```
 
 ---
@@ -827,3 +888,4 @@ After all Phase 2 fixes are applied, verify:
 ---
 
 **Next Phase:** Phase 3 (Testing & Optimization)
+```

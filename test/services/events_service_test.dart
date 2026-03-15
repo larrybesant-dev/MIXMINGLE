@@ -79,7 +79,8 @@ void main() {
 
       // Act
       final eventData = mockFirestore.getDocument('events', 'event1');
-      final isFull = (eventData?['attendees'] as List).length >= (eventData?['maxCapacity'] as int);
+      final isFull = (eventData?['attendees'] as List).length >=
+          (eventData?['maxCapacity'] as int);
 
       // Assert
       expect(isFull, true);
@@ -143,7 +144,8 @@ void main() {
 
     test('should delete event', () {
       // Arrange
-      mockFirestore.addDocument('events', 'event1', TestData.event(id: 'event1'));
+      mockFirestore.addDocument(
+          'events', 'event1', TestData.event(id: 'event1'));
 
       // Act
       mockFirestore.deleteDocument('events', 'event1');

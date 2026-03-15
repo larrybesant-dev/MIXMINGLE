@@ -15,6 +15,8 @@ import 'dart:developer' show log;
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../shared/providers/auth_providers.dart';
 import '../../../shared/providers/messaging_providers.dart';
@@ -29,8 +31,12 @@ import 'live_room_controller.dart';
 import 'live_tile_grid.dart';
 import 'live_room_dj.dart';
 import '../widgets/reaction_bar.dart';
+<<<<<<< HEAD
 import '../widgets/moderation_panel_widget.dart';
 import '../../../core/services/room_permission_service.dart';
+=======
+import '../../../shared/widgets/pop_out_avatar.dart';
+>>>>>>> origin/develop
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   const LiveRoomScreen({
@@ -40,8 +46,8 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
     this.avatarUrl,
   });
 
-  final String  roomId;
-  final String  displayName;
+  final String roomId;
+  final String displayName;
   final String? avatarUrl;
 
   @override
@@ -50,6 +56,7 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
 
 class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     with WidgetsBindingObserver {
+<<<<<<< HEAD
   static const double _desktopBreakpoint = 1100;
   static const double _desktopChatMinWidth = 300;
   static const double _desktopChatMaxWidth = 380;
@@ -60,14 +67,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   late final LiveRoomArgs   _args;
   final _chatScroll     = ScrollController();
   StreamSubscription<WindowSyncEvent>? _windowSyncSub;
+=======
+  late final LiveRoomArgs _args;
+  final _chatController = TextEditingController();
+  final _chatScroll = ScrollController();
+>>>>>>> origin/develop
 
   @override
   void initState() {
     super.initState();
     _args = LiveRoomArgs(
-      roomId:      widget.roomId,
+      roomId: widget.roomId,
       displayName: widget.displayName,
-      avatarUrl:   widget.avatarUrl,
+      avatarUrl: widget.avatarUrl,
     );
     WidgetsBinding.instance.addObserver(this);
     // Defer enterRoom so the provider is fully mounted
@@ -135,7 +147,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   // ── Leave handling ────────────────────────────────────────────────────────
 
   Future<bool> _onWillPop() async {
-    final ctrl  = ref.read(liveRoomControllerProvider.notifier);
+    final ctrl = ref.read(liveRoomControllerProvider.notifier);
     final state = ref.read(liveRoomControllerProvider);
     if (!state.isLeft && !state.isLeaving) {
       await ctrl.leaveRoom();
@@ -233,6 +245,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         ],
       ),
       actions: [
+<<<<<<< HEAD
         IconButton(
           icon: const Icon(Icons.open_in_new, color: Colors.white70),
           tooltip: 'Pop Out Room',
@@ -283,6 +296,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               orElse: () => const SizedBox.shrink(),
             );
           },
+=======
+        // Invite friends button
+        IconButton(
+          icon: const Icon(Icons.person_add_alt_1_outlined,
+              color: Colors.white70, size: 20),
+          tooltip: 'Invite friends',
+          onPressed: () => _showInviteSheet(s),
+>>>>>>> origin/develop
         ),
         if (s.isActive || s.isSuspended)
           Padding(
@@ -311,8 +332,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final ctrl = ref.read(liveRoomControllerProvider.notifier);
 
     if (s.isJoining) return _buildLoadingView(s.statusMessage ?? 'Loading…');
-    if (s.hasError)  return _buildErrorView(s.error ?? 'Unknown error');
+    if (s.hasError) return _buildErrorView(s.error ?? 'Unknown error');
 
+<<<<<<< HEAD
     return LayoutBuilder(
       builder: (context, constraints) {
       final totalWidth = constraints.maxWidth;
@@ -422,6 +444,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   ],
                 ),
               ),
+=======
+    return Column(
+      children: [
+        // ── Tile grid ───────────────────────────────────────────────────
+        Padding(
+          padding: const EdgeInsets.all(8),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.42,
+              minHeight: (MediaQuery.of(context).size.height * 0.42).clamp(0.0, 180.0),
+>>>>>>> origin/develop
             ),
             ReactionBarWidget(onReact: _sendReaction),
             _NowPlayingBanner(state: s),
@@ -432,6 +465,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     );
   }
 
+  // ── Invite friends bottom sheet ────────────────────────────────────
+
+  void _showInviteSheet(LiveRoomState s) {
+    final roomId = widget.roomId;
+    final roomName = s.roomMeta?.name ?? roomId;
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF12082A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _InviteFriendsSheet(
+        roomId: roomId,
+        roomName: roomName,
+      ),
+    );
+  }
+
   // ── Reaction helper ─────────────────────────────────────────────────────────
 
   Future<void> _sendReaction(String emoji) async {
@@ -439,17 +490,38 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       final user = ref.read(currentUserProvider).value;
       if (user == null) return;
       await ref.read(messagingServiceProvider).sendRoomMessage(
-        senderId:        user.id,
-        senderName:      user.displayName ?? user.username,
-        senderAvatarUrl: user.avatarUrl,
-        roomId:          widget.roomId,
-        content:         emoji,
-      );
+            senderId: user.id,
+            senderName: user.displayName ?? user.username,
+            senderAvatarUrl: user.avatarUrl,
+            roomId: widget.roomId,
+            content: emoji,
+          );
     } catch (e) {
       debugPrint('[ROOM_SCREEN] reaction error: $e');
     }
   }
 
+<<<<<<< HEAD
+=======
+  // ── Chat helpers ────────────────────────────────────────────────────────────
+
+  Future<void> _sendChatMessage(String text) async {
+    try {
+      final user = ref.read(currentUserProvider).value;
+      if (user == null) return;
+      await ref.read(messagingServiceProvider).sendRoomMessage(
+            senderId: user.id,
+            senderName: user.displayName ?? user.username,
+            senderAvatarUrl: user.avatarUrl,
+            roomId: widget.roomId,
+            content: text,
+          );
+    } catch (e) {
+      debugPrint('[ROOM_SCREEN] send error: $e');
+    }
+  }
+
+>>>>>>> origin/develop
   Widget _buildLoadingView(String message) => Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -467,7 +539,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, color: Color(0xFFFF4C4C), size: 48),
+              const Icon(Icons.error_outline,
+                  color: Color(0xFFFF4C4C), size: 48),
               const SizedBox(height: 12),
               Text(
                 error,
@@ -514,32 +587,36 @@ class _AudienceRow extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               itemCount: participants.length.clamp(0, 12),
               itemBuilder: (ctx, i) {
-                final p       = participants[i];
+                final p = participants[i];
                 final pending = p.camRequestPending;
                 return Padding(
                   padding: const EdgeInsets.only(right: 4),
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      CircleAvatar(
-                        radius: 14,
-                        backgroundColor: pending
-                            ? const Color(0xFF7A5200)
-                            : const Color(0xFF3A1A5E),
-                        backgroundImage: p.avatarUrl != null
-                            ? NetworkImage(p.avatarUrl!)
-                            : null,
-                        child: p.avatarUrl == null
-                            ? Text(
-                                p.displayName.isNotEmpty
-                                    ? p.displayName[0].toUpperCase()
-                                    : '?',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                ),
-                              )
-                            : null,
+                      PopOutAvatar(
+                        uid: p.userId,
+                        tooltip: p.displayName,
+                        child: CircleAvatar(
+                          radius: 14,
+                          backgroundColor: pending
+                              ? const Color(0xFF7A5200)
+                              : const Color(0xFF3A1A5E),
+                          backgroundImage: p.avatarUrl != null
+                              ? NetworkImage(p.avatarUrl!)
+                              : null,
+                          child: p.avatarUrl == null
+                              ? Text(
+                                  p.displayName.isNotEmpty
+                                      ? p.displayName[0].toUpperCase()
+                                      : '?',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                  ),
+                                )
+                              : null,
+                        ),
                       ),
                       // Raised-hand badge for pending requests
                       if (pending)
@@ -568,12 +645,20 @@ class _AudienceRow extends StatelessWidget {
 
 class _ControlBar extends ConsumerWidget {
   const _ControlBar({required this.args, required this.state});
-  final LiveRoomArgs  args;
+  final LiveRoomArgs args;
   final LiveRoomState state;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final ctrl = ref.read(liveRoomControllerProvider.notifier);
+<<<<<<< HEAD
+=======
+    // Detect whether the local user has a pending cam request
+    final myParticipant = state.participants
+        .where((p) => p.userId == state.localUserId)
+        .firstOrNull;
+    final isRequestPending = myParticipant?.camRequestPending ?? false;
+>>>>>>> origin/develop
 
     return Container(
       decoration: const BoxDecoration(
@@ -676,11 +761,11 @@ class _ControlButton extends StatelessWidget {
     this.activeColor,
   });
 
-  final IconData    icon;
-  final String      label;
-  final bool        active;
+  final IconData icon;
+  final String label;
+  final bool active;
   final VoidCallback onTap;
-  final Color?      activeColor;
+  final Color? activeColor;
 
   @override
   Widget build(BuildContext context) {
@@ -697,17 +782,14 @@ class _ControlButton extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: active
-                  ? color.withAlpha(30)
-                  : const Color(0xFF1E0E3A),
+              color: active ? color.withAlpha(30) : const Color(0xFF1E0E3A),
               shape: BoxShape.circle,
               border: Border.all(color: color.withAlpha(120)),
             ),
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(height: 4),
-          Text(label,
-              style: TextStyle(color: color, fontSize: 10)),
+          Text(label, style: TextStyle(color: color, fontSize: 10)),
         ],
       ),
     );
@@ -719,7 +801,7 @@ class _ControlButton extends StatelessWidget {
 class _ChatArea extends ConsumerStatefulWidget {
   const _ChatArea({required this.scrollController, required this.roomId});
   final ScrollController scrollController;
-  final String           roomId;
+  final String roomId;
 
   @override
   ConsumerState<_ChatArea> createState() => _ChatAreaState();
@@ -774,7 +856,8 @@ class _ChatAreaState extends ConsumerState<_ChatArea> {
 
     return messagesAsync.when(
       loading: () => const Center(
-        child: CircularProgressIndicator(color: Color(0xFF5A3A7E), strokeWidth: 2),
+        child:
+            CircularProgressIndicator(color: Color(0xFF5A3A7E), strokeWidth: 2),
       ),
       error: (e, _) => const Center(
         child: Text(
@@ -933,20 +1016,24 @@ class _ChatBubble extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 12,
-            backgroundColor: const Color(0xFF3A1A5E),
-            backgroundImage: message.senderAvatarUrl.isNotEmpty
-                ? NetworkImage(message.senderAvatarUrl)
-                : null,
-            child: message.senderAvatarUrl.isEmpty
-                ? Text(
-                    message.senderName.isNotEmpty
-                        ? message.senderName[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(color: Colors.white, fontSize: 10),
-                  )
-                : null,
+          PopOutAvatar(
+            uid: message.senderId,
+            tooltip: message.senderName,
+            child: CircleAvatar(
+              radius: 12,
+              backgroundColor: const Color(0xFF3A1A5E),
+              backgroundImage: message.senderAvatarUrl.isNotEmpty
+                  ? NetworkImage(message.senderAvatarUrl)
+                  : null,
+              child: message.senderAvatarUrl.isEmpty
+                  ? Text(
+                      message.senderName.isNotEmpty
+                          ? message.senderName[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                    )
+                  : null,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -1431,8 +1518,8 @@ class _PendingRequestRow extends StatelessWidget {
     required this.onDeny,
   });
   final RoomParticipant participant;
-  final VoidCallback    onApprove;
-  final VoidCallback    onDeny;
+  final VoidCallback onApprove;
+  final VoidCallback onDeny;
 
   @override
   Widget build(BuildContext context) {
@@ -1440,20 +1527,24 @@ class _PendingRequestRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: const Color(0xFF3A1A5E),
-            backgroundImage: participant.avatarUrl != null
-                ? NetworkImage(participant.avatarUrl!)
-                : null,
-            child: participant.avatarUrl == null
-                ? Text(
-                    participant.displayName.isNotEmpty
-                        ? participant.displayName[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(color: Colors.white, fontSize: 11),
-                  )
-                : null,
+          PopOutAvatar(
+            uid: participant.userId,
+            tooltip: participant.displayName,
+            child: CircleAvatar(
+              radius: 14,
+              backgroundColor: const Color(0xFF3A1A5E),
+              backgroundImage: participant.avatarUrl != null
+                  ? NetworkImage(participant.avatarUrl!)
+                  : null,
+              child: participant.avatarUrl == null
+                  ? Text(
+                      participant.displayName.isNotEmpty
+                          ? participant.displayName[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(color: Colors.white, fontSize: 11),
+                    )
+                  : null,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -1507,6 +1598,7 @@ class _PendingRequestRow extends StatelessWidget {
 class _ChatInputBar extends StatefulWidget {
   const _ChatInputBar({required this.controller, required this.onSend});
   final TextEditingController controller;
+<<<<<<< HEAD
   final Future<void> Function(String) onSend;
 
   @override
@@ -1539,6 +1631,9 @@ class _ChatInputBarState extends State<_ChatInputBar> {
       if (mounted) setState(() => _isSending = false);
     }
   }
+=======
+  final VoidCallback onSend;
+>>>>>>> origin/develop
 
   @override
   Widget build(BuildContext context) {
@@ -1600,6 +1695,7 @@ class _ChatInputBarState extends State<_ChatInputBar> {
   }
 }
 
+<<<<<<< HEAD
 // ── DJ Panel helpers ────────────────────────────────────────────────────────
 
 void _showDjPanel(BuildContext context, WidgetRef ref, LiveRoomState state) {
@@ -1649,6 +1745,167 @@ class _NowPlayingBanner extends StatelessWidget {
           Text(
             'by $djName',
             style: const TextStyle(color: Color(0xFFFF6EC7), fontSize: 11),
+=======
+// ── Invite Friends Sheet ───────────────────────────────────────────────────
+
+class _InviteFriendsSheet extends StatefulWidget {
+  final String roomId;
+  final String roomName;
+  const _InviteFriendsSheet(
+      {required this.roomId, required this.roomName});
+
+  @override
+  State<_InviteFriendsSheet> createState() => _InviteFriendsSheetState();
+}
+
+class _InviteFriendsSheetState extends State<_InviteFriendsSheet> {
+  final Set<String> _invited = {};
+
+  Future<void> _sendInvite(String toUid) async {
+    final myUid = FirebaseAuth.instance.currentUser?.uid;
+    if (myUid == null) return;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(toUid)
+        .collection('roomInvites')
+        .add({
+      'fromUid': myUid,
+      'roomId': widget.roomId,
+      'roomName': widget.roomName,
+      'sentAt': FieldValue.serverTimestamp(),
+      'status': 'pending',
+    });
+    if (mounted) setState(() => _invited.add(toUid));
+  }
+
+  Stream<List<_RoomFriend>> _onlineFriendsStream() {
+    final myUid = FirebaseAuth.instance.currentUser?.uid;
+    if (myUid == null) return const Stream.empty();
+    return FirebaseFirestore.instance
+        .collection('users')
+        .doc(myUid)
+        .collection('following')
+        .snapshots()
+        .asyncMap((snap) async {
+      if (snap.docs.isEmpty) return <_RoomFriend>[];
+      final uids = snap.docs.map((d) => d.id).take(30).toList();
+      final res = await FirebaseFirestore.instance
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: uids)
+          .where('isOnline', isEqualTo: true)
+          .get();
+      return res.docs
+          .map((d) => _RoomFriend(
+                uid: d.id,
+                name: (d.data()['displayName'] as String?) ?? 'User',
+                photo: d.data()['photoUrl'] as String?,
+              ))
+          .toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2)),
+          ),
+          const SizedBox(height: 14),
+          const Text('Invite Online Friends',
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold)),
+          const SizedBox(height: 4),
+          Text(widget.roomName,
+              style:
+                  const TextStyle(color: Colors.white38, fontSize: 12)),
+          const SizedBox(height: 12),
+          const Divider(color: Color(0xFF2A1A3E), height: 1),
+          Flexible(
+            child: StreamBuilder<List<_RoomFriend>>(
+              stream: _onlineFriendsStream(),
+              builder: (_, snap) {
+                if (!snap.hasData) {
+                  return const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Center(
+                        child: CircularProgressIndicator(
+                            color: Color(0xFFFF4C4C), strokeWidth: 2)),
+                  );
+                }
+                final friends = snap.data!;
+                if (friends.isEmpty) {
+                  return const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Text('No online friends right now',
+                        style: TextStyle(
+                            color: Colors.white38, fontSize: 13),
+                        textAlign: TextAlign.center),
+                  );
+                }
+                return ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: friends.length,
+                  itemBuilder: (_, i) {
+                    final f = friends[i];
+                    final sent = _invited.contains(f.uid);
+                    return ListTile(
+                      dense: true,
+                      leading: CircleAvatar(
+                        radius: 18,
+                        backgroundColor: const Color(0xFF3A1A5E),
+                        backgroundImage: f.photo != null
+                            ? NetworkImage(f.photo!)
+                            : null,
+                        child: f.photo == null
+                            ? Text(f.name[0].toUpperCase(),
+                                style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 13))
+                            : null,
+                      ),
+                      title: Text(f.name,
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 13)),
+                      subtitle: const Text('Online',
+                          style: TextStyle(
+                              color: Color(0xFF00E676), fontSize: 11)),
+                      trailing: sent
+                          ? const Icon(Icons.check_circle,
+                              color: Color(0xFF00E676), size: 20)
+                          : TextButton(
+                              onPressed: () => _sendInvite(f.uid),
+                              style: TextButton.styleFrom(
+                                backgroundColor: const Color(0xFFFF4C4C)
+                                    .withValues(alpha: 0.15),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 6),
+                                shape: RoundedRectangleBorder(
+                                    borderRadius:
+                                        BorderRadius.circular(14)),
+                              ),
+                              child: const Text('Invite',
+                                  style: TextStyle(
+                                      color: Color(0xFFFF4C4C),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold)),
+                            ),
+                    );
+                  },
+                );
+              },
+            ),
+>>>>>>> origin/develop
           ),
         ],
       ),
@@ -1656,6 +1913,7 @@ class _NowPlayingBanner extends StatelessWidget {
   }
 }
 
+<<<<<<< HEAD
 // ── _DjPanel ────────────────────────────────────────────────────────────────
 
 class _DjPanel extends ConsumerStatefulWidget {
@@ -1912,3 +2170,11 @@ class _DjPanelState extends ConsumerState<_DjPanel> {
   }
 }
 
+=======
+class _RoomFriend {
+  final String uid;
+  final String name;
+  final String? photo;
+  const _RoomFriend({required this.uid, required this.name, this.photo});
+}
+>>>>>>> origin/develop

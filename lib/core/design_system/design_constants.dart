@@ -21,12 +21,12 @@ import 'package:flutter/material.dart';
 
 class DesignColors {
   // Primary accent - BRIGHT BLUE (MINGLE color) - neon blue
-  static const Color accent = Color(0xFF4A90FF);  // Brighter blue
+  static const Color accent = Color(0xFF4A90FF); // Brighter blue
   static const Color accentLight = Color(0xFF6BA8FF);
   static const Color accentDark = Color(0xFF2563EB);
 
   // Secondary accent - ORANGE/CORAL (MIX color) - warm orange-red
-  static const Color secondary = Color(0xFFFF6B35);  // Coral orange
+  static const Color secondary = Color(0xFFFF6B35); // Coral orange
   static const Color secondaryLight = Color(0xFFFF8A5C);
   static const Color secondaryDark = Color(0xFFE85A2A);
 
@@ -55,28 +55,28 @@ class DesignColors {
   static const Color white = Color(0xFFFFFFFF);
 
   // Dark navy background palette (DJ streaming vibe)
-  static const Color background = Color(0xFF080C14);      // Deep navy black
-  static const Color surfaceLight = Color(0xFF1A1F2E);    // Lighter navy
-  static const Color surfaceDefault = Color(0xFF0D1117);  // Default dark navy
-  static const Color surfaceAlt = Color(0xFF151A26);      // Alt navy surface
-  static const Color surfaceDark = Color(0xFF060A10);     // Darkest navy
-  static const Color divider = Color(0xFF2D3748);         // Subtle navy divider
-  static const Color textGray = Color(0xFF9CA3AF);        // Muted gray
-  static const Color textLightGray = Color(0xFFD1D5DB);   // Light gray
+  static const Color background = Color(0xFF080C14); // Deep navy black
+  static const Color surfaceLight = Color(0xFF1A1F2E); // Lighter navy
+  static const Color surfaceDefault = Color(0xFF0D1117); // Default dark navy
+  static const Color surfaceAlt = Color(0xFF151A26); // Alt navy surface
+  static const Color surfaceDark = Color(0xFF060A10); // Darkest navy
+  static const Color divider = Color(0xFF2D3748); // Subtle navy divider
+  static const Color textGray = Color(0xFF9CA3AF); // Muted gray
+  static const Color textLightGray = Color(0xFFD1D5DB); // Light gray
   static const Color textDark = Color(0xFF1F2937);
 
   // Status colors
-  static const Color roomEnergyCalm = Color(0xFF4A90FF);  // Blue
+  static const Color roomEnergyCalm = Color(0xFF4A90FF); // Blue
   static const Color roomEnergyActive = Color(0xFFFF6B35); // Orange
   static const Color roomEnergyBuzzing = Color(0xFFEF4444); // Red
 
   // Semantic colors
-  static const Color success = Color(0xFF22C55E);  // Bright green
-  static const Color warning = Color(0xFFF59E0B);  // Amber
-  static const Color error = Color(0xFFEF4444);    // Red (not accent!)
+  static const Color success = Color(0xFF22C55E); // Bright green
+  static const Color warning = Color(0xFFF59E0B); // Amber
+  static const Color error = Color(0xFFEF4444); // Red (not accent!)
 
   // Transparency
-  static const Color overlay = Color(0x99080C14);  // Navy overlay
+  static const Color overlay = Color(0x99080C14); // Navy overlay
   static const Color shadowColor = Color(0x40000000);
 
   // Text colors
@@ -116,36 +116,75 @@ class DesignColors {
 // ==============================================================================
 
 class DesignTypography {
+  // Display / Page Title — page headers, splash, profile name
+  static const TextStyle display = TextStyle(
+    fontSize: 30,
+    fontWeight: FontWeight.w900,
+    letterSpacing: -0.5,
+    color: DesignColors.white,
+    height: 1.1,
+    shadows: DesignColors.primaryGlow,
+  );
+
+  // Display large (32 px)
+  static const TextStyle displayLarge = TextStyle(
+    fontSize: 32,
+    fontWeight: FontWeight.bold,
+    letterSpacing: -0.5,
+    color: DesignColors.white,
+    height: 1.1,
+  );
+
+  // Section Title (20–22 px, SemiBold) — "About", "Rooms", "Vibes"
+  static const TextStyle sectionTitle = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
+    color: DesignColors.white,
+    height: 1.3,
+    letterSpacing: 0.2,
+  );
+
   // Heading - Room name, prominent text
   static const TextStyle heading = TextStyle(
-    fontSize: 18,
-    fontWeight: FontWeight.bold,
+    fontSize: 20,
+    fontWeight: FontWeight.w600,
     color: DesignColors.white,
-    height: 1.2,
+    height: 1.25,
   );
 
   // Subheading - Participant name, secondary content
   static const TextStyle subheading = TextStyle(
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: FontWeight.w600,
     color: DesignColors.white,
     height: 1.3,
   );
 
-  // Body - Standard text
+  // Body - Standard text (14–16 px, Regular)
   static const TextStyle body = TextStyle(
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: FontWeight.normal,
     color: DesignColors.white,
-    height: 1.4,
+    height: 1.5,
+    letterSpacing: 0.15,
   );
 
-  // Caption - Helper text, timestamps
+  // Body small
+  static const TextStyle bodySm = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.normal,
+    color: DesignColors.textGray,
+    height: 1.4,
+    letterSpacing: 0.25,
+  );
+
+  // Caption - Helper text, timestamps (12–13 px, Medium weight)
   static const TextStyle caption = TextStyle(
     fontSize: 12,
-    fontWeight: FontWeight.normal,
-    color: DesignColors.white,
+    fontWeight: FontWeight.w500,
+    color: DesignColors.textGray,
     height: 1.3,
+    letterSpacing: 0.4,
   );
 
   // Label - Button text, badges
@@ -158,18 +197,11 @@ class DesignTypography {
 
   // Button - Control text
   static const TextStyle button = TextStyle(
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: FontWeight.w600,
     color: DesignColors.white,
     height: 1.2,
-  );
-
-  // Display - Large, prominent headings
-  static const TextStyle display = TextStyle(
-    fontSize: 32,
-    fontWeight: FontWeight.bold,
-    color: DesignColors.white,
-    height: 1.1,
+    letterSpacing: 0.3,
   );
 }
 
@@ -178,32 +210,60 @@ class DesignTypography {
 // ==============================================================================
 
 class DesignSpacing {
-  // Insets
+  // ── Core tokens (Layout Guide §1) ──────────────────────────────────────
+  /// 4 px — tiny gaps, icon padding
   static const double xs = 4;
+  static const double spaceXS = 4;
+
+  /// 8 px — small gaps, label spacing
   static const double sm = 8;
+  static const double spaceSM = 8;
+
+  /// 12 px — standard padding inside cards
   static const double md = 12;
+  static const double spaceMD = 12;
+
+  /// 16 px — default page padding
   static const double lg = 16;
+  static const double spaceLG = 16;
+
+  /// 24 px — section spacing
   static const double xl = 24;
+  static const double spaceXL = 24;
+
+  /// 32 px — large headers, top spacing
   static const double xxl = 32;
+  static const double spaceXXL = 32;
 
-  // Card spacing
-  static const double cardPadding = lg; // 16px inside cards
-  static const double cardSpacing = md; // 12px between cards
-  static const double cardBorderRadius = 12.0;
+  // ── Card spacing ────────────────────────────────────────────────────────
+  static const double cardPadding = lg; // 16 px inside cards
+  static const double cardSpacing = lg; // 16 px between cards
+  static const double cardBorderRadius = 18.0; // 16–20 px range
 
-  // Button sizing
-  static const double buttonMinHeight = 44;
-  static const double buttonMinWidth = 100;
-  static const double buttonPadding = lg; // 16px horizontal, 12px vertical
-  static const double buttonBorderRadius = 12.0;
+  // ── Button sizing (Layout Guide §3) ─────────────────────────────────────
+  static const double buttonMinHeight = 52; // 48–56 px
+  static const double buttonMinWidth = 120;
+  static const double buttonPadding = lg;
+  static const double buttonBorderRadius = 14.0; // 12–16 px range
 
-  // Avatar sizes
-  static const double avatarLarge = 48;
-  static const double avatarMedium = 40;
-  static const double avatarSmall = 32;
+  // ── Input sizing ────────────────────────────────────────────────────────
+  static const double inputHeight = 48;
+  static const double inputPadding = md; // 12 px
+  static const double inputBorderRadius = 12.0;
 
-  // Control bar
-  static const double controlBarHeight = 80;
+  // ── Avatar sizes (radii) ─────────────────────────────────────────────────
+  /// Profile hero — 108 px diameter, radius 54
+  static const double avatarHeroRadius = 54;
+  static const double avatarLarge = 32; // 64 px diameter
+  static const double avatarMedium = 24; // 48 px diameter
+  static const double avatarSmall = 20; // 40 px diameter
+
+  // ── Page structure ────────────────────────────────────────────────────────
+  static const double headerHeight = 64; // 56–72 px
+  static const double headerHeightLg = 72;
+
+  // ── Control bar (rooms) ──────────────────────────────────────────────────
+  static const double controlBarHeight = 72; // Layout Guide §6
   static const double controlSpacing = lg;
 }
 
@@ -241,9 +301,11 @@ class DesignAnimations {
 
   // Micro interactions
   static const Duration cardHoverDuration = Duration(milliseconds: 150);
-  static const Duration notificationFadeInDuration = Duration(milliseconds: 150);
+  static const Duration notificationFadeInDuration =
+      Duration(milliseconds: 150);
   static const Duration notificationVisibleDuration = Duration(seconds: 3);
-  static const Duration notificationFadeOutDuration = Duration(milliseconds: 200);
+  static const Duration notificationFadeOutDuration =
+      Duration(milliseconds: 200);
 
   // Curves (DESIGN_BIBLE.md specifies easeOutCubic, easeInOut, easeInCubic)
   static const Curve easeOutCubic = Cubic(0.215, 0.61, 0.355, 1.0);
@@ -361,12 +423,12 @@ class RoomEnergyThresholds {
 // ==============================================================================
 
 enum JoinPhase {
-  initial,      // Before join is clicked
-  entering,     // Stage 1: "Entering roomâ€¦" (150ms)
-  connecting,   // Stage 2: "Connecting audioâ€¦" (400â€“1000ms)
-  live,         // Stage 3: "You're live" (400ms fade-in)
-  error,        // Join failed
-  left,         // User left room
+  initial, // Before join is clicked
+  entering, // Stage 1: "Entering roomâ€¦" (150ms)
+  connecting, // Stage 2: "Connecting audioâ€¦" (400â€“1000ms)
+  live, // Stage 3: "You're live" (400ms fade-in)
+  error, // Join failed
+  left, // User left room
 }
 
 extension JoinPhaseExtension on JoinPhase {
@@ -406,11 +468,11 @@ extension JoinPhaseExtension on JoinPhase {
 // ==============================================================================
 
 enum NotificationType {
-  userArrived,    // "Emma just joined"
-  userLeft,       // "Emma left the room"
-  userSpeaking,   // "Emma is speakingâ€¦"
-  youAreLive,     // "You're live with 5 others"
-  error,          // Error message
+  userArrived, // "Emma just joined"
+  userLeft, // "Emma left the room"
+  userSpeaking, // "Emma is speakingâ€¦"
+  youAreLive, // "You're live with 5 others"
+  error, // Error message
 }
 
 extension NotificationTypeExtension on NotificationType {
@@ -478,8 +540,5 @@ class DesignConstants {
   static const double padding = DesignSpacing.lg;
   static const double radius = DesignSpacing.cardBorderRadius;
 }
-
-
-
 
 // (flutter/material.dart imported at top of file)

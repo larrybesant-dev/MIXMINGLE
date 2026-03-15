@@ -56,5 +56,3 @@ class DebugLog {
   /// Whether logging is enabled (depends on debug mode)
   static bool get isEnabled => kDebugMode;
 }
-
-

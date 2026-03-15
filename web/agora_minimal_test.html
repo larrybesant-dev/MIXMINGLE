@@ -1,169 +1,172 @@
 <!doctype html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Agora Minimal Join Test (Iris)</title>
+    <style>
+      body {
+        font-family: monospace;
+        background: #1a1a1a;
+        color: #0f0;
+        padding: 20px;
+      }
 
-<head>
-  <meta charset="utf-8">
-  <title>Agora Minimal Join Test (Iris)</title>
-  <style>
-    body {
-      font-family: monospace;
-      background: #1a1a1a;
-      color: #0f0;
-      padding: 20px;
-    }
+      #log {
+        background: #000;
+        border: 1px solid #0f0;
+        padding: 10px;
+        height: 400px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
 
-    #log {
-      background: #000;
-      border: 1px solid #0f0;
-      padding: 10px;
-      height: 400px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
+      button {
+        background: #0f0;
+        color: #000;
+        padding: 10px 20px;
+        margin: 10px 0;
+        cursor: pointer;
+      }
+    </style>
+  </head>
 
-    button {
-      background: #0f0;
-      color: #000;
-      padding: 10px 20px;
-      margin: 10px 0;
-      cursor: pointer;
-    }
-  </style>
-</head>
+  <body>
+    <h2>🎵 Agora Minimal Join Test (Iris SDK)</h2>
+    <button onclick="runTest()">Run Join Test</button>
+    <button onclick="clearLog()">Clear Log</button>
+    <pre id="log"></pre>
 
-<body>
-  <h2>🎵 Agora Minimal Join Test (Iris SDK)</h2>
-  <button onclick="runTest()">Run Join Test</button>
-  <button onclick="clearLog()">Clear Log</button>
-  <pre id="log"></pre>
+    <script>
+      const logElement = document.getElementById("log");
 
-  <script>
-    const logElement = document.getElementById('log');
+      function L(msg) {
+        const timestamp = new Date().toLocaleTimeString();
+        const line = `[${timestamp}] ${msg}`;
+        console.log(line);
+        logElement.textContent += line + "\n";
+        logElement.scrollTop = logElement.scrollHeight;
+      }
 
-    function L(msg) {
-      const timestamp = new Date().toLocaleTimeString();
-      const line = `[${timestamp}] ${msg}`;
-      console.log(line);
-      logElement.textContent += line + '\n';
-      logElement.scrollTop = logElement.scrollHeight;
-    }
+      function clearLog() {
+        logElement.textContent = "";
+      }
 
-    function clearLog() {
-      logElement.textContent = '';
-    }
+      // ⚠️ REPLACE THESE WITH YOUR ACTUAL VALUES
+      const APP_ID = "ec1b578586d24976a89d787d9ee4d5c7";
+      const CHANNEL = "test-channel-minimal";
+      const TOKEN = null; // Use null if app certificate is disabled, or set a valid token
+      const UID = 12345;
 
-    // ⚠️ REPLACE THESE WITH YOUR ACTUAL VALUES
-    const APP_ID = 'ec1b578586d24976a89d787d9ee4d5c7';
-    const CHANNEL = 'test-channel-minimal';
-    const TOKEN = null; // Use null if app certificate is disabled, or set a valid token
-    const UID = 12345;
+      async function runTest() {
+        clearLog();
+        L("=== Starting Agora Minimal Join Test ===");
+        L(`APP_ID: ${APP_ID}`);
+        L(`CHANNEL: ${CHANNEL}`);
+        L(`TOKEN: ${TOKEN ? TOKEN.substring(0, 20) + "..." : "null"}`);
+        L(`UID: ${UID}`);
+        L("");
 
-    async function runTest() {
-      clearLog();
-      L('=== Starting Agora Minimal Join Test ===');
-      L(`APP_ID: ${APP_ID}`);
-      L(`CHANNEL: ${CHANNEL}`);
-      L(`TOKEN: ${TOKEN ? TOKEN.substring(0, 20) + '...' : 'null'}`);
-      L(`UID: ${UID}`);
-      L('');
+        try {
+          // Check if SDK loaded
+          L("Checking for SDK...");
+          if (typeof window.IrisRtcEngine === "undefined") {
+            L("❌ ERROR: window.IrisRtcEngine is undefined");
+            L("Checking for AgoraRTC...");
+            if (typeof AgoraRTC === "undefined") {
+              L("❌ ERROR: AgoraRTC is also undefined - SDK not loaded!");
+              return;
+            }
+            L("✅ Found AgoraRTC (legacy SDK)");
+          } else {
+            L("✅ Found window.IrisRtcEngine");
+          }
+          L("");
 
-      try {
-        // Check if SDK loaded
-        L('Checking for SDK...');
-        if (typeof window.IrisRtcEngine === 'undefined') {
-          L('❌ ERROR: window.IrisRtcEngine is undefined');
-          L('Checking for AgoraRTC...');
-          if (typeof AgoraRTC === 'undefined') {
-            L('❌ ERROR: AgoraRTC is also undefined - SDK not loaded!');
+          // Create client
+          L("Creating client...");
+          let client;
+          if (typeof window.IrisRtcEngine === "function") {
+            L("Instantiating IrisRtcEngine as class...");
+            client = new window.IrisRtcEngine();
+            L("✅ Client created via new IrisRtcEngine()");
+          } else if (
+            typeof AgoraRTC !== "undefined" &&
+            typeof AgoraRTC.createClient === "function"
+          ) {
+            L("Using AgoraRTC.createClient...");
+            client = AgoraRTC.createClient({ mode: "rtc", codec: "vp8" });
+            L("✅ Client created via AgoraRTC.createClient()");
+          } else {
+            L("❌ No supported client creation method found");
             return;
           }
-          L('✅ Found AgoraRTC (legacy SDK)');
-        } else {
-          L('✅ Found window.IrisRtcEngine');
-        }
-        L('');
+          L(`Client type: ${client.constructor.name}`);
+          L(
+            `Client methods: ${Object.getOwnPropertyNames(Object.getPrototypeOf(client)).slice(0, 10).join(", ")}`,
+          );
+          L("");
 
-        // Create client
-        L('Creating client...');
-        let client;
-        if (typeof window.IrisRtcEngine === 'function') {
-          L('Instantiating IrisRtcEngine as class...');
-          client = new window.IrisRtcEngine();
-          L('✅ Client created via new IrisRtcEngine()');
-        } else if (typeof AgoraRTC !== 'undefined' && typeof AgoraRTC.createClient === 'function') {
-          L('Using AgoraRTC.createClient...');
-          client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
-          L('✅ Client created via AgoraRTC.createClient()');
-        } else {
-          L('❌ No supported client creation method found');
-          return;
-        }
-        L(`Client type: ${client.constructor.name}`);
-        L(`Client methods: ${Object.getOwnPropertyNames(Object.getPrototypeOf(client)).slice(0, 10).join(', ')}`);
-        L('');
+          // Try join
+          L("Attempting join...");
+          const joinParams = {
+            appId: APP_ID,
+            channelName: CHANNEL,
+            token: TOKEN,
+            uid: UID,
+          };
+          L(`Join params: ${JSON.stringify(joinParams)}`);
+          L("");
 
-        // Try join
-        L('Attempting join...');
-        const joinParams = {
-          appId: APP_ID,
-          channelName: CHANNEL,
-          token: TOKEN,
-          uid: UID,
-        };
-        L(`Join params: ${JSON.stringify(joinParams)}`);
-        L('');
-
-        let joinResult = null;
-        if (typeof client.callIrisApiAsync === 'function') {
-          L('Using client.callIrisApiAsync...');
-          // CRITICAL: Iris API expects JSON string, not object
-          const joinParamsJson = JSON.stringify(joinParams);
-          try {
-            joinResult = await client.callIrisApiAsync('JoinChannelV2', joinParamsJson);
-            L(`✅ JoinChannelV2 result: ${JSON.stringify(joinResult)}`);
-          } catch (err1) {
-            L(`⚠️ JoinChannelV2 failed: ${err1.message}`);
-            L('Trying JoinChannel with JSON string...');
+          let joinResult = null;
+          if (typeof client.callIrisApiAsync === "function") {
+            L("Using client.callIrisApiAsync...");
+            // CRITICAL: Iris API expects JSON string, not object
+            const joinParamsJson = JSON.stringify(joinParams);
             try {
-              joinResult = await client.callIrisApiAsync('JoinChannel', joinParamsJson);
-              L(`✅ JoinChannel result: ${JSON.stringify(joinResult)}`);
-            } catch (err2) {
-              L(`❌ JoinChannel also failed: ${err2.message}`);
-              throw err2;
+              joinResult = await client.callIrisApiAsync("JoinChannelV2", joinParamsJson);
+              L(`✅ JoinChannelV2 result: ${JSON.stringify(joinResult)}`);
+            } catch (err1) {
+              L(`⚠️ JoinChannelV2 failed: ${err1.message}`);
+              L("Trying JoinChannel with JSON string...");
+              try {
+                joinResult = await client.callIrisApiAsync("JoinChannel", joinParamsJson);
+                L(`✅ JoinChannel result: ${JSON.stringify(joinResult)}`);
+              } catch (err2) {
+                L(`❌ JoinChannel also failed: ${err2.message}`);
+                throw err2;
+              }
             }
+          } else if (typeof client.join === "function") {
+            L("Using client.join() (legacy)...");
+            joinResult = await client.join(APP_ID, CHANNEL, TOKEN, UID);
+            L(`✅ Join result: ${JSON.stringify(joinResult)}`);
+          } else if (typeof client.joinChannel === "function") {
+            L("Using client.joinChannel()...");
+            joinResult = await client.joinChannel(TOKEN, CHANNEL, UID);
+            L(`✅ JoinChannel result: ${JSON.stringify(joinResult)}`);
+          } else {
+            const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(client));
+            L(`❌ No join method found. Available: ${methods.join(", ")}`);
+            return;
           }
-        } else if (typeof client.join === 'function') {
-          L('Using client.join() (legacy)...');
-          joinResult = await client.join(APP_ID, CHANNEL, TOKEN, UID);
-          L(`✅ Join result: ${JSON.stringify(joinResult)}`);
-        } else if (typeof client.joinChannel === 'function') {
-          L('Using client.joinChannel()...');
-          joinResult = await client.joinChannel(TOKEN, CHANNEL, UID);
-          L(`✅ JoinChannel result: ${JSON.stringify(joinResult)}`);
-        } else {
-          const methods = Object.getOwnPropertyNames(Object.getPrototypeOf(client));
-          L(`❌ No join method found. Available: ${methods.join(', ')}`);
-          return;
+
+          L("");
+          L("✅ TEST PASSED - Join succeeded!");
+        } catch (err) {
+          L("");
+          L(`❌ TEST FAILED`);
+          L(`Error: ${err.message}`);
+          L(`Stack: ${err.stack}`);
+          console.error("Full error:", err);
         }
-
-        L('');
-        L('✅ TEST PASSED - Join succeeded!');
-      } catch (err) {
-        L('');
-        L(`❌ TEST FAILED`);
-        L(`Error: ${err.message}`);
-        L(`Stack: ${err.stack}`);
-        console.error('Full error:', err);
       }
-    }
 
-    L('Page loaded. Click "Run Join Test" to start.');
-    L(`SDK detection: IrisRtcEngine=${typeof window.IrisRtcEngine}, AgoraRTC=${typeof AgoraRTC}`);
-  </script>
+      L('Page loaded. Click "Run Join Test" to start.');
+      L(`SDK detection: IrisRtcEngine=${typeof window.IrisRtcEngine}, AgoraRTC=${typeof AgoraRTC}`);
+    </script>
 
-  <!-- Agora Iris Web RTC SDK - SAME AS index.html -->
-  <script src="https://downloads.agora.io/iris-web-rtc/release/iris-web-rtc_n450_w4220_0.8.6.js"></script>
-</body>
-
+    <!-- Agora Iris Web RTC SDK - SAME AS index.html -->
+    <script src="https://downloads.agora.io/iris-web-rtc/release/iris-web-rtc_n450_w4220_0.8.6.js"></script>
+  </body>
 </html>

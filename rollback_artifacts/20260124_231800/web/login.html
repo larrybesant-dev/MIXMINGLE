@@ -1,32 +1,32 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <base href="$FLUTTER_BASE_HREF">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Login – Mix & Mingle</title>
+  <head>
+    <base href="$FLUTTER_BASE_HREF" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Login – Mix & Mingle</title>
 
-  <link rel="icon" href="favicon.png">
+    <link rel="icon" href="favicon.png" />
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4",
-      authDomain: "mix-and-mingle-v2.firebaseapp.com",
-      projectId: "mix-and-mingle-v2",
-      storageBucket: "mix-and-mingle-v2.firebasestorage.app",
-      messagingSenderId: "980846719834",
-      appId: "1:980846719834:web:a8981485ee574b25077963"
-    };
-    firebase.initializeApp(firebaseConfig);
-  </script>
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script>
+      const firebaseConfig = {
+        apiKey: "AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4",
+        authDomain: "mix-and-mingle-v2.firebaseapp.com",
+        projectId: "mix-and-mingle-v2",
+        storageBucket: "mix-and-mingle-v2.firebasestorage.app",
+        messagingSenderId: "980846719834",
+        appId: "1:980846719834:web:a8981485ee574b25077963",
+      };
+      firebase.initializeApp(firebaseConfig);
+    </script>
 
-  <script src="flutter.js"></script>
-  <script src="flutter_bootstrap.js" async></script>
-</head>
-<body>
-  <div id="login-container"></div>
-</body>
+    <script src="flutter.js"></script>
+    <script src="flutter_bootstrap.js" async></script>
+  </head>
+  <body>
+    <div id="login-container"></div>
+  </body>
 </html>

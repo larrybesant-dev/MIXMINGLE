@@ -7,6 +7,7 @@
 ## 🎯 WHAT WAS FIXED
 
 ### BEFORE (Vulnerable)
+
 - ❌ Sessions never expired - users could stay connected indefinitely
 - ❌ Decisions accepted anytime - users could submit hours/days later
 - ❌ Client-side timer only - easy to bypass with DevTools
@@ -15,6 +16,7 @@
 - ❌ Collections unprotected - no Firestore security rules
 
 ### AFTER (Production-Ready)
+
 - ✅ **Server timer**: Cloud Function schedules session expiry at 5 minutes
 - ✅ **Forced disconnect**: Server marks session 'expired' → clients auto-disconnect
 - ✅ **Locked decisions**: Firestore rules reject decisions after expiry
@@ -27,6 +29,7 @@
 ## 📁 FILES CHANGED
 
 ### Cloud Functions (Backend)
+
 ```
 functions/src/speedDating.ts (NEW)
 ├─ onSpeedDatingSessionCreated    → Triggered when session created
@@ -38,6 +41,7 @@ functions/src/index.ts
 ```
 
 ### Firestore Security Rules
+
 ```
 firestore.rules
 ├─ speed_dating_queue             → Users can only read/update their own entry
@@ -47,6 +51,7 @@ firestore.rules
 ```
 
 ### Client (Flutter)
+
 ```
 lib/services/speed_dating_service.dart
 ├─ submitDecision()               → Now calls Cloud Function (server-authoritative)
@@ -64,6 +69,7 @@ lib/features/speed_dating/screens/speed_dating_call_page.dart
 ## 🚀 DEPLOYMENT INSTRUCTIONS
 
 ### 1. Deploy Cloud Functions
+
 ```bash
 cd functions
 npm install
@@ -73,6 +79,7 @@ firebase deploy --only functions:onSpeedDatingSessionCreated,functions:submitSpe
 ```
 
 Expected output:
+
 ```
 ✔  functions[onSpeedDatingSessionCreated] Successful create operation.
 ✔  functions[submitSpeedDatingDecision] Successful create operation.
@@ -80,16 +87,19 @@ Expected output:
 ```
 
 ### 2. Deploy Firestore Rules
+
 ```bash
 firebase deploy --only firestore:rules
 ```
 
 Expected output:
+
 ```
 ✔  firestore: rules file firestore.rules compiled successfully
 ```
 
 ### 3. Update Flutter App
+
 ```bash
 flutter pub get
 flutter build web --release
@@ -103,13 +113,16 @@ firebase deploy --only hosting
 **DO THIS BEFORE LAUNCH**: Create 2 test users and verify you CANNOT:
 
 ### Test 1: Extend Session Beyond 5 Minutes
+
 **Steps:**
+
 1. User A & User B match
 2. Start speed dating session
 3. Wait for timer to reach 0:00
 4. Try to stay connected
 
 **Expected Result:**
+
 - ✅ At 5:00 mark, server marks session 'expired'
 - ✅ Both clients receive forced disconnect
 - ✅ Agora call automatically ends
@@ -120,12 +133,15 @@ firebase deploy --only hosting
 ---
 
 ### Test 2: Submit Decision After Session Expired
+
 **Steps:**
+
 1. Complete a 5-minute speed dating session
 2. Wait for expiry notification
 3. Try to submit decision (keep/pass)
 
 **Expected Result:**
+
 - ✅ Server rejects with error: "Session has expired"
 - ✅ UI shows error message
 - ✅ Decision NOT saved
@@ -135,12 +151,15 @@ firebase deploy --only hosting
 ---
 
 ### Test 3: Bypass Firestore Rules
+
 **Steps:**
+
 1. Open Firebase Console
 2. Navigate to Firestore Database
 3. Try to manually create a `speed_dating_sessions` document
 
 **Expected Result:**
+
 - ✅ Firestore Console shows "PERMISSION_DENIED"
 - ✅ Only Cloud Functions can create sessions
 
@@ -149,11 +168,14 @@ firebase deploy --only hosting
 ---
 
 ### Test 4: Submit Decision for Other User
+
 **Steps:**
+
 1. User A & User B in session
 2. User A tries to submit decision for User B via API
 
 **Expected Result:**
+
 - ✅ Server rejects with "permission-denied"
 - ✅ Only authenticated user can submit their own decision
 
@@ -162,11 +184,14 @@ firebase deploy --only hosting
 ---
 
 ### Test 5: Submit Multiple Decisions
+
 **Steps:**
+
 1. User A submits decision: "keep"
 2. User A tries to change decision to "pass"
 
 **Expected Result:**
+
 - ✅ Server rejects second submission with "already-exists"
 - ✅ Only first decision counts
 
@@ -177,23 +202,29 @@ firebase deploy --only hosting
 ## 📊 MONITORING (After Launch)
 
 ### Cloud Function Logs
+
 Check for suspicious patterns:
+
 ```bash
 firebase functions:log --only submitSpeedDatingDecision --lines 50
 ```
 
 🚨 **RED FLAGS:**
+
 - Multiple "deadline-exceeded" errors (users trying to submit late)
 - "permission-denied" spikes (attempted unauthorized access)
 - Session expiry failures (server timer not working)
 
 ### Firestore Analytics
+
 Monitor collection sizes:
+
 ```bash
 firebase firestore:indexes:list
 ```
 
 Check for:
+
 - `speed_dating_sessions` with status='active' older than 10 minutes (stuck sessions)
 - Abandoned sessions (status='abandoned') spike (UX issue)
 
@@ -218,6 +249,7 @@ Before going live with speed dating:
 ## 🔄 NEXT PHASES (As Per Master Plan)
 
 ### PHASE 2: Define Launch MVP
+
 - [x] Speed dating (HARDENED)
 - [ ] Public/private rooms (verify safety)
 - [ ] Block/report (test enforcement)
@@ -225,12 +257,14 @@ Before going live with speed dating:
 - [ ] Coins/tips (soft monetization test)
 
 ### PHASE 3: Adult Matching System
+
 - [ ] Consent-first preference storage
 - [ ] Sexual preference visibility (opt-in only)
 - [ ] Question engine enforcement
 - [ ] No public leakage of sexual data
 
 ### PHASE 4: Real Launch
+
 - [ ] Technical lock (clean logs)
 - [ ] Abuse testing (all scenarios)
 - [ ] Legal positioning (18+ enforcement)
@@ -241,16 +275,19 @@ Before going live with speed dating:
 ## 💡 TECHNICAL NOTES
 
 ### Why 5 Minutes (Not 3)?
+
 - User feedback: 3 minutes too rushed
 - Industry standard: 4-6 minutes for speed dating
 - Balances: Engagement vs queue throughput
 
 ### Why setTimeout Instead of Cloud Tasks?
+
 - **For MVP:** setTimeout is simpler, works for low volume
 - **For Scale:** Migrate to Cloud Tasks when >100 concurrent sessions
 - **Production Note:** Added comment to migrate when ready
 
 ### What If Server Crashes During Session?
+
 - Sessions expire naturally (no writes = auto-expire after 5 min)
 - Clients have 5-second failsafe timeout
 - Next session creation cleans up stale data
@@ -281,12 +318,14 @@ Anything else = **rollback immediately**
 **This is where most founders fail.**
 
 You have:
+
 - ✅ Server-authoritative session management
 - ✅ Forced disconnects
 - ✅ Locked decisions
 - ✅ Protected collections
 
 **What you must NOT do:**
+
 - ❌ Skip the abuse tests
 - ❌ Launch without verifying forced disconnect works
 - ❌ Ignore monitoring alerts
@@ -294,6 +333,7 @@ You have:
 
 **Speed dating is your highest legal risk feature.**
 If it breaks, you face:
+
 - Harassment liability (users staying connected unwanted)
 - Fraud claims (users gaming matches)
 - Platform bans (ToS violations)

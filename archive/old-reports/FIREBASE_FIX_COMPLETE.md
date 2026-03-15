@@ -3,6 +3,7 @@
 ## Problem Summary
 
 **Error Message from Flutter:**
+
 ```
 ❌ Agora token generation failed: [firebase_functions/internal] internal
 ```
@@ -15,6 +16,7 @@ Firebase Cloud Function `generateAgoraToken` was throwing an INTERNAL error beca
 ## Why This Happens
 
 ### The Issue:
+
 1. Local `.env` file exists in `functions/.env` with credentials:
    - `AGORA_APP_ID=ec1b578586d24976a89d787d9ee4d5c7`
    - `AGORA_APP_CERTIFICATE=79a3e92a657042d08c3c26a26d1e70b6`
@@ -24,6 +26,7 @@ Firebase Cloud Function `generateAgoraToken` was throwing an INTERNAL error beca
 3. The code was checking `process.env.AGORA_APP_ID` and `process.env.AGORA_APP_CERTIFICATE`
 
 4. Without proper configuration, these are **undefined**, so the function throws:
+
    ```
    throw new Error("Agora credentials not configured in environment variables (.env)");
    ```
@@ -35,6 +38,7 @@ Firebase Cloud Function `generateAgoraToken` was throwing an INTERNAL error beca
 ## The Surgical Fix
 
 ### Step 1: Set Firebase Secrets ✅
+
 ```bash
 # Set AGORA_APP_ID
 firebase functions:secrets:set AGORA_APP_ID
@@ -46,6 +50,7 @@ firebase functions:secrets:set AGORA_APP_CERTIFICATE
 ```
 
 **Result:**
+
 ```
 +  Created a new secret version projects/980846719834/secrets/AGORA_APP_ID/versions/1
 +  Created a new secret version projects/980846719834/secrets/AGORA_APP_CERTIFICATE/versions/1
@@ -54,6 +59,7 @@ firebase functions:secrets:set AGORA_APP_CERTIFICATE
 ### Step 2: Update Cloud Function to Use Secrets ✅
 
 **Changed from:**
+
 ```typescript
 // ❌ This doesn't work in production
 const appId = process.env.AGORA_APP_ID;
@@ -61,6 +67,7 @@ const appCertificate = process.env.AGORA_APP_CERTIFICATE;
 ```
 
 **Changed to:**
+
 ```typescript
 // ✅ This properly loads from Firebase Secret Manager
 import { defineSecret } from "firebase-functions/params";
@@ -69,13 +76,13 @@ const agoraAppId = defineSecret("AGORA_APP_ID");
 const agoraAppCertificate = defineSecret("AGORA_APP_CERTIFICATE");
 
 export const generateAgoraToken = onCall(
-  { secrets: [agoraAppId, agoraAppCertificate] },  // ← Tell Firebase to inject secrets
+  { secrets: [agoraAppId, agoraAppCertificate] }, // ← Tell Firebase to inject secrets
   async (request) => {
     // ...
-    const appId = agoraAppId.value();           // ← Read from secret
-    const appCertificate = agoraAppCertificate.value();  // ← Read from secret
+    const appId = agoraAppId.value(); // ← Read from secret
+    const appCertificate = agoraAppCertificate.value(); // ← Read from secret
     // ...
-  }
+  },
 );
 ```
 
@@ -86,6 +93,7 @@ firebase deploy --only functions:generateAgoraToken
 ```
 
 **Result:**
+
 ```
 +  Deploy complete!
 Project Console: https://console.firebase.google.com/project/mix-and-mingle-v2/overview
@@ -115,6 +123,7 @@ Project Console: https://console.firebase.google.com/project/mix-and-mingle-v2/o
 ## Files Modified
 
 **`functions/src/index.ts`**
+
 - Added: `import { defineSecret } from "firebase-functions/params";`
 - Added: Secret definitions for `AGORA_APP_ID` and `AGORA_APP_CERTIFICATE`
 - Modified: Function signature to include `{ secrets: [...] }`
@@ -126,6 +135,7 @@ Project Console: https://console.firebase.google.com/project/mix-and-mingle-v2/o
 ## How This Fixes The Flutter Error
 
 ### Before (❌):
+
 1. Flutter calls `generateAgoraToken` Cloud Function
 2. Function runs but `process.env.AGORA_APP_ID` is `undefined`
 3. Function throws error
@@ -133,6 +143,7 @@ Project Console: https://console.firebase.google.com/project/mix-and-mingle-v2/o
 5. Flutter app shows "Token generation error: internal"
 
 ### After (✅):
+
 1. Flutter calls `generateAgoraToken` Cloud Function
 2. Firebase injects secrets from Secret Manager
 3. `agoraAppId.value()` returns `"ec1b578586d24976a89d787d9ee4d5c7"`
@@ -146,10 +157,12 @@ Project Console: https://console.firebase.google.com/project/mix-and-mingle-v2/o
 ## What Changed in Production
 
 ### Firebase Secrets Manager Now Contains:
+
 - `AGORA_APP_ID` → `ec1b578586d24976a89d787d9ee4d5c7`
 - `AGORA_APP_CERTIFICATE` → `79a3e92a657042d08c3c26a26d1e70b6`
 
 ### Cloud Function Now:
+
 - Properly declares secrets as dependencies
 - Firebase automatically injects them at runtime
 - Function can access them via `.value()` method

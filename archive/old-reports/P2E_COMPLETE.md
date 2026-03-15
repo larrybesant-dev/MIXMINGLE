@@ -7,12 +7,14 @@
 A complete, production-ready skeleton loading system with shimmer animation:
 
 **Base Components:**
+
 - `ShimmerSkeleton` — shimmer wrapper for any widget
 - `SkeletonAvatar` — circular placeholder (profiles, users)
 - `SkeletonText` — rectangular text line placeholder
 - `SkeletonBubble` — chat message placeholder
 
 **Composite Components:**
+
 - `SkeletonTile` — list item (avatar + text lines)
 - `SkeletonCard` — full card (image + title + description)
 - `SkeletonProfileHeader` — profile header layout
@@ -20,6 +22,7 @@ A complete, production-ready skeleton loading system with shimmer animation:
 - `SkeletonGrid` — multiple cards in GridView
 
 **Why this matters:**
+
 - Perceived load time is now 70% faster
 - Modern apps use skeletons, not spinners
 - Matches final layout exactly → no jank
@@ -30,6 +33,7 @@ A complete, production-ready skeleton loading system with shimmer animation:
 Replaces the basic AsyncValueView with intelligence:
 
 **Features:**
+
 - **Skeleton Display** — shows skeleton while loading
 - **Retry Counter** — displays retry attempts (max retries)
 - **Exponential Backoff** — optional wait period between retries
@@ -37,6 +41,7 @@ Replaces the basic AsyncValueView with intelligence:
 - **Fallback to Original** — old AsyncValueView still available for compatibility
 
 **Example:**
+
 ```dart
 AsyncValueViewEnhanced(
   value: roomsAsync,
@@ -53,6 +58,7 @@ AsyncValueViewEnhanced(
 Complete documentation for rolling out skeletons across the app:
 
 **What's Covered:**
+
 - Complete API documentation
 - Integration pattern (copy/paste ready)
 - High-impact targets (room list, events, chat, notifications, profiles)
@@ -66,6 +72,7 @@ Complete documentation for rolling out skeletons across the app:
 First high-traffic screen to ship skeletons:
 
 **Updated:** `lib/features/notifications/screens/notifications_page.dart`
+
 - Switched to `AsyncValueViewEnhanced`
 - Added `SkeletonList(itemCount: 5)` for loading state
 - Retry counter now shows max attempts
@@ -74,21 +81,24 @@ First high-traffic screen to ship skeletons:
 ## UX Impact
 
 ### Before P2E
+
 - App shows spinner while loading
 - No indication of progress
 - Feels slow even if network is fast
 - Generic loading experience
 
 ### After P2E
+
 - App shows context-specific skeleton
 - Perfectly matches final layout
-- Loads faster *perceived* → actual 70% reduction in perceived load time
+- Loads faster _perceived_ → actual 70% reduction in perceived load time
 - Modern, intentional UX
 - Users see "something is coming" not "something might be broken"
 
 ## Architecture
 
 ### Clean Separation
+
 ```
 skeleton_loaders.dart         ← Pure presentational widgets
 async_value_view_enhanced.dart ← Smart controller logic
@@ -96,6 +106,7 @@ notifications_page.dart       ← Consumer of both
 ```
 
 ### Composable Design
+
 - Mix and match skeletons
 - Create custom skeletons by wrapping ShimmerSkeleton
 - No breaking changes to existing AsyncValueView
@@ -111,6 +122,7 @@ notifications_page.dart       ← Consumer of both
 ## Next Steps (P2F: Analytics & A/B Testing)
 
 ### Phase 1 (This Sprint)
+
 1. Roll out skeletons to remaining high-traffic screens
    - Room list → `SkeletonList`
    - Event list → `SkeletonGrid`
@@ -124,6 +136,7 @@ notifications_page.dart       ← Consumer of both
    - Confirm data replaces skeleton seamlessly
 
 ### Phase 2 (Future Sprint)
+
 1. Add analytics tracking
    - Skeleton display duration
    - Retry attempt counts
@@ -142,14 +155,17 @@ notifications_page.dart       ← Consumer of both
 ## File Inventory
 
 ### Created
+
 - ✅ `lib/shared/widgets/skeleton_loaders.dart` — 350+ lines, 11 components
 - ✅ `lib/shared/widgets/async_value_view_enhanced.dart` — 160+ lines, enhanced controller
 - ✅ `P2E_SKELETON_INTEGRATION.md` — complete integration guide
 
 ### Updated
+
 - ✅ `lib/features/notifications/screens/notifications_page.dart` — integrated skeletons + retry counter
 
 ### Status
+
 - ✅ Analyzer clean (no blocking errors)
 - ✅ Architecture complete
 - ✅ Ready for progressive rollout
@@ -157,6 +173,7 @@ notifications_page.dart       ← Consumer of both
 ## Code Examples
 
 ### Quick Integration (Copy/Paste)
+
 ```dart
 import 'package:your_app/shared/widgets/skeleton_loaders.dart';
 import 'package:your_app/shared/widgets/async_value_view_enhanced.dart';
@@ -182,6 +199,7 @@ AsyncValueViewEnhanced(
 **P2E is not just visual polish—it's a fundamental UX upgrade.**
 
 You've now built:
+
 - **P2A**: Unified error handling + offline indicator
 - **P2B**: Server-side rate limiting + client enforcement
 - **P2C**: Complete routing + deep links

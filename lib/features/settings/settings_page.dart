@@ -243,11 +243,11 @@ class _SoundSettingsSection extends ConsumerStatefulWidget {
 }
 
 class _SoundSettingsSectionState extends ConsumerState<_SoundSettingsSection> {
-  bool _landingMusic  = true;
-  bool _profileMusic  = true;
-  bool _microSounds   = true;
-  bool _globalMute    = false;
-  bool _loaded        = false;
+  bool _landingMusic = true;
+  bool _profileMusic = true;
+  bool _microSounds = true;
+  bool _globalMute = false;
+  bool _loaded = false;
 
   @override
   void initState() {
@@ -262,9 +262,9 @@ class _SoundSettingsSectionState extends ConsumerState<_SoundSettingsSection> {
         setState(() {
           _landingMusic = svc.landingMusicEnabled;
           _profileMusic = svc.profileMusicEnabled;
-          _microSounds  = svc.microSoundsEnabled;
-          _globalMute   = svc.globalMute;
-          _loaded       = true;
+          _microSounds = svc.microSoundsEnabled;
+          _globalMute = svc.globalMute;
+          _loaded = true;
         });
       }
     });
@@ -285,9 +285,9 @@ class _SoundSettingsSectionState extends ConsumerState<_SoundSettingsSection> {
         if (!_loaded) {
           _landingMusic = svc.landingMusicEnabled;
           _profileMusic = svc.profileMusicEnabled;
-          _microSounds  = svc.microSoundsEnabled;
-          _globalMute   = svc.globalMute;
-          _loaded       = true;
+          _microSounds = svc.microSoundsEnabled;
+          _globalMute = svc.globalMute;
+          _loaded = true;
         }
         return Column(children: [
           _toggle(
@@ -367,8 +367,8 @@ class _SoundSettingsSectionState extends ConsumerState<_SoundSettingsSection> {
           value: value,
           onChanged: enabled ? onChanged : null,
           activeThumbColor: const Color(0xFFFF7A3C),
-          shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
     );

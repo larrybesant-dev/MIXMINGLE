@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../core/analytics/analytics_service.dart';
 import '../../../core/crashlytics/crashlytics_service.dart';
 
@@ -129,5 +129,3 @@ class ReportService {
     }
   }
 }
-
-

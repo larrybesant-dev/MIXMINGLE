@@ -3,24 +3,32 @@
 /// Shows: Live Rooms, Speed Dating, Discovery, Chats
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:mixmingle/core/routing/app_routes.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/design_system/design_constants.dart';
+import '../../core/design_system/app_layout.dart';
 import '../../shared/models/user_profile.dart';
 import '../../shared/models/room.dart';
 import '../../shared/widgets/club_background.dart';
 import '../../shared/providers/all_providers.dart';
 import '../../core/intelligence/vibe_intelligence_service.dart';
-import '../events/screens/events_page.dart';
 import '../onboarding/widgets/onboarding_welcome_overlay.dart';
+<<<<<<< HEAD
 import '../discover/room_discovery_page_complete.dart';
 import '../discovery/discovery_page.dart';
+=======
+import '../discover/room_discovery_page.dart';
+>>>>>>> origin/develop
 import '../chat/screens/chat_list_page.dart';
 import '../videos/short_video_feed_page.dart';
 import '../search/search_page.dart';
 import '../profile/screens/profile_page.dart';
+import '../match_inbox/screens/match_inbox_page.dart';
+import '../match_inbox/providers/match_inbox_providers.dart';
 import '../room/providers/room_providers.dart';
+<<<<<<< HEAD
 import '../../shared/providers/room_discovery_providers.dart';
 import '../../shared/widgets/room_discovery_card.dart';
 import '../feedback/widgets/floating_feedback_button.dart';
@@ -28,6 +36,16 @@ import '../rooms/pages/trending_rooms_page.dart';
 import '../rooms/pages/recommended_rooms_page.dart';
 import '../rooms/pages/new_rooms_page.dart';
 import '../speed_dating/speed_dating_lobby_page.dart';
+=======
+import '../../core/web/web_window_service.dart';
+import '../feed/social_feed_page.dart';
+import '../../shared/providers/notification_providers.dart';
+import '../../shared/widgets/offline_banner.dart';
+import '../../services/analytics/analytics_service.dart';
+import '../../core/analytics/analytics_service.dart' as core_analytics;
+import 'widgets/active_friends_row.dart';
+import '../discover_users/providers/active_friends_provider.dart';
+>>>>>>> origin/develop
 
 /// Home Page with Electric theme - main post-onboarding landing
 class HomePageElectric extends ConsumerStatefulWidget {
@@ -44,23 +62,29 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
 
   // Vibe palette — same keys as rooms list page for consistency
   static const _kVibeColors = <String, Color>{
-    'Chill':      Color(0xFF4A90FF),
-    'Hype':       Color(0xFFFF4D8B),
-    'Deep Talk':  Color(0xFF8B5CF6),
+    'Chill': Color(0xFF4A90FF),
+    'Hype': Color(0xFFFF4D8B),
+    'Deep Talk': Color(0xFF8B5CF6),
     'Late Night': Color(0xFF6366F1),
-    'Study':      Color(0xFF00E5CC),
-    'Party':      Color(0xFFFFAB00),
+    'Study': Color(0xFF00E5CC),
+    'Party': Color(0xFFFFAB00),
   };
   static const _kVibeIcons = <String, IconData>{
-    'Chill':      Icons.waves_outlined,
-    'Hype':       Icons.bolt,
-    'Deep Talk':  Icons.forum_outlined,
+    'Chill': Icons.waves_outlined,
+    'Hype': Icons.bolt,
+    'Deep Talk': Icons.forum_outlined,
     'Late Night': Icons.nightlight_outlined,
-    'Study':      Icons.menu_book_outlined,
-    'Party':      Icons.celebration_outlined,
+    'Study': Icons.menu_book_outlined,
+    'Party': Icons.celebration_outlined,
   };
   Color _vc(String? v) => _kVibeColors[v] ?? DesignColors.accent;
   IconData _vi(String? v) => _kVibeIcons[v] ?? Icons.graphic_eq;
+
+  @override
+  void initState() {
+    super.initState();
+    core_analytics.AnalyticsService.instance.logScreenView(screenName: 'screen_home');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -96,7 +120,10 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           ),
         ),
         if (showOverlay) const OnboardingWelcomeOverlay(),
+<<<<<<< HEAD
         const FloatingFeedbackButton(),
+=======
+>>>>>>> origin/develop
       ],
     );
   }
@@ -112,16 +139,19 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       title: Row(children: [
         // Logo dot pulse
         Container(
-          width: 10, height: 10,
+          width: 10,
+          height: 10,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: DesignColors.accent,
             boxShadow: [
-              BoxShadow(color: DesignColors.accent.withValues(alpha: 0.7), blurRadius: 10),
+              BoxShadow(
+                  color: DesignColors.accent.withValues(alpha: 0.7),
+                  blurRadius: 10),
             ],
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: AppSpacing.spaceSM),
         const Text(
           'MIXVY',
           style: TextStyle(
@@ -132,11 +162,18 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
             shadows: DesignColors.primaryGlow,
           ),
         ),
+<<<<<<< HEAD
         if (profile != null && profile.vibeTag != null) ...[
           const SizedBox(width: 10),
+=======
+        if (profile?.vibeTag != null) ...[
+          const SizedBox(width: AppSpacing.spaceSM),
+>>>>>>> origin/develop
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.spaceSM, vertical: AppSpacing.spaceXS),
             decoration: BoxDecoration(
+<<<<<<< HEAD
               color: _vc(profile.vibeTag!).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(color: _vc(profile.vibeTag!).withValues(alpha: 0.45)),
@@ -147,11 +184,25 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
               Text(profile.vibeTag!,
                   style: TextStyle(color: _vc(profile.vibeTag!),
                       fontSize: 10, fontWeight: FontWeight.w700)),
+=======
+              color: _vc(profile!.vibeTag).withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(AppSizes.chipBorderRadius),
+              border: Border.all(
+                  color: _vc(profile.vibeTag).withValues(alpha: 0.45)),
+            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Icon(_vi(profile.vibeTag), size: 11, color: _vc(profile.vibeTag)),
+              const SizedBox(width: AppSpacing.spaceXS),
+              Text(profile.vibeTag!,
+                  style: AppTypography.chipLabel
+                      .copyWith(color: _vc(profile.vibeTag))),
+>>>>>>> origin/develop
             ]),
           ),
         ],
       ]),
       actions: [
+<<<<<<< HEAD
         IconButton(
           icon: const Icon(Icons.search_outlined, color: DesignColors.textGray),
           tooltip: 'Search',
@@ -160,17 +211,70 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
         IconButton(
           icon: const Icon(Icons.notifications_outlined, color: DesignColors.textGray),
           onPressed: () => Navigator.pushNamed(context, AppRoutes.notifications),
+=======
+        // Friends pop-out button (web only — Yahoo Messenger style)
+        if (kIsWeb)
+          const IconButton(
+            icon: Icon(Icons.people_outlined, color: DesignColors.accent),
+            tooltip: 'Friends List',
+            onPressed: WebWindowService.openBuddyList,
+          ),
+        // Notification bell with live unread badge
+        Consumer(
+          builder: (_, ref2, __) {
+            final unread =
+                ref2.watch(unreadNotificationCountProvider).value ?? 0;
+            return Stack(
+              clipBehavior: Clip.none,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.notifications_outlined,
+                      color: DesignColors.textGray),
+                  onPressed: () =>
+                      Navigator.pushNamed(context, '/notifications'),
+                ),
+                if (unread > 0)
+                  Positioned(
+                    top: 6,
+                    right: 6,
+                    child: Container(
+                      width: 17,
+                      height: 17,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFF4D8B),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                            color: DesignColors.background, width: 1.5),
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        unread > 9 ? '9+' : '$unread',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+>>>>>>> origin/develop
         ),
         GestureDetector(
           onTap: () => Navigator.pushNamed(context, AppRoutes.settings),
           child: Padding(
             padding: const EdgeInsets.only(right: 16),
             child: profile?.photoUrl != null
-                ? CircleAvatar(radius: 16,
+                ? CircleAvatar(
+                    radius: 16,
                     backgroundImage: NetworkImage(profile!.photoUrl!))
-                : CircleAvatar(radius: 16,
+                : CircleAvatar(
+                    radius: 16,
                     backgroundColor: DesignColors.accent.withValues(alpha: 0.2),
-                    child: const Icon(Icons.person, size: 16, color: DesignColors.accent)),
+                    child: const Icon(Icons.person,
+                        size: 16, color: DesignColors.accent)),
           ),
         ),
       ],
@@ -183,31 +287,41 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   Widget _buildNeonNavBar() {
     const items = [
       _NavItem(Icons.home_outlined, Icons.home, 'Home'),
+      _NavItem(Icons.favorite_border, Icons.favorite, 'Matches'),
       _NavItem(Icons.bolt_outlined, Icons.bolt, 'Speed'),
       _NavItem(Icons.video_call_outlined, Icons.video_call, 'Rooms'),
-      _NavItem(Icons.event_outlined, Icons.event, 'Events'),
+      _NavItem(Icons.dynamic_feed_outlined, Icons.dynamic_feed, 'Feed'),
       _NavItem(Icons.chat_bubble_outline, Icons.chat_bubble, 'Chats'),
       _NavItem(Icons.explore_outlined, Icons.explore, 'Discover'),
       _NavItem(Icons.play_circle_outline, Icons.play_circle, 'Reels'),
       _NavItem(Icons.search_outlined, Icons.search, 'Search'),
       _NavItem(Icons.person_outline, Icons.person, 'Profile'),
     ];
+
+    // Badge count for Matches tab (index 1)
+    final newMatchCount = ref.watch(newMatchCountProvider);
+
     return Container(
       decoration: BoxDecoration(
         color: DesignColors.background,
-        border: Border(top: BorderSide(color: DesignColors.accent.withValues(alpha: 0.15))),
+        border: Border(
+            top:
+                BorderSide(color: DesignColors.accent.withValues(alpha: 0.15))),
         boxShadow: [
-          BoxShadow(color: DesignColors.accent.withValues(alpha: 0.06), blurRadius: 20),
+          BoxShadow(
+              color: DesignColors.accent.withValues(alpha: 0.06),
+              blurRadius: 20),
         ],
       ),
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 60,
+          height: AppSizes.bottomNavHeight,
           child: Row(
             children: List.generate(items.length, (i) {
               final item = items[i];
               final selected = _selectedIndex == i;
+<<<<<<< HEAD
               return Expanded(
                 child: GestureDetector(
                   onTap: () => setState(() => _selectedIndex = i),
@@ -240,6 +354,102 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
                           color: selected ? DesignColors.accent : DesignColors.textGray,
                         )),
                   ]),
+=======
+              // Matches tab badge (index 1)
+              final showBadge = i == 1 && newMatchCount > 0;
+              return GestureDetector(
+                onTap: () {
+                  setState(() => _selectedIndex = i);
+                  final tabNames = [
+                    'home', 'matches', 'speed_dating', 'rooms', 'feed', 'chats', 'profile'
+                  ];
+                  if (i < tabNames.length) {
+                    AnalyticsService().trackScreenView(tabNames[i]);
+                  }
+                },
+                behavior: HitTestBehavior.opaque,
+                child: SizedBox(
+                  width: 48,
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.all(AppSpacing.spaceSM - 2),
+                          decoration: BoxDecoration(
+                            color: selected
+                                ? (i == 1
+                                    ? const Color(0xFFFF4D8B)
+                                        .withValues(alpha: 0.15)
+                                    : DesignColors.accent
+                                        .withValues(alpha: 0.15))
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(10),
+                            boxShadow: selected
+                                ? [
+                                    BoxShadow(
+                                        color: (i == 1
+                                                ? const Color(0xFFFF4D8B)
+                                                : DesignColors.accent)
+                                            .withValues(alpha: 0.3),
+                                        blurRadius: 8)
+                                  ]
+                                : null,
+                          ),
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              Icon(
+                                selected ? item.activeIcon : item.icon,
+                                size: AppSizes.iconNav,
+                                color: selected
+                                    ? (i == 1
+                                        ? const Color(0xFFFF4D8B)
+                                        : DesignColors.accent)
+                                    : DesignColors.textGray,
+                              ),
+                              if (showBadge)
+                                Positioned(
+                                  top: -5,
+                                  right: -5,
+                                  child: Container(
+                                    constraints: const BoxConstraints(
+                                        minWidth: 16, minHeight: 16),
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: const BoxDecoration(
+                                      color: Color(0xFFFF4D8B),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Text(
+                                      newMatchCount > 9
+                                          ? '9+'
+                                          : '$newMatchCount',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
+                                        height: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.spaceXS - 2),
+                        Text(item.label,
+                            style: AppTypography.navLabel.copyWith(
+                              color: selected
+                                  ? (i == 1
+                                      ? const Color(0xFFFF4D8B)
+                                      : DesignColors.accent)
+                                  : DesignColors.textGray,
+                              fontWeight:
+                                  selected ? FontWeight.w700 : FontWeight.w400,
+                            )),
+                      ]),
+>>>>>>> origin/develop
                 ),
               );
             }),
@@ -250,18 +460,20 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   }
 
   Widget _buildBody() {
+    final Widget body;
     switch (_selectedIndex) {
       case 0:
-        return _buildHomeTab();
+        body = _buildHomeTab();
       case 1:
-        return _buildSpeedDatingTab();
+        body = _buildMatchInboxTab();
       case 2:
-        return _buildRoomsTab();
+        body = _buildSpeedDatingTab();
       case 3:
-        return _buildEventsTab();
+        body = _buildRoomsTab();
       case 4:
-        return _buildChatsTab();
+        body = _buildFeedTab();
       case 5:
+<<<<<<< HEAD
         return _buildDiscoveryTab();
       case 6:
         return const ShortVideoFeedPage();
@@ -269,9 +481,20 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
         return const SearchPage();
       case 8:
         return _buildProfileTab();
+=======
+        body = _buildChatsTab();
+      case 6:
+        body = _buildProfileTab();
+>>>>>>> origin/develop
       default:
-        return _buildHomeTab();
+        body = _buildHomeTab();
     }
+    return Column(
+      children: [
+        const OfflineBanner(),
+        Expanded(child: body),
+      ],
+    );
   }
 
   /// Home Tab — personalized vibe greeting + heating-up rooms
@@ -280,8 +503,7 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     final p = profileAsync.asData?.value;
     final roomsAsync = ref.watch(liveRoomsProvider);
     // #2 Composite heating-up score: joinVelocity x2 + viewerCount
-    final liveRooms = ([...(roomsAsync.value ?? [])])
-      ..sort((a, b) {
+    final liveRooms = <Room>[...(roomsAsync.value ?? <Room>[])]..sort((a, b) {
         final aScore = (a.joinVelocity * 2) + a.viewerCount;
         final bScore = (b.joinVelocity * 2) + b.viewerCount;
         return bScore.compareTo(aScore);
@@ -301,70 +523,98 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     final vibe = p?.topVibe ?? p?.vibeTag;
     final vibeLabel = (p != null && p.topVibe != null && p.topVibeCount > 1)
         ? '${p.topVibe} vibes — x${p.topVibeCount} rooms'
-        : vibe != null ? '$vibe vibes today' : null;
+        : vibe != null
+            ? '$vibe vibes today'
+            : null;
+
+    final sw = MediaQuery.sizeOf(context).width;
+    final hPad = AppLayout.responsivePaddingH(sw);
+    final activeFriends = ref.watch(activeFriendsProvider).value ?? [];
 
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('$greeting,',
-                  style: TextStyle(
-                      color: DesignColors.white.withValues(alpha: 0.6),
-                      fontSize: 15)),
-              const SizedBox(height: 4),
-              Text(name,
-                  style: const TextStyle(
-                      color: DesignColors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
-                      shadows: DesignColors.primaryGlow)),
+            padding: EdgeInsets.fromLTRB(hPad, AppSpacing.spaceLG, hPad, 0),
+            child:
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              Text('$greeting,', style: AppTypography.greeting),
+              const SizedBox(height: AppSpacing.spaceXS),
+              Text(name, style: AppTypography.display),
               if (vibe != null) ...[
-                const SizedBox(height: 8),
+                const SizedBox(height: AppSpacing.spaceSM),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.spaceSM + 2,
+                      vertical: AppSpacing.spaceXS),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(colors: [
                       _vc(vibe).withValues(alpha: 0.2),
                       _vc(vibe).withValues(alpha: 0.05),
                     ]),
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius:
+                        BorderRadius.circular(AppSizes.chipBorderRadius),
                     border: Border.all(color: _vc(vibe).withValues(alpha: 0.4)),
                   ),
                   child: Row(mainAxisSize: MainAxisSize.min, children: [
-                    Icon(_vi(vibe), size: 12, color: _vc(vibe)),
-                    const SizedBox(width: 5),
+                    Icon(_vi(vibe), size: 13, color: _vc(vibe)),
+                    const SizedBox(width: AppSpacing.spaceXS),
                     Text(vibeLabel ?? '$vibe vibes today',
-                        style: TextStyle(
-                            color: _vc(vibe),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600)),
+                        style:
+                            AppTypography.chipLabel.copyWith(color: _vc(vibe))),
                   ]),
                 ),
               ],
             ]),
           ),
         ),
+        // ── Active Friends row ──────────────────────────────────────────
+        if (activeFriends.isNotEmpty)
+          SliverToBoxAdapter(
+            child: Padding(
+              padding:
+                  const EdgeInsets.fromLTRB(0, AppSpacing.spaceLG, 0, 0),
+              child: ActiveFriendsRow(
+                presenceList: activeFriends,
+                onAvatarTap: (p) => Navigator.pushNamed(
+                  context,
+                  '/profile/user',
+                  arguments: p.userId,
+                ),
+              ),
+            ),
+          ),
+        // ── CTA cards ─────────────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+            padding: EdgeInsets.fromLTRB(hPad, AppSpacing.spaceXL, hPad, 0),
             child: Row(children: [
-              Expanded(child: _ctaCard(
+              Expanded(
+                  child: _ctaCard(
                 icon: Icons.add_circle_outline,
                 label: 'Start a Room',
                 sublabel: 'Go live now',
                 color: const Color(0xFFFF4D8B),
                 onTap: () => Navigator.pushNamed(context, AppRoutes.createRoom),
               )),
-              const SizedBox(width: 12),
-              Expanded(child: _ctaCard(
+              const SizedBox(width: AppSpacing.spaceMD),
+              Expanded(
+                  child: _ctaCard(
                 icon: Icons.bolt,
                 label: 'Speed Dating',
                 sublabel: '5-min video dates',
                 color: DesignColors.gold,
-                onTap: () => setState(() => _selectedIndex = 1),
+                onTap: () => setState(() => _selectedIndex = 2),
+              )),
+              const SizedBox(width: AppSpacing.spaceMD),
+              Expanded(
+                  child: _ctaCard(
+                icon: Icons.people_alt_outlined,
+                label: 'Find People',
+                sublabel: 'Discover others',
+                color: DesignColors.tertiary,
+                onTap: () =>
+                    Navigator.pushNamed(context, '/discover-users'),
               )),
             ]),
           ),
@@ -374,25 +624,29 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
           SliverToBoxAdapter(child: _buildVibeSuggestionBanner(p)),
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 28, 0, 0),
+            padding: EdgeInsets.fromLTRB(hPad, AppSpacing.spaceXXL - 4, 0, 0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('🔥 Heating Up',
-                    style: TextStyle(
-                        color: DesignColors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800)),
+                const Text('🔥 Heating Up', style: AppTypography.sectionTitle),
                 TextButton(
+<<<<<<< HEAD
                   onPressed: () => setState(() => _selectedIndex = 2),
                   child: const Text('See All',
                       style: TextStyle(color: DesignColors.accent, fontSize: 13)),
+=======
+                  onPressed: () => setState(() => _selectedIndex = 3),
+                  child: Text('See All',
+                      style: AppTypography.caption
+                          .copyWith(color: DesignColors.accent)),
+>>>>>>> origin/develop
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: AppSpacing.spaceSM),
               ],
             ),
           ),
         ),
+<<<<<<< HEAD
         SliverToBoxAdapter(child: _buildHeatingUpRail(heatingUp)),
         // ── Phase 10: Discovery Rails ──────────────────────────
         _buildRailHeader(
@@ -422,6 +676,10 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
         ),
         SliverToBoxAdapter(child: _buildNewRoomsRail()),
         const SliverToBoxAdapter(child: SizedBox(height: 30)),
+=======
+        SliverToBoxAdapter(child: _buildHeatingUpRail(heatingUp, hPad)),
+        const SliverToBoxAdapter(child: AppSectionGap()),
+>>>>>>> origin/develop
       ],
     );
   }
@@ -508,31 +766,36 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
   // #7 — Vibe suggestion banner
   Widget _buildVibeSuggestionBanner(UserProfile? p) {
     if (p == null) return const SizedBox.shrink();
-    final suggestion = ref
-        .read(vibeIntelligenceServiceProvider)
-        .getVibeSuggestion(p);
+    final suggestion =
+        ref.read(vibeIntelligenceServiceProvider).getVibeSuggestion(p);
     if (suggestion == null) return const SizedBox.shrink();
     const nudgeColor = Color(0xFFFFAB00);
+    final sw2 = MediaQuery.sizeOf(context).width;
+    final hPad2 = AppLayout.responsivePaddingH(sw2);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      padding: EdgeInsets.fromLTRB(hPad2, AppSpacing.spaceLG, hPad2, 0),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.spaceMD + 2,
+            vertical: AppSpacing.spaceSM + 2),
         decoration: BoxDecoration(
           color: nudgeColor.withValues(alpha: 0.09),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
           border: Border.all(color: nudgeColor.withValues(alpha: 0.4)),
         ),
         child: Row(children: [
-          const Icon(Icons.lightbulb_outline, size: 18, color: nudgeColor),
-          const SizedBox(width: 10),
+          const Icon(Icons.lightbulb_outline,
+              size: AppSizes.iconStandard - 6, color: nudgeColor),
+          const SizedBox(width: AppSpacing.spaceSM + 2),
           Expanded(
             child: Text(suggestion,
-                style: const TextStyle(
-                    color: nudgeColor, fontSize: 12, fontWeight: FontWeight.w600)),
+                style: AppTypography.caption
+                    .copyWith(color: nudgeColor, fontWeight: FontWeight.w600)),
           ),
           GestureDetector(
             onTap: () => setState(() => _dismissedSuggestion = true),
-            child: const Icon(Icons.close, size: 16, color: nudgeColor),
+            child: const Icon(Icons.close,
+                size: AppSizes.iconStandard - 8, color: nudgeColor),
           ),
         ]),
       ),
@@ -549,7 +812,8 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 14),
+        padding: const EdgeInsets.symmetric(
+            vertical: AppSpacing.spaceLG, horizontal: AppSpacing.spaceMD + 2),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
@@ -559,56 +823,59 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
               color.withValues(alpha: 0.05),
             ],
           ),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
           border: Border.all(color: color.withValues(alpha: 0.4)),
-          boxShadow: [BoxShadow(color: color.withValues(alpha: 0.12), blurRadius: 12)],
+          boxShadow: [
+            BoxShadow(color: color.withValues(alpha: 0.12), blurRadius: 12)
+          ],
         ),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(icon, color: color, size: 26),
-          const SizedBox(height: 8),
+          Icon(icon, color: color, size: AppSizes.iconLarge),
+          const SizedBox(height: AppSpacing.spaceSM),
           Text(label,
-              style: const TextStyle(
-                  color: DesignColors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w800)),
-          const SizedBox(height: 2),
-          Text(sublabel,
-              style: const TextStyle(color: DesignColors.textGray, fontSize: 11)),
+              style: AppTypography.bodySm.copyWith(
+                  color: DesignColors.white, fontWeight: FontWeight.w800)),
+          const SizedBox(height: AppSpacing.spaceXS - 2),
+          Text(sublabel, style: AppTypography.captionSm),
         ]),
       ),
     );
   }
 
-  Widget _buildHeatingUpRail(List<Room> rooms) {
+  Widget _buildHeatingUpRail(List<Room> rooms, double hPad) {
     if (rooms.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(20),
+        padding: EdgeInsets.all(hPad),
         child: Container(
           alignment: Alignment.center,
-          padding: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(AppSpacing.spaceXL),
           decoration: BoxDecoration(
             color: DesignColors.accent.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: DesignColors.accent.withValues(alpha: 0.15)),
+            borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
+            border:
+                Border.all(color: DesignColors.accent.withValues(alpha: 0.15)),
           ),
           child: Column(children: [
-            const Icon(Icons.mic_none_outlined, size: 40, color: DesignColors.accent),
-            const SizedBox(height: 10),
+            const Icon(Icons.mic_none_outlined,
+                size: AppSizes.iconXl + 8, color: DesignColors.accent),
+            const SizedBox(height: AppSpacing.spaceSM + 2),
             const Text('No live rooms yet — be the first!',
-                style: TextStyle(color: DesignColors.textGray, fontSize: 14)),
-            const SizedBox(height: 14),
+                style: AppTypography.bodySm),
+            const SizedBox(height: AppSpacing.spaceMD + 2),
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, AppRoutes.createRoom),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.spaceXL,
+                    vertical: AppSpacing.spaceSM + 2),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
                       colors: [Color(0xFF4A90FF), Color(0xFF8B5CF6)]),
-                  borderRadius: BorderRadius.circular(24),
+                  borderRadius:
+                      BorderRadius.circular(AppSizes.buttonBorderRadius + 10),
                 ),
                 child: const Text('Start a Room',
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w700)),
+                    style: AppTypography.buttonLabel),
               ),
             ),
           ]),
@@ -616,67 +883,83 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
       );
     }
     return SizedBox(
-      height: 160,
+      height: 164,
       child: ListView.builder(
-        padding: const EdgeInsets.only(left: 20, right: 8, top: 8, bottom: 8),
+        padding: EdgeInsets.only(
+            left: hPad,
+            right: AppSpacing.spaceSM,
+            top: AppSpacing.spaceSM,
+            bottom: AppSpacing.spaceSM),
         scrollDirection: Axis.horizontal,
         itemCount: rooms.length,
         itemBuilder: (_, i) {
           final room = rooms[i];
           final color = _vc(room.vibeTag);
           return GestureDetector(
+<<<<<<< HEAD
             onTap: () => Navigator.pushNamed(context, AppRoutes.room, arguments: room.id),
+=======
+            onTap: () =>
+                Navigator.pushNamed(context, '/room', arguments: room.id),
+>>>>>>> origin/develop
             child: Container(
-              width: 160,
-              margin: const EdgeInsets.only(right: 12),
+              width: 164,
+              margin: const EdgeInsets.only(right: AppSpacing.spaceMD),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [color.withValues(alpha: 0.2), DesignColors.background],
+                  colors: [
+                    color.withValues(alpha: 0.2),
+                    DesignColors.background
+                  ],
                 ),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppSizes.cardBorderRadius),
                 border: Border.all(color: color.withValues(alpha: 0.35)),
               ),
               child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.9),
-                        borderRadius: BorderRadius.circular(4)),
-                    child: const Text('LIVE',
-                        style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1)),
-                  ),
-                  const Spacer(),
-                  Text(room.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                          color: DesignColors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 4),
-                  Row(children: [
-                    Icon(Icons.remove_red_eye_outlined, size: 11, color: color),
-                    const SizedBox(width: 3),
-                    Text('${room.viewerCount}',
-                        style: TextStyle(
-                            color: color, fontSize: 11, fontWeight: FontWeight.w600)),
-                    const SizedBox(width: 6),
-                    const Icon(Icons.videocam_outlined,
-                        size: 11, color: DesignColors.textGray),
-                    const SizedBox(width: 3),
-                    Text('${room.camCount}',
-                        style: const TextStyle(
-                            color: DesignColors.textGray, fontSize: 11)),
-                  ]),
-                ]),
+                padding: const EdgeInsets.all(AppSpacing.spaceMD),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.spaceSM - 2,
+                            vertical: AppSpacing.spaceXS - 2),
+                        decoration: BoxDecoration(
+                            color: Colors.red.withValues(alpha: 0.9),
+                            borderRadius:
+                                BorderRadius.circular(AppSpacing.spaceXS)),
+                        child: const Text('LIVE',
+                            style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1)),
+                      ),
+                      const Spacer(),
+                      Text(room.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTypography.bodySm.copyWith(
+                              color: DesignColors.white,
+                              fontWeight: FontWeight.w700)),
+                      const SizedBox(height: AppSpacing.spaceXS),
+                      Row(children: [
+                        Icon(Icons.remove_red_eye_outlined,
+                            size: AppSpacing.spaceMD - 1, color: color),
+                        const SizedBox(width: AppSpacing.spaceXS - 1),
+                        Text('${room.viewerCount}',
+                            style: AppTypography.captionSm.copyWith(
+                                color: color, fontWeight: FontWeight.w600)),
+                        const SizedBox(width: AppSpacing.spaceSM - 2),
+                        const Icon(Icons.videocam_outlined,
+                            size: 11, color: DesignColors.textGray),
+                        const SizedBox(width: AppSpacing.spaceXS - 1),
+                        Text('${room.camCount}',
+                            style: AppTypography.captionSm),
+                      ]),
+                    ]),
               ),
             ),
           );
@@ -685,17 +968,92 @@ class _HomePageElectricState extends ConsumerState<HomePageElectric> {
     );
   }
 
+<<<<<<< HEAD
     Widget _buildSpeedDatingTab() {
     return const SpeedDatingLobbyPage();
+=======
+  /// Match Inbox Tab
+  Widget _buildMatchInboxTab() {
+    return const MatchInboxPage();
+  }
+
+  Widget _buildSpeedDatingTab() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.spaceXL),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: AppSizes.avatarHero,
+              height: AppSizes.avatarHero,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: DesignColors.gold.withValues(alpha: 0.12),
+                boxShadow: [
+                  BoxShadow(
+                      color: DesignColors.gold.withValues(alpha: 0.3),
+                      blurRadius: 30)
+                ],
+              ),
+              child: const Icon(Icons.bolt, size: 52, color: DesignColors.gold),
+            ),
+            const SizedBox(height: AppSpacing.spaceXL),
+            const Text(
+              'SPEED DATING',
+              style: TextStyle(
+                  color: DesignColors.white,
+                  fontSize: 30,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.5,
+                  shadows: DesignColors.secondaryGlow),
+            ),
+            const SizedBox(height: AppSpacing.spaceSM + 2),
+            const Text(
+              'Match. Connect. Vibe. — 5-minute video dates.',
+              textAlign: TextAlign.center,
+              style: AppTypography.bodySm,
+            ),
+            const SizedBox(height: AppSpacing.spaceXXL + 8),
+            GestureDetector(
+              onTap: () => Navigator.pushNamed(context, '/speed-dating'),
+              child: Container(
+                width: double.infinity,
+                height: AppSizes.buttonHeight,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [DesignColors.gold, Color(0xFFFF6B35)]),
+                  borderRadius:
+                      BorderRadius.circular(AppSizes.buttonBorderRadius + 10),
+                  boxShadow: [
+                    BoxShadow(
+                        color: DesignColors.gold.withValues(alpha: 0.35),
+                        blurRadius: 18,
+                        offset: const Offset(0, 6))
+                  ],
+                ),
+                child: const Text(
+                  'START SPEED DATING',
+                  style: AppTypography.buttonLabel,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+>>>>>>> origin/develop
   }
 
   Widget _buildRoomsTab() {
-    return const RoomDiscoveryPageComplete();
+    return const RoomDiscoveryPage();
   }
 
-  /// Events Tab
-  Widget _buildEventsTab() {
-    return const EventsPage();
+  /// Feed Tab — Facebook-style social news feed
+  Widget _buildFeedTab() {
+    return const SocialFeedPage();
   }
 
   /// Chats Tab

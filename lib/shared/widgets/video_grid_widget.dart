@@ -1,4 +1,4 @@
-﻿/// Video Grid Widget - Enhanced with smooth animations and pin/unpin effects
+/// Video Grid Widget - Enhanced with smooth animations and pin/unpin effects
 ///
 /// Features:
 /// - Smooth tile entry animation (scale 0.8â†’1.0, 300ms)
@@ -79,7 +79,8 @@ class _VideoGridWidgetState extends ConsumerState<VideoGridWidget> {
             final int index = entry.key;
             final participant = entry.value;
             final tileWidth =
-                (screenSize.width - (gridColumns + 1) * Spacing.md) / gridColumns;
+                (screenSize.width - (gridColumns + 1) * Spacing.md) /
+                    gridColumns;
             final tileHeight = tileWidth * 0.75; // 4:3 aspect ratio
 
             return _AnimatedVideoTile(
@@ -173,8 +174,7 @@ class _AnimatedVideoTile extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_AnimatedVideoTile> createState() =>
-      _AnimatedVideoTileState();
+  ConsumerState<_AnimatedVideoTile> createState() => _AnimatedVideoTileState();
 }
 
 class _AnimatedVideoTileState extends ConsumerState<_AnimatedVideoTile>
@@ -528,7 +528,8 @@ class _AnimatedVideoTileState extends ConsumerState<_AnimatedVideoTile>
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: WidgetSizes.smallIconSize, color: DesignColors.accent),
+          Icon(icon,
+              size: WidgetSizes.smallIconSize, color: DesignColors.accent),
           const SizedBox(width: 4),
           Text(
             label,
@@ -579,9 +580,7 @@ class _AnimatedVideoTileState extends ConsumerState<_AnimatedVideoTile>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  widget.participant.isAudioEnabled
-                      ? Icons.mic
-                      : Icons.mic_off,
+                  widget.participant.isAudioEnabled ? Icons.mic : Icons.mic_off,
                   size: WidgetSizes.smallIconSize,
                   color: widget.participant.isAudioEnabled
                       ? DesignColors.accent

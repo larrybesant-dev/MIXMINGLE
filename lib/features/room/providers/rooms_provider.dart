@@ -1,4 +1,4 @@
-﻿/// Rooms Provider - State management for rooms list
+/// Rooms Provider - State management for rooms list
 library;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -102,6 +102,5 @@ class RoomsNotifier extends Notifier<RoomsState> {
 }
 
 /// Rooms provider
-final roomsProvider = NotifierProvider<RoomsNotifier, RoomsState>(RoomsNotifier.new);
-
-
+final roomsProvider =
+    NotifierProvider<RoomsNotifier, RoomsState>(RoomsNotifier.new);

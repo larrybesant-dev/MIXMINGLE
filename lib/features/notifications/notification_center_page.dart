@@ -1,10 +1,17 @@
+<<<<<<< HEAD
 ﻿import 'package:flutter/material.dart';
 import 'package:mixmingle/core/routing/app_routes.dart';
+=======
+import 'package:flutter/material.dart';
+>>>>>>> origin/develop
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
+import '../../core/design_system/design_constants.dart';
+import '../../shared/widgets/club_background.dart';
 
+<<<<<<< HEAD
 /// Maps a stored notification type (int index or legacy string) to the string
 /// key used by [NotificationCenterPage] icon/colour/navigation helpers.
 String _notifTypeToString(dynamic rawType) {
@@ -27,6 +34,11 @@ String _notifTypeToString(dynamic rawType) {
 
 /// Provider for notifications stream — reads from user subcollection.
 final notificationsStreamProvider = StreamProvider<List<Map<String, dynamic>>>((ref) {
+=======
+/// Provider for notifications stream
+final notificationsStreamProvider =
+    StreamProvider<List<Map<String, dynamic>>>((ref) {
+>>>>>>> origin/develop
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) {
     return Stream.value([]);
@@ -70,32 +82,32 @@ class NotificationCenterPage extends ConsumerStatefulWidget {
   const NotificationCenterPage({super.key});
 
   @override
-  ConsumerState<NotificationCenterPage> createState() => _NotificationCenterPageState();
+  ConsumerState<NotificationCenterPage> createState() =>
+      _NotificationCenterPageState();
 }
 
-class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage> {
+class _NotificationCenterPageState
+    extends ConsumerState<NotificationCenterPage> {
   final _firestore = FirebaseFirestore.instance;
   bool _showUnreadOnly = false;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final notificationsAsync = ref.watch(notificationsStreamProvider);
+    final unreadCount = ref.watch(unreadCountProvider).asData?.value ?? 0;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Notifications'),
-        actions: [
-          // Filter toggle
-          IconButton(
-            icon: Icon(_showUnreadOnly ? Icons.mark_email_read : Icons.mark_email_unread),
-            tooltip: _showUnreadOnly ? 'Show All' : 'Show Unread',
-            onPressed: () {
-              setState(() {
-                _showUnreadOnly = !_showUnreadOnly;
-              });
-            },
+    return ClubBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new,
+                color: DesignColors.white),
+            onPressed: () => Navigator.pop(context),
           ),
+<<<<<<< HEAD
           // Mark all as read
           IconButton(
             icon: const Icon(Icons.done_all),
@@ -135,199 +147,362 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
                     SizedBox(width: 8),
                     Text('Clear All'),
                   ],
+=======
+          title: Row(
+            children: [
+              const Text(
+                'NOTIFICATIONS',
+                style: TextStyle(
+                  color: DesignColors.white,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 16,
+                  letterSpacing: 1.5,
+>>>>>>> origin/develop
                 ),
               ),
+              if (unreadCount > 0) ...
+                [
+                  const SizedBox(width: 10),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFF4D8B),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                            color: const Color(0xFFFF4D8B)
+                                .withValues(alpha: 0.5),
+                            blurRadius: 8)
+                      ],
+                    ),
+                    child: Text(
+                      '$unreadCount',
+                      style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800),
+                    ),
+                  )
+                ],
             ],
           ),
-        ],
-      ),
-      body: notificationsAsync.when(
-        data: (notifications) {
-          final filteredNotifications =
-              _showUnreadOnly ? notifications.where((n) => n['isRead'] != true).toList() : notifications;
+          actions: [
+            IconButton(
+              icon: Icon(
+                _showUnreadOnly
+                    ? Icons.mark_email_read
+                    : Icons.mark_email_unread,
+                color: _showUnreadOnly
+                    ? const Color(0xFF00E5CC)
+                    : DesignColors.textGray,
+              ),
+              tooltip:
+                  _showUnreadOnly ? 'Show All' : 'Show Unread',
+              onPressed: () =>
+                  setState(() => _showUnreadOnly = !_showUnreadOnly),
+            ),
+            IconButton(
+              icon: const Icon(Icons.done_all,
+                  color: DesignColors.textGray),
+              tooltip: 'Mark All Read',
+              onPressed: _markAllAsRead,
+            ),
+            PopupMenuButton<String>(
+              color: DesignColors.surfaceLight,
+              icon: const Icon(Icons.more_vert,
+                  color: DesignColors.textGray),
+              onSelected: (value) async {
+                switch (value) {
+                  case 'clear':
+                    await _clearAllNotifications();
+                    break;
+                  case 'settings':
+                    if (context.mounted) {
+                      Navigator.pushNamed(
+                          context, '/settings/notifications');
+                    }
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: 'settings',
+                  child: Row(children: [
+                    Icon(Icons.settings,
+                        color: DesignColors.textGray),
+                    SizedBox(width: 8),
+                    Text('Settings',
+                        style:
+                            TextStyle(color: DesignColors.white)),
+                  ]),
+                ),
+                const PopupMenuItem(
+                  value: 'clear',
+                  child: Row(children: [
+                    Icon(Icons.clear_all,
+                        color: DesignColors.textGray),
+                    SizedBox(width: 8),
+                    Text('Clear All',
+                        style:
+                            TextStyle(color: DesignColors.white)),
+                  ]),
+                ),
+              ],
+            ),
+          ],
+        ),
+        body: notificationsAsync.when(
+          data: (notifications) {
+            final filtered = _showUnreadOnly
+                ? notifications
+                    .where((n) => n['isRead'] != true)
+                    .toList()
+                : notifications;
 
-          if (filteredNotifications.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.notifications_none,
-                    size: 64,
-                    color: theme.colorScheme.primary.withValues(alpha: 0.5),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    _showUnreadOnly ? 'No unread notifications' : 'No notifications yet',
-                    style: theme.textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _showUnreadOnly ? 'All caught up!' : 'You\'ll see notifications here when you get them',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+            if (filtered.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.notifications_off_outlined,
+                      size: 72,
+                      color: DesignColors.textGray
+                          .withValues(alpha: 0.35),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 16),
+                    Text(
+                      _showUnreadOnly
+                          ? 'All caught up! ✨'
+                          : 'No notifications yet',
+                      style: const TextStyle(
+                          color: DesignColors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      _showUnreadOnly
+                          ? 'Nothing unread right now'
+                          : 'Room invites, likes, matches—enjoy the ride',
+                      style: const TextStyle(
+                          color: DesignColors.textGray, fontSize: 14),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return RefreshIndicator(
+              color: DesignColors.accent,
+              backgroundColor: DesignColors.surfaceLight,
+              onRefresh: () async {
+                ref.invalidate(notificationsStreamProvider);
+              },
+              child: ListView.builder(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                itemCount: filtered.length,
+                itemBuilder: (context, index) =>
+                    _buildNotificationCard(context, filtered[index]),
               ),
             );
-          }
-
-          return RefreshIndicator(
-            onRefresh: () async {
-              ref.invalidate(notificationsStreamProvider);
-            },
-            child: ListView.builder(
-              itemCount: filteredNotifications.length,
-              padding: const EdgeInsets.all(8),
-              itemBuilder: (context, index) {
-                final notification = filteredNotifications[index];
-                return _buildNotificationCard(context, notification);
-              },
+          },
+          loading: () => const Center(
+              child: CircularProgressIndicator(
+                  color: DesignColors.accent)),
+          error: (error, stack) => Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline,
+                    size: 48, color: DesignColors.error),
+                const SizedBox(height: 12),
+                const Text('Error loading notifications',
+                    style: TextStyle(color: DesignColors.white)),
+                const SizedBox(height: 8),
+                Text(error.toString(),
+                    style: const TextStyle(
+                        color: DesignColors.textGray),
+                    textAlign: TextAlign.center),
+              ],
             ),
-          );
-        },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stack) => Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.error_outline, size: 48, color: theme.colorScheme.error),
-              const SizedBox(height: 16),
-              Text('Error loading notifications', style: theme.textTheme.titleMedium),
-              const SizedBox(height: 8),
-              Text(
-                error.toString(),
-                style: theme.textTheme.bodySmall,
-                textAlign: TextAlign.center,
-              ),
-            ],
           ),
         ),
       ),
     );
   }
 
-  Widget _buildNotificationCard(BuildContext context, Map<String, dynamic> notification) {
-    final theme = Theme.of(context);
+  Widget _buildNotificationCard(
+      BuildContext context, Map<String, dynamic> notification) {
     final isRead = notification['isRead'] == true;
     final title = notification['title'] as String? ?? 'Notification';
+<<<<<<< HEAD
     final body = notification['message'] as String? ?? '';
     final type = notification['typeString'] as String?;
     final createdAt = (notification['timestamp'] as Timestamp?)?.toDate();
+=======
+    final body = notification['body'] as String? ?? '';
+    final type = notification['type'] as String?;
+    final createdAt =
+        (notification['createdAt'] as Timestamp?)?.toDate();
+>>>>>>> origin/develop
     final notificationId = notification['id'] as String;
+    final neonColor = _getNotificationColor(type);
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      color: isRead ? null : theme.colorScheme.primaryContainer.withValues(alpha: 0.1),
-      child: InkWell(
-        onTap: () => _handleNotificationTap(notification),
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Icon
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: _getNotificationColor(type).withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  _getNotificationIcon(type),
-                  color: _getNotificationColor(type),
-                  size: 24,
-                ),
+    return GestureDetector(
+      onTap: () => _handleNotificationTap(notification),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: isRead
+              ? DesignColors.surfaceLight.withValues(alpha: 0.5)
+              : neonColor.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isRead
+                ? DesignColors.divider.withValues(alpha: 0.3)
+                : neonColor.withValues(alpha: 0.35),
+            width: isRead ? 1 : 1.5,
+          ),
+          boxShadow: isRead
+              ? null
+              : [
+                  BoxShadow(
+                      color: neonColor.withValues(alpha: 0.1),
+                      blurRadius: 10)
+                ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Icon
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: neonColor.withValues(alpha: 0.14),
+                shape: BoxShape.circle,
+                border: Border.all(
+                    color: neonColor.withValues(alpha: 0.4), width: 1.5),
+                boxShadow: [
+                  BoxShadow(
+                      color: neonColor.withValues(alpha: 0.2),
+                      blurRadius: 8)
+                ],
               ),
-              const SizedBox(width: 12),
-              // Content
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            title,
-                            style: theme.textTheme.titleSmall?.copyWith(
-                              fontWeight: isRead ? FontWeight.normal : FontWeight.bold,
-                            ),
+              child:
+                  Icon(_getNotificationIcon(type), color: neonColor, size: 22),
+            ),
+            const SizedBox(width: 12),
+            // Content
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            color: DesignColors.white,
+                            fontWeight: isRead
+                                ? FontWeight.w500
+                                : FontWeight.w700,
+                            fontSize: 14,
                           ),
                         ),
-                        if (!isRead)
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.primary,
-                              shape: BoxShape.circle,
-                            ),
+                      ),
+                      if (!isRead)
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: neonColor,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                  color: neonColor.withValues(alpha: 0.7),
+                                  blurRadius: 6)
+                            ],
                           ),
-                      ],
-                    ),
-                    if (body.isNotEmpty) ...[
+                        ),
+                    ],
+                  ),
+                  if (body.isNotEmpty) ...
+                    [
                       const SizedBox(height: 4),
                       Text(
                         body,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.8),
-                        ),
+                        style: const TextStyle(
+                            color: DesignColors.textLightGray,
+                            fontSize: 13,
+                            height: 1.4),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    if (createdAt != null) ...[
-                      const SizedBox(height: 4),
+                  if (createdAt != null) ...
+                    [
+                      const SizedBox(height: 6),
                       Text(
                         _formatTimestamp(createdAt),
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                        ),
+                        style: TextStyle(
+                            color: DesignColors.textGray
+                                .withValues(alpha: 0.6),
+                            fontSize: 11),
                       ),
                     ],
-                  ],
-                ),
-              ),
-              // Actions
-              PopupMenuButton<String>(
-                onSelected: (value) async {
-                  switch (value) {
-                    case 'read':
-                      await _markAsRead(notificationId, !isRead);
-                      break;
-                    case 'delete':
-                      await _deleteNotification(notificationId);
-                      break;
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'read',
-                    child: Row(
-                      children: [
-                        Icon(isRead ? Icons.mark_email_unread : Icons.mark_email_read),
-                        const SizedBox(width: 8),
-                        Text(isRead ? 'Mark Unread' : 'Mark Read'),
-                      ],
-                    ),
-                  ),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Row(
-                      children: [
-                        Icon(Icons.delete),
-                        SizedBox(width: 8),
-                        Text('Delete'),
-                      ],
-                    ),
-                  ),
                 ],
               ),
-            ],
-          ),
+            ),
+            // Actions popup
+            PopupMenuButton<String>(
+              color: DesignColors.surfaceLight,
+              icon: const Icon(Icons.more_vert,
+                  color: DesignColors.textGray, size: 18),
+              padding: EdgeInsets.zero,
+              onSelected: (value) async {
+                switch (value) {
+                  case 'read':
+                    await _markAsRead(notificationId, !isRead);
+                    break;
+                  case 'delete':
+                    await _deleteNotification(notificationId);
+                    break;
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'read',
+                  child: Row(children: [
+                    Icon(
+                        isRead
+                            ? Icons.mark_email_unread
+                            : Icons.mark_email_read,
+                        color: DesignColors.textGray),
+                    const SizedBox(width: 8),
+                    Text(isRead ? 'Mark Unread' : 'Mark Read',
+                        style:
+                            const TextStyle(color: DesignColors.white)),
+                  ]),
+                ),
+                const PopupMenuItem(
+                  value: 'delete',
+                  child: Row(children: [
+                    Icon(Icons.delete, color: DesignColors.error),
+                    SizedBox(width: 8),
+                    Text('Delete',
+                        style: TextStyle(color: DesignColors.error)),
+                  ]),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -358,22 +533,30 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
   Color _getNotificationColor(String? type) {
     switch (type) {
       case 'message':
-        return Colors.blue;
+        return const Color(0xFF4A90FF);   // neon blue
       case 'event':
       case 'eventInvite':
-        return Colors.purple;
+        return const Color(0xFF00E5CC);   // neon cyan
       case 'match':
-        return Colors.pink;
+        return const Color(0xFFFF4D8B);   // neon pink
       case 'follow':
-        return Colors.green;
+        return const Color(0xFF00E5CC);   // neon cyan
       case 'like':
-        return Colors.orange;
+        return const Color(0xFFFF4D8B);   // neon pink
+      case 'roomInvite':
+        return const Color(0xFF4A90FF);   // neon blue
+      case 'speedDatingMatch':
+        return const Color(0xFFFF4D8B);   // neon pink
+      case 'friendRequest':
+        return const Color(0xFF8B5CF6);   // neon purple
+      case 'friendOnline':
+        return const Color(0xFF00E5CC);   // neon cyan
       case 'eventReminder':
-        return Colors.amber;
+        return const Color(0xFFFFAB00);   // neon amber
       case 'systemAlert':
-        return Colors.red;
+        return DesignColors.error;
       default:
-        return Colors.grey;
+        return DesignColors.textGray;
     }
   }
 
@@ -409,8 +592,15 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
     // Navigate based on type
     switch (type) {
       case 'message':
+<<<<<<< HEAD
         if (roomId != null && mounted) {
           Navigator.pushNamed(context, AppRoutes.chat, arguments: {'conversationId': roomId});
+=======
+        final conversationId = data?['conversationId'] as String?;
+        if (conversationId != null && mounted) {
+          Navigator.pushNamed(context, '/chat',
+              arguments: {'conversationId': conversationId});
+>>>>>>> origin/develop
         }
         break;
       case 'event':
@@ -418,7 +608,12 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
         final data = notification['data'] as Map<String, dynamic>?;
         final eventId = data?['eventId'] as String?;
         if (eventId != null && mounted) {
+<<<<<<< HEAD
           Navigator.pushNamed(context, AppRoutes.eventDetails, arguments: {'eventId': eventId});
+=======
+          Navigator.pushNamed(context, '/events/details',
+              arguments: {'eventId': eventId});
+>>>>>>> origin/develop
         }
         break;
       case 'match':
@@ -427,6 +622,7 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
         }
         break;
       case 'follow':
+<<<<<<< HEAD
         if (senderId != null && mounted) {
           Navigator.pushNamed(context, AppRoutes.userProfile, arguments: senderId);
         }
@@ -434,6 +630,12 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
       case 'like':
         if (senderId != null && mounted) {
           Navigator.pushNamed(context, AppRoutes.userProfile, arguments: senderId);
+=======
+        final userId = data?['userId'] as String?;
+        if (userId != null && mounted) {
+          Navigator.pushNamed(context, '/profile/user',
+              arguments: {'userId': userId});
+>>>>>>> origin/develop
         }
         break;
       default:
@@ -523,7 +725,8 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Clear All Notifications'),
-        content: const Text('Are you sure you want to delete all notifications? This cannot be undone.'),
+        content: const Text(
+            'Are you sure you want to delete all notifications? This cannot be undone.'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -544,9 +747,14 @@ class _NotificationCenterPageState extends ConsumerState<NotificationCenterPage>
 
     try {
       final allDocs = await _firestore
+<<<<<<< HEAD
           .collection('users')
           .doc(user.uid)
           .collection('notifications')
+=======
+          .collection('notifications')
+          .where('userId', isEqualTo: user.uid)
+>>>>>>> origin/develop
           .get();
 
       final batch = _firestore.batch();

@@ -1,4 +1,4 @@
-﻿import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class RateLimitService {
   static const String _reportTimestampsKey = 'report_timestamps';
@@ -15,7 +15,8 @@ class RateLimitService {
     final windowStart = now - _rateLimitWindow.inMilliseconds;
 
     // Filter timestamps within the rate limit window
-    final recentTimestamps = timestamps.where((ts) => ts > windowStart).toList();
+    final recentTimestamps =
+        timestamps.where((ts) => ts > windowStart).toList();
 
     return recentTimestamps.length < _maxReportsPerHour;
   }
@@ -30,7 +31,8 @@ class RateLimitService {
     final windowStart = now - _rateLimitWindow.inMilliseconds;
 
     // Keep only timestamps within the window and add the new one
-    final recentTimestamps = timestamps.where((ts) => ts > windowStart).toList();
+    final recentTimestamps =
+        timestamps.where((ts) => ts > windowStart).toList();
     recentTimestamps.add(now);
 
     await prefs.setStringList(
@@ -46,8 +48,10 @@ class RateLimitService {
     final now = DateTime.now().millisecondsSinceEpoch;
     final windowStart = now - _rateLimitWindow.inMilliseconds;
 
-    final recentTimestamps = timestamps.where((ts) => ts > windowStart).toList();
-    return (_maxReportsPerHour - recentTimestamps.length).clamp(0, _maxReportsPerHour);
+    final recentTimestamps =
+        timestamps.where((ts) => ts > windowStart).toList();
+    return (_maxReportsPerHour - recentTimestamps.length)
+        .clamp(0, _maxReportsPerHour);
   }
 
   /// Gets the time until the user can submit another report
@@ -59,7 +63,8 @@ class RateLimitService {
     final now = DateTime.now().millisecondsSinceEpoch;
     final windowStart = now - _rateLimitWindow.inMilliseconds;
 
-    final recentTimestamps = timestamps.where((ts) => ts > windowStart).toList();
+    final recentTimestamps =
+        timestamps.where((ts) => ts > windowStart).toList();
 
     if (recentTimestamps.length < _maxReportsPerHour) {
       return null;
@@ -82,5 +87,3 @@ class RateLimitService {
         .toList();
   }
 }
-
-

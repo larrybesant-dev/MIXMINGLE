@@ -14,9 +14,11 @@
 ### 1. Test Infrastructure
 
 #### `test/test_helpers.dart` (400 lines)
+
 **Purpose**: Centralized testing utilities, mock implementations, and fixture data
 
 **Key Components**:
+
 - **MockUserData**: Data generators for realistic test objects
   - `user()` - Generate mock user with customizable fields
   - `friend()` - Generate friend with status and metadata
@@ -45,6 +47,7 @@
   - `participants()` - 3 video call participants
 
 **Usage Example**:
+
 ```dart
 import 'test/test_helpers.dart';
 
@@ -58,9 +61,11 @@ final friends = TestFixtures.friendsList();
 ### 2. Unit Tests
 
 #### `test/unit/auth_service_test.dart` (350 lines, 20 tests)
+
 **Purpose**: Authentication service testing
 
 **Coverage**:
+
 - ✅ Login (5 tests)
   - Valid credentials success
   - Empty email validation
@@ -96,6 +101,7 @@ final friends = TestFixtures.friendsList();
   - Very long passwords (70+ chars)
 
 **Key Assertions**:
+
 - 25+ individual assertions
 - Email/password validation
 - User object property checks
@@ -108,9 +114,11 @@ final friends = TestFixtures.friendsList();
 ---
 
 #### `test/unit/chat_provider_test.dart` (400 lines, 25 tests)
+
 **Purpose**: Chat provider testing (message CRUD, filtering, search)
 
 **Coverage**:
+
 - ✅ Send Message (5 tests)
   - Message created with correct data
   - Timestamp automatically included
@@ -148,6 +156,7 @@ final friends = TestFixtures.friendsList();
   - ISO8601 format preserved
 
 **Firestore Mock Operations Tested**:
+
 - setMockData(collection, docId, data) - Create/update
 - getMockData(collection, docId) - Retrieve
 - Collection querying and filtering
@@ -158,9 +167,11 @@ final friends = TestFixtures.friendsList();
 ---
 
 #### `test/unit/friends_provider_test.dart` (400 lines, 20 tests)
+
 **Purpose**: Friends provider testing (add/remove, favorites, filtering)
 
 **Coverage**:
+
 - ✅ Get Friends (5 tests)
   - Returns all friends from database
   - Friend object has required fields
@@ -208,9 +219,11 @@ final friends = TestFixtures.friendsList();
 ---
 
 #### `test/unit/groups_provider_test.dart` (400 lines, 20 tests)
+
 **Purpose**: Groups provider testing (join/leave, membersfavorites, unread count)
 
 **Coverage**:
+
 - ✅ Get Groups (4 tests)
   - Returns all joined groups
   - Group object has required fields
@@ -263,9 +276,11 @@ final friends = TestFixtures.friendsList();
 ### 3. Widget Tests
 
 #### `test/widget/video_grid_widget_test.dart` (450 lines, 13 tests)
+
 **Purpose**: VideoGridWidget testing (layout, animations, pin/unpin)
 
 **Coverage**:
+
 - ✅ Grid Rendering (3 tests)
   - Renders correct number of tiles
   - Displays participant name
@@ -291,11 +306,13 @@ final friends = TestFixtures.friendsList();
   - Border styling matches pin state
 
 **Animation Details**:
+
 - **Entry Animation**: ScaleTransition from 0.8 to 1.0 (400ms)
 - **Entry Stagger**: 5% interval per tile
 - **Curve**: Curves.easeOutCubic
 
 **Key Widgets Tested**:
+
 - GridView with responsive layout
 - ScaleTransition for entry animation
 - Container with dynamic borders
@@ -306,9 +323,11 @@ final friends = TestFixtures.friendsList();
 ---
 
 #### `test/widget/chat_box_widget_test.dart` (500 lines, 15 tests)
+
 **Purpose**: ChatBoxWidget testing (message rendering, input, animations)
 
 **Coverage**:
+
 - ✅ Message Rendering (4 tests)
   - Empty state message
   - All messages rendered
@@ -342,11 +361,13 @@ final friends = TestFixtures.friendsList();
   - Handles large message list (50+ messages)
 
 **Animation Details**:
+
 - **Message Fade-in**: FadeTransition 0→1 (300ms)
 - **List Scroll**: Auto-scroll to bottom (300ms)
 - **Loading**: CircularProgressIndicator with 2pt width
 
 **Key Widgets Tested**:
+
 - ListView for message list
 - FadeTransition for message appearance
 - TextField with validation
@@ -357,9 +378,11 @@ final friends = TestFixtures.friendsList();
 ---
 
 #### `test/widget/friends_sidebar_widget_test.dart` (580 lines, 17 tests)
+
 **Purpose**: FriendsSidebarWidget testing (list, search, favorites, collapse)
 
 **Coverage**:
+
 - ✅ List Rendering (3 tests)
   - Renders sidebar with title
   - Displays all friends
@@ -398,10 +421,12 @@ final friends = TestFixtures.friendsList();
   - No dot for offline friends
 
 **Animation Details**:
+
 - **Collapse Animation**: AnimationController 300ms
 - **Entry**: Smooth list transitions
 
 **Key Widgets Tested**:
+
 - TextField for search with filtering
 - ListView for friend list
 - ListTile for friend item
@@ -415,9 +440,11 @@ final friends = TestFixtures.friendsList();
 ### 4. Integration Tests
 
 #### `test/integration/user_flows_integration_test.dart` (450 lines, 15 tests)
+
 **Purpose**: Complete user workflow testing (login→room→chat, friend requests, group join)
 
 **Coverage**:
+
 - ✅ Login → Join Room → Chat (3 tests)
   - User can login and access room
   - User can send message in room
@@ -441,6 +468,7 @@ final friends = TestFixtures.friendsList();
   - Session persists across 5+ operations
 
 **Key Workflow Sequences Tested**:
+
 1. Login → Create Room → Add Participants → Send Message → Leave
 2. User A sends Friend Request → User B accepts → Send DM
 3. User A joins Group → Send Message → Multiple users message
@@ -454,17 +482,17 @@ final friends = TestFixtures.friendsList();
 
 ### Expected Coverage by Component
 
-| Component | Coverage | Tests | Lines |
-|-----------|----------|-------|-------|
-| auth_service | 95% | 20 | 350 |
-| chat_provider | 92% | 25 | 400 |
-| friends_provider | 90% | 20 | 400 |
-| groups_provider | 88% | 20 | 400 |
-| VideoGridWidget | 85% | 13 | 450 |
-| ChatBoxWidget | 86% | 15 | 500 |
-| FriendsSidebarWidget | 87% | 17 | 580 |
-| User Flows | 80% | 15 | 450 |
-| **TOTAL** | **88%** | **145** | **3,930** |
+| Component            | Coverage | Tests   | Lines     |
+| -------------------- | -------- | ------- | --------- |
+| auth_service         | 95%      | 20      | 350       |
+| chat_provider        | 92%      | 25      | 400       |
+| friends_provider     | 90%      | 20      | 400       |
+| groups_provider      | 88%      | 20      | 400       |
+| VideoGridWidget      | 85%      | 13      | 450       |
+| ChatBoxWidget        | 86%      | 15      | 500       |
+| FriendsSidebarWidget | 87%      | 17      | 580       |
+| User Flows           | 80%      | 15      | 450       |
+| **TOTAL**            | **88%**  | **145** | **3,930** |
 
 ### Coverage Breakdown
 
@@ -485,11 +513,13 @@ final friends = TestFixtures.friendsList();
 ## Running the Tests
 
 ### Run All Tests
+
 ```bash
 flutter test
 ```
 
 ### Run Specific Test File
+
 ```bash
 flutter test test/unit/auth_service_test.dart
 flutter test test/widget/chat_box_widget_test.dart
@@ -497,6 +527,7 @@ flutter test test/integration/user_flows_integration_test.dart
 ```
 
 ### Run with Coverage Report
+
 ```bash
 flutter test --coverage
 genhtml coverage/lcov.info -o coverage/html
@@ -504,12 +535,14 @@ open coverage/html/index.html
 ```
 
 ### Run Tests with Output
+
 ```bash
 flutter test --verbose
 flutter test --plain-name "should send message"
 ```
 
 ### Run Tests in Watch Mode
+
 ```bash
 flutter test --watch
 ```
@@ -520,17 +553,17 @@ flutter test --watch
 
 ### Test Execution Times
 
-| Test File | Count | Duration | Per Test |
-|-----------|-------|----------|----------|
-| auth_service_test.dart | 20 | 180ms | 9ms |
-| chat_provider_test.dart | 25 | 220ms | 8.8ms |
-| friends_provider_test.dart | 20 | 200ms | 10ms |
-| groups_provider_test.dart | 20 | 210ms | 10.5ms |
-| video_grid_widget_test.dart | 13 | 850ms | 65ms |
-| chat_box_widget_test.dart | 15 | 920ms | 61ms |
-| friends_sidebar_widget_test.dart | 17 | 1050ms | 62ms |
-| user_flows_integration_test.dart | 15 | 750ms | 50ms |
-| **TOTAL** | **145** | **4,180ms** | **28.8ms** |
+| Test File                        | Count   | Duration    | Per Test   |
+| -------------------------------- | ------- | ----------- | ---------- |
+| auth_service_test.dart           | 20      | 180ms       | 9ms        |
+| chat_provider_test.dart          | 25      | 220ms       | 8.8ms      |
+| friends_provider_test.dart       | 20      | 200ms       | 10ms       |
+| groups_provider_test.dart        | 20      | 210ms       | 10.5ms     |
+| video_grid_widget_test.dart      | 13      | 850ms       | 65ms       |
+| chat_box_widget_test.dart        | 15      | 920ms       | 61ms       |
+| friends_sidebar_widget_test.dart | 17      | 1050ms      | 62ms       |
+| user_flows_integration_test.dart | 15      | 750ms       | 50ms       |
+| **TOTAL**                        | **145** | **4,180ms** | **28.8ms** |
 
 ### Animation Performance
 
@@ -551,24 +584,28 @@ flutter test --watch
 ## Test Best Practices
 
 ### Mocking Strategy
+
 - ✅ All Firebase services mocked (no backend needed)
 - ✅ Fixtures provide realistic test data
 - ✅ Mock responses return immediately (deterministic)
 - ✅ Error scenarios tested with exceptions
 
 ### Test Organization
+
 - ✅ Tests grouped by feature/scenario
 - ✅ Setup/teardown for isolation
 - ✅ Clear test names describing intent
 - ✅ Each test is independent
 
 ### Assertion Strategy
+
 - ✅ One primary assertion per test
 - ✅ Supporting assertions for state validation
 - ✅ Exception type checking
 - ✅ Stream and async assertions
 
 ### Widget Testing
+
 - ✅ WidgetTester extensions reduce boilerplate
 - ✅ Key-based widget finding for reliability
 - ✅ Animation testing with pumpAndSettle()
@@ -593,6 +630,7 @@ Add to your `pubspec.yaml` or CI configuration:
 ```
 
 ### Test Requirements
+
 - Minimum 80% code coverage
 - All 145+ tests passing
 - No linting warnings

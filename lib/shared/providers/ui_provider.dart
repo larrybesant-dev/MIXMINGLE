@@ -1,4 +1,4 @@
-﻿// UI State Providers - Dark/Light mode, video quality, engagement features
+// UI State Providers - Dark/Light mode, video quality, engagement features
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/app_models.dart';
@@ -21,7 +21,8 @@ class VideoQualityNotifier extends Notifier<VideoQuality> {
   void setQuality(VideoQuality quality) => state = quality;
 }
 
-final videoQualityProvider = NotifierProvider<VideoQualityNotifier, VideoQuality>(
+final videoQualityProvider =
+    NotifierProvider<VideoQualityNotifier, VideoQuality>(
   () => VideoQualityNotifier(),
 );
 
@@ -33,7 +34,8 @@ class AutoAdjustQualityNotifier extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
-final autoAdjustQualityProvider = NotifierProvider<AutoAdjustQualityNotifier, bool>(
+final autoAdjustQualityProvider =
+    NotifierProvider<AutoAdjustQualityNotifier, bool>(
   () => AutoAdjustQualityNotifier(),
 );
 
@@ -45,7 +47,8 @@ class FriendsSidebarCollapsedNotifier extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
-final friendsSidebarCollapsedProvider = NotifierProvider<FriendsSidebarCollapsedNotifier, bool>(
+final friendsSidebarCollapsedProvider =
+    NotifierProvider<FriendsSidebarCollapsedNotifier, bool>(
   () => FriendsSidebarCollapsedNotifier(),
 );
 
@@ -57,7 +60,8 @@ class GroupsSidebarCollapsedNotifier extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
-final groupsSidebarCollapsedProvider = NotifierProvider<GroupsSidebarCollapsedNotifier, bool>(
+final groupsSidebarCollapsedProvider =
+    NotifierProvider<GroupsSidebarCollapsedNotifier, bool>(
   () => GroupsSidebarCollapsedNotifier(),
 );
 
@@ -69,7 +73,8 @@ class NotificationsEnabledNotifier extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
-final notificationsEnabledProvider = NotifierProvider<NotificationsEnabledNotifier, bool>(
+final notificationsEnabledProvider =
+    NotifierProvider<NotificationsEnabledNotifier, bool>(
   () => NotificationsEnabledNotifier(),
 );
 
@@ -81,7 +86,8 @@ class SoundEffectsEnabledNotifier extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
-final soundEffectsEnabledProvider = NotifierProvider<SoundEffectsEnabledNotifier, bool>(
+final soundEffectsEnabledProvider =
+    NotifierProvider<SoundEffectsEnabledNotifier, bool>(
   () => SoundEffectsEnabledNotifier(),
 );
 
@@ -93,13 +99,13 @@ class ReactionsEnabledNotifier extends Notifier<bool> {
   void toggle() => state = !state;
 }
 
-final reactionsEnabledProvider = NotifierProvider<ReactionsEnabledNotifier, bool>(
+final reactionsEnabledProvider =
+    NotifierProvider<ReactionsEnabledNotifier, bool>(
   () => ReactionsEnabledNotifier(),
 );
 
 /// Camera approval settings - Control who can see your video
-class CameraApprovalSettingsNotifier
-    extends Notifier<Map<String, String>> {
+class CameraApprovalSettingsNotifier extends Notifier<Map<String, String>> {
   @override
   Map<String, String> build() {
     return {
@@ -165,9 +171,8 @@ class CameraApprovalSettingsNotifier
   }
 }
 
-final cameraApprovalSettingsProvider = NotifierProvider<
-    CameraApprovalSettingsNotifier,
-    Map<String, String>>(
+final cameraApprovalSettingsProvider =
+    NotifierProvider<CameraApprovalSettingsNotifier, Map<String, String>>(
   () => CameraApprovalSettingsNotifier(),
 );
 
@@ -185,7 +190,8 @@ class FavoriteGroupsNotifier extends Notifier<Set<String>> {
   }
 }
 
-final favoriteGroupsProvider = NotifierProvider<FavoriteGroupsNotifier, Set<String>>(
+final favoriteGroupsProvider =
+    NotifierProvider<FavoriteGroupsNotifier, Set<String>>(
   () => FavoriteGroupsNotifier(),
 );
 
@@ -203,7 +209,8 @@ class PinnedFriendsNotifier extends Notifier<Set<String>> {
   }
 }
 
-final pinnedFriendsProvider = NotifierProvider<PinnedFriendsNotifier, Set<String>>(
+final pinnedFriendsProvider =
+    NotifierProvider<PinnedFriendsNotifier, Set<String>>(
   () => PinnedFriendsNotifier(),
 );
 
@@ -230,7 +237,3 @@ final userPreferencesProvider =
     NotifierProvider<UserPreferencesNotifier, Map<String, dynamic>>(
   () => UserPreferencesNotifier(),
 );
-
-
-
-

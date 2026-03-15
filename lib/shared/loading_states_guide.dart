@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import '../core/design_system/design_constants.dart';
+
 /// Loading States & UX Polish Guide
 ///
 /// This module demonstrates best practices for loading states and UX in the app.
 /// The goal: Users should always know what's happening, and the app should never
 /// feel broken or silent.
-
 
 /// Generic loading dialog with customizable message
 class LoadingDialog extends StatelessWidget {
@@ -204,7 +204,8 @@ Future<T> showProgressFor<T>(
 /// Loading messages that should be shown based on operation
 const Map<String, String> loadingMessages = {
   'initializing_sdk': 'ðŸ“± Initializing video system...',
-  'requesting_permissions': 'ðŸ” Requesting camera & microphone permissions...',
+  'requesting_permissions':
+      'ðŸ” Requesting camera & microphone permissions...',
   'joining_channel': 'ðŸ”— Joining conversation...',
   'leaving_channel': 'ðŸ‘‹ Leaving room...',
   'toggling_camera': 'ðŸ“¹ Adjusting camera...',
@@ -287,7 +288,3 @@ class UXPolishLibrary {
     );
   }
 }
-
-
-
-

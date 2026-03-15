@@ -57,8 +57,10 @@ class MediaPermissionsHelper {
     try {
       final permissions = web.window.navigator.permissions;
 
-      final cameraDesc = <String, JSAny?>{'name': 'camera'.toJS}.jsify()! as JSObject;
-      final micDesc = <String, JSAny?>{'name': 'microphone'.toJS}.jsify()! as JSObject;
+      final cameraDesc =
+          <String, JSAny?>{'name': 'camera'.toJS}.jsify()! as JSObject;
+      final micDesc =
+          <String, JSAny?>{'name': 'microphone'.toJS}.jsify()! as JSObject;
 
       final cameraStatus = await permissions.query(cameraDesc).toDart;
       final micStatus = await permissions.query(micDesc).toDart;

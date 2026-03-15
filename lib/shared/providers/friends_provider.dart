@@ -1,4 +1,3 @@
-﻿
 // Friends List Provider - Manages friends with online/offline status, favorites, search
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -124,7 +123,8 @@ class FriendSearchQueryNotifier extends Notifier<String> {
   void setQuery(String query) => state = query;
 }
 
-final friendSearchQueryProvider = NotifierProvider<FriendSearchQueryNotifier, String>(
+final friendSearchQueryProvider =
+    NotifierProvider<FriendSearchQueryNotifier, String>(
   () => FriendSearchQueryNotifier(),
 );
 
@@ -165,7 +165,3 @@ final totalUnreadMessagesProvider = Provider<int>((ref) {
   final friends = ref.watch(friendsProvider);
   return friends.fold<int>(0, (acc, friend) => acc + friend.unreadMessages);
 });
-
-
-
-

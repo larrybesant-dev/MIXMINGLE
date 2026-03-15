@@ -15,6 +15,7 @@
 **File**: `functions/lib/index.js`
 
 **Step 1**: Locate the vulnerable code
+
 ```javascript
 // Find this around line 49:
 exports.generateAgoraToken = functions.https.onCall(async (data, context) => {
@@ -29,6 +30,7 @@ exports.generateAgoraToken = functions.https.onCall(async (data, context) => {
 ```
 
 **Step 2**: Replace with secure version
+
 ```javascript
 exports.generateAgoraToken = functions.https.onCall(async (data, context) => {
   const userId = data.userId;
@@ -44,8 +46,8 @@ exports.generateAgoraToken = functions.https.onCall(async (data, context) => {
 
     // 🔴 REJECT - Don't just warn
     throw new functions.https.HttpsError(
-      'permission-denied',
-      'Cannot generate token for different user. Authentication mismatch detected.',
+      "permission-denied",
+      "Cannot generate token for different user. Authentication mismatch detected.",
     );
   }
 
@@ -57,12 +59,14 @@ exports.generateAgoraToken = functions.https.onCall(async (data, context) => {
 ```
 
 **Step 3**: Test the fix locally
+
 ```bash
 cd functions
 npm run serve
 ```
 
 Then in another terminal, test with:
+
 ```bash
 # Test 1: Same user (should work)
 curl -X POST http://localhost:5001/YOUR_PROJECT/us-central1/generateAgoraToken \
@@ -80,6 +84,7 @@ curl -X POST http://localhost:5001/YOUR_PROJECT/us-central1/generateAgoraToken \
 ```
 
 **Step 4**: Deploy to production
+
 ```bash
 cd functions
 npm run build
@@ -87,6 +92,7 @@ firebase deploy --only functions:generateAgoraToken
 ```
 
 **Verification**:
+
 ```bash
 # Check deployment
 firebase functions:list
@@ -106,6 +112,7 @@ firebase functions:log --only generateAgoraToken
 **File**: `lib/services/agora_video_service.dart`
 
 **Step 1**: Identify current vulnerable code
+
 ```dart
 // Around line 112 in agora_video_service.dart
 class AgoraVideoService {
@@ -129,6 +136,7 @@ class AgoraVideoService {
 ```
 
 **Step 2**: Update to use Cloud Function instead
+
 ```dart
 import 'package:cloud_functions/cloud_functions.dart';
 
@@ -181,6 +189,7 @@ class AgoraVideoService {
 ```
 
 **Step 3**: Update Cloud Function to NOT return App ID
+
 ```javascript
 // functions/lib/index.js - in generateAgoraToken function
 // Make sure this code ONLY returns the token, never the App ID:
@@ -201,6 +210,7 @@ return {
 ```
 
 **Step 4**: Delete Agora config from Firestore
+
 ```dart
 // Run this once to clean up the exposed config
 void main() async {
@@ -216,12 +226,14 @@ void main() async {
 ```
 
 Or in Firebase Console:
+
 1. Go to Firestore Database
 2. Collection: `config`
 3. Document: `agora`
 4. Click "Delete document"
 
 **Step 5**: Update environment variables
+
 ```bash
 # In functions/.env (Firebase Functions emulator)
 AGORA_APP_ID=your_app_id_here
@@ -231,6 +243,7 @@ AGORA_APP_CERTIFICATE=your_certificate_here
 ```
 
 **Step 6**: Test the changes
+
 ```bash
 # Test 1: Verify Cloud Function returns token (no App ID)
 curl -X POST https://YOUR_REGION-YOUR_PROJECT.cloudfunctions.net/generateAgoraToken \
@@ -251,6 +264,7 @@ print(token); // Should print token, not App ID
 ```
 
 **Step 7**: Deploy
+
 ```bash
 # Deploy app
 flutter build web --release
@@ -275,6 +289,7 @@ firebase functions:log --only generateAgoraToken
 **Files**: Multiple (auth_service.dart, agora_video_service.dart, etc.)
 
 **Step 1**: Find all debug prints
+
 ```bash
 # PowerShell
 Get-ChildItem -Recurse -Filter "*.dart" -Path "lib" |
@@ -286,6 +301,7 @@ Get-ChildItem -Recurse -Filter "*.dart" -Path "lib" |
 ```
 
 **Step 2**: Create a filter utility
+
 ```dart
 // lib/core/logging/debug_log.dart (create this file)
 import 'dart:developer' as developer;
@@ -314,6 +330,7 @@ class DebugLog {
 ```
 
 **Step 3**: Replace debugPrints systematically
+
 ```dart
 // BEFORE:
 import 'package:flutter/foundation.dart';
@@ -343,6 +360,7 @@ Future<void> signIn(String email, String password) async {
 ```
 
 **Step 4**: Script to replace all instances
+
 ```bash
 # PowerShell script to replace debugPrint
 $files = Get-ChildItem -Recurse -Filter "*.dart" -Path "lib"
@@ -367,6 +385,7 @@ Write-Host "✅ Replaced all debugPrints"
 ```
 
 **Step 5**: Verify removal
+
 ```bash
 flutter analyze
 flutter pub get
@@ -382,11 +401,13 @@ flutter build web --release
 **Issue**: Force unwraps crash app if null values occur
 
 **Locations**:
+
 - `lib/app_routes.dart:589`
 - `lib/services/camera_service.dart:122`
 - `lib/services/auto_moderation_service.dart` (6 locations)
 
 **Step 1**: Find all force unwraps
+
 ```bash
 # PowerShell
 Get-ChildItem -Recurse -Filter "*.dart" -Path "lib" |
@@ -397,6 +418,7 @@ Get-ChildItem -Recurse -Filter "*.dart" -Path "lib" |
 **Step 2**: Fix each one
 
 **Example 1: app_routes.dart:589**
+
 ```dart
 // BEFORE (CRASH RISK):
 final arguments = settings.arguments as Map<String, dynamic>!;
@@ -417,6 +439,7 @@ if (roomId == null) {
 ```
 
 **Example 2: camera_service.dart:122**
+
 ```dart
 // BEFORE (CRASH RISK):
 final permission = await Permission.camera.request()!;
@@ -432,6 +455,7 @@ if (permission.isGranted) { ... }
 ```
 
 **Example 3: auto_moderation_service.dart (multiple)**
+
 ```dart
 // BEFORE (CRASH RISK):
 final user = users.firstWhere((u) => u.id == userId)!;
@@ -452,6 +476,7 @@ if (message == null) {
 ```
 
 **Step 3**: Add null-coalescing operator helper
+
 ```dart
 // Add this utility in lib/core/extensions.dart
 extension ListExtension<T> on List<T>? {
@@ -465,6 +490,7 @@ final lastMessage = messages.safeLast;
 ```
 
 **Step 4**: Test thoroughly
+
 ```bash
 flutter test lib/app_routes_test.dart
 flutter build web
@@ -481,6 +507,7 @@ flutter build web
 **File**: `firestore.rules`
 
 **Current Rule (VULNERABLE)**:
+
 ```firestore
 match /rooms/{roomId} {
   allow read: if isSignedIn(); // ❌ ALL ROOMS VISIBLE TO EVERYONE
@@ -489,6 +516,7 @@ match /rooms/{roomId} {
 ```
 
 **Fixed Rule (SECURE)**:
+
 ```firestore
 match /rooms/{roomId} {
   // Room host can always read/write
@@ -514,17 +542,20 @@ match /rooms/{roomId} {
 **Step 1**: Open `firestore.rules`
 
 **Step 2**: Replace room rules
+
 ```bash
 # Find the 'match /rooms/{roomId}' section
 # Replace with the fixed rule above
 ```
 
 **Step 3**: Test with Firestore Emulator
+
 ```bash
 firebase emulators:start --only firestore
 ```
 
 Then in another terminal:
+
 ```bash
 # Test case 1: User cannot read private room they're not in
 firebase emulator:exec \
@@ -539,11 +570,13 @@ firebase emulator:exec \
 ```
 
 **Step 4**: Deploy
+
 ```bash
 firebase deploy --only firestore:rules
 ```
 
 **Verification**:
+
 ```bash
 # Check deployed rules
 firebase firestore:indexes
@@ -557,6 +590,7 @@ firebase rules:list
 ## P1 HIGH-PRIORITY FIXES (4-8 Hours - DO NEXT)
 
 ### P1.1: Add Message Rate Limiting
+
 **File**: `firestore.rules`
 
 ```firestore
@@ -571,6 +605,7 @@ match /rooms/{roomId}/messages/{messageId} {
 ```
 
 ### P1.2: Add Pagination to User Discovery
+
 **File**: `lib/providers/users_provider.dart`
 
 ```dart
@@ -591,6 +626,7 @@ Future<List<User>> getUsers({int limit = 20, String? lastUserId}) async {
 ```
 
 ### P1.3-P1.8: Remaining P1 Fixes
+
 See full audit report for details on JWT validation, CSP headers, web error UI, test data removal, SDK validation, env vars.
 
 **Time**: 4-8 hours total
@@ -600,6 +636,7 @@ See full audit report for details on JWT validation, CSP headers, web error UI, 
 ## VERIFICATION CHECKLIST
 
 After all P0 fixes:
+
 - [ ] Auth mismatch rejects same-user tokens ✅
 - [ ] App ID not in Firestore ✅
 - [ ] No debugPrints in console ✅
@@ -615,4 +652,3 @@ After all P0 fixes:
 **Document Version**: 1.0
 **Last Updated**: January 31, 2026
 **Status**: READY FOR IMPLEMENTATION
-

@@ -1,0 +1,30 @@
+# flutter_launcher_icons configuration
+# Run: dart run flutter_launcher_icons
+# ─────────────────────────────────────────────────────────────────────────────
+# Master icon: assets/images/app_logo.png (1024×1024 recommended)
+# ─────────────────────────────────────────────────────────────────────────────
+
+flutter_launcher_icons:
+  # ── Android ──────────────────────────────────────────────────────────────
+  android: true
+  # Adaptive icon layers (Android 8.0+)
+  adaptive_icon_background: "#080C14"
+  adaptive_icon_foreground: "assets/images/app_logo.png"
+  # Legacy icon for older Android versions
+  image_path_android: "assets/images/app_logo.png"
+
+  # ── iOS ──────────────────────────────────────────────────────────────────
+  ios: true
+  image_path_ios: "assets/images/app_logo.png"
+  remove_alpha_ios: true
+
+  # ── Web ──────────────────────────────────────────────────────────────────
+  web:
+    generate: true
+    image_path: "assets/images/app_logo.png"
+    background_color: "#080C14"
+    theme_color: "#4A90FF"
+
+  # ── Windows (optional — uncomment if building desktop) ───────────────────
+  windows:
+    generate: false

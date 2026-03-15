@@ -21,11 +21,13 @@ That's it. Everything else is automatic.
 ### Phase 1: Project Cleanup (10-20 minutes)
 
 **Run:**
+
 ```powershell
 .\cleanup_project.ps1
 ```
 
 **What it does:**
+
 - ✅ Removes stub/old/deprecated files
 - ✅ Removes unused imports
 - ✅ Identifies unused assets
@@ -35,6 +37,7 @@ That's it. Everything else is automatic.
 - ✅ Creates backup (in case you need to restore)
 
 **Output:**
+
 ```
 cleanup_report_TIMESTAMP.md
 flutter_analyze_TIMESTAMP.txt
@@ -43,6 +46,7 @@ cleanup_backup_TIMESTAMP/
 ```
 
 **Review:**
+
 ```powershell
 # Read the cleanup report
 cat cleanup_report_*.md
@@ -61,6 +65,7 @@ cat pubspec_deps_*.txt
 Based on cleanup report findings:
 
 #### If Errors Found
+
 ```powershell
 # Read the error report
 cat flutter_analyze_*.txt | Select-String "error"
@@ -70,6 +75,7 @@ cat flutter_analyze_*.txt | Select-String "error"
 ```
 
 #### If Warnings Found
+
 ```powershell
 # Read warnings
 cat flutter_analyze_*.txt | Select-String "warning"
@@ -79,6 +85,7 @@ cat flutter_analyze_*.txt | Select-String "warning"
 ```
 
 #### If Unused Packages Found
+
 ```powershell
 # Remove unused package
 flutter pub remove package_name
@@ -88,6 +95,7 @@ flutter pub get
 ```
 
 #### If Unused Assets Found
+
 ```powershell
 # Review cleanup report for asset paths
 # Delete if confirmed unused
@@ -127,6 +135,7 @@ Once cleanup & verification done:
 ```
 
 **What it does:**
+
 - ✅ Android build recovery
 - ✅ Android APK signing
 - ✅ Android AAB creation
@@ -138,6 +147,7 @@ Once cleanup & verification done:
 - ✅ Optional notifications (Discord/Slack)
 
 **Output:**
+
 ```
 PRODUCTION_READY_REPORT.md
 production_logs/production_TIMESTAMP.log
@@ -150,15 +160,16 @@ build/web/                                           ← Web (deployed)
 
 ## 🎯 Complete Timeline
 
-| Phase | Steps | Duration |
-|-------|-------|----------|
-| **1. Cleanup** | Remove unused files, analyze code | 10-20 min |
-| **2. Fix Issues** | Address errors, remove packages | 5-30 min |
-| **3. Verify** | Test Web & Android builds | 15 min |
-| **4. Production** | Full build, tests, deploy | 40-50 min |
-| **Total** | All steps | **70-110 min** |
+| Phase             | Steps                             | Duration       |
+| ----------------- | --------------------------------- | -------------- |
+| **1. Cleanup**    | Remove unused files, analyze code | 10-20 min      |
+| **2. Fix Issues** | Address errors, remove packages   | 5-30 min       |
+| **3. Verify**     | Test Web & Android builds         | 15 min         |
+| **4. Production** | Full build, tests, deploy         | 40-50 min      |
+| **Total**         | All steps                         | **70-110 min** |
 
 Or if you skip cleanup:
+
 - **Production only**: 40-50 min
 - **With dry run**: 10 min
 
@@ -167,12 +178,14 @@ Or if you skip cleanup:
 ## ✅ Success Checklist
 
 ### After Cleanup
-- [ ] cleanup_report_*.md reviewed
-- [ ] No ERROR-level issues in flutter_analyze_*.txt
+
+- [ ] cleanup*report*\*.md reviewed
+- [ ] No ERROR-level issues in flutter*analyze*\*.txt
 - [ ] Unused packages identified
 - [ ] Unused assets identified
 
 ### After Fixes
+
 - [ ] All errors fixed
 - [ ] Warnings addressed
 - [ ] Unused packages removed
@@ -181,6 +194,7 @@ Or if you skip cleanup:
 - [ ] APK build successful
 
 ### After Production Build
+
 - [ ] PRODUCTION_READY_REPORT.md generated
 - [ ] App deployed to Firebase ✅
 - [ ] APK ready at `build/app/outputs/flutter-apk/app-release.apk`
@@ -193,6 +207,7 @@ Or if you skip cleanup:
 ## 🚀 Post-Production Deployment
 
 ### Android (Google Play Store)
+
 ```
 Take: build/app/outputs/bundle/release/app-release.aab
 
@@ -207,6 +222,7 @@ Take: build/app/outputs/bundle/release/app-release.aab
 ```
 
 ### Web (Firebase Hosting)
+
 ```
 ✅ Already deployed automatically!
 
@@ -215,6 +231,7 @@ Your app is live at the provided URL
 ```
 
 ### iOS (App Store)
+
 ```powershell
 # On macOS:
 flutter build ios --release
@@ -227,21 +244,25 @@ flutter build ios --release
 ## 🆘 Troubleshooting
 
 ### "cleanup_project.ps1 not found"
+
 - Make sure you're in the project root directory
 - File should be in `C:\Users\LARRY\MIXMINGLE\`
 
 ### "flutter command not found"
+
 - Flutter not in PATH
 - Run: `flutter doctor`
 - If error, reinstall Flutter
 
 ### "Build fails after cleanup"
+
 - Restore from backup: `Copy-Item cleanup_backup_TIMESTAMP/lib_backup -Destination lib -Recurse -Force`
 - Review `flutter_analyze_*.txt` for errors
 - Fix errors manually
 - Retry build
 
 ### "Removed wrong file"
+
 - Check backup in `cleanup_backup_TIMESTAMP/`
 - Restore: `Copy-Item cleanup_backup_TIMESTAMP/lib_backup -Destination lib -Recurse -Force`
 
@@ -252,21 +273,25 @@ flutter build ios --release
 After completing all steps:
 
 ✅ **Code Quality**
+
 - No errors
 - Warnings resolved
 - Unused code removed
 
 ✅ **Project Structure**
+
 - Stub/old files removed
 - Unused assets removed
 - Clean dependencies
 
 ✅ **Build Artifacts**
+
 - Android APK ready
 - Android AAB ready for Play Store
 - Web deployed to Firebase
 
 ✅ **Ready for**
+
 - Store submission
 - Production use
 - User testing
@@ -276,11 +301,13 @@ After completing all steps:
 ## 🎓 Summary
 
 ### Quick Path (No Cleanup)
+
 ```powershell
 .\ultimate_production.ps1              # 40-50 min → Live!
 ```
 
 ### Safe Path (Recommended)
+
 ```powershell
 .\cleanup_project.ps1                  # 10-20 min → Clean code
 # Review & fix issues → 5-30 min
@@ -288,6 +315,7 @@ After completing all steps:
 ```
 
 ### Thorough Path (Most Professional)
+
 ```powershell
 .\cleanup_project.ps1                  # 10-20 min → Identify issues
 # Review & fix issues → 5-30 min

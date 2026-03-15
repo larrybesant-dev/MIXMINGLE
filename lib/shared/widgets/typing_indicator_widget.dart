@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixmingle/shared/providers/chat_providers.dart';
 
@@ -22,7 +22,21 @@ class TypingIndicatorWidget extends ConsumerWidget {
       stream: chatService.typingUsersStream(roomId,
           excludeUserId: userId.isEmpty ? null : userId),
       builder: (context, snapshot) {
+<<<<<<< HEAD
         final typingUsers = (snapshot.data ?? []).take(3).toList();
+=======
+        if (!snapshot.hasData || snapshot.data == null) {
+          return const SizedBox.shrink();
+        }
+
+        final data = snapshot.data;
+        if (data == null) {
+          return const SizedBox.shrink();
+        }
+
+        final typingUsers =
+            data.map((indicator) => indicator.userName).take(3).toList();
+>>>>>>> origin/develop
 
         if (typingUsers.isEmpty) {
           return const SizedBox.shrink();
@@ -80,7 +94,8 @@ class _TypingDots extends StatefulWidget {
   State<_TypingDots> createState() => _TypingDotsState();
 }
 
-class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderStateMixin {
+class _TypingDotsState extends State<_TypingDots>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
 
   @override
@@ -107,7 +122,8 @@ class _TypingDotsState extends State<_TypingDots> with SingleTickerProviderState
           mainAxisSize: MainAxisSize.min,
           children: List.generate(3, (index) {
             final delay = index * 0.2;
-            final opacity = ((_controller.value + delay) % 1.0) < 0.5 ? 0.3 : 1.0;
+            final opacity =
+                ((_controller.value + delay) % 1.0) < 0.5 ? 0.3 : 1.0;
 
             return Padding(
               padding: const EdgeInsets.symmetric(horizontal: 1.5),

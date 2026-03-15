@@ -1,3 +1,18 @@
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run local express (inspect)",
+      "program": "${workspaceFolder}/local-server.js",
+      "runtimeArgs": ["--inspect=9229"],
+      "console": "integratedTerminal",
+      "env": {
+         "AGORA_APP_ID": "ec1b578586d24976a89d787d9ee4d5c7",
+         "AGORA_APP_CERTIFICATE": "<YOUR_REAL_AGORA_CERTIFICATE>",
+        "PORT": "8080"
+      }
+    }
+  ]
 {
   "version": "0.2.0",
   "configurations": [

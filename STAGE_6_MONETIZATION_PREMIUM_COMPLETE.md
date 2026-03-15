@@ -9,6 +9,7 @@
 ## 🎯 Deliverables
 
 ### Coin Economy
+
 ✅ **Virtual Currency System** - Coin balance with transaction logging
 ✅ **Coin Store** - Purchase coins with multiple packages (100-10,000 coins)
 ✅ **Coin Packages** - 6 tiers with bonus coins and VIP+ bonuses
@@ -16,6 +17,7 @@
 ✅ **Cloud Functions** - addCoins, spendCoins, purchaseCoins, transferCoins
 
 ### Premium Subscriptions
+
 ✅ **3 Membership Tiers** - Free, VIP, VIP+
 ✅ **Membership Upgrade Screen** - Beautiful tier comparison UI
 ✅ **RevenueCat Integration** - Cross-platform subscription management
@@ -23,12 +25,14 @@
 ✅ **Membership Badges** - Visual indicators for premium users
 
 ### Tipping System
+
 ✅ **Send Tips** - Tip users with coins
 ✅ **Tip Overlay** - In-app tip dialog
 ✅ **Tip History** - Track tips sent/received
 ✅ **Cloud Function** - transferCoins for tips
 
 ### Gift System
+
 ✅ **Animated Gifts** - 6 animation types (fadeIn, slideUp, bounce, sparkle, heartExplosion, fireworks)
 ✅ **Gift Categories** - Romantic, Celebration, Luxury, Fun, Seasonal
 ✅ **Premium Gifts** - Exclusive gifts for VIP+ members
@@ -36,6 +40,7 @@
 ✅ **Gift Selector** - Rich UI for browsing/sending gifts
 
 ### Premium Feature Gates
+
 ✅ **Access Control** - Restrict features by membership tier
 ✅ **Upgrade Prompts** - Auto-show upgrade when accessing premium features
 ✅ **Premium Labels** - Mark premium content with badges
@@ -85,6 +90,7 @@ lib/
 ## 🗄️ Firestore Schema
 
 ### User Document: `users/{userId}`
+
 ```javascript
 {
   id: "userId",
@@ -108,6 +114,7 @@ lib/
 ```
 
 ### Collection: `coins_transactions/{transactionId}`
+
 ```javascript
 {
   userId: "userId",
@@ -134,6 +141,7 @@ lib/
 ```
 
 ### Collection: `gifts/{giftId}`
+
 ```javascript
 {
   id: "gift_heart",
@@ -154,6 +162,7 @@ lib/
 ```
 
 ### Collection: `gift_transactions/{transactionId}`
+
 ```javascript
 {
   senderId: "userId",
@@ -171,8 +180,10 @@ lib/
 ## 💎 Membership Tiers
 
 ### Free Tier
+
 **Price:** Free
 **Benefits:**
+
 - Access to public rooms
 - Send messages
 - Basic profile features
@@ -180,8 +191,10 @@ lib/
 - Participate in speed dating
 
 ### VIP Tier ($9.99/month)
+
 **Price:** $9.99/month
 **Benefits:**
+
 - ✨ Verification badge
 - Access to VIP-only rooms
 - Advanced search filters
@@ -192,8 +205,10 @@ lib/
 - Enhanced presence visibility
 
 ### VIP+ Tier ($19.99/month)
+
 **Price:** $19.99/month
 **Benefits:**
+
 - All VIP benefits, plus:
 - 💎 Exclusive VIP+ badge
 - 20% bonus on all coin purchases
@@ -209,6 +224,7 @@ lib/
 ## 🪙 Coin Packages
 
 ### Package Tiers
+
 ```dart
 1. Starter    - 100 coins   - $0.99   - Best for: First-time buyers
 2. Small      - 500 coins   - $4.99   - Bonus: 50 coins
@@ -219,7 +235,9 @@ lib/
 ```
 
 ### VIP+ Bonus
+
 VIP+ members receive **+20% bonus coins** on all purchases:
+
 - 100 coins → 120 coins
 - 500 coins → 600 coins
 - etc.
@@ -229,25 +247,27 @@ VIP+ members receive **+20% bonus coins** on all purchases:
 ## 💸 Coin Earning & Spending
 
 ### Ways to Earn Coins
-| Action | Coins | Frequency |
-|--------|-------|-----------|
-| Daily Login | 10 | Once per day |
-| Room Participation (10 min) | 5 | Max 50/day |
-| Message Sent | 1 | Max 20/day |
-| Add Friend | 5 | Per friend |
-| Badge Earned | 10-50 | Varies |
-| Referral | 100 | Per referral |
-| **Purchase** | 100-12,000 | Unlimited |
+
+| Action                      | Coins      | Frequency    |
+| --------------------------- | ---------- | ------------ |
+| Daily Login                 | 10         | Once per day |
+| Room Participation (10 min) | 5          | Max 50/day   |
+| Message Sent                | 1          | Max 20/day   |
+| Add Friend                  | 5          | Per friend   |
+| Badge Earned                | 10-50      | Varies       |
+| Referral                    | 100        | Per referral |
+| **Purchase**                | 100-12,000 | Unlimited    |
 
 ### Ways to Spend Coins
-| Action | Cost | Description |
-|--------|------|-------------|
-| Send Gift | 10-200 | Animated gifts in rooms |
-| Tip User | Custom | Support creators |
-| Room Boost | 50 | Boost room visibility for 1 hour |
-| Profile Spotlight | 100 | Featured in discovery for 24 hours |
-| Custom Theme | 200 | Unlock premium profile themes |
-| Rewind Profile | 25 | Go back after swipe |
+
+| Action            | Cost   | Description                        |
+| ----------------- | ------ | ---------------------------------- |
+| Send Gift         | 10-200 | Animated gifts in rooms            |
+| Tip User          | Custom | Support creators                   |
+| Room Boost        | 50     | Boost room visibility for 1 hour   |
+| Profile Spotlight | 100    | Featured in discovery for 24 hours |
+| Custom Theme      | 200    | Unlock premium profile themes      |
+| Rewind Profile    | 25     | Go back after swipe                |
 
 ---
 
@@ -256,12 +276,15 @@ VIP+ members receive **+20% bonus coins** on all purchases:
 ### CoinEconomyService
 
 #### Get Balance
+
 ```dart
 Future<int> getUserBalance(String userId)
 ```
+
 **Returns:** Current coin balance
 
 #### Add Coins
+
 ```dart
 Future<void> addCoins({
   required String userId,
@@ -271,9 +294,11 @@ Future<void> addCoins({
   String? referenceId,
 })
 ```
+
 **Sources:** dailyLogin, roomParticipation, messageSent, friendAdded, purchase, etc.
 
 #### Spend Coins
+
 ```dart
 Future<void> spendCoins({
   required String userId,
@@ -282,9 +307,11 @@ Future<void> spendCoins({
   String? referenceId,
 })
 ```
+
 **Purpose:** gift, tip, boost, spotlight, theme, etc.
 
 #### Purchase Coins
+
 ```dart
 Future<void> purchaseCoins({
   required String userId,
@@ -294,6 +321,7 @@ Future<void> purchaseCoins({
   String? transactionId,
 })
 ```
+
 **Integration:** RevenueCat for in-app purchases
 
 ---
@@ -301,10 +329,13 @@ Future<void> purchaseCoins({
 ### TippingService
 
 #### Send Tip
+
 ```dart
 Future<void> sendTip(Tip tip)
 ```
+
 **Tip Model:**
+
 ```dart
 class Tip {
   final String receiverId;
@@ -315,6 +346,7 @@ class Tip {
 ```
 
 #### Get Balance
+
 ```dart
 Future<int> getUserBalance(String userId)
 ```
@@ -324,6 +356,7 @@ Future<int> getUserBalance(String userId)
 ### EnhancedGiftService
 
 #### Get Available Gifts
+
 ```dart
 Future<List<EnhancedGift>> getAvailableGifts({
   GiftCategory? category,
@@ -332,6 +365,7 @@ Future<List<EnhancedGift>> getAvailableGifts({
 ```
 
 #### Send Gift
+
 ```dart
 Future<void> sendGift({
   required String senderId,
@@ -343,6 +377,7 @@ Future<void> sendGift({
 ```
 
 #### Get Gift History
+
 ```dart
 Future<List<GiftTransaction>> getUserGiftHistory(
   String userId, {
@@ -355,18 +390,23 @@ Future<List<GiftTransaction>> getUserGiftHistory(
 ### MembershipService
 
 #### Check Access
+
 ```dart
 bool hasAccess(MembershipTier requiredTier)
 ```
+
 **Returns:** `true` if user's tier >= required tier
 
 #### Can Afford
+
 ```dart
 bool canAfford(int amount)
 ```
+
 **Returns:** `true` if coin balance >= amount
 
 #### Update Coin Balance
+
 ```dart
 Future<bool> updateCoinBalance(
   int change,
@@ -376,11 +416,13 @@ Future<bool> updateCoinBalance(
 ```
 
 #### Add Coins
+
 ```dart
 Future<bool> addCoins(int amount, {String? description})
 ```
 
 #### Deduct Coins
+
 ```dart
 Future<bool> deductCoins(
   int amount,
@@ -394,10 +436,12 @@ Future<bool> deductCoins(
 ## 🎨 UI Components
 
 ### CoinStoreScreen
+
 **Location:** `lib/features/payments/screens/coin_store_screen.dart`
 **Route:** `/coins`
 
 **Features:**
+
 - Real-time coin balance display
 - 6 coin package cards
 - VIP+ bonus indicator
@@ -406,6 +450,7 @@ Future<bool> deductCoins(
 - Loading states with neon styling
 
 **Usage:**
+
 ```dart
 Navigator.pushNamed(context, '/coins');
 ```
@@ -413,10 +458,12 @@ Navigator.pushNamed(context, '/coins');
 ---
 
 ### MembershipUpgradeScreen
+
 **Location:** `lib/features/payments/screens/membership_upgrade_screen.dart`
 **Route:** `/membership/upgrade`
 
 **Features:**
+
 - VIP vs VIP+ comparison cards
 - Complete benefits list
 - Tier selection with visual feedback
@@ -425,6 +472,7 @@ Navigator.pushNamed(context, '/coins');
 - Auto-renewal terms
 
 **Usage:**
+
 ```dart
 Navigator.push(
   context,
@@ -437,9 +485,11 @@ Navigator.push(
 ---
 
 ### PremiumFeatureGate
+
 **Location:** `lib/shared/widgets/premium_feature_gate.dart`
 
 **Usage:**
+
 ```dart
 PremiumFeatureGate(
   requiredTier: MembershipTier.vip,
@@ -449,6 +499,7 @@ PremiumFeatureGate(
 ```
 
 **Features:**
+
 - Auto-hide content for non-premium users
 - Show upgrade prompt with tier branding
 - One-tap navigation to upgrade screen
@@ -457,19 +508,24 @@ PremiumFeatureGate(
 ---
 
 ### PremiumBadge
+
 **Usage:**
+
 ```dart
 PremiumBadge(
   tier: MembershipTier.vipPlus,
   size: 24,
 )
 ```
+
 **Displays:** Gradient badge with tier icon and name
 
 ---
 
 ### VerificationBadge
+
 **Usage:**
+
 ```dart
 Row(
   children: [
@@ -478,12 +534,15 @@ Row(
   ],
 )
 ```
+
 **Displays:** Blue verified checkmark icon
 
 ---
 
 ### CoinBalanceWidget
+
 **Usage:**
+
 ```dart
 CoinBalanceDisplay(
   balance: 500,
@@ -494,9 +553,11 @@ CoinBalanceDisplay(
 ---
 
 ### GiftSelector
+
 **Location:** `lib/shared/widgets/gift_selector.dart`
 
 **Usage:**
+
 ```dart
 showModalBottomSheet(
   context: context,
@@ -511,6 +572,7 @@ showModalBottomSheet(
 ```
 
 **Features:**
+
 - Category tabs (Romantic, Celebration, Luxury, Fun, Seasonal)
 - Animated gift previews
 - Coin cost display
@@ -520,7 +582,9 @@ showModalBottomSheet(
 ---
 
 ### TipOverlay
+
 **Usage:**
+
 ```dart
 showDialog(
   context: context,
@@ -533,6 +597,7 @@ showDialog(
 ```
 
 **Features:**
+
 - Custom tip amount input
 - Preset amounts (10, 25, 50, 100 coins)
 - Optional message
@@ -546,30 +611,38 @@ showDialog(
 ### Location: `functions/src/coins.ts`
 
 #### addCoinsWithTransaction
+
 ```typescript
-onCall({ userId, amount, source, description, referenceId })
+onCall({ userId, amount, source, description, referenceId });
 ```
+
 **Returns:** `{ success, newBalance, transactionId }`
 **Logs:** Transaction in `coins_transactions` collection
 
 #### spendCoins
+
 ```typescript
-onCall({ userId, amount, purpose, referenceId })
+onCall({ userId, amount, purpose, referenceId });
 ```
+
 **Returns:** `{ success, newBalance, transactionId }`
 **Validates:** Sufficient balance before deducting
 
 #### purchaseCoins
+
 ```typescript
-onCall({ userId, coinAmount, usdAmount, paymentMethod, transactionId })
+onCall({ userId, coinAmount, usdAmount, paymentMethod, transactionId });
 ```
+
 **Returns:** `{ success, newBalance, purchaseId }`
 **Integration:** RevenueCat transaction validation
 
 #### transferCoins (Tips)
+
 ```typescript
-onCall({ senderId, receiverId, amount, message, roomId })
+onCall({ senderId, receiverId, amount, message, roomId });
 ```
+
 **Returns:** `{ success, senderBalance, receiverBalance }`
 **Atomic:** Uses Firestore transaction for safety
 
@@ -578,6 +651,7 @@ onCall({ senderId, receiverId, amount, message, roomId })
 ## 🚀 Usage Examples
 
 ### Purchase Coins
+
 ```dart
 final controller = ref.read(coinControllerProvider.notifier);
 final package = CoinPackage.medium; // 1,200 + 200 bonus
@@ -592,6 +666,7 @@ if (success) {
 ```
 
 ### Send Gift
+
 ```dart
 final giftService = EnhancedGiftService.instance;
 
@@ -605,6 +680,7 @@ await giftService.sendGift(
 ```
 
 ### Send Tip
+
 ```dart
 final tip = Tip(
   receiverId: userId,
@@ -617,6 +693,7 @@ await TippingService().sendTip(tip);
 ```
 
 ### Check Premium Access
+
 ```dart
 final membership = MembershipService.instance;
 
@@ -628,6 +705,7 @@ if (membership.hasAccess(MembershipTier.vip)) {
 ```
 
 ### Gate Premium Feature
+
 ```dart
 // In your widget tree:
 PremiumFeatureGate(
@@ -642,6 +720,7 @@ PremiumFeatureGate(
 ```
 
 ### Show Membership Badge
+
 ```dart
 // Next to user name
 Row(
@@ -698,6 +777,7 @@ function onlyUpdatingAllowedFields(newData, oldData) {
 ## 📊 Analytics Events
 
 ### Purchase Events
+
 ```dart
 await analytics.logEvent(
   name: 'coin_purchase_started',
@@ -719,6 +799,7 @@ await analytics.logEvent(
 ```
 
 ### Membership Events
+
 ```dart
 await analytics.logEvent(
   name: 'membership_upgraded',
@@ -730,6 +811,7 @@ await analytics.logEvent(
 ```
 
 ### Gift Events
+
 ```dart
 await analytics.logEvent(
   name: 'gift_sent',
@@ -747,12 +829,15 @@ await analytics.logEvent(
 ## 🐛 Known Issues & Workarounds
 
 ### Issue: Purchase stuck in "pending" state
+
 **Solution:** Verify RevenueCat webhook is receiving events. Check Cloud Functions logs for transaction processing errors.
 
 ### Issue: Coin balance not updating after purchase
+
 **Solution:** Cloud Function must complete successfully. Check `coins_transactions` collection for transaction status.
 
 ### Issue: Premium features accessible without subscription
+
 **Solution:** Ensure `PremiumFeatureGate` is wrapping premium content. Verify `MembershipService` is initialized.
 
 ---
@@ -790,6 +875,7 @@ await analytics.logEvent(
 ## ✅ Stage 6 Complete
 
 **Monetization system is production-ready and fully integrated with:**
+
 - ✅ Onboarding (Stage 1)
 - ✅ Home & Rooms (Stage 2)
 - ✅ Speed Dating (Stage 3)
@@ -800,6 +886,7 @@ await analytics.logEvent(
 - ✅ Firestore (Transaction logging)
 
 **Revenue streams enabled:**
+
 - 💰 Coin purchases (6 packages: $0.99 - $79.99)
 - 💳 VIP subscriptions ($9.99/month)
 - 💎 VIP+ subscriptions ($19.99/month)

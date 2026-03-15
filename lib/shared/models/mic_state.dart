@@ -82,7 +82,8 @@ class MicState {
   }
 
   @override
-  String toString() => 'MicState(uid: $uid, userName: $userName, status: ${status.name})';
+  String toString() =>
+      'MicState(uid: $uid, userName: $userName, status: ${status.name})';
 }
 
 // Mic timer for auto-mute after duration

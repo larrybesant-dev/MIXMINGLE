@@ -218,7 +218,8 @@ class _WalletPageState extends ConsumerState<WalletPage>
     );
   }
 
-  Widget _buildRecentTransactions(AsyncValue<List<CoinTransaction>> transactions) {
+  Widget _buildRecentTransactions(
+      AsyncValue<List<CoinTransaction>> transactions) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

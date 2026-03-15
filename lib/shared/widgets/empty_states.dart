@@ -73,9 +73,7 @@ class EmptyState extends StatelessWidget {
       ),
     );
 
-    return showAnimation
-        ? FadeInSlideUp(child: content)
-        : content;
+    return showAnimation ? FadeInSlideUp(child: content) : content;
   }
 }
 
@@ -110,9 +108,7 @@ class _EmptyStateIcon extends StatelessWidget {
       ),
     );
 
-    return showAnimation
-        ? PulseAnimation(child: iconWidget)
-        : iconWidget;
+    return showAnimation ? PulseAnimation(child: iconWidget) : iconWidget;
   }
 }
 
@@ -129,7 +125,8 @@ class NoEventsEmptyState extends StatelessWidget {
       icon: Icons.event,
       iconColor: ClubColors.accent,
       title: 'No Events Yet',
-      message: 'Be the first to create an exciting event and bring people together!',
+      message:
+          'Be the first to create an exciting event and bring people together!',
       actionLabel: onCreateEvent != null ? 'Create Event' : null,
       onAction: onCreateEvent,
     );
@@ -229,7 +226,8 @@ class SearchEmptyState extends StatelessWidget {
       icon: Icons.search_off,
       iconColor: ClubColors.textSecondary,
       title: 'No Results',
-      message: 'We couldn\'t find anything matching "$searchQuery".\nTry different keywords.',
+      message:
+          'We couldn\'t find anything matching "$searchQuery".\nTry different keywords.',
     );
   }
 }
@@ -268,7 +266,8 @@ class ErrorEmptyState extends StatelessWidget {
       icon: Icons.error_outline,
       iconColor: ClubColors.error,
       title: 'Oops! Something Went Wrong',
-      message: errorMessage ?? 'An unexpected error occurred. Please try again.',
+      message:
+          errorMessage ?? 'An unexpected error occurred. Please try again.',
       actionLabel: onRetry != null ? 'Retry' : null,
       onAction: onRetry,
     );
@@ -289,7 +288,8 @@ class ComingSoonEmptyState extends StatelessWidget {
       icon: Icons.construction,
       iconColor: ClubColors.accent,
       title: 'Coming Soon!',
-      message: '$featureName is currently under development.\nStay tuned for updates!',
+      message:
+          '$featureName is currently under development.\nStay tuned for updates!',
       showAnimation: true,
     );
   }

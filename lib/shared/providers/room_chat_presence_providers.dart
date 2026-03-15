@@ -1,8 +1,8 @@
-﻿
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb, defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/foundation.dart'
+    show debugPrint, kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'dart:async';
 
 import '../models/room_message.dart';
@@ -47,10 +47,8 @@ class RoomMessagesState {
 }
 
 /// Paginated messages provider - streams newest messages + supports pagination
-final roomMessagesProvider = NotifierProvider.autoDispose.family<
-    RoomMessagesNotifier,
-    RoomMessagesState,
-    String>((roomId) {
+final roomMessagesProvider = NotifierProvider.autoDispose
+    .family<RoomMessagesNotifier, RoomMessagesState, String>((roomId) {
   return RoomMessagesNotifier()..roomId = roomId;
 });
 
@@ -88,30 +86,30 @@ class RoomMessagesNotifier extends Notifier<RoomMessagesState> {
         .limit(25)
         .snapshots()
         .listen(
-          (snapshot) {
-            debugPrint('[ROOM_CHAT] Received ${snapshot.docs.length} messages');
-            final messages = snapshot.docs
-                .map((doc) => RoomMessage.fromFirestore(doc))
-                .toList()
-                .reversed
-                .toList(); // Reverse to show oldest first (ascending)
+      (snapshot) {
+        debugPrint('[ROOM_CHAT] Received ${snapshot.docs.length} messages');
+        final messages = snapshot.docs
+            .map((doc) => RoomMessage.fromFirestore(doc))
+            .toList()
+            .reversed
+            .toList(); // Reverse to show oldest first (ascending)
 
-            state = state.copyWith(
-              messages: messages,
-              hasMore: snapshot.docs.length >= 25,
-              lastDoc: snapshot.docs.isNotEmpty ? snapshot.docs.first : null,
-              isLoading: false,
-              error: null,
-            );
-          },
-          onError: (error) {
-            debugPrint('[ROOM_CHAT] Error loading messages: $error');
-            state = state.copyWith(
-              isLoading: false,
-              error: error.toString(),
-            );
-          },
+        state = state.copyWith(
+          messages: messages,
+          hasMore: snapshot.docs.length >= 25,
+          lastDoc: snapshot.docs.isNotEmpty ? snapshot.docs.first : null,
+          isLoading: false,
+          error: null,
         );
+      },
+      onError: (error) {
+        debugPrint('[ROOM_CHAT] Error loading messages: $error');
+        state = state.copyWith(
+          isLoading: false,
+          error: error.toString(),
+        );
+      },
+    );
   }
 
   /// Load previous messages (pagination backward)
@@ -123,7 +121,8 @@ class RoomMessagesNotifier extends Notifier<RoomMessagesState> {
     state = state.copyWith(isLoading: true);
 
     try {
-      debugPrint('[ROOM_CHAT] Loading previous messages before: ${state.lastDoc?.id}');
+      debugPrint(
+          '[ROOM_CHAT] Loading previous messages before: ${state.lastDoc?.id}');
 
       final snapshot = await _firestore
           .collection('rooms')
@@ -156,7 +155,8 @@ class RoomMessagesNotifier extends Notifier<RoomMessagesState> {
         error: null,
       );
 
-      debugPrint('[ROOM_CHAT] Loaded ${previousMessages.length} previous messages');
+      debugPrint(
+          '[ROOM_CHAT] Loaded ${previousMessages.length} previous messages');
     } catch (error) {
       debugPrint('[ROOM_CHAT] Error loading previous messages: $error');
       state = state.copyWith(
@@ -167,7 +167,8 @@ class RoomMessagesNotifier extends Notifier<RoomMessagesState> {
   }
 
   /// Send a new message
-  Future<void> sendMessage(String text, String senderName, String senderId) async {
+  Future<void> sendMessage(
+      String text, String senderName, String senderId) async {
     if (text.trim().isEmpty) return;
 
     try {
@@ -199,7 +200,8 @@ class RoomMessagesNotifier extends Notifier<RoomMessagesState> {
 // ============================================================================
 
 /// Stream all members in a room (presence status)
-final roomMembersProvider = StreamProvider.family<List<RoomMember>, String>((ref, roomId) {
+final roomMembersProvider =
+    StreamProvider.family<List<RoomMember>, String>((ref, roomId) {
   debugPrint('[PRESENCE] Listening to members in room: $roomId');
 
   return FirebaseFirestore.instance
@@ -208,7 +210,8 @@ final roomMembersProvider = StreamProvider.family<List<RoomMember>, String>((ref
       .collection('members')
       .snapshots()
       .map((snapshot) {
-    final members = snapshot.docs.map((doc) => RoomMember.fromFirestore(doc)).toList();
+    final members =
+        snapshot.docs.map((doc) => RoomMember.fromFirestore(doc)).toList();
     debugPrint('[PRESENCE] Members count: ${members.length}');
     return members;
   }).handleError((error) {
@@ -279,10 +282,9 @@ class LocalPresenceState {
 }
 
 /// Local user presence notifier - manages current user's online/typing status
-final localUserPresenceProvider = NotifierProvider.family<
-    LocalPresenceNotifier,
-    LocalPresenceState,
-    String>((roomId) {
+final localUserPresenceProvider =
+    NotifierProvider.family<LocalPresenceNotifier, LocalPresenceState, String>(
+        (roomId) {
   return LocalPresenceNotifier()..roomId = roomId;
 });
 

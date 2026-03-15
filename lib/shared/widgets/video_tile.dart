@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:mixmingle/features/room/widgets/video_grid_layout.dart';
 
@@ -40,11 +40,16 @@ class VideoTile extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: VideoGridLayout.getTileBorderRadius(),
         border: Border.all(
-          color: isActiveSpeaker ? VideoGridLayout.getActiveSpeakerGlowColor() : VideoGridLayout.getTileBorderColor(),
-          width:
-              isActiveSpeaker ? VideoGridLayout.getActiveSpeakerBorderWidth() : VideoGridLayout.getDefaultBorderWidth(),
+          color: isActiveSpeaker
+              ? VideoGridLayout.getActiveSpeakerGlowColor()
+              : VideoGridLayout.getTileBorderColor(),
+          width: isActiveSpeaker
+              ? VideoGridLayout.getActiveSpeakerBorderWidth()
+              : VideoGridLayout.getDefaultBorderWidth(),
         ),
-        boxShadow: isActiveSpeaker ? VideoGridLayout.getActiveSpeakerShadow() : VideoGridLayout.getDefaultShadow(),
+        boxShadow: isActiveSpeaker
+            ? VideoGridLayout.getActiveSpeakerShadow()
+            : VideoGridLayout.getDefaultShadow(),
       ),
       child: ClipRRect(
         borderRadius: VideoGridLayout.getTileBorderRadius(),
@@ -58,9 +63,11 @@ class VideoTile extends StatelessWidget {
                 top: 8,
                 right: 8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: VideoGridLayout.getActiveSpeakerGlowColor().withValues(alpha: 0.9),
+                    color: VideoGridLayout.getActiveSpeakerGlowColor()
+                        .withValues(alpha: 0.9),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Row(
@@ -98,7 +105,8 @@ class VideoTile extends StatelessWidget {
                   ),
                 ),
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   child: Row(
                     children: [
                       Expanded(

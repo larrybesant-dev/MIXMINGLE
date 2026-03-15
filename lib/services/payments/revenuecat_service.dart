@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 ﻿/// RevenueCat Service - Stub for compilation
 /// Integration pending RevenueCat SDK setup and App Store/Play Store configuration
+=======
+/// RevenueCat Service - Stub for compilation
+/// TODO: Implement full RevenueCat integration
+>>>>>>> origin/develop
 library;
 
 import '../../features/payments/models/membership_tier.dart';
@@ -50,26 +55,41 @@ class RevenueCatService {
 
   /// Purchase a membership tier
   Future<PurchaseResult> purchaseMembership(MembershipTier tier) async {
+<<<<<<< HEAD
     // DEV STUB - purchase flow pending RevenueCat SDK integration
     return const PurchaseResult(success: false, errorMessage: 'RevenueCat not yet configured');
+=======
+    // DEV STUB - monetization disabled
+    // TODO: Implement RevenueCat purchase flow when ready
+    return const PurchaseResult(
+        success: false, errorMessage: 'RevenueCat not yet configured');
+>>>>>>> origin/develop
   }
 
   /// Purchase a subscription by product ID
   Future<PurchaseResult> purchaseSubscription(String productId) async {
     // DEV STUB
-    return const PurchaseResult(success: false, errorMessage: 'RevenueCat not yet configured');
+    return const PurchaseResult(
+        success: false, errorMessage: 'RevenueCat not yet configured');
   }
 
   /// Purchase a coin package
   Future<PurchaseResult> purchaseCoins(CoinPackage package) async {
     // DEV STUB
-    return const PurchaseResult(success: false, errorMessage: 'RevenueCat not yet configured');
+    return const PurchaseResult(
+        success: false, errorMessage: 'RevenueCat not yet configured');
   }
 
   /// Restore purchases
   Future<PurchaseResult> restorePurchases() async {
+<<<<<<< HEAD
     // DEV STUB - restore flow pending RevenueCat SDK integration
     return const PurchaseResult(success: false, errorMessage: 'RevenueCat not yet configured');
+=======
+    // TODO: Implement restore purchases via RevenueCat
+    return const PurchaseResult(
+        success: false, errorMessage: 'RevenueCat not yet configured');
+>>>>>>> origin/develop
   }
 
   /// Get current entitlements

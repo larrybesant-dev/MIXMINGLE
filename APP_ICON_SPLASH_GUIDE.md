@@ -1,6 +1,7 @@
 # App Icon & Splash Screen Guide
 
 ## Overview
+
 This guide helps you configure the Mix & Mingle app icon and splash screen with the branded nightclub aesthetic.
 
 ---
@@ -8,6 +9,7 @@ This guide helps you configure the Mix & Mingle app icon and splash screen with 
 ## 📱 App Icon Configuration
 
 ### Required Packages
+
 Add these to `pubspec.yaml`:
 
 ```yaml
@@ -16,6 +18,7 @@ dev_dependencies:
 ```
 
 ### Configuration
+
 Add this to `pubspec.yaml`:
 
 ```yaml
@@ -36,6 +39,7 @@ flutter_launcher_icons:
 ### Icon Design Requirements
 
 **Main Icon** (`assets/images/app_icon.png`):
+
 - Size: 1024x1024px
 - Format: PNG with transparency
 - Design: Mix & Mingle logo with vibrant red (#FF4C4C) on dark navy (#1E1E2F)
@@ -43,18 +47,21 @@ flutter_launcher_icons:
 - Style: Modern, bold, nightclub aesthetic
 
 **Adaptive Icon Foreground** (`assets/images/app_icon_foreground.png`):
+
 - Size: 1024x1024px (with 432x432px safe zone)
 - Format: PNG with transparency
 - Design: Logo symbol only (no background)
 - Colors: Red (#FF4C4C) with white highlights
 
 **Brand Colors**:
+
 - Primary: #FF4C4C (Vibrant Red)
 - Background: #1E1E2F (Deep Navy)
 - Accent: #24E8FF (Electric Blue)
 - Premium: #FFD700 (Golden Yellow)
 
 ### Generate Icons
+
 ```bash
 flutter pub get
 flutter pub run flutter_launcher_icons
@@ -65,6 +72,7 @@ flutter pub run flutter_launcher_icons
 ## 🎨 Splash Screen Configuration
 
 ### Required Packages
+
 Add these to `pubspec.yaml`:
 
 ```yaml
@@ -73,6 +81,7 @@ dependencies:
 ```
 
 ### Configuration
+
 Add this to `pubspec.yaml`:
 
 ```yaml
@@ -111,6 +120,7 @@ flutter_native_splash:
 ### Splash Screen Design Requirements
 
 **Main Splash Logo** (`assets/images/splash_logo.png`):
+
 - Size: 1242x1242px
 - Format: PNG with transparency
 - Design: Mix & Mingle logo with neon glow effect
@@ -118,6 +128,7 @@ flutter_native_splash:
 - Colors: Vibrant red (#FF4C4C) with glow
 
 **Branding Footer** (`assets/images/branding.png`):
+
 - Size: 600x200px
 - Format: PNG with transparency
 - Design: "Mix & Mingle" text with tagline
@@ -125,6 +136,7 @@ flutter_native_splash:
 - Color: White with subtle red glow
 
 ### Generate Splash Screen
+
 ```bash
 flutter pub get
 flutter pub run flutter_native_splash:create
@@ -149,25 +161,30 @@ Create these assets and place in `assets/images/`:
 ## 🎨 Design Guidelines
 
 ### Logo Concept
+
 The Mix & Mingle logo should represent:
+
 - **Mix**: Blending, music, energy (red/orange gradient)
 - **Mingle**: Connection, social, people (blue accent)
 - **Symbol**: Music note + people/hearts combined
 - **Style**: Bold, modern, nightclub neon aesthetic
 
 ### Visual Elements
+
 1. **Music Note Icon**: Primary symbol for the brand
 2. **Connection Lines**: Subtle lines connecting people
 3. **Neon Glow**: Signature glow effect (#FF4C4C)
 4. **Gradient**: Red to purple gradient for premium feel
 
 ### Color Usage
+
 - **Primary Red (#FF4C4C)**: Main brand color, CTAs, highlights
 - **Deep Navy (#1E1E2F)**: Backgrounds, depth
 - **Electric Blue (#24E8FF)**: Accents, secondary actions
 - **Golden Yellow (#FFD700)**: Premium features, badges
 
 ### Typography
+
 - **Display**: Poppins Bold (headlines)
 - **Body**: Inter Regular (content)
 - **Accent**: Oswald Bold (special emphasis)
@@ -177,6 +194,7 @@ The Mix & Mingle logo should represent:
 ## 📐 Icon Size Reference
 
 ### iOS
+
 - 1024x1024 - App Store
 - 180x180 - iPhone
 - 167x167 - iPad Pro
@@ -186,6 +204,7 @@ The Mix & Mingle logo should represent:
 - 58x58 - iPhone (settings)
 
 ### Android
+
 - 512x512 - Play Store
 - 192x192 - xxxhdpi
 - 144x144 - xxhdpi
@@ -194,6 +213,7 @@ The Mix & Mingle logo should represent:
 - 48x48 - mdpi
 
 ### Web
+
 - 192x192 - Standard
 - 512x512 - High resolution
 - favicon.ico - Browser tab
@@ -203,13 +223,16 @@ The Mix & Mingle logo should represent:
 ## 🚀 Implementation Steps
 
 ### 1. Create Design Assets
+
 Use Figma, Adobe Illustrator, or Canva:
+
 - Start with 1024x1024 canvas
 - Use brand colors (#FF4C4C, #1E1E2F, #24E8FF)
 - Add neon glow effect
 - Export as PNG with transparency
 
 ### 2. Add to Project
+
 ```
 mix_and_mingle/
 ├── assets/
@@ -222,9 +245,11 @@ mix_and_mingle/
 ```
 
 ### 3. Update pubspec.yaml
+
 Add the icon and splash configurations shown above.
 
 ### 4. Generate Assets
+
 ```bash
 # Install dependencies
 flutter pub get
@@ -237,6 +262,7 @@ flutter pub run flutter_native_splash:create
 ```
 
 ### 5. Test on Devices
+
 ```bash
 # iOS
 flutter run -d ios
@@ -255,10 +281,12 @@ flutter run -d android
 For an animated splash screen using Lottie:
 
 ### 1. Create Lottie Animation
+
 - Export animation as JSON from After Effects
 - Place in `assets/animations/splash_animation.json`
 
 ### 2. Update Main App
+
 ```dart
 import 'package:lottie/lottie.dart';
 
@@ -327,18 +355,21 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
 ## 📱 Platform-Specific Notes
 
 ### iOS
+
 - Use `ios/Runner/Assets.xcassets/AppIcon.appiconset`
 - Requires multiple sizes (automatically generated)
 - No transparency allowed for iOS icons
 - Use `Info.plist` for splash screen duration
 
 ### Android
+
 - Use `android/app/src/main/res/mipmap-*` folders
 - Supports adaptive icons (foreground + background)
 - Splash screen uses `styles.xml` and `colors.xml`
 - Android 12+ has new splash screen API
 
 ### Web
+
 - Use `web/icons/` folder
 - Update `web/manifest.json` with icon paths
 - Provide favicon.ico in `web/` root
@@ -371,6 +402,7 @@ class _AnimatedSplashScreenState extends State<AnimatedSplashScreen> {
 ## 🚨 Common Issues
 
 ### Icon Not Updating
+
 ```bash
 # Clean build
 flutter clean
@@ -384,6 +416,7 @@ flutter run
 ```
 
 ### Splash Screen Issues
+
 ```bash
 # Regenerate splash
 flutter pub run flutter_native_splash:remove
@@ -393,7 +426,9 @@ flutter pub run flutter_native_splash:create
 ```
 
 ### Android Adaptive Icon
+
 If adaptive icon looks wrong:
+
 1. Check safe zone (432x432 center)
 2. Ensure foreground has transparency
 3. Test on different Android versions

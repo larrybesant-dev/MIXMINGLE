@@ -3,6 +3,7 @@
 ## ✅ Completed: Model Consolidation & Compilation Fixes
 
 ### Room Model Unified (`lib/shared/models/room.dart`)
+
 - Merged both Room models into single unified model
 - Supports both new architecture fields AND legacy fields for backward compatibility
 - All imports now use `lib/shared/models/room.dart`
@@ -10,189 +11,203 @@
 
 # 🚀 Integration Instructions
 
-  ## Quick Start - Wire New Pages to App
+## Quick Start - Wire New Pages to App
 
-  ### Step 1: Update app.dart Imports
+### Step 1: Update app.dart Imports
 
-  Add these imports to `lib/app.dart`:
+Add these imports to `lib/app.dart`:
 
-  ```dart
-  // Add with other deferred imports
-  import 'features/discover/room_discovery_page_complete.dart' deferred as room_discovery_complete;
-  import 'features/rooms/create_room_page_complete.dart' deferred as create_room_complete;
-  ```
+```dart
+// Add with other deferred imports
+import 'features/discover/room_discovery_page_complete.dart' deferred as room_discovery_complete;
+import 'features/rooms/create_room_page_complete.dart' deferred as create_room_complete;
+```
 
-  ### Step 2: Update app_routes.dart
+### Step 2: Update app_routes.dart
 
-  Find the `browseRooms` case and update it:
+Find the `browseRooms` case and update it:
 
-  ```dart
-  case browseRooms:
-    // Load the complete discovery page
-    await room_discovery_complete.loadLibrary();
-    return _createSlideRoute(
-      page: const AuthGate(
-        child: ProfileGuard(child: room_discovery_complete.RoomDiscoveryPageComplete()),
-      ),
-      settings: settings,
-      direction: SlideDirection.left,
-    );
-  ```
+```dart
+case browseRooms:
+  // Load the complete discovery page
+  await room_discovery_complete.loadLibrary();
+  return _createSlideRoute(
+    page: const AuthGate(
+      child: ProfileGuard(child: room_discovery_complete.RoomDiscoveryPageComplete()),
+    ),
+    settings: settings,
+    direction: SlideDirection.left,
+  );
+```
 
-  Find the `createRoom` case and update it:
+Find the `createRoom` case and update it:
 
-  ```dart
-  case createRoom:
-    // Load the complete create room page
-    await create_room_complete.loadLibrary();
-    return _createSlideRoute(
-      page: const AuthGate(
-        child: ProfileGuard(child: create_room_complete.CreateRoomPageComplete()),
-      ),
-      settings: settings,
-      direction: SlideDirection.up,
-    );
-  ```
+```dart
+case createRoom:
+  // Load the complete create room page
+  await create_room_complete.loadLibrary();
+  return _createSlideRoute(
+    page: const AuthGate(
+      child: ProfileGuard(child: create_room_complete.CreateRoomPageComplete()),
+    ),
+    settings: settings,
+    direction: SlideDirection.up,
+  );
+```
 
-  ### Step 3: Test the Flow
+### Step 3: Test the Flow
 
-  1. **Hot restart your Flutter app** (press `R` in terminal)
-  2. **Test Room Discovery:**
-     - Navigate to Browse Rooms
-     - Should see live rooms list with search bar and category filters
-     - Click a room to join
-  3. **Test Room Creation:**
-     - Click "Create Room" button (+ icon)
-     - Fill out form and submit
-     - Should auto-navigate to new room
-     - Room should appear in discovery list
-  4. **Test Room Join:**
-     - From discovery page, click any room
-     - Should join Agora channel
-     - Should see video (if video room)
-     - Console should show: "Joined Agora channel: {roomId}"
+1. **Hot restart your Flutter app** (press `R` in terminal)
+2. **Test Room Discovery:**
+   - Navigate to Browse Rooms
+   - Should see live rooms list with search bar and category filters
+   - Click a room to join
+3. **Test Room Creation:**
+   - Click "Create Room" button (+ icon)
+   - Fill out form and submit
+   - Should auto-navigate to new room
+   - Room should appear in discovery list
+4. **Test Room Join:**
+   - From discovery page, click any room
+   - Should join Agora channel
+   - Should see video (if video room)
+   - Console should show: "Joined Agora channel: {roomId}"
 
-  ---
+---
 
-  ## Alternative: Direct Routes (No Deferred Loading)
+## Alternative: Direct Routes (No Deferred Loading)
 
-  If you want simpler integration without deferred loading:
+If you want simpler integration without deferred loading:
 
-  ### Update app.dart imports:
-  ```dart
-  import 'features/discover/room_discovery_page_complete.dart';
-  import 'features/rooms/create_room_page_complete.dart';
-  ```
+### Update app.dart imports:
 
-  ### Update app_routes.dart:
-  ```dart
-  case browseRooms:
-    return _createSlideRoute(
-      page: const AuthGate(
-        child: ProfileGuard(child: RoomDiscoveryPageComplete()),
-      ),
-      settings: settings,
-      direction: SlideDirection.left,
-    );
+```dart
+import 'features/discover/room_discovery_page_complete.dart';
+import 'features/rooms/create_room_page_complete.dart';
+```
 
-  case createRoom:
-    return _createSlideRoute(
-      page: const AuthGate(
-        child: ProfileGuard(child: CreateRoomPageComplete()),
-      ),
-      settings: settings,
-      direction: SlideDirection.up,
-    );
-  ```
+### Update app_routes.dart:
 
-  ---
+```dart
+case browseRooms:
+  return _createSlideRoute(
+    page: const AuthGate(
+      child: ProfileGuard(child: RoomDiscoveryPageComplete()),
+    ),
+    settings: settings,
+    direction: SlideDirection.left,
+  );
 
-  ## Testing Commands
+case createRoom:
+  return _createSlideRoute(
+    page: const AuthGate(
+      child: ProfileGuard(child: CreateRoomPageComplete()),
+    ),
+    settings: settings,
+    direction: SlideDirection.up,
+  );
+```
 
-  ### In Browser Console (while app is running):
-  ```javascript
-  // Navigate to room discovery
-  window.location.hash = '#/browse-rooms';
+---
 
-  // Navigate to create room
-  window.location.hash = '#/create-room';
+## Testing Commands
 
-  // Navigate to specific room
-  window.location.hash = '#/room?roomId=DoWJnySEtTtEZsaB80RR';
-  ```
+### In Browser Console (while app is running):
 
-  ### In Flutter Terminal:
-  ```
-  r  # Hot reload (for small changes)
-  R  # Hot restart (required for new routes/imports)
-  ```
+```javascript
+// Navigate to room discovery
+window.location.hash = "#/browse-rooms";
 
-  ---
+// Navigate to create room
+window.location.hash = "#/create-room";
 
-  ## Verification Checklist
+// Navigate to specific room
+window.location.hash = "#/room?roomId=DoWJnySEtTtEZsaB80RR";
+```
 
-  After integration, verify:
+### In Flutter Terminal:
 
-  - [ ] Browse Rooms shows live rooms
-  - [ ] Search bar works
-  - [ ] Category filters work
-  - [ ] Clicking room navigates to room
-  - [ ] Create Room button works
-  - [ ] Form validation works
-  - [ ] Room creation succeeds
-  - [ ] New room appears in list
-  - [ ] Video/audio initializes
-  - [ ] No console errors
-  - [ ] Backend logs show token generation
-  - [ ] Firestore shows new rooms
+```
+r  # Hot reload (for small changes)
+R  # Hot restart (required for new routes/imports)
+```
 
-  ---
+---
 
-  ## Common Issues & Solutions
+## Verification Checklist
 
-  ### Issue: "Cannot find module RoomDiscoveryPageComplete"
-  **Solution:** Make sure the file exists at:
-  ```
-  lib/features/discover/room_discovery_page_complete.dart
-  ```
+After integration, verify:
 
-  ### Issue: "Undefined name 'room_discovery_complete'"
-  **Solution:** Add the deferred import in app.dart:
-  ```dart
-  import 'features/discover/room_discovery_page_complete.dart' deferred as room_discovery_complete;
-  ```
+- [ ] Browse Rooms shows live rooms
+- [ ] Search bar works
+- [ ] Category filters work
+- [ ] Clicking room navigates to room
+- [ ] Create Room button works
+- [ ] Form validation works
+- [ ] Room creation succeeds
+- [ ] New room appears in list
+- [ ] Video/audio initializes
+- [ ] No console errors
+- [ ] Backend logs show token generation
+- [ ] Firestore shows new rooms
 
-  ### Issue: Rooms not showing in list
-  **Solution:**
-  1. Check Firebase console - make sure rooms exist
-  2. Check Firestore rules allow reading rooms
-  3. Check console for errors
+---
 
-  ### Issue: "Room not found" when joining
-  **Solution:**
-  1. Make sure room exists in Firestore
-  2. Check room ID matches exactly
-  3. Verify room has `isLive: true` and `isActive: true`
+## Common Issues & Solutions
 
-  ---
+### Issue: "Cannot find module RoomDiscoveryPageComplete"
 
-  ## 🎉 You're Almost Done!
+**Solution:** Make sure the file exists at:
 
-  The complete Paltalk-style system is 95% ready. Just wire these pages in and test!
+```
+lib/features/discover/room_discovery_page_complete.dart
+```
 
-  **Files to Update:**
-  1. `lib/app.dart` - Add imports
-  2. `lib/app_routes.dart` - Update route cases
+### Issue: "Undefined name 'room_discovery_complete'"
 
-  **Then Hot Restart and Test!**
-  },
-  loading: () => CircularProgressIndicator(),
-  error: (err, stack) => Text('Error: $err'),
+**Solution:** Add the deferred import in app.dart:
+
+```dart
+import 'features/discover/room_discovery_page_complete.dart' deferred as room_discovery_complete;
+```
+
+### Issue: Rooms not showing in list
+
+**Solution:**
+
+1. Check Firebase console - make sure rooms exist
+2. Check Firestore rules allow reading rooms
+3. Check console for errors
+
+### Issue: "Room not found" when joining
+
+**Solution:**
+
+1. Make sure room exists in Firestore
+2. Check room ID matches exactly
+3. Verify room has `isLive: true` and `isActive: true`
+
+---
+
+## 🎉 You're Almost Done!
+
+The complete Paltalk-style system is 95% ready. Just wire these pages in and test!
+
+**Files to Update:**
+
+1. `lib/app.dart` - Add imports
+2. `lib/app_routes.dart` - Update route cases
+
+**Then Hot Restart and Test!**
+},
+loading: () => CircularProgressIndicator(),
+error: (err, stack) => Text('Error: $err'),
 );
 
 // Watch messages from Firestore (optional - replaces local chat)
 final messagesAsync = ref.watch(roomMessagesFirestoreProvider(widget.roomId));
-```
+
+````
 
 ### Step 3: Add Moderation Controls
 
@@ -231,7 +246,7 @@ PopupMenuButton(
     ),
   ],
 )
-```
+````
 
 ### Step 4: Integrate Dynamic Video Grid
 
@@ -333,6 +348,7 @@ Future<void> toggleCamera(bool enabled) async {
 ## 🎯 Quick Wins
 
 ### Add Room Settings UI
+
 ```dart
 // In room creation/settings dialog
 TextField(
@@ -364,6 +380,7 @@ Slider(
 ```
 
 ### Display Room Events
+
 ```dart
 // Events sidebar/feed
 final eventsAsync = ref.watch(roomEventsFirestoreProvider(widget.roomId));
@@ -409,6 +426,7 @@ eventsAsync.when(
 ## 🚀 Deployment Notes
 
 **Firestore Security Rules Required:**
+
 ```javascript
 // Only owner/admins can moderate
 match /rooms/{roomId}/participants/{userId} {
@@ -430,6 +448,7 @@ match /rooms/{roomId}/events/{eventId} {
 ```
 
 **Firestore Indexes Required:**
+
 - `rooms/{roomId}/messages`: composite index on `createdAt` (ascending)
 - `rooms/{roomId}/events`: composite index on `createdAt` (descending)
 

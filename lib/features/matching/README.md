@@ -28,29 +28,34 @@ lib/features/matching/
 ### ✅ Complete Question Coverage (19 Fields)
 
 **Core Compatibility (40% weight)**
+
 - Relationship Intent (15%)
 - Partner Vibe (10%)
 - Connection Style (8%)
 - Attraction Trigger (7%)
 
 **Lifestyle Compatibility (30% weight)**
+
 - Weekend Energy (8%)
 - Social Style (7%)
 - Lifestyle Habits - smoking/drinking/cannabis (10%)
 - Music Identity (5%)
 
 **Communication & Personality (20% weight)**
+
 - Communication Style (7%)
 - Love Language (7%)
 - Personality Trait (6%)
 
 **Preferences (10% weight)**
+
 - Pets/Kids Preference (3%)
 - Flirting Style (3%)
 - Icebreaker Type (2%)
 - Favorite Prompt (2%)
 
 **Filters**
+
 - Age Range
 - Preferred Genders
 - Distance Preference
@@ -85,6 +90,7 @@ flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
 This will generate:
+
 - `questionnaire_answers.freezed.dart`
 - `questionnaire_answers.g.dart`
 - `matching_profile.freezed.dart`
@@ -110,7 +116,7 @@ class MatchesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final matchesAsync = ref.watch(topMatchesProvider);
-    
+
     return matchesAsync.when(
       loading: () => CircularProgressIndicator(),
       error: (e, _) => Text('Error: $e'),
@@ -224,7 +230,7 @@ class MatchingWeights {
   static const double relationshipIntent = 15.0;
   static const double partnerVibe = 10.0;
   // ... more weights
-  
+
   // Total always equals 100.0
 }
 ```
@@ -262,7 +268,7 @@ double distanceTo(MatchingProfile other) {
   "photoUrl": "https://...",
   "age": 28,
   "latitude": 40.7128,
-  "longitude": -74.0060,
+  "longitude": -74.006,
   "answers": {
     "relationshipIntent": "seriousRelationship",
     "partnerVibe": "intellectual",
@@ -336,8 +342,8 @@ See `matching_service_test.dart` for complete test profiles with all 19 fields p
 {
   "collectionGroup": "matching_profiles",
   "fields": [
-    {"fieldPath": "isActive", "order": "ASCENDING"},
-    {"fieldPath": "lastActive", "order": "DESCENDING"}
+    { "fieldPath": "isActive", "order": "ASCENDING" },
+    { "fieldPath": "lastActive", "order": "DESCENDING" }
   ]
 }
 ```
@@ -381,6 +387,7 @@ final mutualMatchesProvider // Mutual likes
 ## Support
 
 For questions or issues:
+
 1. Check test files for usage examples
 2. Review example UI implementation
 3. Validate Firestore data structure

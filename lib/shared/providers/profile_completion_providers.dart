@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'auth_providers.dart';
 import 'profile_controller.dart' hide currentUserProfileProvider;
 
@@ -20,6 +20,7 @@ final needsOnboardingProvider = Provider<bool>((ref) {
   // Remove this override to re-enable the onboarding gate.
   return false;
 });
+<<<<<<< HEAD
 
 /// 0–100 profile richness score based on five pillars:
 /// avatar (20) + bio (20) + photos (15) + interests (15) + location (15) + music (15)
@@ -36,3 +37,5 @@ final profileCompletenessScoreProvider = Provider.family<int, String>((ref, user
   return score;
 });
 
+=======
+>>>>>>> origin/develop

@@ -1,4 +1,4 @@
-﻿// Web-specific implementations using dart:js_interop and package:web
+// Web-specific implementations using dart:js_interop and package:web
 import 'dart:js_interop';
 import 'dart:typed_data';
 // ignore: depend_on_referenced_packages
@@ -14,5 +14,3 @@ void downloadJsonOnWeb(Uint8List bytes, String filename) {
   anchor.click();
   web.URL.revokeObjectURL(url);
 }
-
-

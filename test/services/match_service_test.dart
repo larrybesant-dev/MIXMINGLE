@@ -17,8 +17,10 @@ void main() {
   group('MatchService Tests', () {
     test('should like a user', () async {
       // Arrange
-      mockFirestore.addDocument('users', 'user1', TestData.userProfile(uid: 'user1'));
-      mockFirestore.addDocument('users', 'user2', TestData.userProfile(uid: 'user2'));
+      mockFirestore.addDocument(
+          'users', 'user1', TestData.userProfile(uid: 'user1'));
+      mockFirestore.addDocument(
+          'users', 'user2', TestData.userProfile(uid: 'user2'));
 
       // Act
       mockFirestore.addDocument('likes', 'like1', {
@@ -49,11 +51,13 @@ void main() {
       });
 
       // Act
-      final likes1 = mockFirestore.query('likes', whereField: 'likerId', whereValue: 'user1');
-      final likes2 = mockFirestore.query('likes', whereField: 'likerId', whereValue: 'user2');
+      final likes1 = mockFirestore.query('likes',
+          whereField: 'likerId', whereValue: 'user1');
+      final likes2 = mockFirestore.query('likes',
+          whereField: 'likerId', whereValue: 'user2');
 
       final isMutual = likes1.any((l) => l['likedUserId'] == 'user2') &&
-                       likes2.any((l) => l['likedUserId'] == 'user1');
+          likes2.any((l) => l['likedUserId'] == 'user1');
 
       if (isMutual) {
         mockFirestore.addDocument('matches', 'match1', {
@@ -82,11 +86,14 @@ void main() {
 
     test('should enforce rate limiting', () {
       // Arrange
-      final likesInLastDay = List.generate(100, (i) => {
-        'likerId': 'user1',
-        'likedUserId': 'user$i',
-        'timestamp': Timestamp.fromDate(DateTime.now().subtract(Duration(hours: i % 24))),
-      });
+      final likesInLastDay = List.generate(
+          100,
+          (i) => {
+                'likerId': 'user1',
+                'likedUserId': 'user$i',
+                'timestamp': Timestamp.fromDate(
+                    DateTime.now().subtract(Duration(hours: i % 24))),
+              });
 
       // Add to mock firestore
       for (var i = 0; i < likesInLastDay.length; i++) {
@@ -94,7 +101,8 @@ void main() {
       }
 
       // Act
-      final userLikes = mockFirestore.query('likes', whereField: 'likerId', whereValue: 'user1');
+      final userLikes = mockFirestore.query('likes',
+          whereField: 'likerId', whereValue: 'user1');
       final recentLikes = userLikes.where((like) {
         final timestamp = like['timestamp'] as Timestamp;
         return DateTime.now().difference(timestamp.toDate()).inDays < 1;
@@ -110,7 +118,8 @@ void main() {
       final user2Interests = ['music', 'sports', 'reading'];
 
       // Act
-      final sharedInterests = user1Interests.where((i) => user2Interests.contains(i)).length;
+      final sharedInterests =
+          user1Interests.where((i) => user2Interests.contains(i)).length;
       final totalInterests = {...user1Interests, ...user2Interests}.length;
       final score = sharedInterests / totalInterests;
 
@@ -134,8 +143,10 @@ void main() {
       });
 
       // Act
-      final matches1 = mockFirestore.query('matches', whereField: 'user1', whereValue: 'user1');
-      final matches2 = mockFirestore.query('matches', whereField: 'user2', whereValue: 'user1');
+      final matches1 = mockFirestore.query('matches',
+          whereField: 'user1', whereValue: 'user1');
+      final matches2 = mockFirestore.query('matches',
+          whereField: 'user2', whereValue: 'user1');
 
       final allMatches = [...matches1, ...matches2];
 

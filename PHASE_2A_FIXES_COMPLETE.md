@@ -9,9 +9,11 @@
 ## FIXES APPLIED
 
 ### ✅ Fix #1: AppLogger.warn() → .warning()
+
 **File:** `lib/services/agora_platform_service.dart` (Line 67)
 **Issue:** Method `warn()` doesn't exist; should be `warning()`
 **Change:**
+
 ```dart
 // BEFORE:
 AppLogger.warn('⚠️ Failed to enable local tracks');
@@ -19,15 +21,18 @@ AppLogger.warn('⚠️ Failed to enable local tracks');
 // AFTER:
 AppLogger.warning('⚠️ Failed to enable local tracks');
 ```
+
 **Status:** ✅ Applied
 **Verification:** `flutter analyze` - No errors
 
 ---
 
 ### ✅ Fix #2: Reorder enableLocalTracks After Join
+
 **File:** `lib/services/agora_platform_service.dart` (Lines 42-91)
 **Issue:** Browser permission prompt happens during join, not before
 **Change:**
+
 ```dart
 // BEFORE (WRONG ORDER):
 1. Init bridge
@@ -39,6 +44,7 @@ AppLogger.warning('⚠️ Failed to enable local tracks');
 2. JoinChannel (browser prompts for permissions here)
 3. EnableLocalTracks (now safe, permissions granted)
 ```
+
 **Status:** ✅ Applied
 **Lines Changed:** 42-91
 **Verification:** Code inspection, build test
@@ -46,9 +52,11 @@ AppLogger.warning('⚠️ Failed to enable local tracks');
 ---
 
 ### ✅ Fix #3: Simplify JS Interop Pattern
+
 **File:** `lib/services/agora_web_bridge_v2.dart` (Lines 205-225)
 **Issue:** `allowInterop` not available in dart:js with this setup
 **Change:**
+
 ```dart
 // BEFORE:
 final onSuccess = js.allowInterop((dynamic result) { ... })
@@ -59,6 +67,7 @@ final onSuccess = (dynamic result) { ... };
 final onError = (dynamic error) { ... };
 // dart:js.callMethod handles interop automatically
 ```
+
 **Status:** ✅ Applied
 **Verification:** `flutter build web --release` - Success
 
@@ -67,6 +76,7 @@ final onError = (dynamic error) { ... };
 ## VERIFICATION RESULTS
 
 ### Build Status
+
 ```
 ✅ flutter pub get                    - SUCCESS
 ✅ flutter analyze (critical areas)   - 0 ERRORS
@@ -75,10 +85,12 @@ final onError = (dynamic error) { ... };
 ```
 
 ### Files Modified
+
 1. `lib/services/agora_web_bridge_v2.dart` (3 changes)
 2. `lib/services/agora_platform_service.dart` (2 changes)
 
 ### Remaining Issues (Non-Critical)
+
 ```
 9 info/warning level issues found:
 - dart:js deprecation warning (not blocking)
@@ -93,11 +105,13 @@ final onError = (dynamic error) { ... };
 ## TECHNICAL IMPACT
 
 ### Before Fixes:
+
 - ❌ Web bridge would crash due to undefined `allowInterop`
 - ❌ Users couldn't enable video/audio (permissions issue)
 - ❌ `flutter build web` would fail
 
 ### After Fixes:
+
 - ✅ Web bridge uses dart:js correctly
 - ✅ Permissions prompt appears at the right time
 - ✅ Users can enable video/audio after permissions granted
@@ -109,6 +123,7 @@ final onError = (dynamic error) { ... };
 ## NEXT STEPS
 
 ### Phase 2B: Core Features & Cleanup
+
 **ETA:** 5-8 hours
 
 1. **Add Remote User Event Forwarding**
@@ -116,10 +131,11 @@ final onError = (dynamic error) { ... };
    - Add JS event listeners for remote user published/unpublished
    - Wire to Dart callbacks
 
- 2. **Firestore Schema & Rules**
-   - File: `FIRESTORE_SCHEMA.md` (create)
-   - File: `firestore.rules` (create)
-   - Create centralized collection constants
+2. **Firestore Schema & Rules**
+
+- File: `FIRESTORE_SCHEMA.md` (create)
+- File: `firestore.rules` (create)
+- Create centralized collection constants
 
 3. **Code Cleanup**
    - Archive deprecated service files
@@ -129,11 +145,11 @@ final onError = (dynamic error) { ... };
 
 ## BLOCKING ISSUES RESOLVED
 
-| Issue | Status | Impact |
-|-------|--------|--------|
-| Web bridge imports | ✅ Fixed | Build now succeeds |
-| AppLogger undefined method | ✅ Fixed | No build errors |
-| enableLocalTracks timing | ✅ Fixed | Users can grant permissions |
+| Issue                      | Status   | Impact                      |
+| -------------------------- | -------- | --------------------------- |
+| Web bridge imports         | ✅ Fixed | Build now succeeds          |
+| AppLogger undefined method | ✅ Fixed | No build errors             |
+| enableLocalTracks timing   | ✅ Fixed | Users can grant permissions |
 
 **All P0 (Critical) blockers resolved.**
 

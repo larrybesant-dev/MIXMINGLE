@@ -41,7 +41,12 @@ class ModerationPanel extends ConsumerStatefulWidget {
   ConsumerState<ModerationPanel> createState() => _ModerationPanelState();
 }
 
+<<<<<<< HEAD
 class _ModerationPanelState extends ConsumerState<ModerationPanel> with TickerProviderStateMixin {
+=======
+class _ModerationPanelState extends ConsumerState<ModerationPanel>
+    with SingleTickerProviderStateMixin {
+>>>>>>> origin/develop
   late AnimationController _slideController;
   late Animation<Offset> _slideAnimation;
   late TabController _tabController;
@@ -84,8 +89,10 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with TickerPr
 
     // Filter by search query
     if (_searchQuery.isNotEmpty) {
-      participants =
-          participants.where((p) => p.displayName.toLowerCase().contains(_searchQuery.toLowerCase())).toList();
+      participants = participants
+          .where((p) =>
+              p.displayName.toLowerCase().contains(_searchQuery.toLowerCase()))
+          .toList();
     }
 
     // Filter by muted status
@@ -219,7 +226,8 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with TickerPr
             borderRadius: BorderRadius.circular(8),
             borderSide: BorderSide.none,
           ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         ),
       ),
     );
@@ -349,7 +357,8 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with TickerPr
     final coHostIds = ref.watch(_coHostIdsProvider(widget.room.id)).asData?.value ?? {};
     final isCoHost = coHostIds.contains(participant.userId);
     final isCurrentUser = participant.userId == widget.currentUserId;
-    final canModerate = widget.currentUserRole.canRemoveParticipants && !isCurrentUser;
+    final canModerate =
+        widget.currentUserRole.canRemoveParticipants && !isCurrentUser;
 
     // Friend status badge
     final friendStatusAsync = ref.watch(friendStatusProvider(participant.userId));
@@ -375,7 +384,9 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with TickerPr
                       ? Colors.deepPurple
                       : Colors.grey[800],
               child: Text(
-                participant.displayName.isNotEmpty ? participant.displayName[0].toUpperCase() : '?',
+                participant.displayName.isNotEmpty
+                    ? participant.displayName[0].toUpperCase()
+                    : '?',
                 style: TextStyle(
                   color: (isHost || isCoHost) ? Colors.white : Colors.white70,
                   fontWeight: FontWeight.w600,
@@ -538,7 +549,8 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with TickerPr
     );
   }
 
-  Future<void> _handleModerationAction(String action, AgoraParticipant participant) async {
+  Future<void> _handleModerationAction(
+      String action, AgoraParticipant participant) async {
     final moderationService = ref.read(moderationServiceProvider);
 
     try {
@@ -549,7 +561,8 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with TickerPr
             participantId: participant.userId,
             mute: participant.hasAudio,
           );
-          _showSnackBar('${participant.displayName} ${participant.hasAudio ? 'muted' : 'unmuted'}');
+          _showSnackBar(
+              '${participant.displayName} ${participant.hasAudio ? 'muted' : 'unmuted'}');
           break;
 
         case 'video':
@@ -558,7 +571,8 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with TickerPr
             participantId: participant.userId,
             disable: participant.hasVideo,
           );
-          _showSnackBar('${participant.displayName}\'s video ${participant.hasVideo ? 'stopped' : 'started'}');
+          _showSnackBar(
+              '${participant.displayName}\'s video ${participant.hasVideo ? 'stopped' : 'started'}');
           break;
 
         case 'promote':
@@ -637,7 +651,8 @@ class _ModerationPanelState extends ConsumerState<ModerationPanel> with TickerPr
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: Text('Cancel', style: TextStyle(color: Colors.grey[400])),
+                child:
+                    Text('Cancel', style: TextStyle(color: Colors.grey[400])),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),

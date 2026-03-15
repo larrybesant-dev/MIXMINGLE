@@ -69,10 +69,20 @@ class RoomAccessWrapper extends ConsumerWidget {
         ),
       ),
       data: (hasAccess) {
+<<<<<<< HEAD
+=======
+        // Build display name from FirebaseAuth (already authenticated at this point)
+        final fbUser = fb_auth.FirebaseAuth.instance.currentUser;
+        final displayName = fbUser?.displayName?.trim().isNotEmpty == true
+            ? fbUser!.displayName!
+            : fbUser?.email?.split('@').first ?? userId;
+        final avatarUrl = fbUser?.photoURL;
+
+>>>>>>> origin/develop
         return LiveRoomScreen(
-          roomId:      room.id,
+          roomId: room.id,
           displayName: displayName,
-          avatarUrl:   avatarUrl,
+          avatarUrl: avatarUrl,
         );
       },
       error: (error, stackTrace) {

@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/agora_participant.dart';
 import 'user_display_name_provider.dart';
 
@@ -90,24 +90,27 @@ class AgoraParticipantNotifier extends Notifier<Map<int, AgoraParticipant>> {
   int get count => state.length;
 
   /// Get participants with video enabled
-  List<AgoraParticipant> get participantsWithVideo => state.values.where((p) => p.hasVideo).toList();
+  List<AgoraParticipant> get participantsWithVideo =>
+      state.values.where((p) => p.hasVideo).toList();
 
   /// Get participants with audio enabled
-  List<AgoraParticipant> get participantsWithAudio => state.values.where((p) => p.hasAudio).toList();
+  List<AgoraParticipant> get participantsWithAudio =>
+      state.values.where((p) => p.hasAudio).toList();
 
   /// Get currently speaking participants
-  List<AgoraParticipant> get speakingParticipants => state.values.where((p) => p.isSpeaking).toList();
+  List<AgoraParticipant> get speakingParticipants =>
+      state.values.where((p) => p.isSpeaking).toList();
 }
 
 /// Provider for Agora participants state
-final agoraParticipantsProvider = NotifierProvider<AgoraParticipantNotifier, Map<int, AgoraParticipant>>(() {
+final agoraParticipantsProvider =
+    NotifierProvider<AgoraParticipantNotifier, Map<int, AgoraParticipant>>(() {
   return AgoraParticipantNotifier();
 });
 
 /// Helper to get participant display name with Firestore lookup
-final participantDisplayNameProvider = FutureProvider.family<String, String>((ref, userId) async {
+final participantDisplayNameProvider =
+    FutureProvider.family<String, String>((ref, userId) async {
   // Use the cached display name provider we just created
   return await ref.watch(userDisplayNameProvider(userId).future);
 });
-
-

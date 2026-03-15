@@ -5,6 +5,7 @@ This guide helps you decode any errors that appear during the test and what they
 ## Frontend Errors (Console)
 
 ### Error: "ERROR: FirebaseAuth.currentUser is null"
+
 ```
 What it means: You clicked "Join Room" before signing in
 How to fix: Sign in first with your test credentials
@@ -12,6 +13,7 @@ Root cause: Frontend auth verification guard working as intended
 ```
 
 ### Error: "Error state unstable - user is null"
+
 ```
 What it means: authStateChanges() completed but user was null
 How to fix: Sign in again, wait for full auth initialization
@@ -20,6 +22,7 @@ Status: This error prevents bad calls from reaching backend
 ```
 
 ### Error: "Agora token generation failed: [firebase_functions/internal] internal"
+
 ```
 What it means: Backend callable failed with generic error
 Debug steps:
@@ -31,6 +34,7 @@ Fix: flutter clean, rebuild, check web/index.html
 ```
 
 ### Error: "CORS policy: Cross-Origin Request Blocked"
+
 ```
 What it means: Browser blocked cross-origin request
 Root cause: Still using old HTTP GET code path
@@ -40,6 +44,7 @@ Prevention: No direct http.get() calls in codebase now
 ```
 
 ### Error: "Cannot read properties of undefined (reading 'createIrisApiEngine')"
+
 ```
 What it means: Agora SDK initialization failed
 Root cause: Agora app ID not loaded or permissions issue
@@ -52,6 +57,7 @@ What to do: Check Agora SDK initialization logs earlier in console
 ## Backend Errors (Cloud Functions Logs)
 
 ### Log: "Auth context - UID: NONE, Token: MISSING"
+
 ```
 What it means: request.auth was null/undefined on backend
 Root cause: Firebase Functions JS SDK not initialized on web
@@ -63,6 +69,7 @@ Fix: Ensure web/index.html properly imports and initializes Functions
 ```
 
 ### Log: "Error: Authentication required. Please ensure you are signed in."
+
 ```
 What it means: Backend caught missing request.auth.uid and threw error
 Root cause: Same as above - web SDK not attaching auth
@@ -71,6 +78,7 @@ Fix: Fix the web SDK initialization
 ```
 
 ### Log: "Auth mismatch: request.auth.uid=X but data.userId=Y"
+
 ```
 What it means: User asking for token for different user
 Root cause: Usually shouldn't happen - indicates user passed wrong userId
@@ -80,6 +88,7 @@ Check: Line in agora_video_service.dart where userId is passed
 ```
 
 ### Log: "Room not found"
+
 ```
 What it means: You tried to join a room that doesn't exist
 Root cause: Room ID invalid or room was deleted
@@ -88,6 +97,7 @@ Verify: Room must exist in Firestore with isLive: true
 ```
 
 ### Log: "User is banned from this room"
+
 ```
 What it means: User's UID is in room.bannedUsers array
 Root cause: User was banned by room host
@@ -96,6 +106,7 @@ Verify: Check Firestore room document for bannedUsers field
 ```
 
 ### Log: "User was removed from this room"
+
 ```
 What it means: User's UID is in room.kickedUsers array
 Root cause: User was kicked by room host
@@ -104,6 +115,7 @@ Verify: Check Firestore room document for kickedUsers field
 ```
 
 ### Log: "Room has ended"
+
 ```
 What it means: Room isLive is false or status is 'ended'
 Root cause: Host ended the broadcast
@@ -112,6 +124,7 @@ Verify: Room document shows isLive: false
 ```
 
 ### Log: "Agora credentials missing"
+
 ```
 What it means: AGORA_APP_ID or AGORA_APP_CERTIFICATE secrets not set
 Root cause: Secrets not configured in Cloud Functions
@@ -126,6 +139,7 @@ Deploy: firebase deploy --only functions:generateAgoraToken
 ## Network Tab Anomalies (Chrome DevTools)
 
 ### Request Method is GET (not POST)
+
 ```
 Problem: Old HTTP code path still active
 Root cause: flutter clean didn't work or stale browser cache
@@ -137,6 +151,7 @@ Fix:
 ```
 
 ### Status 400 Bad Request
+
 ```
 Problem: Invalid request format
 Root cause: Usually wrong region or malformed payload
@@ -148,6 +163,7 @@ Fix: Rebuild and verify region configuration
 ```
 
 ### Status 401 Unauthorized
+
 ```
 Problem: Authorization header missing or invalid
 Root cause: Web SDK not attaching auth token
@@ -156,6 +172,7 @@ Verify: Request headers should show: Authorization: Bearer [token]
 ```
 
 ### Status 403 Forbidden
+
 ```
 Problem: Cloud Run IAM permissions issue
 Root cause: Unlikely if backend deployed correctly
@@ -165,6 +182,7 @@ Deploy: firebase deploy --only functions:generateAgoraToken
 ```
 
 ### Status 500 Internal Server Error
+
 ```
 Problem: Backend exception (not [firebase_functions/internal])
 Root cause: Bug in token generation logic
@@ -174,6 +192,7 @@ Debug: Most common cause is missing secrets
 ```
 
 ### No Authorization Header in Request
+
 ```
 Problem: Web SDK didn't attach auth context
 Root cause: Web platform Firebase SDK not initialized
@@ -185,6 +204,7 @@ Action: flutter clean and rebuild
 ```
 
 ### Request Takes >3 Seconds
+
 ```
 Problem: Slow response (not necessarily bad)
 Normal range: 200-800ms
@@ -200,6 +220,7 @@ Future improvement: Consider caching room data
 ## Combined Error Scenarios
 
 ### Frontend "Auth verified" + Backend "UID: NONE"
+
 ```
 Signal: Mixed success/failure
 Root cause: Web SDK issue specifically
@@ -214,6 +235,7 @@ Check:
 ```
 
 ### Frontend "Auth verified" + Network shows GET
+
 ```
 Signal: Frontend worked but wrong API being called
 Root cause: Old HTTP code path still in build
@@ -223,6 +245,7 @@ Verify: No http.get() to cloudfunctions URLs in codebase
 ```
 
 ### Everything looks good but video doesn't appear
+
 ```
 Not an auth problem (auth succeeded)
 Likely cause: Permissions denied or Agora initialization
@@ -305,6 +328,7 @@ Select-String -Path debug_run.log -Pattern "error|ERROR|Error|exception|EXCEPTIO
 You've successfully diagnosed and fixed the auth pipeline when:
 
 1. **Frontend logs**
+
    ```
    ✅ Auth verified - User: [email], UID: [uid]
    ✅ Auth state: VERIFIED
@@ -312,12 +336,14 @@ You've successfully diagnosed and fixed the auth pipeline when:
    ```
 
 2. **Backend logs**
+
    ```
    ✅ Auth context - UID: [uid], Token: PRESENT
    ✅ Generated Agora token for user [uid]
    ```
 
 3. **Network tab**
+
    ```
    ✅ Method: POST
    ✅ Status: 200

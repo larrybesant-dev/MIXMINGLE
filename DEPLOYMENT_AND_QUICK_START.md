@@ -3,6 +3,7 @@
 ## ⚡ Quick Start (5 Minutes)
 
 ### Prerequisites
+
 - Flutter SDK 3.3.0+
 - Chrome/Firefox for web testing
 - Git
@@ -10,6 +11,7 @@
 ### Local Development
 
 #### 1. Clone/Update Project
+
 ```bash
 cd c:\Users\LARRY\MIXMINGLE
 git pull origin main
@@ -17,6 +19,7 @@ flutter pub get
 ```
 
 #### 2. Run on Web
+
 ```bash
 # Option A: Direct command
 flutter run -d chrome
@@ -29,15 +32,18 @@ Press Ctrl+Shift+B → Select "✨ LAUNCH BOTH: Flutter Web + Firebase Logs"
 ```
 
 #### 3. Open in Browser
+
 Navigate to: `http://localhost:47659` (or printed URL)
 
 #### 4. Navigate to Video Chat
+
 1. Login with test account
 2. Click menu → "Video Chat" or navigate directly to `/video-chat`
 
 ### Test the Features
 
 #### Friends Sidebar
+
 - ✅ See 6 mock friends with online status
 - ✅ Search for friends (try "alex")
 - ✅ Filter by "Online" and "⭐ Favorites"
@@ -45,6 +51,7 @@ Navigate to: `http://localhost:47659` (or printed URL)
 - ✅ See badge with unread message count
 
 #### Video Grid
+
 - ✅ See 3 mock participants
 - ✅ Video tiles show name, audio/video status
 - ✅ Long-press video to pin (pink border appears)
@@ -52,6 +59,7 @@ Navigate to: `http://localhost:47659` (or printed URL)
 - ✅ See muted/unmuted indicators
 
 #### Top Bar
+
 - ✅ See "LIVE • 3 participants" indicator
 - ✅ See unread notification count
 - ✅ Toggle dark/light mode
@@ -59,6 +67,7 @@ Navigate to: `http://localhost:47659` (or printed URL)
 - ✅ Click notifications bell to see all
 
 #### Chat Box
+
 - ✅ Type a message and press send
 - ✅ Click emoji button to pick emoji
 - ✅ Click stickers button to pick sticker
@@ -66,6 +75,7 @@ Navigate to: `http://localhost:47659` (or printed URL)
 - ✅ File upload button shows menu
 
 #### Groups Sidebar
+
 - ✅ See 5 mock groups
 - ✅ Click "Join" to join a group
 - ✅ Click "Exit" to leave a group
@@ -73,6 +83,7 @@ Navigate to: `http://localhost:47659` (or printed URL)
 - ✅ Search groups
 
 #### Notifications
+
 - ✅ Camera permissions dialog works
 - ✅ See notification history panel
 - ✅ Dismiss notifications
@@ -84,6 +95,7 @@ Navigate to: `http://localhost:47659` (or printed URL)
 ### 1. Web Deployment (Firebase Hosting)
 
 #### Prerequisites
+
 ```bash
 npm install -g firebase-tools
 firebase login
@@ -91,6 +103,7 @@ cd c:\Users\LARRY\MIXMINGLE
 ```
 
 #### Build for Web
+
 ```bash
 # Build optimized web app
 flutter build web --release
@@ -100,6 +113,7 @@ flutter build web --release --web-renderer html  # For better browser compat
 ```
 
 #### Deploy to Firebase
+
 ```bash
 # Initialize if needed (first time only)
 firebase init hosting
@@ -112,6 +126,7 @@ firebase deploy --only hosting
 ```
 
 #### Verify Deployment
+
 ```bash
 # Get your URL from firebase deploy output
 firebase hosting:sites:list
@@ -136,6 +151,7 @@ flutter build windows --release
 ### 4. Production Configuration
 
 #### Environment Setup
+
 ```bash
 # Create .env for production
 echo "FLUTTER_ENV=production" > .env
@@ -144,6 +160,7 @@ echo "FIREBASE_PROJECT_ID=your_project_id" >> .env
 ```
 
 #### Update firebase.json
+
 ```json
 {
   "hosting": {
@@ -173,6 +190,7 @@ echo "FIREBASE_PROJECT_ID=your_project_id" >> .env
 ### 5. Performance Optimization
 
 #### Web Optimization
+
 ```bash
 # Enable WASM for better performance (experimental)
 flutter run -d chrome --web-renderer=html
@@ -182,11 +200,13 @@ flutter build web --analyze-size --release
 ```
 
 #### Image Optimization
+
 - Store avatars with CDN (already using pravatar.cc)
 - Cache images aggressively
 - Use WebP format when possible
 
 #### Code Splitting
+
 ```bash
 # Flutter web automatically code-splits
 # Check size report
@@ -198,6 +218,7 @@ flutter build web --release --analyze-size
 ## 📊 Environment Variables
 
 ### Local Development
+
 ```
 FLUTTER_ENV=development
 DEBUG=true
@@ -205,6 +226,7 @@ LOG_LEVEL=debug
 ```
 
 ### Staging
+
 ```
 FLUTTER_ENV=staging
 DEBUG=false
@@ -212,6 +234,7 @@ LOG_LEVEL=info
 ```
 
 ### Production
+
 ```
 FLUTTER_ENV=production
 DEBUG=false
@@ -223,6 +246,7 @@ LOG_LEVEL=error
 ## 🔐 Security Checklist
 
 ### Pre-Deployment
+
 - [ ] Update version number in pubspec.yaml
 - [ ] Run `flutter analyze` - no errors
 - [ ] Run integration tests
@@ -231,6 +255,7 @@ LOG_LEVEL=error
 - [ ] Configure Content Security Policy
 
 ### Firebase Rules
+
 ```
 // Firestore Rules - secure by default
 match /databases/{database}/documents {
@@ -250,6 +275,7 @@ match /b/{bucket}/o {
 ```
 
 ### Data Privacy
+
 - [ ] Enable Firebase backup
 - [ ] Encrypt sensitive data
 - [ ] Set message retention policy (e.g., 30 days)
@@ -261,6 +287,7 @@ match /b/{bucket}/o {
 ## 📈 Monitoring & Analytics
 
 ### Firebase Console
+
 1. Go to: https://console.firebase.google.com
 2. Select your project
 3. Monitor:
@@ -283,6 +310,7 @@ firebase_analytics.logEvent(
 ```
 
 ### Health Checks
+
 ```bash
 # Monitor Firebase Logs (included in tasks)
 firebase functions:log --only generateAgoraToken
@@ -296,6 +324,7 @@ Task: 🟩 Firebase Function Logs
 ## 🐛 Troubleshooting Deployment
 
 ### Build Fails
+
 ```bash
 # Clean build
 flutter clean
@@ -307,12 +336,14 @@ flutter analyze
 ```
 
 ### Web App Loads Blank
+
 - Check browser console (F12)
 - Verify Firebase config in `firebase_options.dart`
 - Check CORS headers
 - Try disabling extensions
 
 ### Localhost 404 Errors
+
 ```bash
 # Rebuild with correct routes
 flutter run -d chrome --release
@@ -320,6 +351,7 @@ flutter run -d chrome --release
 ```
 
 ### Firebase Deployment Fails
+
 ```bash
 # Check authentication
 firebase logout
@@ -340,11 +372,13 @@ firebase deploy --debug
 ### Recommended Testing Flow
 
 1. **Chrome** (Primary)
+
    ```bash
    flutter run -d chrome
    ```
 
 2. **Firefox**
+
    ```bash
    flutter run -d firefox (when available)
    # Or access web app manually
@@ -357,14 +391,14 @@ firebase deploy --debug
 
 ### Test Matrix
 
-| Browser | Desktop | Tablet | Mobile |
-|---------|---------|--------|--------|
+| Browser | Desktop | Tablet  | Mobile  |
+| ------- | ------- | ------- | ------- |
 | Chrome  | ✅ Full | ✅ Full | ✅ Full |
 | Firefox | ✅ HTML | ✅ HTML | ✅ HTML |
-| Safari  | ✅*    | ✅*    | ✅*    |
+| Safari  | ✅\*    | ✅\*    | ✅\*    |
 | Edge    | ✅ Full | ✅ Full | ✅ Full |
 
-*Safari: May need additional WebRTC permissions
+\*Safari: May need additional WebRTC permissions
 
 ---
 
@@ -390,8 +424,8 @@ jobs:
       - run: flutter build web --release
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
-          repoToken: '${{ secrets.GITHUB_TOKEN }}'
-          firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          firebaseServiceAccount: "${{ secrets.FIREBASE_SERVICE_ACCOUNT }}"
           projectId: your-project-id
 ```
 
@@ -400,11 +434,13 @@ jobs:
 ## 📞 Support & Resources
 
 ### Documentation
+
 - [Flutter Web Docs](https://docs.flutter.dev/platform-integration/web)
 - [Firebase Hosting Docs](https://firebase.google.com/docs/hosting)
 - [Riverpod Docs](https://riverpod.dev)
 
 ### Local Debugging
+
 ```bash
 # Enable verbose logging
 flutter run -d chrome -v
@@ -420,6 +456,7 @@ flutter format lib/
 ```
 
 ### Common Commands
+
 ```bash
 # Full clean
 flutter clean && flutter pub get

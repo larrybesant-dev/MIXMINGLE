@@ -19,15 +19,18 @@ final groupChatServiceProvider = Provider<GroupChatService>((ref) {
 // - Double camera toggles
 // - TypeError crashes
 
-final groupRoomProvider = StreamProvider.family<GroupChatRoom?, String>((ref, roomId) {
+final groupRoomProvider =
+    StreamProvider.family<GroupChatRoom?, String>((ref, roomId) {
   return ref.watch(groupChatServiceProvider).watchRoom(roomId);
 });
 
-final groupParticipantsProvider = StreamProvider.family<List<GroupChatParticipant>, String>((ref, roomId) {
+final groupParticipantsProvider =
+    StreamProvider.family<List<GroupChatParticipant>, String>((ref, roomId) {
   return ref.watch(groupChatServiceProvider).watchParticipants(roomId);
 });
 
-final groupMessagesProvider = StreamProvider.family<List<GroupChatMessage>, String>((ref, roomId) {
+final groupMessagesProvider =
+    StreamProvider.family<List<GroupChatMessage>, String>((ref, roomId) {
   return ref.watch(groupChatServiceProvider).watchMessages(roomId);
 });
 
@@ -69,7 +72,14 @@ class GroupCallState {
 }
 
 // Group call state management
+<<<<<<< HEAD
 final groupCallControllerProvider = NotifierProvider<GroupCallStateNotifier, GroupCallState>(GroupCallStateNotifier.new);
+=======
+final groupCallControllerProvider =
+    NotifierProvider.autoDispose<GroupCallStateNotifier, GroupCallState>(
+  GroupCallStateNotifier.new,
+);
+>>>>>>> origin/develop
 
 class GroupCallStateNotifier extends Notifier<GroupCallState> {
   late final AgoraVideoService _service;
@@ -99,7 +109,8 @@ class GroupCallStateNotifier extends Notifier<GroupCallState> {
     await _service.toggleMic();
     state = GroupCallState.fromService(_service);
     if (roomId != null) {
-      await _syncMediaState(roomId, micMuted: _service.isMicMuted, previous: wasMuted);
+      await _syncMediaState(roomId,
+          micMuted: _service.isMicMuted, previous: wasMuted);
     }
   }
 
@@ -108,22 +119,21 @@ class GroupCallStateNotifier extends Notifier<GroupCallState> {
     await _service.toggleVideo();
     state = GroupCallState.fromService(_service);
     if (roomId != null) {
-      await _syncMediaState(roomId, videoMuted: _service.isVideoMuted, previous: wasVideoMuted);
+      await _syncMediaState(roomId,
+          videoMuted: _service.isVideoMuted, previous: wasVideoMuted);
     }
   }
 
   RtcEngine? get engine => _service.engine;
 
-  Future<void> _syncMediaState(String roomId, {bool? micMuted, bool? videoMuted, bool? previous}) async {
+  Future<void> _syncMediaState(String roomId,
+      {bool? micMuted, bool? videoMuted, bool? previous}) async {
     // Avoid Firestore churn on unchanged values
     final changedMic = micMuted != null && micMuted != previous;
     final changedVideo = videoMuted != null && videoMuted != previous;
     if (!changedMic && !changedVideo) return;
 
-    await ref
-        .read(groupChatServiceProvider)
-        .updateMediaState(roomId, isMuted: micMuted, isCameraOn: videoMuted != true);
+    await ref.read(groupChatServiceProvider).updateMediaState(roomId,
+        isMuted: micMuted, isCameraOn: videoMuted != true);
   }
 }
-
-

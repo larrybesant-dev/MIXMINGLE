@@ -1,4 +1,4 @@
-﻿// ============================================================================
+// ============================================================================
 // VALIDATION HELPERS - Central validation logic for all forms
 // ============================================================================
 //
@@ -57,7 +57,8 @@ class ValidationHelpers {
   /// - At least 1 uppercase letter
   /// - At least 1 lowercase letter
   /// - At least 1 number
-  static String? validatePassword(String? value, {String fieldName = 'Password'}) {
+  static String? validatePassword(String? value,
+      {String fieldName = 'Password'}) {
     final v = value ?? '';
 
     // Check if empty
@@ -287,5 +288,3 @@ class ValidationHelpers {
     return str1.toLowerCase() == str2.toLowerCase();
   }
 }
-
-

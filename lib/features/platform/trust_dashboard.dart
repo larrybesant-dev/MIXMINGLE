@@ -1,4 +1,4 @@
-﻿/// Trust Dashboard Widget
+/// Trust Dashboard Widget
 ///
 /// Displays certifications, violations, and trust scores.
 library;
@@ -168,9 +168,8 @@ class _TrustDashboardState extends State<TrustDashboard>
                     child: CircularProgressIndicator(
                       value: score / 100,
                       strokeWidth: 12,
-                      backgroundColor: Theme.of(context)
-                          .colorScheme
-                          .surfaceContainerHighest,
+                      backgroundColor:
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
                       valueColor: AlwaysStoppedAnimation<Color>(color),
                     ),
                   ),
@@ -179,10 +178,11 @@ class _TrustDashboardState extends State<TrustDashboard>
                     children: [
                       Text(
                         score.toStringAsFixed(0),
-                        style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: color,
-                            ),
+                        style:
+                            Theme.of(context).textTheme.displaySmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: color,
+                                ),
                       ),
                       Text(
                         _getScoreLabel(score),
@@ -326,7 +326,8 @@ class _TrustDashboardState extends State<TrustDashboard>
             ..._trustScore!.factors.map((factor) {
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: _getScoreColor(factor.score).withValues(alpha: 0.1),
+                  backgroundColor:
+                      _getScoreColor(factor.score).withValues(alpha: 0.1),
                   child: Text(
                     factor.score.toStringAsFixed(0),
                     style: TextStyle(
@@ -657,8 +658,7 @@ class _TrustDashboardState extends State<TrustDashboard>
     );
   }
 
-  String _formatDate(DateTime date) =>
-      '${date.month}/${date.day}/${date.year}';
+  String _formatDate(DateTime date) => '${date.month}/${date.day}/${date.year}';
 
   // ============================================================
   // ACTIONS
@@ -758,7 +758,8 @@ class _TrustDashboardState extends State<TrustDashboard>
               Text('Description:\n${violation.description}'),
               if (violation.evidence.isNotEmpty) ...[
                 const SizedBox(height: 16),
-                const Text('Evidence:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text('Evidence:',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
                 ...violation.evidence.map((e) => Text('â€¢ $e')),
               ],
             ],

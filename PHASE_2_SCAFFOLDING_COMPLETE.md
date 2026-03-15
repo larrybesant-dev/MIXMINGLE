@@ -11,12 +11,14 @@
 ## FILES CREATED (Production-Ready)
 
 ### 1. **Models Layer**
+
 - ✅ `lib/models/participant.dart` (57 lines)
   - Participant data model with Firestore serialization
   - Methods: copyWith(), toFirestore(), fromFirestore()
   - Fields: uid, name, isSpeaking, isPresent, joinedAt, avatarUrl
 
 ### 2. **Services Layer**
+
 - ✅ `lib/services/agora_service.dart` (148 lines)
   - High-level Agora SDK wrapper for Web v5
   - Methods: initialize(), joinChannel(), leaveChannel(), setMicrophoneMuted(), setVideoCameraMuted()
@@ -33,6 +35,7 @@
   - Exception: JsBridgeException
 
 ### 3. **Controllers Layer**
+
 - ✅ `lib/controllers/join_flow_controller.dart` (139 lines)
   - State machine for 150+400+400ms ceremonial join flow
   - Enum: JoinPhase (idle, entering, connecting, live, error)
@@ -47,6 +50,7 @@
   - Dynamic room context injection via setRoomContext()
 
 ### 4. **Widgets Layer**
+
 - ✅ `lib/features/video_room/widgets/participant_card_widget.dart` (265 lines)
   - Displays single participant with animations
   - Animations: Arrival slide (250ms), Speaking pulse (200ms)
@@ -65,6 +69,7 @@
   - Scales pulse intensity with energy level
 
 ### 5. **Screens Layer**
+
 - ✅ `lib/features/video_room/screens/room_screen.dart` (409 lines)
   - Main video room UI consuming AgoraRoomController
   - Features: Participant grid, control buttons (mic/video/leave), energy indicator
@@ -78,6 +83,7 @@
   - Tap to join navigation to RoomScreen
 
 ### 6. **Configuration**
+
 - ✅ `lib/main.dart` (116 lines - updated)
   - Added Provider setup with MultiProvider wrapper
   - Provides: AgoraService (singleton), RoomFirestoreService, JoinFlowController, AgoraRoomController
@@ -91,6 +97,7 @@
 ## ARCHITECTURE SUMMARY
 
 ### **Dependency Injection Pattern**
+
 ```dart
 MultiProvider(
   providers: [
@@ -104,6 +111,7 @@ MultiProvider(
 ```
 
 ### **Data Flow**
+
 1. **Join Flow**: User taps join → JoinFlowController manages 150+400+400ms ceremony
 2. **Agora Integration**: Connects to channel with token-based auth
 3. **Firestore Presence**: Syncs participant state in real-time
@@ -111,6 +119,7 @@ MultiProvider(
 5. **UI Updates**: Participants stream → notifyListeners() → rebuild
 
 ### **Firestore Schema**
+
 ```
 rooms/
   {roomId}/
@@ -126,7 +135,9 @@ rooms/
 ```
 
 ### **Design Constants Enforcement ✅**
+
 Every file uses:
+
 - `DesignColors`: white, textDark, textGray, divider, accent (#FF4C4C)
 - `DesignTypography`: heading, subheading, body, caption, label
 - `DesignSpacing`: xs(4), sm(8), md(12), lg(16), xl(24), xxl(32), cardPadding(16), avatarMedium(40)
@@ -140,6 +151,7 @@ Every file uses:
 ## TESTING CHECKLIST
 
 ### Ready to Test
+
 - [ ] Build on Web: `flutter build web --debug`
 - [ ] Participant card animations (arrival slide, speaking pulse)
 - [ ] Room discovery stream (live Firestore updates)
@@ -149,6 +161,7 @@ Every file uses:
 - [ ] Hover animations (room card scale, participant card highlight)
 
 ### Integration Points to Complete
+
 - [ ] Get Agora token from backend (currently placeholder in room_discovery_screen.dart)
 - [ ] Get current user ID from auth context (currently placeholder in room_screen.dart #TODO)
 - [ ] Get current user name from auth context (currently placeholder in room_screen.dart #TODO)
@@ -160,17 +173,20 @@ Every file uses:
 ## KNOWN ISSUES & MIGRATION NOTES
 
 ### Import Path Issues (Fixed)
+
 - ✅ Changed from `package:mixmingle/...` to relative imports
 - ✅ Fixed path references for /lib/controllers/ location
 - ✅ Resolved JoinPhase ambiguous import
 
 ### Provider vs Riverpod
+
 - Project uses Riverpod (ProviderScope exists in app.dart)
 - Added Provider alongside Riverpod (both coexist)
 - Riverpod continues managing auth/app state
 - Provider manages video room state (ChangeNotifier controllers)
 
 ### Android/iOS Specifics
+
 - Requires `agora_rtc_engine: ^6.2.2` (already in pubspec.yaml)
 - Requires `permission_handler: ^12.0.1` (already in pubspec.yaml)
 - Web deployment uses AgoraWebBridgeV5 (dart:js_util based)
@@ -181,11 +197,13 @@ Every file uses:
 ## ERROR ANALYSIS
 
 ### Pre-existing Project Errors (Not from This Work)
+
 - ~140 total errors in project analyze
 - Most errors in `/lib/...._disabled/` and old controller files
 - These are outside scope of current scaffolding
 
 ### Newly Created Files Status
+
 - ✅ All imports corrected to relative paths
 - ✅ All design constants properly referenced
 - ✅ All exception handling complete
@@ -197,34 +215,39 @@ Every file uses:
 ## NEXT STEPS (Priority Order)
 
 ### 1. **Configuration (10 minutes)**
-   - Replace `YOU_AGORA_APP_ID` in main.dart with actual Agora app ID
-   - Set up Firestore rules for rooms/{roomId}/members/{uid} schema
-   - Configure backend token generation endpoint
+
+- Replace `YOU_AGORA_APP_ID` in main.dart with actual Agora app ID
+- Set up Firestore rules for rooms/{roomId}/members/{uid} schema
+- Configure backend token generation endpoint
 
 ### 2. **Auth Integration (15 minutes)**
-   - Replace placeholder userId/userName in room_screen.dart with actual auth context
-   - Pull from FirebaseAuth.instance.currentUser
-   - Add user profile display with real avatar URLs
+
+- Replace placeholder userId/userName in room_screen.dart with actual auth context
+- Pull from FirebaseAuth.instance.currentUser
+- Add user profile display with real avatar URLs
 
 ### 3. **Build Verification (5 minutes)**
-   - Run `flutter pub get`
-   - Run `flutter build web --debug` (or `flutter run -d chrome`)
-   - Check no new compilation errors
+
+- Run `flutter pub get`
+- Run `flutter build web --debug` (or `flutter run -d chrome`)
+- Check no new compilation errors
 
 ### 4. **Manual Testing (30 minutes)**
-   - Test room discovery screen (Firestore read)
-   - Test room card hover animations
-   - Test join flow timing (verify 950ms minimum)
-   - Test participant card arrival + speaking animations
-   - Test energy calculation with multiple participants
-   - Test mic/video toggle control
+
+- Test room discovery screen (Firestore read)
+- Test room card hover animations
+- Test join flow timing (verify 950ms minimum)
+- Test participant card arrival + speaking animations
+- Test energy calculation with multiple participants
+- Test mic/video toggle control
 
 ### 5. **Advanced Features (Optional Future)**
-   - Add speaker indicator (who spoke recently)
-   - Add room timer (duration in room)
-   - Add participant leave/join notifications
-   - Add room chat overlay
-   - Add volume meter for speaking detection
+
+- Add speaker indicator (who spoke recently)
+- Add room timer (duration in room)
+- Add participant leave/join notifications
+- Add room chat overlay
+- Add volume meter for speaking detection
 
 ---
 
@@ -244,12 +267,14 @@ Every file uses:
 ✅ Energy metric calculation (presence + speaking activity)
 
 **Ready for:**
+
 - ✅ Production deployment (after placeholder replacements)
 - ✅ Team collaboration (fully documented, clear patterns)
 - ✅ Feature extensions (clean architecture, easy to add)
 - ✅ Design evolution (all constants in one place)
 
 **Estimated Remaining Work:**
+
 - Configuration: 10-15 min
 - Auth integration: 10-20 min
 - Build + test: 30-60 min

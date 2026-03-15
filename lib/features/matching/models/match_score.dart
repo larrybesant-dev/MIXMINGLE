@@ -1,4 +1,4 @@
-﻿// import 'package:freezed_annotation/freezed_annotation.dart';
+// import 'package:freezed_annotation/freezed_annotation.dart';
 
 // part 'match_score.freezed.dart';
 // part 'match_score.g.dart';
@@ -33,8 +33,10 @@ class MatchScore {
       overallScore: (json['overallScore'] as num).toDouble(),
       categoryScores: Map<String, double>.from(json['categoryScores'] as Map),
       sharedInterests: List<String>.from(json['sharedInterests'] as List),
-      compatibilityReasons: List<String>.from(json['compatibilityReasons'] as List),
-      potentialChallenges: List<String>.from(json['potentialChallenges'] as List),
+      compatibilityReasons:
+          List<String>.from(json['compatibilityReasons'] as List),
+      potentialChallenges:
+          List<String>.from(json['potentialChallenges'] as List),
       calculatedAt: DateTime.parse(json['calculatedAt'] as String),
     );
   }
@@ -97,7 +99,8 @@ class RankedMatch {
       userPhotoUrl: json['userPhotoUrl'] as String?,
       age: json['age'] as int,
       distanceInMiles: (json['distanceInMiles'] as num).toDouble(),
-      matchScore: MatchScore.fromJson(json['matchScore'] as Map<String, dynamic>),
+      matchScore:
+          MatchScore.fromJson(json['matchScore'] as Map<String, dynamic>),
       rank: json['rank'] as int,
     );
   }
@@ -131,10 +134,9 @@ class MatchStatistics {
       averageScore: (json['averageScore'] as num).toDouble(),
       highestScore: (json['highestScore'] as num).toDouble(),
       lowestScore: (json['lowestScore'] as num).toDouble(),
-      compatibilityDistribution: Map<String, int>.from(json['compatibilityDistribution'] as Map),
+      compatibilityDistribution:
+          Map<String, int>.from(json['compatibilityDistribution'] as Map),
       calculatedAt: DateTime.parse(json['calculatedAt'] as String),
     );
   }
 }
-
-

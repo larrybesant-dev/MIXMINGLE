@@ -1,4 +1,4 @@
-﻿/// Centralized Firestore collection and document paths
+/// Centralized Firestore collection and document paths
 ///
 /// Use these constants to ensure consistent path naming across the app.
 class FirestorePaths {
@@ -20,7 +20,8 @@ class FirestorePaths {
   static String userMatches(String userId) => '$users/$userId/matches';
   static String userEventRsvps(String userId) => '$users/$userId/event_rsvps';
   static String userBlocked(String userId) => '$users/$userId/blocked';
-  static String userNotifications(String userId) => '$users/$userId/notifications';
+  static String userNotifications(String userId) =>
+      '$users/$userId/notifications';
   static String userWithdrawals(String userId) => '$users/$userId/withdrawals';
 
   // ========== Event Subcollections ==========
@@ -28,14 +29,18 @@ class FirestorePaths {
   static String eventMessages(String eventId) => '$events/$eventId/messages';
 
   // ========== Room Subcollections ==========
-  static String roomParticipants(String roomId) => '$rooms/$roomId/participants';
+  static String roomParticipants(String roomId) =>
+      '$rooms/$roomId/participants';
   static String roomMessages(String roomId) => '$rooms/$roomId/messages';
   static String roomBannedUsers(String roomId) => '$rooms/$roomId/banned_users';
-  static String roomSpeakerQueue(String roomId) => '$rooms/$roomId/speaker_queue';
+  static String roomSpeakerQueue(String roomId) =>
+      '$rooms/$roomId/speaker_queue';
 
   // ========== Group Chat Subcollections ==========
-  static String groupChatMessages(String groupId) => '$groupChats/$groupId/messages';
-  static String groupChatMembers(String groupId) => '$groupChats/$groupId/members';
+  static String groupChatMessages(String groupId) =>
+      '$groupChats/$groupId/messages';
+  static String groupChatMembers(String groupId) =>
+      '$groupChats/$groupId/members';
 
   // ========== Document References ==========
   static String userDoc(String userId) => '$users/$userId';
@@ -45,5 +50,3 @@ class FirestorePaths {
   static String groupChatDoc(String groupId) => '$groupChats/$groupId';
   static String matchDoc(String matchId) => '$matches/$matchId';
 }
-
-

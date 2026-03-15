@@ -1,4 +1,4 @@
-﻿/// Global Network Service
+/// Global Network Service
 ///
 /// Manages multi-region routing, latency-adaptive video, global presence sync,
 /// and cross-region room mirroring.
@@ -33,11 +33,11 @@ enum NodeStatus {
 
 /// Video quality tier
 enum VideoQuality {
-  low,      // 240p
-  medium,   // 480p
-  high,     // 720p
-  hd,       // 1080p
-  uhd,      // 4K
+  low, // 240p
+  medium, // 480p
+  high, // 720p
+  hd, // 1080p
+  uhd, // 4K
 }
 
 /// Region information
@@ -204,15 +204,19 @@ class LatencyMeasurement {
 /// Global network service singleton
 class GlobalNetworkService {
   static GlobalNetworkService? _instance;
-  static GlobalNetworkService get instance => _instance ??= GlobalNetworkService._();
+  static GlobalNetworkService get instance =>
+      _instance ??= GlobalNetworkService._();
 
   GlobalNetworkService._();
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  CollectionReference get _regionsCollection => _firestore.collection('regions');
-  CollectionReference get _presenceCollection => _firestore.collection('presence');
-  CollectionReference get _mirrorsCollection => _firestore.collection('room_mirrors');
+  CollectionReference get _regionsCollection =>
+      _firestore.collection('regions');
+  CollectionReference get _presenceCollection =>
+      _firestore.collection('presence');
+  CollectionReference get _mirrorsCollection =>
+      _firestore.collection('room_mirrors');
 
   final StreamController<UserPresence> _presenceController =
       StreamController<UserPresence>.broadcast();
@@ -329,7 +333,8 @@ class GlobalNetworkService {
 
       // Switch if significantly better (>20% improvement)
       if (bestLatency < currentLatency * 0.8) {
-        debugPrint('ðŸ”„ [GlobalNetwork] Switching region: ${_currentRegion?.name} -> ${best.name}');
+        debugPrint(
+            'ðŸ”„ [GlobalNetwork] Switching region: ${_currentRegion?.name} -> ${best.name}');
         _currentRegion = best;
       }
     }
@@ -395,7 +400,10 @@ class GlobalNetworkService {
 
     // Haversine formula (simplified)
     final a = math.sin((lat2 - lat1) / 2) * math.sin((lat2 - lat1) / 2) +
-        math.cos(lat1) * math.cos(lat2) * math.sin(dLon / 2) * math.sin(dLon / 2);
+        math.cos(lat1) *
+            math.cos(lat2) *
+            math.sin(dLon / 2) *
+            math.sin(dLon / 2);
     final c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a));
 
     return 6371 * c; // Earth radius in km
@@ -417,7 +425,8 @@ class GlobalNetworkService {
     score -= packetLoss * 1000; // -10 points for 1% packet loss
     score -= jitter * 2; // -20 points for 10ms jitter
 
-    debugPrint('ðŸ“Š [GlobalNetwork] Network score: ${score.toStringAsFixed(1)}');
+    debugPrint(
+        'ðŸ“Š [GlobalNetwork] Network score: ${score.toStringAsFixed(1)}');
 
     if (score >= 90) return VideoQuality.uhd;
     if (score >= 75) return VideoQuality.hd;
@@ -476,11 +485,11 @@ class GlobalNetworkService {
 
   int _getBitrate(VideoQuality quality) {
     return switch (quality) {
-      VideoQuality.low => 400000,      // 400 Kbps
-      VideoQuality.medium => 1000000,  // 1 Mbps
-      VideoQuality.high => 2500000,    // 2.5 Mbps
-      VideoQuality.hd => 5000000,      // 5 Mbps
-      VideoQuality.uhd => 15000000,    // 15 Mbps
+      VideoQuality.low => 400000, // 400 Kbps
+      VideoQuality.medium => 1000000, // 1 Mbps
+      VideoQuality.high => 2500000, // 2.5 Mbps
+      VideoQuality.hd => 5000000, // 5 Mbps
+      VideoQuality.uhd => 15000000, // 15 Mbps
     };
   }
 
@@ -590,7 +599,8 @@ class GlobalNetworkService {
     required String roomId,
     required Region targetRegion,
   }) async {
-    debugPrint('ðŸªž [GlobalNetwork] Creating room mirror: $roomId -> ${targetRegion.name}');
+    debugPrint(
+        'ðŸªž [GlobalNetwork] Creating room mirror: $roomId -> ${targetRegion.name}');
 
     final mirrorRef = _mirrorsCollection.doc();
     final edgeNode = await _getEdgeNodeForRegion(targetRegion);
@@ -665,7 +675,8 @@ class GlobalNetworkService {
   }
 
   /// Get latency cache
-  Map<Region, LatencyMeasurement> get latencyCache => Map.unmodifiable(_latencyCache);
+  Map<Region, LatencyMeasurement> get latencyCache =>
+      Map.unmodifiable(_latencyCache);
 
   void dispose() {
     _latencyMeasurementTimer?.cancel();

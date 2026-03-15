@@ -37,11 +37,16 @@ class PresenceService {
   }
 
   /// Set user presence status
+<<<<<<< HEAD
   /// Writes to presence/{userId} with canonical field names:
   ///   state     — "online" | "away" | "offline" | "busy"
   ///   lastActive — server timestamp of last activity
   ///   updatedAt  — server timestamp of this write
   Future<void> _setPresence(PresenceStatus status, {String? roomId, String? message}) async {
+=======
+  Future<void> _setPresence(PresenceStatus status,
+      {String? roomId, String? message}) async {
+>>>>>>> origin/develop
     if (_currentUserId == null) return;
 
     try {
@@ -96,7 +101,8 @@ class PresenceService {
   Stream<UserPresence?> getUserPresence(String userId) {
     // Prevent infinite retry loops
     final retryKey = 'getUserPresence_$userId';
-    if (_retryCounters[retryKey] != null && _retryCounters[retryKey]! >= _maxRetries) {
+    if (_retryCounters[retryKey] != null &&
+        _retryCounters[retryKey]! >= _maxRetries) {
       debugPrint('âš ï¸ Max retries reached for getUserPresence($userId)');
       return Stream.value(null);
     }
@@ -130,7 +136,8 @@ class PresenceService {
   ) {
     StreamSubscription<DocumentSnapshot>? subscription;
 
-    subscription = _firestore.collection('presence').doc(userId).snapshots().listen(
+    subscription =
+        _firestore.collection('presence').doc(userId).snapshots().listen(
       (doc) {
         try {
           // Reset retry counter on success
@@ -170,7 +177,8 @@ class PresenceService {
         // Retry with exponential backoff if under max retries
         if (_retryCounters[retryKey]! < _maxRetries) {
           final delay = _retryDelay * _retryCounters[retryKey]!;
-          debugPrint('ðŸ”„ Retrying presence listener in ${delay.inSeconds}s...');
+          debugPrint(
+              'ðŸ”„ Retrying presence listener in ${delay.inSeconds}s...');
 
           Future.delayed(delay, () {
             if (!controller.isClosed) {
@@ -230,7 +238,8 @@ class PresenceService {
               try {
                 return UserPresence.fromMap(doc.id, doc.data());
               } catch (e) {
-                debugPrint('âš ï¸ Failed to parse presence for doc ${doc.id}: $e');
+                debugPrint(
+                    'âš ï¸ Failed to parse presence for doc ${doc.id}: $e');
                 return null;
               }
             })
@@ -250,7 +259,8 @@ class PresenceService {
   /// Get online users count
   Future<int> getOnlineUsersCount() async {
     try {
-      final fiveMinutesAgo = DateTime.now().subtract(const Duration(minutes: 5));
+      final fiveMinutesAgo =
+          DateTime.now().subtract(const Duration(minutes: 5));
 
       final snapshot = await _firestore
           .collection('presence')

@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
@@ -123,7 +123,8 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
       final event = Event(
         id: const Uuid().v4(),
         title: ValidationHelpers.sanitizeInput(_titleController.text),
-        description: ValidationHelpers.sanitizeInput(_descriptionController.text),
+        description:
+            ValidationHelpers.sanitizeInput(_descriptionController.text),
         location: ValidationHelpers.sanitizeInput(_locationController.text),
         category: _category,
         isPublic: _isPublic,
@@ -210,7 +211,8 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                     child: const Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.add_photo_alternate, size: 48, color: Colors.grey),
+                        Icon(Icons.add_photo_alternate,
+                            size: 48, color: Colors.grey),
                         SizedBox(height: 8),
                         Text(
                           'Add Event Image',
@@ -225,7 +227,10 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                 const SizedBox(height: 24),
                 const Text(
                   'Event Details',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.blueAccent),
+                  style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.blueAccent),
                 ),
                 const SizedBox(height: 16),
                 Padding(
@@ -238,7 +243,8 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                       hintText: 'Enter event title',
                     ),
                     maxLength: ValidationConstants.eventTitleMaxLength,
-                    validator: (value) => ValidationHelpers.validateLengthRequired(
+                    validator: (value) =>
+                        ValidationHelpers.validateLengthRequired(
                       value,
                       ValidationConstants.eventTitleMinLength,
                       ValidationConstants.eventTitleMaxLength,
@@ -257,7 +263,8 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                     ),
                     maxLines: 3,
                     maxLength: ValidationConstants.eventDescriptionMaxLength,
-                    validator: (value) => ValidationHelpers.validateLengthRequired(
+                    validator: (value) =>
+                        ValidationHelpers.validateLengthRequired(
                       value,
                       ValidationConstants.eventDescriptionMinLength,
                       ValidationConstants.eventDescriptionMaxLength,
@@ -295,7 +302,9 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                     Expanded(
                       child: DateTimePicker(
                         label: 'Date',
-                        value: _startDate != null ? DateFormat('MMM dd, yyyy').format(_startDate!) : null,
+                        value: _startDate != null
+                            ? DateFormat('MMM dd, yyyy').format(_startDate!)
+                            : null,
                         onTap: _selectStartDate,
                       ),
                     ),
@@ -317,7 +326,9 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                     Expanded(
                       child: DateTimePicker(
                         label: 'Date',
-                        value: _endDate != null ? DateFormat('MMM dd, yyyy').format(_endDate!) : null,
+                        value: _endDate != null
+                            ? DateFormat('MMM dd, yyyy').format(_endDate!)
+                            : null,
                         onTap: _selectEndDate,
                       ),
                     ),
@@ -387,7 +398,9 @@ class _CreateEventPageState extends ConsumerState<CreateEventPage> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: _isLoading ? null : _submitForm,
-                    child: _isLoading ? const CircularProgressIndicator() : const Text('Create Event'),
+                    child: _isLoading
+                        ? const CircularProgressIndicator()
+                        : const Text('Create Event'),
                   ),
                 ),
               ],

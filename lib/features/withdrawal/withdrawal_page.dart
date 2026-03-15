@@ -17,7 +17,6 @@ class _WithdrawalPageState extends ConsumerState<WithdrawalPage> {
 
   final _monetizationService = MonetizationService();
 
-
   Future<void> _submitWithdrawal() async {
     if (!_formKey.currentState!.validate()) return;
 

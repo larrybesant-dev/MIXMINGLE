@@ -15,6 +15,7 @@ Mix & Mingle is now **hardened against abuse, secured with comprehensive Firesto
 #### Key Security Features:
 
 **Helper Functions:**
+
 - `isSignedIn()` - Authentication check
 - `isOwner()` - Ownership verification
 - `isVerified()` - Email verification check
@@ -24,29 +25,30 @@ Mix & Mingle is now **hardened against abuse, secured with comprehensive Firesto
 
 **Collection Security:**
 
-| Collection | Read | Write | Special Rules |
-|------------|------|-------|---------------|
-| `users` | Public (unless blocked) | Owner only | Profile validation, rate limiting |
-| `users/{uid}/followers` | Public | Self-add only | Block checks |
-| `users/{uid}/following` | Public | Owner only | Block checks |
-| `users/{uid}/blocked` | Owner only | Owner only | Can't block self |
-| `events` | Public (unless blocked) | Host only | 3-100 char title, 2000 char description |
-| `events/{id}/attendees` | Public | Self-manage | Capacity checks |
-| `rooms` | Public (unless blocked) | Host only | 3-100 char title |
-| `rooms/{id}/participants` | Public | Self-manage | Block checks |
-| `rooms/{id}/messages` | Participants only | Participants only | 5000 char limit, rate limiting |
-| `chatRooms` | Participants only | Participants only | DM privacy |
-| `chatRooms/{id}/messages` | Participants only | Sender only | 5000 char limit |
-| `direct_messages` | Sender/receiver only | Sender only | 5000 char limit |
-| `reports` | Server-side only | Create only | 1000 char limit, can't report self |
-| `notifications` | Owner only | Owner only | Personal notifications |
-| `tips` | Sender/receiver only | Sender only | Financial security |
-| `speedDatingSessions` | Participants only | Participants only | Session privacy |
-| `speedDatingMatches` | Participants only | Participants only | Match privacy |
-| `config` | Public | Server-side only | Read-only configuration |
-| `admin` | Server-side only | Server-side only | Admin operations |
+| Collection                | Read                    | Write             | Special Rules                           |
+| ------------------------- | ----------------------- | ----------------- | --------------------------------------- |
+| `users`                   | Public (unless blocked) | Owner only        | Profile validation, rate limiting       |
+| `users/{uid}/followers`   | Public                  | Self-add only     | Block checks                            |
+| `users/{uid}/following`   | Public                  | Owner only        | Block checks                            |
+| `users/{uid}/blocked`     | Owner only              | Owner only        | Can't block self                        |
+| `events`                  | Public (unless blocked) | Host only         | 3-100 char title, 2000 char description |
+| `events/{id}/attendees`   | Public                  | Self-manage       | Capacity checks                         |
+| `rooms`                   | Public (unless blocked) | Host only         | 3-100 char title                        |
+| `rooms/{id}/participants` | Public                  | Self-manage       | Block checks                            |
+| `rooms/{id}/messages`     | Participants only       | Participants only | 5000 char limit, rate limiting          |
+| `chatRooms`               | Participants only       | Participants only | DM privacy                              |
+| `chatRooms/{id}/messages` | Participants only       | Sender only       | 5000 char limit                         |
+| `direct_messages`         | Sender/receiver only    | Sender only       | 5000 char limit                         |
+| `reports`                 | Server-side only        | Create only       | 1000 char limit, can't report self      |
+| `notifications`           | Owner only              | Owner only        | Personal notifications                  |
+| `tips`                    | Sender/receiver only    | Sender only       | Financial security                      |
+| `speedDatingSessions`     | Participants only       | Participants only | Session privacy                         |
+| `speedDatingMatches`      | Participants only       | Participants only | Match privacy                           |
+| `config`                  | Public                  | Server-side only  | Read-only configuration                 |
+| `admin`                   | Server-side only        | Server-side only  | Admin operations                        |
 
 **Security Highlights:**
+
 - ✅ **Block enforcement** - Blocked users can't interact
 - ✅ **Input validation** - String length, character limits
 - ✅ **Rate limiting** - Prevents spam and abuse
@@ -64,6 +66,7 @@ Mix & Mingle is now **hardened against abuse, secured with comprehensive Firesto
 #### Features:
 
 **Block Functionality:**
+
 ```dart
 // Block a user
 await ReportBlockService.blockUser(blockedUserId);
@@ -82,6 +85,7 @@ final blocked = await ReportBlockService.getBlockedUsers();
 ```
 
 **Report Functionality:**
+
 ```dart
 // Report a user
 await ReportBlockService.reportUser(
@@ -103,6 +107,7 @@ final hasReported = await ReportBlockService.hasReportedUser(userId);
 ```
 
 **Safety Helpers:**
+
 ```dart
 // Filter blocked users from a list
 final filtered = await ReportBlockService.filterBlockedUsers(userIds);
@@ -112,6 +117,7 @@ final canInteract = await ReportBlockService.canInteract(otherUserId);
 ```
 
 **Report Reasons:**
+
 1. Harassment or bullying
 2. Inappropriate content
 3. Spam or scam
@@ -124,6 +130,7 @@ final canInteract = await ReportBlockService.canInteract(otherUserId);
 10. Other
 
 #### Automatic Actions When Blocking:
+
 - ✅ Adds user to blocked list
 - ✅ Removes all follow relationships (both directions)
 - ✅ Prevents future interactions
@@ -138,6 +145,7 @@ final canInteract = await ReportBlockService.canInteract(otherUserId);
 #### UI Components:
 
 **Options Bottom Sheet:**
+
 ```dart
 ReportBlockSheet.showOptionsSheet(
   context,
@@ -149,23 +157,27 @@ ReportBlockSheet.showOptionsSheet(
 ```
 
 Features:
+
 - Report user option
 - Block/unblock toggle
 - Cancel option
 - Contextual descriptions
 
 **Report Reasons Sheet:**
+
 - Scrollable list of 10 report reasons
 - Each reason has description
 - Tap to select and proceed
 
 **Report Confirmation Dialog:**
+
 - Shows selected reason
 - Optional description field (500 chars)
 - Submit/cancel actions
 - Loading state
 
 **Block Confirmation Dialog:**
+
 - Clear explanation of blocking effects:
   - Prevents contact
   - Removes followers
@@ -173,10 +185,12 @@ Features:
 - Confirm/cancel actions
 
 **Unblock Confirmation Dialog:**
+
 - Simple unblock confirmation
 - Restore access explanation
 
 #### Success/Error Handling:
+
 - ✅ Loading indicators during operations
 - ✅ Success snackbars with green background
 - ✅ Error snackbars with red background
@@ -200,6 +214,7 @@ Existing `privacy_settings_page.dart` already provides:
 - ✅ Tips received privacy
 
 Privacy Levels:
+
 - **Public** - Everyone can see
 - **Friends** - Only friends can see
 - **Private** - Only you can see
@@ -209,23 +224,27 @@ Privacy Levels:
 ## 🛡️ Security Layers Implemented
 
 ### Layer 1: Authentication
+
 - ✅ Firebase Authentication required for all operations
 - ✅ Email verification checks for sensitive actions
 - ✅ User ownership validation
 
 ### Layer 2: Authorization
+
 - ✅ Comprehensive Firestore security rules
 - ✅ Role-based access control
 - ✅ Owner-only operations
 - ✅ Participant-only access
 
 ### Layer 3: Validation
+
 - ✅ String length validation (titles, descriptions, messages)
 - ✅ Field type validation (string, number, timestamp)
 - ✅ Required field checks
 - ✅ Immutable field protection
 
 ### Layer 4: Rate Limiting
+
 - ✅ Profile updates (1 per minute)
 - ✅ Follow actions (1 per 2 seconds)
 - ✅ Event creation (5 per hour)
@@ -234,6 +253,7 @@ Privacy Levels:
 - ✅ Reports (5 per day)
 
 ### Layer 5: Privacy Controls
+
 - ✅ Block functionality
 - ✅ Report system
 - ✅ Privacy settings
@@ -245,12 +265,14 @@ Privacy Levels:
 ## 🚨 Abuse Prevention Mechanisms
 
 ### 1. Blocking System
+
 - Immediate effect - blocks all interactions
 - Removes social graph connections
 - Prevents content visibility
 - Bidirectional enforcement
 
 ### 2. Reporting System
+
 - 10 predefined report reasons
 - Optional detailed description
 - Server-side report storage
@@ -258,6 +280,7 @@ Privacy Levels:
 - Can't report yourself
 
 ### 3. Rate Limiting
+
 - Prevents spam
 - Prevents mass following/unfollowing
 - Prevents event/room flooding
@@ -265,6 +288,7 @@ Privacy Levels:
 - Prevents report abuse
 
 ### 4. Content Validation
+
 - Title length enforcement (3-100 chars)
 - Description length limits (2000 chars)
 - Message length limits (5000 chars)
@@ -272,6 +296,7 @@ Privacy Levels:
 - Prevents empty content
 
 ### 5. Participant Privacy
+
 - Only participants see DMs
 - Only participants see chat messages
 - Only participants see room messages
@@ -318,6 +343,7 @@ Privacy Levels:
 ## 🔒 Data Security
 
 ### Personal Information Protection
+
 - Email addresses hidden (except user's own)
 - Phone numbers not exposed
 - Last seen can be hidden
@@ -325,12 +351,14 @@ Privacy Levels:
 - Profile can be made private
 
 ### Message Security
+
 - End-to-end participant access only
 - No public message reading
 - Server-side rules enforce privacy
 - Deleted messages stay deleted
 
 ### Financial Security
+
 - Tips only visible to sender/receiver
 - No public financial data
 - Secure transaction records
@@ -340,6 +368,7 @@ Privacy Levels:
 ## 🧪 Testing Security Rules
 
 ### Test Blocked User Access
+
 ```dart
 test('blocked user cannot read profile', () async {
   // User A blocks User B
@@ -354,6 +383,7 @@ test('blocked user cannot read profile', () async {
 ```
 
 ### Test Rate Limiting
+
 ```dart
 test('cannot follow rapidly', () async {
   // First follow succeeds
@@ -374,6 +404,7 @@ test('cannot follow rapidly', () async {
 ```
 
 ### Test Report Validation
+
 ```dart
 test('cannot report yourself', () async {
   expect(
@@ -391,6 +422,7 @@ test('cannot report yourself', () async {
 ## 📊 Security Metrics
 
 ### Before Phase 13:
+
 - ❌ Basic authentication only
 - ❌ No blocking functionality
 - ❌ No reporting system
@@ -399,6 +431,7 @@ test('cannot report yourself', () async {
 - ❌ No abuse prevention
 
 ### After Phase 13:
+
 - ✅ Comprehensive Firestore security rules
 - ✅ Full blocking system with auto-unfollow
 - ✅ Complete reporting system (10 reasons)
@@ -417,11 +450,13 @@ test('cannot report yourself', () async {
 Before deploying to production:
 
 1. ✅ Deploy Firestore security rules
+
    ```bash
    firebase deploy --only firestore:rules
    ```
 
 2. ✅ Test security rules with Firebase emulator
+
    ```bash
    firebase emulators:start --only firestore
    ```
@@ -524,24 +559,28 @@ if (canInteract) {
 ## 🎉 Success Metrics
 
 **Security:**
+
 - ✅ 300+ lines of security rules
 - ✅ 15+ helper functions
 - ✅ 12+ collections secured
 - ✅ 100% default-deny policy
 
 **Abuse Prevention:**
+
 - ✅ Block system with auto-cleanup
 - ✅ 10 report reasons
 - ✅ Rate limiting on 5+ actions
 - ✅ Content validation on all inputs
 
 **Privacy:**
+
 - ✅ 10+ privacy controls
 - ✅ Participant-only access
 - ✅ Blocked user filtering
 - ✅ Hidden fields support
 
 **User Experience:**
+
 - ✅ Intuitive report flow (3 taps)
 - ✅ Clear block confirmations
 - ✅ Success/error feedback
@@ -552,6 +591,7 @@ if (canInteract) {
 ## 🚀 Next Steps (Phase 14)
 
 With security and privacy locked down, we're ready for:
+
 - iOS/Android deployment configuration
 - CI/CD pipeline setup
 - App Store / Play Store metadata
@@ -562,7 +602,7 @@ With security and privacy locked down, we're ready for:
 
 **Phase 13 Status: ✅ COMPLETE - Security Hardened**
 
-*Security Rules: Comprehensive | Abuse Prevention: Active | Privacy: Enhanced*
-*Ready for: Production Deployment | TestFlight | Play Store Internal Testing*
+_Security Rules: Comprehensive | Abuse Prevention: Active | Privacy: Enhanced_
+_Ready for: Production Deployment | TestFlight | Play Store Internal Testing_
 
 **Last Updated: January 27, 2026**

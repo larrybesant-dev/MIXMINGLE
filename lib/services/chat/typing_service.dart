@@ -14,10 +14,12 @@ class TypingService {
   static const int _maxRetries = 3;
   static const Duration _retryDelay = Duration(seconds: 2);
   final Map<String, int> _retryCounters = {};
-  final Map<String, StreamController<List<TypingIndicator>>> _streamControllers = {};
+  final Map<String, StreamController<List<TypingIndicator>>>
+      _streamControllers = {};
 
   /// Start typing in a chat
-  Future<void> startTyping(String chatId, String userId, String userName) async {
+  Future<void> startTyping(
+      String chatId, String userId, String userName) async {
     try {
       // Cancel existing timer
       _typingTimers[chatId]?.cancel();
@@ -53,11 +55,13 @@ class TypingService {
   }
 
   /// Get typing indicators for a chat with error handling and retry guards
-  Stream<List<TypingIndicator>> getTypingIndicators(String chatId, String currentUserId) {
+  Stream<List<TypingIndicator>> getTypingIndicators(
+      String chatId, String currentUserId) {
     final retryKey = 'getTypingIndicators_$chatId';
 
     // Prevent infinite retry loops
-    if (_retryCounters[retryKey] != null && _retryCounters[retryKey]! >= _maxRetries) {
+    if (_retryCounters[retryKey] != null &&
+        _retryCounters[retryKey]! >= _maxRetries) {
       debugPrint('âš ï¸ Max retries reached for getTypingIndicators($chatId)');
       return Stream.value([]);
     }
@@ -115,7 +119,8 @@ class TypingService {
                 }
               })
               .whereType<TypingIndicator>()
-              .where((indicator) => indicator.userId != currentUserId) // Exclude self
+              .where((indicator) =>
+                  indicator.userId != currentUserId) // Exclude self
               .where((indicator) => indicator.isValid) // Only valid indicators
               .toList();
 
@@ -178,7 +183,8 @@ class TypingService {
   /// Cleanup old typing indicators (called periodically)
   Future<void> cleanupOldIndicators() async {
     try {
-      final fiveSecondsAgo = DateTime.now().subtract(const Duration(seconds: 5));
+      final fiveSecondsAgo =
+          DateTime.now().subtract(const Duration(seconds: 5));
 
       final snapshot = await _firestore
           .collection('typing')

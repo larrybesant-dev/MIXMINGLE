@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -40,7 +40,9 @@ class AgoraVideoService extends ChangeNotifier {
 
   // Lazy-loaded to ensure Firebase is initialized
   FirebaseFunctions? _functionsInstance;
-  FirebaseFunctions get _functions => _functionsInstance ?? FirebaseFunctions.instanceFor(region: 'us-central1');
+  FirebaseFunctions get _functions =>
+      _functionsInstance ??
+      FirebaseFunctions.instanceFor(region: 'us-central1');
 
   RtcEngine? _engine;
   bool _isInitialized = false;
@@ -63,7 +65,8 @@ class AgoraVideoService extends ChangeNotifier {
   final Map<int, Map<String, bool>> _remoteUserMediaState = {};
 
   // Broadcaster mode support for 100+ participants
-  bool _isBroadcaster = true; // Default to broadcaster, can downgrade to audience
+  bool _isBroadcaster =
+      true; // Default to broadcaster, can downgrade to audience
   final List<String> _activeBroadcasters = []; // Track active broadcaster UIDs
 
   // Web browser permission state tracking
@@ -92,6 +95,7 @@ class AgoraVideoService extends ChangeNotifier {
   String? get error => _error;
   String? get currentSpeakerId => _currentSpeakerId;
   int? get activeSpeakerUid => _activeSpeakerUid;
+
   /// #9 Auto-spotlight: uid of the participant whose video tile is pinned first
   int? get spotlightedUid => _activeSpeakerUid;
   bool get micLocked => _micLocked;
@@ -101,8 +105,10 @@ class AgoraVideoService extends ChangeNotifier {
   bool get isMicPermissionGranted => _isMicPermissionGranted;
   bool get isCameraPermissionDenied => _isCameraPermissionDenied;
   bool get isMicPermissionDenied => _isMicPermissionDenied;
-  bool get isCameraPermissionPermanentlyDenied => _isCameraPermissionPermanentlyDenied;
-  bool get isMicPermissionPermanentlyDenied => _isMicPermissionPermanentlyDenied;
+  bool get isCameraPermissionPermanentlyDenied =>
+      _isCameraPermissionPermanentlyDenied;
+  bool get isMicPermissionPermanentlyDenied =>
+      _isMicPermissionPermanentlyDenied;
   bool get isCheckingPermissions => _isCheckingPermissions;
 
   /// Initialize Agora Engine with full event handlers
@@ -119,21 +125,25 @@ class AgoraVideoService extends ChangeNotifier {
           'Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â',
         ),
       );
-      DebugLog.info(_safeLog('Ã°Å¸Å½Â¯ AGORA INIT - PLATFORM: ${kIsWeb ? "WEB (JS SDK)" : "NATIVE (Flutter SDK)"}'));
+      DebugLog.info(_safeLog(
+          'Ã°Å¸Å½Â¯ AGORA INIT - PLATFORM: ${kIsWeb ? "WEB (JS SDK)" : "NATIVE (Flutter SDK)"}'));
 
       // Get Agora App ID from Firestore config
-      final configDoc = await _firestore.collection('config').doc('agora').get();
+      final configDoc =
+          await _firestore.collection('config').doc('agora').get();
       final appId = configDoc.data()?['appId'] as String?;
 
       if (appId == null || appId.isEmpty) {
         throw Exception('Agora App ID not configured in Firestore');
       }
       _agoraAppId = appId;
-      DebugLog.info(_safeLog('Ã¢Å“â€¦ Agora App ID loaded (length: ${appId.length})'));
+      DebugLog.info(
+          _safeLog('Ã¢Å“â€¦ Agora App ID loaded (length: ${appId.length})'));
 
       if (kIsWeb) {
         // WEB: Just mark as initialized, actual init happens on join
-        DebugLog.info(_safeLog('Ã°Å¸Å’Â Web platform - will initialize on join'));
+        DebugLog.info(
+            _safeLog('Ã°Å¸Å’Â Web platform - will initialize on join'));
         _isInitialized = true;
         _engine = null; // No native engine on web      } else {
         // NATIVE: Initialize via platform service
@@ -146,10 +156,12 @@ class AgoraVideoService extends ChangeNotifier {
           _registerEventHandlers();
 
           // Set audio profile for high quality voice
-          await _engine!.setAudioProfile(profile: AudioProfileType.audioProfileMusicHighQuality);
+          await _engine!.setAudioProfile(
+              profile: AudioProfileType.audioProfileMusicHighQuality);
 
           // Enable audio volume indication for speaking detection
-          await _engine!.enableAudioVolumeIndication(interval: 200, smooth: 3, reportVad: true);
+          await _engine!.enableAudioVolumeIndication(
+              interval: 200, smooth: 3, reportVad: true);
         }
 
         _isInitialized = true;
@@ -217,25 +229,31 @@ class AgoraVideoService extends ChangeNotifier {
             _remoteUsersSet.add(remoteUid);
 
             // Initialize media state for this user
-            _remoteUserMediaState[remoteUid] = {'hasVideo': false, 'hasAudio': false};
+            _remoteUserMediaState[remoteUid] = {
+              'hasVideo': false,
+              'hasAudio': false
+            };
 
             // Add participant to state (display name fetched async)
             _addParticipantToState(remoteUid);
 
             DebugLog.info(_safeLog('New remote user added: $remoteUid'));
           } else {
-            DebugLog.info(_safeLog('Remote user already tracked (rejoin or duplicate): $remoteUid'));
+            DebugLog.info(_safeLog(
+                'Remote user already tracked (rejoin or duplicate): $remoteUid'));
           }
 
           notifyListeners();
 
           // Set up remote video canvas (important for web)
           if (kIsWeb) {
-            _engine!.setupRemoteVideo(VideoCanvas(uid: remoteUid, renderMode: RenderModeType.renderModeFit));
+            _engine!.setupRemoteVideo(VideoCanvas(
+                uid: remoteUid, renderMode: RenderModeType.renderModeFit));
           }
         },
 
-        onUserOffline: (RtcConnection connection, int remoteUid, UserOfflineReasonType reason) {
+        onUserOffline: (RtcConnection connection, int remoteUid,
+            UserOfflineReasonType reason) {
           DebugLog.info(_safeLog('User left: $remoteUid (reason: $reason)'));
 
           // Remove from both list and set for consistency
@@ -244,14 +262,17 @@ class AgoraVideoService extends ChangeNotifier {
           _remoteUserMediaState.remove(remoteUid);
 
           // Remove from participant and video state
-          ref?.read(agoraParticipantsProvider.notifier).removeParticipant(remoteUid);
+          ref
+              ?.read(agoraParticipantsProvider.notifier)
+              .removeParticipant(remoteUid);
           ref?.read(videoTileProvider.notifier).removeRemoteVideo(remoteUid);
 
           notifyListeners();
         },
 
         onUserInfoUpdated: (int uid, agora.UserInfo info) {
-          DebugLog.info(_safeLog('User info updated: uid=$uid, userAccount=${info.userAccount}'));
+          DebugLog.info(_safeLog(
+              'User info updated: uid=$uid, userAccount=${info.userAccount}'));
 
           // Update participant with Firestore userId if available
           if (ref != null && info.userAccount != null) {
@@ -260,83 +281,90 @@ class AgoraVideoService extends ChangeNotifier {
         },
 
         // === VIDEO STATE TRACKING (CRITICAL FOR CAMERA INDICATORS) ===
-        onRemoteVideoStateChanged:
-            (
-              RtcConnection connection,
-              int remoteUid,
-              RemoteVideoState state,
-              RemoteVideoStateReason reason,
-              int elapsed,
-            ) {
-              DebugLog.info(_safeLog('Remote video state: uid=$remoteUid, state=$state, reason=$reason'));
+        onRemoteVideoStateChanged: (
+          RtcConnection connection,
+          int remoteUid,
+          RemoteVideoState state,
+          RemoteVideoStateReason reason,
+          int elapsed,
+        ) {
+          DebugLog.info(_safeLog(
+              'Remote video state: uid=$remoteUid, state=$state, reason=$reason'));
 
-              final hasVideo =
-                  state == RemoteVideoState.remoteVideoStateStarting ||
-                  state == RemoteVideoState.remoteVideoStateDecoding;
+          final hasVideo = state == RemoteVideoState.remoteVideoStateStarting ||
+              state == RemoteVideoState.remoteVideoStateDecoding;
 
-              // Update participant video state
-              ref?.read(agoraParticipantsProvider.notifier).updateVideoState(remoteUid, hasVideo);
+          // Update participant video state
+          ref
+              ?.read(agoraParticipantsProvider.notifier)
+              .updateVideoState(remoteUid, hasVideo);
 
-              // Update video tile provider
-              if (hasVideo) {
-                ref?.read(videoTileProvider.notifier).addRemoteVideo(remoteUid);
-              } else {
-                ref?.read(videoTileProvider.notifier).removeRemoteVideo(remoteUid);
-              }
+          // Update video tile provider
+          if (hasVideo) {
+            ref?.read(videoTileProvider.notifier).addRemoteVideo(remoteUid);
+          } else {
+            ref?.read(videoTileProvider.notifier).removeRemoteVideo(remoteUid);
+          }
 
-              notifyListeners();
-            },
+          notifyListeners();
+        },
 
         // === AUDIO STATE TRACKING (CRITICAL FOR MIC INDICATORS) ===
-        onRemoteAudioStateChanged:
-            (
-              RtcConnection connection,
-              int remoteUid,
-              RemoteAudioState state,
-              RemoteAudioStateReason reason,
-              int elapsed,
-            ) {
-              DebugLog.info(_safeLog('Remote audio state: uid=$remoteUid, state=$state, reason=$reason'));
+        onRemoteAudioStateChanged: (
+          RtcConnection connection,
+          int remoteUid,
+          RemoteAudioState state,
+          RemoteAudioStateReason reason,
+          int elapsed,
+        ) {
+          DebugLog.info(_safeLog(
+              'Remote audio state: uid=$remoteUid, state=$state, reason=$reason'));
 
-              final hasAudio =
-                  state == RemoteAudioState.remoteAudioStateStarting ||
-                  state == RemoteAudioState.remoteAudioStateDecoding;
+          final hasAudio = state == RemoteAudioState.remoteAudioStateStarting ||
+              state == RemoteAudioState.remoteAudioStateDecoding;
 
-              ref?.read(agoraParticipantsProvider.notifier).updateAudioState(remoteUid, hasAudio);
+          ref
+              ?.read(agoraParticipantsProvider.notifier)
+              .updateAudioState(remoteUid, hasAudio);
 
-              notifyListeners();
-            },
+          notifyListeners();
+        },
 
         // === SPEAKING DETECTION (VOLUME INDICATORS) ===
-        onAudioVolumeIndication:
-            (RtcConnection connection, List<AudioVolumeInfo> speakers, int speakerNumber, int totalVolume) {
-              int? maxVolumeUid;
-              int maxVolume = 0;
+        onAudioVolumeIndication: (RtcConnection connection,
+            List<AudioVolumeInfo> speakers,
+            int speakerNumber,
+            int totalVolume) {
+          int? maxVolumeUid;
+          int maxVolume = 0;
 
-              for (var speaker in speakers) {
-                if (speaker.uid != null && speaker.volume != null) {
-                  final isSpeaking = speaker.volume! > 10; // Threshold for speaking
-                  ref?.read(agoraParticipantsProvider.notifier).updateSpeakingState(speaker.uid!, isSpeaking);
+          for (var speaker in speakers) {
+            if (speaker.uid != null && speaker.volume != null) {
+              final isSpeaking = speaker.volume! > 10; // Threshold for speaking
+              ref
+                  ?.read(agoraParticipantsProvider.notifier)
+                  .updateSpeakingState(speaker.uid!, isSpeaking);
 
-                  // Track most active speaker by volume
-                  if (speaker.volume! > maxVolume) {
-                    maxVolume = speaker.volume!;
-                    maxVolumeUid = speaker.uid!;
-                  }
-                }
+              // Track most active speaker by volume
+              if (speaker.volume! > maxVolume) {
+                maxVolume = speaker.volume!;
+                maxVolumeUid = speaker.uid!;
               }
+            }
+          }
 
-              // Update active speaker if changed
-              if (maxVolumeUid != _activeSpeakerUid && maxVolume > 10) {
-                _activeSpeakerUid = maxVolumeUid;
-                // #9 Auto-spotlight: promote speaker to index 0 in remote user list
-                if (maxVolumeUid != null && _remoteUsersSet.contains(maxVolumeUid)) {
-                  _remoteUsers.remove(maxVolumeUid);
-                  _remoteUsers.insert(0, maxVolumeUid);
-                }
-                notifyListeners();
-              }
-            },
+          // Update active speaker if changed
+          if (maxVolumeUid != _activeSpeakerUid && maxVolume > 10) {
+            _activeSpeakerUid = maxVolumeUid;
+            // #9 Auto-spotlight: promote speaker to index 0 in remote user list
+            if (maxVolumeUid != null &&
+                _remoteUsersSet.contains(maxVolumeUid)) {
+              _remoteUsers.remove(maxVolumeUid);
+              _remoteUsers.insert(0, maxVolumeUid);
+            }
+            notifyListeners();
+          }
+        },
 
         // === ERROR HANDLING ===
         onError: (ErrorCodeType err, String msg) {
@@ -346,14 +374,16 @@ class AgoraVideoService extends ChangeNotifier {
         },
 
         // === CONNECTION STATE ===
-        onConnectionStateChanged:
-            (RtcConnection connection, ConnectionStateType state, ConnectionChangedReasonType reason) {
-              DebugLog.info(_safeLog('Connection state: $state, reason: $reason'));
-            },
+        onConnectionStateChanged: (RtcConnection connection,
+            ConnectionStateType state, ConnectionChangedReasonType reason) {
+          DebugLog.info(_safeLog('Connection state: $state, reason: $reason'));
+        },
 
         // === NETWORK QUALITY ===
-        onNetworkQuality: (RtcConnection connection, int remoteUid, QualityType txQuality, QualityType rxQuality) {
-          if (txQuality == QualityType.qualityPoor || rxQuality == QualityType.qualityPoor) {
+        onNetworkQuality: (RtcConnection connection, int remoteUid,
+            QualityType txQuality, QualityType rxQuality) {
+          if (txQuality == QualityType.qualityPoor ||
+              rxQuality == QualityType.qualityPoor) {
             DebugLog.info(_safeLog(' Poor network quality detected'));
           }
         },
@@ -369,9 +399,11 @@ class AgoraVideoService extends ChangeNotifier {
       _isCheckingPermissions = true;
       notifyListeners();
 
-      DebugLog.info(_safeLog(' Requesting camera and microphone permissions...'));
+      DebugLog.info(
+          _safeLog(' Requesting camera and microphone permissions...'));
 
-      final Map<Permission, PermissionStatus> statuses = await [Permission.camera, Permission.microphone].request();
+      final Map<Permission, PermissionStatus> statuses =
+          await [Permission.camera, Permission.microphone].request();
 
       // Parse permission statuses
       final cameraStatus = statuses[Permission.camera];
@@ -381,14 +413,20 @@ class AgoraVideoService extends ChangeNotifier {
       _isMicPermissionGranted = micStatus?.isGranted ?? false;
       _isCameraPermissionDenied = cameraStatus?.isDenied ?? false;
       _isMicPermissionDenied = micStatus?.isDenied ?? false;
-      _isCameraPermissionPermanentlyDenied = cameraStatus?.isPermanentlyDenied ?? false;
-      _isMicPermissionPermanentlyDenied = micStatus?.isPermanentlyDenied ?? false;
+      _isCameraPermissionPermanentlyDenied =
+          cameraStatus?.isPermanentlyDenied ?? false;
+      _isMicPermissionPermanentlyDenied =
+          micStatus?.isPermanentlyDenied ?? false;
 
-      final bool allGranted = statuses.values.every((status) => status.isGranted);
+      final bool allGranted =
+          statuses.values.every((status) => status.isGranted);
 
       if (!allGranted) {
         DebugLog.info(_safeLog('  Some permissions denied'));
-        final deniedPerms = statuses.entries.where((e) => !e.value.isGranted).map((e) => e.key.toString()).join(', ');
+        final deniedPerms = statuses.entries
+            .where((e) => !e.value.isGranted)
+            .map((e) => e.key.toString())
+            .join(', ');
         _error = 'Permissions denied: $deniedPerms';
       } else {
         DebugLog.info(_safeLog(' All permissions granted'));
@@ -424,7 +462,8 @@ class AgoraVideoService extends ChangeNotifier {
       _isCameraPermissionPermanentlyDenied = cameraStatus.isPermanentlyDenied;
       _isMicPermissionPermanentlyDenied = micStatus.isPermanentlyDenied;
 
-      DebugLog.info(_safeLog(' Permission status - Camera: $cameraStatus, Mic: $micStatus'));
+      DebugLog.info(_safeLog(
+          ' Permission status - Camera: $cameraStatus, Mic: $micStatus'));
 
       _isCheckingPermissions = false;
       notifyListeners();
@@ -462,7 +501,8 @@ class AgoraVideoService extends ChangeNotifier {
       );
       DebugLog.info(_safeLog('Ã°Å¸Å¡â‚¬ JOIN ROOM SEQUENCE START'));
       DebugLog.info(_safeLog('Ã°Å¸â€œÂ Channel: $roomId'));
-      DebugLog.info(_safeLog('Ã°Å¸â€œÂ Platform: ${kIsWeb ? "WEB" : "NATIVE"}'));
+      DebugLog.info(
+          _safeLog('Ã°Å¸â€œÂ Platform: ${kIsWeb ? "WEB" : "NATIVE"}'));
       DebugLog.info(
         _safeLog(
           'Ã¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€ÂÃ¢â€Â',
@@ -470,7 +510,8 @@ class AgoraVideoService extends ChangeNotifier {
       );
 
       // === CHECKPOINT 1: VERIFY AUTH STATE ===
-      DebugLog.info(_safeLog('Ã°Å¸â€â€™ [1/6] Verifying authentication state...'));
+      DebugLog.info(
+          _safeLog('Ã°Å¸â€â€™ [1/6] Verifying authentication state...'));
       final user = _auth.currentUser;
 
       if (user == null) {
@@ -479,7 +520,10 @@ class AgoraVideoService extends ChangeNotifier {
       }
 
       // Extra verification: wait for auth state to be stable
-      final authUser = await _auth.authStateChanges().first.timeout(const Duration(seconds: 3), onTimeout: () => user);
+      final authUser = await _auth
+          .authStateChanges()
+          .first
+          .timeout(const Duration(seconds: 3), onTimeout: () => user);
 
       if (authUser == null) {
         DebugLog.info(_safeLog(' ERROR: Auth state unstable - user is null'));
@@ -489,7 +533,8 @@ class AgoraVideoService extends ChangeNotifier {
       DebugLog.info(_safeLog('Ã¢Å“â€¦ [1/6] Auth verified'));
       DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ User: ${user.email}'));
       DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ UID: ${user.uid}'));
-      DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ Provider: ${user.providerData.map((p) => p.providerId).join(", ")}'));
+      DebugLog.info(_safeLog(
+          '   Ã¢â€â€Ã¢â€â‚¬ Provider: ${user.providerData.map((p) => p.providerId).join(", ")}'));
 
       // === PRE-JOIN BAN CHECK ===
       try {
@@ -510,9 +555,11 @@ class AgoraVideoService extends ChangeNotifier {
 
       // === CHECKPOINT 3: PERMISSIONS ===
       if (kIsWeb) {
-        DebugLog.info(_safeLog('Ã°Å¸Å’Â [3/6] Web platform - browser will prompt for permissions on join'));
+        DebugLog.info(_safeLog(
+            'Ã°Å¸Å’Â [3/6] Web platform - browser will prompt for permissions on join'));
       } else {
-        DebugLog.info(_safeLog('Ã°Å¸â€œÂ± [3/6] Requesting native permissions...'));
+        DebugLog.info(
+            _safeLog('Ã°Å¸â€œÂ± [3/6] Requesting native permissions...'));
         final hasPermissions = await requestPermissions();
         if (!hasPermissions) {
           DebugLog.info(_safeLog('Ã¢ÂÅ’ Permissions denied'));
@@ -537,18 +584,23 @@ class AgoraVideoService extends ChangeNotifier {
 
         // CRITICAL: Force-refresh ID token before calling function
         // This ensures Firebase Web SDK has a fresh token to attach to the callable envelope
-        DebugLog.info(_safeLog(' Refreshing Firebase ID token for callable...'));
+        DebugLog.info(
+            _safeLog(' Refreshing Firebase ID token for callable...'));
         final refreshedToken = await user.getIdToken(true);
-        DebugLog.info(_safeLog(' ID token refreshed, length: ${refreshedToken?.length ?? 0}'));
+        DebugLog.info(_safeLog(
+            ' ID token refreshed, length: ${refreshedToken?.length ?? 0}'));
 
         if (refreshedToken == null || refreshedToken.isEmpty) {
-          throw Exception('Failed to obtain fresh ID token for callable invocation');
+          throw Exception(
+              'Failed to obtain fresh ID token for callable invocation');
         }
 
         // Use callable API - auth context is automatically included by Firebase SDK
         // The refreshed token above ensures the callable envelope has valid authentication
-        DebugLog.info(_safeLog(' Invoking generateAgoraToken callable with authenticated context...'));
-        final result = await _functions.httpsCallable('generateAgoraToken').call({
+        DebugLog.info(_safeLog(
+            ' Invoking generateAgoraToken callable with authenticated context...'));
+        final result =
+            await _functions.httpsCallable('generateAgoraToken').call({
           'roomId': roomId,
           'userId': user.uid,
         });
@@ -596,13 +648,15 @@ class AgoraVideoService extends ChangeNotifier {
         if (!kIsWeb) {
           // Native: Set up preview before join
           await _engine!.enableLocalVideo(true);
-          await _engine!.setupLocalVideo(const VideoCanvas(uid: 0, renderMode: RenderModeType.renderModeFit));
+          await _engine!.setupLocalVideo(const VideoCanvas(
+              uid: 0, renderMode: RenderModeType.renderModeFit));
           await _engine!.startPreview();
           await _engine!.muteLocalVideoStream(false);
           DebugLog.info(_safeLog('Ã¢Å“â€¦ [4/6] Local video preview started'));
         } else {
           // Web: Preview happens automatically on join
-          DebugLog.info(_safeLog('Ã¢Å“â€¦ [4/6] Web - local video will start on join'));
+          DebugLog.info(
+              _safeLog('Ã¢Å“â€¦ [4/6] Web - local video will start on join'));
         }
 
         _isVideoMuted = false;
@@ -613,9 +667,15 @@ class AgoraVideoService extends ChangeNotifier {
       }
 
       // === CHECKPOINT 5: FIRESTORE PARTICIPANT ===
-      DebugLog.info(_safeLog('Ã°Å¸â€œÂ [5/6] Adding user to Firestore participants...'));
+      DebugLog.info(
+          _safeLog('Ã°Å¸â€œÂ [5/6] Adding user to Firestore participants...'));
       try {
-        await _firestore.collection('rooms').doc(roomId).collection('participants').doc(user.uid).set({
+        await _firestore
+            .collection('rooms')
+            .doc(roomId)
+            .collection('participants')
+            .doc(user.uid)
+            .set({
           'userId': user.uid,
           'joinedAt': FieldValue.serverTimestamp(),
           'displayName': user.displayName ?? 'User',
@@ -636,10 +696,13 @@ class AgoraVideoService extends ChangeNotifier {
         ),
       );
       DebugLog.info(_safeLog('Ã°Å¸â€â€” [6/6] Joining Agora channel...'));
-      DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ SDK: ${kIsWeb ? "Web JS" : "Native Flutter"}'));
+      DebugLog.info(_safeLog(
+          '   Ã¢â€â€Ã¢â€â‚¬ SDK: ${kIsWeb ? "Web JS" : "Native Flutter"}'));
       DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ Channel: $roomId'));
-      DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ UID: $_localUid (from token)'));
-      DebugLog.info(_safeLog('   Ã¢â€â€Ã¢â€â‚¬ Token length: ${token.length}'));
+      DebugLog.info(
+          _safeLog('   Ã¢â€â€Ã¢â€â‚¬ UID: $_localUid (from token)'));
+      DebugLog.info(
+          _safeLog('   Ã¢â€â€Ã¢â€â‚¬ Token length: ${token.length}'));
 
       final joined = await AgoraPlatformService.joinChannel(
         appId: _agoraAppId!,
@@ -709,10 +772,17 @@ class AgoraVideoService extends ChangeNotifier {
         final user = _auth.currentUser;
         if (user != null) {
           try {
-            await _firestore.collection('rooms').doc(_currentChannel).collection('participants').doc(user.uid).delete();
-            DebugLog.info(_safeLog('Ã¢Å“â€¦ User removed from room participants'));
+            await _firestore
+                .collection('rooms')
+                .doc(_currentChannel)
+                .collection('participants')
+                .doc(user.uid)
+                .delete();
+            DebugLog.info(
+                _safeLog('Ã¢Å“â€¦ User removed from room participants'));
           } catch (e) {
-            DebugLog.info(_safeLog('Ã¢Å¡Â Ã¯Â¸Â  Failed to remove user from participants: $e'));
+            DebugLog.info(_safeLog(
+                'Ã¢Å¡Â Ã¯Â¸Â  Failed to remove user from participants: $e'));
           }
         }
       }
@@ -757,7 +827,8 @@ class AgoraVideoService extends ChangeNotifier {
       _isMicMuted = !_isMicMuted;
       await AgoraPlatformService.setMicMuted(_isMicMuted);
       notifyListeners();
-      DebugLog.info(_safeLog('Ã°Å¸Å½Â¤ Mic ${_isMicMuted ? "muted" : "unmuted"}'));
+      DebugLog.info(
+          _safeLog('Ã°Å¸Å½Â¤ Mic ${_isMicMuted ? "muted" : "unmuted"}'));
     } catch (e) {
       DebugLog.info(_safeLog(' Failed to toggle mic: $e'));
       _error = 'Mic toggle failed: $e';
@@ -782,7 +853,8 @@ class AgoraVideoService extends ChangeNotifier {
       }
 
       notifyListeners();
-      DebugLog.info(_safeLog('Ã°Å¸â€œÂ¹ Video ${_isVideoMuted ? "muted" : "unmuted"}'));
+      DebugLog.info(
+          _safeLog('Ã°Å¸â€œÂ¹ Video ${_isVideoMuted ? "muted" : "unmuted"}'));
     } catch (e) {
       DebugLog.info(_safeLog('Ã°Å¸â€œÂ¹ Failed to toggle video: $e'));
       _error = 'Video toggle failed: $e';
@@ -853,7 +925,8 @@ class AgoraVideoService extends ChangeNotifier {
       await _engine!.muteLocalAudioStream(false);
       _isMicMuted = false;
 
-      DebugLog.info(_safeLog(' Turn-based lock released: Normal mic control restored'));
+      DebugLog.info(
+          _safeLog(' Turn-based lock released: Normal mic control restored'));
       notifyListeners();
     } catch (e) {
       DebugLog.info(_safeLog(' Failed to release turn-based lock: $e'));
@@ -872,7 +945,8 @@ class AgoraVideoService extends ChangeNotifier {
 
     // Create participant with temporary display name
     // In production, map uid to userId via room metadata
-    final userId = uid.toString(); // Temporary - should come from room participants map
+    final userId =
+        uid.toString(); // Temporary - should come from room participants map
 
     final participant = AgoraParticipant(
       uid: uid,
@@ -895,20 +969,22 @@ class AgoraVideoService extends ChangeNotifier {
     if (ref == null) return;
 
     try {
-      final displayName = await ref!.read(userDisplayNameProvider(userId).future);
-      ref!.read(agoraParticipantsProvider.notifier).updateDisplayName(uid, displayName);
-      DebugLog.info(_safeLog('Updated display name for uid=$uid: $displayName'));
+      final displayName =
+          await ref!.read(userDisplayNameProvider(userId).future);
+      ref!
+          .read(agoraParticipantsProvider.notifier)
+          .updateDisplayName(uid, displayName);
+      DebugLog.info(
+          _safeLog('Updated display name for uid=$uid: $displayName'));
     } catch (e) {
       DebugLog.info(_safeLog('Failed to fetch display name for uid=$uid: $e'));
     }
   }
 
-
   /// Setup method combinations to stop remote participant stream
   /// On web: Handled via Firestore listener removing participant
   /// On native: We can mute their audio but not truly kick them from the session
   /// The Firestore removedUsers list and canUserJoinRoom validation handles actual removal
-
 
   /// Set up web remote user event callbacks
   /// Called during initialize() on web platform to listen for remote user events
@@ -924,7 +1000,8 @@ class AgoraVideoService extends ChangeNotifier {
 
           if (uid == null) return;
 
-          DebugLog.info(_safeLog('Remote user published: uid=$uid, mediaType=$mediaType'));
+          DebugLog.info(_safeLog(
+              'Remote user published: uid=$uid, mediaType=$mediaType'));
 
           // Get or create media state for this user
           _remoteUserMediaState[uid] ??= {'hasVideo': false, 'hasAudio': false};
@@ -945,10 +1022,12 @@ class AgoraVideoService extends ChangeNotifier {
             // Add participant to state (will fetch display name async)
             _addParticipantToState(uid);
 
-            DebugLog.info(_safeLog('New remote user added: uid=$uid (first track)'));
+            DebugLog.info(
+                _safeLog('New remote user added: uid=$uid (first track)'));
           } else {
             // User already in list, this is an additional media track
-            DebugLog.info(_safeLog('Remote user already added: uid=$uid (additional track: $mediaType)'));
+            DebugLog.info(_safeLog(
+                'Remote user already added: uid=$uid (additional track: $mediaType)'));
           }
 
           notifyListeners();
@@ -969,7 +1048,8 @@ class AgoraVideoService extends ChangeNotifier {
           // Get media state for this user
           final mediaState = _remoteUserMediaState[uid];
           if (mediaState == null) {
-            DebugLog.info(_safeLog('User not tracked, ignoring unpublish: uid=$uid'));
+            DebugLog.info(
+                _safeLog('User not tracked, ignoring unpublish: uid=$uid'));
             return;
           }
 
@@ -992,12 +1072,16 @@ class AgoraVideoService extends ChangeNotifier {
             _remoteUserMediaState.remove(uid);
 
             // Remove from participant state
-            ref?.read(agoraParticipantsProvider.notifier).removeParticipant(uid);
+            ref
+                ?.read(agoraParticipantsProvider.notifier)
+                .removeParticipant(uid);
             ref?.read(videoTileProvider.notifier).removeRemoteVideo(uid);
 
-            DebugLog.info(_safeLog('User completely removed (all tracks gone): uid=$uid'));
+            DebugLog.info(_safeLog(
+                'User completely removed (all tracks gone): uid=$uid'));
           } else {
-            DebugLog.info(_safeLog('User still has active tracks: uid=$uid (video=$hasVideo, audio=$hasAudio)'));
+            DebugLog.info(_safeLog(
+                'User still has active tracks: uid=$uid (video=$hasVideo, audio=$hasAudio)'));
           }
 
           notifyListeners();
@@ -1022,10 +1106,13 @@ class AgoraVideoService extends ChangeNotifier {
             _remoteUserMediaState.remove(uid);
 
             // Clean up participant and video state
-            ref?.read(agoraParticipantsProvider.notifier).removeParticipant(uid);
+            ref
+                ?.read(agoraParticipantsProvider.notifier)
+                .removeParticipant(uid);
             ref?.read(videoTileProvider.notifier).removeRemoteVideo(uid);
 
-            DebugLog.info(_safeLog('User force-removed (left event): uid=$uid'));
+            DebugLog.info(
+                _safeLog('User force-removed (left event): uid=$uid'));
             notifyListeners();
           }
         } catch (e) {
@@ -1033,7 +1120,8 @@ class AgoraVideoService extends ChangeNotifier {
         }
       });
 
-      DebugLog.info(_safeLog('Web remote user callbacks configured with media state tracking'));
+      DebugLog.info(_safeLog(
+          'Web remote user callbacks configured with media state tracking'));
     } catch (e) {
       DebugLog.info(_safeLog('Error setting up web callbacks: $e'));
     }
@@ -1043,7 +1131,8 @@ class AgoraVideoService extends ChangeNotifier {
   // PROVIDER-COMPATIBLE ALIASES
   // ============================================================================
 
-  Future<void> joinChannel(String channelName, {String? token, int? uid}) async {
+  Future<void> joinChannel(String channelName,
+      {String? token, int? uid}) async {
     await joinRoom(channelName);
   }
 
@@ -1141,14 +1230,11 @@ class AgoraVideoService extends ChangeNotifier {
         DebugLog.info(_safeLog('  Error leaving channel: $e'));
       });
 
-      _engine!
-          .release()
-          .then((_) {
-            DebugLog.info(_safeLog(' Agora engine released'));
-          })
-          .catchError((e) {
-            DebugLog.info(_safeLog('  Error releasing engine: $e'));
-          });
+      _engine!.release().then((_) {
+        DebugLog.info(_safeLog(' Agora engine released'));
+      }).catchError((e) {
+        DebugLog.info(_safeLog('  Error releasing engine: $e'));
+      });
 
       _engine = null;
       notifyListeners();
@@ -1224,7 +1310,8 @@ class AgoraVideoService extends ChangeNotifier {
   void updateActiveBroadcasters(List<String> broadcasterIds) {
     _activeBroadcasters.clear();
     _activeBroadcasters.addAll(broadcasterIds);
-    DebugLog.info(_safeLog(' Active broadcasters: ${_activeBroadcasters.length}'));
+    DebugLog.info(
+        _safeLog(' Active broadcasters: ${_activeBroadcasters.length}'));
     notifyListeners();
   }
 }

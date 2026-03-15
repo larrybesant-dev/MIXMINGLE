@@ -61,7 +61,8 @@ class Message {
       mentionedUserIds: List<String>.from(json['mentionedUserIds'] ?? []),
       reactions: List<String>.from(json['reactions'] ?? []),
       isEdited: json['isEdited'] ?? false,
-      editedAt: json['editedAt'] != null ? DateTime.parse(json['editedAt']) : null,
+      editedAt:
+          json['editedAt'] != null ? DateTime.parse(json['editedAt']) : null,
       status: MessageStatus.values.firstWhere(
         (e) => e.toString() == 'MessageStatus.${json['status'] ?? 'sent'}',
         orElse: () => MessageStatus.sent,

@@ -1,18 +1,53 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb_auth;
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
-import '../../../core/responsive/responsive_utils.dart';
-import '../../../core/animations/app_animations.dart';
+import '../../../app/app_routes.dart';
+import '../../../core/design_system/app_layout.dart';
+import '../../../core/design_system/design_constants.dart';
 import '../../../shared/providers/all_providers.dart';
 import '../../../shared/widgets/club_background.dart';
-import '../../../shared/widgets/glow_text.dart';
 import '../../../shared/models/user_profile.dart';
+<<<<<<< HEAD
 import '../../../shared/models/vibe_genres.dart';
 import '../../../core/routing/app_routes.dart';
+=======
+import '../widgets/profile_music_widget.dart';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Vibe chips (ordered as specified in UI spec)
+// ─────────────────────────────────────────────────────────────────────────────
+const _kVibeChips = <(String, Color)>[
+  ('Chill', Color(0xFF4A90FF)),
+  ('Hype', Color(0xFFFF4D8B)),
+  ('Deep Talk', Color(0xFF8B5CF6)),
+  ('Party', Color(0xFFFFAB00)),
+  ('Late Night', Color(0xFF6366F1)),
+  ('Creative', Color(0xFFFFD700)),
+  ('Funny', Color(0xFF00E5CC)),
+  ('Flirty', Color(0xFFFF69B4)),
+];
+
+const _kGenderOptions = [
+  'Man', 'Woman', 'Non-binary', 'Trans man', 'Trans woman', 'Prefer not to say',
+];
+
+const _kPronounOptions = [
+  'he/him', 'she/her', 'they/them', 'he/they', 'she/they', 'any',
+];
+
+const _kInterests = [
+  'Music', 'Sports', 'Travel', 'Food', 'Movies',
+  'Books', 'Gaming', 'Art', 'Fitness', 'Dancing',
+  'Cooking', 'Technology', 'Nature', 'Pets', 'Fashion',
+  'Photography', 'Nightlife', 'Volunteering',
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+>>>>>>> origin/develop
 
 class CreateProfilePage extends ConsumerStatefulWidget {
   const CreateProfilePage({super.key});
@@ -22,21 +57,67 @@ class CreateProfilePage extends ConsumerStatefulWidget {
 }
 
 class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
+  // ── Form ──────────────────────────────────────────────────
   final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
+
+  // ── Text controllers ──────────────────────────────────────
+  final _displayNameController = TextEditingController();
   final _bioController = TextEditingController();
-  final _ageController = TextEditingController();
   final _locationController = TextEditingController();
   final _zipController = TextEditingController();
 
-  // ZIP lookup state
-  String? _zipResolvedCity;   // "Chicago, IL"
+  // ── ZIP lookup ────────────────────────────────────────────
+  String? _zipResolvedCity;
   bool _zipLooking = false;
   String? _zipError;
 
+  // ── Avatar ────────────────────────────────────────────────
+  final _imagePicker = ImagePicker();
+  String? _profileImageUrl;
+  bool _isUploadingAvatar = false;
+
+  // ── Gallery photos (up to 6) ─────────────────────────────
+  final List<String> _galleryPhotos = [];
+  bool _isUploadingGallery = false;
+
+  // ── Vibe / music ─────────────────────────────────────────
+  String? _selectedVibeTag;
+  final List<String> _selectedMusicGenres = [];
+  String? _selectedCountryCode;
+
+  // ── Music track ───────────────────────────────────────────
+  String? _musicTitle;
+  String? _musicArtist;
+  String? _musicPreviewUrl;
+  TrackSource? _musicSource;
+
+  // ── Lifestyle ─────────────────────────────────────────────
+  String? _selectedGender;
+  String? _selectedPronouns;
+  DateTime? _birthday;
+  final List<String> _selectedInterests = [];
+
+  // ── Submit ────────────────────────────────────────────────
+  bool _isLoading = false;
+
+  // ─────────────────────────────────────────────────────────
+  @override
+  void dispose() {
+    _displayNameController.dispose();
+    _bioController.dispose();
+    _locationController.dispose();
+    _zipController.dispose();
+    super.dispose();
+  }
+
+  // ── ZIP code lookup ──────────────────────────────────────
   Future<void> _lookupZip(String zip) async {
     if (zip.length != 5) return;
-    setState(() { _zipLooking = true; _zipError = null; _zipResolvedCity = null; });
+    setState(() {
+      _zipLooking = true;
+      _zipError = null;
+      _zipResolvedCity = null;
+    });
     try {
       final res = await http.get(Uri.parse('https://api.zippopotam.us/us/$zip'));
       if (res.statusCode == 200) {
@@ -46,308 +127,466 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
           final city = places[0]['place name'] as String;
           final state = places[0]['state abbreviation'] as String;
           final resolved = '$city, $state';
-          setState(() { _zipResolvedCity = resolved; _zipError = null; });
+          setState(() {
+            _zipResolvedCity = resolved;
+            _zipError = null;
+          });
           _locationController.text = resolved;
         }
       } else {
-        setState(() { _zipError = 'ZIP code not found'; });
+        setState(() => _zipError = 'ZIP code not found');
       }
     } catch (_) {
-      setState(() { _zipError = 'Could not look up ZIP code'; });
+      setState(() => _zipError = 'Could not look up ZIP code');
     } finally {
-      setState(() { _zipLooking = false; });
+      setState(() => _zipLooking = false);
     }
   }
 
-  final ImagePicker _imagePicker = ImagePicker();
-  String? _profileImageUrl;
-  String? _selectedGender;
-  final List<String> _selectedInterests = [];
-
-  // ── Sprint 1: Vibe, Music, Country ────────────────────────
-  String? _selectedVibeTag;
-  final List<String> _selectedMusicGenres = [];
-  String? _selectedCountryCode;
-
-  // ── Loading guards ────────────────────────────────────────
-  bool _isLoading = false;
-  bool _isUploadingImage = false;
-
-  int _currentStep = 0;
-  // Step count: 0-Basic, 1-Interests, 2-Vibe, 3-Photo
-  static const int _totalSteps = 4;
-
-  final List<String> _availableInterests = [
-    'Music',
-    'Sports',
-    'Travel',
-    'Food',
-    'Movies',
-    'Books',
-    'Gaming',
-    'Art',
-    'Photography',
-    'Fitness',
-    'Dancing',
-    'Cooking',
-    'Technology',
-    'Nature',
-    'Pets',
-    'Fashion',
-    'Shopping',
-    'Nightlife',
-    'Volunteering',
-  ];
-
-  final List<String> _genderOptions = [
-    'Male',
-    'Female',
-    'Non-binary',
-    'Prefer not to say',
-  ];
-
-  @override
-  void dispose() {
-    _usernameController.dispose();
-    _bioController.dispose();
-    _ageController.dispose();
-    _locationController.dispose();
-    _zipController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickImage() async {
-    if (_isUploadingImage) return;
+  Future<void> _pickAvatar() async {
+    if (_isUploadingAvatar) return;
     try {
-      final pickedFile = await _imagePicker.pickImage(
+      final picked = await _imagePicker.pickImage(
         source: ImageSource.gallery,
         maxWidth: 800,
         maxHeight: 800,
         imageQuality: 85,
       );
+      if (picked == null || !mounted) return;
 
-      if (pickedFile != null && mounted) {
-        setState(() => _isUploadingImage = true);
+      final uid = fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (uid.isEmpty) {
+        _showSnack('Not authenticated — please sign in again.');
+        return;
+      }
 
-        // Use Firebase Auth UID directly — currentUserProvider.future returns
-        // null for brand-new users who have no Firestore document yet, which
-        // silently aborted the upload. Auth UID is always available on this
-        // page because the auth gate guarantees the user is signed in.
-        final uid = fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '';
-        if (uid.isEmpty) {
-          if (mounted) {
-            setState(() => _isUploadingImage = false);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Not authenticated — please sign in again.')),
-            );
-          }
-          return;
-        }
-
+      setState(() => _isUploadingAvatar = true);
+      try {
         final controller = ref.read(storageControllerProvider.notifier);
-        final url = await controller.uploadImage(pickedFile, uid);
+        final url = await controller.uploadImage(picked, uid);
         if (mounted) {
           setState(() {
-            _isUploadingImage = false;
-            if (url != null) {
-              _profileImageUrl = url;
-            }
+            _isUploadingAvatar = false;
+            if (url != null) _profileImageUrl = url;
           });
           if (url == null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Photo upload failed — please try again.')),
-            );
+            _showSnack('Upload returned no URL — check Storage rules & CORS.');
           }
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isUploadingAvatar = false);
+          final isCors = e.toString().toLowerCase().contains('cors') ||
+              e.toString().toLowerCase().contains('access-control') ||
+              e.toString().toLowerCase().contains('network');
+          _showSnack(isCors
+              ? 'Upload blocked: run tools/apply-cors.ps1 to fix web uploads.'
+              : 'Photo upload failed: $e');
         }
       }
     } catch (e) {
       if (mounted) {
-        setState(() => _isUploadingImage = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error picking image: $e')),
-        );
+        setState(() => _isUploadingAvatar = false);
+        _showSnack('Error picking image: $e');
       }
     }
   }
 
+  // ── Gallery photo upload ─────────────────────────────────
+  Future<void> _pickGalleryPhoto() async {
+    if (_galleryPhotos.length >= 6 || _isUploadingGallery) return;
+    try {
+      final picked = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1200,
+        maxHeight: 1200,
+        imageQuality: 80,
+      );
+      if (picked == null || !mounted) return;
+
+      final uid = fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '';
+      if (uid.isEmpty) return;
+
+      setState(() => _isUploadingGallery = true);
+      try {
+        final controller = ref.read(storageControllerProvider.notifier);
+        final url = await controller.uploadImage(
+          picked,
+          '${uid}_gallery_${DateTime.now().millisecondsSinceEpoch}',
+        );
+        if (mounted) {
+          setState(() {
+            if (url != null) _galleryPhotos.add(url);
+            _isUploadingGallery = false;
+          });
+        }
+      } catch (e) {
+        if (mounted) {
+          setState(() => _isUploadingGallery = false);
+          _showSnack('Gallery upload failed: $e');
+        }
+      }
+    } catch (e) {
+      if (mounted) _showSnack('Error picking image: $e');
+    }
+  }
+
+  // ── Birthday picker ───────────────────────────────────────
+  Future<void> _pickBirthday() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _birthday ?? DateTime(now.year - 22),
+      firstDate: DateTime(now.year - 100),
+      lastDate: DateTime(now.year - 18),
+      helpText: 'Select your birthday',
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: DesignColors.accent,
+            surface: DesignColors.surfaceDark,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) setState(() => _birthday = picked);
+  }
+
+  void _showSnack(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(msg)));
+  }
+
   Future<void> _createProfile() async {
-    if (_isLoading) return; // prevent double-submit
+    if (_isLoading) return;
     if (!_formKey.currentState!.validate()) return;
 
     if (_selectedGender == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your gender')),
-      );
+      _showSnack('Please select your gender');
       return;
     }
-
     if (_selectedInterests.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one interest')),
-      );
+      _showSnack('Please select at least one interest');
       return;
     }
 
     setState(() => _isLoading = true);
 
-    // Use Firebase Auth directly — this page is only reachable when the user
-    // is authenticated. currentUserProvider.future returns null for users who
-    // have no Firestore document yet (the exact case we're handling here).
     final firebaseUser = fb_auth.FirebaseAuth.instance.currentUser;
     if (firebaseUser == null) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Session expired — please sign in again.')),
-        );
+        _showSnack('Session expired — please sign in again.');
       }
       return;
-    }
-
-    final age = int.tryParse(_ageController.text.trim());
-    DateTime? birthday;
-    if (age != null) {
-      birthday = DateTime(DateTime.now().year - age, 1, 1);
     }
 
     final userProfile = UserProfile(
       id: firebaseUser.uid,
       email: firebaseUser.email ?? '',
-      displayName: _usernameController.text.trim(),
+      displayName: _displayNameController.text.trim(),
       photoUrl: _profileImageUrl,
+      galleryPhotos: _galleryPhotos.isNotEmpty ? List.unmodifiable(_galleryPhotos) : null,
       interests: _selectedInterests,
-      location: _locationController.text.trim().isNotEmpty ? _locationController.text.trim() : null,
-      bio: _bioController.text.trim().isNotEmpty ? _bioController.text.trim() : null,
-      birthday: birthday,
+      location: _locationController.text.trim().isNotEmpty
+          ? _locationController.text.trim()
+          : null,
+      bio: _bioController.text.trim().isNotEmpty
+          ? _bioController.text.trim()
+          : null,
+      birthday: _birthday,
       gender: _selectedGender,
-      // Sprint 1 vibe fields
+      pronouns: _selectedPronouns,
       vibeTag: _selectedVibeTag,
-      musicGenres: _selectedMusicGenres.isNotEmpty ? List.unmodifiable(_selectedMusicGenres) : null,
+      musicGenres: _selectedMusicGenres.isNotEmpty
+          ? List.unmodifiable(_selectedMusicGenres)
+          : null,
       countryCode: _selectedCountryCode,
+      favoriteTrackPreviewUrl: _musicPreviewUrl,
+      favoriteTrackTitle: _musicTitle,
+      favoriteTrackArtist: _musicArtist,
+      favoriteTrackSource: _musicSource,
       createdAt: DateTime.now(),
       updatedAt: DateTime.now(),
     );
 
     try {
-      await ref.read(profileControllerProvider).updateProfile(
-            userProfile,
-          );
-
+      await ref.read(profileControllerProvider).updateProfile(userProfile);
       if (mounted) {
+<<<<<<< HEAD
         // Use pushNamedAndRemoveUntil('/app') so that the RootAuthGate
         // re-evaluates now that the profile exists; avoids being trapped
         // inside _ProfileIncompleteApp's locked navigator.
         Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.app, (_) => false);
+=======
+        Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.home, (_) => false);
+>>>>>>> origin/develop
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error creating profile: $e')),
-        );
+        _showSnack('Error creating profile: $e');
       }
     }
   }
 
-  void _nextStep() {
-    if (_currentStep < _totalSteps - 1) {
-      setState(() => _currentStep++);
-    } else {
-      _createProfile();
-    }
+  // ── Helper: stub profile for ProfileMusicEditor ──────────────
+  UserProfile get _musicEditorProfile {
+    final uid = fb_auth.FirebaseAuth.instance.currentUser?.uid ?? '';
+    return UserProfile(
+      id: uid,
+      email: fb_auth.FirebaseAuth.instance.currentUser?.email ?? '',
+      displayName: _displayNameController.text.trim(),
+      favoriteTrackPreviewUrl: _musicPreviewUrl,
+      favoriteTrackTitle: _musicTitle,
+      favoriteTrackArtist: _musicArtist,
+      favoriteTrackSource: _musicSource,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
   }
 
-  void _previousStep() {
-    if (_currentStep > 0) {
-      setState(() => _currentStep--);
-    }
-  }
-
+  // ─────────────────────────────────────────────────────────────
+  // BUILD
+  // ─────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return ClubBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: const Text('Create Profile'),
+          title: const Text('Set Up Your Profile'),
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
         body: SafeArea(
           child: Form(
             key: _formKey,
-            child: Column(
-              children: [
-                // Progress indicator
-                Padding(
-                  padding: Responsive.responsivePadding(context),
-                  child: Row(
-                    children: List.generate(_totalSteps, (index) {
-                      return Expanded(
-                        child: Container(
-                          height: 4,
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.spaceLG),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ── 1. Header ──────────────────────────────────
+                  const Text('Set Up Your Profile', style: AppTypography.sectionTitle),
+                  const SizedBox(height: AppSpacing.spaceXS),
+                  const Text(
+                    'Tell the world who you are',
+                    style: AppTypography.caption,
+                  ),
+                  const SizedBox(height: AppSpacing.spaceXL),
+
+                  // ── 2. Avatar ─────────────────────────────────
+                  Center(
+                    child: Column(
+                      children: [
+                        GestureDetector(
+                          onTap: _isUploadingAvatar ? null : _pickAvatar,
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: DesignColors.surfaceLight,
+                              border: Border.all(
+                                color: DesignColors.accent,
+                                width: 3,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: DesignColors.accent.withValues(alpha: 0.4),
+                                  blurRadius: 18,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                              image: _profileImageUrl != null
+                                  ? DecorationImage(
+                                      image: NetworkImage(_profileImageUrl!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: _isUploadingAvatar
+                                ? const CircularProgressIndicator()
+                                : _profileImageUrl == null
+                                    ? const Icon(
+                                        Icons.camera_alt,
+                                        size: 40,
+                                        color: DesignColors.accent,
+                                      )
+                                    : null,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.spaceMD),
+                        TextButton.icon(
+                          onPressed: _isUploadingAvatar ? null : _pickAvatar,
+                          icon: const Icon(Icons.upload),
+                          label: Text(
+                            _profileImageUrl == null
+                                ? 'Upload Photo'
+                                : 'Change Photo',
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.spaceXL),
+
+                  // ── 3. Display Name ───────────────────────────
+                  _sectionLabel('Display Name'),
+                  const SizedBox(height: AppSpacing.spaceMD),
+                  TextFormField(
+                    controller: _displayNameController,
+                    maxLength: 40,
+                    buildCounter: (_, {required currentLength, required isFocused, maxLength}) => null,
+                    decoration: const InputDecoration(
+                      hintText: 'What should people call you?',
+                      prefixIcon: Icon(Icons.person_outline),
+                    ),
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) {
+                        return 'Display name is required';
+                      }
+                      if (v.trim().length < 2) {
+                        return 'Must be at least 2 characters';
+                      }
+                      if (v.trim().length > 40) {
+                        return 'Must be 40 characters or fewer';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: AppSpacing.spaceXL),
+
+                  // ── 4. Bio ────────────────────────────────────
+                  _sectionLabel('About Me'),
+                  const SizedBox(height: AppSpacing.spaceMD),
+                  TextFormField(
+                    controller: _bioController,
+                    decoration: const InputDecoration(
+                      hintText: 'Tell others about yourself...',
+                      alignLabelWithHint: true,
+                    ),
+                    minLines: 5,
+                    maxLines: null,
+                    maxLength: 300,
+                  ),
+                  const SizedBox(height: AppSpacing.spaceXL),
+
+                  // ── 5. Vibe Tags ──────────────────────────────
+                  _sectionLabel('Your Vibe'),
+                  const SizedBox(height: AppSpacing.spaceMD),
+                  Wrap(
+                    spacing: AppSpacing.spaceSM,
+                    runSpacing: AppSpacing.spaceSM,
+                    children: _kVibeChips.map(((String, Color) chip) {
+                      final label = chip.$1;
+                      final color = chip.$2;
+                      final selected = _selectedVibeTag == label;
+                      return GestureDetector(
+                        onTap: () => setState(() =>
+                            _selectedVibeTag = selected ? null : label),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 8),
                           decoration: BoxDecoration(
-                            color: index <= _currentStep
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(2),
+                            color: selected
+                                ? color.withValues(alpha: 0.22)
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: selected
+                                  ? color
+                                  : color.withValues(alpha: 0.45),
+                              width: selected ? 1.5 : 1,
+                            ),
+                          ),
+                          child: Text(
+                            label,
+                            style: TextStyle(
+                              color: selected
+                                  ? color
+                                  : color.withValues(alpha: 0.75),
+                              fontWeight: selected
+                                  ? FontWeight.w700
+                                  : FontWeight.normal,
+                              fontSize: 13,
+                            ),
                           ),
                         ),
                       );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: AppSpacing.spaceXL),
+
+                  // ── 6. Music ──────────────────────────────────
+                  _sectionLabel('Your Music'),
+                  const SizedBox(height: AppSpacing.spaceMD),
+                  ProfileMusicEditor(
+                    profile: _musicEditorProfile,
+                    onTrackChanged: (url, title, artist, source) => setState(() {
+                      _musicPreviewUrl = url;
+                      _musicTitle = title;
+                      _musicArtist = artist;
+                      _musicSource = source;
+                    }),
+                    onRemove: () => setState(() {
+                      _musicPreviewUrl = null;
+                      _musicTitle = null;
+                      _musicArtist = null;
+                      _musicSource = null;
                     }),
                   ),
-                ),
+                  const SizedBox(height: AppSpacing.spaceXL),
 
-                // Content
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: Responsive.responsivePadding(context),
-                    child: AppAnimations.fadeIn(
-                      child: _buildStepContent(context),
+                  // ── 7. Photos ─────────────────────────────────
+                  _sectionLabel('Photos'),
+                  const SizedBox(height: AppSpacing.spaceMD),
+                  _buildPhotoGrid(),
+                  const SizedBox(height: AppSpacing.spaceXL),
+
+                  // ── 8. More About You ─────────────────────────
+                  _sectionLabel('More About You'),
+                  const SizedBox(height: AppSpacing.spaceMD),
+                  _buildLifestyleFields(context),
+                  const SizedBox(height: AppSpacing.spaceXXL),
+
+                  // ── 9. Save Button ────────────────────────────
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: (_isLoading || _isUploadingAvatar)
+                          ? null
+                          : _createProfile,
+                      style: ElevatedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        backgroundColor: DesignColors.accent,
+                      ),
+                      child: _isLoading
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                          : const Text(
+                              'Save Profile',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                     ),
                   ),
-                ),
-
-                // Navigation buttons
-                Padding(
-                  padding: Responsive.responsivePadding(context),
-                  child: Row(
-                    children: [
-                      if (_currentStep > 0)
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: _previousStep,
-                            child: const Text('Back'),
-                          ),
-                        ),
-                      if (_currentStep > 0) SizedBox(width: Responsive.responsiveSpacing(context, 16)),
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
-                          onPressed: (_isLoading || _isUploadingImage) ? null : _nextStep,
-                          style: ElevatedButton.styleFrom(
-                            padding: EdgeInsets.symmetric(
-                              vertical: Responsive.responsiveSpacing(context, 16),
-                            ),
-                          ),
-                          child: (_isLoading && _currentStep == _totalSteps - 1)
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : Text(_currentStep < _totalSteps - 1 ? 'Next' : 'Create Profile'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: Responsive.responsiveSpacing(context, 16)),
-              ],
+                  const SizedBox(height: AppSpacing.spaceXXL),
+                ],
+              ),
             ),
           ),
         ),
@@ -355,125 +594,204 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
     );
   }
 
-  Widget _buildStepContent(BuildContext context) {
-    switch (_currentStep) {
-      case 0:
-        return _buildBasicInfoStep(context);
-      case 1:
-        return _buildInterestsStep(context);
-      case 2:
-        return _buildVibeStep(context);
-      case 3:
-        return _buildPhotoStep(context);
-      default:
-        return const SizedBox.shrink();
-    }
+  // ─────────────────────────────────────────────────────────────
+  // Section helpers
+  // ─────────────────────────────────────────────────────────────
+
+  Widget _sectionLabel(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        color: DesignColors.white,
+        fontSize: 15,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.3,
+      ),
+    );
   }
 
-  Widget _buildBasicInfoStep(BuildContext context) {
+  // ── Photo Grid (up to 6) ─────────────────────────────────────
+  Widget _buildPhotoGrid() {
+    const maxPhotos = 6;
+    final slots = List<Widget>.generate(_galleryPhotos.length, (i) {
+      return Stack(
+        fit: StackFit.expand,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: Image.network(
+              _galleryPhotos[i],
+              fit: BoxFit.cover,
+            ),
+          ),
+          Positioned(
+            top: 4,
+            right: 4,
+            child: GestureDetector(
+              onTap: () => setState(() => _galleryPhotos.removeAt(i)),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.6),
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(4),
+                child: const Icon(Icons.close, size: 14, color: Colors.white),
+              ),
+            ),
+          ),
+        ],
+      );
+    });
+
+    if (_galleryPhotos.length < maxPhotos) {
+      slots.add(
+        GestureDetector(
+          onTap: _isUploadingGallery ? null : _pickGalleryPhoto,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            decoration: BoxDecoration(
+              color: DesignColors.surfaceLight,
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: DesignColors.accent.withValues(alpha: 0.4),
+                width: 1.5,
+              ),
+            ),
+            child: _isUploadingGallery
+                ? const Center(child: CircularProgressIndicator(strokeWidth: 2))
+                : const Center(
+                    child: Icon(
+                      Icons.add_photo_alternate_outlined,
+                      color: DesignColors.accent,
+                      size: 32,
+                    ),
+                  ),
+          ),
+        ),
+      );
+    }
+
+    return GridView.count(
+      crossAxisCount: 3,
+      crossAxisSpacing: 8,
+      mainAxisSpacing: 8,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      children: slots,
+    );
+  }
+
+  // ── Lifestyle Fields ─────────────────────────────────────────
+  Widget _buildLifestyleFields(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        GlowText(
-          text: 'Basic Information',
-          fontSize: Responsive.responsiveFontSize(context, 24),
-          fontWeight: FontWeight.bold,
-        ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 8)),
-        Text(
-          'Let\'s start with the essentials',
-          style: TextStyle(
-            fontSize: Responsive.responsiveFontSize(context, 16),
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+        // Birthday
+        _fieldLabel('Birthday'),
+        const SizedBox(height: 8),
+        GestureDetector(
+          onTap: _pickBirthday,
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: DesignColors.surfaceLight,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: DesignColors.accent.withValues(alpha: 0.25),
+              ),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.cake_outlined,
+                    color: DesignColors.accent, size: 18),
+                const SizedBox(width: 10),
+                Text(
+                  _birthday == null
+                      ? 'Select your birthday'
+                      : '${_birthday!.day}/${_birthday!.month}/${_birthday!.year}',
+                  style: TextStyle(
+                    color: _birthday == null
+                        ? DesignColors.textGray
+                        : DesignColors.white,
+                    fontSize: 15,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 32)),
-
-        // Username
-        TextFormField(
-          controller: _usernameController,
-          decoration: const InputDecoration(
-            labelText: 'Username',
-            hintText: 'Choose a unique username',
-            prefixIcon: Icon(Icons.person),
-          ),
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return 'Username is required';
-            }
-            if (value.trim().length < 3) {
-              return 'Username must be at least 3 characters';
-            }
-            return null;
-          },
-        ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 16)),
-
-        // Age
-        TextFormField(
-          controller: _ageController,
-          decoration: const InputDecoration(
-            labelText: 'Age',
-            hintText: 'Your age',
-            prefixIcon: Icon(Icons.cake),
-          ),
-          keyboardType: TextInputType.number,
-          validator: (value) {
-            if (value == null || value.trim().isEmpty) {
-              return 'Age is required';
-            }
-            final age = int.tryParse(value.trim());
-            if (age == null || age < 18 || age > 100) {
-              return 'Please enter a valid age (18-100)';
-            }
-            return null;
-          },
-        ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 16)),
+        const SizedBox(height: AppSpacing.spaceXL),
 
         // Gender
-        DropdownButtonFormField<String>(
-          initialValue: _selectedGender,
-          decoration: const InputDecoration(
-            labelText: 'Gender',
-            prefixIcon: Icon(Icons.wc),
-          ),
-          items: _genderOptions.map((gender) {
-            return DropdownMenuItem(
-              value: gender,
-              child: Text(gender),
+        _fieldLabel('Gender'),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _kGenderOptions.map((g) {
+            final sel = _selectedGender == g;
+            return ChoiceChip(
+              label: Text(g),
+              selected: sel,
+              onSelected: (_) => setState(() =>
+                  _selectedGender = sel ? null : g),
+              selectedColor: DesignColors.accent,
+              labelStyle: TextStyle(
+                color: sel ? Colors.white : DesignColors.textGray,
+                fontWeight:
+                    sel ? FontWeight.w700 : FontWeight.normal,
+              ),
             );
           }).toList(),
-          onChanged: (value) {
-            setState(() => _selectedGender = value);
-          },
-          validator: (value) {
-            if (value == null || value.isEmpty) {
-              return 'Please select your gender';
-            }
-            return null;
-          },
         ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 16)),
+        const SizedBox(height: AppSpacing.spaceXL),
 
-        // Location via ZIP code
+        // Pronouns
+        _fieldLabel('Pronouns'),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _kPronounOptions.map((p) {
+            final sel = _selectedPronouns == p;
+            return ChoiceChip(
+              label: Text(p),
+              selected: sel,
+              onSelected: (_) => setState(() =>
+                  _selectedPronouns = sel ? null : p),
+              selectedColor: DesignColors.tertiary,
+              labelStyle: TextStyle(
+                color: sel ? Colors.white : DesignColors.textGray,
+                fontWeight:
+                    sel ? FontWeight.w700 : FontWeight.normal,
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: AppSpacing.spaceXL),
+
+        // Location via ZIP
+        _fieldLabel('Location (optional)'),
+        const SizedBox(height: 8),
         TextFormField(
           controller: _zipController,
           decoration: InputDecoration(
-            labelText: 'ZIP Code (Optional)',
-            hintText: '90210',
-            prefixIcon: const Icon(Icons.location_on),
+            hintText: 'ZIP code — e.g. 90210',
+            prefixIcon: const Icon(Icons.location_on_outlined),
             suffixIcon: _zipLooking
                 ? const SizedBox(
                     width: 20,
                     height: 20,
                     child: Padding(
                       padding: EdgeInsets.all(12),
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child:
+                          CircularProgressIndicator(strokeWidth: 2),
                     ),
                   )
                 : _zipResolvedCity != null
-                    ? const Icon(Icons.check_circle, color: Colors.green)
+                    ? const Icon(Icons.check_circle,
+                        color: Colors.green)
                     : null,
             errorText: _zipError,
           ),
@@ -497,312 +815,61 @@ class _CreateProfilePageState extends ConsumerState<CreateProfilePage> {
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(Icons.place, size: 14, color: Colors.green),
+              const Icon(Icons.place,
+                  size: 14, color: Colors.green),
               const SizedBox(width: 4),
-              Text(
-                _zipResolvedCity!,
-                style: const TextStyle(color: Colors.green, fontSize: 13),
-              ),
+              Text(_zipResolvedCity!,
+                  style: const TextStyle(
+                      color: Colors.green, fontSize: 13)),
             ],
           ),
         ],
-        SizedBox(height: Responsive.responsiveSpacing(context, 16)),
+        const SizedBox(height: AppSpacing.spaceXL),
 
-        // Bio
-        TextFormField(
-          controller: _bioController,
-          decoration: const InputDecoration(
-            labelText: 'Bio',
-            hintText: 'Tell others about yourself',
-            prefixIcon: Icon(Icons.edit),
-          ),
-          maxLines: 3,
-          maxLength: 200,
-        ),
-      ],
-    );
-  }
-
-  Widget _buildInterestsStep(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GlowText(
-          text: 'Your Interests',
-          fontSize: Responsive.responsiveFontSize(context, 24),
-          fontWeight: FontWeight.bold,
-        ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 8)),
-        Text(
-          'Select at least one interest',
-          style: TextStyle(
-            fontSize: Responsive.responsiveFontSize(context, 16),
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-          ),
-        ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 24)),
+        // Interests
+        _fieldLabel('Interests'),
+        const SizedBox(height: 8),
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: _availableInterests.map((interest) {
-            final isSelected = _selectedInterests.contains(interest);
-            return AppAnimations.scaleIn(
-              beginScale: 0.9,
-              child: FilterChip(
-                label: Text(interest),
-                selected: isSelected,
-                onSelected: (selected) {
-                  setState(() {
-                    if (selected) {
-                      _selectedInterests.add(interest);
-                    } else {
-                      _selectedInterests.remove(interest);
-                    }
-                  });
-                },
-                selectedColor: Theme.of(context).colorScheme.primary,
-                checkmarkColor: Colors.white,
+          children: _kInterests.map((interest) {
+            final sel = _selectedInterests.contains(interest);
+            return FilterChip(
+              label: Text(interest),
+              selected: sel,
+              onSelected: (v) => setState(() => v
+                  ? _selectedInterests.add(interest)
+                  : _selectedInterests.remove(interest)),
+              selectedColor: DesignColors.secondary,
+              checkmarkColor: Colors.white,
+              labelStyle: TextStyle(
+                color: sel ? Colors.white : DesignColors.textGray,
               ),
             );
           }).toList(),
         ),
         if (_selectedInterests.isNotEmpty) ...[
-          SizedBox(height: Responsive.responsiveSpacing(context, 24)),
+          const SizedBox(height: 8),
           Text(
-            'Selected: ${_selectedInterests.length}',
-            style: TextStyle(
-              fontSize: Responsive.responsiveFontSize(context, 14),
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.bold,
-            ),
+            '${_selectedInterests.length} selected',
+            style: const TextStyle(
+                color: DesignColors.accent,
+                fontSize: 12,
+                fontWeight: FontWeight.w600),
           ),
         ],
       ],
     );
   }
 
-  // ── Sprint 1: Vibe & Music step ────────────────────────────────────────────
-  Widget _buildVibeStep(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GlowText(
-          text: 'Your Vibe',
-          fontSize: Responsive.responsiveFontSize(context, 24),
-          fontWeight: FontWeight.bold,
-        ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 8)),
-        Text(
-          'Pick your energy and favourite music',
-          style: TextStyle(
-            fontSize: Responsive.responsiveFontSize(context, 16),
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-          ),
-        ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 24)),
-
-        // Vibe tags
-        const Text(
-          'Energy vibe',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-        ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 10)),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: VibeTags.all.map((tag) {
-            final color = VibeTags.colorFor(tag);
-            final isSelected = _selectedVibeTag == tag;
-            return GestureDetector(
-              onTap: () => setState(() => _selectedVibeTag = isSelected ? null : tag),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isSelected ? color.withValues(alpha: 0.25) : Colors.transparent,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isSelected ? color : color.withValues(alpha: 0.45),
-                    width: isSelected ? 1.5 : 1,
-                  ),
-                ),
-                child: Text(
-                  '${VibeTags.emojiFor(tag)} $tag',
-                  style: TextStyle(
-                    color: isSelected ? color : color.withValues(alpha: 0.75),
-                    fontWeight: isSelected ? FontWeight.w700 : FontWeight.normal,
-                    fontSize: 13,
-                  ),
-                ),
-              ),
-            );
-          }).toList(),
-        ),
-
-        SizedBox(height: Responsive.responsiveSpacing(context, 24)),
-
-        // Music genres
-        const Text(
-          'Music genres  (pick as many as you like)',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-        ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 10)),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: MusicGenres.all.map((genre) {
-            final isSelected = _selectedMusicGenres.contains(genre);
-            return FilterChip(
-              label: Text(genre),
-              selected: isSelected,
-              onSelected: (selected) => setState(() {
-                if (selected) {
-                  _selectedMusicGenres.add(genre);
-                } else {
-                  _selectedMusicGenres.remove(genre);
-                }
-              }),
-              selectedColor: Theme.of(context).colorScheme.primary,
-              checkmarkColor: Colors.white,
-            );
-          }).toList(),
-        ),
-
-        SizedBox(height: Responsive.responsiveSpacing(context, 24)),
-
-        // Country picker
-        const Text(
-          'Country (optional)',
-          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14),
-        ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 10)),
-        DropdownButtonFormField<String>(
-          decoration: const InputDecoration(
-            prefixIcon: Icon(Icons.flag_outlined),
-            hintText: 'Select your country',
-          ),
-          initialValue: _selectedCountryCode,
-          items: CountryFlags.commonCountries.entries.map((e) {
-            return DropdownMenuItem(
-              value: e.key,
-              child: Text('${CountryFlags.toEmoji(e.key)}  ${e.value}'),
-            );
-          }).toList(),
-          onChanged: (v) => setState(() => _selectedCountryCode = v),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPhotoStep(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        GlowText(
-          text: 'Profile Photo',
-          fontSize: Responsive.responsiveFontSize(context, 24),
-          fontWeight: FontWeight.bold,
-        ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 8)),
-        Text(
-          'Add a great photo of yourself',
-          style: TextStyle(
-            fontSize: Responsive.responsiveFontSize(context, 16),
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-          ),
-        ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 32)),
-        Center(
-          child: GestureDetector(
-            behavior: HitTestBehavior.opaque,
-            onTap: _isUploadingImage ? null : _pickImage,
-            child: Stack(
-              alignment: Alignment.center,
-              children: [
-                Container(
-                  width: Responsive.responsiveValue(
-                    context: context,
-                    mobile: 150.0,
-                    tablet: 200.0,
-                    desktop: 250.0,
-                  ),
-                  height: Responsive.responsiveValue(
-                    context: context,
-                    mobile: 150.0,
-                    tablet: 200.0,
-                    desktop: 250.0,
-                  ),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Theme.of(context).colorScheme.primary,
-                      width: 3,
-                    ),
-                    image: _profileImageUrl != null
-                        ? DecorationImage(
-                            image: NetworkImage(_profileImageUrl!),
-                            fit: BoxFit.cover,
-                          )
-                        : null,
-                  ),
-                  child: (!_isUploadingImage && _profileImageUrl == null)
-                      ? Icon(
-                          Icons.add_a_photo,
-                          size: Responsive.responsiveIconSize(context, 60),
-                          color: Theme.of(context).colorScheme.primary,
-                        )
-                      : null,
-                ),
-                if (_isUploadingImage)
-                  const CircularProgressIndicator(),
-              ],
-            ),
-          ),
-        ),
-        SizedBox(height: Responsive.responsiveSpacing(context, 16)),
-        Center(
-          child: TextButton.icon(
-            onPressed: _isUploadingImage ? null : _pickImage,
-            icon: const Icon(Icons.photo_library),
-            label: Text(_isUploadingImage
-                ? 'Uploading…'
-                : _profileImageUrl == null
-                    ? 'Choose Photo'
-                    : 'Change Photo'),
-          ),
-        ),
-        if (_profileImageUrl == null) ...[
-          SizedBox(height: Responsive.responsiveSpacing(context, 24)),
-          Container(
-            padding: Responsive.responsivePadding(context),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(
-                color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Theme.of(context).colorScheme.error,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'A profile photo helps others connect with you',
-                    style: TextStyle(
-                      fontSize: Responsive.responsiveFontSize(context, 14),
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ],
+  Widget _fieldLabel(String text) {
+    return Text(
+      text,
+      style: const TextStyle(
+        color: DesignColors.textGray,
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+      ),
     );
   }
 }

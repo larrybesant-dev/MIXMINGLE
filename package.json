@@ -2,11 +2,14 @@
   "name": "mix-and-mingle-admin",
   "version": "1.0.0",
   "description": "Admin scripts for Mix & Mingle app",
-  "main": "create_sample_events.js",
+  "main": "index.js",
   "scripts": {
-    "create-events": "node create_sample_events.js"
+    "create-events": "node create_sample_events.js",
+    "check-index": "node --check index.js",
+    "start-local": "node --inspect=9229 local-server.js",
+    "test": "jest --runInBand"
   },
   "dependencies": {
-    "firebase-admin": "^12.0.0"
+    "firebase-admin": "12.0.0"
   }
 }

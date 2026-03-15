@@ -1,3 +1,14 @@
+<<<<<<< HEAD
+=======
+/// FCM Notifications Service - Friend Presence Alerts
+///
+/// Monitors friend presence changes and sends push notifications
+/// Reference: DESIGN_BIBLE.md Section G (Backend Integration)
+library;
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+>>>>>>> origin/develop
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import '../features/chat_room_page.dart';
@@ -62,3 +73,21 @@ class FcmNotificationService {
     };
   }
 }
+<<<<<<< HEAD
+=======
+
+/// FCM notification service provider
+/// Note: Typically used in conjunction with PresenceNotificationService
+/// which handles the actual presence monitoring and calls this service.
+final fcmNotificationServiceProvider = Provider<FcmNotificationService>((ref) {
+  final firestore = FirestoreService();
+  return FcmNotificationService(firestore: firestore);
+});
+
+/// Watch notification permissions status
+final notificationPermissionsProvider =
+    FutureProvider<NotificationSettings>((ref) async {
+  final messaging = FirebaseMessaging.instance;
+  return messaging.getNotificationSettings();
+});
+>>>>>>> origin/develop

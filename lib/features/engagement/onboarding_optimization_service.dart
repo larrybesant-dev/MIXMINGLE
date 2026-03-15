@@ -24,7 +24,8 @@ class OnboardingOptimizationService {
 
   // Prefs keys
   static const String _onboardingStartTimeKey = 'onboarding_start_time';
-  static const String _firstInteractionCompletedKey = 'first_interaction_completed';
+  static const String _firstInteractionCompletedKey =
+      'first_interaction_completed';
   static const String _welcomeRoomJoinedKey = 'welcome_room_joined';
 
   /// Track onboarding start
@@ -98,7 +99,8 @@ class OnboardingOptimizationService {
         'onboardingDurationSeconds': durationSeconds,
       });
 
-      debugPrint('âœ… [Onboarding] Funnel complete tracked (${durationSeconds}s)');
+      debugPrint(
+          'âœ… [Onboarding] Funnel complete tracked (${durationSeconds}s)');
     } catch (e) {
       debugPrint('âŒ [Onboarding] Failed to track complete: $e');
     }
@@ -185,7 +187,8 @@ class OnboardingOptimizationService {
 
       return const FirstInteractionNudge(
         title: 'Say Hello! ðŸ‘‹',
-        message: 'Join a room and start chatting to make your first connection!',
+        message:
+            'Join a room and start chatting to make your first connection!',
         actionLabel: 'Find a Room',
         actionRoute: '/discover',
       );
@@ -224,7 +227,8 @@ class OnboardingOptimizationService {
         completedAt: (data['onboardingCompletedAt'] as Timestamp?)?.toDate(),
         durationSeconds: data['onboardingDurationSeconds'] as int?,
         welcomeRoomJoined: data['welcomeRoomJoined'] as bool? ?? false,
-        firstInteractionCompleted: data['firstInteractionCompleted'] as bool? ?? false,
+        firstInteractionCompleted:
+            data['firstInteractionCompleted'] as bool? ?? false,
       );
     } catch (e) {
       debugPrint('âŒ [Onboarding] Failed to get metrics: $e');

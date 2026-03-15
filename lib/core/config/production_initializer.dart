@@ -62,7 +62,8 @@ class ProductionInitializer {
       // Set custom error info (only on native platforms)
       if (!kIsWeb) {
         await crashlytics.setCustomKey('app_version', '1.0.1+2');
-        await crashlytics.setCustomKey('environment', EnvironmentConfig.isProduction ? 'production' : 'staging');
+        await crashlytics.setCustomKey('environment',
+            EnvironmentConfig.isProduction ? 'production' : 'staging');
       }
 
       AppLogger.info('âœ… Crash reporting enabled');
@@ -121,5 +122,3 @@ class ProductionInitializer {
 // import 'package:firebase_auth/firebase_auth.dart';
 // import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 // import 'package:firebase_analytics/firebase_analytics.dart';
-
-

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 /// MIXVY SDK
+=======
+/// Mix & Mingle SDK
+>>>>>>> origin/develop
 ///
 /// Client SDK for integrating MIXVY functionality
 /// into external applications.
@@ -175,8 +179,7 @@ class CreatorStats {
         averageRating: (json['averageRating'] as num).toDouble(),
         totalEarnings: (json['totalEarnings'] as num).toDouble(),
         totalHoursStreamed: json['totalHoursStreamed'] as int,
-        engagementByDay:
-            Map<String, int>.from(json['engagementByDay'] ?? {}),
+        engagementByDay: Map<String, int>.from(json['engagementByDay'] ?? {}),
         updatedAt: DateTime.parse(json['updatedAt'] as String),
       );
 }
@@ -199,7 +202,8 @@ class SpotlightResult {
     required this.startedAt,
   });
 
-  factory SpotlightResult.fromJson(Map<String, dynamic> json) => SpotlightResult(
+  factory SpotlightResult.fromJson(Map<String, dynamic> json) =>
+      SpotlightResult(
         success: json['success'] as bool,
         spotlightId: json['spotlightId'] as String?,
         userId: json['userId'] as String,
@@ -323,15 +327,17 @@ class MMSDK {
     _log('Initializing MIXVY SDK...');
 
     try {
-      final response = await _httpClient.post(
-        Uri.parse('${config.baseUrl}/oauth/token'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'grant_type': 'client_credentials',
-          'client_id': config.clientId,
-          'client_secret': config.clientSecret,
-        }),
-      ).timeout(config.timeout);
+      final response = await _httpClient
+          .post(
+            Uri.parse('${config.baseUrl}/oauth/token'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'grant_type': 'client_credentials',
+              'client_id': config.clientId,
+              'client_secret': config.clientSecret,
+            }),
+          )
+          .timeout(config.timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -376,13 +382,15 @@ class MMSDK {
     try {
       await _ensureAuthenticated();
 
-      final response = await _httpClient.post(
-        Uri.parse('${config.baseUrl}/api/v1/rooms/$roomId/join'),
-        headers: _authHeaders,
-        body: jsonEncode({
-          'userId': userId,
-        }),
-      ).timeout(config.timeout);
+      final response = await _httpClient
+          .post(
+            Uri.parse('${config.baseUrl}/api/v1/rooms/$roomId/join'),
+            headers: _authHeaders,
+            body: jsonEncode({
+              'userId': userId,
+            }),
+          )
+          .timeout(config.timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -408,10 +416,12 @@ class MMSDK {
     try {
       await _ensureAuthenticated();
 
-      final response = await _httpClient.post(
-        Uri.parse('${config.baseUrl}/api/v1/rooms/$roomId/leave'),
-        headers: _authHeaders,
-      ).timeout(config.timeout);
+      final response = await _httpClient
+          .post(
+            Uri.parse('${config.baseUrl}/api/v1/rooms/$roomId/leave'),
+            headers: _authHeaders,
+          )
+          .timeout(config.timeout);
 
       if (response.statusCode == 200) {
         _log('Left room successfully');
@@ -433,10 +443,12 @@ class MMSDK {
     try {
       await _ensureAuthenticated();
 
-      final response = await _httpClient.get(
-        Uri.parse('${config.baseUrl}/api/v1/rooms/$roomId'),
-        headers: _authHeaders,
-      ).timeout(config.timeout);
+      final response = await _httpClient
+          .get(
+            Uri.parse('${config.baseUrl}/api/v1/rooms/$roomId'),
+            headers: _authHeaders,
+          )
+          .timeout(config.timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -465,11 +477,13 @@ class MMSDK {
         if (cursor != null) 'cursor': cursor,
       };
 
-      final response = await _httpClient.get(
-        Uri.parse('${config.baseUrl}/api/v1/rooms')
-            .replace(queryParameters: queryParams),
-        headers: _authHeaders,
-      ).timeout(config.timeout);
+      final response = await _httpClient
+          .get(
+            Uri.parse('${config.baseUrl}/api/v1/rooms')
+                .replace(queryParameters: queryParams),
+            headers: _authHeaders,
+          )
+          .timeout(config.timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -503,14 +517,16 @@ class MMSDK {
     try {
       await _ensureAuthenticated();
 
-      final response = await _httpClient.post(
-        Uri.parse('${config.baseUrl}/api/v1/rooms/$roomId/messages'),
-        headers: _authHeaders,
-        body: jsonEncode({
-          'content': content,
-          'type': type.name,
-        }),
-      ).timeout(config.timeout);
+      final response = await _httpClient
+          .post(
+            Uri.parse('${config.baseUrl}/api/v1/rooms/$roomId/messages'),
+            headers: _authHeaders,
+            body: jsonEncode({
+              'content': content,
+              'type': type.name,
+            }),
+          )
+          .timeout(config.timeout);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -543,11 +559,13 @@ class MMSDK {
         if (beforeId != null) 'before': beforeId,
       };
 
-      final response = await _httpClient.get(
-        Uri.parse('${config.baseUrl}/api/v1/rooms/$roomId/messages')
-            .replace(queryParameters: queryParams),
-        headers: _authHeaders,
-      ).timeout(config.timeout);
+      final response = await _httpClient
+          .get(
+            Uri.parse('${config.baseUrl}/api/v1/rooms/$roomId/messages')
+                .replace(queryParameters: queryParams),
+            headers: _authHeaders,
+          )
+          .timeout(config.timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -581,14 +599,16 @@ class MMSDK {
     try {
       await _ensureAuthenticated();
 
-      final response = await _httpClient.post(
-        Uri.parse('${config.baseUrl}/api/v1/rooms/$roomId/spotlight'),
-        headers: _authHeaders,
-        body: jsonEncode({
-          'userId': userId,
-          'durationSeconds': duration.inSeconds,
-        }),
-      ).timeout(config.timeout);
+      final response = await _httpClient
+          .post(
+            Uri.parse('${config.baseUrl}/api/v1/rooms/$roomId/spotlight'),
+            headers: _authHeaders,
+            body: jsonEncode({
+              'userId': userId,
+              'durationSeconds': duration.inSeconds,
+            }),
+          )
+          .timeout(config.timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -618,10 +638,12 @@ class MMSDK {
     try {
       await _ensureAuthenticated();
 
-      final response = await _httpClient.get(
-        Uri.parse('${config.baseUrl}/api/v1/creators/$creatorId/stats'),
-        headers: _authHeaders,
-      ).timeout(config.timeout);
+      final response = await _httpClient
+          .get(
+            Uri.parse('${config.baseUrl}/api/v1/creators/$creatorId/stats'),
+            headers: _authHeaders,
+          )
+          .timeout(config.timeout);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
@@ -653,11 +675,13 @@ class MMSDK {
     try {
       await _ensureAuthenticated();
 
-      final response = await _httpClient.post(
-        Uri.parse('${this.config.baseUrl}/api/v1/embed/multicam'),
-        headers: _authHeaders,
-        body: jsonEncode(config.toJson()),
-      ).timeout(this.config.timeout);
+      final response = await _httpClient
+          .post(
+            Uri.parse('${this.config.baseUrl}/api/v1/embed/multicam'),
+            headers: _authHeaders,
+            body: jsonEncode(config.toJson()),
+          )
+          .timeout(this.config.timeout);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;

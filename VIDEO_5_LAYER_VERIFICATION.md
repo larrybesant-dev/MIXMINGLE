@@ -36,6 +36,7 @@ Map<Permission, PermissionStatus> statuses = await [
 ```
 
 **Verification**:
+
 - [x] Camera permission requested
 - [x] Microphone permission requested
 - [x] Both required before joining
@@ -44,6 +45,7 @@ Map<Permission, PermissionStatus> statuses = await [
 - [x] Proper error handling if denied
 
 **Action on Permission Denied**:
+
 ```
 _error = 'Permissions denied: ...';
 return false;
@@ -71,6 +73,7 @@ return false;
 ```
 
 **Critical Step**:
+
 ```dart
 // Register handlers BEFORE joining
 _registerEventHandlers();
@@ -81,6 +84,7 @@ This happens in `initialize()`, **before** `joinRoom()` is ever called.
 ✅ **This ensures**: If user joins before handlers are registered, you don't miss `onUserPublished` events.
 
 **Verification**:
+
 - [x] Handlers registered before any channel join
 - [x] Initialize called only once (guard with `if (_isInitialized) return`)
 - [x] Video enabled
@@ -137,6 +141,7 @@ await _engine!.joinChannel(
 ```
 
 **Event Handler Update**:
+
 ```dart
 onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
   _localUid = connection.localUid;
@@ -149,6 +154,7 @@ onJoinChannelSuccess: (RtcConnection connection, int elapsed) {
 ```
 
 ✅ **This ensures**:
+
 - Your camera preview appears on your screen
 - Your video stream is published to others
 - Local tile is added to the grid
@@ -222,6 +228,7 @@ onUserOffline: (RtcConnection connection, int remoteUid,
 ```
 
 **Verification Checklist**:
+
 - [x] `onUserJoined` fires when remote user joins
 - [x] `onUserPublished` fires when they publish video
 - [x] `subscribeVideo(remoteUid)` called immediately in onUserPublished
@@ -232,6 +239,7 @@ onUserOffline: (RtcConnection connection, int remoteUid,
 - [x] Remote tile removed from provider
 
 ✅ **This ensures**:
+
 - You see remote users' video
 - No race conditions
 - Video tiles appear/disappear correctly
@@ -259,6 +267,7 @@ agora_video_service.dart
 ```
 
 **VideoTileProvider** (`agora_video_tile_provider.dart`):
+
 ```dart
 class VideoTileState {
   final int? localUid;
@@ -274,6 +283,7 @@ class VideoTileState {
 ```
 
 **VoiceRoomPage** (`voice_room_page.dart`):
+
 ```dart
 class VoiceRoomPage extends ConsumerWidget {
   @override
@@ -296,6 +306,7 @@ class VoiceRoomPage extends ConsumerWidget {
 ```
 
 **VideoTile Widget**:
+
 ```dart
 class _VideoTile extends StatelessWidget {
   @override
@@ -317,6 +328,7 @@ class _VideoTile extends StatelessWidget {
 ```
 
 **Verification**:
+
 - [x] videoTileProvider tracked
 - [x] agoraParticipantsProvider tracked
 - [x] Grid rebuilds when tiles change
@@ -326,6 +338,7 @@ class _VideoTile extends StatelessWidget {
 - [x] Grid columns calculated based on count
 
 ✅ **This ensures**:
+
 - Tiles appear/disappear smoothly
 - Local preview visible
 - Remote users visible
@@ -375,6 +388,7 @@ final participants = ref.watch(agoraParticipantsProvider);
 ## 🎬 Exact Flow (What Happens)
 
 ### User A Opens Room
+
 ```
 1. VoiceRoomPage.initState()
 2. → agoraService.initialize()
@@ -396,6 +410,7 @@ final participants = ref.watch(agoraParticipantsProvider);
 User A now sees their own camera preview. ✅
 
 ### User B Joins Same Room
+
 ```
 1. User B calls joinRoom(roomId)
 2. Agora notifies User A: onUserJoined(B)
@@ -416,6 +431,7 @@ Both users now see each other. ✅
 ## 🚨 Critical Points (If Missing = Video Breaks)
 
 ### 1️⃣ Handlers Registered Before Join
+
 ```dart
 // ❌ WRONG - Handlers registered after joining
 await _engine!.joinChannel(...);
@@ -431,6 +447,7 @@ await _engine!.joinChannel(...);
 ---
 
 ### 2️⃣ subscribeVideo Called in onUserPublished
+
 ```dart
 // ❌ WRONG - Never calling subscribeVideo
 onUserPublished: (uid, mediaType) {
@@ -450,6 +467,7 @@ onUserPublished: (uid, mediaType) async {
 ---
 
 ### 3️⃣ Local Preview Started Before Join
+
 ```dart
 // ❌ WRONG - No preview before join
 await _engine!.joinChannel(...);
@@ -465,6 +483,7 @@ await _engine!.joinChannel(...);
 ---
 
 ### 4️⃣ Video Canvas for Remote (on Web)
+
 ```dart
 // ❌ WRONG - No canvas for remote video
 onUserPublished: (uid, mediaType) async {
@@ -486,6 +505,7 @@ onUserPublished: (uid, mediaType) async {
 ---
 
 ### 5️⃣ UI Provider Updates
+
 ```dart
 // ❌ WRONG - No UI updates
 onUserPublished: (uid, mediaType) async {
@@ -506,44 +526,49 @@ onUserPublished: (uid, mediaType) async {
 
 ## 📊 Final Verification
 
-| Layer | Component | Status | Evidence |
-|-------|-----------|--------|----------|
-| 1 | Permissions | ✅ | requestPermissions() in joinRoom() |
-| 2 | Engine Init | ✅ | initialize() with correct order |
-| 2 | Event Handlers | ✅ | _registerEventHandlers() before join |
-| 3 | Local Preview | ✅ | startPreview() before joinChannel() |
-| 3 | Local Publish | ✅ | publishCameraTrack: true in options |
-| 4 | Remote Subscribe | ✅ | subscribeVideo() in onUserPublished |
-| 4 | Remote Setup | ✅ | setupRemoteVideo() for web |
-| 4 | State Updates | ✅ | Provider updates in all events |
-| 5 | UI Provider | ✅ | videoTileProvider + watch in page |
-| 5 | Grid Render | ✅ | GridView.builder with allVideoUids |
+| Layer | Component        | Status | Evidence                              |
+| ----- | ---------------- | ------ | ------------------------------------- |
+| 1     | Permissions      | ✅     | requestPermissions() in joinRoom()    |
+| 2     | Engine Init      | ✅     | initialize() with correct order       |
+| 2     | Event Handlers   | ✅     | \_registerEventHandlers() before join |
+| 3     | Local Preview    | ✅     | startPreview() before joinChannel()   |
+| 3     | Local Publish    | ✅     | publishCameraTrack: true in options   |
+| 4     | Remote Subscribe | ✅     | subscribeVideo() in onUserPublished   |
+| 4     | Remote Setup     | ✅     | setupRemoteVideo() for web            |
+| 4     | State Updates    | ✅     | Provider updates in all events        |
+| 5     | UI Provider      | ✅     | videoTileProvider + watch in page     |
+| 5     | Grid Render      | ✅     | GridView.builder with allVideoUids    |
 
 ---
 
 ## 🎯 What This Means
 
 ✅ **You will see your own camera preview**
+
 - startPreview() called
 - Local tile in UI
 - Instant feedback
 
 ✅ **Others will see your video**
+
 - Video published to Agora
 - publishCameraTrack: true
 - Stream reaches remote users
 
 ✅ **You will see others' video**
+
 - subscribeVideo() called when they publish
 - Remote tiles rendered
 - Zero race conditions
 
 ✅ **Camera on/off works**
+
 - toggleVideo() calls muteLocalVideoStream()
 - Provider updates UI
 - Instant feedback
 
 ✅ **Scales to 10+ users**
+
 - GridView handles any count
 - Provider state is efficient
 - No memory leaks
@@ -553,6 +578,7 @@ onUserPublished: (uid, mediaType) async {
 ## 🚀 Ready for Production
 
 ### Pre-Deployment
+
 - [x] All 5 layers implemented
 - [x] Event handlers correct order
 - [x] Remote subscription working
@@ -561,6 +587,7 @@ onUserPublished: (uid, mediaType) async {
 - [x] Debug logging complete
 
 ### Testing
+
 - [ ] Test with 1 user (local preview)
 - [ ] Test with 2 users (local + remote)
 - [ ] Test with 3+ users
@@ -569,6 +596,7 @@ onUserPublished: (uid, mediaType) async {
 - [ ] No flicker
 
 ### Deployment
+
 - [ ] Agora App ID in Firestore config/agora
 - [ ] Cloud Function for token generation
 - [ ] Permissions properly configured
@@ -581,6 +609,7 @@ onUserPublished: (uid, mediaType) async {
 **Your video setup is complete and correct.**
 
 All 5 layers are implemented:
+
 1. ✅ Permissions requested
 2. ✅ Engine initialized correctly
 3. ✅ Local video published
@@ -590,6 +619,7 @@ All 5 layers are implemented:
 **You're ready to test with real participants.**
 
 Next step: Open voice room, join with 2 devices, verify:
+
 1. You see your camera
 2. Other person sees your camera
 3. You see their camera

@@ -11,9 +11,11 @@
 ### 🎯 Four Critical Fixes Implemented
 
 #### **Fix 1: Ghost User Elimination**
+
 Prevents stale video tiles from persisting when users leave.
 
 **How It Works**:
+
 - Each remote user now has a media state map: `{ hasVideo: bool, hasAudio: bool }`
 - Users are only marked "offline" when **all media tracks** are gone
 - Added fallback `user-left` event handler for guaranteed cleanup
@@ -24,9 +26,11 @@ Prevents stale video tiles from persisting when users leave.
 ---
 
 #### **Fix 2: Duplicate Tile Prevention**
+
 Prevents the same user from appearing in multiple tiles during rapid rejoin/join events.
 
 **How It Works**:
+
 - Added `_remoteUsersSet` (Set<int>) for O(1) deduplication lookup
 - `onUserJoined` checks Set before adding (idempotent)
 - `addRemoteVideo` and `setLocalUid` are idempotent (safe to call multiple times)
@@ -37,9 +41,11 @@ Prevents the same user from appearing in multiple tiles during rapid rejoin/join
 ---
 
 #### **Fix 3: Race Condition Hardening**
+
 Handles out-of-order events and overlapping operations safely.
 
 **How It Works**:
+
 - Proper event sequencing: join → publish → subscribe
 - Leave → unpublish → cleanup follows correct order
 - Rapid rejoin within 2s handled without merge/conflict
@@ -50,9 +56,11 @@ Handles out-of-order events and overlapping operations safely.
 ---
 
 #### **Fix 4: Clean Leave Cycles**
+
 Ensures **complete, atomic** cleanup when users leave rooms.
 
 **How It Works**:
+
 - `onLeaveChannel` clears: `_remoteUsers`, `_remoteUsersSet`, `_remoteUserMediaState`
 - Web bridge clears: `remoteUserMediaState` Map on leave
 - Synchronized cleanup across service, providers, and JS bridge
@@ -65,6 +73,7 @@ Ensures **complete, atomic** cleanup when users leave rooms.
 ## Files Changed (6 total)
 
 ### Core Service Layer
+
 1. **[lib/services/agora_video_service.dart](lib/services/agora_video_service.dart)**
    - Added `_remoteUserMediaState` (media tracking)
    - Added `_remoteUsersSet` (deduplication)
@@ -76,6 +85,7 @@ Ensures **complete, atomic** cleanup when users leave rooms.
    - New bridge method for fallback user-left handling
 
 ### Provider Layer (State Management)
+
 3. **[lib/providers/agora_video_tile_provider.dart](lib/providers/agora_video_tile_provider.dart)**
    - Made operations idempotent (check before add/remove)
    - Added `syncRemoteVideoUids()` for batch updates
@@ -86,12 +96,14 @@ Ensures **complete, atomic** cleanup when users leave rooms.
    - No breaking changes
 
 ### UI Layer (Redux)
+
 5. **[lib/features/room/screens/room_page.dart](lib/features/room/screens/room_page.dart)**
    - Safe deduplication in `_buildVideoView()`: `remoteUsers.toSet().toList()`
    - Updated to use `uniqueRemoteUsers` for rendering
    - User count displays accurate de-duped list
 
 ### JavaScript/Web Bridge
+
 6. **[web/agora_web.js](web/agora_web.js)**
    - Added `remoteUserMediaState` Map for per-user media tracking
    - Enhanced event handlers: `user-published`, `user-unpublished`, `user-left`
@@ -108,6 +120,7 @@ Ensures **complete, atomic** cleanup when users leave rooms.
 ✅ **Test Guide**: Complete with 7 test scenarios
 
 ### Immediate Next Steps:
+
 1. **Launch Chrome**: Run `flutter run -d chrome --no-hot`
 2. **Create Test Room**: Set up multi-user scenario
 3. **Execute Tests**: Follow `PHASE_2C_SPRINT1_TEST_GUIDE.md`
@@ -118,6 +131,7 @@ Ensures **complete, atomic** cleanup when users leave rooms.
 ## Technical Architecture Overview
 
 ### **State Management Flow**
+
 ```
 JS Bridge (web/agora_web.js)
     ↓ (media state tracking)
@@ -131,12 +145,14 @@ AgoraVideoView tiles (one per unique UID)
 ```
 
 ### **Deduplication Strategy**
+
 - **JS Bridge Level**: `remoteUserMediaState` Map tracks active media per UID
 - **Service Level**: `_remoteUsersSet` prevents duplicate adds
 - **Provider Level**: Idempotent operations (check-before-modify pattern)
 - **UI Level**: `.toSet().toList()` atomic conversion before render
 
 ### **Event Handling Order** (Web-specific)
+
 ```
 1. user-published (track media state, add if new)
    ↓
@@ -154,6 +170,7 @@ AgoraVideoView tiles (one per unique UID)
 ## Key Data Structures
 
 ### Media State Map
+
 ```dart
 _remoteUserMediaState: Map<int, Map<String, bool>>
 // uid → { 'hasVideo': bool, 'hasAudio': bool }
@@ -162,6 +179,7 @@ _remoteUserMediaState: Map<int, Map<String, bool>>
 ```
 
 ### Deduplication Set
+
 ```dart
 _remoteUsersSet: Set<int>
 // Fast O(1) lookup: is this UID already tracked?
@@ -174,12 +192,14 @@ _remoteUsers: List<int> // Ordered list of UIDs
 ## Behavioral Changes
 
 ### Before Fix
+
 - User leaves → tile persists (if SDK missed unpublish event)
 - Rapid rejoin → user appears twice in grid
 - Leave during joins → UI glitches, stale state
 - Audio-only → incorrectly removed
 
 ### After Fix
+
 - User leaves → tile instantly disappears (even if one media type lingers)
 - Rapid rejoin → user appears exactly once
 - Leave during joins → clean state, no merges
@@ -190,16 +210,16 @@ _remoteUsers: List<int> // Ordered list of UIDs
 
 ## Test Scenarios Overview
 
-| Test # | Scenario | Status | Estimated Time |
-|--------|----------|--------|-----------------|
-| 1 | Basic Join/Leave - No Ghosts | Ready | 5 min |
-| 2 | Duplicate Prevention - Rapid Rejoin | Ready | 5 min |
-| 3 | Audio-Video Separation | Ready | 5 min |
-| 4 | Multi-User Join Storm (4 users) | Ready | 10 min |
-| 5 | Leave During Join | Ready | 10 min |
-| 6 | Network Interruption Simulation | Ready | 10 min |
-| 7 | Rapid Camera Toggle | Ready | 5 min |
-| **Total** | | **Ready to Execute** | **~50 min** |
+| Test #    | Scenario                            | Status               | Estimated Time |
+| --------- | ----------------------------------- | -------------------- | -------------- |
+| 1         | Basic Join/Leave - No Ghosts        | Ready                | 5 min          |
+| 2         | Duplicate Prevention - Rapid Rejoin | Ready                | 5 min          |
+| 3         | Audio-Video Separation              | Ready                | 5 min          |
+| 4         | Multi-User Join Storm (4 users)     | Ready                | 10 min         |
+| 5         | Leave During Join                   | Ready                | 10 min         |
+| 6         | Network Interruption Simulation     | Ready                | 10 min         |
+| 7         | Rapid Camera Toggle                 | Ready                | 5 min          |
+| **Total** |                                     | **Ready to Execute** | **~50 min**    |
 
 ---
 
@@ -273,6 +293,7 @@ After testing, we should see:
 ## Next Phase Preview (Phase 2C, Sprint 2)
 
 Once Multi-User Stability verified:
+
 - **Host Controls** (mute, remove, promote users)
 - **Firestore Sync Hardening** (real-time participant updates)
 - **Event Ordering** (reliable state machines per operation)
@@ -282,6 +303,7 @@ Once Multi-User Stability verified:
 ## Questions or Issues?
 
 Refer to:
+
 - Implementation details: Code comments with `// CRITICAL:` markers
 - Testing procedures: `PHASE_2C_SPRINT1_TEST_GUIDE.md`
 - Architecture: This document's "Technical Architecture" section
@@ -293,6 +315,7 @@ Refer to:
 **Phase 2C, Sprint 1 is complete and ready for execution testing.**
 
 All code is:
+
 - ✅ Implemented
 - ✅ Compiled
 - ✅ Documented

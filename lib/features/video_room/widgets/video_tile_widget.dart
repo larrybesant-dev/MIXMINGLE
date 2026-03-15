@@ -89,7 +89,8 @@ class _VideoTileWidgetState extends State<VideoTileWidget> {
                 bottom: 8,
                 left: 8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: DesignColors.overlay,
                     borderRadius: BorderRadius.circular(4),
@@ -129,7 +130,8 @@ class _VideoTileWidgetState extends State<VideoTileWidget> {
                 top: 8,
                 left: 8,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                   decoration: BoxDecoration(
                     color: _getStateColor(tile.state),
                     borderRadius: BorderRadius.circular(12),

@@ -1,4 +1,4 @@
-﻿import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 enum GroupChatMessageType { text }
 
@@ -19,7 +19,8 @@ class GroupChatMessage {
     this.timestamp,
   });
 
-  factory GroupChatMessage.fromDocument(DocumentSnapshot<Map<String, dynamic>> doc) {
+  factory GroupChatMessage.fromDocument(
+      DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? <String, dynamic>{};
     return GroupChatMessage(
       id: doc.id,
@@ -37,7 +38,9 @@ class GroupChatMessage {
       'senderName': senderName,
       'text': text,
       'type': type.name,
-      'timestamp': timestamp != null ? Timestamp.fromDate(timestamp!) : FieldValue.serverTimestamp(),
+      'timestamp': timestamp != null
+          ? Timestamp.fromDate(timestamp!)
+          : FieldValue.serverTimestamp(),
     };
   }
 
@@ -46,5 +49,3 @@ class GroupChatMessage {
     return GroupChatMessageType.text;
   }
 }
-
-

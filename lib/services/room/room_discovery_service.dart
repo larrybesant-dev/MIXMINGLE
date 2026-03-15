@@ -181,9 +181,12 @@ class RoomDiscoveryService {
           .where((doc) {
             final data = doc.data();
             final title = (data['title'] as String?)?.toLowerCase() ?? '';
-            final tags = List<String>.from(data['tags'] ?? []).map((tag) => tag.toLowerCase()).toList();
+            final tags = List<String>.from(data['tags'] ?? [])
+                .map((tag) => tag.toLowerCase())
+                .toList();
 
-            return title.contains(lowerKeyword) || tags.any((tag) => tag.contains(lowerKeyword));
+            return title.contains(lowerKeyword) ||
+                tags.any((tag) => tag.contains(lowerKeyword));
           })
           .take(limit)
           .toList();
@@ -215,7 +218,8 @@ class RoomDiscoveryService {
       }
 
       // Sort by count and return top tags
-      final sortedTags = tagCounts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+      final sortedTags = tagCounts.entries.toList()
+        ..sort((a, b) => b.value.compareTo(a.value));
 
       return sortedTags.take(limit).map((e) => e.key).toList();
     } catch (e) {
@@ -261,6 +265,7 @@ class RoomDiscoveryService {
     }
   }
 
+<<<<<<< HEAD
   // ── Phase 10: Stream-based discovery ────────────────────────────────────
 
   /// Live stream of trending rooms — public rooms ordered by viewerCount desc.
@@ -367,5 +372,129 @@ class RoomDiscoveryService {
         .handleError((e) {
       debugPrint('getNewRoomsStream error: $e');
     });
+=======
+  // ── Typed discovery queries (Phase 1 Room Discovery Sweep) ─────────────────
+
+  /// Trending rooms: ordered by viewerCount DESC, limit 20.
+  /// This is the canonical trending query used by trendingRoomsProvider.
+  Future<List<DocumentSnapshot>> getTrendingRoomsTyped({int limit = 20}) async {
+    try {
+      final snapshot = await _firestore
+          .collection('rooms')
+          .where('isActive', isEqualTo: true)
+          .orderBy('viewerCount', descending: true)
+          .limit(limit)
+          .get();
+      return snapshot.docs;
+    } catch (e) {
+      debugPrint('Error getting trending rooms (typed): $e');
+      return [];
+    }
+  }
+
+  /// New rooms: ordered by createdAt DESC, limit 20.
+  Future<List<DocumentSnapshot>> getNewRoomsTyped({int limit = 20}) async {
+    try {
+      final snapshot = await _firestore
+          .collection('rooms')
+          .where('isActive', isEqualTo: true)
+          .orderBy('createdAt', descending: true)
+          .limit(limit)
+          .get();
+      return snapshot.docs;
+    } catch (e) {
+      debugPrint('Error getting new rooms (typed): $e');
+      return [];
+    }
+  }
+
+  /// Rooms where at least one of [friendIds] appears in participantIds.
+  /// Uses array-contains-any (Firestore supports up to 30 values per query).
+  Future<List<DocumentSnapshot>> getFriendsInRoomsTyped(
+    List<String> friendIds, {
+    int limit = 20,
+  }) async {
+    if (friendIds.isEmpty) return [];
+    try {
+      // array-contains-any supports max 30 values; chunk if needed.
+      final chunks = <List<String>>[];
+      for (var i = 0; i < friendIds.length; i += 30) {
+        chunks.add(friendIds.sublist(
+            i, i + 30 > friendIds.length ? friendIds.length : i + 30));
+      }
+
+      final results = <DocumentSnapshot>[];
+      final seen = <String>{};
+
+      for (final chunk in chunks) {
+        final snapshot = await _firestore
+            .collection('rooms')
+            .where('isActive', isEqualTo: true)
+            .where('participantIds', arrayContainsAny: chunk)
+            .limit(limit)
+            .get();
+        for (final doc in snapshot.docs) {
+          if (seen.add(doc.id)) results.add(doc);
+        }
+      }
+
+      return results.take(limit).toList();
+    } catch (e) {
+      debugPrint('Error getting friends-in-rooms: $e');
+      return [];
+    }
+  }
+
+  /// Recommended rooms: filter by user [interests] or [categories].
+  /// Falls back to trending (viewerCount DESC) if no matches found.
+  Future<List<DocumentSnapshot>> getRecommendedRoomsTyped({
+    List<String> interests = const [],
+    List<String> categories = const [],
+    int limit = 20,
+  }) async {
+    try {
+      final candidates = <DocumentSnapshot>[];
+      final seen = <String>{};
+
+      // Try by category first
+      for (final cat in categories.take(5)) {
+        final snapshot = await _firestore
+            .collection('rooms')
+            .where('isActive', isEqualTo: true)
+            .where('category', isEqualTo: cat)
+            .orderBy('viewerCount', descending: true)
+            .limit(limit)
+            .get();
+        for (final doc in snapshot.docs) {
+          if (seen.add(doc.id)) candidates.add(doc);
+        }
+        if (candidates.length >= limit) break;
+      }
+
+      // Try by tags/interests
+      if (candidates.length < limit && interests.isNotEmpty) {
+        final snapshot = await _firestore
+            .collection('rooms')
+            .where('isActive', isEqualTo: true)
+            .where('tags', arrayContainsAny: interests.take(10).toList())
+            .orderBy('viewerCount', descending: true)
+            .limit(limit)
+            .get();
+        for (final doc in snapshot.docs) {
+          if (seen.add(doc.id)) candidates.add(doc);
+        }
+      }
+
+      // Fallback to trending if still empty
+      if (candidates.isEmpty) {
+        return getTrendingRoomsTyped(limit: limit);
+      }
+
+      return candidates.take(limit).toList();
+    } catch (e) {
+      debugPrint('Error getting recommended rooms: $e');
+      return getTrendingRoomsTyped(limit: limit);
+    }
+>>>>>>> origin/develop
   }
 }
