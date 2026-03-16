@@ -27,6 +27,7 @@ import '../presentation/screens/event_screen.dart';
 import '../presentation/screens/membership_screen.dart';
 
 final GoRouter appRouter = GoRouter(
+  initialLocation: '/splash',
   routes: [
     GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
     GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
