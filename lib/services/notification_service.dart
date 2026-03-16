@@ -1,14 +1,11 @@
-import 'package:firebase_messaging/firebase_messaging.dart';
-
 class NotificationService {
-  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+	Future<void> pushNotification(String userId, String message) async {
+		// Implement push notification logic
+		await Future.delayed(Duration(milliseconds: 500));
+	}
 
-  Future<void> initialize() async {
-    await _messaging.requestPermission();
-  }
-
-  void sendRoomInvite(String userId) {}
-  void sendEventReminder(String userId) {}
-  void sendNewFollower(String userId) {}
-  void sendMessageNotification(String userId) {}
+	Future<void> inAppNotification(String userId, String message) async {
+		// Implement in-app notification logic
+		await Future.delayed(Duration(milliseconds: 500));
+	}
 }
