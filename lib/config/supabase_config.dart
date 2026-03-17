@@ -1,2 +1,2 @@
-const supabaseUrl = 'YOUR_SUPABASE_URL';
-const supabaseKey = 'YOUR_SUPABASE_ANON_KEY';
+const supabaseUrl = 'https://zwkrpcmbevprfatwgfvb.supabase.co';
+const supabaseKey = 'sb_publishable_sg-E5r61j7cKpMgOgJ2KtQ_3wBQ26ut';

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,31 +31,45 @@ class _LoginScreenState extends State<LoginScreen> {
       _isLoading = true;
       _error = null;
     });
-    // TODO: Implement login logic (API call)
-    await Future.delayed(const Duration(seconds: 2));
-    setState(() {
-      _isLoading = false;
-    });
-    // For now, just show a dialog
-    if (context.mounted) {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Login Successful'),
-          content: const Text('You have logged in successfully!'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                if (context.mounted) {
-                  Navigator.of(context).pop();
-                  GoRouter.of(context).go('/home');
-                }
-              },
-              child: const Text('Go to Home'),
-            ),
-          ],
-        ),
+    try {
+      final response = await Supabase.instance.client.auth.signInWithPassword(
+        email: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
       );
+      setState(() {
+        _isLoading = false;
+      });
+      if (response.user != null) {
+        if (context.mounted) {
+          showDialog(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Login Successful'),
+              content: const Text('You have logged in successfully!'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    if (context.mounted) {
+                      Navigator.of(context).pop();
+                      GoRouter.of(context).go('/home');
+                    }
+                  },
+                  child: const Text('Go to Home'),
+                ),
+              ],
+            ),
+          );
+        }
+      } else {
+        setState(() {
+          _error = 'Invalid email or password.';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _error = e.toString();
+      });
     }
   }
 
@@ -83,10 +98,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _emailController,
-                  style: TextStyle(color: theme.colorScheme.onSurface),
+                  style: TextStyle(color: Colors.black87),
                   decoration: InputDecoration(
                     labelText: 'Email',
-                    labelStyle: TextStyle(color: theme.colorScheme.onSurface),
+                    labelStyle: TextStyle(color: Colors.black87),
                   ),
                   keyboardType: TextInputType.emailAddress,
                   validator: (v) => v == null || !v.contains('@') ? 'Valid email required' : null,
@@ -94,10 +109,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  style: TextStyle(color: theme.colorScheme.onSurface),
+                  style: TextStyle(color: Colors.black87),
                   decoration: InputDecoration(
                     labelText: 'Password',
-                    labelStyle: TextStyle(color: theme.colorScheme.onSurface),
+                    labelStyle: TextStyle(color: Colors.black87),
                   ),
                   obscureText: true,
                   validator: (v) => v == null || v.length < 6 ? 'Min 6 characters' : null,
