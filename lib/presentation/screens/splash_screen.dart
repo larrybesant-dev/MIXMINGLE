@@ -21,7 +21,7 @@ class SplashScreen extends StatelessWidget {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(0, 0, 0, 0.1),
+                  color: theme.colorScheme.primary.withAlpha(25), // 0.1 opacity
                   shape: BoxShape.circle,
                 ),
                 child: Icon(Icons.flash_on, size: 60, color: theme.colorScheme.primary),
