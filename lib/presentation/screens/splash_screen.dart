@@ -1,6 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,7 +32,11 @@ class _SplashScreenState extends State<SplashScreen> {
                   color: theme.colorScheme.primary.withAlpha(25), // 0.1 opacity
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.flash_on, size: 60, color: theme.colorScheme.primary),
+                child: Icon(
+                  Icons.flash_on,
+                  size: 60,
+                  color: theme.colorScheme.primary,
+                ),
               ),
               const SizedBox(height: 24),
               // App Name
@@ -67,7 +71,10 @@ class _SplashScreenState extends State<SplashScreen> {
                   Flexible(
                     child: Text(
                       'I am 21 years of age or older',
-                      style: GoogleFonts.poppins(fontSize: 14, color: theme.colorScheme.onSurface),
+                      style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        color: theme.colorScheme.onSurface,
+                      ),
                     ),
                   ),
                 ],
@@ -79,9 +86,13 @@ class _SplashScreenState extends State<SplashScreen> {
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  onPressed: isOver21 ? () => Navigator.of(context).pushReplacementNamed('/login') : null,
+                  onPressed: isOver21
+                      ? () => GoRouter.of(context).go('/login')
+                      : null,
                   child: const Text('Login', style: TextStyle(fontSize: 18)),
                 ),
               ),
@@ -92,11 +103,24 @@ class _SplashScreenState extends State<SplashScreen> {
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
-                    side: BorderSide(color: theme.colorScheme.primary, width: 2),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    side: BorderSide(
+                      color: theme.colorScheme.primary,
+                      width: 2,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  onPressed: isOver21 ? () => Navigator.of(context).pushReplacementNamed('/register') : null,
-                  child: Text('Register', style: TextStyle(fontSize: 18, color: theme.colorScheme.primary)),
+                  onPressed: isOver21
+                      ? () => GoRouter.of(context).go('/register')
+                      : null,
+                  child: Text(
+                    'Register',
+                    style: TextStyle(
+                      fontSize: 18,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(height: 32),

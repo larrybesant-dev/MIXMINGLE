@@ -1,5 +1,6 @@
-
+import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:go_router/go_router.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -47,7 +48,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
-              Navigator.of(context).pushReplacementNamed('/login');
+              // Use GoRouter for navigation
+              // ignore: use_build_context_synchronously
+              GoRouter.of(context).go('/login');
             },
             child: const Text('Go to Login'),
           ),
@@ -60,10 +63,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Register'), centerTitle: true),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
@@ -75,53 +75,85 @@ class _RegisterScreenState extends State<RegisterScreen> {
               children: [
                 Text(
                   'Create your account',
-                  style: GoogleFonts.poppins(fontSize: 24, fontWeight: FontWeight.bold),
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(labelText: 'Full Name'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Name required' : null,
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                  decoration: InputDecoration(
+                    labelText: 'Full Name',
+                    labelStyle: TextStyle(color: theme.colorScheme.onSurface),
+                  ),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Name required' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                  decoration: InputDecoration(
+                    labelText: 'Email',
+                    labelStyle: TextStyle(color: theme.colorScheme.onSurface),
+                  ),
                   keyboardType: TextInputType.emailAddress,
-                  validator: (v) => v == null || !v.contains('@') ? 'Valid email required' : null,
+                  validator: (v) => v == null || !v.contains('@')
+                      ? 'Valid email required'
+                      : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _passwordController,
-                  decoration: const InputDecoration(labelText: 'Password'),
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    labelStyle: TextStyle(color: theme.colorScheme.onSurface),
+                  ),
                   obscureText: true,
-                  validator: (v) => v == null || v.length < 6 ? 'Min 6 characters' : null,
+                  validator: (v) =>
+                      v == null || v.length < 6 ? 'Min 6 characters' : null,
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _confirmPasswordController,
-                  decoration: const InputDecoration(labelText: 'Confirm Password'),
+                  style: TextStyle(color: theme.colorScheme.onSurface),
+                  decoration: InputDecoration(
+                    labelText: 'Confirm Password',
+                    labelStyle: TextStyle(color: theme.colorScheme.onSurface),
+                  ),
                   obscureText: true,
-                  validator: (v) => v != _passwordController.text ? 'Passwords do not match' : null,
+                  validator: (v) => v != _passwordController.text
+                      ? 'Passwords do not match'
+                      : null,
                 ),
                 const SizedBox(height: 24),
                 if (_error != null)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                    child: Text(
+                      _error!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
                   ),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _register,
                   child: _isLoading
-                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                      ? const SizedBox(
+                          height: 20,
+                          width: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Text('Register', style: TextStyle(fontSize: 18)),
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: _isLoading
                       ? null
-                      : () => Navigator.of(context).pushReplacementNamed('/login'),
+                      : () => GoRouter.of(context).go('/login'),
                   child: const Text('Already have an account? Login'),
                 ),
               ],
