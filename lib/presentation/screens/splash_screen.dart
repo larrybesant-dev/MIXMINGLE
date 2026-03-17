@@ -2,8 +2,16 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen> {
+  bool isOver21 = false;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -47,7 +55,24 @@ class SplashScreen extends StatelessWidget {
                   color: theme.colorScheme.onSurface,
                 ),
               ),
-              const SizedBox(height: 36),
+              const SizedBox(height: 24),
+              // Age Confirmation
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Checkbox(
+                    value: isOver21,
+                    onChanged: (val) => setState(() => isOver21 = val ?? false),
+                  ),
+                  Flexible(
+                    child: Text(
+                      'I am 21 years of age or older',
+                      style: GoogleFonts.poppins(fontSize: 14, color: theme.colorScheme.onSurface),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
               // Login Button
               SizedBox(
                 width: double.infinity,
@@ -56,7 +81,7 @@ class SplashScreen extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  onPressed: () => Navigator.of(context).pushReplacementNamed('/login'),
+                  onPressed: isOver21 ? () => Navigator.of(context).pushReplacementNamed('/login') : null,
                   child: const Text('Login', style: TextStyle(fontSize: 18)),
                 ),
               ),
@@ -70,7 +95,7 @@ class SplashScreen extends StatelessWidget {
                     side: BorderSide(color: theme.colorScheme.primary, width: 2),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  onPressed: () => Navigator.of(context).pushReplacementNamed('/register'),
+                  onPressed: isOver21 ? () => Navigator.of(context).pushReplacementNamed('/register') : null,
                   child: Text('Register', style: TextStyle(fontSize: 18, color: theme.colorScheme.primary)),
                 ),
               ),
