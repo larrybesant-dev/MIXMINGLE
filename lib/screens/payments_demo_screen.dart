@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 
 class PaymentsDemoScreen extends StatelessWidget {
   const PaymentsDemoScreen({super.key});
@@ -34,8 +35,24 @@ class PaymentsDemoScreen extends StatelessWidget {
           children: [
             ElevatedButton(
               child: const Text('Start Payment'),
-              onPressed: () {
-                // TODO: Implement Stripe payment flow
+              onPressed: () async {
+                // Stripe payment flow
+                final amount = 1000; // Example amount in cents
+                final clientSecret = await PaymentApi.createIntent(
+                  amount: amount.toDouble(),
+                  currency: 'usd',
+                  recipientId: 'demo',
+                );
+                await Stripe.instance.initPaymentSheet(
+                  paymentSheetParameters: SetupPaymentSheetParameters(
+                    paymentIntentClientSecret: clientSecret,
+                    merchantDisplayName: 'MixVy',
+                  ),
+                );
+                await Stripe.instance.presentPaymentSheet();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Payment successful')),
+                );
               },
             ),
             const SizedBox(height: 16),

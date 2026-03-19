@@ -13,9 +13,22 @@ class PaymentApi {
     required String currency,
     required String recipientId,
   }) async {
-    // Example: Call backend REST API to create Stripe payment intent
-    // Replace with actual endpoint
-    final response = await Future.delayed(Duration(milliseconds: 500), () => {'clientSecret': 'mock_client_secret'});
-    return response['clientSecret'] ?? '';
+    // Real backend call for Stripe payment intent
+    final url = Uri.parse('https://us-central1-mix-and-mingle-v2.cloudfunctions.net/createPaymentIntent');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'amount': amount,
+        'currency': currency,
+        'recipientId': recipientId,
+      }),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['clientSecret'] ?? '';
+    } else {
+      throw Exception('Failed to create payment intent: ${response.body}');
+    }
   }
 }

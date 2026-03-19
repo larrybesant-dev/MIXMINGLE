@@ -59,4 +59,5 @@ class AuthController extends StateNotifier<UserModel?> {
 		}
 	}
 }
-// Empty Dart file for auth_controller.dart
+
+final authControllerProvider = StateNotifierProvider<AuthController, UserModel?>((ref) => AuthController());

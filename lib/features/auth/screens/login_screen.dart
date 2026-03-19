@@ -1,9 +1,6 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
-import '../../features/auth/auth_controller.dart';
-
+import '../../providers/auth_providers.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -17,11 +14,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  bool _isLoading = false;
-  String? _error;
-
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(authControllerProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
       body: Form(
@@ -46,15 +42,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 24.0),
               ElevatedButton(
-                onPressed: _isLoading ? null : _login,
-                child: _isLoading
+                onPressed: state.isLoading ? null : _login,
+                child: state.isLoading
                     ? const CircularProgressIndicator()
                     : const Text('Login'),
               ),
-              if (_error != null) ...[
+              if (state.error != null) ...[
                 const SizedBox(height: 12),
                 Text(
-                  _error!,
+                  state.error!,
                   style: const TextStyle(color: Colors.red),
                 ),
               ],
@@ -68,31 +64,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final email = _emailController.text.trim();
-    final password = _passwordController.text.trim();
+    await ref
+        .read(authControllerProvider.notifier)
+        .login(_emailController.text.trim(), _passwordController.text.trim());
 
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
+    final state = ref.read(authControllerProvider);
 
-    try {
-      final auth = ref.read(authControllerProvider.notifier);
-      await auth.login(email, password);
-
-      setState(() {
-        _isLoading = false;
-        _error = auth.error;
-      });
-
-      if (_error == null && mounted) {
-        Navigator.of(context).pushReplacementNamed('/home');
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _error = 'Network error. Please try again.';
-      });
+    if (state.error == null && mounted) {
+      Navigator.of(context).pushReplacementNamed('/home');
     }
   }
 }

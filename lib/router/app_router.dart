@@ -16,6 +16,34 @@ import '../features/events/event_detail_screen.dart';
 
 // final supabase = Supabase.instance.client;
 
+import 'package:flutter/material.dart';
+import '../features/auth/screens/login_screen.dart';
+import '../features/auth/screens/signup_screen.dart';
+import '../features/auth/screens/forgot_password_screen.dart';
+import '../features/home/home_screen.dart';
+
+class AppRouter {
+  static Route<dynamic> generate(RouteSettings settings) {
+    switch (settings.name) {
+      case '/':
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
+      case '/signup':
+        return MaterialPageRoute(builder: (_) => const SignupScreen());
+      case '/forgot':
+        return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
+      case '/home':
+        return MaterialPageRoute(builder: (_) => const HomeScreen());
+      case '/onboarding':
+        return MaterialPageRoute(builder: (_) => const OnboardingScreen());
+      case '/profile':
+        return MaterialPageRoute(builder: (_) => const ProfileScreen());
+      case '/verify':
+        return MaterialPageRoute(builder: (_) => const VerifyEmailScreen());
+      default:
+        return MaterialPageRoute(builder: (_) => const LoginScreen());
+    }
+  }
+}
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
   redirect: (context, state) {
