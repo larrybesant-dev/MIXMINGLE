@@ -1,0 +1,3 @@
+class PaymentConstants {
+  static const String stripePublishableKey = 'pk_live_51RQGn3ETMThPcwCj5ElJrm0Ue359e5oMYvIZFQCxSZUdg3b2EHBdMKZOKog4SoE87T5WtYMthzQMQZEITYeWsiu100aXHmRMYt';
+}

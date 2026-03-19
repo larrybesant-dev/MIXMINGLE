@@ -22,7 +22,15 @@ class PresenceWidget extends ConsumerWidget {
               size: 12,
             ),
             SizedBox(width: 4),
-            Text(isOnline ? 'Online' : 'Offline'),
+            Semantics(
+              label: isOnline ? 'User is online' : 'User is offline',
+              child: Text(
+                isOnline ? 'Online' : 'Offline',
+                style: TextStyle(
+                  color: isOnline ? Colors.green[800] : Colors.grey[800], // Improved contrast
+                ),
+              ),
+            ),
           ],
         );
       },

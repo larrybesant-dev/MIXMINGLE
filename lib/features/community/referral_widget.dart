@@ -13,29 +13,40 @@ class ReferralWidget extends ConsumerWidget {
     final emailController = TextEditingController();
     return Column(
       children: [
-        TextField(
-          controller: emailController,
-          decoration: InputDecoration(labelText: 'Referral Email'),
+        Semantics(
+          label: 'Referral Email input field',
+          child: TextField(
+            controller: emailController,
+            decoration: InputDecoration(labelText: 'Referral Email'),
+          ),
         ),
-        ElevatedButton(
-          onPressed: () async {
-            final code = await referralService.generateReferralCode(userId);
-            if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('Referral code: $code')),
-            );
-          },
-          child: Text('Generate Referral Code'),
+        Semantics(
+          label: 'Generate Referral Code button',
+          button: true,
+          child: ElevatedButton(
+            onPressed: () async {
+              final code = await referralService.generateReferralCode(userId);
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Referral code: $code')),
+              );
+            },
+            child: Text('Generate Referral Code', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 18 : 16)),
+          ),
         ),
-        ElevatedButton(
-          onPressed: () async {
-            final success = await referralService.redeemReferral(emailController.text, userId);
-            if (!context.mounted) return;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(success ? 'Referral redeemed!' : 'Failed to redeem referral')),
-            );
-          },
-          child: Text('Redeem Referral'),
+        Semantics(
+          label: 'Redeem Referral button',
+          button: true,
+          child: ElevatedButton(
+            onPressed: () async {
+              final success = await referralService.redeemReferral(emailController.text, userId);
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(success ? 'Referral redeemed!' : 'Failed to redeem referral')),
+              );
+            },
+            child: Text('Redeem Referral', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 18 : 16)),
+          ),
         ),
       ],
     );

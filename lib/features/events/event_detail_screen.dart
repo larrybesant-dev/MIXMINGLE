@@ -6,7 +6,12 @@ class EventDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Event Detail')),
-      body: const Center(child: Text('Event Detail Screen')),
+      body: Center(
+        child: Semantics(
+          label: 'Event Detail Screen',
+          child: Text('Event Detail Screen', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 20 : 18)),
+        ),
+      ),
     );
   }
 }

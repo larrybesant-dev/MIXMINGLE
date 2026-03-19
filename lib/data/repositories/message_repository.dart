@@ -1,7 +1,23 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/message_model.dart';
 
 abstract class MessageRepository {
   Future<List<MessageModel>> getMessages(String roomId);
-  Future<void> sendMessage(MessageModel message);
-  Future<void> deleteMessage(String messageId);
+  Future<void> sendMessage(String roomId, MessageModel message);
+}
+
+class MessageRepositoryImpl implements MessageRepository {
+  final FirebaseFirestore firestore;
+  MessageRepositoryImpl(this.firestore);
+
+  @override
+  Future<List<MessageModel>> getMessages(String roomId) async {
+    final snapshot = await firestore.collection('rooms').doc(roomId).collection('messages').orderBy('timestamp').get();
+    return snapshot.docs.map((doc) => MessageModel.fromJson(doc.data())).toList();
+  }
+
+  @override
+  Future<void> sendMessage(String roomId, MessageModel message) async {
+    await firestore.collection('rooms').doc(roomId).collection('messages').add(message.toJson());
+  }
 }

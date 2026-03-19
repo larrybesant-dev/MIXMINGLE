@@ -1,6 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'moderation_provider.dart';
+// Removed unused import
 
 class ModerationActions extends ConsumerWidget {
   final String roomId;
@@ -10,18 +11,35 @@ class ModerationActions extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final moderationService = ref.read(moderationServiceProvider);
-    return Row(
+    return Column(
       children: [
-        IconButton(
-          icon: Icon(Icons.block),
-          onPressed: () => moderationService.reportUser(userId, 'Violation'),
-          tooltip: 'Report User',
+        Semantics(
+          label: 'Report User button',
+          button: true,
+          child: ElevatedButton(
+            onPressed: () async {
+              await FirebaseFirestore.instance.collection('moderation_reports').add({
+                'roomId': roomId,
+                'userId': userId,
+                'type': 'Violation',
+                'timestamp': DateTime.now(),
+              });
+            },
+            child: Text('Report User', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 18 : 16)),
+          ),
         ),
-        IconButton(
-          icon: Icon(Icons.block),
-          onPressed: () => moderationService.blockUser(userId),
-          tooltip: 'Block User',
+        Semantics(
+          label: 'Block User button',
+          button: true,
+          child: ElevatedButton(
+            onPressed: () async {
+              await FirebaseFirestore.instance.collection('moderation_blocks').add({
+                'roomId': roomId,
+              'userId': userId,
+              'timestamp': DateTime.now(),
+            });
+          },
+          child: const Text('Block User'),
         ),
       ],
     );

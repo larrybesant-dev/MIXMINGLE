@@ -15,7 +15,15 @@ class MessageBubble extends StatelessWidget {
           color: isMe ? Colors.blue[100] : Colors.grey[300],
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Text(message),
+        child: Semantics(
+          label: isMe ? 'Sent message' : 'Received message',
+          child: Text(
+            message,
+            style: TextStyle(
+              color: isMe ? Colors.blue[900] : Colors.grey[800], // Improved contrast
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -31,6 +31,16 @@
 
   <title>mixvy</title>
   <link rel="manifest" href="manifest.json">
+  <!-- Stripe.js -->
+  <script src="https://js.stripe.com/v3/"></script>
+  <script>
+    function stripePay(key, amount, currency) {
+      var stripe = Stripe(key);
+      // TODO: Implement payment logic (create payment intent, redirect, etc.)
+      alert('Stripe payment called: ' + amount + ' ' + currency);
+      // You must implement backend call and payment flow here.
+    }
+  </script>
 </head>
 <body>
   <!--

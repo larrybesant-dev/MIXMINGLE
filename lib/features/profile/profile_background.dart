@@ -1,12 +1,19 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+// Removed unused import
 // Handles profile background color customization
 class ProfileBackgroundManager {
-  // TODO: Implement color selection and storage
-  static void setBackgroundColor(String userId, String colorHex) {
-    // Save color preference
+  final FirebaseFirestore firestore;
+  ProfileBackgroundManager(this.firestore);
+
+  Future<void> setBackgroundColor(String userId, String colorHex) async {
+    await firestore.collection('users').doc(userId).update({
+      'backgroundColor': colorHex,
+    });
   }
 
-  static String getBackgroundColor(String userId) {
-    // Retrieve color preference
-    return '#FFFFFF'; // Default
+  Future<String?> getBackgroundColor(String userId) async {
+    final doc = await firestore.collection('users').doc(userId).get();
+    if (!doc.exists || doc.data()?['backgroundColor'] == null) return null;
+    return doc.data()!['backgroundColor'];
   }
 }

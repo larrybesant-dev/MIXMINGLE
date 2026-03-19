@@ -15,3 +15,12 @@ A few resources to get you started if this is your first Flutter project:
 For help getting started with Flutter development, view the
 [online documentation](https://docs.flutter.dev/), which offers tutorials,
 samples, guidance on mobile development, and a full API reference.
+
+## Test Coverage
+- AuthController
+- ProfileController
+- PaymentsController
+- HomeController
+- RoomController
+
+Add more tests for widgets, screens, and services as needed.

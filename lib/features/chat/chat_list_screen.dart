@@ -6,7 +6,12 @@ class ChatListScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Chats')),
-      body: const Center(child: Text('Chat List Screen')),
+      body: Center(
+        child: Semantics(
+          label: 'Chat List Screen',
+          child: Text('Chat List Screen', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 20 : 18)),
+        ),
+      ),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'tile_card.dart';
 
 class EventCard extends StatelessWidget {
   final String title;
@@ -6,10 +7,14 @@ class EventCard extends StatelessWidget {
   const EventCard({super.key, required this.title, required this.description});
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: ListTile(
-        title: Text(title),
-        subtitle: Text(description),
+    return TileCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          Text(description, style: Theme.of(context).textTheme.bodyMedium),
+        ],
       ),
     );
   }
