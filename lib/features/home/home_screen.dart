@@ -1,11 +1,21 @@
 
-import 'package:flutter/material.dart';
 
-class HomeScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../feed/providers/feed_providers.dart';
+import '../feed/models/post_model.dart';
+import '../feed/models/room_model.dart';
+import '../feed/models/event_model.dart';
+
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final postsAsync = ref.watch(postsStreamProvider);
+    final roomsAsync = ref.watch(roomsStreamProvider);
+    final eventsAsync = ref.watch(eventsStreamProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home Feed'),
@@ -27,62 +37,69 @@ class HomeScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text('Create Post'),
-        onPressed: () {}, // Add post creation logic
+        onPressed: () {},
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(32),
-        children: [
-          const SizedBox(height: 24),
-          Text(
-            'Welcome to MixVy!',
-            style: Theme.of(context).textTheme.headlineMedium,
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          const Text(
-            'Live posts, rooms, and events will appear here.',
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 32),
-          Card(
-            color: Colors.deepPurple.shade50,
-            child: ListTile(
-              leading: const Icon(Icons.event, color: Colors.deepPurple),
-              title: const Text('Upcoming Event: MixVy Launch Party'),
-              subtitle: const Text('March 25, 2026 • 7:00 PM'),
-              trailing: ElevatedButton(
-                child: const Text('Join'),
-                onPressed: () {}, // Add join event logic
-              ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Live Posts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            postsAsync.when(
+              data: (posts) => posts.isEmpty
+                  ? const Text('No posts yet.')
+                  : Column(children: posts.map(_postCard).toList()),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Text('Error: $e'),
             ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            color: Colors.blue.shade50,
-            child: ListTile(
-              leading: const Icon(Icons.room, color: Colors.blue),
-              title: const Text('Live Room: Chill Vibes'),
-              subtitle: const Text('Join now and meet new people!'),
-              trailing: ElevatedButton(
-                child: const Text('Enter'),
-                onPressed: () {}, // Add enter room logic
-              ),
+            const SizedBox(height: 24),
+            const Text('Active Rooms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            roomsAsync.when(
+              data: (rooms) => rooms.isEmpty
+                  ? const Text('No active rooms.')
+                  : Column(children: rooms.map(_roomCard).toList()),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Text('Error: $e'),
             ),
-          ),
-          const SizedBox(height: 16),
-          Card(
-            color: Colors.orange.shade50,
-            child: ListTile(
-              leading: const Icon(Icons.star, color: Colors.orange),
-              title: const Text('Featured Post: Welcome to MixVy!'),
-              subtitle: const Text('Check out our new features and connect.'),
-              trailing: ElevatedButton(
-                child: const Text('View'),
-                onPressed: () {}, // Add view post logic
-              ),
+            const SizedBox(height: 24),
+            const Text('Upcoming Events', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            eventsAsync.when(
+              data: (events) => events.isEmpty
+                  ? const Text('No upcoming events.')
+                  : Column(children: events.map(_eventCard).toList()),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Text('Error: $e'),
             ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _postCard(PostModel p) {
+    return Card(
+      child: ListTile(
+        title: Text(p.text),
+        subtitle: Text('by ${p.userId} • ${p.createdAt}'),
+      ),
+    );
+  }
+
+  Widget _roomCard(RoomModel r) {
+    return Card(
+      child: ListTile(
+        title: Text(r.title),
+        subtitle: Text('Host: ${r.hostId}'),
+        trailing: const Icon(Icons.circle, color: Colors.green, size: 12),
+      ),
+    );
+  }
+
+  Widget _eventCard(EventModel e) {
+    return Card(
+      child: ListTile(
+        title: Text(e.title),
+        subtitle: Text('Host: ${e.hostId} • ${e.date}'),
       ),
     );
   }

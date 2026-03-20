@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 // PaymentApi placeholder: cloud_functions removed, implement Stripe payment logic here
 class PaymentApi {
     static Future<void> notifySuccess({

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../providers/auth_providers.dart';
+import 'package:mixvy/features/providers/auth_providers.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -39,7 +39,7 @@ class _ForgotPasswordScreenState
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
-                  state.error!,
+                  state.error ?? '',
                   style: const TextStyle(color: Colors.red),
                 ),
               ),

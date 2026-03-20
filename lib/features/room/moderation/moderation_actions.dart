@@ -35,12 +35,12 @@ class ModerationActions extends ConsumerWidget {
             onPressed: () async {
               await FirebaseFirestore.instance.collection('moderation_blocks').add({
                 'roomId': roomId,
-              'userId': userId,
-              'timestamp': DateTime.now(),
-            });
-          },
-          child: const Text('Block User'),
-        ),
+                'userId': userId,
+                'timestamp': DateTime.now(),
+              });
+            },
+            child: const Text('Block User'),
+          ),
       ],
     );
   }

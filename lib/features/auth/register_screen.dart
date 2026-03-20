@@ -38,10 +38,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     });
     try {
       final authController = ref.read(authControllerProvider.notifier);
-      await authController.register(email, password);
+      await authController.signup(email, password);
       setState(() {
         _isLoading = false;
-        _error = authController.error;
+        _error = ref.read(authControllerProvider).error;
       });
       if (_error == null) {
         Navigator.of(context).pushReplacementNamed('/login');

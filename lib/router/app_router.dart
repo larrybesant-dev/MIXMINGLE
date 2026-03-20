@@ -1,7 +1,6 @@
 
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../features/auth/login_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/profile/edit_profile_screen.dart';
@@ -17,9 +16,7 @@ import '../features/events/event_detail_screen.dart';
 // final supabase = Supabase.instance.client;
 
 import 'package:flutter/material.dart';
-import '../features/auth/screens/login_screen.dart';
-import '../features/auth/screens/signup_screen.dart';
-import '../features/auth/screens/forgot_password_screen.dart';
+import 'package:mixvy/features/auth/screens/login_screen.dart';
 import '../features/home/home_screen.dart';
 
 class AppRouter {
@@ -27,18 +24,10 @@ class AppRouter {
     switch (settings.name) {
       case '/':
         return MaterialPageRoute(builder: (_) => const LoginScreen());
-      case '/signup':
-        return MaterialPageRoute(builder: (_) => const SignupScreen());
-      case '/forgot':
-        return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
       case '/home':
         return MaterialPageRoute(builder: (_) => const HomeScreen());
-      case '/onboarding':
-        return MaterialPageRoute(builder: (_) => const OnboardingScreen());
       case '/profile':
         return MaterialPageRoute(builder: (_) => const ProfileScreen());
-      case '/verify':
-        return MaterialPageRoute(builder: (_) => const VerifyEmailScreen());
       default:
         return MaterialPageRoute(builder: (_) => const LoginScreen());
     }
