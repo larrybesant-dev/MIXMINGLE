@@ -1,3 +1,4 @@
+import 'package:state_notifier/state_notifier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class PaymentState {
@@ -39,7 +40,11 @@ class PaymentController extends StateNotifier<PaymentState> {
     state = state.copyWith(isLoading: true, error: null, amount: amount);
     try {
       // Replace with real payment logic
-      state = state.copyWith(isLoading: false, paymentId: 'mockId', isConfirmed: false);
+      state = state.copyWith(
+        isLoading: false,
+        paymentId: 'mockId',
+        isConfirmed: false,
+      );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
@@ -56,6 +61,7 @@ class PaymentController extends StateNotifier<PaymentState> {
   }
 }
 
-final paymentControllerProvider = StateNotifierProvider<PaymentController, PaymentState>((ref) {
-  return PaymentController();
-});
+final paymentControllerProvider =
+    StateNotifierProvider<PaymentController, PaymentState>((ref) {
+      return PaymentController();
+    });

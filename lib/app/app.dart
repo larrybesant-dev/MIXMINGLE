@@ -6,6 +6,8 @@ import '../theme/custom_theme.dart';
 
 class MixVyApp extends StatelessWidget {
   const MixVyApp({super.key});
+  
+  RouterConfig<Object>? get appRouter => null;
 
   @override
   Widget build(BuildContext context) {

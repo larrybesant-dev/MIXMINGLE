@@ -6,12 +6,13 @@ import 'payments_controller.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import '../../services/payment_api.dart';
 import '../../config/payment_constants.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class PaymentsScreen extends StatelessWidget {
+class PaymentsScreen extends ConsumerWidget {
   const PaymentsScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     if (kIsWeb) {
       return StripeWebPaymentWidget(
         publishableKey: PaymentConstants.stripePublishableKey,
@@ -19,7 +20,7 @@ class PaymentsScreen extends StatelessWidget {
         currency: 'usd',
       );
     }
-    final paymentState = context.watch(paymentControllerProvider);
+    final paymentState = ref.watch(paymentControllerProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Payments')),
       body: Column(
@@ -36,7 +37,7 @@ class PaymentsScreen extends StatelessWidget {
                   onPressed: paymentState.isLoading
                       ? null
                       : () async {
-                          final controller = context.read(paymentControllerProvider.notifier);
+                          final controller = ref.read(paymentControllerProvider.notifier);
                           await controller.initiatePayment(1000);
                           if (!context.mounted) return;
                           if (paymentState.error == null) {

@@ -77,10 +77,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 label: 'Save profile button',
                 button: true,
                 child: ElevatedButton(
-                  onPressed: state.isLoading ? null : _saveProfile,
-                  child: state.isLoading
-                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Text('Save'),
+                  onPressed: _saveProfile,
+                  child: const Text('Save'),
                 ),
               ),
             ],
@@ -88,9 +86,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ),
       ),
     );
-                        : Text('Save', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 20 : 18)),
-                  ),
-                ),
+              // ...existing code...
             ],
           ),
         ),

@@ -1,3 +1,4 @@
+import 'package:state_notifier/state_notifier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ProfileState {
@@ -76,7 +77,8 @@ class ProfileController extends StateNotifier<ProfileState> {
   }
 }
 
-final profileControllerProvider = StateNotifierProvider<ProfileController, ProfileState>((ref) {
-  return ProfileController();
-});
+final profileControllerProvider =
+    StateNotifierProvider<ProfileController, ProfileState>((ref) {
+      return ProfileController();
+    });
 // Empty Dart file for profile_controller.dart

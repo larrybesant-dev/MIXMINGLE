@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
-// Removed unused imports
+import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -27,7 +27,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (!_formKey.currentState!.validate()) return;
     if (email.isEmpty || password.isEmpty) {
       setState(() {
-        _error = 'Email and password are required.';
+        _localError = 'Email and password are required.';
       });
       return;
     }
