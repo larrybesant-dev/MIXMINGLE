@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'core/theme.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -17,8 +18,11 @@ void main() async {
     Stripe.publishableKey = PaymentConstants.stripePublishableKey;
   }
   runApp(
-    const ProviderScope(
-      child: MixVyApp(),
+    ProviderScope(
+      child: MaterialApp(
+        theme: buildMidnightTheme(),
+        home: MixVyApp(),
+      ),
     ),
   );
 }

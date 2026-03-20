@@ -1,6 +1,7 @@
 
 import 'package:go_router/go_router.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mixvy/auth/auth_controller.dart';
 import '../features/auth/register_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/profile/edit_profile_screen.dart';
@@ -36,8 +37,8 @@ class AppRouter {
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
   redirect: (context, state) {
-    final user = FirebaseAuth.instance.currentUser;
-    final isLoggedIn = user != null;
+    final authState = context.read(authControllerProvider);
+    final isLoggedIn = authState.uid != null;
 
     final isAuthRoute =
       state.matchedLocation == '/login' ||

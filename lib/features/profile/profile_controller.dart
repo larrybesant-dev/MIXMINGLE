@@ -1,16 +1,58 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../models/user_model.dart';
-class ProfileController extends StateNotifier<UserModel?> {
-    String? error;
-  ProfileController() : super(null);
+class ProfileState {
+  final bool isLoading;
+  final String? error;
+  final String? username;
+  final String? email;
+  final String? avatarUrl;
+  final int coinBalance;
+  final String? membershipLevel;
+  final List<String> followers;
+
+  const ProfileState({
+    this.isLoading = false,
+    this.error,
+    this.username,
+    this.email,
+    this.avatarUrl,
+    this.coinBalance = 0,
+    this.membershipLevel,
+    this.followers = const [],
+  });
+
+  ProfileState copyWith({
+    bool? isLoading,
+    String? error,
+    String? username,
+    String? email,
+    String? avatarUrl,
+    int? coinBalance,
+    String? membershipLevel,
+    List<String>? followers,
+  }) {
+    return ProfileState(
+      isLoading: isLoading ?? this.isLoading,
+      error: error ?? this.error,
+      username: username ?? this.username,
+      email: email ?? this.email,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      coinBalance: coinBalance ?? this.coinBalance,
+      membershipLevel: membershipLevel ?? this.membershipLevel,
+      followers: followers ?? this.followers,
+    );
+  }
+}
+
+class ProfileController extends StateNotifier<ProfileState> {
+  ProfileController() : super(const ProfileState());
 
   Future<void> fetchProfile(String userId) async {
+    state = state.copyWith(isLoading: true, error: null);
     try {
-      // Example: Fetch user profile
       // Replace with real API call
-      state = UserModel(
-        id: 'user123',
+      state = state.copyWith(
+        isLoading: false,
         username: 'username',
         email: 'user@example.com',
         avatarUrl: '',
@@ -18,27 +60,23 @@ class ProfileController extends StateNotifier<UserModel?> {
         membershipLevel: 'Free',
         followers: [],
       );
-      error = null;
     } catch (e) {
-      error = e.toString();
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
-  Future<void> updateProfile(UserModel user) async {
+
+  Future<void> updateProfile(ProfileState profile) async {
+    state = state.copyWith(isLoading: true, error: null);
     try {
-      // Example: Update user profile
-      state = user;
-      error = null;
+      // Replace with real API call
+      state = profile.copyWith(isLoading: false);
     } catch (e) {
-      error = e.toString();
-    }
-  }
-  void editProfile(UserModel user) {
-    try {
-      state = user;
-      error = null;
-    } catch (e) {
-      error = e.toString();
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 }
+
+final profileControllerProvider = StateNotifierProvider<ProfileController, ProfileState>((ref) {
+  return ProfileController();
+});
 // Empty Dart file for profile_controller.dart

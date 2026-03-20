@@ -1,30 +1,36 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mixvy/features/auth/auth_controller.dart';
-import 'package:mixvy/models/user_model.dart';
+import 'package:mixvy/auth/auth_controller.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {
   group('AuthController', () {
-    late AuthController controller;
-
+    late ProviderContainer container;
     setUp(() {
-      controller = AuthController();
+      container = ProviderContainer();
     });
 
     test('login sets user state', () async {
+      final controller = container.read(authControllerProvider.notifier);
       await controller.login('test@example.com', 'password');
-      expect(controller.state, isA<UserModel>());
-      expect(controller.state?.email, 'test@example.com');
+      final state = container.read(authControllerProvider);
+      expect(state.uid, isNotNull);
+      expect(state.error, isNull);
     });
 
     test('logout clears user state', () async {
+      final controller = container.read(authControllerProvider.notifier);
       await controller.login('test@example.com', 'password');
       await controller.logout();
-      expect(controller.state, isNull);
+      final state = container.read(authControllerProvider);
+      expect(state.uid, isNull);
     });
 
-    test('register sets user state', () async {
-      await controller.register('new@example.com', 'password');
-      expect(controller.state?.email, 'new@example.com');
+    test('signup sets user state', () async {
+      final controller = container.read(authControllerProvider.notifier);
+      await controller.signup('new@example.com', 'password');
+      final state = container.read(authControllerProvider);
+      expect(state.uid, isNotNull);
+      expect(state.error, isNull);
     });
   });
 }

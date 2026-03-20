@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'profile_controller.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -10,8 +11,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  bool _isLoading = false;
-  String? _error;
+  // Remove local loading/error, use ProfileState
 
   @override
   void dispose() {
@@ -20,22 +20,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     super.dispose();
   }
 
-  void _saveProfile() async {
-    setState(() {
-      _isLoading = true;
-      _error = null;
-    });
-    // TODO: Implement profile update logic
-    await Future.delayed(const Duration(seconds: 1)); // Placeholder
-    setState(() {
-      _isLoading = false;
-      _error = null;
-    });
-    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated')));
+  Future<void> _saveProfile() async {
+    final controller = ref.read(profileControllerProvider.notifier);
+    await controller.updateProfile(
+      ref.read(profileControllerProvider).copyWith(
+        username: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+      ),
+    );
+    if (!mounted) return;
+    final state = ref.read(profileControllerProvider);
+    if (state.error == null) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated')));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(profileControllerProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: Center(
@@ -44,40 +46,48 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-                Semantics(
-                  label: 'Name input field',
-                  child: TextFormField(
-                    controller: _nameController,
-                    decoration: const InputDecoration(labelText: 'Name'),
-                    autofocus: true,
-                    textInputAction: TextInputAction.next,
-                  ),
+              Semantics(
+                label: 'Name input field',
+                child: TextFormField(
+                  controller: _nameController,
+                  decoration: const InputDecoration(labelText: 'Name'),
+                  autofocus: true,
+                  textInputAction: TextInputAction.next,
                 ),
+              ),
               const SizedBox(height: 16),
+              Semantics(
+                label: 'Email input field',
+                child: TextFormField(
+                  controller: _emailController,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                  textInputAction: TextInputAction.done,
+                ),
+              ),
+              const SizedBox(height: 24),
+              if (state.error != null)
                 Semantics(
-                  label: 'Email input field',
-                  child: TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    textInputAction: TextInputAction.done,
+                  label: 'Error message',
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Text(state.error!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
                   ),
                 ),
-              const SizedBox(height: 24),
-                if (_error != null)
-                  Semantics(
-                    label: 'Error message',
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(_error!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                Semantics(
-                  label: 'Save profile button',
-                  button: true,
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _saveProfile,
-                    child: _isLoading
-                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              Semantics(
+                label: 'Save profile button',
+                button: true,
+                child: ElevatedButton(
+                  onPressed: state.isLoading ? null : _saveProfile,
+                  child: state.isLoading
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Text('Save'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
                         : Text('Save', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 20 : 18)),
                   ),
                 ),
