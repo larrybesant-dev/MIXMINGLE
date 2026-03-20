@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixvy/features/providers/auth_providers.dart';
+import 'package:your_app/auth/auth_controller.dart';
 
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -16,7 +16,7 @@ class _ForgotPasswordScreenState
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(authControllerProvider);
+    final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text("Reset Password")),
@@ -30,16 +30,16 @@ class _ForgotPasswordScreenState
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: state.isLoading ? null : _reset,
-              child: state.isLoading
+              onPressed: authState.isLoading ? null : _reset,
+              child: authState.isLoading
                   ? const CircularProgressIndicator()
                   : const Text("Send Reset Email"),
             ),
-            if (state.error != null)
+            if (authState.error != null)
               Padding(
                 padding: const EdgeInsets.only(top: 12),
                 child: Text(
-                  state.error ?? '',
+                  authState.error ?? '',
                   style: const TextStyle(color: Colors.red),
                 ),
               ),
@@ -50,8 +50,7 @@ class _ForgotPasswordScreenState
   }
 
   Future<void> _reset() async {
-    await ref
-        .read(authControllerProvider.notifier)
-        .resetPassword(_email.text.trim());
+    final controller = ref.read(authControllerProvider.notifier);
+    await controller.resetPassword(_email.text.trim());
   }
 }

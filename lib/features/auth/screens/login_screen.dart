@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixvy/features/providers/auth_providers.dart';
+import 'package:your_app/auth/auth_controller.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -16,7 +16,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(authControllerProvider);
+    final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Login')),
@@ -42,15 +42,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const SizedBox(height: 24.0),
               ElevatedButton(
-                onPressed: state.isLoading ? null : _login,
-                child: state.isLoading
+                onPressed: authState.isLoading ? null : _login,
+                child: authState.isLoading
                     ? const CircularProgressIndicator()
                     : const Text('Login'),
               ),
-              if (state.error != null) ...[
+              if (authState.error != null) ...[
                 const SizedBox(height: 12),
                 Text(
-                  state.error ?? '',
+                  authState.error ?? '',
                   style: const TextStyle(color: Colors.red),
                 ),
               ],
@@ -64,13 +64,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await ref
-        .read(authControllerProvider.notifier)
-        .login(_emailController.text.trim(), _passwordController.text.trim());
-
-    final state = ref.read(authControllerProvider);
-
-    if (state.error == null && mounted) {
+    final controller = ref.read(authControllerProvider.notifier);
+    await controller.login(_emailController.text.trim(), _passwordController.text.trim());
+    final authState = ref.read(authControllerProvider);
+    if (!mounted) return;
+    if (authState.error == null) {
       Navigator.of(context).pushReplacementNamed('/home');
     }
   }
