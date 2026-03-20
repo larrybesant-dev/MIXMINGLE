@@ -12,8 +12,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  bool _isLoading = false;
-  String? _error;
+  String? _localError;
 
   @override
   void dispose() {
@@ -33,29 +32,24 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
     setState(() {
-      _isLoading = true;
-      _error = null;
+      _localError = null;
     });
-    try {
-      final authController = ref.read(authControllerProvider.notifier);
-      await authController.signup(email, password);
-      setState(() {
-        _isLoading = false;
-        _error = ref.read(authControllerProvider).error;
-      });
-      if (_error == null) {
-        Navigator.of(context).pushReplacementNamed('/login');
-      }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _error = 'Network error. Please try again.';
-      });
+    final controller = ref.read(authControllerProvider.notifier);
+    await controller.signup(email, password);
+    final authState = ref.read(authControllerProvider);
+    if (!mounted) return;
+    setState(() {
+      _localError = authState.error;
+    });
+    if (authState.error == null && authState.uid != null) {
+      Navigator.of(context).pushReplacementNamed('/login');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authControllerProvider);
+    final isLoading = authState.isLoading;
     return Scaffold(
       appBar: AppBar(title: const Text('Register')),
       body: Center(
@@ -66,57 +60,81 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                  Semantics(
-                    label: 'Email input field',
-                    child: TextFormField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(labelText: 'Email'),
-                      validator: (v) => v == null || !v.contains('@') ? 'Enter a valid email' : null,
-                      autofocus: true,
-                      textInputAction: TextInputAction.next,
-                    ),
+                Semantics(
+                  label: 'Email input field',
+                  child: TextFormField(
+                    controller: _emailController,
+                    decoration: const InputDecoration(labelText: 'Email'),
+                    validator: (v) => v == null || !v.contains('@') ? 'Enter a valid email' : null,
+                    autofocus: true,
+                    textInputAction: TextInputAction.next,
                   ),
+                ),
                 const SizedBox(height: 16),
-                  Semantics(
-                    label: 'Password input field',
-                    child: TextFormField(
-                      controller: _passwordController,
-                      decoration: const InputDecoration(labelText: 'Password'),
-                      obscureText: true,
-                      validator: (v) => v == null || v.length < 6 ? 'Min 6 characters' : null,
-                      textInputAction: TextInputAction.done,
-                    ),
+                Semantics(
+                  label: 'Password input field',
+                  child: TextFormField(
+                    controller: _passwordController,
+                    decoration: const InputDecoration(labelText: 'Password'),
+                    obscureText: true,
+                    validator: (v) => v == null || v.length < 6 ? 'Min 6 characters' : null,
+                    textInputAction: TextInputAction.done,
                   ),
+                ),
                 const SizedBox(height: 24),
-                  if (_error != null)
-                    Semantics(
-                      label: 'Error message',
-                      child: Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Text(_error!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                if (_localError != null || authState.error != null)
+                  Semantics(
+                    label: 'Error message',
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        _localError ?? authState.error!,
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  Semantics(
-                    label: 'Register button',
-                    button: true,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _register,
-                      child: _isLoading
-                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                          : Text('Register', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 20 : 18)),
-                    ),
                   ),
+                Semantics(
+                  label: 'Register button',
+                  button: true,
+                  child: ElevatedButton(
+                    onPressed: isLoading ? null : _register,
+                    child: isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Text(
+                            'Register',
+                            style: TextStyle(
+                              fontSize: MediaQuery.of(context).size.width > 400
+                                  ? 20
+                                  : 18,
+                            ),
+                          ),
+                  ),
+                ),
                 const SizedBox(height: 16),
-                  Semantics(
-                    label: 'Login navigation button',
-                    button: true,
-                    child: TextButton(
-                      onPressed: _isLoading
-                          ? null
-                          : () => Navigator.of(context).pushNamed('/login'),
-                      child: Text('Already have an account? Login', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 16 : 14)),
+                Semantics(
+                  label: 'Login navigation button',
+                  button: true,
+                  child: TextButton(
+                    onPressed: isLoading
+                        ? null
+                        : () => Navigator.of(context).pushNamed('/login'),
+                    child: Text(
+                      'Already have an account? Login',
+                      style: TextStyle(
+                        fontSize: MediaQuery.of(context).size.width > 400
+                            ? 16
+                            : 14,
+                      ),
                     ),
                   ),
+                ),
               ],
             ),
           ),
