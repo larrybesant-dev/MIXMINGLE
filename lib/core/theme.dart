@@ -10,7 +10,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
   cardTheme: CardThemeData(
     elevation: 0,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-    color: Colors.white.withOpacity(0.05),
+    color: Colors.white.withAlpha(13), // 0.05 * 255 ≈ 13
   ),
   textTheme: const TextTheme(
     displayLarge: TextStyle(
@@ -76,12 +76,12 @@ final ThemeData midnightCreativeTheme = ThemeData(
     primary: Color(0xFFAC8EFF),
     secondary: Color(0xFF6C47FF),
     surface: Color(0xFF181A20),
-    background: Color(0xFF0C0E12),
+    surface: Color(0xFF0C0E12),
     error: Color(0xFFFF5A5A),
     onPrimary: Colors.white,
     onSecondary: Colors.white,
     onSurface: Colors.white,
-    onBackground: Colors.white,
+    onSurface: Colors.white,
     onError: Colors.white,
   ),
   dividerTheme: const DividerThemeData(
