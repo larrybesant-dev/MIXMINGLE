@@ -18,7 +18,7 @@ class LiveRoomCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: (0.08 * 255).round()),
+              color: Colors.black.withValues(alpha: 0.08),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -33,7 +33,7 @@ class LiveRoomCard extends StatelessWidget {
               height: 80,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withValues(alpha: (0.1 * 255).round()),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.videocam, size: 40, color: Colors.white70),
@@ -51,7 +51,7 @@ class LiveRoomCard extends StatelessWidget {
             Text(
               room.description ?? '',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: (0.7 * 255).round()),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                   ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

@@ -17,7 +17,7 @@ class EventsScreen extends ConsumerWidget {
             : ListView.separated(
                 padding: const EdgeInsets.all(16),
                 itemCount: events.length,
-                separatorBuilder: (_, __) => const Divider(),
+                separatorBuilder: (_, _) => const Divider(),
                 itemBuilder: (context, i) {
                   final event = events[i];
                   return ListTile(

@@ -79,7 +79,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
                 children: [
                   // Remote video(s)
                   if (_agora!.remoteUids.isNotEmpty)
-                    ..._agora!.remoteUids.map((uid) => Positioned.fill(child: _agora!.getRemoteView(uid))).toList()
+                        ..._agora!.remoteUids.map((uid) => Positioned.fill(child: _agora!.getRemoteView(uid)))
                   else
                     Center(child: Text('Waiting for partner...')),
                   // Local video (small preview)

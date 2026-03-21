@@ -16,7 +16,7 @@ class TrendingUserCard extends StatelessWidget {
           CircleAvatar(
             radius: 36,
             backgroundImage: NetworkImage(user.avatarUrl),
-            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: (0.2 * 255).round()),
+            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
           ),
           const SizedBox(height: 8),
           Text(

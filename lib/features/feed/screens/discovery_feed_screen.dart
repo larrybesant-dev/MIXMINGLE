@@ -56,7 +56,7 @@ class DiscoveryFeedScreen extends ConsumerWidget {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: feedState.liveRooms.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 16),
+                      separatorBuilder: (_, _) => const SizedBox(width: 16),
                       itemBuilder: (context, index) {
                         final room = feedState.liveRooms[index];
                         return LiveRoomCard(room: room, onTap: () {
@@ -83,7 +83,7 @@ class DiscoveryFeedScreen extends ConsumerWidget {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: feedState.trendingUsers.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 16),
+                      separatorBuilder: (_, _) => const SizedBox(width: 16),
                       itemBuilder: (context, index) {
                         final user = feedState.trendingUsers[index];
                         return TrendingUserCard(user: user, onTap: () {
