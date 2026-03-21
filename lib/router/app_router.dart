@@ -18,7 +18,7 @@ import '../features/events/event_detail_screen.dart';
 // Supabase logic removed.
 
 import 'package:mixvy/features/auth/screens/login_screen.dart';
-import '../features/home/home_screen.dart';
+import '../features/dashboard/dashboard_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authControllerProvider);
@@ -32,7 +32,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+      GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
       GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),

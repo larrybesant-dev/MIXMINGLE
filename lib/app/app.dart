@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../router/app_router.dart';
-import '../core/theme.dart';
+import '../core/theme/electric_velvet_theme.dart';
 
 class MixVyApp extends ConsumerWidget {
   const MixVyApp({super.key});
@@ -11,7 +11,7 @@ class MixVyApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
       title: 'MixVy',
-      theme: midnightCreativeTheme,
+      theme: electricVelvetTheme,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );
