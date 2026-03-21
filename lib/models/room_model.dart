@@ -4,26 +4,29 @@ class RoomModel {
   final String id;
   final String name;
   final String? description;
+  final String? rules;
   final String hostId;
   final bool isLive;
   final String? thumbnailUrl;
   final Timestamp? createdAt;
   final Timestamp? updatedAt;
-
   // Members
   final List<String> stageUserIds;
   final List<String> audienceUserIds;
-
   // Metadata
   final int memberCount;
   final String? category;
   final List<String> tags;
+  // New fields for info panel/moderation
+  final List<String> coHosts;
+  final bool isLocked;
 
   RoomModel({
     required this.id,
     required this.name,
     required this.hostId,
     this.description,
+    this.rules,
     this.isLive = false,
     this.thumbnailUrl,
     this.createdAt,
@@ -33,6 +36,8 @@ class RoomModel {
     this.memberCount = 0,
     this.category,
     this.tags = const [],
+    this.coHosts = const [],
+    this.isLocked = false,
   });
 
   /// Combined members list (used by UI)
@@ -46,6 +51,7 @@ class RoomModel {
       id: documentId,
       name: json['name'] ?? 'Untitled Room',
       description: json['description'],
+      rules: json['rules'],
       hostId: json['hostId'] ?? '',
       isLive: json['isLive'] ?? false,
       thumbnailUrl: json['thumbnailUrl'],
@@ -56,6 +62,8 @@ class RoomModel {
       memberCount: json['memberCount'] ?? 0,
       category: json['category'],
       tags: List<String>.from(json['tags'] ?? []),
+      coHosts: List<String>.from(json['coHosts'] ?? []),
+      isLocked: json['isLocked'] ?? false,
     );
   }
 
