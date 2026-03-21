@@ -3,6 +3,7 @@ import '../models/user_model.dart';
 
 
 
+class FriendService {
   Future<void> sendFriendRequest(String fromUserId, String toUserId) async {
     // TODO: Implement sendFriendRequest using Firebase/Firestore
   }

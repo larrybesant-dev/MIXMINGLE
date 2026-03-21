@@ -1,8 +1,6 @@
 import '../models/message_model.dart';
 
-
-
-
+class ChatService {
   Future<void> sendMessage(String roomId, String senderId, String content) async {
     // TODO: Implement sendMessage using Firebase/Firestore
   }
