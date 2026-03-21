@@ -11,12 +11,12 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Use Firebase Emulator Suite for local development
-  const bool useEmulator = true; // Set to false for production
+  // Use Firebase Emulator Suite for local development only
+  const bool useEmulator =
+      !kReleaseMode &&
+      (kIsWeb ? false : true); // Only true for local dev, not web prod
   if (useEmulator) {
     // Firestore emulator
     try {
@@ -32,9 +32,5 @@ void main() async {
   if (!kIsWeb) {
     Stripe.publishableKey = PaymentConstants.stripePublishableKey;
   }
-  runApp(
-    ProviderScope(
-      child: MixVyApp(),
-    ),
-  );
+  runApp(ProviderScope(child: MixVyApp()));
 }
