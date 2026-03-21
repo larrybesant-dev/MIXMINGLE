@@ -23,7 +23,7 @@ class EventsScreen extends ConsumerWidget {
                   return ListTile(
                     leading: const Icon(Icons.event),
                     title: Text(event.title),
-                       subtitle: Text('Host: ${event.hostId ?? 'Unknown'} • ${event.date != null ? event.date.toLocal().toString().split(' ')[0] : ''}'),
+                       subtitle: Text('Host: ${event.hostId} • ${event.date.toLocal().toString().split(' ')[0]}'),
                     trailing: ElevatedButton(
                       onPressed: () {
                         // TODO: Show event details or join logic

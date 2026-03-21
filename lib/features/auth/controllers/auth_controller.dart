@@ -26,20 +26,24 @@ class AuthState {
 }
 
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
-  (ref) => AuthController(),
+  (ref) => AuthController(FirebaseAuth.instance),
 );
 
+
 class AuthController extends StateNotifier<AuthState> {
-  AuthController() : super(AuthState(uid: FirebaseAuth.instance.currentUser?.uid)) {
-    FirebaseAuth.instance.authStateChanges().listen((user) {
+  final FirebaseAuth _auth;
+
+  AuthController(this._auth) : super(AuthState(uid: _auth.currentUser?.uid)) {
+    _auth.authStateChanges().listen((user) {
       state = state.copyWith(uid: user?.uid);
     });
   }
 
+
   Future<void> signup(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final cred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final cred = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
@@ -52,7 +56,7 @@ class AuthController extends StateNotifier<AuthState> {
   Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final cred = await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final cred = await _auth.signInWithEmailAndPassword(
         email: email,
         password: password,
       );
