@@ -6,7 +6,7 @@ import '../../../models/user.dart';
 class FeedState {
   final bool isLoading;
   final String? error;
-  final List<dynamic> liveRooms; // TODO: Replace dynamic with correct Room model
+  final List<RoomModel> liveRooms;
   final List<User> trendingUsers;
 
   const FeedState({
@@ -19,7 +19,7 @@ class FeedState {
   FeedState copyWith({
     bool? isLoading,
     String? error,
-    List<dynamic>? liveRooms, // TODO: Replace dynamic with correct Room model
+    List<RoomModel>? liveRooms,
     List<User>? trendingUsers,
   }) {
     return FeedState(
@@ -46,8 +46,8 @@ class FeedController extends StateNotifier<FeedState> {
           .limit(20)
           .get();
       final liveRooms = roomsSnap.docs
-          .map((doc) => doc.data()) // TODO: Replace with correct Room model parsing
-          .toList();
+        .map((doc) => RoomModel.fromJson({'id': doc.id, ...doc.data()}))
+        .toList();
       final usersSnap = await _firestore
           .collection('users')
           .orderBy('coinBalance', descending: true)
