@@ -10,11 +10,9 @@ final ThemeData electricVelvetTheme = ThemeData(
     brightness: Brightness.dark,
     primary: const Color(0xFF6200EE),
     secondary: const Color(0xFF03DAC6),
-    background: const Color(0xFF18181A),
-    surface: const Color(0xFF23232B),
   ),
   appBarTheme: const AppBarTheme(
-    backgroundColor: Color(0xFF23232B),
+    // shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero),
     elevation: 0,
     titleTextStyle: TextStyle(
       color: Colors.white,

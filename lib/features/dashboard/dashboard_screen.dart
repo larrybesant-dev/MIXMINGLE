@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../shared/widgets/TopAppBar.dart';
-import '../../shared/widgets/BottomNavBar.dart';
+import '../../shared/widgets/top_app_bar.dart';
+import '../../shared/widgets/bottom_nav_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../feed/providers/feed_providers.dart';
 import '../feed/models/post_model.dart';
