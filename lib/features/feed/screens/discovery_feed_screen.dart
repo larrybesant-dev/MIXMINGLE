@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../controllers/feed_controller.dart';
-import '../../models/room.dart';
+import '../../models/room_model.dart';
 import '../../models/user.dart';
+import 'package:go_router/go_router.dart';
 import '../widgets/live_room_card.dart';
 import '../widgets/trending_user_card.dart';
 import '../widgets/feed_empty_state.dart';

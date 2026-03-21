@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/room.dart';
+import '../../models/room_model.dart';
 import '../../models/user.dart';
 
 class FeedState {
