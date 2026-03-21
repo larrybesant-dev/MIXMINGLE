@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+export 'event_model.dart';
 
 class UserProfile {
   final String uid;
