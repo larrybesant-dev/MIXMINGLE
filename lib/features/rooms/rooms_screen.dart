@@ -16,7 +16,7 @@ class RoomsScreen extends ConsumerWidget {
       appBar: AppBar(title: const Text('Live Rooms')),
       floatingActionButton: FloatingActionButton(
         onPressed: () => Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const CreateRoomScreen()),
+          MaterialPageRoute(builder: (_) => CreateRoomScreen()),
         ),
         child: const Icon(Icons.add),
         tooltip: 'Create Live Room',

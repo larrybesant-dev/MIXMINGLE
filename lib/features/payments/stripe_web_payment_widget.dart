@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:js_interop' as js;
+import 'dart:js_util' as js_util;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
@@ -16,7 +16,6 @@ class StripeWebPaymentWidget extends StatelessWidget {
   });
 
   Future<void> _pay() async {
-    // Call backend to create payment intent and get client secret
     final response = await http.post(
       Uri.parse('https://us-central1-mix-and-mingle-v2.cloudfunctions.net/createPaymentIntent'),
       headers: {'Content-Type': 'application/json'},
@@ -29,8 +28,7 @@ class StripeWebPaymentWidget extends StatelessWidget {
       final data = jsonDecode(response.body);
       final clientSecret = data['clientSecret'];
       if (clientSecret != null) {
-        // ignore: undefined_prefixed_name
-        js.context.callMethod('stripePay', [publishableKey, clientSecret]);
+        js_util.callMethod(js_util.globalThis, 'stripePay', [publishableKey, clientSecret]);
       } else {
         _showError('No client secret returned.');
       }
@@ -40,8 +38,7 @@ class StripeWebPaymentWidget extends StatelessWidget {
   }
 
   void _showError(String message) {
-    // ignore: undefined_prefixed_name
-    js.context.callMethod('alert', [message]);
+    js_util.callMethod(js_util.globalThis, 'alert', [message]);
   }
 
   @override

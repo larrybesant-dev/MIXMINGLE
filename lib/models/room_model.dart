@@ -17,9 +17,9 @@ class RoomModel {
   final int memberCount;
   final String? category;
   final List<String> tags;
-  // New fields for info panel/moderation
   final List<String> coHosts;
   final bool isLocked;
+  final int? slowModeSeconds;
 
   RoomModel({
     required this.id,
@@ -38,6 +38,7 @@ class RoomModel {
     this.tags = const [],
     this.coHosts = const [],
     this.isLocked = false,
+    this.slowModeSeconds,
   });
 
   /// Combined members list (used by UI)
@@ -64,6 +65,7 @@ class RoomModel {
       tags: List<String>.from(json['tags'] ?? []),
       coHosts: List<String>.from(json['coHosts'] ?? []),
       isLocked: json['isLocked'] ?? false,
+      slowModeSeconds: json['slowModeSeconds'],
     );
   }
 
@@ -71,6 +73,7 @@ class RoomModel {
     return {
       'name': name,
       'description': description,
+      'rules': rules,
       'hostId': hostId,
       'isLive': isLive,
       'thumbnailUrl': thumbnailUrl,
@@ -81,6 +84,9 @@ class RoomModel {
       'memberCount': memberCount,
       'category': category,
       'tags': tags,
+      'coHosts': coHosts,
+      'isLocked': isLocked,
+      'slowModeSeconds': slowModeSeconds,
     };
   }
 
@@ -88,6 +94,7 @@ class RoomModel {
     String? id,
     String? name,
     String? description,
+    String? rules,
     String? hostId,
     bool? isLive,
     String? thumbnailUrl,
@@ -98,11 +105,15 @@ class RoomModel {
     int? memberCount,
     String? category,
     List<String>? tags,
+    List<String>? coHosts,
+    bool? isLocked,
+    int? slowModeSeconds,
   }) {
     return RoomModel(
       id: id ?? this.id,
       name: name ?? this.name,
       description: description ?? this.description,
+      rules: rules ?? this.rules,
       hostId: hostId ?? this.hostId,
       isLive: isLive ?? this.isLive,
       thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
@@ -113,6 +124,9 @@ class RoomModel {
       memberCount: memberCount ?? this.memberCount,
       category: category ?? this.category,
       tags: tags ?? this.tags,
+      coHosts: coHosts ?? this.coHosts,
+      isLocked: isLocked ?? this.isLocked,
+      slowModeSeconds: slowModeSeconds ?? this.slowModeSeconds,
     );
   }
 }

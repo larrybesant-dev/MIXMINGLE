@@ -1,3 +1,4 @@
+import '../../core/error_handler.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../services/agora_service.dart';
@@ -48,7 +49,8 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
       final data = jsonDecode(response.body);
       return data['token'] ?? '';
     } else {
-      throw Exception('Failed to fetch Agora token: ${response.body}');
+      ErrorHandler.handle('Failed to fetch Agora token: ${response.body}');
+      return '';
     }
   }
 

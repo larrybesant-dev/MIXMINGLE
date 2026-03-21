@@ -9,16 +9,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Connect to Firestore emulator in dev mode only
-  if (currentEnv == Environment.dev) {
-    // ignore: avoid_print
-    print('Connecting to Firestore emulator...');
-    FirebaseFirestore.instance.useFirestoreEmulator('localhost', 8080);
-  }
+  // Firestore emulator disabled: always use production Firebase
 
   runApp(const ProviderScope(child: MixVyApp()));
 }

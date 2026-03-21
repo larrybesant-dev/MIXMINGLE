@@ -45,6 +45,28 @@
 			"presentation": {
 				"reveal": "silent"
 			}
+		},
+		{
+			"label": "Run Flutter app",
+			"type": "shell",
+			"command": "flutter run",
+			"args": [
+				"-d",
+				"chrome"
+			],
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Run Flutter app",
+			"type": "shell",
+			"command": "flutter run",
+			"args": [
+				"-d",
+				"chrome"
+			],
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

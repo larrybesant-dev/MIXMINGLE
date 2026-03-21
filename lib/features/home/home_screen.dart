@@ -95,7 +95,13 @@ class _HomeFeedBody extends StatelessWidget {
           const Text('Live Posts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           postsAsync.when(
             data: (posts) => posts.isEmpty
-                ? const Text('No posts yet.')
+                ? Column(
+                    children: const [
+                      Icon(Icons.forum, size: 48, color: Colors.grey),
+                      SizedBox(height: 8),
+                      Text('No posts yet. Start the conversation!'),
+                    ],
+                  )
                 : Column(children: posts.map((p) => _postCard(p)).toList()),
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => midnightErrorCard('Error: $e'),
@@ -104,7 +110,13 @@ class _HomeFeedBody extends StatelessWidget {
           const Text('Active Rooms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           roomsAsync.when(
             data: (rooms) => rooms.isEmpty
-                ? const Text('No active rooms.')
+                ? Column(
+                    children: const [
+                      Icon(Icons.meeting_room, size: 48, color: Colors.grey),
+                      SizedBox(height: 8),
+                      Text('No active rooms. Create one to get started!'),
+                    ],
+                  )
                 : Column(children: rooms.map((r) => _roomCard(r)).toList()),
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => midnightErrorCard('Error: $e'),
@@ -113,10 +125,16 @@ class _HomeFeedBody extends StatelessWidget {
           const Text('Upcoming Events', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
           eventsAsync.when(
             data: (events) => events.isEmpty
-                ? const Text('No upcoming events.')
+                ? Column(
+                    children: const [
+                      Icon(Icons.event_busy, size: 48, color: Colors.grey),
+                      SizedBox(height: 8),
+                      Text('No upcoming events. Check back soon!'),
+                    ],
+                  )
                 : Column(children: events.map((e) => _eventCard(e)).toList()),
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => midnightErrorCard('Error: $e'),
           ),
         ],
       ),
@@ -155,7 +173,7 @@ Widget midnightErrorCard(String message) => Card(
 // Card widget for rooms
 Widget _roomCard(RoomModel r) => Card(
       child: ListTile(
-        // TODO: Fix: r.name ?? 'Room'
+        title: Text(r.name.isNotEmpty ? r.name : 'Untitled Room'),
         subtitle: Text('Host: ${r.hostId}'),
         trailing: const Icon(Icons.circle, color: Colors.green, size: 12),
       ),
@@ -164,7 +182,9 @@ Widget _roomCard(RoomModel r) => Card(
 // Card widget for events (dynamic fallback)
 Widget _eventCard(dynamic e) => Card(
       child: ListTile(
-        // TODO: Fix: e is EventModel ? (e.title ?? 'Event') : e.toString()
+        title: e is EventModel
+            ? Text(e.title?.isNotEmpty == true ? e.title! : 'Untitled Event')
+            : Text(e.toString()),
         subtitle: e is EventModel ? Text('Host: ${e.hostId} • ${e.date}') : null,
       ),
     );

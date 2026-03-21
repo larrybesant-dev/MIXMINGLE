@@ -1,3 +1,4 @@
 enum Environment { dev, prod }
 
-const Environment currentEnv = Environment.dev;
+// Force production environment for all builds
+const Environment currentEnv = Environment.prod;

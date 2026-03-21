@@ -36,13 +36,31 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final user = ref.read(userProvider);
     if (user == null) return;
     final now = DateTime.now();
+    final roomDoc = await FirebaseFirestore.instance.collection('rooms').doc(widget.roomId).get();
+    final isLocked = (roomDoc.data()?['isLocked'] ?? false) as bool;
+    if (isLocked) {
+      // Room is locked, do not join
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          Navigator.of(context).pop();
+        });
+      }
+      return;
+    }
     final docRef = FirebaseFirestore.instance.collection('rooms').doc(widget.roomId).collection('participants').doc(user.id);
     final doc = await docRef.get();
     if (doc.exists) {
+      final data = doc.data() as Map<String, dynamic>;
+      if (data['isBanned'] == true) {
+        if (mounted) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            Navigator.of(context).pop();
+          });
+        }
+        return;
+      }
       await docRef.update({
         'lastActiveAt': now,
-        'isMuted': false,
-        'isBanned': false,
       });
     } else {
       await docRef.set({
@@ -80,7 +98,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final currentParticipantAsync = ref.watch(currentParticipantProvider({'roomId': widget.roomId, 'userId': user.id}));
     final participantsAsync = ref.watch(participantsStreamProvider(widget.roomId));
     final messageStreamAsync = ref.watch(messageStreamProvider(widget.roomId));
-    // Use sendMessageProvider(widget.roomId) directly in the widget tree
+    final participantCountAsync = ref.watch(participantCountProvider(widget.roomId));
+    final hostAsync = ref.watch(hostProvider(widget.roomId));
+    final coHostsAsync = ref.watch(coHostsProvider(widget.roomId));
     final hostControls = ref.read(hostControlsProvider);
 
     return currentParticipantAsync.when(
@@ -101,7 +121,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             if (participant?.isBanned == true) {
               return const Scaffold(body: Center(child: Text('You are banned from this room.')));
             }
-      final sendMessage = ref.read(sendMessageProvider(widget.roomId));
+            final sendMessage = ref.read(sendMessageProvider(widget.roomId));
             if (isLocked && !isHost && !isCohost) {
               return const Scaffold(body: Center(child: Text('Room is locked.')));
             }
@@ -112,42 +132,37 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   if (isHost)
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Row(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: Text('Host Controls', style: Theme.of(context).textTheme.titleMedium),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.lock),
-                            color: isLocked ? Colors.red : Colors.grey,
-                            tooltip: isLocked ? 'Unlock Room' : 'Lock Room',
-                            onPressed: () => hostControls.setLock(widget.roomId, !isLocked),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.timer),
-                            tooltip: 'Set Slow Mode',
-                            onPressed: () async {
-                              final controller = TextEditingController(text: slowModeSeconds.toString());
-                              final result = await showDialog<int>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Set Slow Mode (seconds)'),
-                                  content: TextField(
-                                    controller: controller,
-                                    keyboardType: TextInputType.number,
-                                    decoration: const InputDecoration(hintText: 'Seconds'),
-                                  ),
-                                  actions: [
-                                    TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(context, int.tryParse(controller.text)),
-                                      child: const Text('Set'),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (result != null) await hostControls.setSlowMode(widget.roomId, result);
-                            },
+                          Text('Host Controls', style: Theme.of(context).textTheme.titleMedium),
+                          Row(
+                            children: [
+                              Text('Slow Mode:'),
+                              const SizedBox(width: 8),
+                              DropdownButton<int>(
+                                value: slowModeSeconds,
+                                items: const [
+                                  DropdownMenuItem(value: 0, child: Text('Off')),
+                                  DropdownMenuItem(value: 5, child: Text('5s')),
+                                  DropdownMenuItem(value: 10, child: Text('10s')),
+                                  DropdownMenuItem(value: 30, child: Text('30s')),
+                                ],
+                                onChanged: (val) {
+                                  if (val != null) hostControls.toggleSlowMode(widget.roomId, val);
+                                },
+                              ),
+                              const SizedBox(width: 24),
+                              Text('Room:'),
+                              const SizedBox(width: 8),
+                              Switch(
+                                value: isLocked,
+                                onChanged: (_) => hostControls.toggleLockRoom(widget.roomId),
+                                activeColor: Colors.red,
+                                inactiveThumbColor: Colors.green,
+                              ),
+                              Text(isLocked ? 'Locked' : 'Open'),
+                            ],
                           ),
                         ],
                       ),
@@ -166,12 +181,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   IconButton(
                                     icon: Icon(p.isMuted ? Icons.volume_off : Icons.volume_up),
                                     tooltip: p.isMuted ? 'Unmute' : 'Mute',
-                                    onPressed: () => hostControls.muteUser(widget.roomId, p.userId, !p.isMuted),
+                                    onPressed: () => p.isMuted
+                                        ? hostControls.unmuteUser(widget.roomId, p.userId)
+                                        : hostControls.muteUser(widget.roomId, p.userId),
                                   ),
                                   IconButton(
                                     icon: Icon(p.isBanned ? Icons.block : Icons.check),
                                     tooltip: p.isBanned ? 'Unban' : 'Ban',
-                                    onPressed: () => hostControls.banUser(widget.roomId, p.userId, !p.isBanned),
+                                    onPressed: () => p.isBanned
+                                        ? hostControls.unbanUser(widget.roomId, p.userId)
+                                        : hostControls.banUser(widget.roomId, p.userId),
                                   ),
                                 ],
                               ),
@@ -182,6 +201,51 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         error: (e, _) => Center(child: Text('Error: $e')),
                       ),
                     ),
+                  if (!isHost) ...[
+                    // Presence header and avatar strip
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      child: Row(
+                        children: [
+                          participantCountAsync.when(
+                            data: (count) => Text(
+                              '$count in room',
+                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            loading: () => const SizedBox(width: 60, child: LinearProgressIndicator()),
+                            error: (e, _) => const Text('—'),
+                          ),
+                          const Spacer(),
+                          hostAsync.when(
+                            data: (host) => host != null
+                                ? CircleAvatar(
+                                    radius: 16,
+                                    backgroundColor: Colors.amber,
+                                    child: Text('H', style: TextStyle(color: Colors.white)),
+                                  )
+                                : const SizedBox.shrink(),
+                            loading: () => const CircleAvatar(radius: 16, backgroundColor: Colors.grey),
+                            error: (e, _) => const SizedBox.shrink(),
+                          ),
+                          const SizedBox(width: 8),
+                          coHostsAsync.when(
+                            data: (cohosts) => Row(
+                              children: cohosts.map((cohost) => Padding(
+                                padding: const EdgeInsets.only(left: 2.0),
+                                child: CircleAvatar(
+                                  radius: 14,
+                                  backgroundColor: Colors.blue,
+                                  child: Text('C', style: TextStyle(color: Colors.white)),
+                                ),
+                              )).toList(),
+                            ),
+                            loading: () => const SizedBox(width: 32, child: LinearProgressIndicator()),
+                            error: (e, _) => const SizedBox.shrink(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                   Expanded(
                     child: messageStreamAsync.when(
                       data: (messages) {

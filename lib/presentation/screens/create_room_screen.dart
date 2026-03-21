@@ -1,17 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/auth/controllers/auth_controller.dart';
 
-class CreateRoomScreen extends StatelessWidget {
-  const CreateRoomScreen({super.key});
+class CreateRoomScreen extends ConsumerStatefulWidget {
+  CreateRoomScreen({Key? key}) : super(key: key);
+
+  @override
+  ConsumerState<CreateRoomScreen> createState() => _CreateRoomScreenState();
+}
+
+class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final titleController = TextEditingController();
+  final descriptionController = TextEditingController();
+  final rulesController = TextEditingController();
+  final slowModeController = TextEditingController(text: '0');
+  bool isLoading = false;
+
   @override
   Widget build(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
-    final titleController = TextEditingController();
-    final descriptionController = TextEditingController();
-    final rulesController = TextEditingController();
-    final slowModeController = TextEditingController(text: '0');
-    bool isLoading = false;
-
+    final authState = ref.watch(authControllerProvider);
+    final userId = authState.uid;
     return Scaffold(
       appBar: AppBar(title: const Text('Create Live Room')),
       body: Padding(
@@ -58,7 +68,11 @@ class CreateRoomScreen extends StatelessWidget {
                       : () async {
                           if (!_formKey.currentState!.validate()) return;
                           setState(() => isLoading = true);
-                          final userId = 'hostId'; // TODO: Replace with real user ID from auth
+                          if (userId == null) {
+                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('You must be logged in to create a room.')));
+                            setState(() => isLoading = false);
+                            return;
+                          }
                           final now = DateTime.now();
                           final slowMode = int.tryParse(slowModeController.text) ?? 0;
                           await FirebaseFirestore.instance.collection('rooms').add({
