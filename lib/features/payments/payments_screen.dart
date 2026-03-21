@@ -1,15 +1,12 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'stripe_web_payment_widget.dart';
 import 'payments_controller.dart';
-import 'package:flutter_stripe/flutter_stripe.dart';
-import '../../services/payment_api.dart';
 import '../../config/payment_constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class PaymentsScreen extends ConsumerWidget {
-  const PaymentsScreen({Key? key}) : super(key: key);
+  const PaymentsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -31,9 +28,6 @@ class PaymentsScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
-                  child: paymentState.isLoading
-                      ? const CircularProgressIndicator()
-                      : const Text('Start Payment'),
                   onPressed: paymentState.isLoading
                       ? null
                       : () async {
@@ -44,6 +38,9 @@ class PaymentsScreen extends ConsumerWidget {
                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment successful')));
                           }
                         },
+                  child: paymentState.isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Start Payment'),
                 ),
                 const SizedBox(height: 16),
                 Text('Pay securely with Stripe'),

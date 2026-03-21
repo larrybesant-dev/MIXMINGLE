@@ -5,7 +5,7 @@ import 'package:flutter_stripe/flutter_stripe.dart';
 class SendPaymentPage extends StatefulWidget {
   final String recipientId;
   final String recipientName;
-  const SendPaymentPage({Key? key, required this.recipientId, required this.recipientName}) : super(key: key);
+  const SendPaymentPage({super.key, required this.recipientId, required this.recipientName});
 
   @override
   State<SendPaymentPage> createState() => _SendPaymentPageState();
@@ -48,6 +48,7 @@ class _SendPaymentPageState extends State<SendPaymentPage> {
         recipientId: widget.recipientId,
         amount: amount,
       );
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment sent!')));
     } catch (e) {
       setState(() { _error = e.toString(); });
@@ -83,7 +84,14 @@ class _SendPaymentPageState extends State<SendPaymentPage> {
               button: true,
               child: ElevatedButton(
                 onPressed: _loading ? null : _sendPayment,
-                child: _loading ? const CircularProgressIndicator() : Text('Send Payment', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 20 : 18)),
+                child: _loading
+                    ? const CircularProgressIndicator()
+                    : Text(
+                        'Send Payment',
+                        style: TextStyle(
+                          fontSize: MediaQuery.of(context).size.width > 400 ? 20 : 18,
+                        ),
+                      ),
               ),
             ),
           ],

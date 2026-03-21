@@ -41,6 +41,7 @@ class ModerationActions extends ConsumerWidget {
             },
             child: const Text('Block User'),
           ),
+        ),
       ],
     );
   }

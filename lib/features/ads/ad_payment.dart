@@ -1,3 +1,4 @@
+import 'package:flutter_stripe/flutter_stripe.dart';
 // Handles business ad payments
 import '../payments/payment_intent_service.dart';
 class AdPayment {
@@ -10,8 +11,18 @@ class AdPayment {
     if (clientSecret == null) {
       throw Exception('Failed to create payment intent');
     }
-    // TODO: Present Stripe payment sheet using clientSecret
-    // Example: Stripe.instance.initPaymentSheet(...)
-    // Stripe payment sheet logic should be implemented here
+    // Present Stripe payment sheet using clientSecret
+    try {
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'MixVy',
+        ),
+      );
+      await Stripe.instance.presentPaymentSheet();
+    } catch (e) {
+      // Handle payment sheet errors
+      rethrow;
+    }
   }
 }

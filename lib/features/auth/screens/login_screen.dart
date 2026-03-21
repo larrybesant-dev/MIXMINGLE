@@ -66,8 +66,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final controller = ref.read(authControllerProvider.notifier);
     await controller.login(_emailController.text.trim(), _passwordController.text.trim());
-    final authState = ref.read(authControllerProvider);
     if (!mounted) return;
+    final authState = ref.read(authControllerProvider);
     if (authState.error == null) {
       Navigator.of(context).pushReplacementNamed('/home');
     }

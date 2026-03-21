@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../services/agora_service.dart';
 
 class SpeedDatingScreen extends StatefulWidget {
-  const SpeedDatingScreen({Key? key}) : super(key: key);
+  const SpeedDatingScreen({super.key});
 
   @override
   State<SpeedDatingScreen> createState() => _SpeedDatingScreenState();
@@ -34,8 +34,8 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
               label: 'Join Room button',
               button: true,
               child: ElevatedButton(
-                child: Text('Join Room', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 20 : 18)),
                 onPressed: joinRoom,
+                child: Text('Join Room', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 20 : 18)),
               ),
             ),
           if (_inCall)

@@ -6,11 +6,11 @@ class StripeWebPaymentWidget extends StatelessWidget {
   final String currency;
 
   const StripeWebPaymentWidget({
-    Key? key,
+    super.key,
     required this.publishableKey,
     required this.amount,
     required this.currency,
-  }) : super(key: key);
+  });
 
   void _pay() {
     // Call Stripe.js via JS interop

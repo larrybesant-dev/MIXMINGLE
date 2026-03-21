@@ -16,7 +16,6 @@ import '../features/events/event_detail_screen.dart';
 
 // final supabase = Supabase.instance.client;
 
-import 'package:flutter/material.dart';
 import 'package:mixvy/features/auth/screens/login_screen.dart';
 import '../features/home/home_screen.dart';
 
