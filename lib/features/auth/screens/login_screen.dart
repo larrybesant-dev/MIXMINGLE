@@ -10,6 +10,26 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
+  @override
+  void initState() {
+    super.initState();
+    ref.listen<AuthState>(
+      authControllerProvider,
+      (previous, next) {
+        if (next.error == null && previous?.uid != next.uid && next.uid != null && mounted) {
+          Navigator.of(context).pushReplacementNamed('/home');
+        }
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -66,10 +86,5 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     final controller = ref.read(authControllerProvider.notifier);
     await controller.login(_emailController.text.trim(), _passwordController.text.trim());
-    if (!mounted) return;
-    final authState = ref.read(authControllerProvider);
-    if (authState.error == null) {
-      Navigator.of(context).pushReplacementNamed('/home');
-    }
   }
 }
