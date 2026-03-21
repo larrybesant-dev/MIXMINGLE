@@ -40,7 +40,7 @@ class RoomInfoPanel extends ConsumerWidget {
               Text('Co-Hosts', style: Theme.of(context).textTheme.titleSmall),
               Wrap(
                 spacing: 8,
-                children: coHostIds.map((id) => UserAvatarName(userId: id ?? '')).toList(),
+                children: coHostIds.map((id) => UserAvatarName(userId: id)).toList(),
               ),
             ],
             const SizedBox(height: 16),
@@ -53,10 +53,10 @@ class RoomInfoPanel extends ConsumerWidget {
               loading: () => const CircularProgressIndicator(),
               error: (e, _) => Text('Error loading participants: $e'),
             ),
-            if ((room.rules ?? '').isNotEmpty) ...[
+            if (room.rules != null && room.rules!.isNotEmpty) ...[
               const SizedBox(height: 16),
               Text('Room Rules', style: Theme.of(context).textTheme.titleSmall),
-              Text(room.rules ?? '', style: Theme.of(context).textTheme.bodySmall),
+              Text(room.rules!, style: Theme.of(context).textTheme.bodySmall),
             ],
             if (room.isLocked && !isMember) ...[
               const SizedBox(height: 24),
