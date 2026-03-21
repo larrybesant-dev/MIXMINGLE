@@ -1,5 +1,4 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
-
 part of 'test_freezed_model.dart';
 
 // **************************************************************************

@@ -1,4 +1,4 @@
-import '../models/user_model.dart';
+import '../../models/models.dart';
 
 abstract class UserRepository {
   Future<UserModel?> getUser(String uid);

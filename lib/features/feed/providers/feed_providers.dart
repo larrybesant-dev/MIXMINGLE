@@ -4,7 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../repository/feed_repository.dart';
 import '../models/post_model.dart';
 import '../models/room_model.dart';
-import '../models/event_model.dart';
+import '../../models/models.dart';
 
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
