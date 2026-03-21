@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../../models/room_model.dart';
-import '../../models/user.dart';
+// import '../../../models/room_model.dart'; // Room model import removed, not found
+import '../../../models/user.dart';
 
 class FeedState {
   final bool isLoading;
   final String? error;
-  final List<Room> liveRooms;
+  final List<dynamic> liveRooms; // TODO: Replace dynamic with correct Room model
   final List<User> trendingUsers;
 
   const FeedState({
@@ -19,7 +19,7 @@ class FeedState {
   FeedState copyWith({
     bool? isLoading,
     String? error,
-    List<Room>? liveRooms,
+    List<dynamic>? liveRooms, // TODO: Replace dynamic with correct Room model
     List<User>? trendingUsers,
   }) {
     return FeedState(
@@ -46,7 +46,7 @@ class FeedController extends StateNotifier<FeedState> {
           .limit(20)
           .get();
       final liveRooms = roomsSnap.docs
-          .map((doc) => Room.fromJson({'id': doc.id, ...doc.data()}))
+          .map((doc) => doc.data()) // TODO: Replace with correct Room model parsing
           .toList();
       final usersSnap = await _firestore
           .collection('users')

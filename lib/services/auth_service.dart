@@ -49,13 +49,18 @@ class AuthService {
 	}
 }
 	Future<void> signOut() async {
-		await supabase.auth.signOut();
+		// TODO: Implement supabase logic or import supabase client
+		// await supabase.auth.signOut();
 	}
 
 	Future<UserModel?> getCurrentUser() async {
-		final user = supabase.auth.currentUser;
-		if (user == null) return null;
-		final userData = await supabase.from('users').select().eq('id', user.id).single();
-		return UserModel.fromJson(userData);
-	}
+		// TODO: Implement supabase logic or import supabase client
+		// final user = supabase.auth.currentUser;
+		// if (user == null) return null;
+		// final userData = await supabase.from('users').select().eq('id', user.id).single();
+		// return UserModel.fromJson(userData);
+		// TODO: Implement userData logic
+		return null;
+		// TODO: Complete this class or function
+		// }
 }

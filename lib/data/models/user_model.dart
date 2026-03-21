@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart'; // For Timestamp
-import 'package:flutter/material.dart'; // For Widget, VoidCallback
+// import 'package:flutter/material.dart'; // Removed unused import
 // Plain Dart UserModel for Firestore compatibility. Freezed removed.
 class UserModel {
   final String? id;

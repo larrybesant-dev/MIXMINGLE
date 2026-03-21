@@ -1,6 +1,7 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../services/presence_service.dart';
+// import 'package:flutter_riverpod/flutter_riverpod.dart'; // Unused import
+// import '../../services/presence_service.dart'; // Unused import
 
-final presenceServiceProvider = Provider<PresenceService>((ref) {
-  return PresenceService();
-});
+// TODO: Implement PresenceService and uncomment below
+// final presenceServiceProvider = Provider<PresenceService>((ref) {
+//   return PresenceService();
+// });

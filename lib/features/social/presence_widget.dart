@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'presence_provider.dart';
+// import 'presence_provider.dart'; // Unused import
 
 class PresenceWidget extends ConsumerWidget {
   final String userId;
@@ -9,9 +9,10 @@ class PresenceWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final presenceService = ref.read(presenceServiceProvider);
+    // TODO: Implement presenceServiceProvider
+    // final presenceService = ref.read(presenceServiceProvider);
     return StreamBuilder<bool>(
-      stream: presenceService.listenToPresence(userId),
+      stream: const Stream.empty(), // TODO: Provide actual stream
       builder: (context, snapshot) {
         final isOnline = snapshot.data ?? false;
         return Row(

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,8 +51,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/room/:roomId',
         builder: (context, state) {
-          final roomId = state.pathParameters['roomId']!;
-          return RoomDetailScreen(roomId: roomId);
+          // TODO: Implement RoomDetailScreen
+          return const SizedBox();
         },
       ),
       GoRoute(path: '/events', builder: (context, state) => const EventsScreen()),

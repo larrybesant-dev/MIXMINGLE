@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/feed/providers/feed_providers.dart';
-import '../../models/room_model.dart';
+// import '../../models/room_model.dart'; // Removed unused import
 import '../../widgets/room_tile.dart';
 
 class RoomsScreen extends ConsumerWidget {

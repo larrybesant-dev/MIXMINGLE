@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../models/room.dart';
+// import '../../../models/room_model.dart'; // Unused import removed
 
 class LiveRoomCard extends StatelessWidget {
-  final Room room;
+  final dynamic room; // TODO: Replace dynamic with correct Room model
   final VoidCallback onTap;
 
   const LiveRoomCard({required this.room, required this.onTap, Key? key}) : super(key: key);
