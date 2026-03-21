@@ -7,6 +7,8 @@ import '../feed/models/post_model.dart';
 import '../../models/room_model.dart';
 import 'package:mixvy/models/models.dart';
 
+import 'package:go_router/go_router.dart';
+
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
@@ -38,11 +40,11 @@ class HomeScreen extends ConsumerWidget {
           ),
           IconButton(
             icon: const Icon(Icons.notifications),
-            onPressed: () => Navigator.pushNamed(context, '/notifications'),
+            onPressed: () => context.go('/notifications'),
           ),
           IconButton(
             icon: const Icon(Icons.chat),
-            onPressed: () => Navigator.pushNamed(context, '/chats'),
+            onPressed: () => context.go('/chats'),
           ),
         ],
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
+import 'package:go_router/go_router.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -42,7 +43,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _localError = authState.error;
     });
     if (authState.error == null && authState.uid != null) {
-      Navigator.of(context).pushReplacementNamed('/login');
+      // Use GoRouter for navigation
+      context.go('/login');
     }
   }
 

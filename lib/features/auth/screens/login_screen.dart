@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 
+import 'package:go_router/go_router.dart';
+
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -25,11 +27,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-        ref.listen<AuthState>(authControllerProvider, (previous, next) {
-          if (next.error == null && previous?.uid != next.uid && next.uid != null && mounted) {
-            Navigator.of(context).pushReplacementNamed('/home');
-          }
-        });
+    ref.listen<AuthState>(authControllerProvider, (previous, next) {
+      if (next.error == null && previous?.uid != next.uid && next.uid != null && mounted) {
+        // Use GoRouter for navigation
+        context.go('/');
+      }
+    });
     final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
