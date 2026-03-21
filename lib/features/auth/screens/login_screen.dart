@@ -10,18 +10,7 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  @override
-  void initState() {
-    super.initState();
-    ref.listen<AuthState>(
-      authControllerProvider,
-      (previous, next) {
-        if (next.error == null && previous?.uid != next.uid && next.uid != null && mounted) {
-          Navigator.of(context).pushReplacementNamed('/home');
-        }
-      },
-    );
-  }
+
 
   @override
   void dispose() {
@@ -36,6 +25,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+        ref.listen<AuthState>(authControllerProvider, (previous, next) {
+          if (next.error == null && previous?.uid != next.uid && next.uid != null && mounted) {
+            Navigator.of(context).pushReplacementNamed('/home');
+          }
+        });
     final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
