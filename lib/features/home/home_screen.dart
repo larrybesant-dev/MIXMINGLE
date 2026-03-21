@@ -96,7 +96,7 @@ class _HomeFeedBody extends StatelessWidget {
                 ? const Text('No posts yet.')
                 : Column(children: posts.map((p) => _postCard(p)).toList()),
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => midnightErrorCard('Error: $e'),
           ),
           const SizedBox(height: 24),
           const Text('Active Rooms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -105,7 +105,7 @@ class _HomeFeedBody extends StatelessWidget {
                 ? const Text('No active rooms.')
                 : Column(children: rooms.map((r) => _roomCard(r)).toList()),
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => midnightErrorCard('Error: $e'),
           ),
           const SizedBox(height: 24),
           const Text('Upcoming Events', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -125,8 +125,28 @@ class _HomeFeedBody extends StatelessWidget {
 // Card widget for posts
 Widget _postCard(PostModel p) => Card(
       child: ListTile(
-        title: Text(p.text ?? 'Untitled'),
-        subtitle: Text('by ${p.userId} • ${p.createdAt}'),
+        title: Text(p.text),
+        subtitle: Text('by ${p.userId} • ${p.createdAt}'),
+      ),
+    );
+
+// Midnight Error Card pattern
+Widget midnightErrorCard(String message) => Card(
+      color: Colors.black87,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            const Icon(Icons.error, color: Colors.redAccent),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ],
+        ),
       ),
     );
 
