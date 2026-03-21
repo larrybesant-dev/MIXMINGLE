@@ -13,14 +13,30 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
   // Matchmaking and video call logic
   AgoraService? _agora;
   bool _inCall = false;
+  bool _muted = false;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
   Future<void> joinRoom() async {
     final roomRef = FirebaseFirestore.instance.collection('speed_dating_rooms').doc('room1');
     await roomRef.set({'participants': FieldValue.increment(1)}, SetOptions(merge: true));
     _agora = AgoraService();
-    await _agora!.initialize('YOUR_AGORA_APP_ID');
-    await _agora!.joinChannel('YOUR_TOKEN', 'room1', 0);
+    _agora!.onRemoteUserJoined = () => setState(() {});
+    _agora!.onRemoteUserLeft = () => setState(() {});
+    await _agora!.initialize('YOUR_AGORA_APP_ID'); // TODO: Replace with secure App ID
+    await _agora!.joinChannel('YOUR_TOKEN', 'room1', 0); // TODO: Replace with secure token
     setState(() {
       _inCall = true;
+    });
+  }
+
+  Future<void> leaveRoom() async {
+    await _agora?.leaveChannel();
+    setState(() {
+      _inCall = false;
     });
   }
   @override
@@ -38,14 +54,49 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
                 child: Text('Join Room', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 20 : 18)),
               ),
             ),
-          if (_inCall)
+          if (_inCall && _agora != null)
             Expanded(
-              child: Center(
-                child: Semantics(
-                  label: 'Video Call UI',
-                  child: Text('Video Call UI Placeholder', style: TextStyle(fontSize: MediaQuery.of(context).size.width > 400 ? 20 : 18)),
-                ),
-                // Replace with Agora video widget if needed
+              child: Stack(
+                children: [
+                  // Remote video(s)
+                  if (_agora!.remoteUids.isNotEmpty)
+                    ..._agora!.remoteUids.map((uid) => Positioned.fill(child: _agora!.getRemoteView(uid))).toList()
+                  else
+                    Center(child: Text('Waiting for partner...')),
+                  // Local video (small preview)
+                  Positioned(
+                    right: 16,
+                    bottom: 16,
+                    width: 120,
+                    height: 160,
+                    child: Container(
+                      decoration: BoxDecoration(border: Border.all(color: Colors.white, width: 2), borderRadius: BorderRadius.circular(8)),
+                      child: _agora!.getLocalView(),
+                    ),
+                  ),
+                  // Call controls
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconButton(
+                          icon: Icon(_muted ? Icons.mic_off : Icons.mic, color: Colors.white),
+                          onPressed: () async {
+                            setState(() => _muted = !_muted);
+                            await _agora!.mute(_muted);
+                          },
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.call_end, color: Colors.red),
+                          onPressed: leaveRoom,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           const SizedBox(height: 16),
