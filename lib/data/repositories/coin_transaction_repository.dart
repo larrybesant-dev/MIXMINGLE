@@ -1,4 +1,4 @@
-import '../models/coin_transaction_model.dart';
+import '../../models/coin_transaction_model.dart';
 
 abstract class CoinTransactionRepository {
   Future<List<CoinTransactionModel>> getTransactions(String userId);

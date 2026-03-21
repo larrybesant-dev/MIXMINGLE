@@ -1,3 +1,4 @@
+// Removed: Use lib/models/room_model.dart instead.
 import 'package:freezed_annotation/freezed_annotation.dart';
 part 'room_model.freezed.dart';
 part 'room_model.g.dart';

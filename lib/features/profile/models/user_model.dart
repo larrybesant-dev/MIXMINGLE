@@ -61,4 +61,5 @@ class UserModel {
       displayName: map['displayName'],
     );
   }
+// Removed: Use lib/models/user_model.dart instead.
 }

@@ -6,7 +6,7 @@ class RoomModel {
   final String name;
   final String hostId;
   final String? description;
-  final List<String> members;
+  // Stubbed for compatibility. Do not use.
   final bool isLive;
   final DateTime createdAt;
 
@@ -43,5 +43,5 @@ class RoomModel {
       };
 
   factory RoomModel.fromFirestore(DocumentSnapshot doc) =>
-      RoomModel.fromJson(doc.data() as Map<String, dynamic>);
+    // Legacy RoomModel file. No longer used. All logic now in lib/models/room_model.dart
 }

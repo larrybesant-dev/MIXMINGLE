@@ -21,14 +21,14 @@ class FeedRepository {
 
   Stream<List<RoomModel>> roomsStream() {
     return _db
-        .collection('rooms')
-        .where('active', isEqualTo: true)
-        .orderBy('createdAt', descending: true)
-        .limit(50)
-        .snapshots()
-        .map((snap) => snap.docs
-            .map((d) => RoomModel.fromDoc(d.id, d.data()))
-            .toList());
+      .collection('rooms')
+      .where('active', isEqualTo: true)
+      .orderBy('createdAt', descending: true)
+      .limit(50)
+      .snapshots()
+      .map((snap) => snap.docs
+        .map((d) => RoomModel.fromJson(d.data()))
+        .toList());
   }
 
   Stream<List<EventModel>> eventsStream() {

@@ -11,14 +11,24 @@ void main() {
     });
 
     test('addRoom adds a room', () {
-      final room = RoomModel(id: 'room1');
+      final room = RoomModel(
+        id: 'room1',
+        name: 'Test Room',
+        hostId: 'host1',
+        createdAt: DateTime.now(),
+      );
       controller.addRoom(room);
       expect(controller.state.length, 1);
       expect(controller.state.first.id, 'room1');
     });
 
     test('removeRoom removes a room', () {
-      final room = RoomModel(id: 'room1');
+      final room = RoomModel(
+        id: 'room1',
+        name: 'Test Room',
+        hostId: 'host1',
+        createdAt: DateTime.now(),
+      );
       controller.addRoom(room);
       controller.removeRoom('room1');
       expect(controller.state.isEmpty, true);

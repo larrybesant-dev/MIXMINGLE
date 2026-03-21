@@ -11,22 +11,42 @@ void main() {
     });
 
     test('createRoom sets state', () {
-      final room = RoomModel(id: 'room1');
+      final room = RoomModel(
+        id: 'room1',
+        name: 'Test Room',
+        hostId: 'host1',
+        createdAt: DateTime.now(),
+      );
       controller.createRoom(room);
       expect(controller.state?.id, 'room1');
     });
 
     test('leaveRoom clears state', () {
-      final room = RoomModel(id: 'room1');
+      final room = RoomModel(
+        id: 'room1',
+        name: 'Test Room',
+        hostId: 'host1',
+        createdAt: DateTime.now(),
+      );
       controller.createRoom(room);
       controller.leaveRoom();
       expect(controller.state, isNull);
     });
 
     test('updateRoom updates state', () {
-      final room = RoomModel(id: 'room1');
+      final room = RoomModel(
+        id: 'room1',
+        name: 'Test Room',
+        hostId: 'host1',
+        createdAt: DateTime.now(),
+      );
       controller.createRoom(room);
-      final updatedRoom = RoomModel(id: 'room1');
+      final updatedRoom = RoomModel(
+        id: 'room1',
+        name: 'Updated Room',
+        hostId: 'host1',
+        createdAt: DateTime.now(),
+      );
       controller.updateRoom(updatedRoom);
       expect(controller.state?.id, 'room1');
     });

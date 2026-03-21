@@ -153,7 +153,7 @@ Widget midnightErrorCard(String message) => Card(
 // Card widget for rooms
 Widget _roomCard(RoomModel r) => Card(
       child: ListTile(
-        title: Text(r.title ?? 'Room'),
+        title: Text(r.name ?? 'Room'),
         subtitle: Text('Host: ${r.hostId}'),
         trailing: const Icon(Icons.circle, color: Colors.green, size: 12),
       ),
