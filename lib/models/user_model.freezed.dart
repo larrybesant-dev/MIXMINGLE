@@ -297,3 +297,4 @@ abstract class _UserModel implements UserModel {
   _$$UserModelImplCopyWith<_$UserModelImpl> get copyWith =>
       throw _privateConstructorUsedError;
 }
+// Freezed file removed. No longer used. All logic now in lib/models/user_model.dart

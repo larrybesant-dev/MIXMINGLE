@@ -1,4 +1,4 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../models/models.dart';
+import '../../models/user_model.dart';
 
 final userProvider = StateProvider<UserModel?>((ref) => null);

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/presence_model.dart';
+import '../../models/presence_model.dart';
 
 abstract class PresenceRepository {
   Future<List<PresenceModel>> getPresence(String roomId);

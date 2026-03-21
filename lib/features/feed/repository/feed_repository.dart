@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/post_model.dart';
-import '../models/room_model.dart';
+import '../../../models/room_model.dart';
 import 'package:mixvy/models/models.dart';
 
 class FeedRepository {

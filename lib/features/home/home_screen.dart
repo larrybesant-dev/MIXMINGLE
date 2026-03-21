@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../feed/providers/feed_providers.dart';
 import '../feed/models/post_model.dart';
-import '../feed/models/room_model.dart';
+import '../../models/room_model.dart';
 import 'package:mixvy/models/models.dart';
 
 class HomeScreen extends ConsumerWidget {

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/room_model.dart';
+import '../../models/room_model.dart';
 
 abstract class RoomRepository {
   Future<List<RoomModel>> getRooms();
