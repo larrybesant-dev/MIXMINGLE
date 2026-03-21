@@ -1,5 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/models.dart';
+import '../models/user_model.dart';
 
 class AuthService {
 	final supabase = Supabase.instance.client;
@@ -12,6 +12,7 @@ class AuthService {
 					'id': response.user!.id,
 					'username': username,
 					'email': email,
+					'createdAt': DateTime.now().toIso8601String(),
 				});
 				return UserModel(
 					id: response.user!.id,
@@ -21,6 +22,7 @@ class AuthService {
 					coinBalance: 0,
 					membershipLevel: 'Free',
 					followers: [],
+					createdAt: DateTime.now(),
 				);
 			}
 			return null;

@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/message_model.dart';
+import '../../models/message_model.dart';
 
 abstract class MessageRepository {
   Future<List<MessageModel>> getMessages(String roomId);

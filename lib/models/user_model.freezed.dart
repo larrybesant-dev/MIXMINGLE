@@ -17,13 +17,13 @@ mixin _$UserModel {
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   $UserModelCopyWith<UserModel> get copyWith =>
-      throw _privateConstructorUsedError;
+      throw _privateConstructorUsedError; // Stubbed legacy Freezed file. All logic now in lib/models/user_model.dart
 }
 
 /// @nodoc
 abstract class $UserModelCopyWith<$Res> {
   factory $UserModelCopyWith(UserModel value, $Res Function(UserModel) then) =
-      _$UserModelCopyWithImpl<$Res, UserModel>;
+      _$UserModelCopyWithImpl<$Res, UserModel>; // Stubbed legacy Freezed file. All logic now in lib/models/user_model.dart
   @useResult
   $Res call({
     String id,
@@ -80,7 +80,7 @@ class _$UserModelCopyWithImpl<$Res, $Val extends UserModel>
             coinBalance: null == coinBalance
                 ? _value.coinBalance
                 : coinBalance // ignore: cast_nullable_to_non_nullable
-                      as int,
+                // Stubbed legacy Freezed file. All logic now in lib/models/user_model.dart
             membershipLevel: null == membershipLevel
                 ? _value.membershipLevel
                 : membershipLevel // ignore: cast_nullable_to_non_nullable
