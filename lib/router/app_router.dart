@@ -14,7 +14,7 @@ import '../features/events/create_event_screen.dart';
 import '../features/events/event_detail_screen.dart';
 // Add more feature imports as needed
 
-// final supabase = Supabase.instance.client;
+// Supabase logic removed.
 
 import 'package:mixvy/features/auth/screens/login_screen.dart';
 import '../features/home/home_screen.dart';
