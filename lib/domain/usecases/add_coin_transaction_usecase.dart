@@ -1,4 +1,4 @@
-import '../../data/models/coin_transaction_model.dart';
+import '../../models/coin_transaction_model.dart';
 import '../../data/repositories/coin_transaction_repository.dart';
 
 class AddCoinTransactionUseCase {

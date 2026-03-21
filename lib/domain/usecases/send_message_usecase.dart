@@ -1,4 +1,4 @@
-import '../../data/models/message_model.dart';
+import '../../models/message_model.dart';
 import '../../data/repositories/message_repository.dart';
 
 class SendMessageUseCase {

@@ -1,6 +1,6 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixvy/data/models/room_model.dart';
+import 'package:mixvy/models/room_model.dart';
 
 final homeControllerProvider = StateNotifierProvider<HomeController, List<RoomModel>>(
   (ref) => HomeController(),

@@ -1,4 +1,4 @@
-import '../../data/models/presence_model.dart';
+import '../../models/presence_model.dart';
 import '../../data/repositories/presence_repository.dart';
 
 class UpdatePresenceUseCase {

@@ -1,4 +1,4 @@
-import '../../data/models/gift_model.dart';
+import '../../models/gift_model.dart';
 import '../../data/repositories/gift_repository.dart';
 
 class SendGiftUseCase {

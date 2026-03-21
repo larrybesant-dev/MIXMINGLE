@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/models/room_model.dart';
+import '../../models/room_model.dart';
 class RoomController extends StateNotifier<RoomModel?> {
   String? error;
   RoomController() : super(null);

@@ -1,4 +1,4 @@
-import '../../data/models/friend_model.dart';
+import '../../models/friend_model.dart';
 import '../../data/repositories/friend_repository.dart';
 
 class AddFriendUseCase {

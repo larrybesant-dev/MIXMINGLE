@@ -1,4 +1,4 @@
-import '../../data/models/room_model.dart';
+import '../../models/room_model.dart';
 import '../../data/repositories/room_repository.dart';
 
 class GetRoomsUseCase {

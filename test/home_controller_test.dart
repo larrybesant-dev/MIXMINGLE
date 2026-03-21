@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/home/home_controller.dart';
-import 'package:mixvy/data/models/room_model.dart';
+import 'package:mixvy/models/room_model.dart';
 
 void main() {
   group('HomeController', () {
