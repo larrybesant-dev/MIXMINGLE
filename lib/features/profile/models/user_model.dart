@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class UserModel {
   final String id;
   final String email;
@@ -32,7 +34,7 @@ class UserModel {
         interests: List<String>.from(json['interests'] ?? []),
         createdAt: (json['createdAt'] is Timestamp)
             ? (json['createdAt'] as Timestamp).toDate()
-            : DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+            : DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
         coinBalance: json['coinBalance'] ?? 0,
         membershipLevel: json['membershipLevel'] ?? 'basic',
         followers: List<String>.from(json['followers'] ?? []),
@@ -51,15 +53,6 @@ class UserModel {
         'followers': followers,
       };
 
-  factory UserModel.fromFirestore(DocumentSnapshot doc) =>
-      UserModel.fromJson(doc.data() as Map<String, dynamic>);
-
-  factory UserModel.fromMap(Map<String, dynamic> map) {
-    return UserModel(
-      uid: map['uid'],
-      email: map['email'],
-      displayName: map['displayName'],
-    );
-  }
-// Removed: Use lib/models/user_model.dart instead.
+  factory UserModel.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) =>
+      UserModel.fromJson(doc.data() ?? {});
 }
