@@ -24,11 +24,12 @@ class HomeScreen extends ConsumerWidget {
     // List of widgets for each tab
     final List<Widget> pages = [
       _HomeFeedBody(postsAsync: postsAsync, roomsAsync: roomsAsync, eventsAsync: eventsAsync),
-      // Placeholder widgets for other tabs
-      const Center(child: Text('Rooms')), // TODO: Replace with actual Rooms screen
-      const Center(child: Text('Events')), // TODO: Replace with actual Events screen
-      const Center(child: Text('Profile')), // TODO: Replace with actual Profile screen
+      // Real Rooms screen
+      const RoomsScreen(),
+      const EventsScreen(),
+      ProfileScreen(),
     ];
+
 
     return Scaffold(
       appBar: AppBar(

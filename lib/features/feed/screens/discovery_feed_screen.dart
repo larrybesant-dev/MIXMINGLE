@@ -59,7 +59,8 @@ class DiscoveryFeedScreen extends ConsumerWidget {
                       itemBuilder: (context, index) {
                         final room = feedState.liveRooms[index];
                         return LiveRoomCard(room: room, onTap: () {
-                          // TODO: Navigate to room
+                          // Navigate to room detail
+                          context.go('/room/${room.id}');
                         });
                       },
                     ),
@@ -85,7 +86,8 @@ class DiscoveryFeedScreen extends ConsumerWidget {
                       itemBuilder: (context, index) {
                         final user = feedState.trendingUsers[index];
                         return TrendingUserCard(user: user, onTap: () {
-                          // TODO: Navigate to user profile
+                          // Navigate to user profile
+                          context.go('/profile/${user.id}');
                         });
                       },
                     ),

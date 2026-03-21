@@ -36,10 +36,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
       GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
       GoRoute(path: '/profile/edit', builder: (context, state) => const EditProfileScreen()),
+      GoRoute(
+        path: '/profile/:userId',
+        builder: (context, state) {
+          final userId = state.pathParameters['userId']!;
+          return ProfileScreen(userId: userId);
+        },
+      ),
       GoRoute(path: '/payments', builder: (context, state) => const PaymentsScreen()),
       GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
       GoRoute(path: '/chats', builder: (context, state) => const ChatListScreen()),
       GoRoute(path: '/chat/:roomId', builder: (context, state) => const ChatScreen()),
+      GoRoute(
+        path: '/room/:roomId',
+        builder: (context, state) {
+          final roomId = state.pathParameters['roomId']!;
+          return RoomDetailScreen(roomId: roomId);
+        },
+      ),
       GoRoute(path: '/events', builder: (context, state) => const EventsScreen()),
       GoRoute(path: '/events/create', builder: (context, state) => const CreateEventScreen()),
       GoRoute(path: '/events/detail/:eventId', builder: (context, state) => const EventDetailScreen()),
