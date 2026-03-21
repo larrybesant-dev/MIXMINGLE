@@ -21,24 +21,18 @@ import 'package:mixvy/features/auth/screens/login_screen.dart';
 import '../features/home/home_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authControllerProvider);
   return GoRouter(
-    initialLocation: '/splash',
+    initialLocation: '/',
     redirect: (context, state) {
-      final authState = ref.read(authControllerProvider);
-      final isLoggedIn = authState.uid != null;
-      final isAuthRoute =
-        state.matchedLocation == '/login' ||
-        state.matchedLocation == '/register' ||
-        state.matchedLocation == '/splash';
-      if (!isLoggedIn && !isAuthRoute) {
-        return '/login';
-      }
-      if (isLoggedIn && isAuthRoute) {
-        return '/home';
-      }
+      final loggedIn = authState.uid != null;
+      final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+      if (!loggedIn && !isLoggingIn) return '/login';
+      if (loggedIn && isLoggingIn) return '/';
       return null;
     },
     routes: [
+      GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
       GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),

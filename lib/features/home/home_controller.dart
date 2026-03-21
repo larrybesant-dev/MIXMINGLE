@@ -1,21 +1,19 @@
 
-import '../../data/models/room_model.dart';
-import 'package:state_notifier/state_notifier.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mixvy/data/models/room_model.dart';
+
+final homeControllerProvider = StateNotifierProvider<HomeController, List<RoomModel>>(
+  (ref) => HomeController(),
+);
+
 class HomeController extends StateNotifier<List<RoomModel>> {
-    String? error;
-final homeControllerProvider =
-    StateNotifierProvider<HomeController, int>((ref) {
-  return HomeController();
-});
+  HomeController() : super([]);
 
-class HomeController extends void StateNotifier<int> {
-  HomeController() : super(0);
-
-  void increment() {
-    state++;
+  void addRoom(RoomModel room) {
+    state = [...state, room];
   }
 
-  void decrement() {
-    state--;
+  void removeRoom(String id) {
+    state = state.where((room) => room.id != id).toList();
   }
 }

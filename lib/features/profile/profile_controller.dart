@@ -1,4 +1,3 @@
-import 'package:state_notifier/state_notifier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class ProfileState {
@@ -45,26 +44,12 @@ class ProfileState {
   }
 }
 
+final profileControllerProvider = StateNotifierProvider<ProfileController, ProfileState>(
+  (ref) => ProfileController(),
+);
+
 class ProfileController extends StateNotifier<ProfileState> {
   ProfileController() : super(const ProfileState());
-
-  Future<void> fetchProfile(String userId) async {
-    state = state.copyWith(isLoading: true, error: null);
-    try {
-      // Replace with real API call
-      state = state.copyWith(
-        isLoading: false,
-        username: 'username',
-        email: 'user@example.com',
-        avatarUrl: '',
-        coinBalance: 0,
-        membershipLevel: 'Free',
-        followers: [],
-      );
-    } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
-    }
-  }
 
   Future<void> updateProfile(ProfileState profile) async {
     state = state.copyWith(isLoading: true, error: null);
@@ -75,10 +60,19 @@ class ProfileController extends StateNotifier<ProfileState> {
       state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
-}
 
-final profileControllerProvider =
-    StateNotifierProvider<ProfileController, ProfileState>((ref) {
-      return ProfileController();
-    });
-// Empty Dart file for profile_controller.dart
+  Future<void> fetchProfile(String userId) async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      // Replace with real API call
+      // For test, set mock data
+      state = state.copyWith(
+        isLoading: false,
+        username: 'username',
+        email: 'user@example.com',
+      );
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+}

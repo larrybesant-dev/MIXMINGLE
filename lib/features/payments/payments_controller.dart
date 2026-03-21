@@ -1,4 +1,3 @@
-import 'package:state_notifier/state_notifier.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class PaymentState {
@@ -32,6 +31,10 @@ class PaymentState {
     );
   }
 }
+
+final paymentsControllerProvider = StateNotifierProvider<PaymentController, PaymentState>(
+  (ref) => PaymentController(),
+);
 
 class PaymentController extends StateNotifier<PaymentState> {
   PaymentController() : super(const PaymentState());

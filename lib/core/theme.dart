@@ -7,10 +7,10 @@ ThemeData midnightCreativeTheme = ThemeData(
   primaryColor: const Color(0xFFAC8EFF),
   scaffoldBackgroundColor: const Color(0xFF0C0E12),
   fontFamily: 'Plus Jakarta Sans',
-  cardTheme: CardTheme(
+  cardTheme: CardThemeData(
     elevation: 0,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-    color: Colors.white.withOpacity(0.05),
+    color: Colors.white.withAlpha((0.05 * 255).toInt()),
   ),
   textTheme: const TextTheme(
     displayLarge: TextStyle(fontWeight: FontWeight.w800, fontSize: 32, letterSpacing: -1, color: Colors.white),
@@ -27,11 +27,14 @@ ThemeData midnightCreativeTheme = ThemeData(
   ),
   inputDecorationTheme: InputDecorationTheme(
     filled: true,
-    fillColor: Colors.white.withOpacity(0.05),
+    fillColor: Colors.white.withAlpha((0.05 * 255).toInt()),
     border: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
       borderSide: BorderSide.none,
     ),
   ),
 );
+
+ThemeData buildMidnightTheme() {
+  return midnightCreativeTheme;
 }

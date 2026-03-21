@@ -1,23 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// ...existing code...
 import '../router/app_router.dart';
-import '../theme/custom_theme.dart';
+import '../core/theme.dart';
 
-class MixVyApp extends StatelessWidget {
+class MixVyApp extends ConsumerWidget {
   const MixVyApp({super.key});
-  
-  RouterConfig<Object>? get appRouter => null;
 
   @override
-  Widget build(BuildContext context) {
-    return ProviderScope(
-      child: MaterialApp.router(
-        title: 'MixVy',
-        theme: customTheme,
-        routerConfig: appRouter,
-        debugShowCheckedModeBanner: false,
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(routerProvider);
+    return MaterialApp.router(
+      title: 'MixVy',
+      theme: buildMidnightTheme(),
+      routerConfig: router,
+      debugShowCheckedModeBanner: false,
     );
   }
 }
