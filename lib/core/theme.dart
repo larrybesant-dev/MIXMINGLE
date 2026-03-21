@@ -75,12 +75,10 @@ final ThemeData midnightCreativeTheme = ThemeData(
   colorScheme: const ColorScheme.dark(
     primary: Color(0xFFAC8EFF),
     secondary: Color(0xFF6C47FF),
-    surface: Color(0xFF181A20),
     surface: Color(0xFF0C0E12),
     error: Color(0xFFFF5A5A),
     onPrimary: Colors.white,
     onSecondary: Colors.white,
-    onSurface: Colors.white,
     onSurface: Colors.white,
     onError: Colors.white,
   ),
