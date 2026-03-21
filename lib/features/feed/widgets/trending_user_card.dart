@@ -5,7 +5,7 @@ class TrendingUserCard extends StatelessWidget {
   final User user;
   final VoidCallback onTap;
 
-  const TrendingUserCard({required this.user, required this.onTap, Key? key}) : super(key: key);
+  const TrendingUserCard({required this.user, required this.onTap, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,7 +16,7 @@ class TrendingUserCard extends StatelessWidget {
           CircleAvatar(
             radius: 36,
             backgroundImage: NetworkImage(user.avatarUrl),
-            backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+            backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: (0.2 * 255).round()),
           ),
           const SizedBox(height: 8),
           Text(

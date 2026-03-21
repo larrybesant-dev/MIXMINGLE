@@ -5,7 +5,7 @@ class LiveRoomCard extends StatelessWidget {
   final RoomModel room;
   final VoidCallback onTap;
 
-  const LiveRoomCard({required this.room, required this.onTap, Key? key}) : super(key: key);
+  const LiveRoomCard({required this.room, required this.onTap, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +18,7 @@ class LiveRoomCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.08),
+              color: Colors.black.withValues(alpha: (0.08 * 255).round()),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -33,7 +33,7 @@ class LiveRoomCard extends StatelessWidget {
               height: 80,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: (0.1 * 255).round()),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(Icons.videocam, size: 40, color: Colors.white70),
@@ -51,7 +51,7 @@ class LiveRoomCard extends StatelessWidget {
             Text(
               room.description ?? '',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: (0.7 * 255).round()),
                   ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
