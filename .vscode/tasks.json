@@ -32,6 +32,19 @@
 			"command": "flutter build web --release --base-href \"/\"",
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "Flutter Clean",
+			"type": "shell",
+			"command": "flutter",
+			"args": [
+				"clean"
+			],
+			"group": "build",
+			"problemMatcher": [],
+			"presentation": {
+				"reveal": "silent"
+			}
 		}
 	]
 }

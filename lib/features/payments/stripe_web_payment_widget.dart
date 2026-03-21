@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'dart:js' as js;
+import 'dart:js_interop' as js;
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 

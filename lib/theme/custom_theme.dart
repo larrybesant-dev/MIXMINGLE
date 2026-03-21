@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 final customTheme = ThemeData(
   brightness: Brightness.dark,
-  primaryColor: Colors.deepPurple,
   colorScheme: ColorScheme.dark(
     primary: Colors.deepPurple,
     surface: Colors.black,

@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 // Electric Velvet ThemeData for MixVy
 final ThemeData electricVelvetTheme = ThemeData(
   brightness: Brightness.dark,
-  primaryColor: const Color(0xFF6200EE), // #6200EE
   scaffoldBackgroundColor: const Color(0xFF18181A),
   colorScheme: ColorScheme.fromSeed(
     seedColor: const Color(0xFF6200EE),

@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 final ThemeData midnightCreativeTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
-  primaryColor: const Color(0xFFAC8EFF),
   scaffoldBackgroundColor: const Color(0xFF0C0E12),
   fontFamily: 'Plus Jakarta Sans',
   cardTheme: CardThemeData(

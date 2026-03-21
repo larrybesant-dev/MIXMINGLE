@@ -1,49 +1,107 @@
 
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 
 class RoomModel {
   final String id;
   final String name;
-  final String hostId;
   final String? description;
-  final List<String> members;
+  final String hostId;
   final bool isLive;
-  final DateTime createdAt;
+  final String? thumbnailUrl;
+  final Timestamp? createdAt;
+  final Timestamp? updatedAt;
+
+  // Members
+  final List<String> stageUserIds;
+  final List<String> audienceUserIds;
+
+  // Metadata
+  final int memberCount;
+  final String? category;
+  final List<String> tags;
 
   RoomModel({
     required this.id,
     required this.name,
     required this.hostId,
     this.description,
-    this.members = const [],
     this.isLive = false,
-    required this.createdAt,
+    this.thumbnailUrl,
+    this.createdAt,
+    this.updatedAt,
+    this.stageUserIds = const [],
+    this.audienceUserIds = const [],
+    this.memberCount = 0,
+    this.category,
+    this.tags = const [],
   });
 
-  factory RoomModel.fromJson(Map<String, dynamic> json) => RoomModel(
-        id: json['id'] ?? '',
-        name: json['name'] ?? json['title'] ?? '',
-        hostId: json['hostId'] ?? '',
-        description: json['description'],
-        members: List<String>.from(json['members'] ?? json['participantIds'] ?? []),
-        isLive: json['isLive'] ?? json['active'] ?? false,
-        createdAt: (json['createdAt'] is Timestamp)
-            ? (json['createdAt'] as Timestamp).toDate()
-            : DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-      );
+  factory RoomModel.fromJson(Map<String, dynamic> json) {
+    return RoomModel(
+      id: json['id'] ?? '',
+      name: json['name'] ?? 'Untitled Room',
+    RoomModel({
+      required this.id,
+      required this.name,
+      required this.hostId,
+      this.description,
+      this.isLive = false,
+      this.thumbnailUrl,
+      this.createdAt,
+      this.updatedAt,
+      this.stageUserIds = const [],
+      this.audienceUserIds = const [],
+      this.memberCount = 0,
+      this.category,
+      this.tags = const [],
+    });
+    return {
+      'name': name,
+      'description': description,
+      'hostId': hostId,
+      'isLive': isLive,
+      'thumbnailUrl': thumbnailUrl,
+      'createdAt': createdAt,
+      'updatedAt': updatedAt,
+      'stageUserIds': stageUserIds,
+      'audienceUserIds': audienceUserIds,
+      'memberCount': memberCount,
+      'category': category,
+      'tags': tags,
+    };
+  }
 
-  Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'hostId': hostId,
-        'description': description,
-        'members': members,
-        'isLive': isLive,
-        'createdAt': createdAt.toIso8601String(),
-      };
-
-  factory RoomModel.fromFirestore(DocumentSnapshot doc) =>
-      RoomModel.fromJson(doc.data() as Map<String, dynamic>);
+  RoomModel copyWith({
+    String? id,
+    String? name,
+    String? description,
+    String? hostId,
+    bool? isLive,
+    String? thumbnailUrl,
+    Timestamp? createdAt,
+    Timestamp? updatedAt,
+    List<String>? stageUserIds,
+    List<String>? audienceUserIds,
+    int? memberCount,
+    String? category,
+    List<String>? tags,
+  }) {
+    return RoomModel(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      description: description ?? this.description,
+      hostId: hostId ?? this.hostId,
+      isLive: isLive ?? this.isLive,
+      thumbnailUrl: thumbnailUrl ?? this.thumbnailUrl,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      stageUserIds: stageUserIds ?? this.stageUserIds,
+      audienceUserIds: audienceUserIds ?? this.audienceUserIds,
+      memberCount: memberCount ?? this.memberCount,
+      category: category ?? this.category,
+      tags: tags ?? this.tags,
+    );
+  }
 }
 
 
