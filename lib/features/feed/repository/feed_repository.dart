@@ -27,7 +27,7 @@ class FeedRepository {
       .limit(50)
       .snapshots()
       .map((snap) => snap.docs
-        .map((d) => RoomModel.fromJson(d.data()))
+        .map((d) => RoomModel.fromJson(d.data(), d.id))
         .toList());
   }
 

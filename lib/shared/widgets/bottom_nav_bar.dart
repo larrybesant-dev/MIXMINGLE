@@ -31,4 +31,3 @@ class BottomNavBar extends StatelessWidget {
 		);
 	}
 }
-export './bottom_nav_bar.dart';

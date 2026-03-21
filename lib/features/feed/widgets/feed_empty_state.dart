@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 class FeedEmptyState extends StatelessWidget {
   final String message;
 
-  const FeedEmptyState({required this.message, Key? key}) : super(key: key);
+  const FeedEmptyState({required this.message, super.key});
 
   @override
   Widget build(BuildContext context) {

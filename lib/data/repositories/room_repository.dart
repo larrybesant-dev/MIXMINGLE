@@ -16,14 +16,14 @@ class RoomRepositoryImpl implements RoomRepository {
   @override
   Future<List<RoomModel>> getRooms() async {
     final snapshot = await firestore.collection('rooms').get();
-    return snapshot.docs.map((doc) => RoomModel.fromJson(doc.data())).toList();
+    return snapshot.docs.map((doc) => RoomModel.fromJson(doc.data(), doc.id)).toList();
   }
 
   @override
   Future<RoomModel?> getRoom(String roomId) async {
     final doc = await firestore.collection('rooms').doc(roomId).get();
     if (!doc.exists) return null;
-    return RoomModel.fromJson(doc.data()!);
+    return RoomModel.fromJson(doc.data()!, doc.id);
   }
 
   @override

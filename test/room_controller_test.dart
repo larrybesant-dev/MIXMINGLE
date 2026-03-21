@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/room/room_controller.dart';
 import 'package:mixvy/models/room_model.dart';
@@ -15,7 +16,7 @@ void main() {
         id: 'room1',
         name: 'Test Room',
         hostId: 'host1',
-        createdAt: DateTime.now(),
+        createdAt: Timestamp.fromDate(DateTime.now()),
       );
       controller.createRoom(room);
       expect(controller.state?.id, 'room1');
@@ -26,7 +27,7 @@ void main() {
         id: 'room1',
         name: 'Test Room',
         hostId: 'host1',
-        createdAt: DateTime.now(),
+        createdAt: Timestamp.fromDate(DateTime.now()),
       );
       controller.createRoom(room);
       controller.leaveRoom();
@@ -38,14 +39,14 @@ void main() {
         id: 'room1',
         name: 'Test Room',
         hostId: 'host1',
-        createdAt: DateTime.now(),
+        createdAt: Timestamp.fromDate(DateTime.now()),
       );
       controller.createRoom(room);
       final updatedRoom = RoomModel(
         id: 'room1',
         name: 'Updated Room',
         hostId: 'host1',
-        createdAt: DateTime.now(),
+        createdAt: Timestamp.fromDate(DateTime.now()),
       );
       controller.updateRoom(updatedRoom);
       expect(controller.state?.id, 'room1');

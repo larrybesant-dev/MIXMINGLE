@@ -10,7 +10,7 @@ import '../widgets/feed_empty_state.dart';
 import '../widgets/feed_loading_shimmer.dart';
 
 class DiscoveryFeedScreen extends ConsumerWidget {
-  const DiscoveryFeedScreen({Key? key}) : super(key: key);
+  const DiscoveryFeedScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

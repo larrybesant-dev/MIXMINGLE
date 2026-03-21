@@ -1,5 +1,4 @@
-
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class RoomModel {
   final String id;
@@ -36,25 +35,31 @@ class RoomModel {
     this.tags = const [],
   });
 
-  factory RoomModel.fromJson(Map<String, dynamic> json) {
+  /// Combined members list (used by UI)
+  List<String> get members => [
+        ...stageUserIds,
+        ...audienceUserIds,
+      ];
+
+  factory RoomModel.fromJson(Map<String, dynamic> json, String documentId) {
     return RoomModel(
-      id: json['id'] ?? '',
+      id: documentId,
       name: json['name'] ?? 'Untitled Room',
-    RoomModel({
-      required this.id,
-      required this.name,
-      required this.hostId,
-      this.description,
-      this.isLive = false,
-      this.thumbnailUrl,
-      this.createdAt,
-      this.updatedAt,
-      this.stageUserIds = const [],
-      this.audienceUserIds = const [],
-      this.memberCount = 0,
-      this.category,
-      this.tags = const [],
-    });
+      description: json['description'],
+      hostId: json['hostId'] ?? '',
+      isLive: json['isLive'] ?? false,
+      thumbnailUrl: json['thumbnailUrl'],
+      createdAt: json['createdAt'],
+      updatedAt: json['updatedAt'],
+      stageUserIds: List<String>.from(json['stageUserIds'] ?? []),
+      audienceUserIds: List<String>.from(json['audienceUserIds'] ?? []),
+      memberCount: json['memberCount'] ?? 0,
+      category: json['category'],
+      tags: List<String>.from(json['tags'] ?? []),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
     return {
       'name': name,
       'description': description,
@@ -103,7 +108,3 @@ class RoomModel {
     );
   }
 }
-
-
-
-

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-// import '../../../models/room_model.dart'; // Unused import removed
+import 'package:mixvy/models/room_model.dart';
 
 class LiveRoomCard extends StatelessWidget {
   final RoomModel room;
@@ -49,7 +49,7 @@ class LiveRoomCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              room.description,
+              room.description ?? '',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                   ),

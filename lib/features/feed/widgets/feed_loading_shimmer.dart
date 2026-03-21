@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class FeedLoadingShimmer extends StatelessWidget {
-  const FeedLoadingShimmer({Key? key}) : super(key: key);
+  const FeedLoadingShimmer({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -19,7 +19,7 @@ class RoomDetailScreen extends StatelessWidget {
           if (!snapshot.hasData || !snapshot.data!.exists) {
             return const Center(child: Text('Room not found.'));
           }
-          final room = RoomModel.fromJson(snapshot.data!.data() as Map<String, dynamic>);
+          final room = RoomModel.fromJson(snapshot.data!.data() as Map<String, dynamic>, snapshot.data!.id);
           return Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -35,7 +35,7 @@ class RoomDetailScreen extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text('Members: ${room.members.length}'),
                 const SizedBox(height: 16),
-                Text('Created: ${room.createdAt.toLocal()}'),
+                Text('Created: {room.createdAt?.toDate().toLocal()}'),
                 const SizedBox(height: 16),
                 Text(room.isLive ? 'Status: Live' : 'Status: Offline', style: TextStyle(color: room.isLive ? Colors.green : Colors.grey)),
               ],

@@ -47,7 +47,7 @@ class FeedController extends StateNotifier<FeedState> {
           .limit(20)
           .get();
       final liveRooms = roomsSnap.docs
-        .map((doc) => RoomModel.fromJson({'id': doc.id, ...doc.data()}))
+        .map((doc) => RoomModel.fromJson(doc.data(), doc.id))
         .toList();
       final usersSnap = await _firestore
           .collection('users')
