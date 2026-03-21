@@ -13,6 +13,18 @@
       }
     ]
   },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
+  },
   "functions": [
     {
       "source": "functions",
