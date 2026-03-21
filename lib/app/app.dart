@@ -11,7 +11,7 @@ class MixVyApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     return MaterialApp.router(
       title: 'MixVy',
-      theme: buildMidnightTheme(),
+      theme: midnightCreativeTheme,
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

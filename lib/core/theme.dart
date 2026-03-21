@@ -7,7 +7,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
   primaryColor: const Color(0xFFAC8EFF),
   scaffoldBackgroundColor: const Color(0xFF0C0E12),
   fontFamily: 'Plus Jakarta Sans',
-  cardTheme: CardTheme(
+  cardTheme: CardThemeData(
     elevation: 0,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     color: Colors.white.withOpacity(0.05),
