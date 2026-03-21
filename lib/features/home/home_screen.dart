@@ -83,8 +83,7 @@ class _HomeFeedBody extends StatelessWidget {
     required this.postsAsync,
     required this.roomsAsync,
     required this.eventsAsync,
-    Key? key,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

@@ -28,10 +28,10 @@ class RoomInfoPanel extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(room.name, style: Theme.of(context).textTheme.headlineSmall),
-            if ((room.description ?? '').isNotEmpty)
+            if (room.description != null && room.description!.isNotEmpty)
               Padding(
                 padding: const EdgeInsets.only(top: 8, bottom: 16),
-                child: Text(room.description ?? '', style: Theme.of(context).textTheme.bodyMedium),
+                child: Text(room.description!, style: Theme.of(context).textTheme.bodyMedium),
               ),
             Text('Host', style: Theme.of(context).textTheme.titleSmall),
             UserAvatarName(userId: hostId),
@@ -86,8 +86,8 @@ class UserAvatarName extends ConsumerWidget {
     return userAsync.when(
       data: (user) => Column(
         children: [
-          CircleAvatar(backgroundImage: NetworkImage(user.avatarUrl), radius: 20),
-          Text(user.username, style: Theme.of(context).textTheme.labelSmall),
+          CircleAvatar(backgroundImage: NetworkImage(user?.avatarUrl ?? ''), radius: 20),
+          Text(user?.username ?? 'Unknown', style: Theme.of(context).textTheme.labelSmall),
         ],
       ),
       loading: () => const CircleAvatar(radius: 20, child: CircularProgressIndicator(strokeWidth: 2)),

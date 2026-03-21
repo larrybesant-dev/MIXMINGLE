@@ -1,8 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-class LiveRoomScreen extends StatelessWidget {
+class LiveRoomScreen extends StatefulWidget {
   const LiveRoomScreen({super.key});
+  @override
+  State<LiveRoomScreen> createState() => _LiveRoomScreenState();
+}
+
+class _LiveRoomScreenState extends State<LiveRoomScreen> {
+  // Example: This would come from your backend/room model
+  int slowModeSeconds = 10; // Set to 0 to disable slow mode
+  DateTime? lastMessageTime;
+  bool isSending = false;
+  String cooldownMessage = '';
+
+  void _trySendMessage() {
+    final now = DateTime.now();
+    if (slowModeSeconds == 0 || lastMessageTime == null) {
+      _sendMessage();
+      return;
+    }
+    final diff = now.difference(lastMessageTime!).inSeconds;
+    if (diff >= slowModeSeconds) {
+      _sendMessage();
+    } else {
+      setState(() {
+        cooldownMessage = 'Please wait [1m${slowModeSeconds - diff}s[0m before sending another message.';
+      });
+    }
+  }
+
+  void _sendMessage() {
+    setState(() {
+      isSending = true;
+      cooldownMessage = '';
+    });
+    // Simulate sending message
+    Future.delayed(const Duration(milliseconds: 500), () {
+      setState(() {
+        lastMessageTime = DateTime.now();
+        isSending = false;
+        cooldownMessage = '';
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,6 +91,36 @@ class LiveRoomScreen extends StatelessWidget {
               ],
             ),
           ),
+          if (cooldownMessage.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              child: Text(
+                cooldownMessage,
+                style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              ),
+            ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    enabled: !isSending,
+                    decoration: const InputDecoration(
+                      hintText: 'Type your message...',
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: isSending ? null : _trySendMessage,
+                  child: isSending
+                      ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Text('Send'),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             child: ListView.builder(
               itemCount: 3,
@@ -65,7 +137,6 @@ class LiveRoomScreen extends StatelessWidget {
           ),
         ],
       ),
-    // ...existing code...
     );
   }
 }
