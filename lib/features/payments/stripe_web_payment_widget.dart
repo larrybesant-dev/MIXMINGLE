@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:js' as js;
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class StripeWebPaymentWidget extends StatelessWidget {
   final String publishableKey;
@@ -12,17 +15,33 @@ class StripeWebPaymentWidget extends StatelessWidget {
     required this.currency,
   });
 
-  void _pay() {
-    // Call Stripe.js via JS interop
-    // Use JS interop for web only
-    // ignore: undefined_prefixed_name
-    stripePay(publishableKey, amount, currency);
+  Future<void> _pay() async {
+    // Call backend to create payment intent and get client secret
+    final response = await http.post(
+      Uri.parse('https://us-central1-mix-and-mingle-v2.cloudfunctions.net/createPaymentIntent'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'amount': amount / 100, // Convert cents to dollars for backend
+        'currency': currency,
+      }),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final clientSecret = data['clientSecret'];
+      if (clientSecret != null) {
+        // ignore: undefined_prefixed_name
+        js.context.callMethod('stripePay', [publishableKey, clientSecret]);
+      } else {
+        _showError('No client secret returned.');
+      }
+    } else {
+      _showError('Failed to create payment intent.');
+    }
   }
 
-  // ignore: non_constant_identifier_names
-  void stripePay(String key, int amount, String currency) {
-    // This function is a placeholder for JS interop
-    // Actual implementation should be in web/index.html
+  void _showError(String message) {
+    // ignore: undefined_prefixed_name
+    js.context.callMethod('alert', [message]);
   }
 
   @override
@@ -33,13 +52,3 @@ class StripeWebPaymentWidget extends StatelessWidget {
     );
   }
 }
-
-// You must add Stripe.js to your web/index.html and define a JS function 'stripePay'.
-// Example:
-// <script src="https://js.stripe.com/v3/"></script>
-// <script>
-//   function stripePay(key, amount, currency) {
-//     var stripe = Stripe(key);
-//     // Implement payment logic here (create payment intent, redirect, etc.)
-//   }
-// </script>

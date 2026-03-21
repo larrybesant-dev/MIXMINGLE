@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../../services/agora_service.dart';
+import '../../config/agora_constants.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class SpeedDatingScreen extends StatefulWidget {
   const SpeedDatingScreen({super.key});
@@ -26,11 +29,27 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
     _agora = AgoraService();
     _agora!.onRemoteUserJoined = () => setState(() {});
     _agora!.onRemoteUserLeft = () => setState(() {});
-    await _agora!.initialize('YOUR_AGORA_APP_ID'); // TODO: Replace with secure App ID
-    await _agora!.joinChannel('YOUR_TOKEN', 'room1', 0); // TODO: Replace with secure token
+    await _agora!.initialize(AgoraConstants.appId);
+    // Fetch token from backend
+    final token = await _fetchAgoraToken('room1', 0);
+    await _agora!.joinChannel(token, 'room1', 0);
     setState(() {
       _inCall = true;
     });
+  }
+
+  Future<String> _fetchAgoraToken(String channelName, int uid) async {
+    final response = await http.post(
+      Uri.parse(AgoraConstants.tokenEndpoint),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'channelName': channelName, 'uid': uid}),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['token'] ?? '';
+    } else {
+      throw Exception('Failed to fetch Agora token: ${response.body}');
+    }
   }
 
   Future<void> leaveRoom() async {
