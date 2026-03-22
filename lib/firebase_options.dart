@@ -19,15 +19,15 @@ class DefaultFirebaseOptions {
     }
   }
 
-  /// FirebaseOptions for web, API key loaded from .env
+  /// FirebaseOptions for web, API key hardcoded for production
   static FirebaseOptions get web => FirebaseOptions(
-    apiKey: dotenv.env['FIREBASE_API_KEY_WEB'] ?? '',
+    apiKey: 'AIzaSyBBmz9ybuDRCA2dAVjFZVj7R7wrDL0wTYU',
     authDomain: 'mix-and-mingle-v2.firebaseapp.com',
     projectId: 'mix-and-mingle-v2',
     storageBucket: 'mix-and-mingle-v2.firebasestorage.app',
     messagingSenderId: '980846719834',
-    appId: '1:980846719834:web:a8981485ee574b25077963',
-    measurementId: 'G-XWZLSPYZKY',
+    appId: '1:980846719834:web:fbcdf5051c55d691077963',
+    measurementId: 'G-BN784E6ZJY',
   );
 
   /// FirebaseOptions for windows, API key loaded from .env

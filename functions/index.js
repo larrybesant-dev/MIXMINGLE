@@ -1,19 +1,21 @@
+
 const functions = require("firebase-functions");
 const admin = require("firebase-admin");
 const Stripe = require("stripe");
 const cors = require("cors")({ origin: true });
+const { STRIPE_SECRET, STRIPE_WEBHOOK_SECRET } = require("./params");
 
 admin.initializeApp();
 
 // 🔥 CREATE CHECKOUT SESSION (Stripe instantiated at runtime)
-exports.createCheckoutSession = functions.https.onRequest((req, res) => {
+exports.createCheckoutSession = functions.runWith({ secrets: [STRIPE_SECRET] }).https.onRequest((req, res) => {
     cors(req, res, async () => {
         try {
             const { userId } = req.body;
             if (!userId) {
                 return res.status(400).send("Missing userId");
             }
-            const stripe = new Stripe(process.env.STRIPE_SECRET, {
+            const stripe = new Stripe(STRIPE_SECRET.value(), {
                 apiVersion: "2023-10-16"
             });
             const session = await stripe.checkout.sessions.create({
@@ -46,12 +48,12 @@ exports.createCheckoutSession = functions.https.onRequest((req, res) => {
 });
 
 // 🔥 STRIPE WEBHOOK (Stripe instantiated at runtime)
-exports.stripeWebhook = functions.https.onRequest(async (req, res) => {
+exports.stripeWebhook = functions.runWith({ secrets: [STRIPE_SECRET, STRIPE_WEBHOOK_SECRET] }).https.onRequest(async (req, res) => {
     const sig = req.headers["stripe-signature"];
-    const stripe = new Stripe(process.env.STRIPE_SECRET, {
+    const stripe = new Stripe(STRIPE_SECRET.value(), {
         apiVersion: "2023-10-16"
     });
-    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    const endpointSecret = STRIPE_WEBHOOK_SECRET.value();
     let event;
     try {
         event = stripe.webhooks.constructEvent(

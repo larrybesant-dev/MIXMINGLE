@@ -1,8 +1,48 @@
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'google_sign_in_helper_stub.dart'
+  if (dart.library.html) 'google_sign_in_helper_web.dart'
+  if (dart.library.io) 'google_sign_in_helper_mobile.dart';
 
-class MixVyLoginScreen extends StatelessWidget {
+
+class MixVyLoginScreen extends StatefulWidget {
   const MixVyLoginScreen({super.key});
+
+  @override
+  State<MixVyLoginScreen> createState() => _MixVyLoginScreenState();
+}
+
+class _MixVyLoginScreenState extends State<MixVyLoginScreen> {
+  bool _isLoadingGoogle = false;
+  String? _error;
+
+
+
+  late final dynamic _googleSignInHelper;
+
+  @override
+  void initState() {
+    super.initState();
+    _googleSignInHelper = getGoogleSignInHelper();
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    setState(() {
+      _isLoadingGoogle = true;
+      _error = null;
+    });
+    try {
+      await _googleSignInHelper.signInWithGoogle();
+      setState(() { _isLoadingGoogle = false; });
+      // Optionally, navigate to home screen here
+    } catch (e) {
+      setState(() {
+        _isLoadingGoogle = false;
+        _error = e.toString();
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +55,11 @@ class MixVyLoginScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                if (_error != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: Text(_error!, style: TextStyle(color: Colors.red, fontSize: 14)),
+                  ),
                 // Brand
                 Column(
                   children: [
@@ -27,7 +72,7 @@ class MixVyLoginScreen extends StatelessWidget {
                         color: Colors.white,
                         shadows: [
                           Shadow(
-                            color: const Color(0xFFB6A0FF).withOpacity(0.4),
+                            color: const Color(0xFFB6A0FF).withValues(alpha: 0.4),
                             blurRadius: 20,
                           ),
                         ],
@@ -42,7 +87,7 @@ class MixVyLoginScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF00e3fd).withOpacity(0.5),
+                            color: const Color(0xFF00e3fd).withValues(alpha: 0.5),
                             blurRadius: 10,
                           ),
                         ],
@@ -69,7 +114,7 @@ class MixVyLoginScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 40,
                         offset: const Offset(0, 10),
                       ),
@@ -95,7 +140,7 @@ class MixVyLoginScreen extends StatelessWidget {
                           fillColor: const Color(0xFF131313),
                           prefixIcon: const Icon(Icons.mail_outline, color: Color(0xFFadaaaa)),
                           hintText: 'name@domain.com',
-                          hintStyle: GoogleFonts.inter(color: Colors.white.withOpacity(0.4)),
+                          hintStyle: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.4)),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
@@ -145,7 +190,7 @@ class MixVyLoginScreen extends StatelessWidget {
                           prefixIcon: const Icon(Icons.lock_outline, color: Color(0xFFadaaaa)),
                           suffixIcon: const Icon(Icons.visibility, color: Color(0xFFadaaaa)),
                           hintText: '••••••••',
-                          hintStyle: GoogleFonts.inter(color: Colors.white.withOpacity(0.4)),
+                          hintStyle: GoogleFonts.inter(color: Colors.white.withValues(alpha: 0.4)),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide.none,
@@ -164,7 +209,7 @@ class MixVyLoginScreen extends StatelessWidget {
                           backgroundColor: const Color(0xFFb6a0ff),
                           foregroundColor: Colors.black,
                           elevation: 8,
-                          shadowColor: const Color(0xFFb6a0ff).withOpacity(0.2),
+                          shadowColor: const Color(0xFFb6a0ff).withValues(alpha: 0.2),
                         ),
                         child: Text(
                           'LOG IN',
@@ -201,8 +246,10 @@ class MixVyLoginScreen extends StatelessWidget {
                         children: [
                           Expanded(
                             child: OutlinedButton.icon(
-                              onPressed: () {},
-                              icon: const Icon(Icons.account_circle, color: Colors.white),
+                              onPressed: _isLoadingGoogle ? null : _handleGoogleSignIn,
+                              icon: _isLoadingGoogle
+                                  ? SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                                  : const Icon(Icons.account_circle, color: Colors.white),
                               label: Text('Google', style: GoogleFonts.inter(color: Colors.white)),
                               style: OutlinedButton.styleFrom(
                                 backgroundColor: const Color(0xFF20201f),
@@ -241,7 +288,7 @@ class MixVyLoginScreen extends StatelessWidget {
                                   color: const Color(0xFF00e3fd),
                                   fontWeight: FontWeight.bold,
                                   decoration: TextDecoration.underline,
-                                  decorationColor: const Color(0xFF00e3fd).withOpacity(0.3),
+                                  decorationColor: const Color(0xFF00e3fd).withValues(alpha: 0.3),
                                   decorationThickness: 2,
                                 ),
                               ),
