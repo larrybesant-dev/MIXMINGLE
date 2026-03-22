@@ -81,11 +81,11 @@ class RoomInfoPanel extends ConsumerWidget {
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   CircleAvatar(
-                                                    backgroundImage: NetworkImage(user.avatarUrl ?? ''),
+                                                    backgroundImage: NetworkImage(user.avatarUrl),
                                                     radius: 32,
                                                   ),
                                                   const SizedBox(height: 12),
-                                                  Text(user.username ?? 'Unknown', style: Theme.of(context).textTheme.titleMedium),
+                                                  Text(user.username, style: Theme.of(context).textTheme.titleMedium),
                                                 ],
                                               ),
                                         loading: () => const SizedBox(height: 60, child: Center(child: CircularProgressIndicator())),
@@ -144,11 +144,11 @@ class RoomInfoPanel extends ConsumerWidget {
                                                   mainAxisSize: MainAxisSize.min,
                                                   children: [
                                                     CircleAvatar(
-                                                      backgroundImage: NetworkImage(user.avatarUrl ?? ''),
+                                                      backgroundImage: NetworkImage(user.avatarUrl),
                                                       radius: 32,
                                                     ),
                                                     const SizedBox(height: 12),
-                                                    Text(user.username ?? 'Unknown', style: Theme.of(context).textTheme.titleMedium),
+                                                    Text(user.username, style: Theme.of(context).textTheme.titleMedium),
                                                   ],
                                                 ),
                                           loading: () => const SizedBox(height: 60, child: Center(child: CircularProgressIndicator())),
@@ -194,7 +194,7 @@ class RoomInfoPanel extends ConsumerWidget {
                         showDialog(
                           context: context,
                           builder: (context) {
-                            final participantsAsync = ref.watch(participantsProvider(room.id));
+                            final participantsAsync = ref.watch(participantsStreamProvider(room.id));
                             return AlertDialog(
                               title: const Text('Participants'),
                               content: participantsAsync.when(
@@ -396,7 +396,8 @@ class UserAvatarName extends ConsumerWidget {
       data: (user) => Column(
         children: [
           CircleAvatar(backgroundImage: NetworkImage(user?.avatarUrl ?? ''), radius: 20),
-          Text(user?.username, style: Theme.of(context).textTheme.labelSmall),
+          if (user != null)
+            Text(user.username, style: Theme.of(context).textTheme.labelSmall),
         ],
       ),
       loading: () => const CircleAvatar(radius: 20, child: CircularProgressIndicator(strokeWidth: 2)),

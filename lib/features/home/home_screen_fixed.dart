@@ -5,6 +5,7 @@ import '../feed/models/post_model.dart';
 import '../../models/room_model.dart';
 import 'package:mixvy/models/models.dart';
 import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 final _bottomNavIndexProvider = StateProvider<int>((ref) => 0);
 
@@ -270,7 +271,7 @@ class _ProfileScreen extends StatelessWidget {
                     try {
                       // Sign out from Firebase
                       await Future.delayed(Duration(milliseconds: 100)); // Optional: for UI feedback
-                      await (await import('package:firebase_auth/firebase_auth.dart')).FirebaseAuth.instance.signOut();
+                      await FirebaseAuth.instance.signOut();
                       // Navigate to login or root screen
                       if (mounted && context.mounted) {
                         Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
