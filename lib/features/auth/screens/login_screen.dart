@@ -1,63 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:mixvy/features/auth/controllers/auth_controller.dart';
+import 'package:mixvy/presentation/screens/mixvy_login_screen.dart';
 
-import 'package:go_router/go_router.dart';
-
-class LoginScreen extends ConsumerStatefulWidget {
+class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   @override
-  ConsumerState<LoginScreen> createState() => _LoginScreenState();
-}
-
-class _LoginScreenState extends ConsumerState<LoginScreen> {
-
-
-  @override
-  void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
-
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-
-  @override
   Widget build(BuildContext context) {
-    ref.listen<AuthState>(authControllerProvider, (previous, next) {
-      if (next.error == null && previous?.uid != next.uid && next.uid != null && mounted) {
-        // Use GoRouter for navigation
-        context.go('/');
-      }
-    });
-    final authState = ref.watch(authControllerProvider);
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Form(
-        key: _formKey,
-        child: Padding(
-          padding: const EdgeInsets.all(32.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(label: Text('Email')),
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter email' : null,
-              ),
-              TextFormField(
-                controller: _passwordController,
-                decoration: const InputDecoration(label: Text('Password')),
-                obscureText: true,
-                validator: (value) =>
-                    value == null || value.isEmpty ? 'Enter password' : null,
-              ),
-              const SizedBox(height: 24.0),
+    return const MixVyLoginScreen();
+  }
+}
               ElevatedButton(
                 onPressed: authState.isLoading ? null : _login,
                 child: authState.isLoading
