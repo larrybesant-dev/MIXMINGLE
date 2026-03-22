@@ -39,7 +39,11 @@ class RoomsScreen extends ConsumerWidget {
                 subtitle: Text(room.description ?? ''),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
-                  // TODO: Navigate to LiveRoomScreen with room.id (manual follow-up required)
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => LiveRoomScreen(roomId: room.id),
+                    ),
+                  );
                 },
               );
             },

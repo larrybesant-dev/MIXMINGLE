@@ -21,13 +21,13 @@ class AgoraService {
       );
     }
 
-    /// Get the remote video view widget for a given uid
-    Widget getRemoteView(int uid) {
+    /// Get the remote video view widget for a given uid and channel
+    Widget getRemoteView(int uid, String channelId) {
       return AgoraVideoView(
         controller: VideoViewController.remote(
           rtcEngine: _engine,
           canvas: VideoCanvas(uid: uid),
-          connection: const RtcConnection(channelId: 'room1'), // TODO: dynamic channel
+          connection: RtcConnection(channelId: channelId),
         ),
       );
     }

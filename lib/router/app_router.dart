@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +12,7 @@ import '../features/chat/chat_screen.dart';
 import '../features/events/events_screen.dart';
 import '../features/events/create_event_screen.dart';
 import '../features/events/event_detail_screen.dart';
+import '../features/room/room_detail_screen.dart';
 // Add more feature imports as needed
 
 // Supabase logic removed.
@@ -51,8 +51,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/room/:roomId',
         builder: (context, state) {
-          // TODO: Implement RoomDetailScreen (manual follow-up required)
-          return const SizedBox();
+          final roomId = state.pathParameters['roomId']!;
+          return RoomDetailScreen(roomId: roomId);
         },
       ),
       GoRoute(path: '/events', builder: (context, state) => const EventsScreen()),

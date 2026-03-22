@@ -1,4 +1,7 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+/// Loads Stripe publishable key from .env file using flutter_dotenv.
+/// Ensure you call `await dotenv.load()` in main() before using this constant.
 class PaymentConstants {
-  /// TODO: Move Stripe publishable key to secure config before production
-  static const String stripePublishableKey = 'pk_live_51RQGn3ETMThPcwCj5ElJrm0Ue359e5oMYvIZFQCxSZUdg3b2EHBdMKZOKog4SoE87T5WtYMthzQMQZEITYeWsiu100aXHmRMYt';
+  static String get stripePublishableKey => dotenv.env['STRIPE_PUBLISHABLE_KEY'] ?? '';
 }

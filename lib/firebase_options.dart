@@ -2,6 +2,7 @@
 // Based on Firebase web config provided by user
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
@@ -18,9 +19,9 @@ class DefaultFirebaseOptions {
     }
   }
 
-  /// TODO: Move Firebase API key to secure config before production
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4',
+  /// FirebaseOptions for web, API key loaded from .env
+  static FirebaseOptions get web => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_WEB'] ?? '',
     authDomain: 'mix-and-mingle-v2.firebaseapp.com',
     projectId: 'mix-and-mingle-v2',
     storageBucket: 'mix-and-mingle-v2.firebasestorage.app',
@@ -29,9 +30,9 @@ class DefaultFirebaseOptions {
     measurementId: 'G-XWZLSPYZKY',
   );
 
-  /// TODO: Move Firebase API key to secure config before production
-  static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4',
+  /// FirebaseOptions for windows, API key loaded from .env
+  static FirebaseOptions get windows => FirebaseOptions(
+    apiKey: dotenv.env['FIREBASE_API_KEY_WINDOWS'] ?? '',
     authDomain: 'mix-and-mingle-v2.firebaseapp.com',
     projectId: 'mix-and-mingle-v2',
     storageBucket: 'mix-and-mingle-v2.firebasestorage.app',

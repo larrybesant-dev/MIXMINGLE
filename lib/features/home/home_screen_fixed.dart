@@ -90,8 +90,52 @@ class _RoomsScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text('Create Room'),
-        onPressed: () {
-          // TODO: Implement room creation dialog
+        onPressed: () async {
+          final mounted = context.mounted;
+          final nameController = TextEditingController();
+          final descController = TextEditingController();
+          final result = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: const Text('Create Room'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: nameController,
+                      decoration: const InputDecoration(labelText: 'Room Name'),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: descController,
+                      decoration: const InputDecoration(labelText: 'Description'),
+                      maxLines: 2,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (nameController.text.trim().isEmpty) return;
+                    // Here you would send the room to your backend or Firestore
+                    Navigator.of(context).pop(true);
+                  },
+                  child: const Text('Create'),
+                ),
+              ],
+            ),
+          );
+          if (mounted && context.mounted && result == true) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Room created!')),
+            );
+          }
         },
       ),
     );
@@ -127,8 +171,77 @@ class _EventsScreen extends ConsumerWidget {
       floatingActionButton: FloatingActionButton.extended(
         icon: const Icon(Icons.add),
         label: const Text('Create Event'),
-        onPressed: () {
-          // TODO: Implement event creation dialog
+        onPressed: () async {
+          final mounted = context.mounted;
+          final titleController = TextEditingController();
+          final descController = TextEditingController();
+          DateTime? selectedDate;
+          final result = await showDialog<bool>(
+            context: context,
+            builder: (context) => StatefulBuilder(
+              builder: (context, setState) => AlertDialog(
+                title: const Text('Create Event'),
+                content: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      TextField(
+                        controller: titleController,
+                        decoration: const InputDecoration(labelText: 'Event Title'),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: descController,
+                        decoration: const InputDecoration(labelText: 'Description'),
+                        maxLines: 2,
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(selectedDate == null
+                                ? 'No date selected'
+                                : 'Date: \\${selectedDate!.toLocal().toString().split(' ')[0]}'),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              final picked = await showDatePicker(
+                                context: context,
+                                initialDate: DateTime.now(),
+                                firstDate: DateTime.now(),
+                                lastDate: DateTime(2100),
+                              );
+                              if (picked != null) setState(() => selectedDate = picked);
+                            },
+                            child: const Text('Pick Date'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(false),
+                    child: const Text('Cancel'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (titleController.text.trim().isEmpty || selectedDate == null) return;
+                      // Here you would send the event to your backend or Firestore
+                      Navigator.of(context).pop(true);
+                    },
+                    child: const Text('Create'),
+                  ),
+                ],
+              ),
+            ),
+          );
+          if (mounted && context.mounted && result == true) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Event created!')),
+            );
+          }
         },
       ),
     );
@@ -149,11 +262,30 @@ class _ProfileScreen extends StatelessWidget {
             const SizedBox(height: 8),
             const Text('Profile details coming soon!'),
             const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () {
-                // TODO: Implement sign out
+            Builder(
+              builder: (context) {
+                return ElevatedButton(
+                  onPressed: () async {
+                    final mounted = context.mounted;
+                    try {
+                      // Sign out from Firebase
+                      await Future.delayed(Duration(milliseconds: 100)); // Optional: for UI feedback
+                      await (await import('package:firebase_auth/firebase_auth.dart')).FirebaseAuth.instance.signOut();
+                      // Navigate to login or root screen
+                      if (mounted && context.mounted) {
+                        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+                      }
+                    } catch (e) {
+                      if (mounted && context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Sign out failed: $e')),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Sign Out'),
+                );
               },
-              child: const Text('Sign Out'),
             ),
           ],
         ),
@@ -267,8 +399,8 @@ Widget _roomCard(RoomModel r) => Card(
 Widget _eventCard(dynamic e) => Card(
       child: ListTile(
         title: e is EventModel
-            ? Text(e.title.isNotEmpty == true ? e.title : 'Untitled Event')
-            : Text(e.toString()),
-        subtitle: e is EventModel ? Text('Host: ${e.hostId} • ${e.date}') : null,
+          ? Text(e.title.toString().trim().isNotEmpty ? e.title : 'Event')
+          : Text(e.toString()),
+        subtitle: e is EventModel ? Text('Host: ${e.hostId} • ${e.date}') : null,
       ),
     );

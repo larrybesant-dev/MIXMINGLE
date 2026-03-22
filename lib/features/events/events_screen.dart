@@ -23,10 +23,63 @@ class EventsScreen extends ConsumerWidget {
                   return ListTile(
                     leading: const Icon(Icons.event),
                     title: Text(event.title),
-                       subtitle: Text('Host: ${event.hostId} • ${event.date.toLocal().toString().split(' ')[0]}'),
+                    subtitle: Text('Host: ${event.hostId} • ${event.date.toLocal().toString().split(' ')[0]}'),
                     trailing: ElevatedButton(
                       onPressed: () {
-                        // TODO: Show event details or join logic (manual follow-up required)
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: Text(event.title),
+                            content: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Host: ${event.hostId}'),
+                                const SizedBox(height: 8),
+                                Text('Date: ${event.date.toLocal().toString().split(' ')[0]}'),
+                                // No description field in EventModel
+                              ],
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('Close'),
+                              ),
+                              ElevatedButton(
+                                onPressed: () async {
+                                  final mounted = context.mounted;
+                                  // Simulate join event logic (replace with backend call as needed)
+                                  final confirm = await showDialog<bool>(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text('Join Event'),
+                                      content: const Text('Do you want to join this event?'),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(false),
+                                          child: const Text('Cancel'),
+                                        ),
+                                        ElevatedButton(
+                                          onPressed: () => Navigator.of(context).pop(true),
+                                          child: const Text('Join'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (mounted && context.mounted) {
+                                    Navigator.of(context).pop();
+                                    if (confirm == true) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('You have joined the event!')),
+                                      );
+                                    }
+                                  }
+                                },
+                                child: const Text('Join'),
+                              ),
+                            ],
+                          ),
+                        );
                       },
                       child: const Text('Details'),
                     ),

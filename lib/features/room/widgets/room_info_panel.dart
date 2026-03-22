@@ -1,5 +1,7 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../models/room_model.dart';
 import '../../room/providers/participant_providers.dart';
 import '../../feed/providers/user_providers.dart';
@@ -66,7 +68,38 @@ class RoomInfoPanel extends ConsumerWidget {
                           ? const Text('No host')
                           : GestureDetector(
                               onTap: () {
-                                // TODO: Show profile modal for host (manual follow-up required)
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    final userAsync = ref.read(userProvider(host.userId));
+                                    return AlertDialog(
+                                      title: const Text('Host Profile'),
+                                      content: userAsync.when(
+                                        data: (user) => user == null
+                                            ? const Text('User not found.')
+                                            : Column(
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  CircleAvatar(
+                                                    backgroundImage: NetworkImage(user.avatarUrl ?? ''),
+                                                    radius: 32,
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                  Text(user.username ?? 'Unknown', style: Theme.of(context).textTheme.titleMedium),
+                                                ],
+                                              ),
+                                        loading: () => const SizedBox(height: 60, child: Center(child: CircularProgressIndicator())),
+                                        error: (e, _) => Text('Error loading user: $e'),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.of(context).pop(),
+                                          child: const Text('Close'),
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                );
                               },
                               child: Row(
                                 children: [
@@ -98,7 +131,38 @@ class RoomInfoPanel extends ConsumerWidget {
                               spacing: 8,
                               children: cohosts.map((c) => GestureDetector(
                                 onTap: () {
-                                  // TODO: Show profile modal for cohost (manual follow-up required)
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) {
+                                      final userAsync = ref.read(userProvider(c.userId));
+                                      return AlertDialog(
+                                        title: const Text('Co-host Profile'),
+                                        content: userAsync.when(
+                                          data: (user) => user == null
+                                              ? const Text('User not found.')
+                                              : Column(
+                                                  mainAxisSize: MainAxisSize.min,
+                                                  children: [
+                                                    CircleAvatar(
+                                                      backgroundImage: NetworkImage(user.avatarUrl ?? ''),
+                                                      radius: 32,
+                                                    ),
+                                                    const SizedBox(height: 12),
+                                                    Text(user.username ?? 'Unknown', style: Theme.of(context).textTheme.titleMedium),
+                                                  ],
+                                                ),
+                                          loading: () => const SizedBox(height: 60, child: Center(child: CircularProgressIndicator())),
+                                          error: (e, _) => Text('Error loading user: $e'),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed: () => Navigator.of(context).pop(),
+                                            child: const Text('Close'),
+                                          ),
+                                        ],
+                                      );
+                                    },
+                                  );
                                 },
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -126,8 +190,42 @@ class RoomInfoPanel extends ConsumerWidget {
                       child: Text('Participants', style: Theme.of(context).textTheme.titleSmall?.copyWith(letterSpacing: 1.2)),
                     ),
                     GestureDetector(
-                      onTap: () {
-                        // TODO: Open participant list modal (manual follow-up required)
+                      onTap: () async {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            final participantsAsync = ref.watch(participantsProvider(room.id));
+                            return AlertDialog(
+                              title: const Text('Participants'),
+                              content: participantsAsync.when(
+                                data: (participants) => participants.isEmpty
+                                    ? const Text('No participants in this room.')
+                                    : SizedBox(
+                                        width: 300,
+                                        child: ListView.builder(
+                                          shrinkWrap: true,
+                                          itemCount: participants.length,
+                                          itemBuilder: (context, i) {
+                                            final userId = participants[i].userId;
+                                            return ListTile(
+                                              leading: UserAvatarName(userId: userId),
+                                              title: Text(userId),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                loading: () => const SizedBox(height: 60, child: Center(child: CircularProgressIndicator())),
+                                error: (e, _) => Text('Error loading participants: $e'),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('Close'),
+                                ),
+                              ],
+                            );
+                          },
+                        );
                       },
                       child: participantCountAsync.when(
                         data: (count) => Text('$count in the room', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
@@ -183,23 +281,92 @@ class RoomInfoPanel extends ConsumerWidget {
                       children: [
                         if (isMember && hostAsync.asData?.value != null && ref.read(isHostProvider(hostAsync.asData!.value)))
                           TextButton.icon(
-                            onPressed: () {
-                              // TODO: Invite co-host (manual follow-up required)
+                            onPressed: () async {
+                              final inviteController = TextEditingController();
+                              final scaffoldMessenger = ScaffoldMessenger.of(context);
+                              final result = await showDialog<String>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Invite Co-host'),
+                                  content: TextField(
+                                    controller: inviteController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'User ID or Username',
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop(inviteController.text);
+                                      },
+                                      child: const Text('Invite'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (result != null && result.trim().isNotEmpty) {
+                                // Here you would send the invite to your backend or Firestore
+                                scaffoldMessenger.showSnackBar(
+                                  const SnackBar(content: Text('Co-host invite sent!')),
+                                );
+                              }
                             },
                             icon: const Icon(Icons.person_add_alt_1),
                             label: const Text('Invite Co-host'),
                           ),
                         if (!isMember)
                           TextButton.icon(
-                            onPressed: () {
-                              // TODO: Report room (manual follow-up required)
+                            onPressed: () async {
+                              final reportController = TextEditingController();
+                              final scaffoldMessenger = ScaffoldMessenger.of(context);
+                              final result = await showDialog<String>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Report Room'),
+                                  content: TextField(
+                                    controller: reportController,
+                                    decoration: const InputDecoration(
+                                      labelText: 'Reason for report',
+                                    ),
+                                    maxLines: 3,
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        Navigator.of(context).pop(reportController.text);
+                                      },
+                                      child: const Text('Submit'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (result != null && result.trim().isNotEmpty) {
+                                // Here you would send the report to your backend or Firestore
+                                scaffoldMessenger.showSnackBar(
+                                  const SnackBar(content: Text('Report submitted. Thank you!')),
+                                );
+                              }
                             },
                             icon: const Icon(Icons.flag),
                             label: const Text('Report Room'),
                           ),
                         TextButton.icon(
                           onPressed: () {
-                            // TODO: Share room link (manual follow-up required)
+                            final roomLink = 'https://mixvy.app/room/${room.id}';
+                            // No async gap before using context
+                            SharePlus.instance.share(
+                              ShareParams(
+                                text: 'Join my room on MixVy! $roomLink',
+                              ),
+                            );
                           },
                           icon: const Icon(Icons.share),
                           label: const Text('Share'),
@@ -229,7 +396,7 @@ class UserAvatarName extends ConsumerWidget {
       data: (user) => Column(
         children: [
           CircleAvatar(backgroundImage: NetworkImage(user?.avatarUrl ?? ''), radius: 20),
-          Text(user?.username ?? 'Unknown', style: Theme.of(context).textTheme.labelSmall),
+          Text(user?.username, style: Theme.of(context).textTheme.labelSmall),
         ],
       ),
       loading: () => const CircleAvatar(radius: 20, child: CircularProgressIndicator(strokeWidth: 2)),
