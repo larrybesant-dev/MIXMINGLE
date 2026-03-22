@@ -53,19 +53,27 @@ class AuthService {
 			       return null;
 		       }
 	}
-}
-	       Future<void> signOut() async {
-		       // Not implemented: Supabase logic
-		       ErrorHandler.handle('Sign out not implemented.');
-	       }
+	Future<void> signOut() async {
+		try {
+			await _auth.signOut();
+		} catch (e) {
+			ErrorHandler.handle(e);
+			Logger.log('Sign out error: $e');
+		}
+	}
 
-	       Future<UserModel?> getCurrentUser() async {
-		       // Not implemented: Supabase logic
-		       ErrorHandler.handle('getCurrentUser not implemented.');
-		       return null;
-		// return UserModel.fromJson(userData);
-		// TODO: Implement userData logic
-		return null;
-		// TODO: Complete this class or function
-		// }
+	Future<UserModel?> getCurrentUser() async {
+		try {
+			final user = _auth.currentUser;
+			if (user == null) return null;
+			final userData = await _firestore.collection('users').doc(user.uid).get();
+			if (!userData.exists) return null;
+			return UserModel.fromJson(userData.data()!);
+		} catch (e) {
+			ErrorHandler.handle(e);
+			Logger.log('Get current user error: $e');
+			return null;
+		}
+	}
+}
 }

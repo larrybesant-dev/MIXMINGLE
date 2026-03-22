@@ -1,34 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../features/auth/controllers/auth_controller.dart';
+import '../../widgets/mixvy_drawer.dart';
 
-class UserProfileScreen extends StatelessWidget {
+class UserProfileScreen extends ConsumerWidget {
   const UserProfileScreen({super.key});
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(authControllerProvider).uid;
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: Colors.purple),
-              child: const Text('MixVy Navigation', style: TextStyle(color: Colors.white, fontSize: 20)),
-            ),
-            ListTile(title: const Text('Home Feed'), onTap: () => context.go('/home')),
-            ListTile(title: const Text('Chats'), onTap: () => context.go('/chats')),
-            ListTile(title: const Text('Friends'), onTap: () => context.go('/friends')),
-            ListTile(title: const Text('Profile'), onTap: () => context.go('/profile/${'userId'}')),
-            ListTile(title: const Text('Payments'), onTap: () => context.go('/payments-demo')),
-            ListTile(title: const Text('Notifications'), onTap: () => context.go('/notifications')),
-            ListTile(title: const Text('Live Room'), onTap: () => context.go('/live/${'roomId'}')),
-            ListTile(title: const Text('Settings'), onTap: () => context.go('/settings')),
-            ListTile(title: const Text('Moderation'), onTap: () => context.go('/moderation')),
-            ListTile(title: const Text('Search'), onTap: () => context.go('/search')),
-            ListTile(title: const Text('Invite Friends'), onTap: () => context.go('/invite')),
-          ],
-        ),
-      ),
+      drawer: MixVyDrawer(userId: uid),
       body: Column(
         children: [
           Padding(

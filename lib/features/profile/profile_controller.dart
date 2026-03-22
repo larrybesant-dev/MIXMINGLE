@@ -1,4 +1,7 @@
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'models/user_model.dart';
 
 class ProfileState {
   final bool isLoading;
@@ -54,7 +57,17 @@ class ProfileController extends StateNotifier<ProfileState> {
   Future<void> updateProfile(ProfileState profile) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      // Replace with real API call
+      final userId = profile.username ?? '';
+      // You may want to store userId elsewhere, adjust as needed
+      final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+      await userRef.update({
+        'username': profile.username,
+        'email': profile.email,
+        'avatarUrl': profile.avatarUrl,
+        'coinBalance': profile.coinBalance,
+        'membershipLevel': profile.membershipLevel,
+        'followers': profile.followers,
+      });
       state = profile.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -64,12 +77,20 @@ class ProfileController extends StateNotifier<ProfileState> {
   Future<void> fetchProfile(String userId) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      // Replace with real API call
-      // For test, set mock data
+      final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      if (!userDoc.exists) {
+        state = state.copyWith(isLoading: false, error: 'User not found');
+        return;
+      }
+      final user = UserModel.fromFirestore(userDoc);
       state = state.copyWith(
         isLoading: false,
-        username: 'username',
-        email: 'user@example.com',
+        username: user.username,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        coinBalance: user.coinBalance,
+        membershipLevel: user.membershipLevel,
+        followers: user.followers,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

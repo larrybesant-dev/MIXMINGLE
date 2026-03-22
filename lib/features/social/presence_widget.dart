@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'presence_provider.dart'; // Unused import
+import 'presence_provider.dart';
 
 class PresenceWidget extends ConsumerWidget {
   final String userId;
@@ -9,10 +9,9 @@ class PresenceWidget extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: Implement presenceServiceProvider
-    // final presenceService = ref.read(presenceServiceProvider);
+    final presenceService = ref.read(presenceServiceProvider);
     return StreamBuilder<bool>(
-      stream: const Stream.empty(), // TODO: Provide actual stream
+      stream: presenceService.userPresenceStream(userId),
       builder: (context, snapshot) {
         final isOnline = snapshot.data ?? false;
         return Row(
@@ -28,7 +27,7 @@ class PresenceWidget extends ConsumerWidget {
               child: Text(
                 isOnline ? 'Online' : 'Offline',
                 style: TextStyle(
-                  color: isOnline ? Colors.green[800] : Colors.grey[800], // Improved contrast
+                  color: isOnline ? Colors.green[800] : Colors.grey[800],
                 ),
               ),
             ),
