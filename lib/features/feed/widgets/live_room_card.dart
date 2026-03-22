@@ -40,7 +40,7 @@ class LiveRoomCard extends StatelessWidget {
                   errorBuilder: (context, error, stackTrace) => Container(
                     height: 80,
                     width: double.infinity,
-                    color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                    color: Theme.of(context).colorScheme.primary.withAlpha((255 * 0.1).toInt()),
                     child: const Icon(Icons.broken_image, size: 40, color: Colors.white54),
                   ),
                 ),
@@ -50,7 +50,7 @@ class LiveRoomCard extends StatelessWidget {
                 height: 80,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  color: Theme.of(context).colorScheme.primary.withAlpha((255 * 0.1).toInt()),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Icon(Icons.videocam, size: 40, color: Colors.white70),
@@ -69,7 +69,7 @@ class LiveRoomCard extends StatelessWidget {
               Text(
                 'Untitled Room',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      color: Theme.of(context).colorScheme.onSurface.withAlpha((255 * 0.5).toInt()),
                       fontStyle: FontStyle.italic,
                     ),
                 maxLines: 1,
@@ -79,7 +79,7 @@ class LiveRoomCard extends StatelessWidget {
             Text(
               room.description?.isNotEmpty == true ? room.description! : 'No description provided.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    color: Theme.of(context).colorScheme.onSurface.withAlpha((255 * 0.7).toInt()),
                   ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

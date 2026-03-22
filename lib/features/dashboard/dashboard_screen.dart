@@ -116,7 +116,7 @@ import '../feed/models/event_model.dart';
     // Card widget for rooms
     Widget _roomCard(RoomModel r) => Card(
           child: ListTile(
-            // TODO: Fix: r.name ?? 'Room'
+            // TODO: Fix: r.name ?? 'Room' (manual follow-up required)
             subtitle: Text('Host: ${r.hostId}'),
             trailing: const Icon(Icons.circle, color: Colors.green, size: 12),
           ),
@@ -125,7 +125,7 @@ import '../feed/models/event_model.dart';
     // Card widget for events (dynamic fallback)
     Widget _eventCard(dynamic e) => Card(
           child: ListTile(
-            // TODO: Fix: e is EventModel ? (e.title ?? 'Event') : e.toString()
+            // TODO: Fix: e is EventModel ? (e.title ?? 'Event') : e.toString() (manual follow-up required)
             subtitle: e is EventModel ? Text('Host: ${e.hostId} • ${e.date}') : null,
           ),
         );

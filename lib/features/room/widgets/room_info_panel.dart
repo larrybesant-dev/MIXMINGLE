@@ -66,7 +66,7 @@ class RoomInfoPanel extends ConsumerWidget {
                           ? const Text('No host')
                           : GestureDetector(
                               onTap: () {
-                                // TODO: Show profile modal for host
+                                // TODO: Show profile modal for host (manual follow-up required)
                               },
                               child: Row(
                                 children: [
@@ -98,7 +98,7 @@ class RoomInfoPanel extends ConsumerWidget {
                               spacing: 8,
                               children: cohosts.map((c) => GestureDetector(
                                 onTap: () {
-                                  // TODO: Show profile modal for cohost
+                                  // TODO: Show profile modal for cohost (manual follow-up required)
                                 },
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -127,7 +127,7 @@ class RoomInfoPanel extends ConsumerWidget {
                     ),
                     GestureDetector(
                       onTap: () {
-                        // TODO: Open participant list modal
+                        // TODO: Open participant list modal (manual follow-up required)
                       },
                       child: participantCountAsync.when(
                         data: (count) => Text('$count in the room', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
@@ -184,7 +184,7 @@ class RoomInfoPanel extends ConsumerWidget {
                         if (isMember && hostAsync.asData?.value != null && ref.read(isHostProvider(hostAsync.asData!.value)))
                           TextButton.icon(
                             onPressed: () {
-                              // TODO: Invite co-host
+                              // TODO: Invite co-host (manual follow-up required)
                             },
                             icon: const Icon(Icons.person_add_alt_1),
                             label: const Text('Invite Co-host'),
@@ -192,14 +192,14 @@ class RoomInfoPanel extends ConsumerWidget {
                         if (!isMember)
                           TextButton.icon(
                             onPressed: () {
-                              // TODO: Report room
+                              // TODO: Report room (manual follow-up required)
                             },
                             icon: const Icon(Icons.flag),
                             label: const Text('Report Room'),
                           ),
                         TextButton.icon(
                           onPressed: () {
-                            // TODO: Share room link
+                            // TODO: Share room link (manual follow-up required)
                           },
                           icon: const Icon(Icons.share),
                           label: const Text('Share'),

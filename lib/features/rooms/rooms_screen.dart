@@ -18,8 +18,8 @@ class RoomsScreen extends ConsumerWidget {
         onPressed: () => Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => CreateRoomScreen()),
         ),
-        child: const Icon(Icons.add),
         tooltip: 'Create Live Room',
+        child: const Icon(Icons.add),
       ),
       body: roomsAsync.when(
         data: (rooms) {
@@ -30,7 +30,7 @@ class RoomsScreen extends ConsumerWidget {
           return ListView.separated(
             padding: const EdgeInsets.all(16),
             itemCount: liveRooms.length,
-            separatorBuilder: (_, __) => const Divider(),
+            separatorBuilder: (_, _) => const Divider(),
             itemBuilder: (context, i) {
               final room = liveRooms[i];
               return ListTile(
@@ -39,7 +39,7 @@ class RoomsScreen extends ConsumerWidget {
                 subtitle: Text(room.description ?? ''),
                 trailing: const Icon(Icons.arrow_forward),
                 onTap: () {
-                  // TODO: Navigate to LiveRoomScreen with room.id
+                  // TODO: Navigate to LiveRoomScreen with room.id (manual follow-up required)
                 },
               );
             },

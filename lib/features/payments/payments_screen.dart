@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'stripe_web_payment_widget.dart';
 import 'payments_controller.dart';
-import '../../config/payment_constants.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class PaymentsScreen extends ConsumerWidget {
@@ -11,11 +10,7 @@ class PaymentsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (kIsWeb) {
-      return StripeWebPaymentWidget(
-        publishableKey: PaymentConstants.stripePublishableKey,
-        amount: 1000, // Example amount in cents
-        currency: 'usd',
-      );
+      return const StripeWebPaymentWidget();
     }
     final paymentState = ref.watch(paymentControllerProvider);
     return Scaffold(

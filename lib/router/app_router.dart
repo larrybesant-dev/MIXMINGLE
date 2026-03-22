@@ -51,7 +51,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/room/:roomId',
         builder: (context, state) {
-          // TODO: Implement RoomDetailScreen
+          // TODO: Implement RoomDetailScreen (manual follow-up required)
           return const SizedBox();
         },
       ),

@@ -158,7 +158,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               Switch(
                                 value: isLocked,
                                 onChanged: (_) => hostControls.toggleLockRoom(widget.roomId),
-                                activeColor: Colors.red,
+                                activeThumbColor: Colors.red,
                                 inactiveThumbColor: Colors.green,
                               ),
                               Text(isLocked ? 'Locked' : 'Open'),
@@ -208,8 +208,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       child: Row(
                         children: [
                           participantCountAsync.when(
-                            data: (count) => Text(
-                              '$count in room',
+                            data: (participantCount) => Text(
+                              '[participantCount] in room',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             loading: () => const SizedBox(width: 60, child: LinearProgressIndicator()),
@@ -310,11 +310,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                     await sendMessage(messageController.text.trim());
                                     messageController.clear();
                                   } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(content: Text(e.toString())),
-                                    );
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text(e.toString())),
+                                      );
+                                    }
                                   } finally {
-                                    setState(() => isSending = false);
+                                    if (context.mounted) {
+                                      setState(() => isSending = false);
+                                    }
                                   }
                                 },
                           child: isSending

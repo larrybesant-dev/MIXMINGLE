@@ -18,6 +18,7 @@ class DefaultFirebaseOptions {
     }
   }
 
+  /// TODO: Move Firebase API key to secure config before production
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4',
     authDomain: 'mix-and-mingle-v2.firebaseapp.com',
@@ -28,6 +29,7 @@ class DefaultFirebaseOptions {
     measurementId: 'G-XWZLSPYZKY',
   );
 
+  /// TODO: Move Firebase API key to secure config before production
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4',
     authDomain: 'mix-and-mingle-v2.firebaseapp.com',

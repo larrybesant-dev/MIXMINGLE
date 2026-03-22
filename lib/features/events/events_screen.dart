@@ -26,7 +26,7 @@ class EventsScreen extends ConsumerWidget {
                        subtitle: Text('Host: ${event.hostId} • ${event.date.toLocal().toString().split(' ')[0]}'),
                     trailing: ElevatedButton(
                       onPressed: () {
-                        // TODO: Show event details or join logic
+                        // TODO: Show event details or join logic (manual follow-up required)
                       },
                       child: const Text('Details'),
                     ),

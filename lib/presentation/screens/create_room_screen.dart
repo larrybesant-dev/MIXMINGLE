@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/controllers/auth_controller.dart';
 
 class CreateRoomScreen extends ConsumerStatefulWidget {
-  CreateRoomScreen({Key? key}) : super(key: key);
+  const CreateRoomScreen({super.key});
 
   @override
   ConsumerState<CreateRoomScreen> createState() => _CreateRoomScreenState();
@@ -62,7 +62,6 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                 ),
                 const SizedBox(height: 24),
                 ElevatedButton(
-                  child: isLoading ? const CircularProgressIndicator() : const Text('Create Room'),
                   onPressed: isLoading
                       ? null
                       : () async {
@@ -98,6 +97,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                             Navigator.of(context).pop();
                           }
                         },
+                  child: isLoading ? const CircularProgressIndicator() : const Text('Create Room'),
                 ),
               ],
             ),
