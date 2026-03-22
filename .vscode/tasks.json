@@ -67,6 +67,41 @@
 			],
 			"isBackground": false,
 			"group": "build"
+		},
+		{
+			"label": "Build Flutter Web App",
+			"type": "shell",
+			"command": "flutter build web --release --web-renderer canvaskit --base-href \"/\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Flutter Web App (no renderer flag)",
+			"type": "shell",
+			"command": "flutter build web --release --base-href \"/\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Flutter Web App (no renderer flag)",
+			"type": "shell",
+			"command": "flutter build web --release --base-href \"/\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Flutter Web App (no renderer flag)",
+			"type": "shell",
+			"command": "flutter build web --release --base-href \"/\"",
+			"isBackground": false,
+			"group": "build"
+		},
+		{
+			"label": "Build Flutter Web App (no renderer flag)",
+			"type": "shell",
+			"command": "flutter build web --release --base-href \"/\"",
+			"isBackground": false,
+			"group": "build"
 		}
 	]
 }

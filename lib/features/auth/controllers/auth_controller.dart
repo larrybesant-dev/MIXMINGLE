@@ -25,19 +25,25 @@ class AuthState {
   }
 }
 
-final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
-  (ref) => AuthController(FirebaseAuth.instance),
+
+final authControllerProvider = NotifierProvider<AuthController, AuthState>(
+  () => AuthController(),
 );
 
 
-class AuthController extends StateNotifier<AuthState> {
-  final FirebaseAuth _auth;
 
-  AuthController(this._auth) : super(AuthState(uid: _auth.currentUser?.uid)) {
+class AuthController extends Notifier<AuthState> {
+  late final FirebaseAuth _auth;
+
+  @override
+  AuthState build() {
+    _auth = FirebaseAuth.instance;
     _auth.authStateChanges().listen((user) {
       state = state.copyWith(uid: user?.uid);
     });
+    return AuthState(uid: _auth.currentUser?.uid);
   }
+
 
 
   Future<void> signup(String email, String password) async {
@@ -53,6 +59,7 @@ class AuthController extends StateNotifier<AuthState> {
     }
   }
 
+
   Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -67,14 +74,14 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
-    await FirebaseAuth.instance.signOut();
+    await _auth.signOut();
     state = state.copyWith(uid: null);
   }
-  
+
   Future<void> resetPassword(String email) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      await _auth.sendPasswordResetEmail(email: email);
       state = state.copyWith(isLoading: false);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

@@ -32,12 +32,13 @@ class PaymentState {
   }
 }
 
-final paymentsControllerProvider = StateNotifierProvider<PaymentController, PaymentState>(
-  (ref) => PaymentController(),
+final paymentsControllerProvider = NotifierProvider<PaymentController, PaymentState>(
+  () => PaymentController(),
 );
 
-class PaymentController extends StateNotifier<PaymentState> {
-  PaymentController() : super(const PaymentState());
+class PaymentController extends Notifier<PaymentState> {
+  @override
+  PaymentState build() => const PaymentState();
 
   Future<void> initiatePayment(double amount) async {
     state = state.copyWith(isLoading: true, error: null, amount: amount);
@@ -64,7 +65,6 @@ class PaymentController extends StateNotifier<PaymentState> {
   }
 }
 
-final paymentControllerProvider =
-    StateNotifierProvider<PaymentController, PaymentState>((ref) {
-      return PaymentController();
-    });
+final paymentControllerProvider = NotifierProvider<PaymentController, PaymentState>(
+  () => PaymentController(),
+);

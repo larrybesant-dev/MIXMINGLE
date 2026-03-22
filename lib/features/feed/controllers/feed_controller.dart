@@ -32,10 +32,14 @@ class FeedState {
   }
 }
 
-class FeedController extends StateNotifier<FeedState> {
-  final FirebaseFirestore _firestore;
+class FeedController extends Notifier<FeedState> {
+  late final FirebaseFirestore _firestore;
 
-  FeedController(this._firestore) : super(const FeedState());
+  @override
+  FeedState build() {
+    _firestore = FirebaseFirestore.instance;
+    return const FeedState();
+  }
 
   Future<void> loadFeed() async {
     state = state.copyWith(isLoading: true, error: null);
@@ -68,8 +72,6 @@ class FeedController extends StateNotifier<FeedState> {
   }
 }
 
-final feedControllerProvider =
-    StateNotifierProvider<FeedController, FeedState>((ref) {
-  final firestore = FirebaseFirestore.instance;
-  return FeedController(firestore);
-});
+final feedControllerProvider = NotifierProvider<FeedController, FeedState>(
+  () => FeedController(),
+);

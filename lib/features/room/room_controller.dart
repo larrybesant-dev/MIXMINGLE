@@ -1,9 +1,15 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/room_model.dart';
-class RoomController extends StateNotifier<RoomModel?> {
+
+final roomControllerProvider = NotifierProvider<RoomController, RoomModel?>(
+  () => RoomController(),
+);
+
+class RoomController extends Notifier<RoomModel?> {
   String? error;
-  RoomController() : super(null);
+
+  @override
+  RoomModel? build() => null;
 
   void createRoom(RoomModel room) {
     try {

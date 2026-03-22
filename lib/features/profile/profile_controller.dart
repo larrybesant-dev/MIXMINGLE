@@ -47,18 +47,18 @@ class ProfileState {
   }
 }
 
-final profileControllerProvider = StateNotifierProvider<ProfileController, ProfileState>(
-  (ref) => ProfileController(),
+final profileControllerProvider = NotifierProvider<ProfileController, ProfileState>(
+  () => ProfileController(),
 );
 
-class ProfileController extends StateNotifier<ProfileState> {
-  ProfileController() : super(const ProfileState());
+class ProfileController extends Notifier<ProfileState> {
+  @override
+  ProfileState build() => const ProfileState();
 
   Future<void> updateProfile(ProfileState profile) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final userId = profile.username ?? '';
-      // You may want to store userId elsewhere, adjust as needed
       final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
       await userRef.update({
         'username': profile.username,

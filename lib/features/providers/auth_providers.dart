@@ -5,10 +5,9 @@ final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
 });
 
-final authControllerProvider =
-    StateNotifierProvider<AuthController, AuthState>((ref) {
-  return AuthController(ref);
-});
+final authControllerProvider = NotifierProvider<AuthController, AuthState>(
+  () => AuthController(),
+);
 
 class AuthState {
   final bool isLoading;
@@ -34,25 +33,22 @@ class AuthState {
   }
 }
 
-class AuthController extends StateNotifier<AuthState> {
-  final Ref ref;
+class AuthController extends Notifier<AuthState> {
+  late final FirebaseAuth _auth;
 
-  AuthController(this.ref) : super(AuthState()) {
-    _listenToAuth();
-  }
-
-  void _listenToAuth() {
-    ref.read(firebaseAuthProvider).authStateChanges().listen((user) {
+  @override
+  AuthState build() {
+    _auth = FirebaseAuth.instance;
+    _auth.authStateChanges().listen((user) {
       state = state.copyWith(user: user);
     });
+    return AuthState();
   }
 
   Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
-
     try {
-      await ref.read(firebaseAuthProvider)
-          .signInWithEmailAndPassword(email: email, password: password);
+      await _auth.signInWithEmailAndPassword(email: email, password: password);
       state = state.copyWith(isLoading: false);
     } on FirebaseAuthException catch (e) {
       state = state.copyWith(isLoading: false, error: e.message);
@@ -61,10 +57,8 @@ class AuthController extends StateNotifier<AuthState> {
 
   Future<void> signup(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
-
     try {
-      await ref.read(firebaseAuthProvider)
-          .createUserWithEmailAndPassword(email: email, password: password);
+      await _auth.createUserWithEmailAndPassword(email: email, password: password);
       state = state.copyWith(isLoading: false);
     } on FirebaseAuthException catch (e) {
       state = state.copyWith(isLoading: false, error: e.message);
@@ -72,6 +66,6 @@ class AuthController extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
-    await ref.read(firebaseAuthProvider).signOut();
+    await _auth.signOut();
   }
 }
