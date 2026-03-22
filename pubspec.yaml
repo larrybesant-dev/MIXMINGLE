@@ -52,4 +52,5 @@
       - assets/images/
       - assets/icons/
       - assets/fonts/
+      - assets/.env
     uses-material-design: true
