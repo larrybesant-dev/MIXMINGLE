@@ -61,7 +61,7 @@ class MixVyLoginScreen extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 48),
-                // Login Form
+                // Login Form (single set)
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
