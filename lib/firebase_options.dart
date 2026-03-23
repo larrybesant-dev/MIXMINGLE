@@ -19,9 +19,9 @@ class DefaultFirebaseOptions {
     }
   }
 
-  /// FirebaseOptions for web, API key hardcoded for production
+  /// FirebaseOptions for web, API key loaded from .env
   static FirebaseOptions get web => FirebaseOptions(
-    apiKey: 'AIzaSyBBmz9ybuDRCA2dAVjFZVj7R7wrDL0wTYU',
+    apiKey: dotenv.env['FIREBASE_API_KEY_WEB'] ?? '',
     authDomain: 'mix-and-mingle-v2.firebaseapp.com',
     projectId: 'mix-and-mingle-v2',
     storageBucket: 'mix-and-mingle-v2.firebasestorage.app',
