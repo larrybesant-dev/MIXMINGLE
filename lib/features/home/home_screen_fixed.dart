@@ -1,5 +1,5 @@
+
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../feed/providers/feed_providers.dart';
 import '../feed/models/post_model.dart';
@@ -8,7 +8,7 @@ import 'package:mixvy/models/models.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-final _bottomNavIndexProvider = StateProvider<int>(() => 0);
+final _bottomNavIndexProvider = StateProvider<int>((ref) => 0);
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});

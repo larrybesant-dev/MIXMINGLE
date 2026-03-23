@@ -1,17 +1,25 @@
+// ...existing code...
 import 'package:flutter/material.dart';
 import '../../services/payment_api.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../presentation/providers/payment_api_provider.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class SendPaymentPage extends StatefulWidget {
+class SendPaymentPage extends ConsumerStatefulWidget {
   final String recipientId;
   final String recipientName;
-  const SendPaymentPage({super.key, required this.recipientId, required this.recipientName});
+  const SendPaymentPage({
+    super.key,
+    required this.recipientId,
+    required this.recipientName,
+  });
 
   @override
-  State<SendPaymentPage> createState() => _SendPaymentPageState();
+  ConsumerState<SendPaymentPage> createState() => _SendPaymentPageState();
 }
 
-class _SendPaymentPageState extends State<SendPaymentPage> {
+class _SendPaymentPageState extends ConsumerState<SendPaymentPage> {
   final _amountController = TextEditingController();
   bool _loading = false;
   String? _error;
@@ -30,7 +38,19 @@ class _SendPaymentPageState extends State<SendPaymentPage> {
     try {
       final amount = double.tryParse(_amountController.text);
       if (amount == null || amount <= 0) {
-        setState(() { _error = 'Enter a valid amount.'; _loading = false; });
+        setState(() {
+          _error = 'Enter a valid amount.';
+          _loading = false;
+        });
+        return;
+      }
+      // Check if user is logged in
+      final user = await Future.value(FirebaseAuth.instance.currentUser);
+      if (user == null) {
+        setState(() {
+          _error = 'You must be logged in to send payments.';
+          _loading = false;
+        });
         return;
       }
       final clientSecret = await PaymentApi.createIntent(
@@ -38,22 +58,30 @@ class _SendPaymentPageState extends State<SendPaymentPage> {
         currency: 'usd',
         recipientId: widget.recipientId,
       );
-      await Stripe.instance.initPaymentSheet(paymentSheetParameters: SetupPaymentSheetParameters(
-        paymentIntentClientSecret: clientSecret,
-        merchantDisplayName: 'MixVy',
-      ));
+      await Stripe.instance.initPaymentSheet(
+        paymentSheetParameters: SetupPaymentSheetParameters(
+          paymentIntentClientSecret: clientSecret,
+          merchantDisplayName: 'MixVy',
+        ),
+      );
       await Stripe.instance.presentPaymentSheet();
-      // Notify backend of successful payment
+      // Notify backend of successful payment (senderId is authenticated user)
       await PaymentApi.notifySuccess(
         recipientId: widget.recipientId,
         amount: amount,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment sent!')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Payment sent!')));
     } catch (e) {
-      setState(() { _error = e.toString(); });
+      setState(() {
+        _error = e.toString();
+      });
     } finally {
-      setState(() { _loading = false; });
+      setState(() {
+        _loading = false;
+      });
     }
   }
 
@@ -77,7 +105,13 @@ class _SendPaymentPageState extends State<SendPaymentPage> {
             if (_error != null)
               Semantics(
                 label: 'Error message',
-                child: Text(_error!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                child: Text(
+                  _error!,
+                  style: const TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             Semantics(
               label: 'Send Payment button',
@@ -89,7 +123,9 @@ class _SendPaymentPageState extends State<SendPaymentPage> {
                     : Text(
                         'Send Payment',
                         style: TextStyle(
-                          fontSize: MediaQuery.of(context).size.width > 400 ? 20 : 18,
+                          fontSize: MediaQuery.of(context).size.width > 400
+                              ? 20
+                              : 18,
                         ),
                       ),
               ),
