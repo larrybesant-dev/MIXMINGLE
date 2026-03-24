@@ -9,17 +9,21 @@ class FriendsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Friends')),
       body: Consumer(builder: (context, ref, _) {
-        final friends = ref.watch(friendListProvider);
-        return ListView.builder(
-          itemCount: friends.length,
-          itemBuilder: (context, index) => ListTile(
-            leading: CircleAvatar(child: Text(friends[index].userId ?? 'F$index')),
-            title: Text(friends[index].friendId ?? 'Friend $index'),
-            trailing: IconButton(
-              icon: const Icon(Icons.chat),
-              onPressed: () {},
+        final friendsAsync = ref.watch(friendStreamProvider);
+        return friendsAsync.when(
+          data: (friends) => ListView.builder(
+            itemCount: friends.length,
+            itemBuilder: (context, index) => ListTile(
+              leading: CircleAvatar(child: Text(friends[index].userId ?? 'F$index')),
+              title: Text(friends[index].friendId ?? 'Friend $index'),
+              trailing: IconButton(
+                icon: const Icon(Icons.chat),
+                onPressed: () {},
+              ),
             ),
           ),
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Error: $e')),
         );
       }),
     );

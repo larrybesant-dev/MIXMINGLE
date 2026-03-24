@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:uuid/uuid.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -53,17 +55,33 @@ class PaymentApi {
   static final _firestore = FirebaseFirestore.instance;
   static final _uuid = Uuid();
 
-  /// Creates a payment intent (stub for Stripe integration, returns a fake client secret for now)
+  /// Creates a payment intent by calling a backend endpoint that integrates with Stripe
   static Future<String> createIntent({
     required double amount,
     required String currency,
     required String recipientId,
   }) async {
-    // TODO: Integrate with Stripe or backend to create a real payment intent
-    // For now, just return a fake client secret
-    return Future.value(
-      'test_client_secret_${DateTime.now().millisecondsSinceEpoch}',
+    // Replace with your actual backend endpoint
+    final url = Uri.parse('https://us-central1-mixvy-app.cloudfunctions.net/createPaymentIntent');
+    final response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'amount': amount.toString(),
+        'currency': currency,
+        'recipientId': recipientId,
+      }),
     );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      if (data['clientSecret'] != null) {
+        return data['clientSecret'] as String;
+      } else {
+        throw Exception('clientSecret missing in response');
+      }
+    } else {
+      throw Exception('Failed to create payment intent: ${response.body}');
+    }
   }
 
   /// Notifies backend of successful payment (records transaction in Firestore)

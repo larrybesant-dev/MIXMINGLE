@@ -1,2 +1,12 @@
 // ...existing code...
-// Firebase Crashlytics code removed. Implement error reporting logic here if needed.
+// Error reporting stub. Replace with Crashlytics, Sentry, or custom logic as needed.
+import 'package:logging/logging.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+
+final _logger = Logger('ErrorReporting');
+
+void reportError(dynamic error, StackTrace stack) {
+	_logger.severe('Error: $error', error, stack);
+	// Report to Firebase Crashlytics
+	FirebaseCrashlytics.instance.recordError(error, stack);
+}

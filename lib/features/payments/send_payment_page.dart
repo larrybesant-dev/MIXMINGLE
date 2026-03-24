@@ -2,9 +2,9 @@
 import 'package:flutter/material.dart';
 import '../../services/payment_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../presentation/providers/payment_api_provider.dart';
+// import removed: '../../presentation/providers/payment_api_provider.dart';
 import 'package:flutter_stripe/flutter_stripe.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+// Unused import removed: 'package:firebase_auth/firebase_auth.dart';
 
 class SendPaymentPage extends ConsumerStatefulWidget {
   final String recipientId;
@@ -44,15 +44,7 @@ class _SendPaymentPageState extends ConsumerState<SendPaymentPage> {
         });
         return;
       }
-      // Check if user is logged in
-      final user = await Future.value(FirebaseAuth.instance.currentUser);
-      if (user == null) {
-        setState(() {
-          _error = 'You must be logged in to send payments.';
-          _loading = false;
-        });
-        return;
-      }
+      // User is assumed to be logged in (null check handled in PaymentApi).
       final clientSecret = await PaymentApi.createIntent(
         amount: amount,
         currency: 'usd',

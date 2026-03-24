@@ -5,7 +5,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 final walletProvider = StreamProvider<double>((ref) {
   final user = FirebaseAuth.instance.currentUser;
   if (user == null) {
-    return const Stream<double>.value(0);
+    return Stream<double>.value(0);
   }
   final docStream = FirebaseFirestore.instance
       .collection('users')
