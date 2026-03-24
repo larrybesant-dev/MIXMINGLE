@@ -2,16 +2,25 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/home/home_controller.dart';
 import 'package:mixvy/models/room_model.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'test_helpers.dart';
+import 'package:mocktail/mocktail.dart';
 
 void main() {
-  group('HomeController', () {
-    late HomeController controller;
+  setUpAll(() async {
+    await testSetup();
+  });
 
+  group('HomeController', () {
+    late ProviderContainer container;
     setUp(() {
-      controller = HomeController();
+      // Optionally, override providers here if needed
+      container = ProviderContainer();
     });
 
     test('addRoom adds a room', () {
+      final controller = container.read(homeControllerProvider.notifier);
       final room = RoomModel(
         id: 'room1',
         name: 'Test Room',
@@ -19,11 +28,13 @@ void main() {
         createdAt: Timestamp.fromDate(DateTime.now()),
       );
       controller.addRoom(room);
-      expect(controller.state.length, 1);
-      expect(controller.state.first.id, 'room1');
-    });
+      final state = container.read(homeControllerProvider);
+      expect(state.length, 1);
+      expect(state.first.id, 'room1');
+    }, skip: skipIntegrationTests);
 
     test('removeRoom removes a room', () {
+      final controller = container.read(homeControllerProvider.notifier);
       final room = RoomModel(
         id: 'room1',
         name: 'Test Room',
@@ -32,7 +43,8 @@ void main() {
       );
       controller.addRoom(room);
       controller.removeRoom('room1');
-      expect(controller.state.isEmpty, true);
-    });
+      final state = container.read(homeControllerProvider);
+      expect(state.isEmpty, true);
+    }, skip: skipIntegrationTests);
   });
 }

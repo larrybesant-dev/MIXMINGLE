@@ -8,10 +8,10 @@ import 'package:mixvy/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // Firestore emulator disabled: always use production Firebase
-
+  const isTest = bool.fromEnvironment('FLUTTER_TEST', defaultValue: false);
+  if (!isTest) {
+    await dotenv.load();
+    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  }
   runApp(const ProviderScope(child: MixVyApp()));
 }

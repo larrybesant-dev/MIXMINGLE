@@ -52,6 +52,10 @@ final profileControllerProvider = NotifierProvider<ProfileController, ProfileSta
 );
 
 class ProfileController extends Notifier<ProfileState> {
+  final FirebaseFirestore _firestore;
+
+  ProfileController({FirebaseFirestore? firestore}) : _firestore = firestore ?? FirebaseFirestore.instance;
+
   @override
   ProfileState build() => const ProfileState();
 
@@ -59,7 +63,7 @@ class ProfileController extends Notifier<ProfileState> {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final userId = profile.username ?? '';
-      final userRef = FirebaseFirestore.instance.collection('users').doc(userId);
+      final userRef = _firestore.collection('users').doc(userId);
       await userRef.update({
         'username': profile.username,
         'email': profile.email,
@@ -77,7 +81,7 @@ class ProfileController extends Notifier<ProfileState> {
   Future<void> fetchProfile(String userId) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+      final userDoc = await _firestore.collection('users').doc(userId).get();
       if (!userDoc.exists) {
         state = state.copyWith(isLoading: false, error: 'User not found');
         return;
