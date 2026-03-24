@@ -30,8 +30,11 @@ final mockAuth = MockFirebaseAuth();
 final mockFirestore = MockFirebaseFirestore();
 
 Future<void> testSetup() async {
-    // Mock signOut to return a Future<void>
-    when(() => mockAuth.signOut()).thenAnswer((_) async => Future.value());
+    // Mock signOut to set currentUser to null and return a Future<void>
+    when(() => mockAuth.signOut()).thenAnswer((_) async {
+      when(() => mockAuth.currentUser).thenReturn(null);
+      return Future.value();
+    });
   TestWidgetsFlutterBinding.ensureInitialized();
   registerFallbackValue(MockFirebaseApp());
   registerFallbackValue(MockFirebaseAuth());
