@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
+import 'package:mixvy/services/analytics_service.dart';
 
 class MixVyLoginScreen extends StatefulWidget {
-  const MixVyLoginScreen({Key? key}) : super(key: key);
+  const MixVyLoginScreen({super.key});
 
   @override
   State<MixVyLoginScreen> createState() => _MixVyLoginScreenState();
@@ -53,7 +54,7 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            authState.error!,
+            authState.error ?? '',
             style: const TextStyle(color: Colors.white),
           ),
           backgroundColor: Colors.redAccent,
@@ -71,7 +72,6 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final mq = MediaQuery.of(context);
     return Consumer(
       builder: (context, ref, _) {
         final authState = ref.watch(authControllerProvider);
@@ -84,7 +84,6 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
               final width = constraints.maxWidth;
               final isMobile = width < 600;
               final isTablet = width >= 600 && width < 1024;
-              final isDesktop = width >= 1024;
               double containerWidth = isMobile
                   ? double.infinity
                   : (isTablet ? 500 : 420);
@@ -111,11 +110,11 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
                       margin: containerMargin,
                       padding: EdgeInsets.all(formPadding),
                       decoration: BoxDecoration(
-                        color: theme.cardColor.withValues(alpha: (0.95 * 255).toInt()),
+                        color: theme.cardColor.withAlpha((0.95 * 255).toInt()),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.3),
+                            color: Colors.black.withAlpha((0.3 * 255).toInt()),
                             blurRadius: 24,
                             offset: const Offset(0, 8),
                           ),
@@ -177,13 +176,15 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
                                 ),
                               ),
                               validator: (v) {
-                                if (v == null || v.isEmpty)
+                                if (v == null || v.isEmpty) {
                                   return 'Enter your email.';
+                                }
                                 final emailRegex = RegExp(
                                   r"^[\w-.]+@([\w-]+\.)+[\w-]{2,4}",
                                 );
-                                if (!emailRegex.hasMatch(v))
+                                if (!emailRegex.hasMatch(v)) {
                                   return 'Enter a valid email.';
+                                }
                                 return null;
                               },
                               textInputAction: TextInputAction.next,
@@ -257,7 +258,7 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
                               Padding(
                                 padding: const EdgeInsets.only(bottom: 12),
                                 child: Text(
-                                  error!,
+                                  error,
                                   style: const TextStyle(
                                     color: Colors.redAccent,
                                     fontWeight: FontWeight.w600,
@@ -303,7 +304,11 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 TextButton(
-                                  onPressed: isLoading ? null : () {},
+                                  onPressed: isLoading
+                                      ? null
+                                      : () {
+                                          Navigator.of(context).pushNamed('/forgot-password');
+                                        },
                                   child: const Text(
                                     'Forgot password?',
                                     style: TextStyle(color: Colors.white70),
@@ -320,7 +325,11 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
                                   style: const TextStyle(color: Colors.white70),
                                 ),
                                 TextButton(
-                                  onPressed: isLoading ? null : () {},
+                                  onPressed: isLoading
+                                      ? null
+                                      : () {
+                                          Navigator.of(context).pushNamed('/register');
+                                        },
                                   child: const Text(
                                     'Sign up',
                                     style: TextStyle(
@@ -353,7 +362,24 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
                                   label: 'Sign in with Google',
                                   color: Colors.white,
                                   textColor: Colors.black,
-                                  onTap: isLoading ? null : () {},
+                                  onTap: isLoading
+                                      ? null
+                                      : () async {
+                                          final authController = ref.read(authControllerProvider.notifier);
+                                          await authController.signInWithGoogle();
+                                          final authState = ref.read(authControllerProvider);
+                                          if (authState.error != null && mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  authState.error ?? '',
+                                                  style: const TextStyle(color: Colors.white),
+                                                ),
+                                                backgroundColor: Colors.redAccent,
+                                              ),
+                                            );
+                                          }
+                                        },
                                   fontSize: buttonFontSize,
                                   iconSize: iconSize,
                                   padding: EdgeInsets.symmetric(

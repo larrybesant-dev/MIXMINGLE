@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/room/room_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'test_helpers.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:mixvy/models/room_model.dart';
 
 void main() {

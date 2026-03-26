@@ -5,7 +5,6 @@ import 'package:mixvy/models/room_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'test_helpers.dart';
-import 'package:mocktail/mocktail.dart';
 
 void main() {
   setUpAll(() async {

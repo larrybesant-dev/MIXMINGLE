@@ -1,10 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/profile/profile_controller.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'test_helpers.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:mocktail/mocktail.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 void main() {

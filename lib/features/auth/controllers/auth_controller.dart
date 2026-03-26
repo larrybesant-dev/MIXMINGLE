@@ -1,6 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../../presentation/screens/google_sign_in_helper_stub.dart';
+
 class AuthState {
   final bool isLoading;
   final String? error;
@@ -23,6 +25,16 @@ final authControllerProvider = NotifierProvider<AuthController, AuthState>(
 
 
 class AuthController extends Notifier<AuthState> {
+
+    Future<void> signInWithGoogle() async {
+      state = state.copyWith(isLoading: true, error: null);
+      try {
+        await getGoogleSignInHelper().signInWithGoogle();
+        state = state.copyWith(isLoading: false, uid: _auth.currentUser?.uid);
+      } catch (e) {
+        state = state.copyWith(isLoading: false, error: e.toString());
+      }
+    }
   final FirebaseAuth _auth;
 
   AuthController({FirebaseAuth? auth}) : _auth = auth ?? FirebaseAuth.instance;

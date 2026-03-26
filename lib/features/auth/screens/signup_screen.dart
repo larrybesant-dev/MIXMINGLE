@@ -68,11 +68,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
     final controller = ref.read(authControllerProvider.notifier);
     await controller.signup(_email.text.trim(), _password.text.trim());
-    final authState = ref.read(authControllerProvider);
     if (!mounted) return;
+    final authState = ref.read(authControllerProvider);
     if (authState.error == null) {
       // Log signup event
       await AnalyticsService().logEvent('signup', params: {'method': 'email_password'});
+      if (!mounted) return;
       Navigator.of(context).pushReplacementNamed('/home');
     }
   }

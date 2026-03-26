@@ -1,4 +1,3 @@
-import 'package:flutter_test/flutter_test.dart';
 import 'package:patrol/patrol.dart';
 import 'package:mixvy/main.dart' as app;
 import 'test_helpers.dart';

@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -68,12 +69,13 @@ class _StripeWebPaymentWidgetState
         throw Exception("Failed to create session: \\${response.body}");
       }
     } catch (e, stack) {
-      // Integrate Crashlytics for error reporting
-      try {
-        FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Stripe checkout session creation failed');
-      } catch (_) {
-        // Fallback: print error if Crashlytics is not available
-        FlutterError.reportError(FlutterErrorDetails(exception: e, stack: stack));
+      // Integrate Crashlytics for error reporting (not on web)
+      if (!kIsWeb) {
+        try {
+          FirebaseCrashlytics.instance.recordError(e, stack, reason: 'Stripe checkout session creation failed');
+        } catch (_) {
+          FlutterError.reportError(FlutterErrorDetails(exception: e, stack: stack));
+        }
       }
       return null;
     }
