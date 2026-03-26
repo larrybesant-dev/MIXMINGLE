@@ -1,9 +1,12 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixvy/app/app.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
+
 import 'package:mixvy/firebase_options.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
 
 void main() async {

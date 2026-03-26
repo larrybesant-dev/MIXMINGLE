@@ -8,6 +8,14 @@
   <base href="$FLUTTER_BASE_HREF">
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>MixVy - Welcome &amp; Login</title>
+  <link rel="manifest" href="manifest.json">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('flutter_service_worker.js');
+      });
+    }
+  </script>
   <!-- Tailwind CDN removed for production. Use Flutter for all UI, or build Tailwind CSS locally if needed for custom HTML. -->
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>

@@ -111,7 +111,7 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
                       margin: containerMargin,
                       padding: EdgeInsets.all(formPadding),
                       decoration: BoxDecoration(
-                        color: theme.cardColor.withOpacity(0.95),
+                        color: theme.cardColor.withValues(alpha: (0.95 * 255).toInt()),
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
@@ -241,10 +241,12 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
                                 ),
                               ),
                               validator: (v) {
-                                if (v == null || v.isEmpty)
+                                if (v == null || v.isEmpty) {
                                   return 'Enter your password.';
-                                if (v.length < 6)
+                                }
+                                if (v.length < 6) {
                                   return 'Password must be at least 6 characters.';
+                                }
                                 return null;
                               },
                               textInputAction: TextInputAction.done,

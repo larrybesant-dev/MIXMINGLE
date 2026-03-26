@@ -35,26 +35,26 @@ final mockFirestore = MockFirebaseFirestore();
 
 Future<void> testSetup() async {
   // Track currentUser for signOut/login and control authStateChanges
-  User? _currentUser = mockUser;
-  final _authStateController = StreamController<User?>.broadcast();
-  _authStateController.add(_currentUser);
-  when(() => mockAuth.currentUser).thenAnswer((_) => _currentUser);
-  when(() => mockAuth.authStateChanges()).thenAnswer((_) => _authStateController.stream);
+  User? currentUser = mockUser;
+  final authStateController = StreamController<User?>.broadcast();
+  authStateController.add(currentUser);
+  when(() => mockAuth.currentUser).thenAnswer((_) => currentUser);
+  when(() => mockAuth.authStateChanges()).thenAnswer((_) => authStateController.stream);
   when(() => mockAuth.signInWithEmailAndPassword(email: any(named: 'email'), password: any(named: 'password')))
       .thenAnswer((_) async {
-        _currentUser = mockUser;
-        _authStateController.add(_currentUser);
+        currentUser = mockUser;
+        authStateController.add(currentUser);
         return mockUserCredential;
       });
   when(() => mockAuth.createUserWithEmailAndPassword(email: any(named: 'email'), password: any(named: 'password')))
       .thenAnswer((_) async {
-        _currentUser = mockUser;
-        _authStateController.add(_currentUser);
+        currentUser = mockUser;
+        authStateController.add(currentUser);
         return mockUserCredential;
       });
   when(() => mockAuth.signOut()).thenAnswer((_) async {
-    _currentUser = null;
-    _authStateController.add(_currentUser);
+    currentUser = null;
+    authStateController.add(currentUser);
     return Future.value();
   });
   TestWidgetsFlutterBinding.ensureInitialized();

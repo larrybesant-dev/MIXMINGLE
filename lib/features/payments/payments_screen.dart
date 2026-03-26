@@ -1,8 +1,10 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+
 import 'stripe_web_payment_widget.dart';
 import 'payments_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mixvy/services/analytics_service.dart';
 
 class PaymentsScreen extends ConsumerWidget {
   const PaymentsScreen({super.key});
