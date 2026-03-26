@@ -12,6 +12,16 @@ void main() async {
   if (!isTest) {
     await dotenv.load();
     await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+    // Set up global error handling for Crashlytics
+    FlutterError.onError = (FlutterErrorDetails details) {
+      FlutterError.presentError(details);
+      // Report to Crashlytics
+      FirebaseCrashlytics.instance.recordFlutterError(details);
+    };
+    PlatformDispatcher.instance.onError = (error, stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
   }
   runApp(const ProviderScope(child: MixVyApp()));
 }

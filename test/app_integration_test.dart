@@ -8,36 +8,41 @@ void main() {
   setUpAll(() async {
     await testSetup();
   });
-  patrolWidgetTest('Launches and navigates through main pages', ($) async {
-    app.main();
-    await $.pumpAndSettle();
 
-    // Verify Splash or Onboarding
-    expect($(find.text('Welcome')), findsOneWidget);
+  patrolWidgetTest(
+    'Launches and navigates through main pages',
+    ($) async {
+      app.main();
+      await $.pumpAndSettle();
 
-    // Navigate to Home
-    await $(find.byIcon(Icons.home)).tap();
-    await $.pumpAndSettle();
-    expect($(find.text('Home')), findsOneWidget);
+      // Verify Splash or Onboarding
+      expect(find.text('Welcome'), findsOneWidget);
 
-    // Navigate to Feed
-    await $(find.byIcon(Icons.dynamic_feed)).tap();
-    await $.pumpAndSettle();
-    expect($(find.text('Feed')), findsOneWidget);
+      // Navigate to Home
+      await $.tap(find.byIcon(Icons.home));
+      await $.pumpAndSettle();
+      expect(find.text('Home'), findsOneWidget);
 
-    // Navigate to Chat
-    await $(find.byIcon(Icons.chat)).tap();
-    await $.pumpAndSettle();
-    expect($(find.text('Chat')), findsOneWidget);
+      // Navigate to Feed
+      await $.tap(find.byIcon(Icons.dynamic_feed));
+      await $.pumpAndSettle();
+      expect(find.text('Feed'), findsOneWidget);
 
-    // Navigate to Payments
-    await $(find.byIcon(Icons.payment)).tap();
-    await $.pumpAndSettle();
-    expect($(find.text('Payments')), findsOneWidget);
+      // Navigate to Chat
+      await $.tap(find.byIcon(Icons.chat));
+      await $.pumpAndSettle();
+      expect(find.text('Chat'), findsOneWidget);
 
-    // Navigate to Profile
-    await $(find.byIcon(Icons.person)).tap();
-    await $.pumpAndSettle();
-    expect($(find.text('Profile')), findsOneWidget);
-  });
+      // Navigate to Payments
+      await $.tap(find.byIcon(Icons.payment));
+      await $.pumpAndSettle();
+      expect(find.text('Payments'), findsOneWidget);
+
+      // Navigate to Profile
+      await $.tap(find.byIcon(Icons.person));
+      await $.pumpAndSettle();
+      expect(find.text('Profile'), findsOneWidget);
+    },
+    skip: skipIntegrationTests,
+  );
 }

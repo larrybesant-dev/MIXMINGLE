@@ -25,13 +25,20 @@ class HomeScreen extends ConsumerWidget {
       const _EventsScreen(),
       const _ProfileScreen(),
     ];
+    Future<void> _logTabSwitch(int idx) async {
+      final tabNames = ['home', 'rooms', 'events', 'profile'];
+      await AnalyticsService().logEvent('tab_switched', params: {'tab': tabNames[idx]});
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('Home Feed'),
         actions: [
           IconButton(
             icon: const Icon(Icons.person),
-            onPressed: () => ref.read(_bottomNavIndexProvider.notifier).state = 3,
+            onPressed: () async {
+              await _logTabSwitch(3);
+              ref.read(_bottomNavIndexProvider.notifier).state = 3;
+            },
           ),
           IconButton(
             icon: const Icon(Icons.notifications),
@@ -51,7 +58,10 @@ class HomeScreen extends ConsumerWidget {
       body: pages[selectedIndex],
       bottomNavigationBar: NavigationBar(
         selectedIndex: selectedIndex,
-        onDestinationSelected: (int idx) => ref.read(_bottomNavIndexProvider.notifier).state = idx,
+        onDestinationSelected: (int idx) async {
+          await _logTabSwitch(idx);
+          ref.read(_bottomNavIndexProvider.notifier).state = idx;
+        },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
           NavigationDestination(icon: Icon(Icons.meeting_room), label: 'Rooms'),

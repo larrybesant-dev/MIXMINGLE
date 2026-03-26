@@ -30,6 +30,8 @@ class PaymentsScreen extends ConsumerWidget {
                           await controller.initiatePayment(1000);
                           if (!context.mounted) return;
                           if (paymentState.error == null) {
+                            // Log purchase event
+                            await AnalyticsService().logPurchase(value: 1000, currency: 'usd');
                             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Payment successful')));
                           }
                         },

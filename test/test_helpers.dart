@@ -8,6 +8,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'dart:async';
+
 /// Loads .env.test and mocks Firebase initialization for tests.
 import 'dart:io';
 import 'package:path/path.dart' as p;
@@ -26,15 +28,35 @@ class MockDocumentSnapshot extends Mock implements DocumentSnapshot<Map<String, 
 class MockCollectionReference extends Mock implements CollectionReference<Map<String, dynamic>> {}
 
 // Expose mocks for use in test files
+final mockUser = MockUser();
+final mockUserCredential = MockUserCredential();
 final mockAuth = MockFirebaseAuth();
 final mockFirestore = MockFirebaseFirestore();
 
 Future<void> testSetup() async {
-    // Mock signOut to set currentUser to null and return a Future<void>
-    when(() => mockAuth.signOut()).thenAnswer((_) async {
-      when(() => mockAuth.currentUser).thenReturn(null);
-      return Future.value();
-    });
+  // Track currentUser for signOut/login and control authStateChanges
+  User? _currentUser = mockUser;
+  final _authStateController = StreamController<User?>.broadcast();
+  _authStateController.add(_currentUser);
+  when(() => mockAuth.currentUser).thenAnswer((_) => _currentUser);
+  when(() => mockAuth.authStateChanges()).thenAnswer((_) => _authStateController.stream);
+  when(() => mockAuth.signInWithEmailAndPassword(email: any(named: 'email'), password: any(named: 'password')))
+      .thenAnswer((_) async {
+        _currentUser = mockUser;
+        _authStateController.add(_currentUser);
+        return mockUserCredential;
+      });
+  when(() => mockAuth.createUserWithEmailAndPassword(email: any(named: 'email'), password: any(named: 'password')))
+      .thenAnswer((_) async {
+        _currentUser = mockUser;
+        _authStateController.add(_currentUser);
+        return mockUserCredential;
+      });
+  when(() => mockAuth.signOut()).thenAnswer((_) async {
+    _currentUser = null;
+    _authStateController.add(_currentUser);
+    return Future.value();
+  });
   TestWidgetsFlutterBinding.ensureInitialized();
   registerFallbackValue(MockFirebaseApp());
   registerFallbackValue(MockFirebaseAuth());
@@ -45,20 +67,13 @@ Future<void> testSetup() async {
   registerFallbackValue(MockDocumentSnapshot());
   registerFallbackValue(MockCollectionReference());
 
-  // Mock FirebaseAuth methods
-  final mockUser = MockUser();
-  final mockUserCredential = MockUserCredential();
-  when(() => mockUser.uid).thenReturn('mock-uid');
-  when(() => mockUser.email).thenReturn('user@example.com');
-  when(() => mockUser.displayName).thenReturn('username');
-  when(() => mockUser.photoURL).thenReturn('');
-  when(() => mockUserCredential.user).thenReturn(mockUser);
-  when(() => mockAuth.currentUser).thenReturn(mockUser);
-  when(() => mockAuth.signInWithEmailAndPassword(email: any(named: 'email'), password: any(named: 'password')))
-      .thenAnswer((_) async => mockUserCredential);
-  when(() => mockAuth.createUserWithEmailAndPassword(email: any(named: 'email'), password: any(named: 'password')))
-      .thenAnswer((_) async => mockUserCredential);
-  when(() => mockAuth.authStateChanges()).thenAnswer((_) => Stream<User?>.value(mockUser));
+    // Mock FirebaseAuth methods (use top-level mocks)
+    when(() => mockUser.uid).thenReturn('mock-uid');
+    when(() => mockUser.email).thenReturn('user@example.com');
+    when(() => mockUser.displayName).thenReturn('username');
+    when(() => mockUser.photoURL).thenReturn('');
+    when(() => mockUserCredential.user).thenReturn(mockUser);
+    when(() => mockAuth.authStateChanges()).thenAnswer((_) => Stream<User?>.value(mockUser));
 
   // Mock Firestore methods
   final mockDocRef = MockDocumentReference();
