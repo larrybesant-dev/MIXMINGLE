@@ -367,17 +367,21 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
                                       : () async {
                                           final authController = ref.read(authControllerProvider.notifier);
                                           await authController.signInWithGoogle();
+                                          if (!mounted) return;
                                           final authState = ref.read(authControllerProvider);
-                                          if (authState.error != null && mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  authState.error ?? '',
-                                                  style: const TextStyle(color: Colors.white),
+                                          if (authState.error != null) {
+                                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                                              if (!mounted) return;
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    authState.error ?? '',
+                                                    style: const TextStyle(color: Colors.white),
+                                                  ),
+                                                  backgroundColor: Colors.redAccent,
                                                 ),
-                                                backgroundColor: Colors.redAccent,
-                                              ),
-                                            );
+                                              );
+                                            });
                                           }
                                         },
                                   fontSize: buttonFontSize,
