@@ -38,7 +38,7 @@ void main() async {
           return true;
         };
       }
-    } catch (e, stack) {
+    } catch (e) {
       // If Firebase fails to initialize, show a fallback UI
       runApp(
         MaterialApp(

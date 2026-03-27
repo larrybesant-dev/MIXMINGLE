@@ -59,7 +59,7 @@ void main() {
         hostId: 'host1',
         createdAt: Timestamp.fromDate(DateTime.now()),
       );
-      controller.updateRoom(updatedRoom);
+      controller.updateRoom(updatedRoom.id, {'name': updatedRoom.name});
       final state = container.read(roomControllerProvider);
       expect(state?.id, 'room1');
     }, skip: skipIntegrationTests);
