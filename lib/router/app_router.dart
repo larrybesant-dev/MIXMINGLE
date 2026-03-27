@@ -6,8 +6,7 @@ import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 import '../features/auth/register_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/payments/payments_screen.dart';
-import 'package:mixvy/features/auth/screens/login_screen.dart';
-import '../features/dashboard/dashboard_screen.dart';
+
 
 // Supabase logic removed.
 

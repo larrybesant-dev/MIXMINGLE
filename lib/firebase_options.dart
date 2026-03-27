@@ -1,5 +1,7 @@
 // Corrected FirebaseOptions for MixVy
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
+
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DefaultFirebaseOptions {

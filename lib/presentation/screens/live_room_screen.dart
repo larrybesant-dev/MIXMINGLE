@@ -7,6 +7,7 @@ import '../../features/room/providers/participant_providers.dart';
 import '../../features/room/providers/message_providers.dart';
 import '../../features/room/widgets/message_bubble.dart';
 import '../../features/room/providers/host_controls_provider.dart';
+import '../../features/room/providers/host_provider.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   final String roomId;
