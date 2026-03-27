@@ -1,8 +1,45 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:uuid/uuid.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
+
+abstract class PaymentFunctionsGateway {
+  Future<Map<String, dynamic>> call(
+    String name,
+    Map<String, dynamic> payload,
+  );
+}
+
+class FirebasePaymentFunctionsGateway implements PaymentFunctionsGateway {
+  FirebasePaymentFunctionsGateway({FirebaseFunctions? functions})
+      : _functions = functions ?? FirebaseFunctions.instance;
+
+  final FirebaseFunctions _functions;
+
+  @override
+  Future<Map<String, dynamic>> call(
+    String name,
+    Map<String, dynamic> payload,
+  ) async {
+    final callable = _functions.httpsCallable(name);
+    final result = await callable.call<Map<String, dynamic>>(payload);
+    return Map<String, dynamic>.from(result.data);
+  }
+}
+
+abstract class PaymentAuthGateway {
+  User? get currentUser;
+}
+
+class FirebasePaymentAuthGateway implements PaymentAuthGateway {
+  FirebasePaymentAuthGateway({FirebaseAuth? auth})
+      : _auth = auth ?? FirebaseAuth.instance;
+
+  final FirebaseAuth _auth;
+
+  @override
+  User? get currentUser => _auth.currentUser;
+}
 
 class CoinTransaction {
   final String id;
@@ -42,18 +79,42 @@ class CoinTransaction {
 }
 
 class PaymentApi {
-    /// Ensures user document exists with default balance
-    static Future<void> ensureUserExists(String uid, {double defaultBalance = 100.0}) async {
-      final userDoc = await _firestore.collection('users').doc(uid).get();
-      if (!userDoc.exists) {
-        await _firestore.collection('users').doc(uid).set({
-          'uid': uid,
-          'balance': defaultBalance,
-        });
-      }
-    }
   static final _firestore = FirebaseFirestore.instance;
-  static final _uuid = Uuid();
+  static PaymentFunctionsGateway? _functionsGateway;
+  static PaymentAuthGateway? _authGateway;
+
+  static PaymentFunctionsGateway get _resolvedFunctionsGateway =>
+    _functionsGateway ??= FirebasePaymentFunctionsGateway();
+
+  static PaymentAuthGateway get _resolvedAuthGateway =>
+    _authGateway ??= FirebasePaymentAuthGateway();
+
+  @visibleForTesting
+  static void configureForTesting({
+    PaymentFunctionsGateway? functionsGateway,
+    PaymentAuthGateway? authGateway,
+  }) {
+    if (functionsGateway != null) {
+      _functionsGateway = functionsGateway;
+    }
+    if (authGateway != null) {
+      _authGateway = authGateway;
+    }
+  }
+
+  @visibleForTesting
+  static void resetForTesting() {
+    _functionsGateway = null;
+    _authGateway = null;
+  }
+
+  static Future<T> _callFunction<T>(
+    String name,
+    Map<String, dynamic> payload,
+  ) async {
+    final result = await _resolvedFunctionsGateway.call(name, payload);
+    return result as T;
+  }
 
   /// Creates a payment intent by calling a backend endpoint that integrates with Stripe
   static Future<String> createIntent({
@@ -61,27 +122,16 @@ class PaymentApi {
     required String currency,
     required String recipientId,
   }) async {
-    // Replace with your actual backend endpoint
-    final url = Uri.parse('https://us-central1-mixvy-app.cloudfunctions.net/createPaymentIntent');
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'amount': amount.toString(),
-        'currency': currency,
-        'recipientId': recipientId,
-      }),
-    );
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      if (data['clientSecret'] != null) {
-        return data['clientSecret'] as String;
-      } else {
-        throw Exception('clientSecret missing in response');
-      }
-    } else {
-      throw Exception('Failed to create payment intent: ${response.body}');
+    final data = await _callFunction<Map<String, dynamic>>('createPaymentIntent', {
+      'amount': amount,
+      'currency': currency,
+      'recipientId': recipientId,
+    });
+    final clientSecret = data['clientSecret'] as String?;
+    if (clientSecret == null || clientSecret.isEmpty) {
+      throw Exception('clientSecret missing in response');
     }
+    return clientSecret;
   }
 
   /// Notifies backend of successful payment (records transaction in Firestore)
@@ -89,63 +139,27 @@ class PaymentApi {
     required String recipientId,
     required double amount,
   }) async {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _resolvedAuthGateway.currentUser;
     if (user == null) {
       throw Exception('User not logged in');
     }
-    final senderId = user.uid;
-    final transaction = CoinTransaction(
-      id: _uuid.v4(),
-      senderId: senderId,
-      receiverId: recipientId,
-      amount: amount,
-      timestamp: DateTime.now(),
-      status: 'completed',
-    );
-    await _firestore
-        .collection('transactions')
-        .doc(transaction.id)
-        .set(transaction.toJson());
+    await _callFunction<Map<String, dynamic>>('recordStripePaymentSuccess', {
+      'recipientId': recipientId,
+      'amount': amount,
+    });
   }
 
   static Future<void> sendPayment(
     String receiverId,
     double amount,
   ) async {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = _resolvedAuthGateway.currentUser;
     if (user == null) {
       throw Exception('User not logged in');
     }
-    final senderId = user.uid;
-    // Ensure both users exist
-    await ensureUserExists(senderId);
-    await ensureUserExists(receiverId);
-
-    // Run Firestore transaction for atomic balance update
-    await _firestore.runTransaction((txn) async {
-      final senderRef = _firestore.collection('users').doc(senderId);
-      final receiverRef = _firestore.collection('users').doc(receiverId);
-      final senderSnap = await txn.get(senderRef);
-      final receiverSnap = await txn.get(receiverRef);
-      final senderBalance = (senderSnap.data()?['balance'] ?? 0).toDouble();
-      final receiverBalance = (receiverSnap.data()?['balance'] ?? 0).toDouble();
-      if (senderBalance < amount) {
-        throw Exception('Insufficient balance');
-      }
-      txn.update(senderRef, {'balance': senderBalance - amount});
-      txn.update(receiverRef, {'balance': receiverBalance + amount});
-      final transaction = CoinTransaction(
-        id: _uuid.v4(),
-        senderId: senderId,
-        receiverId: receiverId,
-        amount: amount,
-        timestamp: DateTime.now(),
-        status: 'sent',
-      );
-      txn.set(
-        _firestore.collection('transactions').doc(transaction.id),
-        transaction.toJson(),
-      );
+    await _callFunction<Map<String, dynamic>>('sendCoinTransfer', {
+      'receiverId': receiverId,
+      'amount': amount,
     });
   }
 
@@ -154,18 +168,17 @@ class PaymentApi {
     String targetId,
     double amount,
   ) async {
-    final transaction = CoinTransaction(
-      id: _uuid.v4(),
-      senderId: requesterId,
-      receiverId: targetId,
-      amount: amount,
-      timestamp: DateTime.now(),
-      status: 'requested',
-    );
-    await _firestore
-        .collection('transactions')
-        .doc(transaction.id)
-        .set(transaction.toJson());
+    final user = _resolvedAuthGateway.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+    if (user.uid != requesterId) {
+      throw Exception('Authenticated user does not match requesterId');
+    }
+    await _callFunction<Map<String, dynamic>>('requestCoinTransfer', {
+      'targetId': targetId,
+      'amount': amount,
+    });
   }
 
   static Stream<List<CoinTransaction>> getTransactions(String userId) {

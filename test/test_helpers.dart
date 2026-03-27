@@ -6,6 +6,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'dart:async';
 
 
 
@@ -21,6 +22,12 @@ final mockUser = MockUser();
 final mockUserCredential = MockUserCredential();
 final mockAuth = MockFirebaseAuth();
 final mockFirestore = MockFirebaseFirestore();
+final StreamController<User?> authStateController =
+    StreamController<User?>.broadcast();
+
+void emitAuthState(User? user) {
+  authStateController.add(user);
+}
 
 Future<void> testSetup() async {
   // Removed unused local variable 'currentUser'
@@ -38,7 +45,9 @@ Future<void> testSetup() async {
     when(() => mockUser.displayName).thenReturn('username');
     when(() => mockUser.photoURL).thenReturn('');
     when(() => mockUserCredential.user).thenReturn(mockUser);
-    when(() => mockAuth.authStateChanges()).thenAnswer((_) => Stream<User?>.value(mockUser));
+    when(() => mockAuth.authStateChanges()).thenAnswer((_) => authStateController.stream);
+    when(() => mockAuth.currentUser).thenReturn(mockUser);
+    emitAuthState(mockUser);
 
   // Mock Firestore methods
   // Setup collection/doc chain

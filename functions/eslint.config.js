@@ -1,7 +1,7 @@
-// ESLint v9+ flat config migration for Cloud Functions
-import globals from "globals";
+// ESLint v9+ flat config for Cloud Functions.
+const globals = require("globals");
 
-export default [
+module.exports = [
   {
     files: ["**/*.js"],
     languageOptions: {
@@ -11,13 +11,18 @@ export default [
     rules: {
       "no-restricted-globals": ["error", "name", "length"],
       "prefer-arrow-callback": "error",
-      "quotes": ["error", "double", { allowTemplateLiterals: true }],
+      "quotes": ["error", "double", {allowTemplateLiterals: true}],
     },
   },
   {
     files: ["**/*.spec.*"],
     languageOptions: {
-      globals: { mocha: true },
+      globals: {
+        ...globals.node,
+        describe: true,
+        it: true,
+      },
+      ecmaVersion: 2018,
     },
     rules: {},
   },

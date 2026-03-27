@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mocktail/mocktail.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'test_helpers.dart';
 
 void main() {
@@ -10,7 +12,36 @@ void main() {
 
   group('AuthController', () {
     late ProviderContainer container;
+    late User? currentUser;
+
     setUp(() {
+      currentUser = mockUser;
+      when(() => mockAuth.currentUser).thenAnswer((_) => currentUser);
+      when(
+        () => mockAuth.signInWithEmailAndPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer((_) async {
+        currentUser = mockUser;
+        emitAuthState(mockUser);
+        return mockUserCredential;
+      });
+      when(
+        () => mockAuth.createUserWithEmailAndPassword(
+          email: any(named: 'email'),
+          password: any(named: 'password'),
+        ),
+      ).thenAnswer((_) async {
+        currentUser = mockUser;
+        emitAuthState(mockUser);
+        return mockUserCredential;
+      });
+      when(() => mockAuth.signOut()).thenAnswer((_) async {
+        currentUser = null;
+        emitAuthState(null);
+      });
+
       container = ProviderContainer(
         overrides: [
           authControllerProvider.overrideWith(() => AuthController(auth: mockAuth)),

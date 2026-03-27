@@ -12,14 +12,15 @@ class GoogleSignInHelperMobile implements GoogleSignInHelper {
     final GoogleSignInAuthentication googleAuth = googleUser.authentication;
     final AuthCredential credential = GoogleAuthProvider.credential(
       idToken: googleAuth.idToken,
-      accessToken: googleAuth.accessToken,
     );
     await FirebaseAuth.instance.signInWithCredential(credential);
   }
-}
 
-extension on GoogleSignInAuthentication {
-  String? get accessToken => null;
+  @override
+  Future<void> completePendingRedirectSignIn() async {
+    // Redirect completion is only relevant for web.
+    return;
+  }
 }
 
 GoogleSignInHelper getGoogleSignInHelper() => GoogleSignInHelperMobile();

@@ -1,20 +1,29 @@
+import 'dart:async';
+import 'dart:developer' as developer;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../../../presentation/screens/google_sign_in_helper_stub.dart';
+import '../../../presentation/screens/google_sign_in_helper.dart';
 
 class AuthState {
   final bool isLoading;
   final String? error;
   final String? uid;
 
+  static const Object _unset = Object();
+
   const AuthState({this.isLoading = false, this.error, this.uid});
 
-  AuthState copyWith({bool? isLoading, String? error, String? uid}) {
+  AuthState copyWith({
+    bool? isLoading,
+    Object? error = _unset,
+    Object? uid = _unset,
+  }) {
     return AuthState(
       isLoading: isLoading ?? this.isLoading,
-      error: error,
-      uid: uid ?? this.uid,
+      error: identical(error, _unset) ? this.error : error as String?,
+      uid: identical(uid, _unset) ? this.uid : uid as String?,
     );
   }
 }
@@ -25,12 +34,18 @@ final authControllerProvider = NotifierProvider<AuthController, AuthState>(
 
 
 class AuthController extends Notifier<AuthState> {
+  final GoogleSignInHelper _googleSignInHelper = getGoogleSignInHelper();
+
+  StreamSubscription<User?>? _authStateSubscription;
 
     Future<void> signInWithGoogle() async {
       state = state.copyWith(isLoading: true, error: null);
       try {
-        await getGoogleSignInHelper().signInWithGoogle();
+        await _googleSignInHelper.signInWithGoogle();
         state = state.copyWith(isLoading: false, uid: _auth.currentUser?.uid);
+      } on FirebaseAuthException catch (e, st) {
+        _logAuthException(e, st, context: 'google-sign-in');
+        state = state.copyWith(isLoading: false, error: _getReadableError(e.code));
       } catch (e) {
         state = state.copyWith(isLoading: false, error: e.toString());
       }
@@ -41,10 +56,33 @@ class AuthController extends Notifier<AuthState> {
 
   @override
   AuthState build() {
-    _auth.authStateChanges().listen((user) {
+    _authStateSubscription?.cancel();
+    _authStateSubscription = _auth.authStateChanges().listen((user) {
       state = state.copyWith(uid: user?.uid);
     });
+
+    unawaited(_completeRedirectSignInIfNeeded());
+
+    ref.onDispose(() {
+      _authStateSubscription?.cancel();
+    });
+
     return AuthState(uid: _auth.currentUser?.uid);
+  }
+
+  Future<void> _completeRedirectSignInIfNeeded() async {
+    try {
+      await _googleSignInHelper.completePendingRedirectSignIn();
+      final uid = _auth.currentUser?.uid;
+      if (uid != null) {
+        state = state.copyWith(uid: uid, error: null);
+      }
+    } on FirebaseAuthException catch (e, st) {
+      _logAuthException(e, st, context: 'redirect-result');
+      state = state.copyWith(error: _getReadableError(e.code));
+    } catch (_) {
+      // Ignore non-auth redirect completion errors to avoid noisy startup failures.
+    }
   }
 
   Future<void> signup(String email, String password) async {
@@ -55,7 +93,8 @@ class AuthController extends Notifier<AuthState> {
         password: password,
       );
       state = state.copyWith(isLoading: false, uid: cred.user?.uid);
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e, st) {
+      _logAuthException(e, st, context: 'signup');
       final errorMessage = _getReadableError(e.code);
       state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
@@ -73,7 +112,8 @@ class AuthController extends Notifier<AuthState> {
         password: password.trim(),
       );
       state = state.copyWith(isLoading: false, uid: cred.user?.uid);
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e, st) {
+      _logAuthException(e, st, context: 'login');
       state = state.copyWith(isLoading: false, error: _getReadableError(e.code));
     } catch (e) {
       state = state.copyWith(isLoading: false, error: "Unexpected error: $e");
@@ -96,6 +136,12 @@ class AuthController extends Notifier<AuthState> {
         return 'This account has been disabled';
       case 'too-many-requests':
         return 'Too many login attempts. Try again later';
+      case 'account-exists-with-different-credential':
+        return 'Account exists with another sign-in method. Try a different provider.';
+      case 'popup-blocked':
+      case 'popup-closed-by-user':
+      case 'web-context-cancelled':
+        return 'Sign-in was cancelled. Please try again.';
       case 'email-already-in-use':
         return 'Email already in use';
       case 'weak-password':
@@ -115,11 +161,25 @@ class AuthController extends Notifier<AuthState> {
     try {
       await _auth.sendPasswordResetEmail(email: email);
       state = state.copyWith(isLoading: false);
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseAuthException catch (e, st) {
+      _logAuthException(e, st, context: 'reset-password');
       final errorMessage = _getReadableError(e.code);
       state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
       state = state.copyWith(isLoading: false, error: "Unexpected error: $e");
     }
+  }
+
+  void _logAuthException(
+    FirebaseAuthException e,
+    StackTrace stackTrace, {
+    required String context,
+  }) {
+    developer.log(
+      'FirebaseAuthException in $context: ${e.code}',
+      name: 'AuthController',
+      error: e,
+      stackTrace: stackTrace,
+    );
   }
 }

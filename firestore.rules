@@ -1,0 +1,124 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function isFriendLinkUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends'])
+        && request.resource.data.friends.hasAll(resource.data.friends)
+        && request.resource.data.friends.hasAny([request.auth.uid]);
+    }
+
+    function roomDoc(roomId) {
+      return get(/databases/$(database)/documents/rooms/$(roomId));
+    }
+
+    function isRoomHost(roomId) {
+      return signedIn() && roomDoc(roomId).data.hostId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow create: if isSelf(userId);
+      allow update: if isSelf(userId) || (signedIn() && isFriendLinkUpdate());
+      allow delete: if isSelf(userId);
+    }
+
+    match /rooms/{roomId} {
+      allow read: if signedIn();
+      allow create: if signedIn() && request.resource.data.hostId == request.auth.uid;
+      allow update, delete: if isRoomHost(roomId);
+
+      match /participants/{participantId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && participantId == request.auth.uid
+          && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if isRoomHost(roomId) || participantId == request.auth.uid;
+      }
+
+      match /presence/{userId} {
+        allow read: if signedIn();
+        allow create, update, delete: if isRoomHost(roomId) || userId == request.auth.uid;
+      }
+
+      match /typing/{userId} {
+        allow read: if signedIn();
+        allow create, update, delete: if userId == request.auth.uid;
+      }
+
+      match /messages/{messageId} {
+        allow read: if signedIn();
+        allow create: if signedIn() && request.resource.data.senderId == request.auth.uid;
+        allow update, delete: if isRoomHost(roomId) || resource.data.senderId == request.auth.uid;
+
+        match /reactions/{userId} {
+          allow read: if signedIn();
+          allow create, update, delete: if userId == request.auth.uid;
+        }
+      }
+    }
+
+    match /posts/{postId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && (!('authorId' in request.resource.data) || request.resource.data.authorId == request.auth.uid)
+        && (!('userId' in request.resource.data) || request.resource.data.userId == request.auth.uid);
+      allow update, delete: if signedIn()
+        && ((('authorId' in resource.data) && resource.data.authorId == request.auth.uid)
+          || (('userId' in resource.data) && resource.data.userId == request.auth.uid));
+    }
+
+    match /events/{eventId} {
+      allow read: if signedIn();
+      allow create: if signedIn();
+      allow update, delete: if signedIn()
+        && ((('hostId' in resource.data) && resource.data.hostId == request.auth.uid)
+          || (('ownerId' in resource.data) && resource.data.ownerId == request.auth.uid)
+          || (('userId' in resource.data) && resource.data.userId == request.auth.uid));
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if signedIn()
+        && (resource.data.senderId == request.auth.uid || resource.data.receiverId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.senderId == request.auth.uid;
+      allow update, delete: if false;
+    }
+
+    match /friend_requests/{requestId} {
+      allow read: if signedIn()
+        && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);
+      allow create: if signedIn() && request.resource.data.fromUserId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.toUserId == request.auth.uid;
+    }
+
+    match /friends/{friendId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create, update: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /notifications/{notificationId} {
+      allow read: if signedIn();
+      allow write: if false;
+    }
+
+    match /admin/{document=**} {
+      allow read, write: if false;
+    }
+
+    match /logs/{logId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

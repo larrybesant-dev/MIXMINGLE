@@ -8,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:mixvy/firebase_options.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:mixvy/dev/firebase_emulator_bootstrap.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -23,6 +24,8 @@ void main() async {
       await Firebase.initializeApp(
         options: DefaultFirebaseOptions.currentPlatform,
       );
+
+      await FirebaseEmulatorBootstrap.configure();
 
       // Crashlytics (not supported on web)
       if (!kIsWeb) {

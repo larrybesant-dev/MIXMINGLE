@@ -5,7 +5,12 @@ import 'google_sign_in_helper_stub.dart';
 class GoogleSignInHelperWeb implements GoogleSignInHelper {
   @override
   Future<void> signInWithGoogle() async {
-    await FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
+    await FirebaseAuth.instance.signInWithRedirect(GoogleAuthProvider());
+  }
+
+  @override
+  Future<void> completePendingRedirectSignIn() async {
+    await FirebaseAuth.instance.getRedirectResult();
   }
 }
 
