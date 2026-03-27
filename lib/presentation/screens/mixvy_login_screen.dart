@@ -61,11 +61,13 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
         ),
       );
     }
-    if (authState.uid != null && mounted) {
+    if (authState.uid != null) {
       // Log login event
       await AnalyticsService().logLogin(method: 'email_password');
-      // Navigate to home or dashboard after successful login
-      Navigator.of(context).pushReplacementNamed('/home');
+      if (mounted) {
+        // Navigate to home or dashboard after successful login
+        Navigator.of(context).pushReplacementNamed('/home');
+      }
     }
   }
 
