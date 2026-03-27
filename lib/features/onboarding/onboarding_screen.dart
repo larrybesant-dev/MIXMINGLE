@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mixvy/core/services/first_run_service.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -27,6 +29,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   ];
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Stack(
@@ -41,9 +49,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             left: 20,
             right: 20,
             child: ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (_index == pages.length - 1) {
-                  Navigator.pushReplacementNamed(context, '/');
+                  await FirstRunService.markOnboardingSeen();
+                  if (!mounted) return;
+                  context.go('/');
                 } else {
                   _controller.nextPage(
                     duration: const Duration(milliseconds: 300),

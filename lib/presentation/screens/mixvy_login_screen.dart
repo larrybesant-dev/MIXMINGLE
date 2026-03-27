@@ -43,26 +43,38 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     setState(() => _obscurePassword = !_obscurePassword);
   }
 
+  Future<void> _showMessage(String message, {bool isError = false}) async {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: const TextStyle(color: Colors.white),
+        ),
+        backgroundColor: isError ? Colors.redAccent : Colors.green,
+      ),
+    );
+  }
+
   Future<void> _login() async {
     if (!_formKey.currentState!.validate()) return;
+    
+    // Read all necessary values before starting async operations
     final authController = ref.read(authControllerProvider.notifier);
+    
     await authController.login(
       _emailController.text.trim(),
       _passwordController.text.trim(),
     );
+    
+    // Check if widget is still mounted before accessing ref or context
+    if (!mounted) return;
+    
     final authState = ref.read(authControllerProvider);
-    if (authState.error != null && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            authState.error ?? '',
-            style: const TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
+    if (authState.error != null) {
+      await _showMessage(authState.error ?? '', isError: true);
     }
-    if (authState.uid != null) {
+    if (authState.uid != null && mounted) {
       // Log login event
       await AnalyticsService().logLogin(method: 'email_password');
       if (mounted) {
@@ -72,8 +84,51 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     }
   }
 
+  Future<void> _resetPassword() async {
+    final email = _emailController.text.trim();
+    if (email.isEmpty) {
+      await _showMessage('Enter your email first to reset password', isError: true);
+      return;
+    }
+
+    final authController = ref.read(authControllerProvider.notifier);
+    await authController.resetPassword(email);
+
+    if (!mounted) return;
+
+    final authState = ref.read(authControllerProvider);
+    if (authState.error != null) {
+      await _showMessage(authState.error ?? '', isError: true);
+      return;
+    }
+
+    await _showMessage('Password reset email sent');
+  }
+
+  Future<void> _signInWithGoogle() async {
+    final authController = ref.read(authControllerProvider.notifier);
+    await authController.signInWithGoogle();
+
+    if (!mounted) return;
+
+    final authState = ref.read(authControllerProvider);
+    if (authState.error != null) {
+      await _showMessage(authState.error ?? '', isError: true);
+      return;
+    }
+
+    if (authState.uid != null) {
+      await AnalyticsService().logLogin(method: 'google');
+      if (mounted) {
+        context.go('/');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final authState = ref.watch(authControllerProvider);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Login'),
@@ -124,8 +179,28 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: _login,
-                    child: const Text('Login'),
+                    onPressed: authState.isLoading ? null : _login,
+                    child: authState.isLoading
+                        ? const SizedBox(
+                            height: 18,
+                            width: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Login'),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: authState.isLoading ? null : _resetPassword,
+                  child: const Text('Forgot password?'),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: authState.isLoading ? null : _signInWithGoogle,
+                    icon: const Icon(Icons.login),
+                    label: const Text('Continue with Google'),
                   ),
                 ),
               ],

@@ -55,21 +55,53 @@ class AuthController extends Notifier<AuthState> {
         password: password,
       );
       state = state.copyWith(isLoading: false, uid: cred.user?.uid);
+    } on FirebaseAuthException catch (e) {
+      final errorMessage = _getReadableError(e.code);
+      state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: "Unexpected error: $e");
     }
   }
 
   Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     try {
+      final normalizedEmail = email.trim();
+
       final cred = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
+        email: normalizedEmail,
+        password: password.trim(),
       );
       state = state.copyWith(isLoading: false, uid: cred.user?.uid);
+    } on FirebaseAuthException catch (e) {
+      state = state.copyWith(isLoading: false, error: _getReadableError(e.code));
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: "Unexpected error: $e");
+    }
+  }
+
+  String _getReadableError(String code) {
+    switch (code) {
+      case 'invalid-credential':
+        return 'Invalid email or password. If this account was created with Google, use Google Sign-In';
+      case 'invalid-login-credentials':
+        return 'Invalid email or password';
+      case 'user-not-found':
+        return 'No account found with this email';
+      case 'wrong-password':
+        return 'Incorrect password';
+      case 'invalid-email':
+        return 'Invalid email address';
+      case 'user-disabled':
+        return 'This account has been disabled';
+      case 'too-many-requests':
+        return 'Too many login attempts. Try again later';
+      case 'email-already-in-use':
+        return 'Email already in use';
+      case 'weak-password':
+        return 'Password is too weak';
+      default:
+        return 'Login failed: $code';
     }
   }
 
@@ -83,8 +115,11 @@ class AuthController extends Notifier<AuthState> {
     try {
       await _auth.sendPasswordResetEmail(email: email);
       state = state.copyWith(isLoading: false);
+    } on FirebaseAuthException catch (e) {
+      final errorMessage = _getReadableError(e.code);
+      state = state.copyWith(isLoading: false, error: errorMessage);
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(isLoading: false, error: "Unexpected error: $e");
     }
   }
 }

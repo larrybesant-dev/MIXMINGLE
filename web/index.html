@@ -1,155 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <!DOCTYPE html>
-
-  <html class="dark" lang="en"><head>
   <meta charset="utf-8"/>
   <base href="$FLUTTER_BASE_HREF">
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>MixVy - Welcome &amp; Login</title>
   <link rel="manifest" href="manifest.json">
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', function() {
-        navigator.serviceWorker.register('flutter_service_worker.js');
-      });
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      font-family: Roboto, sans-serif;
+      overflow: hidden;
     }
-  </script>
-  <!-- Tailwind CDN removed for production. Use Flutter for all UI, or build Tailwind CSS locally if needed for custom HTML. -->
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-  <script id="tailwind-config">
-        tailwind.config = {
-          darkMode: "class",
-          theme: {
-            extend: {
-              colors: {
-                "surface": "#0e0e0e",
-                "on-primary-fixed-variant": "#32008a",
-                "surface-bright": "#2c2c2c",
-                "on-secondary": "#004d57",
-                "surface-container-highest": "#262626",
-                "secondary": "#00e3fd",
-                  <!-- All external CSS frameworks and Tailwind config removed for production. Flutter handles all UI. -->
-                  <link rel="icon" type="image/png" href="favicon.png"/>
-                  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
-        min-height: max(884px, 100dvh);
-      }
-    </style>
-    </head>
-  <body class="bg-surface font-body text-on-background selection:bg-secondary/30">
-  <!-- TopAppBar suppression: Login is a task-focused screen -->
-  <main class="relative min-h-screen flex flex-col items-center justify-center px-6 py-12 overflow-hidden">
-  <!-- Abstract Background Elements -->
-  <div class="absolute top-[-10%] left-[-10%] w-96 h-96 bg-primary/10 blur-[120px] rounded-full"></div>
-  <div class="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-secondary/5 blur-[150px] rounded-full"></div>
-  <div class="w-full max-w-md z-10 space-y-12">
-  <!-- Brand Section -->
-  <div class="flex flex-col items-center text-center space-y-4">
-  <div class="relative group">
-  <h1 class="font-headline text-6xl md:text-7xl font-extrabold tracking-tighter text-white uppercase neon-glow-primary transition-transform duration-500 group-hover:scale-105">
-                          MixVy
-                      </h1>
-  <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-1 bg-secondary rounded-full shadow-[0_0_10px_#00e3fd]"></div>
-  </div>
-  <p class="font-headline text-on-surface-variant tracking-wide uppercase text-xs font-bold pt-4">
-                      The Digital Curator Experience
-                  </p>
-  </div>
-  <!-- Login Form -->
-  <div class="space-y-8">
-  <div class="space-y-4">
-  <!-- Email Input -->
-  <div class="group">
-  <label class="block text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-2 ml-1">Email Address</label>
-  <div class="relative flex items-center">
-  <span class="material-symbols-outlined absolute left-4 text-on-surface-variant group-focus-within:text-secondary transition-colors duration-300">mail</span>
-  <input class="w-full bg-surface-container-low border-none rounded-xl py-4 pl-12 pr-4 text-on-surface placeholder:text-on-surface-variant/40 focus:ring-1 focus:ring-secondary/50 focus:bg-surface-container transition-all duration-300 edge-light" placeholder="name@domain.com" type="email"/>
-  </div>
-  </div>
-  <!-- Password Input -->
-  <div class="group">
-  <div class="flex justify-between items-end mb-2 ml-1">
-  <label class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Password</label>
-  <a class="text-[10px] font-bold uppercase tracking-widest text-secondary hover:text-secondary-fixed transition-colors" href="#">Forgot?</a>
-  </div>
-  <div class="relative flex items-center">
-  <span class="material-symbols-outlined absolute left-4 text-on-surface-variant group-focus-within:text-secondary transition-colors duration-300">lock</span>
-  <input class="w-full bg-surface-container-low border-none rounded-xl py-4 pl-12 pr-12 text-on-surface placeholder:text-on-surface-variant/40 focus:ring-1 focus:ring-secondary/50 focus:bg-surface-container transition-all duration-300 edge-light" placeholder="••••••••" type="password"/>
-  <span class="material-symbols-outlined absolute right-4 text-on-surface-variant cursor-pointer hover:text-on-surface">visibility</span>
-  </div>
-  </div>
-  </div>
-  <!-- Action Button -->
-  <button class="w-full bg-gradient-to-br from-primary to-primary-dim text-on-primary-fixed font-headline font-extrabold py-4 rounded-full shadow-[0_10px_40px_rgba(182,160,255,0.2)] active:scale-95 transition-all duration-300 ease-out-expo hover:shadow-[0_15px_50px_rgba(182,160,255,0.3)]">
-                      LOG IN
-                  </button>
-  </div>
-  <!-- Social Logins -->
-  <div class="space-y-6">
-  <div class="flex items-center gap-4">
-  <div class="h-[1px] flex-1 bg-surface-container-highest"></div>
-  <span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Or connect with</span>
-  <div class="h-[1px] flex-1 bg-surface-container-highest"></div>
-  </div>
-  <div class="grid grid-cols-2 gap-4">
-  <button class="flex items-center justify-center gap-3 bg-surface-container py-3.5 rounded-xl border border-white/5 hover:bg-surface-container-high transition-colors active:scale-95 duration-200">
-  <img alt="" class="w-5 h-5 grayscale opacity-70" data-alt="Google logo icon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA56FTg7Pthprb3Gtkr7lYQE9Jo0Qpt6l0OiIN4CEIB9-iqMDKU9EzZRdHK3jUEO-7LDPfr7RD6tQZa648z7eg_C7lYfyzLvxRKclPD9VZDnczyTluuJNRsl8rF3Z_CCdmCUZwlC18xD26ZpoejLvsJSibMh0b4aS3Zbm4WMxFsIaQ4Veb5SQrFcz-9d-_8QuQhJiQOnF3ozc6S-1QbOeVF26auhYzJ0-Rz4hY0P196FxUiI08aGMcXT9WuNKWS8uOBFocHzlghgaHz"/>
-  <span class="text-xs font-bold uppercase tracking-tight text-on-surface">Google</span>
-  </button>
-  <button class="flex items-center justify-center gap-3 bg-surface-container py-3.5 rounded-xl border border-white/5 hover:bg-surface-container-high transition-colors active:scale-95 duration-200">
-  <span class="material-symbols-outlined text-xl text-on-surface" style="font-variation-settings: 'FILL' 1;">ios</span>
-  <span class="text-xs font-bold uppercase tracking-tight text-on-surface">Apple</span>
-  </button>
-  </div>
-  </div>
-  <!-- Sign Up Prompt -->
-  <p class="text-center text-sm text-on-surface-variant">
-                  Don't have an account? 
-                  <a class="text-secondary font-bold hover:underline decoration-secondary/30 underline-offset-4 ml-1" href="#">Create One</a>
-  </p>
-  </div>
-  </main>
-  <!-- BottomNavBar suppressed: Login is a task-focused journey -->
-  <!-- Decorative Corner Gradients -->
-  <div class="fixed top-0 right-0 w-64 h-64 opacity-20 pointer-events-none">
-  <div class="absolute inset-0 bg-gradient-to-bl from-secondary to-transparent"></div>
-  </div>
-  <div class="fixed bottom-0 left-0 w-64 h-64 opacity-10 pointer-events-none">
-  <div class="absolute inset-0 bg-gradient-to-tr from-primary to-transparent"></div>
-  </div>
-  </body></html>
-      });
-      const data = await response.json();
-      if (!data.clientSecret) {
-        alert('Failed to create payment intent.');
-        return;
-      }
-      // Use Stripe.js to handle the payment
-      const { error } = await stripe.confirmCardPayment(data.clientSecret, {
-        payment_method: {
-          card: { token: 'tok_visa' }, // Replace with real card element/token
-        },
-      });
-      if (error) {
-        alert('Payment failed: ' + error.message);
-      } else {
-        alert('Payment successful!');
-      }
-    }
-  </script>
+  </style>
 </head>
 <body>
-  <!--
-    You can customize the "flutter_bootstrap.js" script.
-    This is useful to provide a custom configuration to the Flutter loader
-    or to give the user feedback during the initialization process.
-
-    For more details:
-    * https://docs.flutter.dev/platform-integration/web/initialization
-  -->
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
