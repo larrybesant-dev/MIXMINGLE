@@ -1,1 +1,4 @@
-[BACKUP] speed_dating_controller.dart
+// Placeholder SpeedDatingController. Replace with real implementation.
+class SpeedDatingController {
+	void startSession() {}
+}

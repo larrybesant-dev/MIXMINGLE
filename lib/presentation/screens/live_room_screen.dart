@@ -208,8 +208,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       child: Row(
                         children: [
                           participantCountAsync.when(
-                            data: (participantCount) => Text(
-                              '[participantCount] in room',
+                              data: (participantCount) => Text(
+                                '$participantCount in room',
                               style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             loading: () => const SizedBox(width: 60, child: LinearProgressIndicator()),
@@ -265,7 +265,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             final msg = messages[i];
                             return MessageBubble(
                               message: msg,
-                              user: user,
+                              isMe: msg.userId == user.id,
                             );
                           },
                         );

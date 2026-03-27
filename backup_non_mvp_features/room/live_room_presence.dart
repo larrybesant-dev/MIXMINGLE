@@ -1,1 +1,4 @@
-[BACKUP] live_room_presence.dart
+// Placeholder LiveRoomPresence. Replace with real implementation.
+class LiveRoomPresence {
+	bool isPresent = false;
+}

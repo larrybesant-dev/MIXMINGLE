@@ -1,1 +1,4 @@
-[BACKUP] room_controller.dart
+// Placeholder RoomController. Replace with real implementation.
+class RoomController {
+	void controlRoom() {}
+}

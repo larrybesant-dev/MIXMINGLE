@@ -1,1 +1,6 @@
-[BACKUP] host_controls_providers.dart
+// Placeholder HostControlsProviders. Replace with real implementation.
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final hostControlsProviders = Provider<String>((ref) {
+	return 'Host controls providers placeholder';
+});

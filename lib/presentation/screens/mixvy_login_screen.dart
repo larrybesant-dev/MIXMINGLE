@@ -64,8 +64,8 @@ class _MixVyLoginScreenState extends State<MixVyLoginScreen>
     if (authState.uid != null && mounted) {
       // Log login event
       await AnalyticsService().logLogin(method: 'email_password');
-      // TODO: Navigate to home or dashboard after successful login
-      // Navigator.of(context).pushReplacementNamed('/home');
+      // Navigate to home or dashboard after successful login
+      Navigator.of(context).pushReplacementNamed('/home');
     }
   }
 

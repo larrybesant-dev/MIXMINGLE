@@ -1,1 +1,4 @@
-[BACKUP] live_agora_client.dart
+// Placeholder LiveAgoraClient. Replace with real implementation.
+class LiveAgoraClient {
+	void connect() {}
+}

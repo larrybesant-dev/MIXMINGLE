@@ -1,1 +1,4 @@
-[BACKUP] presence_service.dart
+// Placeholder PresenceService. Replace with real implementation.
+class PresenceService {
+	bool isPresent() => false;
+}
