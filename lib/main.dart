@@ -6,29 +6,56 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
 
 import 'package:mixvy/firebase_options.dart';
-// Crashlytics is not supported on web
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   const isTest = bool.fromEnvironment('FLUTTER_TEST', defaultValue: false);
+
   if (!isTest) {
-    await dotenv.load();
-    await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-    // Set up global error handling for Crashlytics (not on web)
-    if (!kIsWeb) {
-      FlutterError.onError = (FlutterErrorDetails details) {
-        FlutterError.presentError(details);
-        // Report to Crashlytics
-        FirebaseCrashlytics.instance.recordFlutterError(details);
-      };
-      PlatformDispatcher.instance.onError = (error, stack) {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-        return true;
-      };
+    try {
+      // Load environment variables
+      await dotenv.load();
+
+      // Initialize Firebase
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      // Crashlytics (not supported on web)
+      if (!kIsWeb) {
+        FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+
+        FlutterError.onError = (FlutterErrorDetails details) {
+          FlutterError.presentError(details);
+          FirebaseCrashlytics.instance.recordFlutterError(details);
+        };
+
+        PlatformDispatcher.instance.onError = (error, stack) {
+          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+          return true;
+        };
+      }
+    } catch (e, stack) {
+      // If Firebase fails to initialize, show a fallback UI
+      runApp(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: Text(
+                'Failed to initialize Firebase.\n$e',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      );
+      return;
     }
   }
+
+  // Run the actual app
   runApp(const ProviderScope(child: MixVyApp()));
 }
