@@ -37,6 +37,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       body: Stack(
         children: [
@@ -44,6 +45,44 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             controller: _controller,
             onPageChanged: (i) => setState(() => _index = i),
             children: pages,
+          ),
+          Positioned(
+            top: 56,
+            right: 20,
+            child: TextButton(
+              onPressed: _index == pages.length - 1
+                  ? null
+                  : () async {
+                      final router = GoRouter.of(context);
+                      await FirstRunService.markOnboardingSeen();
+                      if (!mounted) return;
+                      router.go('/login');
+                    },
+              child: const Text('Skip'),
+            ),
+          ),
+          Positioned(
+            bottom: 112,
+            left: 20,
+            right: 20,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: List.generate(
+                pages.length,
+                (i) => AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  width: _index == i ? 26 : 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    color: _index == i
+                        ? theme.colorScheme.primary
+                        : theme.colorScheme.onSurface.withOpacity(0.25),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+            ),
           ),
           Positioned(
             bottom: 40,
@@ -84,14 +123,36 @@ class _OnboardPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(title, style: Theme.of(context).textTheme.headlineMedium),
+          Container(
+            width: 78,
+            height: 78,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                colors: [
+                  theme.colorScheme.primary.withOpacity(0.75),
+                  theme.colorScheme.secondary.withOpacity(0.75),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: const Icon(Icons.bolt, color: Colors.white, size: 36),
+          ),
+          const SizedBox(height: 24),
+          Text(title, textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 16),
-          Text(subtitle, textAlign: TextAlign.center),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
         ],
       ),
     );

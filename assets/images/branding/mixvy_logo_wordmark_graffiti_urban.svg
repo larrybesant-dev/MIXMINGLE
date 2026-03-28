@@ -1,0 +1,38 @@
+<svg width="1400" height="420" viewBox="0 0 1400 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grafGrad" x1="100" y1="70" x2="1280" y2="360" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#00E7FF"/>
+      <stop offset="0.48" stop-color="#A22BFF"/>
+      <stop offset="1" stop-color="#FF2B7E"/>
+    </linearGradient>
+    <filter id="paintShadow" x="120" y="70" width="1160" height="320" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#111827" flood-opacity="0.32"/>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="420" fill="transparent"/>
+
+  <g opacity="0.9">
+    <circle cx="260" cy="90" r="6" fill="#00D9FF"/>
+    <circle cx="290" cy="120" r="4" fill="#FF4FBA"/>
+    <circle cx="1140" cy="90" r="6" fill="#7D4DFF"/>
+    <circle cx="1110" cy="118" r="4" fill="#2BE4FF"/>
+  </g>
+
+  <g filter="url(#paintShadow)">
+    <text
+      x="700"
+      y="292"
+      text-anchor="middle"
+      font-family="'Trebuchet MS', 'Segoe UI', Arial, sans-serif"
+      font-size="228"
+      font-style="italic"
+      font-weight="900"
+      letter-spacing="1"
+      fill="url(#grafGrad)">
+      MixVy
+    </text>
+  </g>
+
+  <path d="M310 320C420 355 980 355 1090 320" stroke="#FF3B9C" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+</svg>

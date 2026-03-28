@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/user_model.dart';
+import '../../services/moderation_service.dart';
 
 abstract class PaymentRecipientRepository {
   Future<List<UserModel>> searchRecipients(
@@ -12,10 +13,12 @@ abstract class PaymentRecipientRepository {
 }
 
 class FirestorePaymentRecipientRepository implements PaymentRecipientRepository {
-  FirestorePaymentRecipientRepository({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  FirestorePaymentRecipientRepository({FirebaseFirestore? firestore, ModerationService? moderationService})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _moderationService = moderationService ?? ModerationService(firestore: firestore ?? FirebaseFirestore.instance);
 
   final FirebaseFirestore _firestore;
+  final ModerationService _moderationService;
 
   @override
   Future<List<UserModel>> searchRecipients(
@@ -24,15 +27,19 @@ class FirestorePaymentRecipientRepository implements PaymentRecipientRepository 
   }) async {
     final snapshot = await _firestore
         .collection('users')
-      .orderBy('balance', descending: true)
+        .orderBy('balance', descending: true)
         .limit(25)
         .get();
 
     final normalizedQuery = query.trim().toLowerCase();
+    final blockedIds = currentUserId == null
+        ? const <String>{}
+        : await _moderationService.getExcludedUserIds(currentUserId);
 
     return snapshot.docs
         .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
         .where((user) => user.id != currentUserId)
+        .where((user) => !blockedIds.contains(user.id))
         .where((user) {
           if (normalizedQuery.isEmpty) {
             return true;

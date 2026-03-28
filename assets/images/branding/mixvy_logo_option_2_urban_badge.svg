@@ -1,0 +1,38 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg2" x1="80" y1="80" x2="930" y2="940" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#101010"/>
+      <stop offset="1" stop-color="#1D1D1D"/>
+    </linearGradient>
+    <linearGradient id="badge" x1="240" y1="220" x2="790" y2="780" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF6E2E"/>
+      <stop offset="0.55" stop-color="#FF3D7D"/>
+      <stop offset="1" stop-color="#7D52FF"/>
+    </linearGradient>
+    <linearGradient id="audio" x1="410" y1="350" x2="650" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#33D1FF"/>
+      <stop offset="1" stop-color="#2452FF"/>
+    </linearGradient>
+    <linearGradient id="word2" x1="180" y1="760" x2="820" y2="920" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF7A2C"/>
+      <stop offset="0.65" stop-color="#FF3A8A"/>
+      <stop offset="1" stop-color="#6C5DFF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="96" fill="url(#bg2)"/>
+
+  <path d="M512 170L762 315V605L512 750L262 605V315L512 170Z" fill="#0C0F19" stroke="url(#badge)" stroke-width="26"/>
+  <path d="M425 322C425 308 441 300 453 307L659 426C670 433 670 449 659 456L453 575C441 582 425 574 425 560V322Z" fill="#FFFFFF"/>
+
+  <rect x="472" y="436" width="24" height="92" rx="5" fill="url(#audio)"/>
+  <rect x="510" y="396" width="24" height="132" rx="5" fill="url(#audio)"/>
+  <rect x="548" y="458" width="24" height="70" rx="5" fill="url(#audio)"/>
+  <rect x="586" y="420" width="24" height="108" rx="5" fill="url(#audio)"/>
+
+  <circle cx="298" cy="336" r="26" fill="#FF5D39"/>
+  <circle cx="726" cy="336" r="26" fill="#6E62FF"/>
+  <circle cx="512" cy="238" r="18" fill="#FF3F87"/>
+
+  <text x="512" y="845" text-anchor="middle" fill="url(#word2)" font-size="128" font-family="Plus Jakarta Sans, Segoe UI, Arial" font-weight="800" letter-spacing="0.5">MixVy</text>
+</svg>

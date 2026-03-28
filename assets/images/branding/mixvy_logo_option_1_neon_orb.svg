@@ -1,0 +1,45 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="140" y1="120" x2="880" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0F1220"/>
+      <stop offset="1" stop-color="#161B2F"/>
+    </linearGradient>
+    <linearGradient id="ring" x1="220" y1="210" x2="790" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF4FD8"/>
+      <stop offset="0.45" stop-color="#7A5CFF"/>
+      <stop offset="1" stop-color="#32C7FF"/>
+    </linearGradient>
+    <linearGradient id="play" x1="400" y1="330" x2="650" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#56F0FF"/>
+      <stop offset="0.5" stop-color="#9B5EFF"/>
+      <stop offset="1" stop-color="#FF5C6B"/>
+    </linearGradient>
+    <linearGradient id="word" x1="180" y1="760" x2="820" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D536FF"/>
+      <stop offset="0.6" stop-color="#584BFF"/>
+      <stop offset="1" stop-color="#1C8BFF"/>
+    </linearGradient>
+    <filter id="glow" x="180" y="160" width="660" height="660" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="12" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1024" height="1024" rx="96" fill="url(#bg)"/>
+
+  <g filter="url(#glow)">
+    <circle cx="512" cy="392" r="255" stroke="url(#ring)" stroke-width="34"/>
+    <circle cx="290" cy="410" r="68" fill="#4A2AFF" opacity="0.9"/>
+    <circle cx="735" cy="410" r="68" fill="#1C8BFF" opacity="0.9"/>
+  </g>
+
+  <path d="M430 300C430 286 446 278 458 285L668 407C679 414 679 430 668 437L458 559C446 566 430 558 430 544V300Z" fill="url(#play)"/>
+  <rect x="472" y="438" width="28" height="96" rx="6" fill="#B7B8FF"/>
+  <rect x="516" y="406" width="28" height="128" rx="6" fill="#E6B4FF"/>
+  <rect x="560" y="454" width="28" height="80" rx="6" fill="#FFD881"/>
+
+  <text x="512" y="845" text-anchor="middle" fill="url(#word)" font-size="132" font-family="Plus Jakarta Sans, Segoe UI, Arial" font-weight="800" letter-spacing="1">MixVy</text>
+</svg>

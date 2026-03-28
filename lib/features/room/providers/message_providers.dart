@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../presentation/providers/user_provider.dart';
 import '../../../models/message_model.dart';
+import '../../../services/moderation_service.dart';
 import 'room_firestore_provider.dart';
 
 final messageStreamProvider = StreamProvider.autoDispose.family<List<MessageModel>, String>((ref, roomId) {
@@ -71,6 +72,16 @@ final sendMessageProvider =
 		}
 
 		final firestore = ref.read(roomFirestoreProvider);
+		final roomSnapshot = await firestore.collection('rooms').doc(roomId).get();
+		final hostId = (roomSnapshot.data()?['hostId'] as String? ?? '').trim();
+		if (hostId.isNotEmpty) {
+			final moderationService = ModerationService(firestore: firestore);
+			final hasBlockingRelationship = await moderationService.hasBlockingRelationship(user.id, hostId);
+			if (hasBlockingRelationship) {
+				throw StateError('You cannot message in this room.');
+			}
+		}
+
 		final messageRef = firestore.collection('rooms').doc(roomId).collection('messages').doc();
 		await messageRef.set({
 			'id': messageRef.id,

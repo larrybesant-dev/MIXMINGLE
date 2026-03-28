@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../shared/widgets/top_app_bar.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../feed/providers/feed_providers.dart';
 import '../feed/screens/discovery_feed_screen.dart';
 import '../feed/models/post_model.dart';
@@ -43,6 +44,8 @@ import '../feed/models/event_model.dart';
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      _quickActions(context),
+                      const SizedBox(height: 20),
                       const Text('Live Posts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                       postsAsync.when(
                         data: (posts) => posts.isEmpty
@@ -97,6 +100,39 @@ import '../feed/models/event_model.dart';
           ),
         );
 
+    Widget _quickActions(BuildContext context) {
+      return Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          ActionChip(
+            avatar: const Icon(Icons.search, size: 18),
+            label: const Text('Discover People'),
+            onPressed: () {
+              setState(() {
+                _currentIndex = 1;
+              });
+            },
+          ),
+          ActionChip(
+            avatar: const Icon(Icons.flash_on, size: 18),
+            label: const Text('Speed Dating'),
+            onPressed: () => context.go('/speed-dating'),
+          ),
+          ActionChip(
+            avatar: const Icon(Icons.notifications, size: 18),
+            label: const Text('Notifications'),
+            onPressed: () => context.go('/notifications'),
+          ),
+          ActionChip(
+            avatar: const Icon(Icons.payments, size: 18),
+            label: const Text('Payments'),
+            onPressed: () => context.go('/payments'),
+          ),
+        ],
+      );
+    }
+
     // Midnight Error Card pattern
     Widget midnightErrorCard(String message) => Card(
           color: Colors.black87,
@@ -123,6 +159,7 @@ import '../feed/models/event_model.dart';
             title: Text(r.name.isNotEmpty ? r.name : 'Room'),
             subtitle: const Text('Live room'),
             trailing: const Icon(Icons.circle, color: Colors.green, size: 12),
+            onTap: () => context.go('/room/${r.id}'),
           ),
         );
 

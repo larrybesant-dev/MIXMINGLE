@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../models/user_model.dart';
@@ -33,9 +34,9 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     final recipientId = _selectedRecipient?.id;
     final amount = double.tryParse(_amountController.text.trim());
 
-    if (recipientId == null || amount == null || amount <= 0) {
+    if (recipientId == null || amount == null || amount <= 0 || amount > 100000) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Select a recipient and enter a valid amount.')),
+        const SnackBar(content: Text('Select a recipient and enter a valid amount (max 100000).')),
       );
       return;
     }
@@ -76,10 +77,20 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     });
   }
 
+  void _setQuickAmount(double amount) {
+    setState(() {
+      _amountController.text = amount.toStringAsFixed(amount.truncateToDouble() == amount ? 0 : 2);
+      _amountController.selection = TextSelection.collapsed(offset: _amountController.text.length);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     if (kIsWeb) {
-      return const StripeWebPaymentWidget();
+      return Scaffold(
+        appBar: AppBar(title: const Text('Payments')),
+        body: const SafeArea(child: StripeWebPaymentWidget()),
+      );
     }
 
     final user = FirebaseAuth.instance.currentUser;
@@ -99,6 +110,19 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: const [
+                  Icon(Icons.shield_outlined),
+                  SizedBox(width: 10),
+                  Expanded(child: Text('Send or request coins with trusted members only. Double-check recipient before confirming.')),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
           Text(
             'Wallet',
             style: Theme.of(context).textTheme.titleLarge,
@@ -207,10 +231,24 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
           TextField(
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [
+              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+            ],
             decoration: const InputDecoration(
               labelText: 'Amount',
               border: OutlineInputBorder(),
             ),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ActionChip(label: const Text('10'), onPressed: () => _setQuickAmount(10)),
+              ActionChip(label: const Text('25'), onPressed: () => _setQuickAmount(25)),
+              ActionChip(label: const Text('50'), onPressed: () => _setQuickAmount(50)),
+              ActionChip(label: const Text('100'), onPressed: () => _setQuickAmount(100)),
+            ],
           ),
           const SizedBox(height: 16),
           Row(

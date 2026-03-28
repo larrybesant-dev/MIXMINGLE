@@ -87,6 +87,26 @@ void main() {
       expect(snapshot.docs.single.data()['clientSentAt'], isNotNull);
     });
 
+    test('sendMessageProvider rejects messages when host is blocked', () async {
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'host-1',
+      });
+      await firestore.collection('blocks').doc('user-1_host-1').set({
+        'blockerUserId': 'user-1',
+        'blockedUserId': 'host-1',
+      });
+
+      final sendMessage = container.read(sendMessageProvider('room-a'));
+
+      await expectLater(
+        () => sendMessage('blocked message'),
+        throwsA(isA<StateError>()),
+      );
+
+      final snapshot = await firestore.collection('rooms').doc('room-a').collection('messages').get();
+      expect(snapshot.docs, isEmpty);
+    });
+
     test('hostControlsProvider toggles room lock state', () async {
       await firestore.collection('rooms').doc('room-a').set({
         'hostId': 'user-1',

@@ -1,18 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../services/moderation_service.dart';
 import '../models/speed_dating_models.dart';
 
 class SpeedDatingService {
-  SpeedDatingService({FirebaseFirestore? firestore}) : _firestore = firestore ?? FirebaseFirestore.instance;
+  SpeedDatingService({FirebaseFirestore? firestore, ModerationService? moderationService})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _moderationService = moderationService ?? ModerationService(firestore: firestore ?? FirebaseFirestore.instance);
 
   final FirebaseFirestore _firestore;
+  final ModerationService _moderationService;
   static const Uuid _uuid = Uuid();
 
   Stream<List<SpeedDateCandidate>> candidatesStream({required String currentUserId}) {
-    return _firestore.collection('users').limit(100).snapshots().map((snapshot) {
+    return _firestore.collection('users').limit(100).snapshots().asyncMap((snapshot) async {
+      final blockedIds = await _moderationService.getExcludedUserIds(currentUserId);
       return snapshot.docs
           .where((doc) => doc.id != currentUserId)
+          .where((doc) => !blockedIds.contains(doc.id))
           .map(SpeedDateCandidate.fromDoc)
           .where((candidate) => candidate.username.trim().isNotEmpty)
           .toList();
@@ -33,6 +39,10 @@ class SpeedDatingService {
     required bool liked,
     required int sessionSeconds,
   }) async {
+    if (await _moderationService.hasBlockingRelationship(fromUserId, toUserId)) {
+      throw Exception('Cannot interact with a blocked user.');
+    }
+
     final actionId = '${fromUserId}_$toUserId';
     final reciprocalActionId = '${toUserId}_$fromUserId';
 

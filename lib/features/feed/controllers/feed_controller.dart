@@ -1,8 +1,10 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../../../models/room_model.dart';
 import '../../../models/user.dart';
+import '../../../services/moderation_service.dart';
 
 class FeedState {
   final bool isLoading;
@@ -34,16 +36,24 @@ class FeedState {
 
 class FeedController extends Notifier<FeedState> {
   late final FirebaseFirestore _firestore;
+  late final FirebaseAuth _auth;
+  late final ModerationService _moderationService;
 
   @override
   FeedState build() {
     _firestore = FirebaseFirestore.instance;
+    _auth = FirebaseAuth.instance;
+    _moderationService = ModerationService(firestore: _firestore, auth: _auth);
     return const FeedState();
   }
 
   Future<void> loadFeed() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
+      final currentUserId = _auth.currentUser?.uid;
+      final blockedIds = currentUserId == null
+          ? const <String>{}
+          : await _moderationService.getExcludedUserIds(currentUserId);
       final roomsSnap = await _firestore
           .collection('rooms')
           .where('isLive', isEqualTo: true)
@@ -51,8 +61,9 @@ class FeedController extends Notifier<FeedState> {
           .limit(20)
           .get();
       final liveRooms = roomsSnap.docs
-        .map((doc) => RoomModel.fromJson(doc.data(), doc.id))
-        .toList();
+          .map((doc) => RoomModel.fromJson(doc.data(), doc.id))
+          .where((room) => !blockedIds.contains(room.hostId))
+          .toList();
       final usersSnap = await _firestore
           .collection('users')
           .orderBy('balance', descending: true)
@@ -60,6 +71,7 @@ class FeedController extends Notifier<FeedState> {
           .get();
       final trendingUsers = usersSnap.docs
           .map((doc) => User.fromJson({'id': doc.id, ...doc.data()}))
+          .where((user) => !blockedIds.contains(user.id))
           .toList();
       state = state.copyWith(
         isLoading: false,

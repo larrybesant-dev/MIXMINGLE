@@ -1,0 +1,38 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#EDF1F6"/>
+    </linearGradient>
+    <linearGradient id="mark" x1="300" y1="250" x2="750" y2="680" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#CD2CFF"/>
+      <stop offset="0.5" stop-color="#5C48FF"/>
+      <stop offset="1" stop-color="#148BFF"/>
+    </linearGradient>
+    <linearGradient id="tail" x1="520" y1="560" x2="780" y2="700" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF4A70"/>
+      <stop offset="1" stop-color="#FFB03A"/>
+    </linearGradient>
+    <linearGradient id="word3" x1="200" y1="770" x2="830" y2="920" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8F22FF"/>
+      <stop offset="0.65" stop-color="#4255FF"/>
+      <stop offset="1" stop-color="#0F86FF"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1024" height="1024" rx="96" fill="url(#bg3)"/>
+
+  <circle cx="512" cy="400" r="224" stroke="url(#mark)" stroke-width="28"/>
+  <path d="M415 304C415 291 430 283 441 289L651 406C662 412 662 428 651 434L441 551C430 557 415 549 415 536V304Z" fill="url(#mark)"/>
+
+  <rect x="465" y="420" width="26" height="108" rx="6" fill="#E4DDFF"/>
+  <rect x="505" y="388" width="26" height="140" rx="6" fill="#CDB5FF"/>
+  <rect x="545" y="454" width="26" height="74" rx="6" fill="#FFC677"/>
+
+  <path d="M610 562C664 580 706 614 750 670" stroke="url(#tail)" stroke-width="24" stroke-linecap="round"/>
+
+  <circle cx="308" cy="388" r="52" fill="#8F22FF" opacity="0.86"/>
+  <circle cx="716" cy="388" r="52" fill="#148BFF" opacity="0.86"/>
+
+  <text x="512" y="846" text-anchor="middle" fill="url(#word3)" font-size="130" font-family="Plus Jakarta Sans, Segoe UI, Arial" font-weight="800">MixVy</text>
+</svg>

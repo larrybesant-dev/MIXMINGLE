@@ -1,11 +1,99 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../models/moderation_model.dart';
+
 class ModerationService {
-  Future<void> reportUser(String userId, String reason) async {
-    // Implement reporting logic
-    await Future.delayed(Duration(milliseconds: 500));
+  ModerationService({FirebaseFirestore? firestore, FirebaseAuth? auth})
+      : _firestore = firestore ?? FirebaseFirestore.instance,
+        _auth = auth;
+
+  final FirebaseFirestore _firestore;
+  final FirebaseAuth? _auth;
+
+  String get _currentUserId {
+    final userId = (_auth ?? FirebaseAuth.instance).currentUser?.uid;
+    if (userId == null || userId.isEmpty) {
+      throw Exception('User not logged in');
+    }
+    return userId;
   }
 
-  Future<void> blockUser(String userId) async {
-    // Implement blocking logic
-    await Future.delayed(Duration(milliseconds: 500));
+  Future<void> blockUser(String blockedUserId) async {
+    final blockerUserId = _currentUserId;
+    if (blockedUserId.trim().isEmpty || blockedUserId == blockerUserId) {
+      return;
+    }
+
+    final docId = '${blockerUserId}_$blockedUserId';
+    final block = BlockRecordModel(
+      id: docId,
+      blockerUserId: blockerUserId,
+      blockedUserId: blockedUserId,
+      createdAt: DateTime.now().toUtc(),
+    );
+
+    await _firestore.collection('blocks').doc(docId).set(block.toJson(), SetOptions(merge: true));
+  }
+
+  Future<void> unblockUser(String blockedUserId) async {
+    final blockerUserId = _currentUserId;
+    final docId = '${blockerUserId}_$blockedUserId';
+    await _firestore.collection('blocks').doc(docId).delete();
+  }
+
+  Future<bool> isBlocked(String otherUserId) async {
+    final blockerUserId = _currentUserId;
+    final docId = '${blockerUserId}_$otherUserId';
+    final snapshot = await _firestore.collection('blocks').doc(docId).get();
+    return snapshot.exists;
+  }
+
+  Future<void> reportTarget({
+    required String targetId,
+    required ReportTargetType targetType,
+    required String reason,
+    String? details,
+  }) async {
+    final reporterUserId = _currentUserId;
+    final reportRef = _firestore.collection('reports').doc();
+    final report = ReportRecordModel(
+      id: reportRef.id,
+      reporterUserId: reporterUserId,
+      targetId: targetId,
+      targetType: targetType,
+      reason: reason.trim(),
+      details: details?.trim().isEmpty == true ? null : details?.trim(),
+      createdAt: DateTime.now().toUtc(),
+    );
+    await reportRef.set(report.toJson());
+  }
+
+  Future<Set<String>> getExcludedUserIds(String userId) async {
+    if (userId.trim().isEmpty) {
+      return const <String>{};
+    }
+
+    final results = await Future.wait([
+      _firestore.collection('blocks').where('blockerUserId', isEqualTo: userId).get(),
+      _firestore.collection('blocks').where('blockedUserId', isEqualTo: userId).get(),
+    ]);
+
+    final blockedByCurrent = results[0];
+    final blockingCurrent = results[1];
+
+    return {
+      ...blockedByCurrent.docs
+          .map((doc) => doc.data()['blockedUserId'] as String? ?? '')
+          .where((id) => id.isNotEmpty),
+      ...blockingCurrent.docs
+          .map((doc) => doc.data()['blockerUserId'] as String? ?? '')
+          .where((id) => id.isNotEmpty),
+    };
+  }
+
+  Future<bool> hasBlockingRelationship(String firstUserId, String secondUserId) async {
+    final excludedUserIds = await getExcludedUserIds(firstUserId);
+    return excludedUserIds.contains(secondUserId);
   }
 }

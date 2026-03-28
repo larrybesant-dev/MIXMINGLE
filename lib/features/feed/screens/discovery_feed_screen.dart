@@ -45,20 +45,72 @@ class DiscoveryFeedContent extends ConsumerWidget {
         }
         if (feedState.error != null) {
           return Center(
-            child: Text(
-              feedState.error!,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.wifi_off, size: 38, color: Theme.of(context).colorScheme.error),
+                  const SizedBox(height: 10),
+                  Text(
+                    feedState.error!,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Theme.of(context).colorScheme.error),
+                  ),
+                  const SizedBox(height: 12),
+                  FilledButton.icon(
+                    onPressed: () => ref.read(feedControllerProvider.notifier).loadFeed(),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
+                ],
+              ),
             ),
           );
         }
         if (feedState.liveRooms.isEmpty && feedState.trendingUsers.isEmpty) {
-          return const FeedEmptyState(message: 'No live rooms or trending users right now.');
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const FeedEmptyState(message: 'No live rooms or trending users right now.'),
+                  const SizedBox(height: 12),
+                  FilledButton.tonalIcon(
+                    onPressed: () => context.go('/speed-dating'),
+                    icon: const Icon(Icons.local_fire_department_rounded),
+                    label: const Text('Try Speed Dating'),
+                  ),
+                ],
+              ),
+            ),
+          );
         }
         return RefreshIndicator(
           onRefresh: () => ref.read(feedControllerProvider.notifier).loadFeed(),
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.explore),
+                      const SizedBox(width: 10),
+                      const Expanded(
+                        child: Text('Swipe through live rooms and trending users to find your next connection.'),
+                      ),
+                      TextButton(
+                        onPressed: () => context.go('/friends'),
+                        child: const Text('Friends'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
               if (feedState.liveRooms.isNotEmpty) ...[
                 Text(
                   'Live Now',

@@ -5,17 +5,24 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/friend_request_model.dart';
 import '../models/user_model.dart';
 import 'analytics_service.dart';
+import 'moderation_service.dart';
 
 class FriendService {
-  FriendService({FirebaseFirestore? firestore, AnalyticsService? analyticsService})
+  FriendService({FirebaseFirestore? firestore, AnalyticsService? analyticsService, ModerationService? moderationService})
       : _firestore = firestore ?? FirebaseFirestore.instance,
-        _analyticsService = analyticsService ?? AnalyticsService();
+        _analyticsService = analyticsService ?? AnalyticsService(),
+        _moderationService = moderationService ?? ModerationService(firestore: firestore ?? FirebaseFirestore.instance);
 
   final FirebaseFirestore _firestore;
   final AnalyticsService _analyticsService;
+  final ModerationService _moderationService;
 
   Future<void> sendFriendRequest(String fromUserId, String toUserId) async {
     if (fromUserId.trim().isEmpty || toUserId.trim().isEmpty || fromUserId == toUserId) {
+      return;
+    }
+
+    if (await _moderationService.hasBlockingRelationship(fromUserId, toUserId)) {
       return;
     }
 
@@ -151,9 +158,15 @@ class FriendService {
     final friendIds = await getFriendIds(userId);
     if (friendIds.isEmpty) return [];
 
+    final excludedIds = await _moderationService.getExcludedUserIds(userId);
+    final visibleFriendIds = friendIds.where((id) => !excludedIds.contains(id)).toList(growable: false);
+    if (visibleFriendIds.isEmpty) {
+      return const [];
+    }
+
     final friendsQuery = await _firestore
         .collection('users')
-        .where(FieldPath.documentId, whereIn: friendIds)
+        .where(FieldPath.documentId, whereIn: visibleFriendIds)
         .get();
     return friendsQuery.docs
         .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
@@ -238,12 +251,16 @@ class FriendService {
   }) async {
     final normalizedQuery = query.trim().toLowerCase();
     final snapshot = await _firestore.collection('users').limit(30).get();
+    final blockedIds = currentUserId == null
+        ? const <String>{}
+        : await _moderationService.getExcludedUserIds(currentUserId);
 
     return snapshot.docs
         .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
         .where((user) => user.id.isNotEmpty)
         .where((user) => user.id != currentUserId)
         .where((user) => !excludeUserIds.contains(user.id))
+        .where((user) => !blockedIds.contains(user.id))
         .where((user) {
           if (normalizedQuery.isEmpty) {
             return true;

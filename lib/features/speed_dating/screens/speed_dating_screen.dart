@@ -134,6 +134,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
 
   Widget _buildCandidateCard(SpeedDateCandidate candidate, ThemeData theme, String currentUserId) {
     final hasAvatar = candidate.avatarUrl != null && candidate.avatarUrl!.trim().isNotEmpty;
+    final displayName = candidate.username.trim().isEmpty ? 'MixVy user' : candidate.username.trim();
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -168,7 +169,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
           ),
           const SizedBox(height: 14),
           Text(
-            candidate.username,
+            displayName,
             style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 4),
@@ -203,6 +204,17 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
           ],
           const SizedBox(height: 20),
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              TextButton.icon(
+                onPressed: () => context.go('/profile/${candidate.id}'),
+                icon: const Icon(Icons.person_outline),
+                label: const Text('View profile'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Row(
             children: [
               Expanded(
                 child: OutlinedButton.icon(
@@ -224,6 +236,11 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          TextButton(
+            onPressed: _isSubmitting ? null : _nextCandidate,
+            child: const Text('Skip to next person'),
           ),
         ],
       ),

@@ -51,92 +51,106 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
     final isLoading = authState.isLoading;
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('Register')),
-      body: Center(
+      body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Semantics(
-                  label: 'Email input field',
-                  child: TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    validator: (v) => v == null || !v.contains('@') ? 'Enter a valid email' : null,
-                    autofocus: true,
-                    textInputAction: TextInputAction.next,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height - 120),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Icon(Icons.person_add_alt_1, size: 52, color: theme.colorScheme.primary),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Create your MixVy account',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.headlineSmall,
                   ),
-                ),
-                const SizedBox(height: 16),
-                Semantics(
-                  label: 'Password input field',
-                  child: TextFormField(
-                    controller: _passwordController,
-                    decoration: const InputDecoration(labelText: 'Password'),
-                    obscureText: true,
-                    validator: (v) => v == null || v.length < 6 ? 'Min 6 characters' : null,
-                    textInputAction: TextInputAction.done,
+                  const SizedBox(height: 8),
+                  Text(
+                    'Set up your account now, then complete your profile and start matching instantly.',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium,
                   ),
-                ),
-                const SizedBox(height: 24),
-                if (_localError != null || authState.error != null)
+                  const SizedBox(height: 24),
                   Semantics(
-                    label: 'Error message',
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Text(
-                        _localError ?? authState.error!,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
+                    label: 'Email input field',
+                    child: TextFormField(
+                      controller: _emailController,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (v) => v == null || !v.contains('@') ? 'Enter a valid email' : null,
+                      autofocus: true,
+                      textInputAction: TextInputAction.next,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Semantics(
+                    label: 'Password input field',
+                    child: TextFormField(
+                      controller: _passwordController,
+                      decoration: const InputDecoration(
+                        labelText: 'Password',
+                        border: OutlineInputBorder(),
+                      ),
+                      obscureText: true,
+                      validator: (v) => v == null || v.length < 6 ? 'Min 6 characters' : null,
+                      textInputAction: TextInputAction.done,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  if (_localError != null || authState.error != null)
+                    Semantics(
+                      label: 'Error message',
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: Text(
+                          _localError ?? authState.error!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                Semantics(
-                  label: 'Register button',
-                  button: true,
-                  child: ElevatedButton(
-                    onPressed: isLoading ? null : _register,
-                    child: isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(
-                            'Register',
-                            style: TextStyle(
-                              fontSize: MediaQuery.of(context).size.width > 400
-                                  ? 20
-                                  : 18,
-                            ),
-                          ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Semantics(
-                  label: 'Login navigation button',
-                  button: true,
-                  child: TextButton(
-                    onPressed: isLoading
-                        ? null
-                        : () => context.go('/login'),
-                    child: Text(
-                      'Already have an account? Login',
-                      style: TextStyle(
-                        fontSize: MediaQuery.of(context).size.width > 400
-                            ? 16
-                            : 14,
+                  SizedBox(
+                    width: double.infinity,
+                    child: Semantics(
+                      label: 'Register button',
+                      button: true,
+                      child: ElevatedButton(
+                        onPressed: isLoading ? null : _register,
+                        child: isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(strokeWidth: 2),
+                              )
+                            : const Text('Register'),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 16),
+                  Semantics(
+                    label: 'Login navigation button',
+                    button: true,
+                    child: TextButton(
+                      onPressed: isLoading
+                          ? null
+                          : () => context.go('/login'),
+                      child: const Text('Already have an account? Login'),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),

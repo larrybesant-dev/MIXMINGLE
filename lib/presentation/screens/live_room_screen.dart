@@ -14,6 +14,7 @@ import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/room/providers/host_provider.dart';
 import '../../services/analytics_service.dart';
 import '../../services/agora_service.dart';
+import '../../services/moderation_service.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -54,7 +55,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       _firestore = ref.read(roomFirestoreProvider);
       _joinedUserId = user.id;
       _joinRoom(user.id);
-      _connectCall(user.id);
     }
   }
 
@@ -195,13 +195,27 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       final roomDoc = await firestore.collection('rooms').doc(widget.roomId).get();
       if (!roomDoc.exists) {
         setState(() => _roomJoinError = 'This room no longer exists.');
+        _joinedUserId = null;
         _exitRoom();
         return;
+      }
+
+      final hostId = (roomDoc.data()?['hostId'] as String? ?? '').trim();
+      if (hostId.isNotEmpty) {
+        final moderationService = ModerationService(firestore: firestore);
+        final hasBlockingRelationship = await moderationService.hasBlockingRelationship(userId, hostId);
+        if (hasBlockingRelationship) {
+          setState(() => _roomJoinError = 'You cannot join this room.');
+          _joinedUserId = null;
+          _exitRoom();
+          return;
+        }
       }
 
       final isLocked = (roomDoc.data()?['isLocked'] ?? false) as bool;
       if (isLocked) {
         setState(() => _roomJoinError = 'Room is locked by host.');
+        _joinedUserId = null;
         _exitRoom();
         return;
       }
@@ -212,6 +226,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         final data = doc.data() as Map<String, dynamic>;
         if (data['isBanned'] == true) {
           setState(() => _roomJoinError = 'You are banned from this room.');
+          _joinedUserId = null;
           _exitRoom();
           return;
         }
@@ -228,6 +243,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           'lastActiveAt': now,
         });
       }
+
+      await _connectCall(userId);
 
       if (!_hasTrackedRoomJoin) {
         _hasTrackedRoomJoin = true;
@@ -280,7 +297,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         if (mounted) {
           _firestore = ref.read(roomFirestoreProvider);
           _joinRoom(user.id);
-          _connectCall(user.id);
         }
       });
     }

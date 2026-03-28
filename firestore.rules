@@ -22,15 +22,38 @@ service cloud.firestore {
         'username',
         'email',
         'avatarUrl',
+        'coverPhotoUrl',
         'galleryUrls',
         'introVideoUrl',
         'bio',
+        'aboutMe',
+        'age',
+        'gender',
+        'location',
+        'relationshipStatus',
         'vibePrompt',
         'firstDatePrompt',
         'musicTastePrompt',
         'interests',
+        'themeId',
+        'camViewPolicy',
+        'adultModeEnabled',
+        'adultConsentAccepted',
         'updatedAt'
       ]);
+    }
+
+    function userDoc(userId) {
+      return get(/databases/$(database)/documents/users/$(userId));
+    }
+
+    function adultModeEnabled(userId) {
+      return userDoc(userId).data.adultModeEnabled == true
+        && userDoc(userId).data.adultConsentAccepted == true;
+    }
+
+    function canReadSharedAdultProfile(userId) {
+      return signedIn() && adultModeEnabled(request.auth.uid) && adultModeEnabled(userId);
     }
 
     function roomDoc(roomId) {
@@ -47,6 +70,17 @@ service cloud.firestore {
       allow update: if (isSelf(userId) && isAllowedUserProfileUpdate())
         || (signedIn() && isFriendLinkUpdate());
       allow delete: if isSelf(userId);
+
+      match /adult_profile/{documentId} {
+        allow read: if isSelf(userId)
+          || (canReadSharedAdultProfile(userId)
+            && resource.data.visibility == 'optedInAdultsOnly');
+        allow create, update, delete: if isSelf(userId);
+      }
+
+      match /privacy/{documentId} {
+        allow read, create, update, delete: if isSelf(userId);
+      }
     }
 
     match /rooms/{roomId} {
@@ -81,6 +115,24 @@ service cloud.firestore {
           allow read: if signedIn();
           allow create, update, delete: if userId == request.auth.uid;
         }
+      }
+
+      match /policies/{documentId} {
+        allow read: if signedIn();
+        allow create, update, delete: if isRoomHost(roomId);
+      }
+
+      match /cam_access_requests/{requestId} {
+        allow read: if signedIn()
+          && (resource.data.requesterId == request.auth.uid
+            || resource.data.broadcasterId == request.auth.uid
+            || isRoomHost(roomId));
+        allow create: if signedIn()
+          && request.resource.data.requesterId == request.auth.uid
+          && request.resource.data.broadcasterId is string;
+        allow update: if signedIn()
+          && (resource.data.broadcasterId == request.auth.uid || isRoomHost(roomId));
+        allow delete: if false;
       }
     }
 
@@ -135,6 +187,54 @@ service cloud.firestore {
         && resource.data.userId == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']);
       allow delete: if false;
+    }
+
+    match /wallets/{userId} {
+      allow read: if isSelf(userId);
+      allow create, update, delete: if false;
+    }
+
+    match /wallet_ledger/{entryId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    match /referral_codes/{code} {
+      allow read: if signedIn();
+      allow create, update, delete: if false;
+    }
+
+    match /referrals/{referralId} {
+      allow read: if signedIn()
+        && (resource.data.referrerUserId == request.auth.uid
+          || resource.data.referredUserId == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
+    match /referral_earnings/{earningId} {
+      allow read: if signedIn() && resource.data.beneficiaryUserId == request.auth.uid;
+      allow create, update, delete: if false;
+    }
+
+    match /blocks/{blockId} {
+      allow read: if signedIn()
+        && (resource.data.blockerUserId == request.auth.uid
+          || resource.data.blockedUserId == request.auth.uid);
+      allow create: if signedIn()
+        && request.resource.data.blockerUserId == request.auth.uid
+        && request.resource.data.blockedUserId is string;
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.blockerUserId == request.auth.uid;
+    }
+
+    match /reports/{reportId} {
+      allow read: if signedIn() && resource.data.reporterUserId == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.reporterUserId == request.auth.uid
+        && request.resource.data.targetId is string
+        && request.resource.data.targetType is string
+        && request.resource.data.reason is string;
+      allow update, delete: if false;
     }
 
     match /speed_dating_actions/{actionId} {

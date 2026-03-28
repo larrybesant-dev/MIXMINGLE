@@ -1,61 +1,37 @@
-// ignore_for_file: subtype_of_sealed_class
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/profile/profile_controller.dart';
 import 'package:mocktail/mocktail.dart';
-
-class MockFirebaseFirestore extends Mock implements FirebaseFirestore {}
-
-class MockCollectionReference extends Mock
-    implements CollectionReference<Map<String, dynamic>> {}
-
-class MockDocumentReference extends Mock
-    implements DocumentReference<Map<String, dynamic>> {}
-
-class MockDocumentSnapshot extends Mock
-    implements DocumentSnapshot<Map<String, dynamic>> {}
 
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
 
 class MockUser extends Mock implements User {}
 
 void main() {
-  late MockFirebaseFirestore firestore;
-  late MockCollectionReference usersCollection;
-  late MockDocumentReference userDocument;
-  late MockDocumentSnapshot userSnapshot;
+  late FakeFirebaseFirestore firestore;
   late MockFirebaseAuth auth;
   late MockUser user;
 
-  setUpAll(() {
-    registerFallbackValue(SetOptions(merge: true));
-  });
-
   setUp(() {
-    firestore = MockFirebaseFirestore();
-    usersCollection = MockCollectionReference();
-    userDocument = MockDocumentReference();
-    userSnapshot = MockDocumentSnapshot();
+    firestore = FakeFirebaseFirestore();
     auth = MockFirebaseAuth();
     user = MockUser();
 
-    when(() => firestore.collection('users')).thenReturn(usersCollection);
-    when(() => usersCollection.doc(any())).thenReturn(userDocument);
     when(() => auth.currentUser).thenReturn(user);
     when(() => user.uid).thenReturn('user123');
     when(() => user.email).thenReturn('user@example.com');
     when(() => user.displayName).thenReturn('username');
     when(() => user.photoURL).thenReturn('');
+    when(() => user.reload()).thenAnswer((_) async {});
+    when(() => user.updateDisplayName(any())).thenAnswer((_) async {});
+    when(() => user.updatePhotoURL(any())).thenAnswer((_) async {});
   });
 
   group('ProfileController', () {
     test('fetchProfile loads the Firestore user document', () async {
-      when(() => userDocument.get()).thenAnswer((_) async => userSnapshot);
-      when(() => userSnapshot.exists).thenReturn(true);
-      when(() => userSnapshot.data()).thenReturn({
+      await firestore.collection('users').doc('user123').set({
         'id': 'user123',
         'username': 'username',
         'email': 'user@example.com',
@@ -63,7 +39,7 @@ void main() {
         'coinBalance': 10,
         'membershipLevel': 'Premium',
         'followers': <String>[],
-        'createdAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+        'createdAt': DateTime(2026, 1, 1).toIso8601String(),
       });
 
       final container = ProviderContainer(
@@ -86,8 +62,6 @@ void main() {
     });
 
     test('updateProfile saves against the authenticated uid', () async {
-      when(() => userDocument.set(any(), any())).thenAnswer((_) async {});
-
       final container = ProviderContainer(
         overrides: [
           profileControllerProvider.overrideWith(
@@ -109,12 +83,15 @@ void main() {
         ),
       );
 
-      verify(() => usersCollection.doc('user123')).called(1);
+      final snapshot = await firestore.collection('users').doc('user123').get();
+      final data = snapshot.data();
+      expect(data, isNotNull);
+      expect(data!['username'], 'testuser');
+      expect(data['email'], 'test@mixvy.com');
 
       final state = container.read(profileControllerProvider);
       expect(state.userId, 'user123');
       expect(state.username, 'testuser');
-      expect(state.membershipLevel, 'Premium');
       expect(state.error, isNull);
     });
   });

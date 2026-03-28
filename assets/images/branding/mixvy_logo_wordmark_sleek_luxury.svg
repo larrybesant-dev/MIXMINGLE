@@ -1,0 +1,26 @@
+<svg width="1400" height="420" viewBox="0 0 1400 420" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="luxGrad" x1="150" y1="90" x2="1260" y2="330" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D6B26A"/>
+      <stop offset="0.55" stop-color="#F4E2B8"/>
+      <stop offset="1" stop-color="#BC8F3F"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1400" height="420" fill="transparent"/>
+
+  <line x1="220" y1="118" x2="1180" y2="118" stroke="#C8A96A" stroke-opacity="0.55" stroke-width="2"/>
+  <line x1="260" y1="340" x2="1140" y2="340" stroke="#C8A96A" stroke-opacity="0.45" stroke-width="2"/>
+
+  <text
+    x="700"
+    y="285"
+    text-anchor="middle"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="214"
+    font-weight="700"
+    letter-spacing="3"
+    fill="url(#luxGrad)">
+    MixVy
+  </text>
+</svg>
