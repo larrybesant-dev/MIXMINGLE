@@ -139,11 +139,11 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
   Future<String?> _resolveUploadUserId() async {
     try {
       final auth = FirebaseAuth.instance;
-      await auth.currentUser?.reload();
-      final freshUser = auth.currentUser;
-      if (freshUser == null) return null;
-      await freshUser.getIdToken(true);
-      return freshUser.uid;
+      final user = auth.currentUser;
+      if (user == null) return null;
+      // Avoid reload() on web here; it can race auth state and destabilize upload flow.
+      await user.getIdToken();
+      return user.uid;
     } catch (error, stackTrace) {
       developer.log(
         'Failed to resolve upload user id',
@@ -313,7 +313,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       final picker = ImagePicker();
       final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 88);
       if (file == null) return;
-      final bytes = await file.readAsBytes();
+      final bytes = await file.readAsBytes().timeout(const Duration(seconds: 20));
       if (bytes.lengthInBytes > _maxPhotoBytes) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -359,6 +359,11 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_mapPlatformError(e, kind: 'Photo'))),
+      );
+    } on TimeoutException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Photo upload timed out. Please try again.')),
       );
     } catch (e) {
       developer.log(
