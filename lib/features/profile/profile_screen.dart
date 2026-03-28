@@ -213,7 +213,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
     required ValueSetter<bool> setBusy,
     required String folder,
     required String successMessage,
-    required void Function(ProfileState current, String url) transform,
+    required ProfileState Function(ProfileState current, String url) transform,
   }) async {
     if (isBusy) return;
     final userId = await _resolveUploadUserId();
@@ -249,9 +249,9 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       );
       final controller = ref.read(profileControllerProvider.notifier);
       final current = ref.read(profileControllerProvider);
-      final next = current;
-      transform(next, url);
-      await controller.updateProfile(ref.read(profileControllerProvider));
+      final next = transform(current, url);
+      controller.updateDraft(next);
+      await controller.updateProfile(next);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(successMessage)));
     } on FirebaseException catch (e) {
@@ -270,7 +270,6 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
   }
 
   Future<void> _uploadPhoto() async {
-    final controller = ref.read(profileControllerProvider.notifier);
     final current = ref.read(profileControllerProvider);
     await _uploadImage(
       isBusy: _isUploadingPhoto,
@@ -278,13 +277,12 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       folder: 'profile_photos',
       successMessage: 'Profile photo uploaded.',
       transform: (_, url) {
-        controller.state = current.copyWith(avatarUrl: url);
+        return current.copyWith(avatarUrl: url);
       },
     );
   }
 
   Future<void> _uploadCoverPhoto() async {
-    final controller = ref.read(profileControllerProvider.notifier);
     final current = ref.read(profileControllerProvider);
     await _uploadImage(
       isBusy: _isUploadingCover,
@@ -292,13 +290,12 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       folder: 'cover_photos',
       successMessage: 'Cover photo uploaded.',
       transform: (_, url) {
-        controller.state = current.copyWith(coverPhotoUrl: url);
+        return current.copyWith(coverPhotoUrl: url);
       },
     );
   }
 
   Future<void> _uploadGalleryPhoto() async {
-    final controller = ref.read(profileControllerProvider.notifier);
     final current = ref.read(profileControllerProvider);
     await _uploadImage(
       isBusy: _isUploadingGallery,
@@ -306,8 +303,8 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       folder: 'gallery_photos',
       successMessage: 'Gallery photo uploaded.',
       transform: (_, url) {
-        controller.state = current.copyWith(
-          galleryUrls: [...current.galleryUrls, url].toSet().toList(growable: false),
+        return current.copyWith(
+          galleryUrls: {...current.galleryUrls, url}.toList(growable: false),
         );
       },
     );
@@ -581,7 +578,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
                           const SizedBox(width: 12),
                           Expanded(
                             child: DropdownButtonFormField<String>(
-                              value: _selectedGender,
+                              initialValue: _selectedGender,
                               decoration: const InputDecoration(labelText: 'Gender'),
                               items: _genderOptions
                                   .map((value) => DropdownMenuItem<String>(value: value, child: Text(value)))
@@ -598,7 +595,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
                       ),
                       const SizedBox(height: 12),
                       DropdownButtonFormField<String>(
-                        value: _selectedRelationshipStatus,
+                        initialValue: _selectedRelationshipStatus,
                         decoration: const InputDecoration(labelText: 'Relationship status'),
                         items: _relationshipOptions
                             .map((value) => DropdownMenuItem<String>(value: value, child: Text(value)))
@@ -636,7 +633,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<CamViewPolicy>(
-                        value: _selectedCamViewPolicy,
+                        initialValue: _selectedCamViewPolicy,
                         decoration: const InputDecoration(labelText: 'Who can view my cam'),
                         items: CamViewPolicy.values
                             .map(
@@ -662,7 +659,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
                   child: Column(
                     children: [
                       DropdownButtonFormField<String>(
-                        value: _selectedThemeId,
+                        initialValue: _selectedThemeId,
                         decoration: const InputDecoration(labelText: 'Theme'),
                         items: _themeOptions
                             .map((value) => DropdownMenuItem<String>(value: value, child: Text(value)))
@@ -882,7 +879,7 @@ class _HeroCard extends StatelessWidget {
                     ? Image.network(
                         state.coverPhotoUrl!.trim(),
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.landscape_rounded, size: 40),
+                        errorBuilder: (_, _, _) => const Icon(Icons.landscape_rounded, size: 40),
                       )
                     : const Icon(Icons.landscape_rounded, size: 40),
               ),
@@ -900,7 +897,7 @@ class _HeroCard extends StatelessWidget {
                         width: 84,
                         height: 84,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(Icons.person, size: 32),
+                        errorBuilder: (_, _, _) => const Icon(Icons.person, size: 32),
                       ),
                     )
                   : const Icon(Icons.person, size: 32),

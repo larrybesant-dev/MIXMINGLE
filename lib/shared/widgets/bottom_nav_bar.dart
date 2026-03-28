@@ -14,7 +14,7 @@ class BottomNavBar extends StatelessWidget {
 			onTap: onTap,
 			backgroundColor: theme.colorScheme.surface,
 			selectedItemColor: theme.colorScheme.primary,
-			unselectedItemColor: theme.colorScheme.onSurface.withOpacity(0.65),
+			unselectedItemColor: theme.colorScheme.onSurface.withValues(alpha: 0.65),
 			items: const [
 				BottomNavigationBarItem(
 					icon: Icon(Icons.home),

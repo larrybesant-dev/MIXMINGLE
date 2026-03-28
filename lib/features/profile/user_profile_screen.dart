@@ -193,8 +193,8 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   borderRadius: BorderRadius.circular(22),
                   gradient: LinearGradient(
                     colors: [
-                      Theme.of(context).colorScheme.primary.withOpacity(0.85),
-                      Theme.of(context).colorScheme.secondary.withOpacity(0.8),
+                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.85),
+                      Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -246,7 +246,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                           const SizedBox(height: 6),
                           Text(
                             details.isEmpty ? 'Live social creator' : details.join(' • '),
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white.withOpacity(0.9)),
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
                             textAlign: TextAlign.center,
                           ),
                           const SizedBox(height: 12),
@@ -402,7 +402,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   child: ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: galleryUrls.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 10),
+                    separatorBuilder: (_, _) => const SizedBox(width: 10),
                     itemBuilder: (context, index) {
                       final url = galleryUrls[index].trim();
                       return ClipRRect(
@@ -453,9 +453,9 @@ class _MiniBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.2),
+        color: Colors.white.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withOpacity(0.28)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.28)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

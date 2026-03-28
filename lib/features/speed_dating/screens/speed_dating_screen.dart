@@ -102,27 +102,29 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
     required String currentUserId,
     required String matchId,
   }) async {
+    final pageContext = context;
     await showDialog<void>(
-      context: context,
-      builder: (context) {
+      context: pageContext,
+      builder: (dialogContext) {
         return AlertDialog(
           title: const Text('It\'s a match'),
           content: Text('You and ${candidate.username} liked each other.'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () => Navigator.of(dialogContext).pop(),
               child: const Text('Keep Browsing'),
             ),
             FilledButton(
               onPressed: () async {
-                Navigator.of(context).pop();
+                Navigator.of(dialogContext).pop();
                 final roomId = await _service.startLiveDateRoom(
                   hostUserId: currentUserId,
                   targetUserId: candidate.id,
                   matchId: matchId,
                 );
                 if (!mounted) return;
-                context.go('/room/$roomId');
+                if (!pageContext.mounted) return;
+                pageContext.go('/room/$roomId');
               },
               child: const Text('Start Live Date'),
             ),

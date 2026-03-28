@@ -190,6 +190,10 @@ class ProfileController extends Notifier<ProfileState> {
     await fetchProfile(_auth.currentUser?.uid);
   }
 
+  void updateDraft(ProfileState profile) {
+    state = profile.copyWith(error: null);
+  }
+
   Future<void> updateProfile(ProfileState profile) async {
     state = state.copyWith(isLoading: true, error: null);
 

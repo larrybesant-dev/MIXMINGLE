@@ -31,9 +31,9 @@ class ProfileService {
       adultRef.get(),
     ]);
 
-    final userSnapshot = results[0] as DocumentSnapshot<Map<String, dynamic>>;
-    final privacySnapshot = results[1] as DocumentSnapshot<Map<String, dynamic>>;
-    final adultSnapshot = results[2] as DocumentSnapshot<Map<String, dynamic>>;
+    final userSnapshot = results[0];
+    final privacySnapshot = results[1];
+    final adultSnapshot = results[2];
 
     return ProfileBundle(
       userData: userSnapshot.data() ?? <String, dynamic>{},

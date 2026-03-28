@@ -77,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   decoration: BoxDecoration(
                     color: _index == i
                         ? theme.colorScheme.primary
-                        : theme.colorScheme.onSurface.withOpacity(0.25),
+                      : theme.colorScheme.onSurface.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -136,8 +136,8 @@ class _OnboardPage extends StatelessWidget {
               shape: BoxShape.circle,
               gradient: LinearGradient(
                 colors: [
-                  theme.colorScheme.primary.withOpacity(0.75),
-                  theme.colorScheme.secondary.withOpacity(0.75),
+                  theme.colorScheme.primary.withValues(alpha: 0.75),
+                  theme.colorScheme.secondary.withValues(alpha: 0.75),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
