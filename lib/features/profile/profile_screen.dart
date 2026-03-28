@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -233,26 +234,62 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
     final metadata = SettableMetadata(contentType: contentType);
 
     try {
-      await ref.putData(bytes, metadata);
+      await ref.putData(bytes, metadata).timeout(const Duration(seconds: 45));
     } on FirebaseException catch (e) {
       final code = e.code.toLowerCase();
       final shouldRetry = code == 'unauthenticated' || code == 'permission-denied' || code == 'unauthorized';
       if (!shouldRetry) rethrow;
       await FirebaseAuth.instance.currentUser?.getIdToken(true);
-      await ref.putData(bytes, metadata);
+      await ref.putData(bytes, metadata).timeout(const Duration(seconds: 45));
+    } on TimeoutException {
+      throw FirebaseException(
+        plugin: 'firebase_storage',
+        code: 'retry-limit-exceeded',
+        message: 'Upload timed out before completion.',
+      );
     }
 
-    try {
-      return await ref.getDownloadURL();
-    } on FirebaseException catch (e, stackTrace) {
-      developer.log(
-        'Failed to resolve uploaded file download URL',
-        name: 'ProfileUpload',
-        error: e,
-        stackTrace: stackTrace,
-      );
-      rethrow;
+    Object? lastError;
+    StackTrace? lastStackTrace;
+    for (var attempt = 1; attempt <= 3; attempt++) {
+      try {
+        return await ref.getDownloadURL().timeout(const Duration(seconds: 20));
+      } on TimeoutException catch (e, stackTrace) {
+        lastError = e;
+        lastStackTrace = stackTrace;
+      } on FirebaseException catch (e, stackTrace) {
+        lastError = e;
+        lastStackTrace = stackTrace;
+        final code = e.code.toLowerCase();
+        if (code != 'object-not-found' && code != 'unknown') {
+          rethrow;
+        }
+      } catch (e, stackTrace) {
+        lastError = e;
+        lastStackTrace = stackTrace;
+      }
+
+      if (attempt < 3) {
+        await Future<void>.delayed(Duration(milliseconds: 300 * attempt));
+      }
     }
+
+    developer.log(
+      'Failed to resolve uploaded file download URL after retries',
+      name: 'ProfileUpload',
+      error: lastError,
+      stackTrace: lastStackTrace,
+    );
+
+    if (lastError is FirebaseException) {
+      throw lastError;
+    }
+
+    throw FirebaseException(
+      plugin: 'firebase_storage',
+      code: 'unknown',
+      message: 'Unable to get photo URL after upload.',
+    );
   }
 
   Future<void> _uploadImage({

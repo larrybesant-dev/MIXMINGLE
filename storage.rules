@@ -27,6 +27,12 @@ service firebase.storage {
       allow delete: if isOwner(userId);
     }
 
+    match /users/{userId}/cover_photos/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if isOwner(userId) && isImageUpload();
+      allow delete: if isOwner(userId);
+    }
+
     match /users/{userId}/gallery_photos/{fileName} {
       allow read: if signedIn();
       allow create, update: if isOwner(userId) && isImageUpload();
