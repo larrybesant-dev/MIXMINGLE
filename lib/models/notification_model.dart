@@ -5,6 +5,7 @@ class NotificationModel {
   final String userId;
   final String type;
   final String content;
+  final String? roomId;
   final bool isRead;
   final DateTime createdAt;
 
@@ -13,6 +14,7 @@ class NotificationModel {
     required this.userId,
     required this.type,
     required this.content,
+    this.roomId,
     required this.isRead,
     required this.createdAt,
   });
@@ -24,6 +26,7 @@ class NotificationModel {
       userId: json['userId'] as String? ?? '',
       type: json['type'] as String? ?? 'general',
       content: json['content'] as String? ?? json['body'] as String? ?? '',
+        roomId: (json['roomId'] as String?)?.trim(),
       isRead: json['isRead'] as bool? ?? false,
       createdAt: createdAt is Timestamp
           ? createdAt.toDate()

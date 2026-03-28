@@ -8,6 +8,9 @@ const {
   recordStripePaymentSuccessHandler,
   sendCoinTransferHandler,
   requestCoinTransferHandler,
+  getStripeConnectStatusHandler,
+  createStripeConnectOnboardingLinkHandler,
+  createStripeConnectDashboardLinkHandler,
   createCheckoutSessionHandler,
   getCheckoutBaseUrl,
 } = paymentFunctions.__testing;
@@ -26,6 +29,7 @@ function createFirestoreDouble(initialUsers = {}) {
   );
   const transactions = new Map();
   const logs = new Map();
+  const stripeConnectAccounts = new Map();
 
   function storeFor(name) {
     switch (name) {
@@ -35,6 +39,8 @@ function createFirestoreDouble(initialUsers = {}) {
         return transactions;
       case "logs":
         return logs;
+      case "stripe_connect_accounts":
+        return stripeConnectAccounts;
       default:
         throw new Error(`Unsupported collection ${name}`);
     }
@@ -95,6 +101,7 @@ function createFirestoreDouble(initialUsers = {}) {
       users,
       transactions,
       logs,
+      stripeConnectAccounts,
     },
   };
 
@@ -231,6 +238,107 @@ describe("payment callable handlers", () => {
     assert.equal(recorded.receiverId, "user-3");
     assert.deepEqual(recorded.participants, ["user-1", "user-3"]);
     assert.equal(recorded.status, "requested");
+  });
+
+  it("getStripeConnectStatusHandler returns not-started status without an account", async () => {
+    const firestore = createFirestoreDouble();
+    const response = await getStripeConnectStatusHandler(makeRequest({}), {
+      firestore,
+      stripeClient: {
+        accounts: {
+          retrieve: async () => {
+            throw new Error("should not retrieve");
+          },
+        },
+      },
+    });
+
+    assert.equal(response.hasAccount, false);
+    assert.equal(response.onboardingComplete, false);
+  });
+
+  it("createStripeConnectOnboardingLinkHandler creates account, stores status, and returns link", async () => {
+    const firestore = createFirestoreDouble();
+    let createdAccountPayload;
+    let createdLinkPayload;
+    const stripeClient = {
+      accounts: {
+        create: async (payload) => {
+          createdAccountPayload = payload;
+          return {
+            id: "acct_123",
+            charges_enabled: false,
+            payouts_enabled: false,
+            details_submitted: false,
+            country: "US",
+          };
+        },
+        retrieve: async () => {
+          throw new Error("should not retrieve before create");
+        },
+        createLoginLink: async () => ({url: "https://stripe.test/dashboard"}),
+      },
+      accountLinks: {
+        create: async (payload) => {
+          createdLinkPayload = payload;
+          return {url: "https://stripe.test/onboarding"};
+        },
+      },
+    };
+
+    const response = await createStripeConnectOnboardingLinkHandler(makeRequest({}), {
+      firestore,
+      stripeClient,
+      publicAppUrl: "https://mixvy.app",
+    });
+
+    assert.equal(response.url, "https://stripe.test/onboarding");
+    assert.equal(response.accountId, "acct_123");
+    assert.equal(createdAccountPayload.type, "express");
+    assert.equal(createdLinkPayload.account, "acct_123");
+    assert.equal(createdLinkPayload.refresh_url, "https://mixvy.app/payments?connect=refresh");
+    assert.equal(createdLinkPayload.return_url, "https://mixvy.app/payments?connect=return");
+    assert.equal(
+        firestore.__state.stripeConnectAccounts.get("user-1").accountId,
+        "acct_123",
+    );
+  });
+
+  it("createStripeConnectDashboardLinkHandler creates a dashboard login link", async () => {
+    const firestore = createFirestoreDouble();
+    firestore.__state.stripeConnectAccounts.set("user-1", {accountId: "acct_saved"});
+    let retrievedAccountId;
+    let loginLinkAccountId;
+    const stripeClient = {
+      accounts: {
+        retrieve: async (accountId) => {
+          retrievedAccountId = accountId;
+          return {
+            id: accountId,
+            charges_enabled: true,
+            payouts_enabled: true,
+            details_submitted: true,
+            country: "US",
+          };
+        },
+        create: async () => {
+          throw new Error("should not create new account");
+        },
+        createLoginLink: async (accountId) => {
+          loginLinkAccountId = accountId;
+          return {url: "https://stripe.test/dashboard"};
+        },
+      },
+    };
+
+    const response = await createStripeConnectDashboardLinkHandler(makeRequest({}), {
+      firestore,
+      stripeClient,
+    });
+
+    assert.equal(response.url, "https://stripe.test/dashboard");
+    assert.equal(retrievedAccountId, "acct_saved");
+    assert.equal(loginLinkAccountId, "acct_saved");
   });
 
   it("getCheckoutBaseUrl prefers CHECKOUT_BASE_URL and trims trailing slash", () => {

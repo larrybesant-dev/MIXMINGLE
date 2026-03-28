@@ -6,6 +6,8 @@ import 'package:mixvy/features/room/providers/host_controls_provider.dart';
 import 'package:mixvy/features/room/providers/message_providers.dart';
 import 'package:mixvy/features/room/providers/participant_providers.dart';
 import 'package:mixvy/features/room/providers/room_firestore_provider.dart';
+import 'package:mixvy/features/room/providers/cam_access_provider.dart';
+import 'package:mixvy/models/room_policy_model.dart';
 import 'package:mixvy/models/user_model.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
 
@@ -183,6 +185,80 @@ void main() {
           .doc('settings')
           .get();
       expect(policySnapshot.data()?['allowChat'], false);
+    });
+
+    test('hostControlsProvider toggles allowCamRequests policy', () async {
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'user-1',
+      });
+      await firestore.collection('rooms').doc('room-a').collection('policies').doc('settings').set({
+        'allowCamRequests': true,
+      });
+
+      final controls = container.read(hostControlsProvider);
+      await controls.toggleAllowCamRequests('room-a');
+
+      final policySnapshot = await firestore
+          .collection('rooms')
+          .doc('room-a')
+          .collection('policies')
+          .doc('settings')
+          .get();
+      expect(policySnapshot.data()?['allowCamRequests'], false);
+    });
+
+    test('hostControlsProvider can promote and demote a participant', () async {
+      await firestore.collection('rooms').doc('room-a').collection('participants').doc('user-2').set({
+        'userId': 'user-2',
+        'role': 'audience',
+        'joinedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+        'lastActiveAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+      });
+
+      final controls = container.read(hostControlsProvider);
+      await controls.promoteToCohost('room-a', 'user-2');
+      var participantSnapshot = await firestore.collection('rooms').doc('room-a').collection('participants').doc('user-2').get();
+      expect(participantSnapshot.data()?['role'], 'cohost');
+
+      await controls.demoteToAudience('room-a', 'user-2');
+      participantSnapshot = await firestore.collection('rooms').doc('room-a').collection('participants').doc('user-2').get();
+      expect(participantSnapshot.data()?['role'], 'audience');
+    });
+
+    test('camAccessController approves request and promotes requester', () async {
+      await firestore.collection('rooms').doc('room-a').set({'hostId': 'user-1'});
+      await firestore.collection('rooms').doc('room-a').collection('participants').doc('user-2').set({
+        'userId': 'user-2',
+        'role': 'audience',
+        'joinedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+        'lastActiveAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+      });
+      await firestore.collection('rooms').doc('room-a').collection('cam_access_requests').doc('request-1').set({
+        'id': 'request-1',
+        'roomId': 'room-a',
+        'requesterId': 'user-2',
+        'broadcasterId': 'user-1',
+        'status': 'pending',
+        'decisionScope': 'single_session',
+        'createdAt': DateTime(2026, 1, 1).toIso8601String(),
+        'updatedAt': DateTime(2026, 1, 1).toIso8601String(),
+      });
+
+      final controller = container.read(camAccessControllerProvider);
+      await controller.approveRequest(
+        'room-a',
+        const CamAccessRequestModel(
+          id: 'request-1',
+          roomId: 'room-a',
+          requesterId: 'user-2',
+          broadcasterId: 'user-1',
+        ),
+      );
+
+      final requestSnapshot = await firestore.collection('rooms').doc('room-a').collection('cam_access_requests').doc('request-1').get();
+      final participantSnapshot = await firestore.collection('rooms').doc('room-a').collection('participants').doc('user-2').get();
+      expect(requestSnapshot.data()?['status'], 'approved');
+      expect(participantSnapshot.data()?['role'], 'cohost');
     });
   });
 }

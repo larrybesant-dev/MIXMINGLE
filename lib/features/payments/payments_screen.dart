@@ -2,8 +2,14 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../config/mixvy_economy_config.dart';
+import '../../models/cash_out_request_model.dart';
 import '../../models/user_model.dart';
+import '../../models/wallet_model.dart';
+import '../../services/cash_out_service.dart';
+import '../../services/payment_api.dart';
 import 'stripe_web_payment_widget.dart';
 import 'payments_controller.dart';
 import 'payment_recipient_provider.dart';
@@ -22,7 +28,15 @@ class PaymentsScreen extends ConsumerStatefulWidget {
 class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   final _recipientController = TextEditingController();
   final _amountController = TextEditingController(text: '10');
+  final CashOutService _cashOutService = CashOutService();
   UserModel? _selectedRecipient;
+  late Future<StripeConnectStatus> _connectStatusFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _connectStatusFuture = PaymentApi.getStripeConnectStatus();
+  }
 
   @override
   void dispose() {
@@ -109,20 +123,118 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    if (kIsWeb) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Payments')),
-        body: const SafeArea(child: StripeWebPaymentWidget()),
-      );
+  Future<void> _requestCashOut(WalletModel wallet, double pendingCashOut) async {
+    final amountController = TextEditingController();
+    final submitted = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Request Cash Out'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Available cash: ${(wallet.cashBalance - pendingCashOut).toStringAsFixed(2)}',
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: amountController,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              inputFormatters: [
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              ],
+              decoration: const InputDecoration(
+                labelText: 'Cash-out amount',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Submit'),
+          ),
+        ],
+      ),
+    );
+
+    if (submitted != true) {
+      return;
     }
 
+    final amount = double.tryParse(amountController.text.trim());
+    if (amount == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Enter a valid cash-out amount.')),
+      );
+      return;
+    }
+
+    try {
+      await _cashOutService.requestCashOut(amount);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cash-out request submitted.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not request cash-out: $e')),
+      );
+    }
+  }
+
+  Future<void> _refreshConnectStatus() async {
+    setState(() {
+      _connectStatusFuture = PaymentApi.getStripeConnectStatus();
+    });
+  }
+
+  Future<void> _launchPayoutSetup() async {
+    try {
+      final url = await PaymentApi.createStripeConnectOnboardingLink();
+      final launched = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (!launched) {
+        throw Exception('Could not open Stripe onboarding.');
+      }
+      await _refreshConnectStatus();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not start payout setup: $e')),
+      );
+    }
+  }
+
+  Future<void> _openStripeDashboard() async {
+    try {
+      final url = await PaymentApi.createStripeConnectDashboardLink();
+      final launched = await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+      if (!launched) {
+        throw Exception('Could not open Stripe dashboard.');
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open Stripe dashboard: $e')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final paymentState = ref.watch(paymentControllerProvider);
-    final walletAsync = ref.watch(walletProvider);
+    final walletDetailsAsync = ref.watch(walletDetailsProvider);
     final referralCodeAsync = ref.watch(referralCodeProvider);
     final referralEarningsAsync = ref.watch(referralEarningsProvider);
+    final cashOutRequestsAsync = _cashOutService.requestsForCurrentUser();
     final transactionsAsync = ref.watch(
       coinTransactionStreamProvider(user?.uid ?? ''),
     );
@@ -137,6 +249,107 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(24),
         children: [
+          if (kIsWeb) ...[
+            const StripeWebPaymentWidget(),
+            const SizedBox(height: 24),
+          ],
+          FutureBuilder<StripeConnectStatus>(
+            future: _connectStatusFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const LinearProgressIndicator();
+              }
+
+              if (snapshot.hasError) {
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Creator payouts',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 8),
+                        Text('Payout status unavailable: ${snapshot.error}'),
+                        const SizedBox(height: 8),
+                        OutlinedButton.icon(
+                          onPressed: _refreshConnectStatus,
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              final status = snapshot.data ?? const StripeConnectStatus(
+                hasAccount: false,
+                chargesEnabled: false,
+                payoutsEnabled: false,
+                detailsSubmitted: false,
+                onboardingComplete: false,
+              );
+
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Creator payouts',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        status.onboardingComplete
+                            ? 'Stripe payout setup is complete.'
+                            : 'Connect a Stripe account to receive creator payouts.',
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          _statusChip('Account', status.hasAccount),
+                          _statusChip('Details', status.detailsSubmitted),
+                          _statusChip('Charges', status.chargesEnabled),
+                          _statusChip('Payouts', status.payoutsEnabled),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: _launchPayoutSetup,
+                            icon: const Icon(Icons.account_balance_outlined),
+                            label: Text(status.onboardingComplete ? 'Update Payout Setup' : 'Start Payout Setup'),
+                          ),
+                          if (status.hasAccount)
+                            OutlinedButton.icon(
+                              onPressed: _openStripeDashboard,
+                              icon: const Icon(Icons.open_in_new),
+                              label: const Text('Open Stripe Dashboard'),
+                            ),
+                          OutlinedButton.icon(
+                            onPressed: _refreshConnectStatus,
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Refresh Status'),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
           Card(
             child: Padding(
               padding: const EdgeInsets.all(12),
@@ -155,10 +368,74 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             style: Theme.of(context).textTheme.titleLarge,
           ),
           const SizedBox(height: 8),
-          walletAsync.when(
-            data: (balance) => Text('Current balance: ${balance.toStringAsFixed(2)}'),
+          walletDetailsAsync.when(
+            data: (wallet) {
+              return StreamBuilder<List<CashOutRequestModel>>(
+                stream: cashOutRequestsAsync,
+                builder: (context, snapshot) {
+                  final requests = snapshot.data ?? const <CashOutRequestModel>[];
+                  final pendingCashOut = requests
+                      .where((request) => request.status == 'pending' || request.status == 'processing')
+                      .fold<double>(0, (runningTotal, request) => runningTotal + request.amount);
+
+                  return Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Coin balance: ${wallet.coinBalance.toStringAsFixed(0)}'),
+                          const SizedBox(height: 6),
+                          Text('Cash balance: ${wallet.cashBalance.toStringAsFixed(2)}'),
+                          const SizedBox(height: 6),
+                          Text('Referral earnings: ${wallet.referralEarnings.toStringAsFixed(2)}'),
+                          const SizedBox(height: 6),
+                          Text('Room earnings: ${wallet.roomEarnings.toStringAsFixed(2)}'),
+                          const SizedBox(height: 6),
+                          Text('Gift earnings: ${wallet.giftEarnings.toStringAsFixed(2)}'),
+                          const SizedBox(height: 6),
+                          Text('Pending cash-out: ${pendingCashOut.toStringAsFixed(2)}'),
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            onPressed: (wallet.cashBalance - pendingCashOut) >= MixVyEconomyConfig.creatorPayoutMinimumCash
+                                ? () => _requestCashOut(wallet, pendingCashOut)
+                                : null,
+                            icon: const Icon(Icons.account_balance_wallet_outlined),
+                            label: Text(
+                              'Request Cash Out (${MixVyEconomyConfig.creatorPayoutMinimumCash.toStringAsFixed(0)} min)',
+                            ),
+                          ),
+                          if (requests.isNotEmpty) ...[
+                            const SizedBox(height: 12),
+                            Text(
+                              'Recent cash-out requests',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                            const SizedBox(height: 8),
+                            ...requests.take(3).map(
+                              (request) => ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(Icons.payments_outlined),
+                                title: Text(request.amount.toStringAsFixed(2)),
+                                subtitle: Text(request.status),
+                                trailing: Text(
+                                  request.createdAt == null
+                                      ? 'Pending'
+                                      : '${request.createdAt!.month}/${request.createdAt!.day}',
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
             loading: () => const LinearProgressIndicator(),
-            error: (e, _) => Text('Balance unavailable: $e'),
+            error: (e, _) => Text('Wallet unavailable: $e'),
           ),
           const SizedBox(height: 14),
           Card(
@@ -382,4 +659,11 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
       ),
     );
   }
+}
+
+Widget _statusChip(String label, bool enabled) {
+  return Chip(
+    avatar: Icon(enabled ? Icons.check_circle_outline : Icons.radio_button_unchecked, size: 18),
+    label: Text(label),
+  );
 }

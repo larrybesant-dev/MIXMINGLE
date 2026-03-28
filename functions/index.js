@@ -13,6 +13,62 @@ function getCheckoutBaseUrl() {
     return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
 }
 
+function mapStripeConnectAccount(account) {
+    const chargesEnabled = !!account.charges_enabled;
+    const payoutsEnabled = !!account.payouts_enabled;
+    const detailsSubmitted = !!account.details_submitted;
+
+    return {
+        accountId: account.id,
+        chargesEnabled,
+        payoutsEnabled,
+        detailsSubmitted,
+        onboardingComplete: chargesEnabled && payoutsEnabled && detailsSubmitted,
+        country: account.country || "US",
+    };
+}
+
+async function ensureStripeConnectAccount(uid, deps = {}) {
+    const firestore = deps.firestore || db;
+    const stripeClient = deps.stripeClient || stripe;
+    const accountRef = firestore.collection("stripe_connect_accounts").doc(uid);
+    const accountSnap = await accountRef.get();
+
+    let accountId = accountSnap.exists ? accountSnap.data().accountId : null;
+    let account;
+
+    if (accountId) {
+        account = await stripeClient.accounts.retrieve(accountId);
+    } else {
+        account = await stripeClient.accounts.create({
+            type: "express",
+            country: process.env.STRIPE_CONNECT_COUNTRY || "US",
+            capabilities: {
+                card_payments: {requested: true},
+                transfers: {requested: true},
+            },
+            business_type: "individual",
+            metadata: {
+                firebaseUid: uid,
+            },
+        });
+        accountId = account.id;
+    }
+
+    const mapped = mapStripeConnectAccount(account);
+    const payload = {
+        ...mapped,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    if (!accountSnap.exists) {
+        payload.createdAt = admin.firestore.FieldValue.serverTimestamp();
+    }
+
+    await accountRef.set(payload, {merge: true});
+
+    return mapped;
+}
+
 async function createCheckoutSessionHandler(req, res, deps = {}) {
     const stripeClient = deps.stripeClient || stripe;
 
@@ -216,6 +272,75 @@ async function requestCoinTransferHandler(request, deps = {}) {
 
 exports.requestCoinTransfer = onCall(async (request) => requestCoinTransferHandler(request));
 
+async function getStripeConnectStatusHandler(request, deps = {}) {
+    const uid = requireAuth(request);
+    const firestore = deps.firestore || db;
+    const stripeClient = deps.stripeClient || stripe;
+    const accountRef = firestore.collection("stripe_connect_accounts").doc(uid);
+    const accountSnap = await accountRef.get();
+
+    if (!accountSnap.exists || !accountSnap.data().accountId) {
+        return {
+            hasAccount: false,
+            accountId: null,
+            chargesEnabled: false,
+            payoutsEnabled: false,
+            detailsSubmitted: false,
+            onboardingComplete: false,
+            country: process.env.STRIPE_CONNECT_COUNTRY || "US",
+        };
+    }
+
+    const account = await stripeClient.accounts.retrieve(accountSnap.data().accountId);
+    const mapped = mapStripeConnectAccount(account);
+    await accountRef.set({
+        ...mapped,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, {merge: true});
+
+    return {
+        hasAccount: true,
+        ...mapped,
+    };
+}
+
+exports.getStripeConnectStatus = onCall(async (request) => getStripeConnectStatusHandler(request));
+
+async function createStripeConnectOnboardingLinkHandler(request, deps = {}) {
+    const uid = requireAuth(request);
+    const stripeClient = deps.stripeClient || stripe;
+    const publicAppUrl = deps.publicAppUrl || getCheckoutBaseUrl();
+
+    const mapped = await ensureStripeConnectAccount(uid, deps);
+    const accountLink = await stripeClient.accountLinks.create({
+        account: mapped.accountId,
+        refresh_url: `${publicAppUrl}/payments?connect=refresh`,
+        return_url: `${publicAppUrl}/payments?connect=return`,
+        type: "account_onboarding",
+    });
+
+    return {
+        url: accountLink.url,
+        hasAccount: true,
+        ...mapped,
+    };
+}
+
+exports.createStripeConnectOnboardingLink = onCall(async (request) => createStripeConnectOnboardingLinkHandler(request));
+
+async function createStripeConnectDashboardLinkHandler(request, deps = {}) {
+    const uid = requireAuth(request);
+    const stripeClient = deps.stripeClient || stripe;
+    const status = await ensureStripeConnectAccount(uid, deps);
+
+    const loginLink = await stripeClient.accounts.createLoginLink(status.accountId);
+    return {
+        url: loginLink.url,
+    };
+}
+
+exports.createStripeConnectDashboardLink = onCall(async (request) => createStripeConnectDashboardLinkHandler(request));
+
 async function generateAgoraTokenHandler(request) {
     const authUid = requireAuth(request);
     const channelName = request.data && request.data.channelName;
@@ -304,9 +429,14 @@ exports.__testing = {
     recordStripePaymentSuccessHandler,
     sendCoinTransferHandler,
     requestCoinTransferHandler,
+    getStripeConnectStatusHandler,
+    createStripeConnectOnboardingLinkHandler,
+    createStripeConnectDashboardLinkHandler,
     generateAgoraTokenHandler,
     createCheckoutSessionHandler,
     getCheckoutBaseUrl,
+    mapStripeConnectAccount,
+    ensureStripeConnectAccount,
     requireAuth,
     parsePositiveAmount,
     ensureUserExists,

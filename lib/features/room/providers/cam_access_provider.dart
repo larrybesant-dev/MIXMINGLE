@@ -1,0 +1,107 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../models/room_policy_model.dart';
+import 'room_firestore_provider.dart';
+
+class CamAccessController {
+  CamAccessController(this._db);
+
+  final FirebaseFirestore _db;
+
+  CollectionReference<Map<String, dynamic>> _requestCollection(String roomId) {
+    return _db.collection('rooms').doc(roomId).collection('cam_access_requests');
+  }
+
+  Future<void> requestAccess({
+    required String roomId,
+    required String requesterId,
+    required String broadcasterId,
+  }) async {
+    final existing = await _requestCollection(roomId)
+        .where('requesterId', isEqualTo: requesterId)
+        .where('broadcasterId', isEqualTo: broadcasterId)
+        .where('status', isEqualTo: 'pending')
+        .limit(1)
+        .get();
+    if (existing.docs.isNotEmpty) {
+      return;
+    }
+
+    final requestRef = _requestCollection(roomId).doc();
+    await requestRef.set({
+      'id': requestRef.id,
+      'roomId': roomId,
+      'requesterId': requesterId,
+      'broadcasterId': broadcasterId,
+      'status': 'pending',
+      'decisionScope': 'single_session',
+      'participantIds': [requesterId, broadcasterId],
+      'createdAt': FieldValue.serverTimestamp(),
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  Future<void> approveRequest(String roomId, CamAccessRequestModel request) async {
+    final batch = _db.batch();
+    batch.update(_requestCollection(roomId).doc(request.id), {
+      'status': 'approved',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+    batch.set(
+      _db.collection('rooms').doc(roomId).collection('participants').doc(request.requesterId),
+      {
+        'userId': request.requesterId,
+        'role': 'cohost',
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+    await batch.commit();
+  }
+
+  Future<void> denyRequest(String roomId, String requestId) async {
+    await _requestCollection(roomId).doc(requestId).update({
+      'status': 'denied',
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+}
+
+final camAccessControllerProvider = Provider<CamAccessController>((ref) {
+  return CamAccessController(ref.watch(roomFirestoreProvider));
+});
+
+final roomCamAccessRequestsProvider = StreamProvider.autoDispose.family<List<CamAccessRequestModel>, String>((ref, roomId) {
+  final firestore = ref.watch(roomFirestoreProvider);
+  return firestore
+      .collection('rooms')
+      .doc(roomId)
+      .collection('cam_access_requests')
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map(
+        (snapshot) => snapshot.docs
+            .map((doc) => CamAccessRequestModel.fromJson({'id': doc.id, ...doc.data()}))
+            .toList(growable: false),
+      );
+});
+
+final myCamAccessRequestProvider = StreamProvider.autoDispose.family<CamAccessRequestModel?, ({String roomId, String requesterId})>((ref, params) {
+  final firestore = ref.watch(roomFirestoreProvider);
+  return firestore
+      .collection('rooms')
+      .doc(params.roomId)
+      .collection('cam_access_requests')
+      .where('requesterId', isEqualTo: params.requesterId)
+      .orderBy('createdAt', descending: true)
+      .limit(1)
+      .snapshots()
+      .map((snapshot) {
+        if (snapshot.docs.isEmpty) {
+          return null;
+        }
+        final doc = snapshot.docs.first;
+        return CamAccessRequestModel.fromJson({'id': doc.id, ...doc.data()});
+      });
+});

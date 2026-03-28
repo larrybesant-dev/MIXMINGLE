@@ -1,4 +1,6 @@
 
+import 'dart:developer' as developer;
+
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
@@ -28,22 +30,32 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) async {
-      final loggedIn = authState.uid != null;
-      final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
-      final isOnboarding = state.matchedLocation == '/onboarding';
-      final isProfile = state.matchedLocation == '/profile';
-      final isFirstRun = await FirstRunService.isFirstRun();
+      try {
+        final loggedIn = authState.uid != null;
+        final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
+        final isOnboarding = state.matchedLocation == '/onboarding';
+        final isProfile = state.matchedLocation == '/profile';
+        final isFirstRun = await FirstRunService.isFirstRun();
 
-      if (isFirstRun && !isOnboarding) return '/onboarding';
-      if (!isFirstRun && isOnboarding) return loggedIn ? '/' : '/login';
-      if (!loggedIn && !isLoggingIn) return '/login';
-      if (loggedIn) {
-        final profileComplete = await ProfileGateService.isProfileComplete(authState.uid!);
-        if (!profileComplete && !isProfile) return '/profile';
-        if (profileComplete && isProfile && !isFirstRun) return '/';
+        if (isFirstRun && !isOnboarding) return '/onboarding';
+        if (!isFirstRun && isOnboarding) return loggedIn ? '/' : '/login';
+        if (!loggedIn && !isLoggingIn) return '/login';
+        if (loggedIn) {
+          final profileComplete = await ProfileGateService.isProfileComplete(authState.uid!);
+          if (!profileComplete && !isProfile) return '/profile';
+          if (profileComplete && isProfile && !isFirstRun) return '/';
+        }
+        if (loggedIn && isLoggingIn) return '/';
+        return null;
+      } catch (error, stackTrace) {
+        developer.log(
+          'Router redirect failed for ${state.matchedLocation}',
+          name: 'AppRouter',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        return null;
       }
-      if (loggedIn && isLoggingIn) return '/';
-      return null;
     },
     routes: [
       GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),

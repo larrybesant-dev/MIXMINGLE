@@ -189,6 +189,31 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /follows/{followId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.followerUserId == request.auth.uid
+        && request.resource.data.followedUserId is string
+        && request.resource.data.followedUserId != request.auth.uid;
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.followerUserId == request.auth.uid;
+    }
+
+    match /cash_out_requests/{requestId} {
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.amount is number
+        && request.resource.data.amount > 0
+        && request.resource.data.status == 'pending';
+      allow update, delete: if false;
+    }
+
+    match /stripe_connect_accounts/{userId} {
+      allow read: if isSelf(userId);
+      allow create, update, delete: if false;
+    }
+
     match /wallets/{userId} {
       allow read: if isSelf(userId);
       allow create, update, delete: if false;

@@ -2,8 +2,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:mixvy/models/moderation_model.dart';
+import 'package:mixvy/services/follow_service.dart';
 import 'package:mixvy/services/moderation_service.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+import '../../widgets/follow_button.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String userId;
@@ -16,6 +19,7 @@ class UserProfileScreen extends StatefulWidget {
 
 class _UserProfileScreenState extends State<UserProfileScreen> {
   final ModerationService _moderationService = ModerationService();
+  final FollowService _followService = FollowService();
 
   Future<Map<String, dynamic>> _loadProfile() async {
     final firestore = FirebaseFirestore.instance;
@@ -25,20 +29,71 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     final privacySnapshot = await privacyRef.get();
 
     var isBlocked = false;
+    var isFollowing = false;
+    var followerCount = 0;
+    var followingCount = 0;
     final viewerId = FirebaseAuth.instance.currentUser?.uid;
     if (viewerId != null && viewerId != widget.userId) {
       try {
         isBlocked = await _moderationService.isBlocked(widget.userId);
+        isFollowing = await _followService.isFollowing(viewerId, widget.userId);
       } catch (_) {
         isBlocked = false;
+        isFollowing = false;
       }
+    }
+
+    try {
+      followerCount = await _followService.followerCount(widget.userId);
+      followingCount = await _followService.followingCount(widget.userId);
+    } catch (_) {
+      followerCount = 0;
+      followingCount = 0;
     }
 
     return {
       'user': userSnapshot,
       'privacy': privacySnapshot.data() ?? const <String, dynamic>{},
       'isBlocked': isBlocked,
+      'isFollowing': isFollowing,
+      'followerCount': followerCount,
+      'followingCount': followingCount,
     };
+  }
+
+  Future<void> _toggleFollow(bool currentlyFollowing) async {
+    try {
+      if (currentlyFollowing) {
+        await _followService.unfollowUser(widget.userId);
+      } else {
+        await _followService.followUser(widget.userId);
+      }
+      if (!mounted) return;
+      setState(() {});
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(currentlyFollowing ? 'Unfollowed user.' : 'Now following user.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not update follow status: $e')),
+      );
+    }
+  }
+
+  Future<void> _inviteToLiveRoom() async {
+    try {
+      await _followService.inviteUserToHostedRoom(widget.userId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Live room invite sent.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not send invite: $e')),
+      );
+    }
   }
 
   Future<void> _toggleBlock(bool currentlyBlocked) async {
@@ -145,6 +200,9 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           final data = userSnapshot.data() ?? const <String, dynamic>{};
           final privacy = Map<String, dynamic>.from(payload['privacy'] as Map<String, dynamic>? ?? const <String, dynamic>{});
           final isBlocked = payload['isBlocked'] as bool? ?? false;
+          final isFollowing = payload['isFollowing'] as bool? ?? false;
+          final followerCount = payload['followerCount'] as int? ?? 0;
+          final followingCount = payload['followingCount'] as int? ?? 0;
           final viewerId = FirebaseAuth.instance.currentUser?.uid;
           final isOwnProfile = viewerId == widget.userId;
 
@@ -159,7 +217,6 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           final firstDatePrompt = (data['firstDatePrompt'] as String?)?.trim();
           final musicTastePrompt = (data['musicTastePrompt'] as String?)?.trim();
           final interests = List<String>.from(data['interests'] ?? const []);
-          final followers = List<String>.from(data['followers'] ?? const []);
           final age = (data['age'] as num?)?.toInt();
           final gender = (data['gender'] as String?)?.trim();
           final location = (data['location'] as String?)?.trim();
@@ -230,6 +287,19 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                                       width: 88,
                                       height: 88,
                                       fit: BoxFit.cover,
+                                      loadingBuilder: (context, child, loadingProgress) {
+                                        if (loadingProgress == null) return child;
+                                        return Center(
+                                          child: SizedBox(
+                                            width: 44,
+                                            height: 44,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
+                                            ),
+                                          ),
+                                        );
+                                      },
                                       errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 34),
                                     ),
                                   )
@@ -270,33 +340,25 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: FilledButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Invite to live room coming soon.')),
-                        );
-                      },
-                      icon: const Icon(Icons.mic),
-                      label: const Text('Invite'),
+              if (!isOwnProfile)
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: _inviteToLiveRoom,
+                        icon: const Icon(Icons.mic),
+                        label: const Text('Invite'),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Follow system coming soon.')),
-                        );
-                      },
-                      icon: const Icon(Icons.person_add_alt_1),
-                      label: const Text('Follow'),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: FollowButton(
+                        isFollowing: isFollowing,
+                        onPressed: () => _toggleFollow(isFollowing),
+                      ),
                     ),
-                  ),
-                ],
-              ),
+                  ],
+                ),
               if (!isOwnProfile) ...[
                 const SizedBox(height: 10),
                 Row(
@@ -323,7 +385,11 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: _PublicStatTile(label: 'Followers', value: '${followers.length}'),
+                    child: _PublicStatTile(label: 'Followers', value: '$followerCount'),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _PublicStatTile(label: 'Following', value: '$followingCount'),
                   ),
                   const SizedBox(width: 8),
                   Expanded(

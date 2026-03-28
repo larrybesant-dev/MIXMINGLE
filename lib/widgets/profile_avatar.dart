@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 class ProfileAvatar extends StatelessWidget {
-  final String? imageUrl;
-  const ProfileAvatar({super.key, this.imageUrl});
+  final String? profilePictureUrl;
+  const ProfileAvatar({super.key, this.profilePictureUrl});
 
-  bool get _hasImage => imageUrl != null && imageUrl!.trim().isNotEmpty;
+  bool get _hasImage => profilePictureUrl != null && profilePictureUrl!.trim().isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -20,10 +20,23 @@ class ProfileAvatar extends StatelessWidget {
         child: _hasImage
             ? ClipOval(
                 child: Image.network(
-                  imageUrl!.trim(),
+                  profilePictureUrl!.trim(),
                   width: 48,
                   height: 48,
                   fit: BoxFit.cover,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return Center(
+                      child: SizedBox(
+                        width: 24,
+                        height: 24,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
+                        ),
+                      ),
+                    );
+                  },
                   errorBuilder: (context, error, stackTrace) {
                     return Icon(Icons.person, color: theme.colorScheme.primary, size: 32);
                   },

@@ -66,18 +66,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Avatar
+              // Profile Picture
               CircleAvatar(
                 radius: 40,
+                backgroundColor: Theme.of(context).colorScheme.surface,
                 backgroundImage: _avatarUrlController.text.isNotEmpty
                     ? NetworkImage(_avatarUrlController.text)
                     : null,
-                child: _avatarUrlController.text.isEmpty ? const Icon(Icons.person, size: 40) : null,
+                child: _avatarUrlController.text.isEmpty 
+                    ? Icon(Icons.person, size: 40, color: Theme.of(context).colorScheme.primary)
+                    : null,
               ),
               const SizedBox(height: 8),
               TextFormField(
                 controller: _avatarUrlController,
-                decoration: const InputDecoration(labelText: 'Avatar URL'),
+                decoration: const InputDecoration(labelText: 'Profile Picture URL'),
                 textInputAction: TextInputAction.next,
                 onChanged: (_) => setState(() {}),
               ),

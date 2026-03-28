@@ -2,6 +2,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../models/wallet_model.dart';
+
 final walletAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
 });
@@ -14,10 +16,10 @@ final walletUserIdProvider = Provider<String?>((ref) {
   return ref.watch(walletAuthProvider).currentUser?.uid;
 });
 
-final walletProvider = StreamProvider<double>((ref) {
+final walletDetailsProvider = StreamProvider<WalletModel>((ref) {
   final userId = ref.watch(walletUserIdProvider);
   if (userId == null || userId.isEmpty) {
-    return Stream<double>.value(0);
+    return Stream<WalletModel>.value(const WalletModel(userId: '', coinBalance: 0));
   }
 
   final firestore = ref.watch(walletFirestoreProvider);
@@ -29,23 +31,29 @@ final walletProvider = StreamProvider<double>((ref) {
   return docStream.asyncMap((walletDoc) async {
     final walletData = walletDoc.data();
     if (walletData != null) {
-      final rawWalletBalance = walletData['coinBalance'] ?? walletData['balance'];
-      if (rawWalletBalance != null) {
-        return (rawWalletBalance as num).toDouble();
-      }
+      return WalletModel.fromJson({
+        'userId': userId,
+        ...walletData,
+      });
     }
 
     final userDoc = await firestore.collection('users').doc(userId).get();
     final userData = userDoc.data();
     if (userData == null) {
-      return 0.0;
+      return WalletModel(userId: userId);
     }
 
-    final rawUserBalance = userData['balance'] ?? userData['coinBalance'];
-    if (rawUserBalance == null) {
-      return 0.0;
-    }
-
-    return (rawUserBalance as num).toDouble();
+    return WalletModel(
+      userId: userId,
+      coinBalance: ((userData['balance'] ?? userData['coinBalance']) as num?)?.toInt() ?? 0,
+    );
   });
+});
+
+final walletProvider = StreamProvider<double>((ref) {
+  return ref.watch(walletDetailsProvider).when(
+        data: (wallet) => Stream<double>.value(wallet.coinBalance.toDouble()),
+        loading: () => const Stream<double>.empty(),
+        error: (_, _) => const Stream<double>.empty(),
+      );
 });

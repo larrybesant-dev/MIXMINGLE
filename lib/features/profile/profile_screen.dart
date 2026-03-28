@@ -11,17 +11,31 @@ import 'package:mixvy/models/profile_privacy_model.dart';
 import 'package:mixvy/models/room_policy_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../auth/controllers/auth_controller.dart';
 import 'profile_controller.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   final String? userId;
 
   const ProfileScreen({super.key, this.userId});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(
+        title: const Text('Profile'),
+        actions: [
+          TextButton.icon(
+            onPressed: () async {
+              await ref.read(authControllerProvider.notifier).logout();
+              if (!context.mounted) return;
+              context.go('/login');
+            },
+            icon: const Icon(Icons.logout),
+            label: const Text('Logout'),
+          ),
+        ],
+      ),
       body: const SafeArea(child: ProfileFormView()),
     );
   }
@@ -897,6 +911,19 @@ class _HeroCard extends StatelessWidget {
                         width: 84,
                         height: 84,
                         fit: BoxFit.cover,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Center(
+                            child: SizedBox(
+                              width: 42,
+                              height: 42,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
+                              ),
+                            ),
+                          );
+                        },
                         errorBuilder: (_, _, _) => const Icon(Icons.person, size: 32),
                       ),
                     )
@@ -935,7 +962,7 @@ class _HeroCard extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: isUploadingPhoto ? null : onUploadAvatar,
                 icon: const Icon(Icons.photo_camera_back_outlined),
-                label: Text(isUploadingPhoto ? 'Uploading...' : 'Avatar'),
+                label: Text(isUploadingPhoto ? 'Uploading...' : 'Profile Picture'),
               ),
               OutlinedButton.icon(
                 onPressed: isUploadingCover ? null : onUploadCover,

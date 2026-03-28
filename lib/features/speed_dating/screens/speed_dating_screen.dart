@@ -164,6 +164,19 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
                       width: 92,
                       height: 92,
                       fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: SizedBox(
+                            width: 46,
+                            height: 46,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
+                            ),
+                          ),
+                        );
+                      },
                       errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 42),
                     ),
                   )

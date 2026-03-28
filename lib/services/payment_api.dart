@@ -78,6 +78,38 @@ class CoinTransaction {
       );
 }
 
+class StripeConnectStatus {
+  const StripeConnectStatus({
+    required this.hasAccount,
+    required this.chargesEnabled,
+    required this.payoutsEnabled,
+    required this.detailsSubmitted,
+    required this.onboardingComplete,
+    this.accountId,
+    this.country,
+  });
+
+  final bool hasAccount;
+  final bool chargesEnabled;
+  final bool payoutsEnabled;
+  final bool detailsSubmitted;
+  final bool onboardingComplete;
+  final String? accountId;
+  final String? country;
+
+  factory StripeConnectStatus.fromJson(Map<String, dynamic> json) {
+    return StripeConnectStatus(
+      hasAccount: json['hasAccount'] as bool? ?? ((json['accountId'] as String?)?.isNotEmpty ?? false),
+      chargesEnabled: json['chargesEnabled'] as bool? ?? false,
+      payoutsEnabled: json['payoutsEnabled'] as bool? ?? false,
+      detailsSubmitted: json['detailsSubmitted'] as bool? ?? false,
+      onboardingComplete: json['onboardingComplete'] as bool? ?? false,
+      accountId: (json['accountId'] as String?)?.trim(),
+      country: (json['country'] as String?)?.trim(),
+    );
+  }
+}
+
 class PaymentApi {
   static final _firestore = FirebaseFirestore.instance;
   static PaymentFunctionsGateway? _functionsGateway;
@@ -179,6 +211,44 @@ class PaymentApi {
       'targetId': targetId,
       'amount': amount,
     });
+  }
+
+  static Future<StripeConnectStatus> getStripeConnectStatus() async {
+    final user = _resolvedAuthGateway.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+
+    final data = await _callFunction<Map<String, dynamic>>('getStripeConnectStatus', {});
+    return StripeConnectStatus.fromJson(data);
+  }
+
+  static Future<String> createStripeConnectOnboardingLink() async {
+    final user = _resolvedAuthGateway.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+
+    final data = await _callFunction<Map<String, dynamic>>('createStripeConnectOnboardingLink', {});
+    final url = (data['url'] as String?)?.trim();
+    if (url == null || url.isEmpty) {
+      throw Exception('Onboarding URL missing in response');
+    }
+    return url;
+  }
+
+  static Future<String> createStripeConnectDashboardLink() async {
+    final user = _resolvedAuthGateway.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+
+    final data = await _callFunction<Map<String, dynamic>>('createStripeConnectDashboardLink', {});
+    final url = (data['url'] as String?)?.trim();
+    if (url == null || url.isEmpty) {
+      throw Exception('Dashboard URL missing in response');
+    }
+    return url;
   }
 
   static Stream<List<CoinTransaction>> getTransactions(String userId) {

@@ -5,12 +5,14 @@ import 'google_sign_in_helper_stub.dart';
 class GoogleSignInHelperWeb implements GoogleSignInHelper {
   @override
   Future<void> signInWithGoogle() async {
-    await FirebaseAuth.instance.signInWithRedirect(GoogleAuthProvider());
+    await FirebaseAuth.instance.signInWithPopup(GoogleAuthProvider());
   }
 
   @override
   Future<void> completePendingRedirectSignIn() async {
-    await FirebaseAuth.instance.getRedirectResult();
+    // Web now uses popup-based Google sign-in to avoid redirect-result
+    // startup work that can fail before the app renders.
+    return;
   }
 }
 

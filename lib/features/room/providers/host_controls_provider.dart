@@ -26,6 +26,13 @@ class HostControls {
     await policyRef.set({'allowChat': !currentValue}, SetOptions(merge: true));
   }
 
+  Future<void> toggleAllowCamRequests(String roomId) async {
+    final policyRef = _db.collection('rooms').doc(roomId).collection('policies').doc('settings');
+    final snapshot = await policyRef.get();
+    final currentValue = (snapshot.data()?['allowCamRequests'] ?? true) as bool;
+    await policyRef.set({'allowCamRequests': !currentValue}, SetOptions(merge: true));
+  }
+
   Future<void> muteUser(String roomId, String userId) {
     return _participantRef(roomId, userId).update({'isMuted': true});
   }
@@ -40,6 +47,14 @@ class HostControls {
 
   Future<void> unbanUser(String roomId, String userId) {
     return _participantRef(roomId, userId).update({'isBanned': false});
+  }
+
+  Future<void> promoteToCohost(String roomId, String userId) {
+    return _participantRef(roomId, userId).update({'role': 'cohost'});
+  }
+
+  Future<void> demoteToAudience(String roomId, String userId) {
+    return _participantRef(roomId, userId).update({'role': 'audience'});
   }
 
   DocumentReference<Map<String, dynamic>> _participantRef(String roomId, String userId) {

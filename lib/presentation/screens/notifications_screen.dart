@@ -2,12 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../models/notification_model.dart';
 import '../providers/notification_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
 import '../../core/logger.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
+
+  Future<void> _handleNotificationTap(
+    BuildContext context,
+    String userId,
+    NotificationModel notification,
+    dynamic service,
+  ) async {
+    if (!notification.isRead) {
+      try {
+        await service.markRead(userId, notification.id);
+      } catch (error) {
+        Logger.log('Failed to mark notification read on tap: $error');
+      }
+    }
+
+    final roomId = notification.roomId?.trim();
+    if (notification.type == 'live_room_invite' && roomId != null && roomId.isNotEmpty && context.mounted) {
+      context.go('/room/$roomId');
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -67,6 +88,7 @@ class NotificationsScreen extends ConsumerWidget {
                     return Card(
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: ListTile(
+                        onTap: () => _handleNotificationTap(context, userId, notification, service),
                         leading: Icon(
                           notification.isRead ? Icons.notifications_none : Icons.notifications_active,
                           color: notification.isRead ? Colors.grey : Theme.of(context).colorScheme.primary,

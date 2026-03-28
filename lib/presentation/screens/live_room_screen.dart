@@ -10,6 +10,7 @@ import '../../features/room/providers/room_firestore_provider.dart';
 import '../../features/room/providers/participant_providers.dart';
 import '../../features/room/providers/message_providers.dart';
 import '../../features/room/widgets/message_bubble.dart';
+import '../../features/room/providers/cam_access_provider.dart';
 import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/room/providers/host_provider.dart';
 import '../../features/room/providers/room_policy_provider.dart';
@@ -45,6 +46,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   bool _isVideoEnabled = true;
   String? _callError;
   Set<String> _excludedUserIds = const <String>{};
+  String? _appliedMediaRole;
 
   @override
   void initState() {
@@ -163,9 +165,31 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final service = _agoraService;
     _agoraService = null;
     _isCallReady = false;
+    _appliedMediaRole = null;
     if (service != null) {
       await service.dispose();
     }
+  }
+
+  Future<void> _applyRoleMediaState(String role) async {
+    final service = _agoraService;
+    if (service == null || !_isCallReady || _appliedMediaRole == role) {
+      return;
+    }
+
+    final canBroadcast = role == 'host' || role == 'cohost';
+    await service.mute(!canBroadcast);
+    await service.enableVideo(canBroadcast);
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _appliedMediaRole = role;
+      _isMicMuted = !canBroadcast;
+      _isVideoEnabled = canBroadcast;
+    });
   }
 
   void _exitRoom() {
@@ -332,20 +356,29 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final hostAsync = ref.watch(hostProvider(widget.roomId));
     final coHostsAsync = ref.watch(coHostsProvider(widget.roomId));
     final roomPolicyAsync = ref.watch(roomPolicyProvider(widget.roomId));
+    final camRequestsAsync = ref.watch(roomCamAccessRequestsProvider(widget.roomId));
     final hostControls = ref.read(hostControlsProvider);
+    final camAccessController = ref.read(camAccessControllerProvider);
 
     return currentParticipantAsync.when(
       data: (participant) {
         final isHost = ref.watch(isHostProvider(participant));
         final isCohost = ref.watch(isCohostProvider(participant));
         final role = participant?.role ?? 'audience';
+        final myCamRequestAsync = ref.watch(myCamAccessRequestProvider((roomId: widget.roomId, requesterId: user.id)));
         final firestore = ref.watch(roomFirestoreProvider);
+        if (_isCallReady && _appliedMediaRole != role) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _applyRoleMediaState(role);
+          });
+        }
         return StreamBuilder<DocumentSnapshot>(
           stream: firestore.collection('rooms').doc(widget.roomId).snapshots(),
           builder: (context, roomSnap) {
             final roomData = roomSnap.data?.data() as Map<String, dynamic>?;
             slowModeSeconds = roomData?['slowModeSeconds'] ?? 0;
             final isLocked = roomData?['isLocked'] ?? false;
+            final hostId = (roomData?['hostId'] as String? ?? '').trim();
             // Ban enforcement
             if (participant?.isBanned == true) {
               return const Scaffold(body: Center(child: Text('You are banned from this room.')));
@@ -363,6 +396,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               return _excludedUserIds.contains(participantId);
             });
             final allowChat = roomPolicyAsync.valueOrNull?.allowChat ?? true;
+            final allowCamRequests = roomPolicyAsync.valueOrNull?.allowCamRequests ?? true;
             if (isLocked && !isHost && !isCohost) {
               return const Scaffold(body: Center(child: Text('Room is locked.')));
             }
@@ -424,13 +458,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             children: [
                               IconButton.filledTonal(
                                 tooltip: _isMicMuted ? 'Unmute microphone' : 'Mute microphone',
-                                onPressed: _toggleMic,
+                                onPressed: isHost || isCohost ? _toggleMic : null,
                                 icon: Icon(_isMicMuted ? Icons.mic_off : Icons.mic),
                               ),
                               const SizedBox(width: 12),
                               IconButton.filledTonal(
                                 tooltip: _isVideoEnabled ? 'Turn camera off' : 'Turn camera on',
-                                onPressed: _toggleVideo,
+                                onPressed: isHost || isCohost ? _toggleVideo : null,
                                 icon: Icon(_isVideoEnabled ? Icons.videocam : Icons.videocam_off),
                               ),
                             ],
@@ -479,7 +513,53 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                 onChanged: (_) => hostControls.toggleAllowChat(widget.roomId),
                               ),
                               Text(allowChat ? 'On' : 'Off'),
+                              const SizedBox(width: 24),
+                              Text('Cam Req:'),
+                              const SizedBox(width: 8),
+                              Switch(
+                                value: allowCamRequests,
+                                onChanged: (_) => hostControls.toggleAllowCamRequests(widget.roomId),
+                              ),
+                              Text(allowCamRequests ? 'On' : 'Off'),
                             ],
+                          ),
+                          const SizedBox(height: 8),
+                          camRequestsAsync.when(
+                            data: (requests) {
+                              final pendingRequests = requests.where((request) => request.status == 'pending').toList(growable: false);
+                              if (pendingRequests.isEmpty) {
+                                return const Text('No pending cam requests.');
+                              }
+
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: pendingRequests.map((request) {
+                                  return Card(
+                                    child: ListTile(
+                                      title: Text('Cam request from ${request.requesterId}'),
+                                      subtitle: Text('Scope: ${request.decisionScope}'),
+                                      trailing: Wrap(
+                                        spacing: 8,
+                                        children: [
+                                          IconButton(
+                                            onPressed: () => camAccessController.approveRequest(widget.roomId, request),
+                                            icon: const Icon(Icons.check_circle_outline),
+                                            tooltip: 'Approve',
+                                          ),
+                                          IconButton(
+                                            onPressed: () => camAccessController.denyRequest(widget.roomId, request.id),
+                                            icon: const Icon(Icons.cancel_outlined),
+                                            tooltip: 'Deny',
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  );
+                                }).toList(growable: false),
+                              );
+                            },
+                            loading: () => const LinearProgressIndicator(),
+                            error: (e, _) => Text('Could not load cam requests: $e'),
                           ),
                         ],
                       ),
@@ -509,6 +589,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                         ? hostControls.unbanUser(widget.roomId, p.userId)
                                         : hostControls.banUser(widget.roomId, p.userId),
                                   ),
+                                  IconButton(
+                                    icon: Icon(p.role == 'cohost' ? Icons.keyboard_double_arrow_down : Icons.keyboard_double_arrow_up),
+                                    tooltip: p.role == 'cohost' ? 'Demote to audience' : 'Promote to cohost',
+                                    onPressed: p.userId == user.id
+                                        ? null
+                                        : () => p.role == 'cohost'
+                                            ? hostControls.demoteToAudience(widget.roomId, p.userId)
+                                            : hostControls.promoteToCohost(widget.roomId, p.userId),
+                                  ),
                                 ],
                               ),
                             )).toList(),
@@ -519,6 +608,65 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       ),
                     ),
                   if (!isHost) ...[
+                    if (!isCohost)
+                      Card(
+                        margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('Stage & camera access', style: Theme.of(context).textTheme.titleSmall),
+                              const SizedBox(height: 6),
+                              Text(
+                                allowCamRequests
+                                    ? 'Request host approval to speak and use your camera in this room.'
+                                    : 'Host has paused cam access requests for this room.',
+                              ),
+                              const SizedBox(height: 8),
+                              myCamRequestAsync.when(
+                                data: (request) {
+                                  final requestStatus = request?.status;
+                                  return Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      FilledButton.icon(
+                                        onPressed: !allowCamRequests || hostId.isEmpty || requestStatus == 'pending'
+                                            ? null
+                                            : () async {
+                                                try {
+                                                  await camAccessController.requestAccess(
+                                                    roomId: widget.roomId,
+                                                    requesterId: user.id,
+                                                    broadcasterId: hostId,
+                                                  );
+                                                  if (!context.mounted) return;
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    const SnackBar(content: Text('Cam access request sent.')),
+                                                  );
+                                                } catch (e) {
+                                                  if (!context.mounted) return;
+                                                  ScaffoldMessenger.of(context).showSnackBar(
+                                                    SnackBar(content: Text('Could not send request: $e')),
+                                                  );
+                                                }
+                                              },
+                                        icon: const Icon(Icons.videocam_outlined),
+                                        label: const Text('Request Cam Access'),
+                                      ),
+                                      if (requestStatus != null)
+                                        Chip(label: Text('Status: $requestStatus')),
+                                    ],
+                                  );
+                                },
+                                loading: () => const LinearProgressIndicator(),
+                                error: (e, _) => Text('Could not load request status: $e'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     // Presence header and avatar strip
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),

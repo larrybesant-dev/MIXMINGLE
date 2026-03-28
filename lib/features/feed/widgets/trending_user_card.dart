@@ -9,7 +9,7 @@ class TrendingUserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarUrl = user.avatarUrl.trim();
+    final profilePictureUrl = user.avatarUrl.trim();
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -17,14 +17,27 @@ class TrendingUserCard extends StatelessWidget {
           CircleAvatar(
             radius: 36,
             backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
-            child: avatarUrl.isEmpty
+            child: profilePictureUrl.isEmpty
                 ? const Icon(Icons.person)
                 : ClipOval(
                     child: Image.network(
-                      avatarUrl,
+                      profilePictureUrl,
                       width: 72,
                       height: 72,
                       fit: BoxFit.cover,
+                      loadingBuilder: (context, child, loadingProgress) {
+                        if (loadingProgress == null) return child;
+                        return Center(
+                          child: SizedBox(
+                            width: 36,
+                            height: 36,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
+                            ),
+                          ),
+                        );
+                      },
                       errorBuilder: (context, error, stackTrace) => const Icon(Icons.person),
                     ),
                   ),
