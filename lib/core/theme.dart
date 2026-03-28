@@ -4,12 +4,12 @@ import 'package:flutter/material.dart';
 final ThemeData midnightCreativeTheme = ThemeData(
   useMaterial3: true,
   brightness: Brightness.dark,
-  scaffoldBackgroundColor: const Color(0xFF0C0E12),
+  scaffoldBackgroundColor: const Color(0xFF111315),
   fontFamily: 'Plus Jakarta Sans',
   cardTheme: CardThemeData(
     elevation: 0,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-    color: Colors.white.withAlpha(13), // 0.05 * 255 ≈ 13
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+    color: Colors.white.withAlpha(10),
   ),
   textTheme: const TextTheme(
     displayLarge: TextStyle(
@@ -42,7 +42,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
     ),
   ),
   appBarTheme: const AppBarTheme(
-    backgroundColor: Color(0xFF0C0E12),
+    backgroundColor: Color(0xFF111315),
     elevation: 0,
     foregroundColor: Colors.white,
     centerTitle: true,
@@ -53,13 +53,13 @@ final ThemeData midnightCreativeTheme = ThemeData(
     ),
     focusedBorder: OutlineInputBorder(
       borderRadius: BorderRadius.circular(8),
-      borderSide: const BorderSide(color: Color(0xFFAC8EFF), width: 1.5),
+      borderSide: const BorderSide(color: Color(0xFFFF5A36), width: 1.5),
     ),
     labelStyle: const TextStyle(fontSize: 14, color: Colors.white70),
   ),
   elevatedButtonTheme: ElevatedButtonThemeData(
     style: ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFFAC8EFF),
+      backgroundColor: const Color(0xFFFF5A36),
       foregroundColor: Colors.white,
       minimumSize: const Size(double.infinity, 48),
       shape: RoundedRectangleBorder(
@@ -72,9 +72,9 @@ final ThemeData midnightCreativeTheme = ThemeData(
     ),
   ),
   colorScheme: const ColorScheme.dark(
-    primary: Color(0xFFAC8EFF),
-    secondary: Color(0xFF6C47FF),
-    surface: Color(0xFF0C0E12),
+    primary: Color(0xFFFF5A36),
+    secondary: Color(0xFF00D1B2),
+    surface: Color(0xFF111315),
     error: Color(0xFFFF5A5A),
     onPrimary: Colors.white,
     onSecondary: Colors.white,
@@ -88,7 +88,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
   ),
   iconTheme: const IconThemeData(color: Colors.white70),
   snackBarTheme: const SnackBarThemeData(
-    backgroundColor: Color(0xFF181A20),
+    backgroundColor: Color(0xFF1B1F23),
     contentTextStyle: TextStyle(color: Colors.white),
     behavior: SnackBarBehavior.floating,
     shape: RoundedRectangleBorder(

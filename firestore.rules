@@ -22,8 +22,12 @@ service cloud.firestore {
         'username',
         'email',
         'avatarUrl',
+        'galleryUrls',
         'introVideoUrl',
         'bio',
+        'vibePrompt',
+        'firstDatePrompt',
+        'musicTastePrompt',
         'interests',
         'updatedAt'
       ]);
@@ -130,6 +134,28 @@ service cloud.firestore {
       allow update: if signedIn()
         && resource.data.userId == request.auth.uid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead', 'readAt']);
+      allow delete: if false;
+    }
+
+    match /speed_dating_actions/{actionId} {
+      allow read: if signedIn()
+        && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);
+      allow create, update: if signedIn()
+        && request.resource.data.fromUserId == request.auth.uid
+        && request.resource.data.toUserId is string
+        && request.resource.data.decision in ['like', 'pass'];
+      allow delete: if false;
+    }
+
+    match /speed_dating_matches/{matchId} {
+      allow read: if signedIn() && resource.data.participantIds.hasAny([request.auth.uid]);
+      allow create: if signedIn()
+        && request.resource.data.participantIds is list
+        && request.resource.data.participantIds.size() == 2
+        && request.resource.data.participantIds.hasAny([request.auth.uid]);
+      allow update: if signedIn()
+        && resource.data.participantIds.hasAny([request.auth.uid])
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['latestRoomId', 'updatedAt', 'lastActionBy', 'createdAt', 'participantIds']);
       allow delete: if false;
     }
 

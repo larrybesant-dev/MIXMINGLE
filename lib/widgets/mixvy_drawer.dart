@@ -5,6 +5,14 @@ class MixVyDrawer extends StatelessWidget {
   final String? userId;
   const MixVyDrawer({super.key, this.userId});
 
+  Widget _navItem(BuildContext context, {required IconData icon, required String title, required String route}) {
+    return ListTile(
+      leading: Icon(icon, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.9)),
+      title: Text(title),
+      onTap: () => context.go(route),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -12,16 +20,40 @@ class MixVyDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           DrawerHeader(
-            decoration: BoxDecoration(color: Colors.purple),
-            child: const Text('MixVy Navigation', style: TextStyle(color: Colors.white, fontSize: 20)),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  Theme.of(context).colorScheme.primary,
+                  Theme.of(context).colorScheme.secondary,
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const Text(
+                  'MixVy',
+                  style: TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Urban live social network',
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 14),
+                ),
+              ],
+            ),
           ),
-          ListTile(title: const Text('Home'), onTap: () => context.go('/')),
-          ListTile(title: const Text('Discover'), onTap: () => context.go('/discover')),
-          ListTile(title: const Text('Friends'), onTap: () => context.go('/friends')),
-          ListTile(title: const Text('Profile'), onTap: () => context.go('/profile')),
-          ListTile(title: const Text('Payments'), onTap: () => context.go('/payments')),
-          ListTile(title: const Text('Notifications'), onTap: () => context.go('/notifications')),
-          ListTile(title: const Text('Settings'), onTap: () => context.go('/settings')),
+          _navItem(context, icon: Icons.home_rounded, title: 'Home', route: '/'),
+          _navItem(context, icon: Icons.explore_rounded, title: 'Discover', route: '/discover'),
+          _navItem(context, icon: Icons.local_fire_department_rounded, title: 'Live Speed Dating', route: '/speed-dating'),
+          _navItem(context, icon: Icons.people_alt_rounded, title: 'Friends', route: '/friends'),
+          _navItem(context, icon: Icons.person_rounded, title: 'Profile', route: '/profile'),
+          _navItem(context, icon: Icons.payments_rounded, title: 'Payments', route: '/payments'),
+          _navItem(context, icon: Icons.notifications_active_rounded, title: 'Notifications', route: '/notifications'),
+          _navItem(context, icon: Icons.settings_rounded, title: 'Settings', route: '/settings'),
         ],
       ),
     );

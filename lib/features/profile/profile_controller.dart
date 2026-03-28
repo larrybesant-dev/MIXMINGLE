@@ -11,8 +11,12 @@ class ProfileState {
   final String? username;
   final String? email;
   final String? avatarUrl;
+  final List<String> galleryUrls;
   final String? introVideoUrl;
   final String? bio;
+  final String? vibePrompt;
+  final String? firstDatePrompt;
+  final String? musicTastePrompt;
   final List<String> interests;
   final int coinBalance;
   final String? membershipLevel;
@@ -27,8 +31,12 @@ class ProfileState {
     this.username,
     this.email,
     this.avatarUrl,
+    this.galleryUrls = const [],
     this.introVideoUrl,
     this.bio,
+    this.vibePrompt,
+    this.firstDatePrompt,
+    this.musicTastePrompt,
     this.interests = const [],
     this.coinBalance = 0,
     this.membershipLevel,
@@ -42,8 +50,12 @@ class ProfileState {
     Object? username = _unset,
     Object? email = _unset,
     Object? avatarUrl = _unset,
+    List<String>? galleryUrls,
     Object? introVideoUrl = _unset,
     Object? bio = _unset,
+    Object? vibePrompt = _unset,
+    Object? firstDatePrompt = _unset,
+    Object? musicTastePrompt = _unset,
     List<String>? interests,
     int? coinBalance,
     Object? membershipLevel = _unset,
@@ -56,9 +68,13 @@ class ProfileState {
       username: identical(username, _unset) ? this.username : username as String?,
       email: identical(email, _unset) ? this.email : email as String?,
       avatarUrl: identical(avatarUrl, _unset) ? this.avatarUrl : avatarUrl as String?,
+      galleryUrls: galleryUrls ?? this.galleryUrls,
       introVideoUrl: identical(introVideoUrl, _unset) ? this.introVideoUrl : introVideoUrl as String?,
-        bio: identical(bio, _unset) ? this.bio : bio as String?,
-        interests: interests ?? this.interests,
+      bio: identical(bio, _unset) ? this.bio : bio as String?,
+      vibePrompt: identical(vibePrompt, _unset) ? this.vibePrompt : vibePrompt as String?,
+      firstDatePrompt: identical(firstDatePrompt, _unset) ? this.firstDatePrompt : firstDatePrompt as String?,
+      musicTastePrompt: identical(musicTastePrompt, _unset) ? this.musicTastePrompt : musicTastePrompt as String?,
+      interests: interests ?? this.interests,
       coinBalance: coinBalance ?? this.coinBalance,
       membershipLevel: identical(membershipLevel, _unset)
           ? this.membershipLevel
@@ -88,8 +104,12 @@ class ProfileController extends Notifier<ProfileState> {
       email: user?.email,
       username: user?.displayName,
       avatarUrl: user?.photoURL,
+      galleryUrls: const [],
       introVideoUrl: null,
       bio: null,
+      vibePrompt: null,
+      firstDatePrompt: null,
+      musicTastePrompt: null,
       interests: const [],
     );
   }
@@ -113,8 +133,16 @@ class ProfileController extends Notifier<ProfileState> {
       final normalizedUsername = (profile.username ?? '').trim();
       final normalizedEmail = (profile.email ?? user?.email ?? '').trim();
       final normalizedAvatar = (profile.avatarUrl ?? '').trim();
+        final normalizedGallery = profile.galleryUrls
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toSet()
+          .toList();
       final normalizedVideo = (profile.introVideoUrl ?? '').trim();
       final normalizedBio = (profile.bio ?? '').trim();
+        final normalizedVibe = (profile.vibePrompt ?? '').trim();
+        final normalizedFirstDate = (profile.firstDatePrompt ?? '').trim();
+        final normalizedMusic = (profile.musicTastePrompt ?? '').trim();
       final normalizedInterests = profile.interests
           .map((item) => item.trim().toLowerCase())
           .where((item) => item.isNotEmpty)
@@ -124,8 +152,12 @@ class ProfileController extends Notifier<ProfileState> {
         'username': normalizedUsername,
         'email': normalizedEmail,
         'avatarUrl': normalizedAvatar.isEmpty ? null : normalizedAvatar,
+        'galleryUrls': normalizedGallery,
         'introVideoUrl': normalizedVideo.isEmpty ? null : normalizedVideo,
         'bio': normalizedBio.isEmpty ? null : normalizedBio,
+        'vibePrompt': normalizedVibe.isEmpty ? null : normalizedVibe,
+        'firstDatePrompt': normalizedFirstDate.isEmpty ? null : normalizedFirstDate,
+        'musicTastePrompt': normalizedMusic.isEmpty ? null : normalizedMusic,
         'interests': normalizedInterests,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
@@ -145,8 +177,12 @@ class ProfileController extends Notifier<ProfileState> {
         username: normalizedUsername,
         email: normalizedEmail,
         avatarUrl: normalizedAvatar.isEmpty ? null : normalizedAvatar,
+        galleryUrls: normalizedGallery,
         introVideoUrl: normalizedVideo.isEmpty ? null : normalizedVideo,
         bio: normalizedBio.isEmpty ? null : normalizedBio,
+        vibePrompt: normalizedVibe.isEmpty ? null : normalizedVibe,
+        firstDatePrompt: normalizedFirstDate.isEmpty ? null : normalizedFirstDate,
+        musicTastePrompt: normalizedMusic.isEmpty ? null : normalizedMusic,
         interests: normalizedInterests,
       );
     } catch (e) {
@@ -174,8 +210,12 @@ class ProfileController extends Notifier<ProfileState> {
           username: currentUser?.displayName,
           email: currentUser?.email,
           avatarUrl: currentUser?.photoURL,
+          galleryUrls: const [],
           introVideoUrl: null,
           bio: null,
+          vibePrompt: null,
+          firstDatePrompt: null,
+          musicTastePrompt: null,
           interests: const [],
         );
         return;
@@ -201,8 +241,12 @@ class ProfileController extends Notifier<ProfileState> {
         username: user.username.isNotEmpty ? user.username : _auth.currentUser?.displayName,
         email: user.email.isNotEmpty ? user.email : _auth.currentUser?.email,
         avatarUrl: user.avatarUrl,
+        galleryUrls: user.galleryUrls,
         introVideoUrl: user.introVideoUrl,
         bio: user.bio,
+        vibePrompt: user.vibePrompt,
+        firstDatePrompt: user.firstDatePrompt,
+        musicTastePrompt: user.musicTastePrompt,
         interests: user.interests,
         coinBalance: user.coinBalance,
         membershipLevel: user.membershipLevel,
