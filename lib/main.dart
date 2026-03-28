@@ -18,7 +18,11 @@ void main() async {
   if (!isTest) {
     try {
       // Load environment variables
-      await dotenv.load();
+      try {
+        await dotenv.load(fileName: 'assets/.env');
+      } catch (_) {
+        await dotenv.load();
+      }
 
       // Initialize Firebase
       await Firebase.initializeApp(

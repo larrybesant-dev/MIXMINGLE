@@ -1,7 +1,5 @@
 // Corrected FirebaseOptions for MixVy
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
-
-import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DefaultFirebaseOptions {
@@ -20,18 +18,17 @@ class DefaultFirebaseOptions {
     }
   }
 
-  /// Validate that required env keys exist
-  static String _requireEnv(String key) {
+  static String _envOrDefault(String key, String fallback) {
     final value = dotenv.env[key];
     if (value == null || value.isEmpty) {
-      throw FlutterError('Missing required .env key: $key');
+      return fallback;
     }
     return value;
   }
 
   /// FirebaseOptions for web
   static FirebaseOptions get web => FirebaseOptions(
-        apiKey: _requireEnv('FIREBASE_API_KEY_WEB'),
+      apiKey: _envOrDefault('FIREBASE_API_KEY_WEB', 'AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4'),
         authDomain: 'mix-and-mingle-v2.firebaseapp.com',
         projectId: 'mix-and-mingle-v2',
         storageBucket: 'mix-and-mingle-v2.appspot.com',
@@ -42,7 +39,7 @@ class DefaultFirebaseOptions {
 
   /// FirebaseOptions for Windows
   static FirebaseOptions get windows => FirebaseOptions(
-        apiKey: _requireEnv('FIREBASE_API_KEY_WINDOWS'),
+      apiKey: _envOrDefault('FIREBASE_API_KEY_WINDOWS', 'AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4'),
         authDomain: 'mix-and-mingle-v2.firebaseapp.com',
         projectId: 'mix-and-mingle-v2',
         storageBucket: 'mix-and-mingle-v2.appspot.com',
