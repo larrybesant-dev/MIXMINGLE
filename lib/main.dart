@@ -1,3 +1,5 @@
+import 'dart:async';
+import 'dart:developer' as developer;
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,19 +33,40 @@ void main() async {
 
       await FirebaseEmulatorBootstrap.configure();
 
-      // Crashlytics (not supported on web)
+      // Global async/sync error handling for all platforms.
+      FlutterError.onError = (FlutterErrorDetails details) {
+        FlutterError.presentError(details);
+        developer.log(
+          'Flutter framework error',
+          name: 'AppError',
+          error: details.exception,
+          stackTrace: details.stack,
+        );
+
+        if (!kIsWeb) {
+          FirebaseCrashlytics.instance.recordFlutterError(details);
+        }
+      };
+
+      PlatformDispatcher.instance.onError = (error, stack) {
+        developer.log(
+          'Uncaught platform error',
+          name: 'AppError',
+          error: error,
+          stackTrace: stack,
+        );
+
+        if (!kIsWeb) {
+          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        }
+
+        // Mark as handled so web async plugin errors do not bubble as fatal uncaught errors.
+        return true;
+      };
+
+      // Crashlytics collection (not supported on web)
       if (!kIsWeb) {
         FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
-
-        FlutterError.onError = (FlutterErrorDetails details) {
-          FlutterError.presentError(details);
-          FirebaseCrashlytics.instance.recordFlutterError(details);
-        };
-
-        PlatformDispatcher.instance.onError = (error, stack) {
-          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-          return true;
-        };
       }
     } catch (e) {
       // If Firebase fails to initialize, show a fallback UI
@@ -63,6 +86,20 @@ void main() async {
     }
   }
 
-  // Run the actual app
-  runApp(const ProviderScope(child: MixVyApp()));
+  // Run the actual app in a guarded zone to capture uncaught async exceptions.
+  runZonedGuarded(
+    () => runApp(const ProviderScope(child: MixVyApp())),
+    (error, stackTrace) {
+      developer.log(
+        'Uncaught zone error',
+        name: 'AppError',
+        error: error,
+        stackTrace: stackTrace,
+      );
+
+      if (!kIsWeb) {
+        FirebaseCrashlytics.instance.recordError(error, stackTrace, fatal: true);
+      }
+    },
+  );
 }

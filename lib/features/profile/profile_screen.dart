@@ -1,9 +1,10 @@
-import 'dart:typed_data';
+import 'dart:developer' as developer;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:mixvy/models/adult_profile_model.dart';
@@ -135,12 +136,22 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
   }
 
   Future<String?> _resolveUploadUserId() async {
-    final auth = FirebaseAuth.instance;
-    await auth.currentUser?.reload();
-    final freshUser = auth.currentUser;
-    if (freshUser == null) return null;
-    await freshUser.getIdToken(true);
-    return freshUser.uid;
+    try {
+      final auth = FirebaseAuth.instance;
+      await auth.currentUser?.reload();
+      final freshUser = auth.currentUser;
+      if (freshUser == null) return null;
+      await freshUser.getIdToken(true);
+      return freshUser.uid;
+    } catch (error, stackTrace) {
+      developer.log(
+        'Failed to resolve upload user id',
+        name: 'ProfileUpload',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      return null;
+    }
   }
 
   String _mapStorageError(FirebaseException e, {required String kind}) {
@@ -153,6 +164,18 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       'object-not-found' => 'Storage path missing. Please retry.',
       _ => '$kind upload failed (${e.code}): ${e.message ?? 'unknown error'}',
     };
+  }
+
+  String _mapPlatformError(PlatformException e, {required String kind}) {
+    final code = e.code.toLowerCase();
+    final message = (e.message ?? '').trim();
+    if (code.contains('permission') || code.contains('denied')) {
+      return '$kind upload blocked by browser/device permissions.';
+    }
+    if (code.contains('network') || message.toLowerCase().contains('network')) {
+      return '$kind upload failed due to network issues. Please retry.';
+    }
+    return '$kind upload failed (${e.code}): ${message.isEmpty ? 'unknown error' : message}';
   }
 
   List<String> _requiredSetupItems(ProfileState state) {
@@ -219,7 +242,17 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       await ref.putData(bytes, metadata);
     }
 
-    return ref.getDownloadURL();
+    try {
+      return await ref.getDownloadURL();
+    } on FirebaseException catch (e, stackTrace) {
+      developer.log(
+        'Failed to resolve uploaded file download URL',
+        name: 'ProfileUpload',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      rethrow;
+    }
   }
 
   Future<void> _uploadImage({
@@ -269,11 +302,34 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(successMessage)));
     } on FirebaseException catch (e) {
+      developer.log(
+        'Firebase upload error',
+        name: 'ProfileUpload',
+        error: e,
+        stackTrace: StackTrace.current,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(_mapStorageError(e, kind: 'Photo'))),
       );
+    } on PlatformException catch (e) {
+      developer.log(
+        'Platform upload error',
+        name: 'ProfileUpload',
+        error: e,
+        stackTrace: StackTrace.current,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_mapPlatformError(e, kind: 'Photo'))),
+      );
     } catch (e) {
+      developer.log(
+        'Unexpected upload error',
+        name: 'ProfileUpload',
+        error: e,
+        stackTrace: StackTrace.current,
+      );
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
     } finally {
@@ -855,10 +911,10 @@ class _HeroCard extends StatelessWidget {
 
   final ProfileState state;
   final double profileStrength;
-  final VoidCallback onUploadAvatar;
-  final VoidCallback onUploadCover;
-  final VoidCallback onUploadGallery;
-  final VoidCallback onUploadVideo;
+  final Future<void> Function() onUploadAvatar;
+  final Future<void> Function() onUploadCover;
+  final Future<void> Function() onUploadGallery;
+  final Future<void> Function() onUploadVideo;
   final bool isUploadingPhoto;
   final bool isUploadingCover;
   final bool isUploadingGallery;
@@ -866,6 +922,23 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Future<void> safeRunUpload(Future<void> Function() action) async {
+      try {
+        await action();
+      } catch (error, stackTrace) {
+        developer.log(
+          'Unhandled profile upload error',
+          name: 'ProfileUpload',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Profile Picture upload failed. Please try again.')),
+        );
+      }
+    }
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -960,22 +1033,22 @@ class _HeroCard extends StatelessWidget {
             alignment: WrapAlignment.center,
             children: [
               OutlinedButton.icon(
-                onPressed: isUploadingPhoto ? null : onUploadAvatar,
+                onPressed: isUploadingPhoto ? null : () => safeRunUpload(onUploadAvatar),
                 icon: const Icon(Icons.photo_camera_back_outlined),
-                  label: Text(isUploadingPhoto ? 'Uploading...' : 'Profile Picture Upload'),
+                label: Text(isUploadingPhoto ? 'Uploading...' : 'Profile Picture Upload'),
               ),
               OutlinedButton.icon(
-                onPressed: isUploadingCover ? null : onUploadCover,
+                onPressed: isUploadingCover ? null : () => safeRunUpload(onUploadCover),
                 icon: const Icon(Icons.image_outlined),
                 label: Text(isUploadingCover ? 'Uploading...' : 'Cover'),
               ),
               OutlinedButton.icon(
-                onPressed: isUploadingGallery ? null : onUploadGallery,
+                onPressed: isUploadingGallery ? null : () => safeRunUpload(onUploadGallery),
                 icon: const Icon(Icons.collections_outlined),
                 label: Text(isUploadingGallery ? 'Uploading...' : 'Gallery'),
               ),
               OutlinedButton.icon(
-                onPressed: isUploadingVideo ? null : onUploadVideo,
+                onPressed: isUploadingVideo ? null : () => safeRunUpload(onUploadVideo),
                 icon: const Icon(Icons.videocam_outlined),
                 label: Text(isUploadingVideo ? 'Uploading...' : 'Intro video'),
               ),
