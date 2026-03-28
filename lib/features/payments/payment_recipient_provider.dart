@@ -39,8 +39,7 @@ class FirestorePaymentRecipientRepository implements PaymentRecipientRepository 
           }
 
           final username = user.username.toLowerCase();
-          final email = user.email.toLowerCase();
-          return username.contains(normalizedQuery) || email.contains(normalizedQuery);
+          return username.contains(normalizedQuery);
         })
         .toList(growable: false);
   }

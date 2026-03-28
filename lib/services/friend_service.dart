@@ -249,8 +249,7 @@ class FriendService {
             return true;
           }
 
-          return user.username.toLowerCase().contains(normalizedQuery) ||
-              user.email.toLowerCase().contains(normalizedQuery);
+          return user.username.toLowerCase().contains(normalizedQuery);
         })
         .toList(growable: false);
   }

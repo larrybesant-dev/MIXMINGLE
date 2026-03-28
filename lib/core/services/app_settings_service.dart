@@ -13,7 +13,7 @@ class AppSettings {
   });
 
   const AppSettings.defaults()
-      : themeMode = ThemeMode.system,
+      : themeMode = ThemeMode.dark,
         notificationsEnabled = true,
         analyticsEnabled = true;
 
@@ -55,7 +55,7 @@ class AppSettingsService {
     return switch (value) {
       'light' => ThemeMode.light,
       'dark' => ThemeMode.dark,
-      _ => ThemeMode.system,
+      _ => ThemeMode.dark,
     };
   }
 }

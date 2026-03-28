@@ -56,7 +56,7 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
             decoration: const InputDecoration(
               labelText: 'Find people',
               prefixIcon: Icon(Icons.search),
-              hintText: 'Search by username or email',
+              hintText: 'Search by username',
             ),
             onChanged: (value) {
               ref.read(friendSearchQueryProvider.notifier).state = value;

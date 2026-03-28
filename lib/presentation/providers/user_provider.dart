@@ -16,7 +16,7 @@ final userProvider = Provider<UserModel?>((ref) {
 	return UserModel(
 		id: uid,
 		email: firebaseUser?.email ?? '',
-		username: firebaseUser?.displayName ?? firebaseUser?.email ?? 'MixVy User',
+		username: firebaseUser?.displayName ?? 'MixVy User',
 		avatarUrl: firebaseUser?.photoURL,
 		createdAt: DateTime.now(),
 	);
