@@ -13,7 +13,9 @@ final walletProvider = StreamProvider<double>((ref) {
       .snapshots();
   return docStream.map((doc) {
     final data = doc.data();
-    if (data == null || data['balance'] == null) return 0.0;
-    return (data['balance'] as num).toDouble();
+    if (data == null) return 0.0;
+    final rawBalance = data['balance'] ?? data['coinBalance'];
+    if (rawBalance == null) return 0.0;
+    return (rawBalance as num).toDouble();
   });
 });

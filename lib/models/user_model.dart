@@ -38,7 +38,7 @@ class UserModel {
         createdAt: (json['createdAt'] is Timestamp)
             ? (json['createdAt'] as Timestamp).toDate()
             : DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-        coinBalance: json['coinBalance'] ?? 0,
+        coinBalance: ((json['balance'] ?? json['coinBalance']) as num?)?.toInt() ?? 0,
         membershipLevel: json['membershipLevel'] ?? 'basic',
         followers: List<String>.from(json['followers'] ?? []),
       );

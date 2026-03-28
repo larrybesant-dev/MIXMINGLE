@@ -3,6 +3,7 @@ const {onRequest, onCall, HttpsError} = require("firebase-functions/v2/https");
 const {onRequest: onRequestV1} = require("firebase-functions/v1/https");
 const admin = require("firebase-admin");
 const Stripe = require("stripe");
+const {RtcTokenBuilder, RtcRole} = require("agora-access-token");
 admin.initializeApp();
 const stripe = new Stripe(process.env.STRIPE_SECRET || "sk_test_dummy");
 const db = admin.firestore();
@@ -215,6 +216,52 @@ async function requestCoinTransferHandler(request, deps = {}) {
 
 exports.requestCoinTransfer = onCall(async (request) => requestCoinTransferHandler(request));
 
+async function generateAgoraTokenHandler(request) {
+    const authUid = requireAuth(request);
+    const channelName = request.data && request.data.channelName;
+    const rtcUidValue = request.data && request.data.rtcUid;
+
+    if (!channelName || typeof channelName !== "string") {
+        throw new HttpsError("invalid-argument", "channelName is required.");
+    }
+
+    const rtcUid = Number(rtcUidValue);
+    if (!Number.isFinite(rtcUid) || rtcUid <= 0) {
+        throw new HttpsError("invalid-argument", "rtcUid must be a positive integer.");
+    }
+
+    const appId = process.env.AGORA_APP_ID;
+    const appCertificate = process.env.AGORA_APP_CERTIFICATE;
+    if (!appId || !appCertificate) {
+        throw new HttpsError(
+            "failed-precondition",
+            "Agora server credentials are not configured.",
+        );
+    }
+
+    const currentTimestamp = Math.floor(Date.now() / 1000);
+    const expirationTimeInSeconds = 3600;
+    const privilegeExpiredTs = currentTimestamp + expirationTimeInSeconds;
+
+    const token = RtcTokenBuilder.buildTokenWithUid(
+        appId,
+        appCertificate,
+        channelName,
+        Math.floor(rtcUid),
+        RtcRole.PUBLISHER,
+        privilegeExpiredTs,
+    );
+
+    return {
+        token,
+        appId,
+        expiresAt: privilegeExpiredTs,
+        issuedForUid: authUid,
+    };
+}
+
+exports.generateAgoraToken = onCall(async (request) => generateAgoraTokenHandler(request));
+
 // Create Stripe Checkout Session
 exports.createCheckoutSession = onRequest(async (req, res) => createCheckoutSessionHandler(req, res));
 
@@ -257,6 +304,7 @@ exports.__testing = {
     recordStripePaymentSuccessHandler,
     sendCoinTransferHandler,
     requestCoinTransferHandler,
+    generateAgoraTokenHandler,
     createCheckoutSessionHandler,
     getCheckoutBaseUrl,
     requireAuth,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/agora_constants.dart';
@@ -61,6 +62,20 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     return userId.hashCode.abs() % 2147483647;
   }
 
+  Future<String> _fetchAgoraToken({required String channelName, required int rtcUid}) async {
+    final callable = FirebaseFunctions.instance.httpsCallable('generateAgoraToken');
+    final result = await callable.call<Map<String, dynamic>>({
+      'channelName': channelName,
+      'rtcUid': rtcUid,
+    });
+    final data = Map<String, dynamic>.from(result.data);
+    final token = (data['token'] as String?)?.trim() ?? '';
+    if (token.isEmpty) {
+      throw Exception('Missing Agora token from backend response.');
+    }
+    return token;
+  }
+
   Future<void> _connectCall(String userId) async {
     if (_isCallConnecting || _isCallReady) return;
     final appId = AgoraConstants.appId.trim();
@@ -90,8 +105,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
     try {
       final rtcUid = _buildRtcUid(userId);
+      final token = await _fetchAgoraToken(channelName: widget.roomId, rtcUid: rtcUid);
       await service.initialize(appId);
-      await service.joinChannel('', widget.roomId, rtcUid);
+      await service.joinChannel(token, widget.roomId, rtcUid);
       if (!mounted) {
         await service.dispose();
         return;

@@ -17,6 +17,18 @@ service cloud.firestore {
         );
     }
 
+    function isAllowedUserProfileUpdate() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'username',
+        'email',
+        'avatarUrl',
+        'introVideoUrl',
+        'bio',
+        'interests',
+        'updatedAt'
+      ]);
+    }
+
     function roomDoc(roomId) {
       return get(/databases/$(database)/documents/rooms/$(roomId));
     }
@@ -28,7 +40,8 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if signedIn();
       allow create: if isSelf(userId);
-      allow update: if isSelf(userId) || (signedIn() && isFriendLinkUpdate());
+      allow update: if (isSelf(userId) && isAllowedUserProfileUpdate())
+        || (signedIn() && isFriendLinkUpdate());
       allow delete: if isSelf(userId);
     }
 

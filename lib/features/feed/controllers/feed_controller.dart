@@ -55,7 +55,7 @@ class FeedController extends Notifier<FeedState> {
         .toList();
       final usersSnap = await _firestore
           .collection('users')
-          .orderBy('coinBalance', descending: true)
+          .orderBy('balance', descending: true)
           .limit(10)
           .get();
       final trendingUsers = usersSnap.docs

@@ -16,7 +16,7 @@ class User {
       id: json['id'] as String,
       username: json['username'] as String? ?? '',
       avatarUrl: json['avatarUrl'] as String? ?? '',
-      coinBalance: json['coinBalance'] as int? ?? 0,
+      coinBalance: ((json['balance'] ?? json['coinBalance']) as num?)?.toInt() ?? 0,
     );
   }
 }

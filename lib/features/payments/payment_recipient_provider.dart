@@ -24,7 +24,7 @@ class FirestorePaymentRecipientRepository implements PaymentRecipientRepository 
   }) async {
     final snapshot = await _firestore
         .collection('users')
-        .orderBy('coinBalance', descending: true)
+      .orderBy('balance', descending: true)
         .limit(25)
         .get();
 

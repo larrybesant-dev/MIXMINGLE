@@ -121,16 +121,12 @@ class ProfileController extends Notifier<ProfileState> {
           .toSet()
           .toList();
       await userRef.set({
-        'id': userId,
         'username': normalizedUsername,
         'email': normalizedEmail,
         'avatarUrl': normalizedAvatar.isEmpty ? null : normalizedAvatar,
         'introVideoUrl': normalizedVideo.isEmpty ? null : normalizedVideo,
         'bio': normalizedBio.isEmpty ? null : normalizedBio,
         'interests': normalizedInterests,
-        'coinBalance': profile.coinBalance,
-        'membershipLevel': profile.membershipLevel ?? 'free',
-        'followers': profile.followers,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
       state = profile.copyWith(
