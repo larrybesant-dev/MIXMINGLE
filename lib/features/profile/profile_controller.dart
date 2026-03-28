@@ -11,6 +11,9 @@ class ProfileState {
   final String? username;
   final String? email;
   final String? avatarUrl;
+  final String? introVideoUrl;
+  final String? bio;
+  final List<String> interests;
   final int coinBalance;
   final String? membershipLevel;
   final List<String> followers;
@@ -24,6 +27,9 @@ class ProfileState {
     this.username,
     this.email,
     this.avatarUrl,
+    this.introVideoUrl,
+    this.bio,
+    this.interests = const [],
     this.coinBalance = 0,
     this.membershipLevel,
     this.followers = const [],
@@ -36,6 +42,9 @@ class ProfileState {
     Object? username = _unset,
     Object? email = _unset,
     Object? avatarUrl = _unset,
+    Object? introVideoUrl = _unset,
+    Object? bio = _unset,
+    List<String>? interests,
     int? coinBalance,
     Object? membershipLevel = _unset,
     List<String>? followers,
@@ -47,6 +56,9 @@ class ProfileState {
       username: identical(username, _unset) ? this.username : username as String?,
       email: identical(email, _unset) ? this.email : email as String?,
       avatarUrl: identical(avatarUrl, _unset) ? this.avatarUrl : avatarUrl as String?,
+      introVideoUrl: identical(introVideoUrl, _unset) ? this.introVideoUrl : introVideoUrl as String?,
+        bio: identical(bio, _unset) ? this.bio : bio as String?,
+        interests: interests ?? this.interests,
       coinBalance: coinBalance ?? this.coinBalance,
       membershipLevel: identical(membershipLevel, _unset)
           ? this.membershipLevel
@@ -76,6 +88,9 @@ class ProfileController extends Notifier<ProfileState> {
       email: user?.email,
       username: user?.displayName,
       avatarUrl: user?.photoURL,
+      introVideoUrl: null,
+      bio: null,
+      interests: const [],
     );
   }
 
@@ -97,11 +112,22 @@ class ProfileController extends Notifier<ProfileState> {
       final userRef = _firestore.collection('users').doc(userId);
       final normalizedUsername = (profile.username ?? '').trim();
       final normalizedEmail = (profile.email ?? user?.email ?? '').trim();
+      final normalizedAvatar = (profile.avatarUrl ?? '').trim();
+      final normalizedVideo = (profile.introVideoUrl ?? '').trim();
+      final normalizedBio = (profile.bio ?? '').trim();
+      final normalizedInterests = profile.interests
+          .map((item) => item.trim().toLowerCase())
+          .where((item) => item.isNotEmpty)
+          .toSet()
+          .toList();
       await userRef.set({
         'id': userId,
         'username': normalizedUsername,
         'email': normalizedEmail,
-        'avatarUrl': profile.avatarUrl,
+        'avatarUrl': normalizedAvatar.isEmpty ? null : normalizedAvatar,
+        'introVideoUrl': normalizedVideo.isEmpty ? null : normalizedVideo,
+        'bio': normalizedBio.isEmpty ? null : normalizedBio,
+        'interests': normalizedInterests,
         'coinBalance': profile.coinBalance,
         'membershipLevel': profile.membershipLevel ?? 'free',
         'followers': profile.followers,
@@ -113,6 +139,10 @@ class ProfileController extends Notifier<ProfileState> {
         userId: userId,
         username: normalizedUsername,
         email: normalizedEmail,
+        avatarUrl: normalizedAvatar.isEmpty ? null : normalizedAvatar,
+        introVideoUrl: normalizedVideo.isEmpty ? null : normalizedVideo,
+        bio: normalizedBio.isEmpty ? null : normalizedBio,
+        interests: normalizedInterests,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());
@@ -139,6 +169,9 @@ class ProfileController extends Notifier<ProfileState> {
           username: currentUser?.displayName,
           email: currentUser?.email,
           avatarUrl: currentUser?.photoURL,
+          introVideoUrl: null,
+          bio: null,
+          interests: const [],
         );
         return;
       }
@@ -151,6 +184,9 @@ class ProfileController extends Notifier<ProfileState> {
         username: user.username.isNotEmpty ? user.username : _auth.currentUser?.displayName,
         email: user.email.isNotEmpty ? user.email : _auth.currentUser?.email,
         avatarUrl: user.avatarUrl,
+        introVideoUrl: user.introVideoUrl,
+        bio: user.bio,
+        interests: user.interests,
         coinBalance: user.coinBalance,
         membershipLevel: user.membershipLevel,
         followers: user.followers,

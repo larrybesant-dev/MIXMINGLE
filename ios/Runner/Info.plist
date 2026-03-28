@@ -53,6 +53,14 @@
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
+	<key>NSCameraUsageDescription</key>
+	<string>MixVy uses your camera for live video rooms.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>MixVy uses your microphone for live audio rooms.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MixVy lets you upload profile photos and intro videos.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>MixVy may save selected media for profile customization.</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

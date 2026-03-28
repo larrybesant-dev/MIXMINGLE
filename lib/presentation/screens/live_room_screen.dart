@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../config/agora_constants.dart';
 import '../providers/user_provider.dart';
 import '../../features/room/providers/room_firestore_provider.dart';
 import '../../features/room/providers/participant_providers.dart';
@@ -11,6 +12,7 @@ import '../../features/room/widgets/message_bubble.dart';
 import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/room/providers/host_provider.dart';
 import '../../services/analytics_service.dart';
+import '../../services/agora_service.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -33,6 +35,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   String? _roomJoinError;
   bool _hasTrackedRoomJoin = false;
   bool _hasTrackedFirstMessage = false;
+  AgoraService? _agoraService;
+  bool _isCallConnecting = false;
+  bool _isCallReady = false;
+  bool _isMicMuted = false;
+  bool _isVideoEnabled = true;
+  String? _callError;
 
   @override
   void initState() {
@@ -45,6 +53,100 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       _firestore = ref.read(roomFirestoreProvider);
       _joinedUserId = user.id;
       _joinRoom(user.id);
+      _connectCall(user.id);
+    }
+  }
+
+  int _buildRtcUid(String userId) {
+    return userId.hashCode.abs() % 2147483647;
+  }
+
+  Future<void> _connectCall(String userId) async {
+    if (_isCallConnecting || _isCallReady) return;
+    final appId = AgoraConstants.appId.trim();
+    if (appId.isEmpty) {
+      setState(() {
+        _callError = 'Audio/video unavailable: missing AGORA_APP_ID.';
+      });
+      return;
+    }
+
+    setState(() {
+      _isCallConnecting = true;
+      _callError = null;
+    });
+
+    final service = AgoraService();
+    service.onRemoteUserJoined = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+    service.onRemoteUserLeft = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+
+    try {
+      final rtcUid = _buildRtcUid(userId);
+      await service.initialize(appId);
+      await service.joinChannel('', widget.roomId, rtcUid);
+      if (!mounted) {
+        await service.dispose();
+        return;
+      }
+      setState(() {
+        _agoraService = service;
+        _isCallReady = true;
+      });
+    } catch (e) {
+      await service.dispose();
+      if (mounted) {
+        setState(() {
+          _callError = 'Audio/video connection failed. ${e.toString()}';
+          _isCallReady = false;
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCallConnecting = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _toggleMic() async {
+    final service = _agoraService;
+    if (service == null || !_isCallReady) return;
+    final next = !_isMicMuted;
+    await service.mute(next);
+    if (mounted) {
+      setState(() {
+        _isMicMuted = next;
+      });
+    }
+  }
+
+  Future<void> _toggleVideo() async {
+    final service = _agoraService;
+    if (service == null || !_isCallReady) return;
+    final next = !_isVideoEnabled;
+    await service.enableVideo(next);
+    if (mounted) {
+      setState(() {
+        _isVideoEnabled = next;
+      });
+    }
+  }
+
+  Future<void> _disconnectCall() async {
+    final service = _agoraService;
+    _agoraService = null;
+    _isCallReady = false;
+    if (service != null) {
+      await service.dispose();
     }
   }
 
@@ -144,6 +246,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
   @override
   void dispose() {
+    _disconnectCall();
     _leaveRoom();
     messageController.dispose();
     scrollController.dispose();
@@ -161,6 +264,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         if (mounted) {
           _firestore = ref.read(roomFirestoreProvider);
           _joinRoom(user.id);
+          _connectCall(user.id);
         }
       });
     }
@@ -201,6 +305,74 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               appBar: AppBar(title: Text('Live Room ($role)')),
               body: Column(
                 children: [
+                  if (_callError != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Text(
+                        _callError!,
+                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  if (_isCallConnecting)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      child: LinearProgressIndicator(),
+                    ),
+                  if (_isCallReady && _agoraService != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      child: Column(
+                        children: [
+                          SizedBox(
+                            height: 170,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: _agoraService!.getLocalView(),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          if (_agoraService!.remoteUids.isNotEmpty)
+                            SizedBox(
+                              height: 120,
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                itemBuilder: (context, index) {
+                                  final remoteUid = _agoraService!.remoteUids[index];
+                                  return SizedBox(
+                                    width: 150,
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(10),
+                                      child: _agoraService!.getRemoteView(remoteUid, widget.roomId),
+                                    ),
+                                  );
+                                },
+                                separatorBuilder: (_, unusedIndex) => const SizedBox(width: 8),
+                                itemCount: _agoraService!.remoteUids.length,
+                              ),
+                            )
+                          else
+                            const Text('Waiting for other participants to join video...'),
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              IconButton.filledTonal(
+                                tooltip: _isMicMuted ? 'Unmute microphone' : 'Mute microphone',
+                                onPressed: _toggleMic,
+                                icon: Icon(_isMicMuted ? Icons.mic_off : Icons.mic),
+                              ),
+                              const SizedBox(width: 12),
+                              IconButton.filledTonal(
+                                tooltip: _isVideoEnabled ? 'Turn camera off' : 'Turn camera on',
+                                onPressed: _toggleVideo,
+                                icon: Icon(_isVideoEnabled ? Icons.videocam : Icons.videocam_off),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
                   if (isHost)
                     Padding(
                       padding: const EdgeInsets.all(8.0),
@@ -425,6 +597,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               ),
               floatingActionButton: FloatingActionButton.extended(
                 onPressed: () async {
+                  await _disconnectCall();
                   await _leaveRoom();
                   if (context.mounted) context.pop();
                 },

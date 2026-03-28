@@ -5,6 +5,7 @@ class UserModel {
   final String email;
   final String username;
   final String? avatarUrl;
+  final String? introVideoUrl;
   final String? bio;
   final List<String> interests;
   final DateTime createdAt;
@@ -17,6 +18,7 @@ class UserModel {
     required this.email,
     required this.username,
     this.avatarUrl,
+    this.introVideoUrl,
     this.bio,
     this.interests = const [],
     required this.createdAt,
@@ -30,6 +32,7 @@ class UserModel {
         email: json['email'] ?? '',
         username: json['username'] ?? json['displayName'] ?? '',
         avatarUrl: json['avatarUrl'],
+        introVideoUrl: json['introVideoUrl'],
         bio: json['bio'],
         interests: List<String>.from(json['interests'] ?? []),
         createdAt: (json['createdAt'] is Timestamp)
@@ -45,6 +48,7 @@ class UserModel {
         'email': email,
         'username': username,
         'avatarUrl': avatarUrl,
+        'introVideoUrl': introVideoUrl,
         'bio': bio,
         'interests': interests,
         'createdAt': createdAt.toIso8601String(),

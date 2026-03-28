@@ -32,12 +32,14 @@ class AgoraService {
       );
     }
   late RtcEngine _engine;
+  bool _initialized = false;
 
   /// Initialize Agora engine with your App ID
   Future<void> initialize(String appId) async {
     _engine = createAgoraRtcEngine();
     await _engine.initialize(RtcEngineContext(appId: appId));
     await _engine.enableVideo();
+    await _engine.enableAudio();
 
     // Set up event handlers
     _engine.registerEventHandler(
@@ -52,6 +54,7 @@ class AgoraService {
         },
       ),
     );
+    _initialized = true;
   }
 
   /// Join a video channel
@@ -66,20 +69,30 @@ class AgoraService {
 
   /// Leave the current channel
   Future<void> leaveChannel() async {
+    if (!_initialized) return;
     await _engine.leaveChannel();
   }
 
   /// Mute/unmute local audio
   Future<void> mute(bool muted) async {
+    if (!_initialized) return;
     await _engine.muteLocalAudioStream(muted);
   }
 
   /// Enable/disable video
   Future<void> enableVideo(bool enabled) async {
+    if (!_initialized) return;
     if (enabled) {
       await _engine.enableVideo();
     } else {
       await _engine.disableVideo();
     }
+  }
+
+  Future<void> dispose() async {
+    if (!_initialized) return;
+    await _engine.leaveChannel();
+    await _engine.release();
+    _initialized = false;
   }
 }
