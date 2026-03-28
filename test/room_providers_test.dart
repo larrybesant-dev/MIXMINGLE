@@ -107,6 +107,51 @@ void main() {
       expect(snapshot.docs, isEmpty);
     });
 
+    test('sendMessageProvider rejects when blocked participant is present', () async {
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'host-1',
+      });
+      await firestore.collection('rooms').doc('room-a').collection('participants').doc('user-2').set({
+        'userId': 'user-2',
+        'role': 'audience',
+        'joinedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+        'lastActiveAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+      });
+      await firestore.collection('blocks').doc('user-1_user-2').set({
+        'blockerUserId': 'user-1',
+        'blockedUserId': 'user-2',
+      });
+
+      final sendMessage = container.read(sendMessageProvider('room-a'));
+
+      await expectLater(
+        () => sendMessage('blocked in room'),
+        throwsA(isA<StateError>()),
+      );
+
+      final snapshot = await firestore.collection('rooms').doc('room-a').collection('messages').get();
+      expect(snapshot.docs, isEmpty);
+    });
+
+    test('sendMessageProvider rejects when room policy disables chat', () async {
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'host-1',
+      });
+      await firestore.collection('rooms').doc('room-a').collection('policies').doc('settings').set({
+        'allowChat': false,
+      });
+
+      final sendMessage = container.read(sendMessageProvider('room-a'));
+
+      await expectLater(
+        () => sendMessage('chat disabled'),
+        throwsA(isA<StateError>()),
+      );
+
+      final snapshot = await firestore.collection('rooms').doc('room-a').collection('messages').get();
+      expect(snapshot.docs, isEmpty);
+    });
+
     test('hostControlsProvider toggles room lock state', () async {
       await firestore.collection('rooms').doc('room-a').set({
         'hostId': 'user-1',
@@ -118,6 +163,26 @@ void main() {
 
       final roomSnapshot = await firestore.collection('rooms').doc('room-a').get();
       expect(roomSnapshot.data()?['isLocked'], true);
+    });
+
+    test('hostControlsProvider toggles allowChat policy', () async {
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'user-1',
+      });
+      await firestore.collection('rooms').doc('room-a').collection('policies').doc('settings').set({
+        'allowChat': true,
+      });
+
+      final controls = container.read(hostControlsProvider);
+      await controls.toggleAllowChat('room-a');
+
+      final policySnapshot = await firestore
+          .collection('rooms')
+          .doc('room-a')
+          .collection('policies')
+          .doc('settings')
+          .get();
+      expect(policySnapshot.data()?['allowChat'], false);
     });
   });
 }

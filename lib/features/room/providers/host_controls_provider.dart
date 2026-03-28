@@ -19,6 +19,13 @@ class HostControls {
     await roomRef.update({'isLocked': !currentValue});
   }
 
+  Future<void> toggleAllowChat(String roomId) async {
+    final policyRef = _db.collection('rooms').doc(roomId).collection('policies').doc('settings');
+    final snapshot = await policyRef.get();
+    final currentValue = (snapshot.data()?['allowChat'] ?? true) as bool;
+    await policyRef.set({'allowChat': !currentValue}, SetOptions(merge: true));
+  }
+
   Future<void> muteUser(String roomId, String userId) {
     return _participantRef(roomId, userId).update({'isMuted': true});
   }

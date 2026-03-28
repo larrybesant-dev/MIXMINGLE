@@ -72,10 +72,42 @@ final sendMessageProvider =
 		}
 
 		final firestore = ref.read(roomFirestoreProvider);
+		final moderationService = ModerationService(firestore: firestore);
+		final blockedIds = await moderationService.getExcludedUserIds(user.id);
+
+		final policySnapshot = await firestore
+				.collection('rooms')
+				.doc(roomId)
+				.collection('policies')
+				.doc('settings')
+				.get();
+		final allowChat = (policySnapshot.data()?['allowChat'] as bool?) ?? true;
+		if (!allowChat) {
+			throw StateError('Chat is currently disabled in this room.');
+		}
+
+		if (blockedIds.isNotEmpty) {
+			final participantsSnapshot = await firestore
+					.collection('rooms')
+					.doc(roomId)
+					.collection('participants')
+					.get();
+			final hasBlockedParticipant = participantsSnapshot.docs.any((doc) {
+				final participantData = doc.data();
+				final participantId = (participantData['userId'] as String? ?? doc.id).trim();
+				if (participantId.isEmpty || participantId == user.id) {
+					return false;
+				}
+				return blockedIds.contains(participantId);
+			});
+			if (hasBlockedParticipant) {
+				throw StateError('You cannot message while a blocked user is in this room.');
+			}
+		}
+
 		final roomSnapshot = await firestore.collection('rooms').doc(roomId).get();
 		final hostId = (roomSnapshot.data()?['hostId'] as String? ?? '').trim();
 		if (hostId.isNotEmpty) {
-			final moderationService = ModerationService(firestore: firestore);
 			final hasBlockingRelationship = await moderationService.hasBlockingRelationship(user.id, hostId);
 			if (hasBlockingRelationship) {
 				throw StateError('You cannot message in this room.');

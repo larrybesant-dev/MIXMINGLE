@@ -12,6 +12,7 @@ import '../../features/room/providers/message_providers.dart';
 import '../../features/room/widgets/message_bubble.dart';
 import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/room/providers/host_provider.dart';
+import '../../features/room/providers/room_policy_provider.dart';
 import '../../services/analytics_service.dart';
 import '../../services/agora_service.dart';
 import '../../services/moderation_service.dart';
@@ -43,6 +44,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   bool _isMicMuted = false;
   bool _isVideoEnabled = true;
   String? _callError;
+  Set<String> _excludedUserIds = const <String>{};
 
   @override
   void initState() {
@@ -201,11 +203,32 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       }
 
       final hostId = (roomDoc.data()?['hostId'] as String? ?? '').trim();
+      final moderationService = ModerationService(firestore: firestore);
+      _excludedUserIds = await moderationService.getExcludedUserIds(userId);
+
       if (hostId.isNotEmpty) {
-        final moderationService = ModerationService(firestore: firestore);
         final hasBlockingRelationship = await moderationService.hasBlockingRelationship(userId, hostId);
         if (hasBlockingRelationship) {
           setState(() => _roomJoinError = 'You cannot join this room.');
+          _joinedUserId = null;
+          _exitRoom();
+          return;
+        }
+      }
+
+      if (_excludedUserIds.isNotEmpty) {
+        final participantsSnapshot = await firestore
+            .collection('rooms')
+            .doc(widget.roomId)
+            .collection('participants')
+            .get();
+        final hasBlockedParticipant = participantsSnapshot.docs.any((doc) {
+          final participantData = doc.data();
+          final participantId = (participantData['userId'] as String? ?? doc.id).trim();
+          return participantId.isNotEmpty && participantId != userId && _excludedUserIds.contains(participantId);
+        });
+        if (hasBlockedParticipant) {
+          setState(() => _roomJoinError = 'You cannot join while a blocked user is in this room.');
           _joinedUserId = null;
           _exitRoom();
           return;
@@ -308,6 +331,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final participantCountAsync = ref.watch(participantCountProvider(widget.roomId));
     final hostAsync = ref.watch(hostProvider(widget.roomId));
     final coHostsAsync = ref.watch(coHostsProvider(widget.roomId));
+    final roomPolicyAsync = ref.watch(roomPolicyProvider(widget.roomId));
     final hostControls = ref.read(hostControlsProvider);
 
     return currentParticipantAsync.when(
@@ -330,6 +354,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               return Scaffold(body: Center(child: Text(_roomJoinError!)));
             }
             final sendMessage = ref.read(sendMessageProvider(widget.roomId));
+            final participantsInRoom = participantsAsync.valueOrNull ?? const [];
+            final hasBlockedParticipantInRoom = participantsInRoom.any((participantItem) {
+              final participantId = participantItem.userId.trim();
+              if (participantId.isEmpty || participantId == user.id) {
+                return false;
+              }
+              return _excludedUserIds.contains(participantId);
+            });
+            final allowChat = roomPolicyAsync.valueOrNull?.allowChat ?? true;
             if (isLocked && !isHost && !isCohost) {
               return const Scaffold(body: Center(child: Text('Room is locked.')));
             }
@@ -438,6 +471,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                 inactiveThumbColor: Colors.green,
                               ),
                               Text(isLocked ? 'Locked' : 'Open'),
+                              const SizedBox(width: 24),
+                              Text('Chat:'),
+                              const SizedBox(width: 8),
+                              Switch(
+                                value: allowChat,
+                                onChanged: (_) => hostControls.toggleAllowChat(widget.roomId),
+                              ),
+                              Text(allowChat ? 'On' : 'Off'),
                             ],
                           ),
                         ],
@@ -550,6 +591,39 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       error: (e, _) => Center(child: Text('Error: $e')),
                     ),
                   ),
+                  participantsAsync.when(
+                    data: (participants) {
+                      final hasBlockedParticipant = participants.any((p) {
+                        final participantId = p.userId.trim();
+                        if (participantId.isEmpty || participantId == user.id) {
+                          return false;
+                        }
+                        return _excludedUserIds.contains(participantId);
+                      });
+
+                      if (!hasBlockedParticipant) {
+                        return const SizedBox.shrink();
+                      }
+
+                      return Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.errorContainer,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          'Blocked relationship detected in this room. Leave to continue safely.',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.onErrorContainer,
+                              ),
+                        ),
+                      );
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, _) => const SizedBox.shrink(),
+                  ),
                   if (cooldownMessage.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
@@ -565,19 +639,30 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         Expanded(
                           child: TextField(
                             controller: messageController,
-                            enabled: !isSending && participant?.isMuted != true && participant?.isBanned != true,
+                            enabled: !isSending
+                                && participant?.isMuted != true
+                                && participant?.isBanned != true
+                                && !hasBlockedParticipantInRoom,
                             decoration: InputDecoration(
                               hintText: participant?.isMuted == true
                                   ? 'You are muted'
                                   : participant?.isBanned == true
                                       ? 'You are banned'
+                                      : hasBlockedParticipantInRoom
+                                          ? 'Blocked relationship in room'
+                                        : !allowChat
+                                          ? 'Chat disabled by host'
                                       : 'Type your message...',
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton(
-                          onPressed: isSending || participant?.isMuted == true || participant?.isBanned == true
+                          onPressed: isSending
+                                  || participant?.isMuted == true
+                                  || participant?.isBanned == true
+                                    || !allowChat
+                                  || hasBlockedParticipantInRoom
                               ? null
                               : () async {
                                   if (messageController.text.trim().isEmpty) return;

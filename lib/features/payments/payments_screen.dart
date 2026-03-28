@@ -9,6 +9,7 @@ import 'payments_controller.dart';
 import 'payment_recipient_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../presentation/providers/coin_transaction_provider.dart';
+import '../../presentation/providers/referral_provider.dart';
 import '../../presentation/providers/wallet_provider.dart';
 
 class PaymentsScreen extends ConsumerStatefulWidget {
@@ -84,6 +85,30 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     });
   }
 
+  Future<void> _generateReferralCode() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return;
+    }
+
+    try {
+      final code = await ref.read(referralServiceProvider).generateReferralCode(user.uid);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Referral code ready: $code')),
+      );
+    } catch (e) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not generate referral code: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     if (kIsWeb) {
@@ -96,6 +121,8 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     final user = FirebaseAuth.instance.currentUser;
     final paymentState = ref.watch(paymentControllerProvider);
     final walletAsync = ref.watch(walletProvider);
+    final referralCodeAsync = ref.watch(referralCodeProvider);
+    final referralEarningsAsync = ref.watch(referralEarningsProvider);
     final transactionsAsync = ref.watch(
       coinTransactionStreamProvider(user?.uid ?? ''),
     );
@@ -132,6 +159,44 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             data: (balance) => Text('Current balance: ${balance.toStringAsFixed(2)}'),
             loading: () => const LinearProgressIndicator(),
             error: (e, _) => Text('Balance unavailable: $e'),
+          ),
+          const SizedBox(height: 14),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Referrals',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  referralCodeAsync.when(
+                    data: (code) => Text(
+                      code == null ? 'No active referral code yet.' : 'Code: $code',
+                    ),
+                    loading: () => const LinearProgressIndicator(),
+                    error: (e, _) => Text('Referral code unavailable: $e'),
+                  ),
+                  const SizedBox(height: 8),
+                  referralEarningsAsync.when(
+                    data: (total) => Text('Referral earnings: ${total.toStringAsFixed(2)}'),
+                    loading: () => const SizedBox.shrink(),
+                    error: (e, _) => Text('Referral earnings unavailable: $e'),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: OutlinedButton.icon(
+                      onPressed: _generateReferralCode,
+                      icon: const Icon(Icons.qr_code_rounded),
+                      label: const Text('Generate Referral Code'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 24),
           TextField(

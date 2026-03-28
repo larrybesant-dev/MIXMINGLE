@@ -5,3 +5,5 @@ export 'friend_provider.dart';
 export 'gift_provider.dart';
 export 'presence_provider.dart';
 export 'coin_transaction_provider.dart';
+export 'wallet_provider.dart';
+export 'referral_provider.dart';
