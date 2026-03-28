@@ -59,11 +59,10 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
   }
 
   void _selectRecipient(UserModel recipient) {
+    final safeName = recipient.username.isNotEmpty ? recipient.username : 'MixVy user';
     setState(() {
       _selectedRecipient = recipient;
-      _recipientController.text = recipient.username.isNotEmpty
-          ? recipient.username
-          : recipient.email;
+      _recipientController.text = safeName;
       _recipientController.selection = TextSelection.collapsed(
         offset: _recipientController.text.length,
       );
@@ -121,7 +120,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
 
               final selectedLabel = _selectedRecipient!.username.isNotEmpty
                   ? _selectedRecipient!.username
-                  : _selectedRecipient!.email;
+                  : 'MixVy user';
               if (value != selectedLabel) {
                 setState(() {
                   _selectedRecipient = null;
@@ -130,7 +129,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             },
             decoration: const InputDecoration(
               labelText: 'Search recipient',
-              hintText: 'Enter a username or email',
+              hintText: 'Enter a username',
               border: OutlineInputBorder(),
             ),
           ),
@@ -142,15 +141,15 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                   child: Text(
                     _selectedRecipient!.username.isNotEmpty
                         ? _selectedRecipient!.username[0].toUpperCase()
-                        : _selectedRecipient!.email[0].toUpperCase(),
+                        : 'M',
                   ),
                 ),
                 title: Text(
                   _selectedRecipient!.username.isNotEmpty
                       ? _selectedRecipient!.username
-                      : _selectedRecipient!.email,
+                      : 'MixVy user',
                 ),
-                subtitle: Text(_selectedRecipient!.email),
+                subtitle: const Text('Recipient selected'),
                 trailing: IconButton(
                   onPressed: _clearRecipient,
                   icon: const Icon(Icons.close),
@@ -186,15 +185,15 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                             child: Text(
                               recipient.username.isNotEmpty
                                   ? recipient.username[0].toUpperCase()
-                                  : recipient.email[0].toUpperCase(),
+                                  : 'M',
                             ),
                           ),
                           title: Text(
                             recipient.username.isNotEmpty
                                 ? recipient.username
-                                : recipient.email,
+                                : 'MixVy user',
                           ),
-                          subtitle: Text(recipient.email),
+                          subtitle: const Text('Community member'),
                         ),
                       ),
                     ),

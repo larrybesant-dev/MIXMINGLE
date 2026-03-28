@@ -8,7 +8,7 @@ class UserProfileScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('User Profile: $userId')),
+      appBar: AppBar(title: const Text('User Profile')),
       body: FutureBuilder<DocumentSnapshot>(
         future: FirebaseFirestore.instance.collection('users').doc(userId).get(),
         builder: (context, snapshot) {
@@ -26,14 +26,10 @@ class UserProfileScreen extends StatelessWidget {
               children: [
                 Text(data['username'] ?? 'User', style: Theme.of(context).textTheme.headlineSmall),
                 const SizedBox(height: 8),
-                Text('Email: ${data['email'] ?? ''}'),
                 if (data['bio'] != null) ...[
                   const SizedBox(height: 8),
                   Text(data['bio']),
                 ],
-                const SizedBox(height: 16),
-                Text('Joined: ${data['createdAt'] ?? ''}'),
-                // Add more user fields as needed
               ],
             ),
           );

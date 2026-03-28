@@ -93,7 +93,7 @@ import '../feed/models/event_model.dart';
     Widget _postCard(PostModel p) => Card(
           child: ListTile(
             title: Text(p.text),
-            subtitle: Text('by ${p.userId} • ${p.createdAt}'),
+            subtitle: Text('Posted • ${p.createdAt}'),
           ),
         );
 
@@ -121,7 +121,7 @@ import '../feed/models/event_model.dart';
     Widget _roomCard(RoomModel r) => Card(
           child: ListTile(
             title: Text(r.name.isNotEmpty ? r.name : 'Room'),
-            subtitle: Text('Host: ${r.hostId}'),
+            subtitle: const Text('Live room'),
             trailing: const Icon(Icons.circle, color: Colors.green, size: 12),
           ),
         );
@@ -132,7 +132,7 @@ import '../feed/models/event_model.dart';
             title: e is EventModel
                 ? Text(e.title.toString().trim().isNotEmpty ? e.title : 'Event')
                 : Text(e.toString()),
-            subtitle: e is EventModel ? Text('Host: ${e.hostId} • ${e.date}') : null,
+            subtitle: e is EventModel ? Text('Event • ${e.date}') : null,
           ),
         );
   }

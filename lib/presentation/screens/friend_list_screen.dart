@@ -266,12 +266,13 @@ class _FriendUserTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final initials = user.username.trim().isEmpty ? '?' : user.username.trim()[0].toUpperCase();
+    final safeName = user.username.trim().isEmpty ? 'MixVy user' : user.username;
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         leading: CircleAvatar(child: Text(initials)),
-        title: Text(user.username.isEmpty ? user.email : user.username),
-        subtitle: Text(user.bio?.isNotEmpty == true ? user.bio! : user.email),
+        title: Text(safeName),
+        subtitle: Text(user.bio?.isNotEmpty == true ? user.bio! : 'Community member'),
         trailing: FilledButton.tonalIcon(
           onPressed: isBusy ? null : onAction,
           icon: isBusy
@@ -305,7 +306,7 @@ class _IncomingFriendRequestTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final displayName = user?.username.isNotEmpty == true ? user!.username : user?.email ?? 'Unknown user';
+    final displayName = user?.username.isNotEmpty == true ? user!.username : 'MixVy user';
     final initials = displayName.trim().isEmpty ? '?' : displayName.trim()[0].toUpperCase();
 
     return Card(

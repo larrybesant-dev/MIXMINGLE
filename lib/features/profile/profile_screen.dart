@@ -31,7 +31,6 @@ class ProfileFormView extends ConsumerStatefulWidget {
 class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
   final _bioController = TextEditingController();
   final _interestsController = TextEditingController();
   String? _loadedUserId;
@@ -49,7 +48,6 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
   @override
   void dispose() {
     _nameController.dispose();
-    _emailController.dispose();
     _bioController.dispose();
     _interestsController.dispose();
     super.dispose();
@@ -175,7 +173,6 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
     }
     _loadedUserId = state.userId;
     _nameController.text = state.username ?? '';
-    _emailController.text = state.email ?? '';
     _bioController.text = state.bio ?? '';
     _interestsController.text = state.interests.join(', ');
   }
@@ -190,7 +187,6 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
     await controller.updateProfile(
       current.copyWith(
         username: _nameController.text.trim(),
-        email: _emailController.text.trim(),
         bio: _bioController.text.trim(),
         interests: _parseInterests(_interestsController.text),
       ),
@@ -237,22 +233,6 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
                     }
                     if (normalized.length > 30) {
                       return 'Display name must be 30 characters or less';
-                    }
-                    return null;
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              Semantics(
-                label: 'Email input field',
-                child: TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                  textInputAction: TextInputAction.done,
-                  validator: (value) {
-                    final normalized = (value ?? '').trim();
-                    if (normalized.isEmpty || !normalized.contains('@')) {
-                      return 'Please enter a valid email';
                     }
                     return null;
                   },
