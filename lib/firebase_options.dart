@@ -28,10 +28,10 @@ class DefaultFirebaseOptions {
 
   /// FirebaseOptions for web
   static FirebaseOptions get web => FirebaseOptions(
-      apiKey: _envOrDefault('FIREBASE_API_KEY_WEB', 'AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4'),
+      apiKey: _envOrDefault('FIREBASE_API_KEY_WEB', 'AIzaSyBBmz9ybuDRCA2dAVjFZVj7R7wrDL0wTYU'),
         authDomain: 'mix-and-mingle-v2.firebaseapp.com',
         projectId: 'mix-and-mingle-v2',
-        storageBucket: 'mix-and-mingle-v2.appspot.com',
+        storageBucket: 'mix-and-mingle-v2.firebasestorage.app',
         messagingSenderId: '980846719834',
         appId: '1:980846719834:web:fbcdf5051c55d691077963',
         measurementId: 'G-BN784E6ZJY',
@@ -39,10 +39,10 @@ class DefaultFirebaseOptions {
 
   /// FirebaseOptions for Windows
   static FirebaseOptions get windows => FirebaseOptions(
-      apiKey: _envOrDefault('FIREBASE_API_KEY_WINDOWS', 'AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4'),
+      apiKey: _envOrDefault('FIREBASE_API_KEY_WINDOWS', 'AIzaSyBBmz9ybuDRCA2dAVjFZVj7R7wrDL0wTYU'),
         authDomain: 'mix-and-mingle-v2.firebaseapp.com',
         projectId: 'mix-and-mingle-v2',
-        storageBucket: 'mix-and-mingle-v2.appspot.com',
+        storageBucket: 'mix-and-mingle-v2.firebasestorage.app',
         messagingSenderId: '980846719834',
         appId: '1:980846719834:web:17c9f4f34a8fb666077963',
         measurementId: 'G-RE3FC9DMJE',

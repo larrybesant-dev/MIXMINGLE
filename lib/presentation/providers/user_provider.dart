@@ -2,10 +2,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../features/auth/controllers/auth_controller.dart';
+import '../../features/profile/profile_controller.dart';
 import '../../models/user_model.dart';
 
 final userProvider = Provider<UserModel?>((ref) {
 	final authState = ref.watch(authControllerProvider);
+	final profileState = ref.watch(profileControllerProvider);
 	final firebaseUser = FirebaseAuth.instance.currentUser;
 	final uid = authState.uid ?? firebaseUser?.uid;
 
@@ -16,8 +18,12 @@ final userProvider = Provider<UserModel?>((ref) {
 	return UserModel(
 		id: uid,
 		email: firebaseUser?.email ?? '',
-		username: firebaseUser?.displayName ?? 'MixVy User',
-		avatarUrl: firebaseUser?.photoURL,
+		username: profileState.userId == uid && (profileState.username?.isNotEmpty == true)
+			? profileState.username!
+			: (firebaseUser?.displayName ?? 'MixVy User'),
+		avatarUrl: profileState.userId == uid && (profileState.avatarUrl?.isNotEmpty == true)
+			? profileState.avatarUrl
+			: firebaseUser?.photoURL,
 		createdAt: DateTime.now(),
 	);
 });

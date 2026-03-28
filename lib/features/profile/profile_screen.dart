@@ -247,12 +247,18 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
                 children: [
                   CircleAvatar(
                     radius: 28,
-                    backgroundImage: (state.avatarUrl != null && state.avatarUrl!.isNotEmpty)
-                        ? NetworkImage(state.avatarUrl!)
-                        : null,
-                    child: (state.avatarUrl == null || state.avatarUrl!.isEmpty)
-                        ? const Icon(Icons.person)
-                        : null,
+                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    child: (state.avatarUrl != null && state.avatarUrl!.trim().isNotEmpty)
+                        ? ClipOval(
+                            child: Image.network(
+                              state.avatarUrl!.trim(),
+                              width: 56,
+                              height: 56,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) => const Icon(Icons.person),
+                            ),
+                          )
+                        : const Icon(Icons.person),
                   ),
                   const SizedBox(width: 12),
                   Expanded(

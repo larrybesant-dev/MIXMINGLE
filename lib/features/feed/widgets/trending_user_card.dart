@@ -9,14 +9,25 @@ class TrendingUserCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final avatarUrl = user.avatarUrl.trim();
     return GestureDetector(
       onTap: onTap,
       child: Column(
         children: [
           CircleAvatar(
             radius: 36,
-            backgroundImage: NetworkImage(user.avatarUrl),
             backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.2),
+            child: avatarUrl.isEmpty
+                ? const Icon(Icons.person)
+                : ClipOval(
+                    child: Image.network(
+                      avatarUrl,
+                      width: 72,
+                      height: 72,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.person),
+                    ),
+                  ),
           ),
           const SizedBox(height: 8),
           Text(
