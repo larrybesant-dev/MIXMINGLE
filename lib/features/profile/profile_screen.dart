@@ -79,12 +79,14 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       return;
     }
 
-    final picker = ImagePicker();
-    final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 88);
-    if (file == null) return;
-
-    setState(() => _isUploadingPhoto = true);
     try {
+      final picker = ImagePicker();
+      final file = await picker.pickImage(source: ImageSource.gallery, imageQuality: 88);
+      if (file == null) return;
+
+      if (!mounted) return;
+      setState(() => _isUploadingPhoto = true);
+
       final bytes = await file.readAsBytes();
       final photoUrl = await _uploadToStorage(
         bytes: bytes,
@@ -124,12 +126,14 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       return;
     }
 
-    final picker = ImagePicker();
-    final file = await picker.pickVideo(source: ImageSource.gallery, maxDuration: const Duration(seconds: 45));
-    if (file == null) return;
-
-    setState(() => _isUploadingVideo = true);
     try {
+      final picker = ImagePicker();
+      final file = await picker.pickVideo(source: ImageSource.gallery, maxDuration: const Duration(seconds: 45));
+      if (file == null) return;
+
+      if (!mounted) return;
+      setState(() => _isUploadingVideo = true);
+
       final bytes = await file.readAsBytes();
       final videoUrl = await _uploadToStorage(
         bytes: bytes,

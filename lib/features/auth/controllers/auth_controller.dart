@@ -65,6 +65,7 @@ class AuthController extends Notifier<AuthState> {
       state = state.copyWith(uid: user?.uid);
     });
 
+    unawaited(_repairInvalidCachedSession());
     unawaited(_completeRedirectSignInIfNeeded());
 
     ref.onDispose(() {
@@ -72,6 +73,46 @@ class AuthController extends Notifier<AuthState> {
     });
 
     return AuthState(uid: _auth.currentUser?.uid);
+  }
+
+  Future<void> _repairInvalidCachedSession() async {
+    final user = _auth.currentUser;
+    if (user == null) {
+      return;
+    }
+
+    try {
+      await user.getIdToken();
+    } on FirebaseAuthException catch (e, st) {
+      _logAuthException(e, st, context: 'cached-session-validation');
+      if (_isInvalidSessionError(e.code)) {
+        await _auth.signOut();
+        state = state.copyWith(uid: null, error: null);
+      }
+    } catch (e, st) {
+      developer.log(
+        'Non-Firebase error while validating cached session',
+        name: 'AuthController',
+        error: e,
+        stackTrace: st,
+      );
+      await _auth.signOut();
+      state = state.copyWith(uid: null, error: null);
+    }
+  }
+
+  bool _isInvalidSessionError(String code) {
+    switch (code) {
+      case 'user-token-expired':
+      case 'invalid-user-token':
+      case 'user-disabled':
+      case 'user-not-found':
+      case 'invalid-credential':
+      case 'requires-recent-login':
+        return true;
+      default:
+        return false;
+    }
   }
 
   Future<void> _completeRedirectSignInIfNeeded() async {
