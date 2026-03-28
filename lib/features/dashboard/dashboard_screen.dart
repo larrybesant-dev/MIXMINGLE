@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../shared/widgets/top_app_bar.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,6 +12,7 @@ import '../../widgets/mixvy_drawer.dart';
 
 import '../../models/room_model.dart';
 import '../feed/models/event_model.dart';
+import '../../core/firestore/firestore_error_utils.dart';
 
 
   class DashboardScreen extends StatefulWidget {
@@ -52,7 +54,10 @@ import '../feed/models/event_model.dart';
                             ? const Text('No posts yet.')
                             : Column(children: posts.map((p) => _postCard(p)).toList()),
                         loading: () => const Center(child: CircularProgressIndicator()),
-                        error: (e, _) => midnightErrorCard('Error: $e'),
+                        error: (e, _) => firestoreErrorCard(
+                          section: 'posts',
+                          error: e,
+                        ),
                       ),
                       const SizedBox(height: 24),
                       const Text('Active Rooms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -61,7 +66,10 @@ import '../feed/models/event_model.dart';
                             ? const Text('No active rooms.')
                             : Column(children: rooms.map((r) => _roomCard(r)).toList()),
                         loading: () => const Center(child: CircularProgressIndicator()),
-                        error: (e, _) => midnightErrorCard('Error: $e'),
+                        error: (e, _) => firestoreErrorCard(
+                          section: 'active rooms',
+                          error: e,
+                        ),
                       ),
                       const SizedBox(height: 24),
                       const Text('Upcoming Events', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -70,7 +78,10 @@ import '../feed/models/event_model.dart';
                             ? const Text('No upcoming events.')
                             : Column(children: events.map((e) => _eventCard(e)).toList()),
                         loading: () => const Center(child: CircularProgressIndicator()),
-                        error: (e, _) => Text('Error: $e'),
+                        error: (e, _) => firestoreErrorCard(
+                          section: 'events',
+                          error: e,
+                        ),
                       ),
                     ],
                   ),
@@ -152,6 +163,47 @@ import '../feed/models/event_model.dart';
             ),
           ),
         );
+
+    Widget firestoreErrorCard({required String section, required Object error}) {
+      final info = parseFirestoreError(error);
+      final friendly = friendlyFirestoreMessage(error, fallbackContext: section);
+
+      return Card(
+        color: Colors.black87,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(
+                info.isPermissionOrAuth ? Icons.lock_outline : Icons.error_outline,
+                color: info.isPermissionOrAuth ? Colors.amberAccent : Colors.redAccent,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      friendly,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    if (error is FirebaseException)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Text(
+                          'Firestore (${error.code}): ${error.message ?? 'No additional details'}',
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.75), fontSize: 12),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     // Card widget for rooms
     Widget _roomCard(RoomModel r) => Card(

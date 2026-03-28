@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../models/room_model.dart';
 import '../../../models/user.dart' as feed_user;
 import '../../../services/moderation_service.dart';
+import '../../../core/firestore/firestore_error_utils.dart';
 
 class FeedState {
   final bool isLoading;
@@ -77,6 +78,16 @@ class FeedController extends Notifier<FeedState> {
         isLoading: false,
         liveRooms: liveRooms,
         trendingUsers: trendingUsers,
+      );
+    } on FirebaseException catch (e, stackTrace) {
+      logFirestoreError(
+        context: 'discovery feed query',
+        error: e,
+        stackTrace: stackTrace,
+      );
+      state = state.copyWith(
+        isLoading: false,
+        error: friendlyFirestoreMessage(e, fallbackContext: 'the discovery feed'),
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

@@ -13,15 +13,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _avatarUrlController = TextEditingController();
+  final _profilePictureUrlController = TextEditingController();
   bool _showPassword = false;
+
+  bool _isValidImageUrl(String url) {
+    final trimmed = url.trim();
+    if (trimmed.isEmpty) return false;
+    final uri = Uri.tryParse(trimmed);
+    return uri != null && (uri.scheme == 'http' || uri.scheme == 'https') && (uri.host.isNotEmpty);
+  }
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _avatarUrlController.dispose();
+    _profilePictureUrlController.dispose();
     super.dispose();
   }
 
@@ -31,16 +38,25 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final state = ref.read(profileControllerProvider);
     _nameController.text = state.username ?? '';
     _emailController.text = state.email ?? '';
-    _avatarUrlController.text = state.avatarUrl ?? '';
+    _profilePictureUrlController.text = state.avatarUrl ?? '';
   }
 
   Future<void> _saveProfile() async {
+    final profilePictureUrl = _profilePictureUrlController.text.trim();
+    if (profilePictureUrl.isNotEmpty && !_isValidImageUrl(profilePictureUrl)) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile Picture URL must be a valid http/https link.')),
+      );
+      return;
+    }
+
     final controller = ref.read(profileControllerProvider.notifier);
     await controller.updateProfile(
       ref.read(profileControllerProvider).copyWith(
         username: _nameController.text.trim(),
         email: _emailController.text.trim(),
-        avatarUrl: _avatarUrlController.text.trim(),
+        avatarUrl: profilePictureUrl,
       ),
     );
     if (!mounted) return;
@@ -58,6 +74,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(profileControllerProvider);
+    final profilePictureUrl = _profilePictureUrlController.text.trim();
+    final hasValidProfilePicture = _isValidImageUrl(profilePictureUrl);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Edit Profile')),
       body: Center(
@@ -70,16 +89,36 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
               CircleAvatar(
                 radius: 40,
                 backgroundColor: Theme.of(context).colorScheme.surface,
-                backgroundImage: _avatarUrlController.text.isNotEmpty
-                    ? NetworkImage(_avatarUrlController.text)
-                    : null,
-                child: _avatarUrlController.text.isEmpty 
-                    ? Icon(Icons.person, size: 40, color: Theme.of(context).colorScheme.primary)
-                    : null,
+                child: hasValidProfilePicture
+                    ? ClipOval(
+                        child: Image.network(
+                          profilePictureUrl,
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                          loadingBuilder: (context, child, loadingProgress) {
+                            if (loadingProgress == null) return child;
+                            return Center(
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
+                                ),
+                              ),
+                            );
+                          },
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(Icons.person, size: 40, color: Theme.of(context).colorScheme.primary);
+                          },
+                        ),
+                      )
+                    : Icon(Icons.person, size: 40, color: Theme.of(context).colorScheme.primary),
               ),
               const SizedBox(height: 8),
               TextFormField(
-                controller: _avatarUrlController,
+                controller: _profilePictureUrlController,
                 decoration: const InputDecoration(labelText: 'Profile Picture URL'),
                 textInputAction: TextInputAction.next,
                 onChanged: (_) => setState(() {}),
