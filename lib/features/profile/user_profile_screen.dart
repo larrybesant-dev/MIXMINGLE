@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:video_player/video_player.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UserProfileScreen extends StatelessWidget {
   final String userId;
@@ -99,7 +99,40 @@ class UserProfileScreen extends StatelessWidget {
               if (introVideoUrl != null && introVideoUrl.isNotEmpty) ...[
                 Text('Intro Video', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 8),
-                _InlineIntroVideoPlayer(videoUrl: introVideoUrl),
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.play_circle_fill_rounded),
+                      const SizedBox(width: 10),
+                      const Expanded(child: Text('Intro video available')),
+                      TextButton(
+                        onPressed: () async {
+                          final uri = Uri.tryParse(introVideoUrl);
+                          if (uri == null) {
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Invalid intro video URL.')),
+                            );
+                            return;
+                          }
+
+                          final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+                          if (!opened && context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Could not open intro video.')),
+                            );
+                          }
+                        },
+                        child: const Text('Open'),
+                      ),
+                    ],
+                  ),
+                ),
                 const SizedBox(height: 18),
               ],
               if (galleryUrls.isNotEmpty) ...[
@@ -182,93 +215,6 @@ class _PromptCard extends StatelessWidget {
           Text(title, style: Theme.of(context).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 4),
           Text(content),
-        ],
-      ),
-    );
-  }
-}
-
-class _InlineIntroVideoPlayer extends StatefulWidget {
-  final String videoUrl;
-
-  const _InlineIntroVideoPlayer({required this.videoUrl});
-
-  @override
-  State<_InlineIntroVideoPlayer> createState() => _InlineIntroVideoPlayerState();
-}
-
-class _InlineIntroVideoPlayerState extends State<_InlineIntroVideoPlayer> {
-  VideoPlayerController? _controller;
-  bool _failed = false;
-
-  @override
-  void initState() {
-    super.initState();
-    final uri = Uri.tryParse(widget.videoUrl);
-    if (uri == null) {
-      _failed = true;
-      return;
-    }
-
-    final controller = VideoPlayerController.networkUrl(uri);
-    _controller = controller;
-    controller.initialize().then((_) {
-      if (!mounted) return;
-      setState(() {});
-    }).catchError((_) {
-      if (!mounted) return;
-      setState(() {
-        _failed = true;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    if (_failed) {
-      return const Text('Could not load intro video.');
-    }
-
-    final controller = _controller;
-    if (controller == null || !controller.value.isInitialized) {
-      return const SizedBox(
-        height: 180,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: Stack(
-        alignment: Alignment.bottomCenter,
-        children: [
-          AspectRatio(
-            aspectRatio: controller.value.aspectRatio,
-            child: VideoPlayer(controller),
-          ),
-          VideoProgressIndicator(controller, allowScrubbing: true),
-          Positioned(
-            right: 10,
-            bottom: 12,
-            child: FloatingActionButton.small(
-              heroTag: 'intro-video-play-toggle',
-              onPressed: () {
-                if (controller.value.isPlaying) {
-                  controller.pause();
-                } else {
-                  controller.play();
-                }
-                setState(() {});
-              },
-              child: Icon(controller.value.isPlaying ? Icons.pause : Icons.play_arrow),
-            ),
-          ),
         ],
       ),
     );
