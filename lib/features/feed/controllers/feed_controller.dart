@@ -3,14 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../../../models/room_model.dart';
-import '../../../models/user.dart';
+import '../../../models/user.dart' as feed_user;
 import '../../../services/moderation_service.dart';
 
 class FeedState {
   final bool isLoading;
   final String? error;
   final List<RoomModel> liveRooms;
-  final List<User> trendingUsers;
+  final List<feed_user.User> trendingUsers;
 
   const FeedState({
     this.isLoading = false,
@@ -23,7 +23,7 @@ class FeedState {
     bool? isLoading,
     String? error,
     List<RoomModel>? liveRooms,
-    List<User>? trendingUsers,
+    List<feed_user.User>? trendingUsers,
   }) {
     return FeedState(
       isLoading: isLoading ?? this.isLoading,
@@ -70,7 +70,7 @@ class FeedController extends Notifier<FeedState> {
           .limit(10)
           .get();
       final trendingUsers = usersSnap.docs
-          .map((doc) => User.fromJson({'id': doc.id, ...doc.data()}))
+          .map((doc) => feed_user.User.fromJson({'id': doc.id, ...doc.data()}))
           .where((user) => !blockedIds.contains(user.id))
           .toList();
       state = state.copyWith(
