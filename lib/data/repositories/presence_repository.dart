@@ -12,12 +12,40 @@ class PresenceRepositoryImpl implements PresenceRepository {
 
   @override
   Future<List<PresenceModel>> getPresence(String roomId) async {
-    final snapshot = await firestore.collection('rooms').doc(roomId).collection('presence').get();
-    return snapshot.docs.map((doc) => PresenceModel.fromJson(doc.data())).toList();
+    final snapshot = await firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .get();
+    return snapshot.docs
+        .map((doc) => PresenceModel.fromJson({
+              'id': doc.id,
+              ...doc.data(),
+              'isOnline': true,
+              'lastSeen': doc.data()['lastActiveAt'],
+            }))
+        .toList(growable: false);
   }
 
   @override
   Future<void> setPresence(String roomId, PresenceModel presence) async {
-    await firestore.collection('rooms').doc(roomId).collection('presence').doc(presence.userId).set(presence.toJson());
+    final userId = presence.userId;
+    if (userId == null || userId.isEmpty) {
+      return;
+    }
+
+    await firestore
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(userId)
+        .set({
+      'userId': userId,
+      'role': 'audience',
+      'isMuted': false,
+      'isBanned': false,
+      'joinedAt': presence.lastSeen ?? FieldValue.serverTimestamp(),
+      'lastActiveAt': presence.lastSeen ?? FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
   }
 }

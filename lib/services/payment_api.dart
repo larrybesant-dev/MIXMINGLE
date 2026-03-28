@@ -182,15 +182,22 @@ class PaymentApi {
   }
 
   static Stream<List<CoinTransaction>> getTransactions(String userId) {
+    if (userId.trim().isEmpty) {
+      return const Stream<List<CoinTransaction>>.empty();
+    }
+
     return _firestore
         .collection('transactions')
-        .where('senderId', isEqualTo: userId)
-        .orderBy('timestamp', descending: true)
+        .where('participants', arrayContains: userId)
         .snapshots()
         .map(
-          (snapshot) => snapshot.docs
-              .map((doc) => CoinTransaction.fromJson(doc.data()))
-              .toList(),
+          (snapshot) {
+            final transactions = snapshot.docs
+                .map((doc) => CoinTransaction.fromJson(doc.data()))
+                .toList(growable: false)
+              ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+            return transactions;
+          },
         );
   }
 }

@@ -1,24 +1,91 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 
-// Minimal Cohost model for placeholder
-class Cohost {
-	final String id;
-	Cohost(this.id);
+import '../../../models/room_participant_model.dart';
+import 'room_firestore_provider.dart';
+
+class CurrentParticipantParams {
+	final String roomId;
+	final String userId;
+
+	const CurrentParticipantParams({required this.roomId, required this.userId});
+
+	@override
+	bool operator ==(Object other) {
+		return identical(this, other) ||
+				(other is CurrentParticipantParams && other.roomId == roomId && other.userId == userId);
+	}
+
+	@override
+	int get hashCode => Object.hash(roomId, userId);
 }
 
-final coHostsProvider = StreamProvider.autoDispose.family<List<Cohost>, String>((ref, roomId) async* {
-	// TODO: Replace with actual Firestore stream logic for co-hosts
-	yield <Cohost>[];
+class Cohost {
+	final String id;
+
+	const Cohost(this.id);
+}
+
+final coHostsProvider = StreamProvider.autoDispose.family<List<Cohost>, String>((ref, roomId) {
+	final firestore = ref.watch(roomFirestoreProvider);
+	return firestore
+			.collection('rooms')
+			.doc(roomId)
+			.collection('participants')
+			.where('role', isEqualTo: 'cohost')
+			.snapshots()
+			.map(
+				(snapshot) => snapshot.docs
+						.map((doc) => Cohost(doc.id))
+						.toList(growable: false),
+			);
 });
 
-final currentParticipantProvider = Provider.autoDispose.family<dynamic, Map<String, dynamic>>((ref, params) => null);
-final participantsStreamProvider = Provider.autoDispose.family<dynamic, String>((ref, roomId) => null);
+final currentParticipantProvider =
+		StreamProvider.autoDispose.family<RoomParticipantModel?, CurrentParticipantParams>((ref, params) {
+	final firestore = ref.watch(roomFirestoreProvider);
+	return firestore
+			.collection('rooms')
+			.doc(params.roomId)
+			.collection('participants')
+			.doc(params.userId)
+			.snapshots()
+			.map((doc) {
+		if (!doc.exists) {
+			return null;
+		}
+		return RoomParticipantModel.fromMap(doc.data() ?? <String, dynamic>{});
+	});
+});
+
+final participantsStreamProvider =
+		StreamProvider.autoDispose.family<List<RoomParticipantModel>, String>((ref, roomId) {
+	final firestore = ref.watch(roomFirestoreProvider);
+	return firestore
+			.collection('rooms')
+			.doc(roomId)
+			.collection('participants')
+			.orderBy('joinedAt')
+			.snapshots()
+			.map(
+				(snapshot) => snapshot.docs
+						.map((doc) => RoomParticipantModel.fromMap(doc.data()))
+						.toList(growable: false),
+			);
+});
+
 final participantCountProvider = StreamProvider.autoDispose.family<int, String>((ref, roomId) {
-	// Listen to the participants collection and emit the count as a stream
-	final participantsCollection = FirebaseFirestore.instance.collection('rooms').doc(roomId).collection('participants');
+	final firestore = ref.watch(roomFirestoreProvider);
+	final participantsCollection = firestore
+			.collection('rooms')
+			.doc(roomId)
+			.collection('participants');
 	return participantsCollection.snapshots().map((snapshot) => snapshot.size);
 });
-final isHostProvider = Provider.autoDispose.family<bool, dynamic>((ref, participant) => false);
-final isCohostProvider = Provider.autoDispose.family<bool, dynamic>((ref, participant) => false);
+
+final isHostProvider = Provider.autoDispose.family<bool, RoomParticipantModel?>((ref, participant) {
+	return participant?.role == 'host';
+});
+
+final isCohostProvider = Provider.autoDispose.family<bool, RoomParticipantModel?>((ref, participant) {
+	return participant?.role == 'cohost';
+});

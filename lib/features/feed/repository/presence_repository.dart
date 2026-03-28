@@ -9,10 +9,15 @@ class PresenceRepository {
     return _db
       .collection('rooms')
       .doc(roomId)
-      .collection('presence')
+      .collection('participants')
       .snapshots()
       .map((snap) => snap.docs
-        .map((d) => PresenceModel.fromJson(d.data()))
+        .map((d) => PresenceModel.fromJson({
+          'id': d.id,
+          ...d.data(),
+          'isOnline': true,
+          'lastSeen': d.data()['lastActiveAt'],
+        }))
         .toList());
   }
 
@@ -20,19 +25,23 @@ class PresenceRepository {
     await _db
       .collection('rooms')
       .doc(roomId)
-      .collection('presence')
+      .collection('participants')
       .doc(userId)
       .set({
         'userId': userId,
-        'lastActive': FieldValue.serverTimestamp(),
-      });
+        'role': 'audience',
+        'isMuted': false,
+        'isBanned': false,
+        'joinedAt': FieldValue.serverTimestamp(),
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
   }
 
   Future<void> removeUser(String roomId, String userId) async {
     await _db
       .collection('rooms')
       .doc(roomId)
-      .collection('presence')
+      .collection('participants')
       .doc(userId)
       .delete();
   }

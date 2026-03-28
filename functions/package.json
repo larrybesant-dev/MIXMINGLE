@@ -4,6 +4,8 @@
   "scripts": {
     "lint": "eslint .",
     "test": "node --test test/payments.spec.js",
+    "backfill:transactions:participants": "node scripts/backfill-transactions-participants.js",
+    "backfill:transactions:participants:apply": "node scripts/backfill-transactions-participants.js --apply",
     "serve": "firebase emulators:start --only functions",
     "shell": "firebase functions:shell",
     "start": "npm run shell",

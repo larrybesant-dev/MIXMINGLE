@@ -1,37 +1,38 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class NotificationsScreen extends StatelessWidget {
+import '../providers/notification_provider.dart';
+import '../../widgets/mixvy_drawer.dart';
+import '../../core/logger.dart';
+
+class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final userId = ref.watch(currentNotificationUserIdProvider);
+    final notificationsAsync = ref.watch(notificationsStreamProvider);
+    final notificationsEnabled = ref.watch(notificationsEnabledProvider);
+    final service = ref.read(notificationServiceProvider);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Notifications')),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: Colors.purple),
-              child: const Text('MixVy Navigation', style: TextStyle(color: Colors.white, fontSize: 20)),
-            ),
-            ListTile(title: const Text('Home Feed'), onTap: () => context.go('/home')),
-            ListTile(title: const Text('Chats'), onTap: () => context.go('/chats')),
-            ListTile(title: const Text('Friends'), onTap: () => context.go('/friends')),
-            ListTile(title: const Text('Profile'), onTap: () => context.go('/profile/${'userId'}')),
-            ListTile(title: const Text('Payments'), onTap: () => context.go('/payments-demo')),
-            ListTile(title: const Text('Notifications'), onTap: () => context.go('/notifications')),
-            ListTile(title: const Text('Live Room'), onTap: () => context.go('/live/${'roomId'}')),
-            ListTile(title: const Text('Settings'), onTap: () => context.go('/settings')),
-            ListTile(title: const Text('Moderation'), onTap: () => context.go('/moderation')),
-            ListTile(title: const Text('Search'), onTap: () => context.go('/search')),
-            ListTile(title: const Text('Invite Friends'), onTap: () => context.go('/invite')),
-          ],
-        ),
-      ),
+      drawer: const MixVyDrawer(),
       body: Column(
         children: [
+          if (userId == null)
+            const Expanded(
+              child: Center(child: Text('Please log in to view notifications.')),
+            )
+          else ...[
+          if (!notificationsEnabled)
+            Container(
+              width: double.infinity,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              padding: const EdgeInsets.all(12),
+              child: const Text('Push notifications are disabled in Settings.'),
+            ),
           Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
@@ -40,40 +41,60 @@ class NotificationsScreen extends StatelessWidget {
                 ElevatedButton.icon(
                   icon: const Icon(Icons.notifications_active),
                   label: const Text('Mark All Read'),
-                  onPressed: () {},
+                  onPressed: () => service.markAllRead(userId),
                 ),
                 ElevatedButton.icon(
                   icon: const Icon(Icons.settings),
                   label: const Text('Notification Settings'),
-                  onPressed: () {},
+                  onPressed: () => context.go('/settings'),
                 ),
               ],
             ),
           ),
           Expanded(
-            child: StreamBuilder(
-              stream: FirebaseFirestore.instance.collection('notifications').snapshots(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-                final docs = (snapshot.data as QuerySnapshot).docs;
+            child: notificationsAsync.when(
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (error, _) => Center(child: Text('Could not load notifications: $error')),
+              data: (notifications) {
+                if (notifications.isEmpty) {
+                  return const Center(child: Text('No notifications yet.'));
+                }
+
                 return ListView.builder(
-                  itemCount: docs.length,
-                  itemBuilder: (context, index) => Card(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: ListTile(
-                      leading: Icon(Icons.notifications, color: Colors.purple),
-                      title: Text(docs[index]['title'] ?? 'Notification'),
-                      subtitle: Text(docs[index]['body'] ?? ''),
-                      trailing: IconButton(icon: const Icon(Icons.check), onPressed: () {}),
-                    ),
-                  ),
+                  itemCount: notifications.length,
+                  itemBuilder: (context, index) {
+                    final notification = notifications[index];
+                    return Card(
+                      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      child: ListTile(
+                        leading: Icon(
+                          notification.isRead ? Icons.notifications_none : Icons.notifications_active,
+                          color: notification.isRead ? Colors.grey : Theme.of(context).colorScheme.primary,
+                        ),
+                        title: Text(notification.type.replaceAll('_', ' ')),
+                        subtitle: Text(notification.content),
+                        trailing: IconButton(
+                          icon: Icon(notification.isRead ? Icons.done_all : Icons.check),
+                          onPressed: notification.isRead
+                              ? null
+                              : () async {
+                                  try {
+                                    await service.markRead(userId, notification.id);
+                                  } catch (error) {
+                                    Logger.log('Failed to mark notification read: $error');
+                                  }
+                                },
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
           ),
         ],
+        ],
       ),
-    // ...existing code...
     );
   }
 }

@@ -8,6 +8,8 @@ const {
   recordStripePaymentSuccessHandler,
   sendCoinTransferHandler,
   requestCoinTransferHandler,
+  createCheckoutSessionHandler,
+  getCheckoutBaseUrl,
 } = paymentFunctions.__testing;
 
 function makeRequest(data, authUid = "user-1") {
@@ -99,6 +101,26 @@ function createFirestoreDouble(initialUsers = {}) {
   return firestore;
 }
 
+function createResponseDouble() {
+  return {
+    statusCode: 200,
+    jsonBody: null,
+    textBody: null,
+    status(code) {
+      this.statusCode = code;
+      return this;
+    },
+    json(body) {
+      this.jsonBody = body;
+      return this;
+    },
+    send(body) {
+      this.textBody = body;
+      return this;
+    },
+  };
+}
+
 describe("payment callable handlers", () => {
   it("createPaymentIntentHandler rejects unauthenticated calls", async () => {
     await assert.rejects(
@@ -141,6 +163,7 @@ describe("payment callable handlers", () => {
     const recorded = firestore.__state.transactions.get(response.transactionId);
     assert.equal(recorded.senderId, "user-1");
     assert.equal(recorded.receiverId, "user-2");
+    assert.deepEqual(recorded.participants, ["user-1", "user-2"]);
     assert.equal(recorded.amount, 7);
     assert.equal(recorded.status, "completed");
   });
@@ -177,6 +200,10 @@ describe("payment callable handlers", () => {
         firestore.__state.transactions.get(response.transactionId).status,
         "sent",
     );
+    assert.deepEqual(
+      firestore.__state.transactions.get(response.transactionId).participants,
+      ["user-1", "user-2"],
+    );
   });
 
   it("requestCoinTransferHandler rejects self-targeted requests", async () => {
@@ -202,6 +229,67 @@ describe("payment callable handlers", () => {
     const recorded = firestore.__state.transactions.get(response.transactionId);
     assert.equal(recorded.senderId, "user-1");
     assert.equal(recorded.receiverId, "user-3");
+    assert.deepEqual(recorded.participants, ["user-1", "user-3"]);
     assert.equal(recorded.status, "requested");
+  });
+
+  it("getCheckoutBaseUrl prefers CHECKOUT_BASE_URL and trims trailing slash", () => {
+    const previousCheckoutBaseUrl = process.env.CHECKOUT_BASE_URL;
+    const previousPublicAppUrl = process.env.PUBLIC_APP_URL;
+
+    process.env.CHECKOUT_BASE_URL = "https://beta.mixvy.app/";
+    process.env.PUBLIC_APP_URL = "https://fallback.mixvy.app";
+
+    assert.equal(getCheckoutBaseUrl(), "https://beta.mixvy.app");
+
+    if (previousCheckoutBaseUrl === undefined) {
+      delete process.env.CHECKOUT_BASE_URL;
+    } else {
+      process.env.CHECKOUT_BASE_URL = previousCheckoutBaseUrl;
+    }
+    if (previousPublicAppUrl === undefined) {
+      delete process.env.PUBLIC_APP_URL;
+    } else {
+      process.env.PUBLIC_APP_URL = previousPublicAppUrl;
+    }
+  });
+
+  it("createCheckoutSessionHandler uses resolved success/cancel URLs", async () => {
+    const previousCheckoutBaseUrl = process.env.CHECKOUT_BASE_URL;
+    const previousPublicAppUrl = process.env.PUBLIC_APP_URL;
+    process.env.CHECKOUT_BASE_URL = "https://beta.mixvy.app";
+    delete process.env.PUBLIC_APP_URL;
+
+    let capturedPayload;
+    const stripeClient = {
+      checkout: {
+        sessions: {
+          create: async (payload) => {
+            capturedPayload = payload;
+            return {url: "https://checkout.stripe.test/session_123"};
+          },
+        },
+      },
+    };
+
+    const req = {body: {userId: "user-9"}};
+    const res = createResponseDouble();
+
+    await createCheckoutSessionHandler(req, res, {stripeClient});
+
+    assert.equal(capturedPayload.success_url, "https://beta.mixvy.app/success");
+    assert.equal(capturedPayload.cancel_url, "https://beta.mixvy.app/cancel");
+    assert.deepEqual(res.jsonBody, {url: "https://checkout.stripe.test/session_123"});
+
+    if (previousCheckoutBaseUrl === undefined) {
+      delete process.env.CHECKOUT_BASE_URL;
+    } else {
+      process.env.CHECKOUT_BASE_URL = previousCheckoutBaseUrl;
+    }
+    if (previousPublicAppUrl === undefined) {
+      delete process.env.PUBLIC_APP_URL;
+    } else {
+      process.env.PUBLIC_APP_URL = previousPublicAppUrl;
+    }
   });
 });

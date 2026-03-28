@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class MixVyDrawer extends ConsumerWidget {
+class MixVyDrawer extends StatelessWidget {
   final String? userId;
-  const MixVyDrawer({super.key, required this.userId});
+  const MixVyDrawer({super.key, this.userId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -16,18 +15,13 @@ class MixVyDrawer extends ConsumerWidget {
             decoration: BoxDecoration(color: Colors.purple),
             child: const Text('MixVy Navigation', style: TextStyle(color: Colors.white, fontSize: 20)),
           ),
-          ListTile(title: const Text('Home Feed'), onTap: () => context.go('/home')),
-          ListTile(title: const Text('Chats'), onTap: () => context.go('/chats')),
+          ListTile(title: const Text('Home'), onTap: () => context.go('/')),
+          ListTile(title: const Text('Discover'), onTap: () => context.go('/discover')),
           ListTile(title: const Text('Friends'), onTap: () => context.go('/friends')),
-          if (userId != null)
-            ListTile(title: const Text('Profile'), onTap: () => context.go('/profile/$userId')),
+          ListTile(title: const Text('Profile'), onTap: () => context.go('/profile')),
           ListTile(title: const Text('Payments'), onTap: () => context.go('/payments')),
           ListTile(title: const Text('Notifications'), onTap: () => context.go('/notifications')),
-          ListTile(title: const Text('Live Room'), onTap: () => context.go('/live')),
           ListTile(title: const Text('Settings'), onTap: () => context.go('/settings')),
-          ListTile(title: const Text('Moderation'), onTap: () => context.go('/moderation')),
-          ListTile(title: const Text('Search'), onTap: () => context.go('/search')),
-          ListTile(title: const Text('Invite Friends'), onTap: () => context.go('/invite')),
         ],
       ),
     );

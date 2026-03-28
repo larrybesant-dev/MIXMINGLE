@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:go_router/go_router.dart';
 
 import '../providers/user_provider.dart';
+import '../../features/room/providers/room_firestore_provider.dart';
 import '../../features/room/providers/participant_providers.dart';
 import '../../features/room/providers/message_providers.dart';
 import '../../features/room/widgets/message_bubble.dart';
 import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/room/providers/host_provider.dart';
+import '../../services/analytics_service.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -20,66 +23,123 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
 class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   late TextEditingController messageController;
   late ScrollController scrollController;
+  FirebaseFirestore? _firestore;
+  String? _joinedUserId;
   DateTime? lastMessageTime;
   int slowModeSeconds = 0;
   bool isSending = false;
   String cooldownMessage = '';
+  bool _isJoiningRoom = false;
+  String? _roomJoinError;
+  bool _hasTrackedRoomJoin = false;
+  bool _hasTrackedFirstMessage = false;
 
   @override
   void initState() {
     super.initState();
     messageController = TextEditingController();
     scrollController = ScrollController();
-    _joinRoom();
+
+    final user = ref.read(userProvider);
+    if (user != null) {
+      _firestore = ref.read(roomFirestoreProvider);
+      _joinedUserId = user.id;
+      _joinRoom(user.id);
+    }
   }
 
-  Future<void> _joinRoom() async {
-    final user = ref.read(userProvider);
-    if (user == null) return;
-    final now = DateTime.now();
-    final roomDoc = await FirebaseFirestore.instance.collection('rooms').doc(widget.roomId).get();
-    final isLocked = (roomDoc.data()?['isLocked'] ?? false) as bool;
-    if (isLocked) {
-      // Room is locked, do not join
-      if (mounted) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          Navigator.of(context).pop();
-        });
-      }
-      return;
-    }
-    final docRef = FirebaseFirestore.instance.collection('rooms').doc(widget.roomId).collection('participants').doc(user.id);
-    final doc = await docRef.get();
-    if (doc.exists) {
-      final data = doc.data() as Map<String, dynamic>;
-      if (data['isBanned'] == true) {
-        if (mounted) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            Navigator.of(context).pop();
-          });
-        }
+  void _exitRoom() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
         return;
       }
-      await docRef.update({
-        'lastActiveAt': now,
-      });
-    } else {
-      await docRef.set({
-        'userId': user.id,
-        'role': 'audience',
-        'isMuted': false,
-        'isBanned': false,
-        'joinedAt': now,
-        'lastActiveAt': now,
-      });
+
+      if (Navigator.of(context).canPop()) {
+        context.pop();
+      } else {
+        context.go('/');
+      }
+    });
+  }
+
+  Future<void> _joinRoom(String userId) async {
+    final firestore = _firestore;
+    if (firestore == null || _isJoiningRoom) return;
+
+    setState(() {
+      _isJoiningRoom = true;
+      _roomJoinError = null;
+    });
+
+    try {
+      _joinedUserId = userId;
+      final now = DateTime.now();
+      final roomDoc = await firestore.collection('rooms').doc(widget.roomId).get();
+      if (!roomDoc.exists) {
+        setState(() => _roomJoinError = 'This room no longer exists.');
+        _exitRoom();
+        return;
+      }
+
+      final isLocked = (roomDoc.data()?['isLocked'] ?? false) as bool;
+      if (isLocked) {
+        setState(() => _roomJoinError = 'Room is locked by host.');
+        _exitRoom();
+        return;
+      }
+
+      final docRef = firestore.collection('rooms').doc(widget.roomId).collection('participants').doc(userId);
+      final doc = await docRef.get();
+      if (doc.exists) {
+        final data = doc.data() as Map<String, dynamic>;
+        if (data['isBanned'] == true) {
+          setState(() => _roomJoinError = 'You are banned from this room.');
+          _exitRoom();
+          return;
+        }
+        await docRef.update({
+          'lastActiveAt': now,
+        });
+      } else {
+        await docRef.set({
+          'userId': userId,
+          'role': 'audience',
+          'isMuted': false,
+          'isBanned': false,
+          'joinedAt': now,
+          'lastActiveAt': now,
+        });
+      }
+
+      if (!_hasTrackedRoomJoin) {
+        _hasTrackedRoomJoin = true;
+        await AnalyticsService().logEvent('room_joined', params: {
+          'room_id': widget.roomId,
+          'user_id': userId,
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _roomJoinError = 'Could not join room. Please try again.');
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isJoiningRoom = false);
+      }
     }
   }
 
   Future<void> _leaveRoom() async {
-    final user = ref.read(userProvider);
-    if (user == null) return;
-    final docRef = FirebaseFirestore.instance.collection('rooms').doc(widget.roomId).collection('participants').doc(user.id);
-    await docRef.delete();
+    final userId = _joinedUserId;
+    final firestore = _firestore;
+    if (userId == null || firestore == null) return;
+
+    final docRef = firestore.collection('rooms').doc(widget.roomId).collection('participants').doc(userId);
+    try {
+      await docRef.delete();
+    } catch (_) {
+      // Best-effort cleanup when users leave a room.
+    }
   }
 
   @override
@@ -96,7 +156,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     if (user == null) {
       return const Scaffold(body: Center(child: Text('Please log in.')));
     }
-    final currentParticipantAsync = ref.watch(currentParticipantProvider({'roomId': widget.roomId, 'userId': user.id}));
+    if (_joinedUserId != user.id && !_isJoiningRoom) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _firestore = ref.read(roomFirestoreProvider);
+          _joinRoom(user.id);
+        }
+      });
+    }
+    final currentParticipantAsync = ref.watch(
+      currentParticipantProvider(CurrentParticipantParams(roomId: widget.roomId, userId: user.id)),
+    );
     final participantsAsync = ref.watch(participantsStreamProvider(widget.roomId));
     final messageStreamAsync = ref.watch(messageStreamProvider(widget.roomId));
     final participantCountAsync = ref.watch(participantCountProvider(widget.roomId));
@@ -109,18 +179,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         final isHost = ref.watch(isHostProvider(participant));
         final isCohost = ref.watch(isCohostProvider(participant));
         final role = participant?.role ?? 'audience';
+        final firestore = ref.watch(roomFirestoreProvider);
         return StreamBuilder<DocumentSnapshot>(
-          stream: FirebaseFirestore.instance.collection('rooms').doc(widget.roomId).snapshots(),
+          stream: firestore.collection('rooms').doc(widget.roomId).snapshots(),
           builder: (context, roomSnap) {
-            if (!roomSnap.hasData) {
-              return const Scaffold(body: Center(child: CircularProgressIndicator()));
-            }
-            final roomData = roomSnap.data!.data() as Map<String, dynamic>?;
+            final roomData = roomSnap.data?.data() as Map<String, dynamic>?;
             slowModeSeconds = roomData?['slowModeSeconds'] ?? 0;
             final isLocked = roomData?['isLocked'] ?? false;
             // Ban enforcement
             if (participant?.isBanned == true) {
               return const Scaffold(body: Center(child: Text('You are banned from this room.')));
+            }
+            if (_roomJoinError != null && _joinedUserId == null) {
+              return Scaffold(body: Center(child: Text(_roomJoinError!)));
             }
             final sendMessage = ref.read(sendMessageProvider(widget.roomId));
             if (isLocked && !isHost && !isCohost) {
@@ -266,7 +337,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             final msg = messages[i];
                             return MessageBubble(
                               message: msg,
-                              isMe: msg.userId == user.id,
+                              isMe: msg.senderId == user.id,
                             );
                           },
                         );
@@ -306,10 +377,31 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               ? null
                               : () async {
                                   if (messageController.text.trim().isEmpty) return;
+                                  if (slowModeSeconds > 0 && lastMessageTime != null) {
+                                    final secondsSinceLastMessage = DateTime.now().difference(lastMessageTime!).inSeconds;
+                                    if (secondsSinceLastMessage < slowModeSeconds) {
+                                      setState(() {
+                                        cooldownMessage =
+                                            'Slow mode is on. Wait ${slowModeSeconds - secondsSinceLastMessage}s.';
+                                      });
+                                      return;
+                                    }
+                                  }
+
                                   setState(() => isSending = true);
                                   try {
                                     await sendMessage(messageController.text.trim());
+                                    lastMessageTime = DateTime.now();
+                                    cooldownMessage = '';
                                     messageController.clear();
+
+                                    if (!_hasTrackedFirstMessage) {
+                                      _hasTrackedFirstMessage = true;
+                                      await AnalyticsService().logEvent('first_message_sent', params: {
+                                        'room_id': widget.roomId,
+                                        'user_id': user.id,
+                                      });
+                                    }
                                   } catch (e) {
                                     if (context.mounted) {
                                       ScaffoldMessenger.of(context).showSnackBar(
@@ -334,7 +426,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               floatingActionButton: FloatingActionButton.extended(
                 onPressed: () async {
                   await _leaveRoom();
-                  if (context.mounted) Navigator.of(context).pop();
+                  if (context.mounted) context.pop();
                 },
                 icon: const Icon(Icons.exit_to_app),
                 label: const Text('Leave Room'),

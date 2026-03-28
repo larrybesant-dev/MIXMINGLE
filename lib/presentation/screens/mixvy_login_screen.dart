@@ -203,6 +203,13 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
                     label: const Text('Continue with Google'),
                   ),
                 ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: authState.isLoading
+                      ? null
+                      : () => context.go('/register'),
+                  child: const Text("Don't have an account? Sign up"),
+                ),
               ],
             ),
           ),

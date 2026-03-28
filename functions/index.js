@@ -7,6 +7,42 @@ admin.initializeApp();
 const stripe = new Stripe(process.env.STRIPE_SECRET || "sk_test_dummy");
 const db = admin.firestore();
 
+function getCheckoutBaseUrl() {
+    const baseUrl = process.env.CHECKOUT_BASE_URL || process.env.PUBLIC_APP_URL || "http://localhost:3000";
+    return baseUrl.endsWith("/") ? baseUrl.slice(0, -1) : baseUrl;
+}
+
+async function createCheckoutSessionHandler(req, res, deps = {}) {
+    const stripeClient = deps.stripeClient || stripe;
+
+    try {
+        const checkoutBaseUrl = getCheckoutBaseUrl();
+        const {userId} = req.body;
+        if (!userId) return res.status(400).json({error: "Missing userId"});
+        const session = await stripeClient.checkout.sessions.create({
+            payment_method_types: ["card"],
+            mode: "payment",
+            line_items: [
+                {
+                    price_data: {
+                        currency: "usd",
+                        product_data: {name: "MixVy Coins"},
+                        unit_amount: 500,
+                    },
+                    quantity: 1,
+                },
+            ],
+            metadata: {userId},
+            success_url: `${checkoutBaseUrl}/success`,
+            cancel_url: `${checkoutBaseUrl}/cancel`,
+        });
+        return res.json({url: session.url});
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send(error.message);
+    }
+}
+
 async function ensureUserExists(uid, firestore = db, defaultBalance = 100) {
     const userRef = firestore.collection("users").doc(uid);
     const userSnap = await userRef.get();
@@ -83,6 +119,7 @@ async function recordStripePaymentSuccessHandler(request, deps = {}) {
         id: transactionRef.id,
         senderId,
         receiverId: recipientId,
+        participants: [senderId, recipientId],
         amount,
         timestamp: new Date().toISOString(),
         status: "completed",
@@ -133,6 +170,7 @@ async function sendCoinTransferHandler(request, deps = {}) {
             id: transactionRef.id,
             senderId,
             receiverId,
+            participants: [senderId, receiverId],
             amount,
             timestamp: new Date().toISOString(),
             status: "sent",
@@ -165,6 +203,7 @@ async function requestCoinTransferHandler(request, deps = {}) {
         id: transactionRef.id,
         senderId: requesterId,
         receiverId: targetId,
+        participants: [requesterId, targetId],
         amount,
         timestamp: new Date().toISOString(),
         status: "requested",
@@ -177,33 +216,7 @@ async function requestCoinTransferHandler(request, deps = {}) {
 exports.requestCoinTransfer = onCall(async (request) => requestCoinTransferHandler(request));
 
 // Create Stripe Checkout Session
-exports.createCheckoutSession = onRequest(async (req, res) => {
-    try {
-        const {userId} = req.body;
-        if (!userId) return res.status(400).json({error: "Missing userId"});
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ["card"],
-            mode: "payment",
-            line_items: [
-                {
-                    price_data: {
-                        currency: "usd",
-                        product_data: {name: "MixVy Coins"},
-                        unit_amount: 500,
-                    },
-                    quantity: 1,
-                },
-            ],
-            metadata: {userId},
-            success_url: "https://your-site.com/success",
-            cancel_url: "https://your-site.com/cancel",
-        });
-        res.json({url: session.url});
-    } catch (error) {
-        console.error(error);
-        res.status(500).send(error.message);
-    }
-});
+exports.createCheckoutSession = onRequest(async (req, res) => createCheckoutSessionHandler(req, res));
 
 // Stripe Webhook
 exports.stripeWebhook = onRequestV1(async (req, res) => {
@@ -244,6 +257,8 @@ exports.__testing = {
     recordStripePaymentSuccessHandler,
     sendCoinTransferHandler,
     requestCoinTransferHandler,
+    createCheckoutSessionHandler,
+    getCheckoutBaseUrl,
     requireAuth,
     parsePositiveAmount,
     ensureUserExists,

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -51,8 +52,11 @@ class AuthController extends Notifier<AuthState> {
       }
     }
   final FirebaseAuth _auth;
+  final FirebaseFirestore? _firestore;
 
-  AuthController({FirebaseAuth? auth}) : _auth = auth ?? FirebaseAuth.instance;
+  AuthController({FirebaseAuth? auth, FirebaseFirestore? firestore})
+      : _auth = auth ?? FirebaseAuth.instance,
+        _firestore = firestore;
 
   @override
   AuthState build() {
@@ -75,6 +79,7 @@ class AuthController extends Notifier<AuthState> {
       await _googleSignInHelper.completePendingRedirectSignIn();
       final uid = _auth.currentUser?.uid;
       if (uid != null) {
+        await _ensureUserDocument(_auth.currentUser!);
         state = state.copyWith(uid: uid, error: null);
       }
     } on FirebaseAuthException catch (e, st) {
@@ -92,6 +97,9 @@ class AuthController extends Notifier<AuthState> {
         email: email,
         password: password,
       );
+      if (cred.user != null) {
+        await _ensureUserDocument(cred.user!);
+      }
       state = state.copyWith(isLoading: false, uid: cred.user?.uid);
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'signup');
@@ -111,6 +119,9 @@ class AuthController extends Notifier<AuthState> {
         email: normalizedEmail,
         password: password.trim(),
       );
+      if (cred.user != null) {
+        await _ensureUserDocument(cred.user!);
+      }
       state = state.copyWith(isLoading: false, uid: cred.user?.uid);
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'login');
@@ -154,6 +165,39 @@ class AuthController extends Notifier<AuthState> {
   Future<void> logout() async {
     await _auth.signOut();
     state = state.copyWith(uid: null);
+  }
+
+  Future<void> _ensureUserDocument(User user) async {
+    final firestore = _firestore ?? _tryResolveFirestore();
+    if (firestore == null) {
+      return;
+    }
+
+    try {
+      await firestore.collection('users').doc(user.uid).set({
+        'id': user.uid,
+        'username': user.displayName ?? '',
+        'email': user.email ?? '',
+        'avatarUrl': user.photoURL,
+        'updatedAt': FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } catch (e, st) {
+      developer.log(
+        'Failed to ensure user document for ${user.uid}',
+        name: 'AuthController',
+        error: e,
+        stackTrace: st,
+      );
+    }
+  }
+
+  FirebaseFirestore? _tryResolveFirestore() {
+    try {
+      return FirebaseFirestore.instance;
+    } catch (_) {
+      return null;
+    }
   }
 
   Future<void> resetPassword(String email) async {

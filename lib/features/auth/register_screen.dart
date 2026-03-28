@@ -43,8 +43,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _localError = authState.error;
     });
     if (authState.error == null && authState.uid != null) {
-      // Use GoRouter for navigation
-      context.go('/login');
+      context.go('/profile');
     }
   }
 
@@ -126,7 +125,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   child: TextButton(
                     onPressed: isLoading
                         ? null
-                        : () => Navigator.of(context).pushNamed('/login'),
+                        : () => context.go('/login'),
                     child: Text(
                       'Already have an account? Login',
                       style: TextStyle(

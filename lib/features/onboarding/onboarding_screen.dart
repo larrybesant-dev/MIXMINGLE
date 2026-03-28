@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixvy/core/services/first_run_service.dart';
+import 'package:mixvy/services/analytics_service.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -51,9 +52,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             child: ElevatedButton(
               onPressed: () async {
                 if (_index == pages.length - 1) {
+                  final router = GoRouter.of(context);
                   await FirstRunService.markOnboardingSeen();
+                  await AnalyticsService().logEvent('onboarding_complete');
                   if (!mounted) return;
-                  context.go('/');
+                  router.go('/');
                 } else {
                   _controller.nextPage(
                     duration: const Duration(milliseconds: 300),

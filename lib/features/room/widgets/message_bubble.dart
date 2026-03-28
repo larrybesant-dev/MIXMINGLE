@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
+import '../../../models/message_model.dart';
+
 class MessageBubble extends StatelessWidget {
-  final dynamic message;
+  final MessageModel message;
   final bool isMe;
 
-  const MessageBubble({Key? key, required this.message, required this.isMe}) : super(key: key);
+  const MessageBubble({super.key, required this.message, required this.isMe});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +20,7 @@ class MessageBubble extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
         ),
         child: Text(
-          message.toString(),
+          message.content,
           style: const TextStyle(
             color: Colors.black87,
           ),

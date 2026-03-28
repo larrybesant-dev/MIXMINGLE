@@ -1,0 +1,62 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../models/user_model.dart';
+
+abstract class PaymentRecipientRepository {
+  Future<List<UserModel>> searchRecipients(
+    String query, {
+    String? currentUserId,
+  });
+}
+
+class FirestorePaymentRecipientRepository implements PaymentRecipientRepository {
+  FirestorePaymentRecipientRepository({FirebaseFirestore? firestore})
+      : _firestore = firestore ?? FirebaseFirestore.instance;
+
+  final FirebaseFirestore _firestore;
+
+  @override
+  Future<List<UserModel>> searchRecipients(
+    String query, {
+    String? currentUserId,
+  }) async {
+    final snapshot = await _firestore
+        .collection('users')
+        .orderBy('coinBalance', descending: true)
+        .limit(25)
+        .get();
+
+    final normalizedQuery = query.trim().toLowerCase();
+
+    return snapshot.docs
+        .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
+        .where((user) => user.id != currentUserId)
+        .where((user) {
+          if (normalizedQuery.isEmpty) {
+            return true;
+          }
+
+          final username = user.username.toLowerCase();
+          final email = user.email.toLowerCase();
+          return username.contains(normalizedQuery) || email.contains(normalizedQuery);
+        })
+        .toList(growable: false);
+  }
+}
+
+final paymentRecipientRepositoryProvider = Provider<PaymentRecipientRepository>(
+  (ref) => FirestorePaymentRecipientRepository(),
+);
+
+final currentPaymentUserIdProvider = Provider<String?>((ref) {
+  return FirebaseAuth.instance.currentUser?.uid;
+});
+
+final paymentRecipientSearchProvider =
+    FutureProvider.family<List<UserModel>, String>((ref, query) {
+  final repository = ref.read(paymentRecipientRepositoryProvider);
+  final currentUserId = ref.read(currentPaymentUserIdProvider);
+  return repository.searchRecipients(query, currentUserId: currentUserId);
+});

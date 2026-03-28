@@ -1,66 +1,139 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+import '../../services/payment_api.dart';
+
+abstract class PaymentGateway {
+  User? get currentUser;
+
+  Future<void> sendPayment(String receiverId, double amount);
+
+  Future<void> requestPayment(String requesterId, String targetId, double amount);
+}
+
+class PaymentApiGateway implements PaymentGateway {
+  @override
+  User? get currentUser => FirebaseAuth.instance.currentUser;
+
+  @override
+  Future<void> sendPayment(String receiverId, double amount) {
+    return PaymentApi.sendPayment(receiverId, amount);
+  }
+
+  @override
+  Future<void> requestPayment(String requesterId, String targetId, double amount) {
+    return PaymentApi.requestPayment(requesterId, targetId, amount);
+  }
+}
 
 class PaymentState {
   final bool isLoading;
   final String? error;
   final double? amount;
-  final String? paymentId;
+  final String? successMessage;
   final bool isConfirmed;
+
+  static const Object _unset = Object();
 
   const PaymentState({
     this.isLoading = false,
     this.error,
     this.amount,
-    this.paymentId,
+    this.successMessage,
     this.isConfirmed = false,
   });
 
   PaymentState copyWith({
     bool? isLoading,
-    String? error,
+    Object? error = _unset,
     double? amount,
-    String? paymentId,
+    Object? successMessage = _unset,
     bool? isConfirmed,
   }) {
     return PaymentState(
       isLoading: isLoading ?? this.isLoading,
-      error: error ?? this.error,
+      error: identical(error, _unset) ? this.error : error as String?,
       amount: amount ?? this.amount,
-      paymentId: paymentId ?? this.paymentId,
+      successMessage: identical(successMessage, _unset)
+          ? this.successMessage
+          : successMessage as String?,
       isConfirmed: isConfirmed ?? this.isConfirmed,
     );
   }
 }
 
-final paymentsControllerProvider = NotifierProvider<PaymentController, PaymentState>(
-  () => PaymentController(),
-);
-
 class PaymentController extends Notifier<PaymentState> {
+  PaymentController({PaymentGateway? gateway})
+      : _gateway = gateway ?? PaymentApiGateway();
+
+  final PaymentGateway _gateway;
+
   @override
   PaymentState build() => const PaymentState();
 
-  Future<void> initiatePayment(double amount) async {
-    state = state.copyWith(isLoading: true, error: null, amount: amount);
+  Future<void> sendCoins({
+    required String receiverId,
+    required double amount,
+  }) async {
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      successMessage: null,
+      amount: amount,
+      isConfirmed: false,
+    );
+
     try {
-      // Replace with real payment logic
+      await _gateway.sendPayment(receiverId, amount);
       state = state.copyWith(
         isLoading: false,
-        paymentId: 'mockId',
-        isConfirmed: false,
+        error: null,
+        successMessage: 'Payment sent successfully.',
+        isConfirmed: true,
       );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+        successMessage: null,
+        isConfirmed: false,
+      );
     }
   }
 
-  Future<void> confirmPayment(String paymentId) async {
-    state = state.copyWith(isLoading: true, error: null, paymentId: paymentId);
+  Future<void> requestCoins({
+    required String targetId,
+    required double amount,
+  }) async {
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+      successMessage: null,
+      amount: amount,
+      isConfirmed: false,
+    );
+
+    final user = _gateway.currentUser;
+    if (user == null) {
+      state = state.copyWith(isLoading: false, error: 'User not logged in');
+      return;
+    }
+
     try {
-      // Replace with real payment logic
-      state = state.copyWith(isLoading: false, isConfirmed: true);
+      await _gateway.requestPayment(user.uid, targetId, amount);
+      state = state.copyWith(
+        isLoading: false,
+        error: null,
+        successMessage: 'Payment request sent successfully.',
+        isConfirmed: true,
+      );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+        successMessage: null,
+        isConfirmed: false,
+      );
     }
   }
 }

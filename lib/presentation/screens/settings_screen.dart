@@ -1,69 +1,85 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class SettingsScreen extends StatelessWidget {
+import '../providers/app_settings_provider.dart';
+import '../../widgets/mixvy_drawer.dart';
+
+class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final settingsAsync = ref.watch(appSettingsControllerProvider);
+    final controller = ref.read(appSettingsControllerProvider.notifier);
+
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+      drawer: const MixVyDrawer(),
+      body: settingsAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, _) => Center(child: Text('Could not load settings: $error')),
+        data: (settings) => ListView(
+          padding: const EdgeInsets.all(16),
           children: [
-            DrawerHeader(
-              decoration: BoxDecoration(color: Colors.purple),
-              child: const Text('MixVy Navigation', style: TextStyle(color: Colors.white, fontSize: 20)),
-            ),
-            ListTile(title: const Text('Home Feed'), onTap: () => context.go('/home')),
-            ListTile(title: const Text('Chats'), onTap: () => context.go('/chats')),
-            ListTile(title: const Text('Friends'), onTap: () => context.go('/friends')),
-            ListTile(title: const Text('Profile'), onTap: () => context.go('/profile/${'userId'}')),
-            ListTile(title: const Text('Payments'), onTap: () => context.go('/payments-demo')),
-            ListTile(title: const Text('Notifications'), onTap: () => context.go('/notifications')),
-            ListTile(title: const Text('Live Room'), onTap: () => context.go('/live/${'roomId'}')),
-            ListTile(title: const Text('Settings'), onTap: () => context.go('/settings')),
-            ListTile(title: const Text('Moderation'), onTap: () => context.go('/moderation')),
-            ListTile(title: const Text('Search'), onTap: () => context.go('/search')),
-            ListTile(title: const Text('Invite Friends'), onTap: () => context.go('/invite')),
-          ],
-        ),
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.settings),
-                  label: const Text('Account Settings'),
-                  onPressed: () {},
-                ),
-                ElevatedButton.icon(
-                  icon: const Icon(Icons.security),
-                  label: const Text('Privacy'),
-                  onPressed: () {},
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: 3,
-              itemBuilder: (context, index) => Card(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: ListTile(
-                  leading: Icon(Icons.settings, color: Colors.grey),
-                  title: Text('Setting Option $index'),
-                  subtitle: Text('Settings option placeholder.'),
-                  trailing: IconButton(icon: const Icon(Icons.arrow_forward), onPressed: () {}),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Appearance', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 12),
+                    SegmentedButton<ThemeMode>(
+                      segments: const [
+                        ButtonSegment(value: ThemeMode.system, icon: Icon(Icons.brightness_auto), label: Text('System')),
+                        ButtonSegment(value: ThemeMode.light, icon: Icon(Icons.light_mode), label: Text('Light')),
+                        ButtonSegment(value: ThemeMode.dark, icon: Icon(Icons.dark_mode), label: Text('Dark')),
+                      ],
+                      selected: <ThemeMode>{settings.themeMode},
+                      onSelectionChanged: (selection) {
+                        controller.updateThemeMode(selection.first);
+                      },
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Card(
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    value: settings.notificationsEnabled,
+                    secondary: const Icon(Icons.notifications_active_outlined),
+                    title: const Text('Push notifications'),
+                    subtitle: const Text('Control alerts for room activity and payments.'),
+                    onChanged: controller.setNotificationsEnabled,
+                  ),
+                  const Divider(height: 1),
+                  SwitchListTile(
+                    value: settings.analyticsEnabled,
+                    secondary: const Icon(Icons.analytics_outlined),
+                    title: const Text('Anonymous analytics'),
+                    subtitle: const Text('Help improve MixVy with usage insights.'),
+                    onChanged: controller.setAnalyticsEnabled,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.shield_outlined),
+                title: const Text('Privacy summary'),
+                subtitle: Text(
+                  settings.analyticsEnabled
+                      ? 'Analytics sharing is enabled. You can disable it at any time.'
+                      : 'Analytics sharing is disabled.',
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

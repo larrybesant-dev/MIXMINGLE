@@ -3,7 +3,10 @@ import '../../shared/widgets/top_app_bar.dart';
 import '../../shared/widgets/bottom_nav_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../feed/providers/feed_providers.dart';
+import '../feed/screens/discovery_feed_screen.dart';
 import '../feed/models/post_model.dart';
+import '../profile/profile_screen.dart';
+import '../../widgets/mixvy_drawer.dart';
 
 import '../../models/room_model.dart';
 import '../feed/models/event_model.dart';
@@ -21,8 +24,11 @@ import '../feed/models/event_model.dart';
 
     @override
     Widget build(BuildContext context) {
+      const titles = ['MixVy', 'Discover', 'Profile'];
+
       return Scaffold(
-        appBar: const TopAppBar(title: 'MixVy'),
+        appBar: TopAppBar(title: titles[_currentIndex]),
+        drawer: const MixVyDrawer(),
         body: IndexedStack(
           index: _currentIndex,
           children: [
@@ -68,10 +74,8 @@ import '../feed/models/event_model.dart';
                 );
               },
             ),
-            // Discover Tab
-            const Center(child: Text('Discover', style: TextStyle(fontSize: 24))),
-            // Profile Tab
-            const Center(child: Text('Profile', style: TextStyle(fontSize: 24))),
+            const DiscoveryFeedContent(),
+            const ProfileFormView(),
           ],
         ),
         bottomNavigationBar: BottomNavBar(
