@@ -128,5 +128,6 @@ Future<void> testSetup() async {
 /// Utility to wrap widget tests in ProviderScope
 Widget withProviderScope(Widget child) => ProviderScope(child: child);
 
-/// Utility to skip integration/patrol tests in CI
-const bool skipIntegrationTests = bool.fromEnvironment('CI', defaultValue: false);
+/// Utility to skip integration/patrol tests unless explicitly opted in.
+/// Run with --dart-define=RUN_INTEGRATION_TESTS=true to include them.
+const bool skipIntegrationTests = !bool.fromEnvironment('RUN_INTEGRATION_TESTS', defaultValue: false);

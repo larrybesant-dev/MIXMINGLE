@@ -96,13 +96,24 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _controller = PageController();
   int _index = 0;
+  int _themeIndex = 1;
   bool _acceptedLegal = false;
 
-  // Swap this to preview a few themes quickly:
-  // _OnboardingThemes.minimalLuxe | _OnboardingThemes.tropicalSunset | _OnboardingThemes.electricRetro
-  final _OnboardingTheme _theme = _OnboardingThemes.tropicalSunset;
+  final List<_OnboardingTheme> _themeOptions = const [
+    _OnboardingThemes.minimalLuxe,
+    _OnboardingThemes.tropicalSunset,
+    _OnboardingThemes.electricRetro,
+  ];
 
-  late final List<_OnboardScene> _pages = [
+  _OnboardingTheme get _theme => _themeOptions[_themeIndex];
+
+  void _cycleTheme(int direction) {
+    setState(() {
+      _themeIndex = (_themeIndex + direction + _themeOptions.length) % _themeOptions.length;
+    });
+  }
+
+  List<_OnboardScene> get _pages => [
     _OnboardScene(
       kicker: 'Live Rooms',
       title: 'Step Into The Hottest Rooms',
@@ -157,7 +168,40 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           PageView(
             controller: _controller,
             onPageChanged: (i) => setState(() => _index = i),
-            children: _pages.map((scene) => _OnboardPage(scene: scene)).toList(growable: false),
+            children: _pages.map((scene) => _OnboardPage(scene: scene, theme: _theme)).toList(growable: false),
+          ),
+          Positioned(
+            top: 42,
+            left: 16,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: _theme.cardSurface.withValues(alpha: 0.72),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    tooltip: 'Previous theme',
+                    onPressed: () => _cycleTheme(-1),
+                    icon: const Icon(Icons.chevron_left_rounded, color: Colors.white),
+                  ),
+                  Text(
+                    _theme.name,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Next theme',
+                    onPressed: () => _cycleTheme(1),
+                    icon: const Icon(Icons.chevron_right_rounded, color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
           ),
           Positioned(
             top: 44,
@@ -358,9 +402,11 @@ class _GlowOrb extends StatelessWidget {
 
 class _OnboardPage extends StatelessWidget {
   final _OnboardScene scene;
+  final _OnboardingTheme theme;
 
   const _OnboardPage({
     required this.scene,
+    required this.theme,
   });
 
   @override
@@ -423,7 +469,7 @@ class _OnboardPage extends StatelessWidget {
                   constraints: const BoxConstraints(maxWidth: 620),
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: _theme.cardSurface.withValues(alpha: 0.76),
+                    color: theme.cardSurface.withValues(alpha: 0.76),
                     borderRadius: BorderRadius.circular(22),
                     border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
                     boxShadow: [
@@ -482,7 +528,7 @@ class _OnboardPage extends StatelessWidget {
                         (perk) => Container(
                           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                           decoration: BoxDecoration(
-                            color: _theme.chipSurface.withValues(alpha: 0.68),
+                            color: theme.chipSurface.withValues(alpha: 0.68),
                             borderRadius: BorderRadius.circular(999),
                             border: Border.all(
                               color: scene.glowColor.withValues(alpha: 0.4),

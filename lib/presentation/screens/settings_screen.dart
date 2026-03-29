@@ -43,7 +43,7 @@ class SettingsScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: settings.localeCode,
+                      initialValue: settings.localeCode,
                       decoration: const InputDecoration(
                         labelText: 'Language',
                         border: OutlineInputBorder(),

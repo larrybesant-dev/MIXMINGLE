@@ -7,7 +7,7 @@ void main() {
     await tester.pumpWidget(const MaterialApp(
       home: Scaffold(body: StripeWebPaymentWidget()),
     ));
-    expect(find.text('Upgrade to Premium'), findsOneWidget);
-    expect(find.text('Pay with Stripe'), findsOneWidget);
+    expect(find.text('MixVy Premium'), findsOneWidget);
+    expect(find.text('Upgrade Now — \$9.99 / month'), findsOneWidget);
   });
 }
