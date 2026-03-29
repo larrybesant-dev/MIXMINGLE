@@ -263,15 +263,8 @@ class ProfileController extends Notifier<ProfileState> {
           lookingFor: profile.adultLookingFor,
         ),
       );
-      if (user != null && user.uid == userId) {
-        if (normalizedUsername.isNotEmpty && normalizedUsername != user.displayName) {
-          await user.updateDisplayName(normalizedUsername);
-        }
-        if (normalizedAvatar != (user.photoURL ?? '').trim()) {
-          await user.updatePhotoURL(normalizedAvatar.isEmpty ? null : normalizedAvatar);
-        }
-        await user.reload();
-      }
+      // Keep profile data in Firestore only.
+      // This avoids Auth accounts:update failures (notably on web profile photo updates).
       state = profile.copyWith(
         isLoading: false,
         error: null,
@@ -346,18 +339,8 @@ class ProfileController extends Notifier<ProfileState> {
       }
 
       final user = UserModel.fromJson({'id': resolvedUserId, ...userData});
-      final currentUser = _auth.currentUser;
-      if (currentUser != null && currentUser.uid == resolvedUserId) {
-        final resolvedUsername = user.username.isNotEmpty ? user.username : currentUser.displayName;
-        final resolvedAvatarUrl = (user.avatarUrl ?? '').trim();
-        if (resolvedUsername != null && resolvedUsername.isNotEmpty && resolvedUsername != currentUser.displayName) {
-          await currentUser.updateDisplayName(resolvedUsername);
-        }
-        if (resolvedAvatarUrl != (currentUser.photoURL ?? '').trim()) {
-          await currentUser.updatePhotoURL(resolvedAvatarUrl.isEmpty ? null : resolvedAvatarUrl);
-        }
-        await currentUser.reload();
-      }
+      // Keep profile data in Firestore only.
+      // This avoids Auth accounts:update failures during profile hydration.
       state = state.copyWith(
         isLoading: false,
         error: null,

@@ -87,6 +87,8 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
 
   static const int _maxPhotoBytes = 20 * 1024 * 1024;
   static const int _maxInlineProfilePhotoBytes = 700 * 1024;
+  static const int _maxInlineCoverPhotoBytes = 700 * 1024;
+  static const int _maxInlineGalleryPhotoBytes = 500 * 1024;
   static const int _maxVideoBytes = 120 * 1024 * 1024;
   static const List<String> _genderOptions = [
     'Woman',
@@ -352,12 +354,18 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       setState(() => setBusy(true));
 
       String url;
-      // Web-specific fallback for profile photo to avoid intermittent storage plugin crashes.
-      if (kIsWeb && folder == 'profile_photos') {
-        if (bytes.lengthInBytes > _maxInlineProfilePhotoBytes) {
+      // Web fallback: keep image uploads in-profile as data URLs to avoid storage web host API crashes.
+      if (kIsWeb) {
+        final inlineLimit = switch (folder) {
+          'profile_photos' => _maxInlineProfilePhotoBytes,
+          'cover_photos' => _maxInlineCoverPhotoBytes,
+          'gallery_photos' => _maxInlineGalleryPhotoBytes,
+          _ => _maxInlineProfilePhotoBytes,
+        };
+        if (bytes.lengthInBytes > inlineLimit) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Profile Picture is too large for web upload fallback. Try a smaller image.')),
+            const SnackBar(content: Text('Image is too large for web upload. Please choose a smaller file.')),
           );
           return;
         }
