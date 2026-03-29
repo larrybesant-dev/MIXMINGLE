@@ -1,0 +1,232 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mixvy/models/room_model.dart';
+import 'package:mixvy/services/room_service.dart';
+
+void main() {
+  group('RoomService', () {
+    late FakeFirebaseFirestore firestore;
+    late RoomService service;
+
+    setUp(() {
+      firestore = FakeFirebaseFirestore();
+      service = RoomService(firestore: firestore);
+    });
+
+    test('createRoom trims input and applies defaults', () async {
+      final roomId = await service.createRoom(
+        hostId: ' host-1 ',
+        name: '  Late Night Vibes  ',
+        description: '  chill room  ',
+        tags: const <String>[' chill ', ' ', 'music'],
+      );
+
+      final doc = await firestore.collection('rooms').doc(roomId).get();
+      final data = doc.data()!;
+
+      expect(data['hostId'], 'host-1');
+      expect(data['name'], 'Late Night Vibes');
+      expect(data['description'], 'chill room');
+      expect(data['isLive'], true);
+      expect(data['isLocked'], false);
+      expect(data['slowModeSeconds'], 0);
+      expect(data['audienceUserIds'], <String>['host-1']);
+      expect(data['tags'], <String>['chill', 'music']);
+    });
+
+    test('createRoom rejects empty hostId and name', () async {
+      await expectLater(
+        () => service.createRoom(hostId: ' ', name: 'ok'),
+        throwsA(isA<ArgumentError>()),
+      );
+      await expectLater(
+        () => service.createRoom(hostId: 'host-1', name: '  '),
+        throwsA(isA<ArgumentError>()),
+      );
+    });
+
+    test('getLiveRooms returns live rooms ordered by updatedAt desc', () async {
+      await firestore.collection('rooms').doc('room-1').set({
+        'name': 'Room One',
+        'hostId': 'host-1',
+        'isLive': true,
+        'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
+      });
+      await firestore.collection('rooms').doc('room-2').set({
+        'name': 'Room Two',
+        'hostId': 'host-2',
+        'isLive': true,
+        'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 12)),
+      });
+      await firestore.collection('rooms').doc('room-3').set({
+        'name': 'Room Three',
+        'hostId': 'host-3',
+        'isLive': false,
+        'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 13)),
+      });
+
+      final rooms = await service.getLiveRooms(limit: 10);
+
+      expect(rooms, hasLength(2));
+      expect(rooms.first.id, 'room-2');
+      expect(rooms.last.id, 'room-1');
+    });
+
+    test('getRecommendedLiveRooms boosts friend-hosted rooms', () async {
+      await firestore.collection('rooms').doc('room-friend').set({
+        'name': 'Friend Room',
+        'hostId': 'friend-1',
+        'isLive': true,
+        'memberCount': 1,
+        'stageUserIds': <String>[],
+        'audienceUserIds': <String>['friend-1'],
+        'isLocked': false,
+        'updatedAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(minutes: 30))),
+      });
+      await firestore.collection('rooms').doc('room-busy').set({
+        'name': 'Busy Room',
+        'hostId': 'host-2',
+        'isLive': true,
+        'memberCount': 18,
+        'stageUserIds': <String>[],
+        'audienceUserIds': <String>['host-2'],
+        'isLocked': false,
+        'updatedAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(minutes: 5))),
+      });
+
+      final rooms = await service.getRecommendedLiveRooms(
+        limit: 2,
+        friendIds: const <String>{'friend-1'},
+      );
+
+      expect(rooms, hasLength(2));
+      expect(rooms.first.id, 'room-friend');
+    });
+
+    test('getRecommendedLiveRooms excludes blocked hosts', () async {
+      await firestore.collection('rooms').doc('room-a').set({
+        'name': 'Room A',
+        'hostId': 'blocked-host',
+        'isLive': true,
+        'memberCount': 10,
+        'stageUserIds': <String>[],
+        'audienceUserIds': <String>['blocked-host'],
+        'isLocked': false,
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+      });
+      await firestore.collection('rooms').doc('room-b').set({
+        'name': 'Room B',
+        'hostId': 'safe-host',
+        'isLive': true,
+        'memberCount': 3,
+        'stageUserIds': <String>[],
+        'audienceUserIds': <String>['safe-host'],
+        'isLocked': false,
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+      });
+
+      final rooms = await service.getRecommendedLiveRooms(
+        limit: 10,
+        excludedHostIds: const <String>{'blocked-host'},
+      );
+
+      expect(rooms.map((room) => room.id), isNot(contains('room-a')));
+      expect(rooms.map((room) => room.id), contains('room-b'));
+    });
+
+    test('getRecommendationReason returns social and popularity labels', () {
+      final friendHostedRoom = RoomModel(
+        id: 'room-1',
+        name: 'Friend Room',
+        hostId: 'friend-1',
+        memberCount: 1,
+      );
+      final popularRoom = RoomModel(
+        id: 'room-2',
+        name: 'Popular Room',
+        hostId: 'host-2',
+        memberCount: 50,
+      );
+
+      final friendReason = service.getRecommendationReason(
+        friendHostedRoom,
+        friendIds: const <String>{'friend-1'},
+      );
+      final popularReason = service.getRecommendationReason(popularRoom);
+
+      expect(friendReason, 'Friend is hosting');
+      expect(popularReason, 'Popular right now');
+    });
+
+    test('getRecommendationTier classifies rooms by social/popularity/recency', () {
+      final friendRoom = RoomModel(
+        id: 'room-f',
+        name: 'Friend Room',
+        hostId: 'friend-1',
+      );
+      final hotRoom = RoomModel(
+        id: 'room-h',
+        name: 'Hot Room',
+        hostId: 'host-2',
+        memberCount: 30,
+      );
+      final freshRoom = RoomModel(
+        id: 'room-r',
+        name: 'Fresh Room',
+        hostId: 'host-3',
+        updatedAt: Timestamp.fromDate(DateTime.now().subtract(const Duration(minutes: 10))),
+      );
+      final liveRoom = RoomModel(
+        id: 'room-l',
+        name: 'Live Room',
+        hostId: 'host-4',
+        updatedAt: Timestamp.fromDate(DateTime.now().subtract(const Duration(hours: 3))),
+      );
+
+      expect(
+        service.getRecommendationTier(friendRoom, friendIds: const <String>{'friend-1'}),
+        'Friends',
+      );
+      expect(service.getRecommendationTier(hotRoom), 'Hot');
+      expect(service.getRecommendationTier(freshRoom), 'Fresh');
+      expect(service.getRecommendationTier(liveRoom), 'Live');
+    });
+
+    test('watchRoomById returns null stream for empty id', () async {
+      final result = await service.watchRoomById('   ').first;
+      expect(result, isNull);
+    });
+
+    test('setRoomLiveStatus trims room id before update', () async {
+      await firestore.collection('rooms').doc('room-1').set({
+        'name': 'Room One',
+        'hostId': 'host-1',
+        'isLive': false,
+      });
+
+      await service.setRoomLiveStatus(' room-1 ', isLive: true);
+
+      final updated = await firestore.collection('rooms').doc('room-1').get();
+      expect(updated.data()?['isLive'], true);
+    });
+
+    test('deleteRoom trims room id before delete', () async {
+      await firestore.collection('rooms').doc('room-1').set({
+        'name': 'Room One',
+        'hostId': 'host-1',
+        'isLive': true,
+      });
+
+      await service.deleteRoom(' room-1 ');
+
+      final deleted = await firestore.collection('rooms').doc('room-1').get();
+      expect(deleted.exists, isFalse);
+    });
+
+    test('getRoomById returns null for empty id', () async {
+      final result = await service.getRoomById('   ');
+      expect(result, isNull);
+    });
+  });
+}

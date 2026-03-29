@@ -12,12 +12,16 @@ class FeedState {
   final bool isLoading;
   final String? error;
   final List<RoomModel> liveRooms;
+  final Map<String, String> roomReasons;
+  final Map<String, String> roomTiers;
   final List<feed_user.User> trendingUsers;
 
   const FeedState({
     this.isLoading = false,
     this.error,
     this.liveRooms = const [],
+    this.roomReasons = const <String, String>{},
+    this.roomTiers = const <String, String>{},
     this.trendingUsers = const [],
   });
 
@@ -25,12 +29,16 @@ class FeedState {
     bool? isLoading,
     String? error,
     List<RoomModel>? liveRooms,
+    Map<String, String>? roomReasons,
+    Map<String, String>? roomTiers,
     List<feed_user.User>? trendingUsers,
   }) {
     return FeedState(
       isLoading: isLoading ?? this.isLoading,
       error: error,
       liveRooms: liveRooms ?? this.liveRooms,
+      roomReasons: roomReasons ?? this.roomReasons,
+      roomTiers: roomTiers ?? this.roomTiers,
       trendingUsers: trendingUsers ?? this.trendingUsers,
     );
   }
@@ -51,6 +59,20 @@ class FeedController extends Notifier<FeedState> {
     return const FeedState();
   }
 
+  Future<Set<String>> _loadFriendIds(String? userId) async {
+    if (userId == null || userId.trim().isEmpty) {
+      return const <String>{};
+    }
+
+    final userDoc = await _firestore.collection('users').doc(userId).get();
+    final data = userDoc.data();
+    if (data == null) {
+      return const <String>{};
+    }
+
+    return List<String>.from(data['friends'] ?? const <String>[]).toSet();
+  }
+
   Future<void> loadFeed() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
@@ -58,9 +80,26 @@ class FeedController extends Notifier<FeedState> {
       final blockedIds = currentUserId == null
           ? const <String>{}
           : await _moderationService.getExcludedUserIds(currentUserId);
-        final liveRooms = (await _roomService.getLiveRooms(limit: 20))
-          .where((room) => !blockedIds.contains(room.hostId))
-          .toList();
+      final friendIds = await _loadFriendIds(currentUserId);
+      final liveRooms = await _roomService.getRecommendedLiveRooms(
+        limit: 20,
+        friendIds: friendIds,
+        excludedHostIds: blockedIds,
+      );
+      final roomReasons = <String, String>{
+        for (final room in liveRooms)
+          room.id: _roomService.getRecommendationReason(
+            room,
+            friendIds: friendIds,
+          ),
+      };
+      final roomTiers = <String, String>{
+        for (final room in liveRooms)
+          room.id: _roomService.getRecommendationTier(
+            room,
+            friendIds: friendIds,
+          ),
+      };
       final usersSnap = await _firestore
           .collection('users')
           .orderBy('balance', descending: true)
@@ -73,6 +112,8 @@ class FeedController extends Notifier<FeedState> {
       state = state.copyWith(
         isLoading: false,
         liveRooms: liveRooms,
+        roomReasons: roomReasons,
+        roomTiers: roomTiers,
         trendingUsers: trendingUsers,
       );
     } on FirebaseException catch (e, stackTrace) {

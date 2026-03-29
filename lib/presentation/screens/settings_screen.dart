@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../providers/app_settings_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
@@ -76,6 +77,16 @@ class SettingsScreen extends ConsumerWidget {
                       ? 'Analytics sharing is enabled. You can disable it at any time.'
                       : 'Analytics sharing is disabled.',
                 ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.manage_accounts_outlined),
+                title: const Text('Account Center'),
+                subtitle: const Text('Email verification, password reset, and account deletion.'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.go('/account'),
               ),
             ),
           ],

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixvy/models/room_model.dart';
@@ -15,6 +17,14 @@ class RoomService {
 	CollectionReference<Map<String, dynamic>> get _roomsCollection =>
 			_firestore.collection('rooms');
 
+	String _normalizeRoomId(String roomId) {
+		final trimmedRoomId = roomId.trim();
+		if (trimmedRoomId.isEmpty) {
+			throw ArgumentError.value(roomId, 'roomId', 'roomId cannot be empty');
+		}
+		return trimmedRoomId;
+	}
+
 	Stream<List<RoomModel>> watchLiveRooms({int limit = 30}) {
 		return _roomsCollection
 				.where('isLive', isEqualTo: true)
@@ -29,6 +39,10 @@ class RoomService {
 	}
 
 	Future<List<RoomModel>> getLiveRooms({int limit = 20}) async {
+		if (limit <= 0) {
+			return const <RoomModel>[];
+		}
+
 		final snapshot = await _roomsCollection
 				.where('isLive', isEqualTo: true)
 				.orderBy('updatedAt', descending: true)
@@ -38,6 +52,104 @@ class RoomService {
 		return snapshot.docs
 				.map((doc) => RoomModel.fromJson(doc.data(), doc.id))
 				.toList(growable: false);
+	}
+
+	Future<List<RoomModel>> getRecommendedLiveRooms({
+		required int limit,
+		Set<String> friendIds = const <String>{},
+		Set<String> excludedHostIds = const <String>{},
+	}) async {
+		if (limit <= 0) {
+			return const <RoomModel>[];
+		}
+
+		final rooms = await getLiveRooms(limit: math.max(limit * 2, limit));
+		final filtered = rooms
+				.where((room) => !excludedHostIds.contains(room.hostId))
+				.toList(growable: false);
+
+		final sorted = filtered.toList(growable: false)
+			..sort((a, b) {
+				final scoreB = _scoreRoom(b, friendIds);
+				final scoreA = _scoreRoom(a, friendIds);
+				final scoreCompare = scoreB.compareTo(scoreA);
+				if (scoreCompare != 0) {
+					return scoreCompare;
+				}
+
+				final updatedA = a.updatedAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+				final updatedB = b.updatedAt?.toDate() ?? DateTime.fromMillisecondsSinceEpoch(0);
+				return updatedB.compareTo(updatedA);
+			});
+
+		return sorted.take(limit).toList(growable: false);
+	}
+
+	String getRecommendationReason(RoomModel room, {Set<String> friendIds = const <String>{}}) {
+		if (friendIds.contains(room.hostId)) {
+			return 'Friend is hosting';
+		}
+
+		final friendPresenceCount = room.members.where((memberId) => friendIds.contains(memberId)).length;
+		if (friendPresenceCount > 1) {
+			return '$friendPresenceCount friends are here';
+		}
+		if (friendPresenceCount == 1) {
+			return '1 friend is here';
+		}
+
+		if (room.memberCount >= 25) {
+			return 'Popular right now';
+		}
+
+		final updatedAt = room.updatedAt?.toDate();
+		if (updatedAt != null && DateTime.now().difference(updatedAt).inMinutes <= 20) {
+			return 'Just started';
+		}
+
+		return 'Active now';
+	}
+
+	String getRecommendationTier(RoomModel room, {Set<String> friendIds = const <String>{}}) {
+		if (friendIds.contains(room.hostId)) {
+			return 'Friends';
+		}
+
+		final friendPresenceCount = room.members.where((memberId) => friendIds.contains(memberId)).length;
+		if (friendPresenceCount > 0) {
+			return 'Friends';
+		}
+
+		if (room.memberCount >= 25) {
+			return 'Hot';
+		}
+
+		final updatedAt = room.updatedAt?.toDate();
+		if (updatedAt != null && DateTime.now().difference(updatedAt).inMinutes <= 20) {
+			return 'Fresh';
+		}
+
+		return 'Live';
+	}
+
+	double _scoreRoom(RoomModel room, Set<String> friendIds) {
+		final memberCountScore = (room.memberCount.clamp(0, 120) as int).toDouble() * 0.8;
+
+		final hostFriendBonus = friendIds.contains(room.hostId) ? 25.0 : 0.0;
+
+		final friendPresenceCount = room.members.where((memberId) => friendIds.contains(memberId)).length;
+		final friendPresenceBonus = math.min(friendPresenceCount * 6.0, 24.0);
+
+		final updatedAt = room.updatedAt?.toDate();
+		double recencyBonus = 0;
+		if (updatedAt != null) {
+			final minutesAgo = DateTime.now().difference(updatedAt).inMinutes;
+			recencyBonus = math.max(0, 18 - (minutesAgo / 8));
+		}
+
+		final lockPenalty = room.isLocked ? -6.0 : 0.0;
+
+		return memberCountScore + hostFriendBonus + friendPresenceBonus + recencyBonus + lockPenalty;
 	}
 
 	Stream<RoomModel?> watchRoomById(String roomId) {
@@ -84,20 +196,29 @@ class RoomService {
 		String? category,
 		List<String> tags = const <String>[],
 	}) async {
+		final trimmedHostId = hostId.trim();
+		final trimmedName = name.trim();
+		if (trimmedHostId.isEmpty) {
+			throw ArgumentError.value(hostId, 'hostId', 'hostId cannot be empty');
+		}
+		if (trimmedName.isEmpty) {
+			throw ArgumentError.value(name, 'name', 'name cannot be empty');
+		}
+
 		final now = FieldValue.serverTimestamp();
 		final docRef = _roomsCollection.doc();
 
 		await docRef.set({
-			'name': name.trim(),
+			'name': trimmedName,
 			'description': description?.trim(),
 			'rules': rules?.trim(),
-			'hostId': hostId.trim(),
+			'hostId': trimmedHostId,
 			'isLive': isLive,
 			'thumbnailUrl': thumbnailUrl?.trim(),
 			'createdAt': now,
 			'updatedAt': now,
 			'stageUserIds': <String>[],
-			'audienceUserIds': <String>[hostId.trim()],
+			'audienceUserIds': <String>[trimmedHostId],
 			'memberCount': 1,
 			'category': category?.trim(),
 			'tags': tags.map((tag) => tag.trim()).where((tag) => tag.isNotEmpty).toList(growable: false),
@@ -110,20 +231,23 @@ class RoomService {
 	}
 
 	Future<void> updateRoom(RoomModel room) async {
-		await _roomsCollection.doc(room.id).update({
+		final roomId = _normalizeRoomId(room.id);
+		await _roomsCollection.doc(roomId).update({
 			...room.toJson(),
 			'updatedAt': FieldValue.serverTimestamp(),
 		});
 	}
 
 	Future<void> setRoomLiveStatus(String roomId, {required bool isLive}) async {
-		await _roomsCollection.doc(roomId).update({
+		final normalizedRoomId = _normalizeRoomId(roomId);
+		await _roomsCollection.doc(normalizedRoomId).update({
 			'isLive': isLive,
 			'updatedAt': FieldValue.serverTimestamp(),
 		});
 	}
 
 	Future<void> deleteRoom(String roomId) async {
-		await _roomsCollection.doc(roomId).delete();
+		final normalizedRoomId = _normalizeRoomId(roomId);
+		await _roomsCollection.doc(normalizedRoomId).delete();
 	}
 }

@@ -129,6 +129,8 @@ class DiscoveryFeedContent extends ConsumerWidget {
                       final room = feedState.liveRooms[index];
                       return LiveRoomCard(
                         room: room,
+                        recommendationTier: feedState.roomTiers[room.id],
+                        recommendationReason: feedState.roomReasons[room.id],
                         onTap: () => context.go('/room/${room.id}'),
                       );
                     },

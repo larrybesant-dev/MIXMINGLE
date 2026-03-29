@@ -4,8 +4,16 @@ import 'package:mixvy/models/room_model.dart';
 class LiveRoomCard extends StatelessWidget {
   final RoomModel room;
   final VoidCallback onTap;
+  final String? recommendationReason;
+  final String? recommendationTier;
 
-  const LiveRoomCard({required this.room, required this.onTap, super.key});
+  const LiveRoomCard({
+    required this.room,
+    required this.onTap,
+    this.recommendationReason,
+    this.recommendationTier,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -84,6 +92,44 @@ class LiveRoomCard extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),
+            if (recommendationTier != null && recommendationTier!.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.secondary.withAlpha((255 * 0.18).toInt()),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  recommendationTier!,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.secondary,
+                        fontWeight: FontWeight.w700,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+            if (recommendationReason != null && recommendationReason!.trim().isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withAlpha((255 * 0.14).toInt()),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  recommendationReason!,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Theme.of(context).colorScheme.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
             const Spacer(),
             Row(
               children: [

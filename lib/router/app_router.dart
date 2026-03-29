@@ -13,6 +13,7 @@ import 'package:mixvy/presentation/screens/friend_list_screen.dart';
 import 'package:mixvy/presentation/screens/live_room_screen.dart';
 import 'package:mixvy/presentation/screens/notifications_screen.dart';
 import 'package:mixvy/presentation/screens/settings_screen.dart';
+import 'package:mixvy/presentation/screens/account_center_screen.dart';
 import 'package:mixvy/features/speed_dating/screens/speed_dating_screen.dart';
 
 import '../features/auth/register_screen.dart';
@@ -166,6 +167,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
       GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
+      GoRoute(path: '/account', builder: (context, state) => const AccountCenterScreen()),
     ],
   );
 });
