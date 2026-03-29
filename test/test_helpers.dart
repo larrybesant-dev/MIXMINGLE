@@ -29,6 +29,8 @@ void emitAuthState(User? user) {
   authStateController.add(user);
 }
 
+final Map<String, Object?> _sharedPrefsStore = <String, Object?>{};
+
 Future<void> testSetup() async {
   // Removed unused local variable 'currentUser'
   // Removed unsupported StreamController and authStateController logic for test mocks
@@ -65,6 +67,33 @@ Future<void> testSetup() async {
       const MethodChannel('plugins.flutter.io/cloud_firestore'),
       (MethodCall methodCall) async {
         return null;
+      },
+    );
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger.setMockMethodCallHandler(
+      const MethodChannel('plugins.flutter.io/shared_preferences'),
+      (MethodCall methodCall) async {
+        switch (methodCall.method) {
+          case 'getAll':
+            return Map<String, Object?>.from(_sharedPrefsStore);
+          case 'setBool':
+          case 'setInt':
+          case 'setDouble':
+          case 'setString':
+          case 'setStringList':
+            final key = methodCall.arguments['key'] as String;
+            final value = methodCall.arguments['value'];
+            _sharedPrefsStore[key] = value;
+            return true;
+          case 'remove':
+            final key = methodCall.arguments as String;
+            _sharedPrefsStore.remove(key);
+            return true;
+          case 'clear':
+            _sharedPrefsStore.clear();
+            return true;
+          default:
+            return null;
+        }
       },
     );
   const MethodChannel firebaseCoreChannel = MethodChannel('plugins.flutter.io/firebase_core');

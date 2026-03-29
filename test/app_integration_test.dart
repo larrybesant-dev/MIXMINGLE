@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:patrol/patrol.dart';
-import 'package:mixvy/main.dart' as app;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mixvy/features/onboarding/onboarding_screen.dart';
 import 'test_helpers.dart';
 
 void main() {
@@ -9,30 +9,23 @@ void main() {
     await testSetup();
   });
 
-  patrolWidgetTest(
-    'Launches and navigates through main pages',
-    ($) async {
-      app.main();
-      await $.pumpAndSettle();
+  testWidgets(
+    'Onboarding renders and advances pages',
+    (tester) async {
+      await tester.pumpWidget(
+        const ProviderScope(
+          child: MaterialApp(home: OnboardingScreen()),
+        ),
+      );
+      await tester.pumpAndSettle();
 
-      // App should at minimum bootstrap a Flutter shell.
       expect(find.byType(Directionality), findsWidgets);
+      expect(find.text('Step Into The Hottest Rooms'), findsOneWidget);
 
-      // If dashboard is available, verify primary bottom-nav flow.
-      if (find.byType(BottomNavigationBar).evaluate().isNotEmpty) {
-        await $.tap(find.byIcon(Icons.search));
-        await $.pumpAndSettle();
-        expect(find.text('Discover'), findsWidgets);
+      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.pumpAndSettle();
 
-        await $.tap(find.byIcon(Icons.person));
-        await $.pumpAndSettle();
-        expect(find.text('Profile'), findsWidgets);
-
-        await $.tap(find.byIcon(Icons.home));
-        await $.pumpAndSettle();
-        expect(find.text('MixVy'), findsWidgets);
-      }
+      expect(find.text('Find Your Night Crew Fast'), findsOneWidget);
     },
-    skip: skipIntegrationTests,
   );
 }

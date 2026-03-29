@@ -6,6 +6,7 @@ import '../router/app_router.dart';
 import '../presentation/providers/app_settings_provider.dart';
 import '../theme/app_theme.dart';
 import '../core/theme.dart';
+import '../shared/widgets/beta_feedback_overlay.dart';
 
 class MixVyApp extends ConsumerWidget {
   const MixVyApp({super.key});
@@ -21,6 +22,11 @@ class MixVyApp extends ConsumerWidget {
       theme: AppTheme.light,
       darkTheme: midnightCreativeTheme,
       themeMode: settings.themeMode,
+      builder: (context, child) {
+        return BetaFeedbackOverlay(
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       locale: appLocale,
       supportedLocales: const [
         Locale('en'),

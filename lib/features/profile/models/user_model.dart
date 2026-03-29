@@ -56,34 +56,59 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        id: json['id'] ?? json['uid'] ?? '',
-        email: json['email'] ?? '',
-        username: json['username'] ?? json['displayName'] ?? '',
-        avatarUrl: json['avatarUrl'],
-        coverPhotoUrl: json['coverPhotoUrl'],
-        galleryUrls: List<String>.from(json['galleryUrls'] ?? const []),
-        introVideoUrl: json['introVideoUrl'],
-        bio: json['bio'],
-        aboutMe: json['aboutMe'],
+        id: _stringOrEmpty(json['id'] ?? json['uid']),
+        email: _stringOrEmpty(json['email']),
+        username: _stringOrEmpty(json['username'] ?? json['displayName']),
+        avatarUrl: _stringOrNull(json['avatarUrl']),
+        coverPhotoUrl: _stringOrNull(json['coverPhotoUrl']),
+        galleryUrls: _stringList(json['galleryUrls']),
+        introVideoUrl: _stringOrNull(json['introVideoUrl']),
+        bio: _stringOrNull(json['bio']),
+        aboutMe: _stringOrNull(json['aboutMe']),
         age: (json['age'] as num?)?.toInt(),
-        gender: json['gender'],
-        location: json['location'],
-        relationshipStatus: json['relationshipStatus'],
-        vibePrompt: json['vibePrompt'],
-        firstDatePrompt: json['firstDatePrompt'],
-        musicTastePrompt: json['musicTastePrompt'],
-        interests: List<String>.from(json['interests'] ?? []),
+        gender: _stringOrNull(json['gender']),
+        location: _stringOrNull(json['location']),
+        relationshipStatus: _stringOrNull(json['relationshipStatus']),
+        vibePrompt: _stringOrNull(json['vibePrompt']),
+        firstDatePrompt: _stringOrNull(json['firstDatePrompt']),
+        musicTastePrompt: _stringOrNull(json['musicTastePrompt']),
+        interests: _stringList(json['interests']),
         createdAt: (json['createdAt'] is Timestamp)
             ? (json['createdAt'] as Timestamp).toDate()
             : DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
         coinBalance: ((json['balance'] ?? json['coinBalance']) as num?)?.toInt() ?? 0,
-        membershipLevel: json['membershipLevel'] ?? 'basic',
-        followers: List<String>.from(json['followers'] ?? []),
-        camViewPolicy: json['camViewPolicy'] ?? 'approvedOnly',
+        membershipLevel: _stringOrEmpty(json['membershipLevel'], fallback: 'basic'),
+        followers: _stringList(json['followers']),
+        camViewPolicy: _stringOrEmpty(json['camViewPolicy'], fallback: 'approvedOnly'),
         adultModeEnabled: json['adultModeEnabled'] as bool? ?? false,
         adultConsentAccepted: json['adultConsentAccepted'] as bool? ?? false,
-        themeId: json['themeId'] ?? 'midnight',
+        themeId: _stringOrEmpty(json['themeId'], fallback: 'midnight'),
       );
+
+  static String? _stringOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+    return value.toString().trim().isEmpty ? null : value.toString().trim();
+  }
+
+  static String _stringOrEmpty(dynamic value, {String fallback = ''}) {
+    final parsed = _stringOrNull(value);
+    return parsed ?? fallback;
+  }
+
+  static List<String> _stringList(dynamic value) {
+    if (value is! List) {
+      return const <String>[];
+    }
+    return value
+        .map((item) => _stringOrNull(item))
+        .whereType<String>()
+        .toSet()
+        .toList(growable: false);
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
