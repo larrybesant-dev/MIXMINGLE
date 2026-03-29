@@ -41,16 +41,13 @@ class _CacheEntry<T> {
 class _RouterGateCache {
   static const Duration _profileTtl = Duration(seconds: 20);
 
-  bool? _isFirstRun;
   final Map<String, _CacheEntry<bool>> _profileByUid = <String, _CacheEntry<bool>>{};
   final Map<String, Future<bool>> _inFlightProfileChecks = <String, Future<bool>>{};
 
   Future<bool> isFirstRun() async {
-    if (_isFirstRun != null) {
-      return _isFirstRun!;
-    }
-    _isFirstRun = await FirstRunService.isFirstRun();
-    return _isFirstRun!;
+    // Do not cache here: FirstRunService already caches internally and updates
+    // its cache when onboarding is marked as seen.
+    return FirstRunService.isFirstRun();
   }
 
   Future<bool> isProfileComplete(String uid) async {
