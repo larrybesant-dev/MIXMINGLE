@@ -133,7 +133,7 @@ class RoomService {
 	}
 
 	double _scoreRoom(RoomModel room, Set<String> friendIds) {
-		final memberCountScore = (room.memberCount.clamp(0, 120) as int).toDouble() * 0.8;
+		final memberCountScore = room.memberCount.clamp(0, 120).toDouble() * 0.8;
 
 		final hostFriendBonus = friendIds.contains(room.hostId) ? 25.0 : 0.0;
 
