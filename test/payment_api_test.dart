@@ -133,4 +133,38 @@ void main() {
       'amount': 9.0,
     });
   });
+
+  test('requestRefund validates reason length before calling backend', () async {
+    final gateway = FakePaymentFunctionsGateway();
+    PaymentApi.configureForTesting(
+      functionsGateway: gateway,
+      authGateway: FakePaymentAuthGateway(mockUser),
+    );
+
+    await expectLater(
+      () => PaymentApi.requestRefund(transactionId: 'tx-1', reason: 'short'),
+      throwsA(isA<Exception>()),
+    );
+    expect(gateway.calls, isEmpty);
+  });
+
+  test('requestRefund calls requestRefund callable with expected payload', () async {
+    final gateway = FakePaymentFunctionsGateway();
+    PaymentApi.configureForTesting(
+      functionsGateway: gateway,
+      authGateway: FakePaymentAuthGateway(mockUser),
+    );
+
+    await PaymentApi.requestRefund(
+      transactionId: 'tx-55',
+      reason: 'Duplicate charge due to retry flow.',
+    );
+
+    expect(gateway.calls, hasLength(1));
+    expect(gateway.calls.single.name, 'requestRefund');
+    expect(gateway.calls.single.payload, <String, dynamic>{
+      'transactionId': 'tx-55',
+      'reason': 'Duplicate charge due to retry flow.',
+    });
+  });
 }

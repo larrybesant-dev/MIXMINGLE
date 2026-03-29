@@ -227,6 +227,66 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     }
   }
 
+  Future<void> _requestRefundForTransaction(CoinTransaction tx) async {
+    final reasonController = TextEditingController();
+    final submitted = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Request Refund'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Transaction: ${tx.id}'),
+            const SizedBox(height: 8),
+            Text('Amount: ${tx.amount.toStringAsFixed(2)}'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: reasonController,
+              minLines: 3,
+              maxLines: 5,
+              decoration: const InputDecoration(
+                labelText: 'Reason',
+                hintText: 'Describe the issue in at least 10 characters.',
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Submit'),
+          ),
+        ],
+      ),
+    );
+
+    if (submitted != true) {
+      return;
+    }
+
+    try {
+      await PaymentApi.requestRefund(
+        transactionId: tx.id,
+        reason: reasonController.text,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Refund request submitted.')),
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not request refund: $error')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
@@ -238,6 +298,7 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
     final transactionsAsync = ref.watch(
       coinTransactionStreamProvider(user?.uid ?? ''),
     );
+    final refundRequestsAsync = PaymentApi.getMyRefundRequests(user?.uid ?? '');
     final recipientsAsync = ref.watch(
       paymentRecipientSearchProvider(
         _selectedRecipient == null ? _recipientController.text : '',
@@ -476,6 +537,50 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
             ),
           ),
           const SizedBox(height: 24),
+          StreamBuilder<List<RefundRequest>>(
+            stream: refundRequestsAsync,
+            builder: (context, snapshot) {
+              final requests = snapshot.data ?? const <RefundRequest>[];
+              final openRequests = requests.where((r) => r.status == 'pending' || r.status == 'under_review').length;
+
+              return Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Payment Support',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(openRequests == 0
+                          ? 'No open refund requests.'
+                          : '$openRequests refund request(s) are currently in review.'),
+                      if (requests.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        ...requests.take(3).map(
+                          (request) => ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: const Icon(Icons.support_agent_outlined),
+                            title: Text('Refund ${request.amount.toStringAsFixed(2)}'),
+                            subtitle: Text('Status: ${request.status}'),
+                            trailing: Text(
+                              request.createdAt == null
+                                  ? 'Pending'
+                                  : '${request.createdAt!.month}/${request.createdAt!.day}',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 12),
           TextField(
             controller: _recipientController,
             onChanged: (value) {
@@ -643,9 +748,38 @@ class _PaymentsScreenState extends ConsumerState<PaymentsScreen> {
                       ),
                       title: Text('${isSent ? '-' : '+'}${tx.amount.toStringAsFixed(2)}'),
                       subtitle: Text('To: ${tx.receiverId}\nStatus: ${tx.status}'),
-                      trailing: Text(
-                        '${tx.timestamp.month}/${tx.timestamp.day}\n${tx.timestamp.hour.toString().padLeft(2, '0')}:${tx.timestamp.minute.toString().padLeft(2, '0')}',
-                        textAlign: TextAlign.right,
+                      trailing: PopupMenuButton<String>(
+                        tooltip: 'Transaction actions',
+                        onSelected: (value) {
+                          if (value == 'refund') {
+                            _requestRefundForTransaction(tx);
+                          }
+                        },
+                        itemBuilder: (context) {
+                          final canRequestRefund = isSent &&
+                              (tx.status == 'completed' || tx.status == 'sent');
+                          final items = <PopupMenuEntry<String>>[
+                            PopupMenuItem<String>(
+                              enabled: false,
+                              value: 'timestamp',
+                              child: Text(
+                                '${tx.timestamp.month}/${tx.timestamp.day} '
+                                '${tx.timestamp.hour.toString().padLeft(2, '0')}:'
+                                '${tx.timestamp.minute.toString().padLeft(2, '0')}',
+                              ),
+                            ),
+                          ];
+                          if (canRequestRefund) {
+                            items.add(
+                              const PopupMenuItem<String>(
+                                value: 'refund',
+                                child: Text('Request refund'),
+                              ),
+                            );
+                          }
+                          return items;
+                        },
+                        child: const Icon(Icons.more_vert),
                       ),
                     ),
                   );

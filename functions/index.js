@@ -1,5 +1,6 @@
 const {onRequest, onCall, HttpsError} = require("firebase-functions/v2/https");
 const {onRequest: onRequestV1} = require("firebase-functions/v1/https");
+const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 const Stripe = require("stripe");
 const {RtcTokenBuilder, RtcRole} = require("agora-access-token");
@@ -18,6 +19,7 @@ const RATE_LIMITS = {
   createStripeConnectOnboardingLink: {windowMs: 60 * 1000, maxRequests: 10},
   createStripeConnectDashboardLink: {windowMs: 60 * 1000, maxRequests: 20},
   generateAgoraToken: {windowMs: 60 * 1000, maxRequests: 30},
+  requestRefund: {windowMs: 60 * 1000, maxRequests: 12},
 };
 
 const rateLimitState = new Map();
@@ -462,6 +464,102 @@ async function generateAgoraTokenHandler(request) {
 
 exports.generateAgoraToken = onCall(async (request) => generateAgoraTokenHandler(request));
 
+async function requestRefundHandler(request, deps = {}) {
+  const requesterId = requireAuth(request);
+  enforceRateLimit("requestRefund", requesterId);
+  const transactionId = parseIdField(
+    request.data && request.data.transactionId,
+    "transactionId",
+  );
+  const reasonRaw = request.data && request.data.reason;
+  const reason = typeof reasonRaw === "string" ? reasonRaw.trim() : "";
+  const firestore = deps.firestore || db;
+
+  if (reason.length < 10 || reason.length > 500) {
+    throw new HttpsError(
+      "invalid-argument",
+      "reason must be between 10 and 500 characters.",
+    );
+  }
+
+  const txRef = firestore.collection("transactions").doc(transactionId);
+  const txSnap = await txRef.get();
+  if (!txSnap.exists) {
+    throw new HttpsError("not-found", "Transaction not found.");
+  }
+
+  const txData = txSnap.data() || {};
+  const participants = Array.isArray(txData.participants) ? txData.participants : [];
+  const senderId = typeof txData.senderId === "string" ? txData.senderId : "";
+  const receiverId = typeof txData.receiverId === "string" ? txData.receiverId : "";
+  const isParticipant = participants.includes(requesterId) ||
+    senderId === requesterId || receiverId === requesterId;
+
+  if (!isParticipant) {
+    throw new HttpsError(
+      "permission-denied",
+      "You are not allowed to request a refund for this transaction.",
+    );
+  }
+
+  const refundRef = firestore
+      .collection("refund_requests")
+      .doc(`${transactionId}_${requesterId}`);
+  const refundSnap = await refundRef.get();
+  const existing = refundSnap.exists ? refundSnap.data() : null;
+  if (existing && (existing.status === "pending" || existing.status === "under_review")) {
+    throw new HttpsError(
+      "already-exists",
+      "A refund request is already open for this transaction.",
+    );
+  }
+
+  await refundRef.set({
+    id: refundRef.id,
+    transactionId,
+    requesterId,
+    senderId,
+    receiverId,
+    amount: Number(txData.amount || 0),
+    status: "pending",
+    reason,
+    sourceStatus: txData.status || "unknown",
+    sourceType: txData.source || "unknown",
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, {merge: true});
+
+  return {
+    refundRequestId: refundRef.id,
+    status: "pending",
+  };
+}
+
+exports.requestRefund = onCall(async (request) => requestRefundHandler(request));
+
+async function cleanupDeletedUserData(uid, deps = {}) {
+  const firestore = deps.firestore || db;
+
+  if (!uid || typeof uid !== "string") {
+    return;
+  }
+
+  const userRef = firestore.collection("users").doc(uid);
+  const connectRef = firestore.collection("stripe_connect_accounts").doc(uid);
+
+  await Promise.allSettled([
+    userRef.delete(),
+    connectRef.delete(),
+  ]);
+}
+
+exports.cleanupDeletedUser = functionsV1.auth.user().onDelete(async (user) => {
+  if (!user || !user.uid) {
+    return;
+  }
+  await cleanupDeletedUserData(user.uid);
+});
+
 // Create Stripe Checkout Session
 exports.createCheckoutSession = onRequest(async (req, res) =>
   createCheckoutSessionHandler(req, res),
@@ -514,6 +612,8 @@ exports.__testing = {
   createStripeConnectDashboardLinkHandler,
   generateAgoraTokenHandler,
   createCheckoutSessionHandler,
+  requestRefundHandler,
+  cleanupDeletedUserData,
   getCheckoutBaseUrl,
   mapStripeConnectAccount,
   ensureStripeConnectAccount,

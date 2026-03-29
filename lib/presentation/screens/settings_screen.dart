@@ -41,6 +41,23 @@ class SettingsScreen extends ConsumerWidget {
                         controller.updateThemeMode(selection.first);
                       },
                     ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: settings.localeCode,
+                      decoration: const InputDecoration(
+                        labelText: 'Language',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: const [
+                        DropdownMenuItem(value: 'en', child: Text('English')),
+                        DropdownMenuItem(value: 'es', child: Text('Espa\u00f1ol')),
+                        DropdownMenuItem(value: 'fr', child: Text('Fran\u00e7ais')),
+                      ],
+                      onChanged: (value) {
+                        if (value == null || value.isEmpty) return;
+                        controller.setLocaleCode(value);
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -81,12 +98,48 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Card(
+              child: Column(
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.gavel_outlined),
+                    title: const Text('Terms of Service'),
+                    subtitle: Text(
+                      settings.hasAcceptedCurrentLegal
+                          ? 'Accepted version ${settings.legalAcceptedVersion}'
+                          : 'Not accepted yet',
+                    ),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.go('/legal/terms'),
+                  ),
+                  const Divider(height: 1),
+                  ListTile(
+                    leading: const Icon(Icons.privacy_tip_outlined),
+                    title: const Text('Privacy Policy'),
+                    subtitle: const Text('Read how MixVy uses and protects your data.'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.go('/legal/privacy'),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
               child: ListTile(
                 leading: const Icon(Icons.manage_accounts_outlined),
                 title: const Text('Account Center'),
                 subtitle: const Text('Email verification, password reset, and account deletion.'),
                 trailing: const Icon(Icons.chevron_right),
                 onTap: () => context.go('/account'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: ListTile(
+                leading: const Icon(Icons.info_outline),
+                title: const Text('App Info & Diagnostics'),
+                subtitle: const Text('Version, build number, environment, and runtime mode.'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.go('/about'),
               ),
             ),
           ],

@@ -169,14 +169,14 @@ This audit compares MixVy against a universal social app baseline (auth, profile
 ---
 
 ## Suggested Tracking Checklist
-- [ ] P0-01 Account delete (client + callable + policy + tests)
+- [x] P0-01 Account delete (client flow + backend cleanup trigger + tests)
 - [ ] P0-02 Apple Sign In (iOS/web + fallback UX + tests)
-- [ ] P0-03 Rate limits and anti-spam middleware in functions
-- [ ] P0-04 Terms/Privacy in app settings and onboarding/legal acceptance
-- [ ] P0-05 Refund path and support states
-- [ ] P1-01 Connected account center
+- [x] P0-03 Rate limits and anti-spam middleware in functions
+- [x] P0-04 Terms/Privacy in app settings and onboarding/legal acceptance
+- [x] P0-05 Refund path and support states
+- [x] P1-01 Connected account center
 - [ ] P1-02 Language selector and localization baseline
-- [ ] P1-03 App version/build diagnostics panel
+- [x] P1-03 App version/build diagnostics panel
 - [ ] P1-04 Moderation dashboard
 - [ ] P1-05 Automated content moderation pipeline
 

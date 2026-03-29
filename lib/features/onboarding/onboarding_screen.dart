@@ -1,18 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixvy/core/services/first_run_service.dart';
+import 'package:mixvy/presentation/providers/app_settings_provider.dart';
 import 'package:mixvy/services/analytics_service.dart';
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final PageController _controller = PageController();
   int _index = 0;
+  bool _acceptedLegal = false;
 
   final pages = const [
     _OnboardPage(
@@ -38,6 +41,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isLastPage = _index == pages.length - 1;
+    final canContinue = !isLastPage || _acceptedLegal;
+
     return Scaffold(
       body: Stack(
         children: [
@@ -77,22 +83,60 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   decoration: BoxDecoration(
                     color: _index == i
                         ? theme.colorScheme.primary
-                      : theme.colorScheme.onSurface.withValues(alpha: 0.25),
+                        : theme.colorScheme.onSurface.withValues(alpha: 0.25),
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
               ),
             ),
           ),
+          if (isLastPage)
+            Positioned(
+              bottom: 92,
+              left: 20,
+              right: 20,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Checkbox(
+                    value: _acceptedLegal,
+                    onChanged: (value) => setState(() => _acceptedLegal = value ?? false),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('I agree to the Terms of Service and Privacy Policy.'),
+                        Wrap(
+                          spacing: 8,
+                          children: [
+                            TextButton(
+                              onPressed: () => context.go('/legal/terms'),
+                              child: const Text('Terms'),
+                            ),
+                            TextButton(
+                              onPressed: () => context.go('/legal/privacy'),
+                              child: const Text('Privacy'),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           Positioned(
             bottom: 40,
             left: 20,
             right: 20,
             child: ElevatedButton(
-              onPressed: () async {
-                if (_index == pages.length - 1) {
+              onPressed: canContinue
+                  ? () async {
+                if (isLastPage) {
                   final router = GoRouter.of(context);
                   await FirstRunService.markOnboardingSeen();
+                  await ref.read(appSettingsControllerProvider.notifier).acceptCurrentLegal();
                   await AnalyticsService().logEvent('onboarding_complete');
                   if (!mounted) return;
                   router.go('/');
@@ -102,8 +146,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     curve: Curves.easeInOut,
                   );
                 }
-              },
-              child: Text(_index == pages.length - 1 ? "Get Started" : "Next"),
+              }
+                  : null,
+              child: Text(isLastPage ? 'Get Started' : 'Next'),
             ),
           ),
         ],

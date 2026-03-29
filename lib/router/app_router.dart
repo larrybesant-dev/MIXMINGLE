@@ -14,7 +14,11 @@ import 'package:mixvy/presentation/screens/live_room_screen.dart';
 import 'package:mixvy/presentation/screens/notifications_screen.dart';
 import 'package:mixvy/presentation/screens/settings_screen.dart';
 import 'package:mixvy/presentation/screens/account_center_screen.dart';
+import 'package:mixvy/presentation/screens/legal_terms_screen.dart';
+import 'package:mixvy/presentation/screens/legal_privacy_screen.dart';
+import 'package:mixvy/presentation/screens/app_info_screen.dart';
 import 'package:mixvy/features/speed_dating/screens/speed_dating_screen.dart';
+import 'package:mixvy/core/services/app_settings_service.dart';
 
 import '../features/auth/register_screen.dart';
 import '../features/profile/profile_screen.dart';
@@ -83,6 +87,7 @@ final _routerGateCacheProvider = Provider<_RouterGateCache>((ref) {
 
 typedef FirstRunCheck = Future<bool> Function();
 typedef ProfileCompleteCheck = Future<bool> Function(String uid);
+typedef LegalAcceptedCheck = Future<bool> Function();
 
 final firstRunCheckProvider = Provider<FirstRunCheck>((ref) {
   final gateCache = ref.read(_routerGateCacheProvider);
@@ -94,21 +99,34 @@ final profileCompleteCheckProvider = Provider<ProfileCompleteCheck>((ref) {
   return (uid) => gateCache.isProfileComplete(uid);
 });
 
+final legalAcceptedCheckProvider = Provider<LegalAcceptedCheck>((ref) {
+  final service = AppSettingsService();
+  return () => service.hasAcceptedCurrentLegal();
+});
+
 Future<String?> evaluateAppRedirect({
   required String matchedLocation,
   required String? uid,
   required FirstRunCheck isFirstRun,
   required ProfileCompleteCheck isProfileComplete,
+  required LegalAcceptedCheck isLegalAccepted,
 }) async {
   final loggedIn = uid != null;
   final isLoggingIn = matchedLocation == '/login' || matchedLocation == '/register';
   final isOnboarding = matchedLocation == '/onboarding';
+  final isLegalRoute = matchedLocation.startsWith('/legal/');
   final isProfile = matchedLocation == '/profile';
   final firstRun = await isFirstRun();
 
-  if (firstRun && !isOnboarding) return '/onboarding';
+  if (firstRun && !isOnboarding && !isLegalRoute) return '/onboarding';
   if (!firstRun && isOnboarding) return loggedIn ? '/' : '/login';
-  if (!loggedIn && !isLoggingIn) return '/login';
+
+  final legalAccepted = await isLegalAccepted();
+  if (!legalAccepted && !isOnboarding && !isLegalRoute) {
+    return '/legal/terms';
+  }
+
+  if (!loggedIn && !isLoggingIn && !isLegalRoute) return '/login';
   if (loggedIn) {
     final profileComplete = await isProfileComplete(uid);
     if (!profileComplete && !isProfile) return '/profile';
@@ -122,6 +140,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authControllerProvider);
   final firstRunCheck = ref.read(firstRunCheckProvider);
   final profileCompleteCheck = ref.read(profileCompleteCheckProvider);
+  final legalAcceptedCheck = ref.read(legalAcceptedCheckProvider);
 
   return GoRouter(
     initialLocation: '/',
@@ -132,6 +151,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           uid: authState.uid,
           isFirstRun: firstRunCheck,
           isProfileComplete: profileCompleteCheck,
+          isLegalAccepted: legalAcceptedCheck,
         );
       } catch (error, stackTrace) {
         developer.log(
@@ -168,6 +188,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
       GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
       GoRoute(path: '/account', builder: (context, state) => const AccountCenterScreen()),
+      GoRoute(path: '/legal/terms', builder: (context, state) => const LegalTermsScreen()),
+      GoRoute(path: '/legal/privacy', builder: (context, state) => const LegalPrivacyScreen()),
+      GoRoute(path: '/about', builder: (context, state) => const AppInfoScreen()),
     ],
   );
 });

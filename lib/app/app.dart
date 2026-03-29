@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/services/app_settings_service.dart';
 import '../router/app_router.dart';
@@ -13,12 +14,24 @@ class MixVyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final settings = ref.watch(appSettingsControllerProvider).valueOrNull ?? const AppSettings.defaults();
+    final appLocale = Locale(settings.localeCode);
 
     return MaterialApp.router(
       title: 'MixVy',
       theme: AppTheme.light,
       darkTheme: midnightCreativeTheme,
       themeMode: settings.themeMode,
+      locale: appLocale,
+      supportedLocales: const [
+        Locale('en'),
+        Locale('es'),
+        Locale('fr'),
+      ],
+      localizationsDelegates: const [
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       routerConfig: router,
       debugShowCheckedModeBanner: false,
     );

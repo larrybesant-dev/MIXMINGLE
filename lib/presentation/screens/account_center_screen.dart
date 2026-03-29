@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -12,6 +11,60 @@ class AccountCenterScreen extends StatefulWidget {
 
 class _AccountCenterScreenState extends State<AccountCenterScreen> {
   bool _busy = false;
+
+  String _providerLabel(String providerId) {
+    switch (providerId) {
+      case 'password':
+        return 'Email and Password';
+      case 'google.com':
+        return 'Google';
+      case 'apple.com':
+        return 'Apple';
+      case 'phone':
+        return 'Phone Number';
+      default:
+        return providerId;
+    }
+  }
+
+  Future<void> _unlinkProvider(String providerId) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final linkedProviders = user.providerData
+        .where((provider) => provider.providerId.isNotEmpty)
+        .map((provider) => provider.providerId)
+        .toSet();
+
+    if (linkedProviders.length <= 1) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must keep at least one sign-in method linked.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _busy = true);
+    try {
+      await user.unlink(providerId);
+      await user.reload();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${_providerLabel(providerId)} has been unlinked.')),
+      );
+      setState(() {});
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not unlink provider: ${e.message ?? e.code}')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
 
   Future<void> _sendVerificationEmail() async {
     final user = FirebaseAuth.instance.currentUser;
@@ -110,7 +163,6 @@ class _AccountCenterScreenState extends State<AccountCenterScreen> {
 
     setState(() => _busy = true);
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).delete();
       await user.delete();
       await FirebaseAuth.instance.signOut();
       if (!mounted) return;
@@ -138,6 +190,10 @@ class _AccountCenterScreenState extends State<AccountCenterScreen> {
     final user = FirebaseAuth.instance.currentUser;
     final email = user?.email?.trim();
     final emailText = email == null || email.isEmpty ? 'No email linked' : email;
+    final linkedProviders = user?.providerData
+        .where((provider) => provider.providerId.isNotEmpty)
+        .toList(growable: false) ??
+      const <UserInfo>[];
 
     return Scaffold(
       appBar: AppBar(title: const Text('Account Center')),
@@ -174,6 +230,40 @@ class _AccountCenterScreenState extends State<AccountCenterScreen> {
                     icon: const Icon(Icons.send_outlined),
                   ),
                 ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          Card(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const ListTile(
+                  leading: Icon(Icons.link_outlined),
+                  title: Text('Connected Sign-In Methods'),
+                  subtitle: Text('Manage linked authentication providers.'),
+                ),
+                const Divider(height: 1),
+                if (linkedProviders.isEmpty)
+                  const ListTile(
+                    title: Text('No linked providers found.'),
+                  )
+                else
+                  ...linkedProviders.map(
+                    (provider) => ListTile(
+                      leading: const Icon(Icons.verified_user_outlined),
+                      title: Text(_providerLabel(provider.providerId)),
+                      subtitle: Text(provider.email?.trim().isNotEmpty == true
+                          ? provider.email!.trim()
+                          : 'Linked'),
+                      trailing: TextButton(
+                        onPressed: _busy || user == null
+                            ? null
+                            : () => _unlinkProvider(provider.providerId),
+                        child: const Text('Unlink'),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),

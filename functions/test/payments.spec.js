@@ -11,6 +11,8 @@ const {
   getStripeConnectStatusHandler,
   createStripeConnectOnboardingLinkHandler,
   createStripeConnectDashboardLinkHandler,
+  requestRefundHandler,
+  cleanupDeletedUserData,
   createCheckoutSessionHandler,
   getCheckoutBaseUrl,
 } = paymentFunctions.__testing;
@@ -30,6 +32,7 @@ function createFirestoreDouble(initialUsers = {}) {
   const transactions = new Map();
   const logs = new Map();
   const stripeConnectAccounts = new Map();
+  const refundRequests = new Map();
 
   function storeFor(name) {
     switch (name) {
@@ -41,6 +44,8 @@ function createFirestoreDouble(initialUsers = {}) {
         return logs;
       case "stripe_connect_accounts":
         return stripeConnectAccounts;
+      case "refund_requests":
+        return refundRequests;
       default:
         throw new Error(`Unsupported collection ${name}`);
     }
@@ -67,6 +72,9 @@ function createFirestoreDouble(initialUsers = {}) {
           throw new Error(`Missing document ${name}/${id}`);
         }
         store.set(id, {...previous, ...data});
+      },
+      async delete() {
+        store.delete(id);
       },
     };
   }
@@ -102,6 +110,7 @@ function createFirestoreDouble(initialUsers = {}) {
       transactions,
       logs,
       stripeConnectAccounts,
+      refundRequests,
     },
   };
 
@@ -339,6 +348,66 @@ describe("payment callable handlers", () => {
     assert.equal(response.url, "https://stripe.test/dashboard");
     assert.equal(retrievedAccountId, "acct_saved");
     assert.equal(loginLinkAccountId, "acct_saved");
+  });
+
+  it("requestRefundHandler records a pending refund request", async () => {
+    const firestore = createFirestoreDouble();
+    firestore.__state.transactions.set("tx_1", {
+      id: "tx_1",
+      senderId: "user-1",
+      receiverId: "user-2",
+      participants: ["user-1", "user-2"],
+      amount: 14,
+      status: "completed",
+      source: "stripe",
+    });
+
+    const response = await requestRefundHandler(
+        makeRequest({transactionId: "tx_1", reason: "Duplicate charge on checkout."}),
+        {firestore},
+    );
+
+    assert.equal(response.status, "pending");
+    const refund = firestore.__state.refundRequests.get("tx_1_user-1");
+    assert.equal(refund.requesterId, "user-1");
+    assert.equal(refund.transactionId, "tx_1");
+    assert.equal(refund.status, "pending");
+  });
+
+  it("requestRefundHandler rejects non-participants", async () => {
+    const firestore = createFirestoreDouble();
+    firestore.__state.transactions.set("tx_2", {
+      id: "tx_2",
+      senderId: "user-1",
+      receiverId: "user-2",
+      participants: ["user-1", "user-2"],
+      amount: 10,
+      status: "completed",
+      source: "stripe",
+    });
+
+    await assert.rejects(
+        () => requestRefundHandler(
+            makeRequest({transactionId: "tx_2", reason: "Charge dispute reason here."}, "user-9"),
+            {firestore},
+        ),
+        (error) => error.code === "permission-denied",
+    );
+  });
+
+  it("cleanupDeletedUserData removes user profile and stripe connect docs", async () => {
+    const firestore = createFirestoreDouble({
+      "user-1": {balance: 100, displayName: "User One"},
+    });
+    firestore.__state.stripeConnectAccounts.set("user-1", {
+      accountId: "acct_123",
+      chargesEnabled: true,
+    });
+
+    await cleanupDeletedUserData("user-1", {firestore});
+
+    assert.equal(firestore.__state.users.has("user-1"), false);
+    assert.equal(firestore.__state.stripeConnectAccounts.has("user-1"), false);
   });
 
   it("getCheckoutBaseUrl prefers CHECKOUT_BASE_URL and trims trailing slash", () => {

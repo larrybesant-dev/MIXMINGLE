@@ -48,6 +48,26 @@ class AppSettingsController extends StateNotifier<AsyncValue<AppSettings>> {
     return _saveWith((settings) => settings.copyWith(analyticsEnabled: enabled));
   }
 
+  Future<void> setLocaleCode(String localeCode) {
+    return _saveWith((settings) => settings.copyWith(localeCode: localeCode));
+  }
+
+  Future<void> acceptCurrentLegal() {
+    return _saveWith((settings) => settings.copyWith(
+          legalAccepted: true,
+          legalAcceptedVersion: AppSettings.currentLegalVersion,
+          legalAcceptedAt: DateTime.now(),
+        ));
+  }
+
+  Future<void> clearLegalAcceptance() {
+    return _saveWith((settings) => settings.copyWith(
+          legalAccepted: false,
+          legalAcceptedVersion: '',
+          legalAcceptedAt: null,
+        ));
+  }
+
   Future<void> _saveWith(AppSettings Function(AppSettings current) update) async {
     final current = state.valueOrNull ?? const AppSettings.defaults();
     final next = update(current);

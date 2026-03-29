@@ -78,6 +78,46 @@ class CoinTransaction {
       );
 }
 
+class RefundRequest {
+  final String id;
+  final String transactionId;
+  final String requesterId;
+  final double amount;
+  final String status;
+  final String reason;
+  final DateTime? createdAt;
+
+  const RefundRequest({
+    required this.id,
+    required this.transactionId,
+    required this.requesterId,
+    required this.amount,
+    required this.status,
+    required this.reason,
+    required this.createdAt,
+  });
+
+  factory RefundRequest.fromJson(Map<String, dynamic> json) {
+    final createdAtRaw = json['createdAt'];
+    DateTime? createdAt;
+    if (createdAtRaw is Timestamp) {
+      createdAt = createdAtRaw.toDate();
+    } else if (createdAtRaw is String) {
+      createdAt = DateTime.tryParse(createdAtRaw);
+    }
+
+    return RefundRequest(
+      id: (json['id'] as String?)?.trim() ?? '',
+      transactionId: (json['transactionId'] as String?)?.trim() ?? '',
+      requesterId: (json['requesterId'] as String?)?.trim() ?? '',
+      amount: (json['amount'] as num?)?.toDouble() ?? 0,
+      status: (json['status'] as String?)?.trim() ?? 'pending',
+      reason: (json['reason'] as String?)?.trim() ?? '',
+      createdAt: createdAt,
+    );
+  }
+}
+
 class StripeConnectStatus {
   const StripeConnectStatus({
     required this.hasAccount,
@@ -249,6 +289,52 @@ class PaymentApi {
       throw Exception('Dashboard URL missing in response');
     }
     return url;
+  }
+
+  static Future<void> requestRefund({
+    required String transactionId,
+    required String reason,
+  }) async {
+    final user = _resolvedAuthGateway.currentUser;
+    if (user == null) {
+      throw Exception('User not logged in');
+    }
+    final normalizedTransactionId = transactionId.trim();
+    if (normalizedTransactionId.isEmpty) {
+      throw Exception('Transaction id is required');
+    }
+
+    final normalizedReason = reason.trim();
+    if (normalizedReason.length < 10) {
+      throw Exception('Refund reason must be at least 10 characters.');
+    }
+
+    await _callFunction<Map<String, dynamic>>('requestRefund', {
+      'transactionId': normalizedTransactionId,
+      'reason': normalizedReason,
+    });
+  }
+
+  static Stream<List<RefundRequest>> getMyRefundRequests(String userId) {
+    if (userId.trim().isEmpty) {
+      return const Stream<List<RefundRequest>>.empty();
+    }
+
+    return _firestore
+        .collection('refund_requests')
+        .where('requesterId', isEqualTo: userId)
+        .snapshots()
+        .map((snapshot) {
+          final requests = snapshot.docs
+              .map((doc) => RefundRequest.fromJson(doc.data()))
+              .toList(growable: false)
+            ..sort((a, b) {
+              final aTime = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+              final bTime = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+              return bTime.compareTo(aTime);
+            });
+          return requests;
+        });
   }
 
   static Stream<List<CoinTransaction>> getTransactions(String userId) {

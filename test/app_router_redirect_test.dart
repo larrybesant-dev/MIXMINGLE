@@ -9,6 +9,7 @@ void main() {
         uid: null,
         isFirstRun: () async => true,
         isProfileComplete: (_) async => true,
+        isLegalAccepted: () async => false,
       );
 
       expect(result, '/onboarding');
@@ -20,6 +21,7 @@ void main() {
         uid: null,
         isFirstRun: () async => false,
         isProfileComplete: (_) async => true,
+        isLegalAccepted: () async => true,
       );
 
       expect(result, '/login');
@@ -31,6 +33,7 @@ void main() {
         uid: 'user-1',
         isFirstRun: () async => false,
         isProfileComplete: (_) async => false,
+        isLegalAccepted: () async => true,
       );
 
       expect(result, '/profile');
@@ -42,6 +45,7 @@ void main() {
         uid: 'user-1',
         isFirstRun: () async => false,
         isProfileComplete: (_) async => false,
+        isLegalAccepted: () async => true,
       );
 
       expect(result, isNull);
@@ -53,9 +57,22 @@ void main() {
         uid: 'user-1',
         isFirstRun: () async => false,
         isProfileComplete: (_) async => true,
+        isLegalAccepted: () async => true,
       );
 
       expect(result, '/');
+    });
+
+    test('routes users to legal terms when current legal is not accepted', () async {
+      final result = await evaluateAppRedirect(
+        matchedLocation: '/login',
+        uid: null,
+        isFirstRun: () async => false,
+        isProfileComplete: (_) async => true,
+        isLegalAccepted: () async => false,
+      );
+
+      expect(result, '/legal/terms');
     });
   });
 }
