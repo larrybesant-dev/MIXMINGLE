@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/room_policy_model.dart';
+import '../../../services/notification_service.dart';
 import 'room_firestore_provider.dart';
 
 class CamAccessController {
@@ -40,6 +41,11 @@ class CamAccessController {
       'createdAt': FieldValue.serverTimestamp(),
       'updatedAt': FieldValue.serverTimestamp(),
     });
+
+    await NotificationService(firestore: _db).inAppNotification(
+      broadcasterId,
+      'New stage access request from $requesterId in room $roomId.',
+    );
   }
 
   Future<void> approveRequest(String roomId, CamAccessRequestModel request) async {
@@ -58,13 +64,25 @@ class CamAccessController {
       SetOptions(merge: true),
     );
     await batch.commit();
+    await NotificationService(firestore: _db).inAppNotification(
+      request.requesterId,
+      'Your stage access request was approved in room $roomId.',
+    );
   }
 
   Future<void> denyRequest(String roomId, String requestId) async {
+    final requestSnapshot = await _requestCollection(roomId).doc(requestId).get();
+    final requesterId = (requestSnapshot.data()?['requesterId'] as String?)?.trim();
     await _requestCollection(roomId).doc(requestId).update({
       'status': 'denied',
       'updatedAt': FieldValue.serverTimestamp(),
     });
+    if (requesterId != null && requesterId.isNotEmpty) {
+      await NotificationService(firestore: _db).inAppNotification(
+        requesterId,
+        'Your stage access request was denied in room $roomId.',
+      );
+    }
   }
 }
 

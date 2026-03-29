@@ -64,6 +64,22 @@ service cloud.firestore {
       return signedIn() && roomDoc(roomId).data.hostId == request.auth.uid;
     }
 
+    function participantDoc(roomId, userId) {
+      return get(/databases/$(database)/documents/rooms/$(roomId)/participants/$(userId));
+    }
+
+    function participantRole(roomId, userId) {
+      return participantDoc(roomId, userId).data.role;
+    }
+
+    function isRoomModerator(roomId) {
+      return signedIn() && participantRole(roomId, request.auth.uid) == 'moderator';
+    }
+
+    function isRoomStaff(roomId) {
+      return isRoomHost(roomId) || isRoomModerator(roomId);
+    }
+
     match /users/{userId} {
       allow read: if signedIn();
       allow create: if isSelf(userId);
@@ -92,8 +108,16 @@ service cloud.firestore {
         allow read: if signedIn();
         allow create: if signedIn()
           && participantId == request.auth.uid
-          && request.resource.data.userId == request.auth.uid;
-        allow update, delete: if isRoomHost(roomId) || participantId == request.auth.uid;
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.role in ['audience', 'host']
+          && request.resource.data.isBanned == false
+          && request.resource.data.isMuted == false;
+        allow update: if isRoomHost(roomId)
+          || (
+            participantId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastActiveAt'])
+          );
+        allow delete: if isRoomHost(roomId) || participantId == request.auth.uid;
       }
 
       match /presence/{userId} {
@@ -126,12 +150,31 @@ service cloud.firestore {
         allow read: if signedIn()
           && (resource.data.requesterId == request.auth.uid
             || resource.data.broadcasterId == request.auth.uid
-            || isRoomHost(roomId));
+            || isRoomStaff(roomId));
         allow create: if signedIn()
           && request.resource.data.requesterId == request.auth.uid
-          && request.resource.data.broadcasterId is string;
+          && request.resource.data.broadcasterId is string
+          && request.resource.data.roomId == roomId
+          && request.resource.data.status == 'pending';
         allow update: if signedIn()
-          && (resource.data.broadcasterId == request.auth.uid || isRoomHost(roomId));
+          && (resource.data.broadcasterId == request.auth.uid || isRoomStaff(roomId));
+        allow delete: if false;
+      }
+
+      match /mic_access_requests/{requestId} {
+        allow read: if signedIn()
+          && (resource.data.requesterId == request.auth.uid
+            || resource.data.hostId == request.auth.uid
+            || isRoomStaff(roomId));
+        allow create: if signedIn()
+          && request.resource.data.requesterId == request.auth.uid
+          && request.resource.data.hostId is string
+          && request.resource.data.roomId == roomId
+          && request.resource.data.status == 'pending'
+          && request.resource.data.priority is int
+          && request.resource.data.priority >= 0
+          && request.resource.data.expiresAt is timestamp;
+        allow update: if signedIn() && isRoomStaff(roomId);
         allow delete: if false;
       }
     }

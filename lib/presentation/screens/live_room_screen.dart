@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:flutter/material.dart';
@@ -8,17 +9,21 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/agora_constants.dart';
 import '../../models/moderation_model.dart';
+import '../../models/room_policy_model.dart';
 import '../../models/room_participant_model.dart';
 import '../providers/user_provider.dart';
 import '../../features/room/providers/room_firestore_provider.dart';
 import '../../features/room/providers/participant_providers.dart';
 import '../../features/room/providers/message_providers.dart';
+import '../../features/room/providers/presence_provider.dart';
 import '../../features/room/widgets/message_bubble.dart';
 import '../../features/room/widgets/room_control_sheets.dart';
 import '../../features/room/providers/cam_access_provider.dart';
+import '../../features/room/providers/mic_access_provider.dart';
 import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/room/providers/host_provider.dart';
 import '../../features/room/providers/room_policy_provider.dart';
+import '../../features/room/room_permissions.dart';
 import '../../services/analytics_service.dart';
 import '../../services/agora_service.dart';
 import '../../services/follow_service.dart';
@@ -32,7 +37,8 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
   ConsumerState<LiveRoomScreen> createState() => _LiveRoomScreenState();
 }
 
-class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
+class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
+  with WidgetsBindingObserver {
   late TextEditingController messageController;
   late ScrollController scrollController;
   FirebaseFirestore? _firestore;
@@ -54,6 +60,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   Set<String> _excludedUserIds = const <String>{};
   String? _appliedMediaRole;
   bool _isHandlingParticipantRemoval = false;
+  Timer? _presenceHeartbeatTimer;
 
   bool _looksLikeAgoraAppId(String value) {
     final trimmed = value.trim();
@@ -66,6 +73,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     messageController = TextEditingController();
     scrollController = ScrollController();
 
@@ -125,6 +133,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       }
     };
     service.onRemoteUserLeft = () {
+      if (mounted) {
+        setState(() {});
+      }
+    };
+    service.onSpeakerActivityChanged = () {
       if (mounted) {
         setState(() {});
       }
@@ -208,6 +221,31 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     }
   }
 
+  void _startPresenceHeartbeat(String userId) {
+    _presenceHeartbeatTimer?.cancel();
+    final presenceController = ref.read(roomPresenceControllerProvider);
+    presenceController.setOnline(roomId: widget.roomId, userId: userId);
+    _presenceHeartbeatTimer = Timer.periodic(const Duration(seconds: 20), (_) {
+      presenceController.heartbeat(roomId: widget.roomId, userId: userId);
+    });
+  }
+
+  Future<void> _stopPresenceHeartbeat() async {
+    _presenceHeartbeatTimer?.cancel();
+    _presenceHeartbeatTimer = null;
+    final userId = _joinedUserId;
+    if (userId == null) {
+      return;
+    }
+    try {
+      await ref
+          .read(roomPresenceControllerProvider)
+          .setOffline(roomId: widget.roomId, userId: userId);
+    } catch (_) {
+      // Best-effort cleanup.
+    }
+  }
+
   Future<void> _disconnectCall() async {
     final service = _agoraService;
     _agoraService = null;
@@ -224,10 +262,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       return;
     }
 
-    final canBroadcast = role == 'host' || role == 'cohost';
+    final canBroadcast = role == 'host' || role == 'cohost' || role == 'stage';
+    final videoEnabled = role == 'host' || role == 'cohost';
     await service.setBroadcaster(canBroadcast);
     await service.mute(!canBroadcast);
-    await service.enableVideo(canBroadcast);
+    await service.enableVideo(videoEnabled);
 
     if (!mounted) {
       return;
@@ -236,7 +275,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     setState(() {
       _appliedMediaRole = role;
       _isMicMuted = !canBroadcast;
-      _isVideoEnabled = canBroadcast;
+      _isVideoEnabled = videoEnabled;
     });
   }
 
@@ -382,11 +421,22 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   }) async {
     final isSelf = target.userId == currentUserId;
     final targetIsHost = target.userId == hostId || target.role == 'host';
-    final actorIsModeratorOnly = isModerator && !isHost;
-    final canModerateTarget =
-        !targetIsHost && (!actorIsModeratorOnly || target.role == 'audience');
-    final canManageParticipant =
-        !isSelf && (isHost || isModerator) && canModerateTarget;
+    final actorRole =
+        currentParticipant?.role ?? (isHost ? 'host' : (isModerator ? 'moderator' : 'audience'));
+    final canManageParticipant = RoomPermissions.canManageParticipant(
+      actorRole: actorRole,
+      actorUserId: currentUserId,
+      targetRole: target.role,
+      targetUserId: target.userId,
+      hostUserId: hostId,
+    );
+    final canHostOnlyManage = RoomPermissions.isHost(actorRole) && !isSelf && !targetIsHost;
+    final canTransferOwnership = RoomPermissions.canTransferOwnership(
+      actorRole: actorRole,
+      actorUserId: currentUserId,
+      targetUserId: target.userId,
+      hostUserId: hostId,
+    );
     final moderationService = ModerationService();
     final followService = FollowService();
     var isBlocked = false;
@@ -509,7 +559,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 }
               }),
             ),
-          if (isHost && !isSelf && !targetIsHost)
+          if (canHostOnlyManage)
             RoomActionItem(
               label: target.role == 'moderator'
                   ? 'Remove moderator'
@@ -537,7 +587,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 }
               }),
             ),
-          if (isHost && !isSelf && !targetIsHost)
+          if (canHostOnlyManage)
             RoomActionItem(
               label: target.role == 'cohost'
                   ? 'Move to audience'
@@ -565,7 +615,34 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                 }
               }),
             ),
-          if (isHost && !isSelf && !targetIsHost)
+          if (canTransferOwnership)
+            RoomActionItem(
+              label: 'Transfer room ownership',
+              icon: Icons.workspace_premium_outlined,
+              destructive: true,
+              onTap: () => runAction(() async {
+                final confirmed = await _confirmAction(
+                  title: 'Transfer ownership',
+                  message:
+                      'Make ${target.userId} the new room host? You will be moved to cohost.',
+                  confirmLabel: 'Transfer',
+                );
+                if (!confirmed) {
+                  return;
+                }
+                try {
+                  await hostControls.transferHost(
+                    roomId: widget.roomId,
+                    fromUserId: currentUserId,
+                    toUserId: target.userId,
+                  );
+                  _showSnackBar('${target.userId} is now the room host.');
+                } catch (e) {
+                  _showSnackBar('Could not transfer ownership: $e');
+                }
+              }),
+            ),
+          if (canHostOnlyManage)
             RoomActionItem(
               label: target.isBanned ? 'Unban user' : 'Ban user',
               icon: target.isBanned
@@ -881,7 +958,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           : (hostId == userId ? 'host' : 'audience');
       await _connectCall(
         userId,
-        canBroadcast: participantRole == 'host' || participantRole == 'cohost',
+        canBroadcast:
+            participantRole == 'host' ||
+            participantRole == 'cohost' ||
+            participantRole == 'stage',
       );
 
       if (!_hasTrackedRoomJoin) {
@@ -891,6 +971,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           params: {'room_id': widget.roomId, 'user_id': userId},
         );
       }
+      _startPresenceHeartbeat(userId);
     } catch (_) {
       if (mounted) {
         setState(
@@ -915,6 +996,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         .collection('participants')
         .doc(userId);
     try {
+      await _stopPresenceHeartbeat();
       await docRef.delete();
     } catch (_) {
       // Best-effort cleanup when users leave a room.
@@ -923,11 +1005,32 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _presenceHeartbeatTimer?.cancel();
     _disconnectCall();
     _leaveRoom();
     messageController.dispose();
     scrollController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    final userId = _joinedUserId;
+    if (userId == null) {
+      return;
+    }
+    final presenceController = ref.read(roomPresenceControllerProvider);
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.detached ||
+        state == AppLifecycleState.inactive) {
+      _presenceHeartbeatTimer?.cancel();
+      _presenceHeartbeatTimer = null;
+      presenceController.setOffline(roomId: widget.roomId, userId: userId);
+    } else if (state == AppLifecycleState.resumed) {
+      _startPresenceHeartbeat(userId);
+    }
   }
 
   @override
@@ -956,14 +1059,20 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final participantCountAsync = ref.watch(
       participantCountProvider(widget.roomId),
     );
+    final presenceAsync = ref.watch(roomPresenceStreamProvider(widget.roomId));
     final hostAsync = ref.watch(hostProvider(widget.roomId));
     final coHostsAsync = ref.watch(coHostsProvider(widget.roomId));
     final roomPolicyAsync = ref.watch(roomPolicyProvider(widget.roomId));
     final camRequestsAsync = ref.watch(
       roomCamAccessRequestsProvider(widget.roomId),
     );
+    final micRequestsAsync = ref.watch(
+      roomMicAccessRequestsProvider(widget.roomId),
+    );
     final hostControls = ref.read(hostControlsProvider);
     final camAccessController = ref.read(camAccessControllerProvider);
+    final micAccessController = ref.read(micAccessControllerProvider);
+    final roomPolicyController = ref.read(roomPolicyControllerProvider);
 
     return currentParticipantAsync.when(
       data: (participant) {
@@ -973,6 +1082,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         final role = participant?.role ?? 'audience';
         final myCamRequestAsync = ref.watch(
           myCamAccessRequestProvider((
+            roomId: widget.roomId,
+            requesterId: user.id,
+          )),
+        );
+        final myMicRequestAsync = ref.watch(
+          myMicAccessRequestProvider((
             roomId: widget.roomId,
             requesterId: user.id,
           )),
@@ -1112,9 +1227,20 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         children: [
                           SizedBox(
                             height: 170,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: _agoraService!.getLocalView(),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: _agoraService!.localSpeaking
+                                      ? Colors.green
+                                      : Colors.transparent,
+                                  width: 3,
+                                ),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: _agoraService!.getLocalView(),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -1128,11 +1254,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                       _agoraService!.remoteUids[index];
                                   return SizedBox(
                                     width: 150,
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(10),
-                                      child: _agoraService!.getRemoteView(
-                                        remoteUid,
-                                        widget.roomId,
+                                    child: DecoratedBox(
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(
+                                          color: _agoraService!
+                                                  .isRemoteSpeaking(remoteUid)
+                                              ? Colors.green
+                                              : Colors.transparent,
+                                          width: 3,
+                                        ),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(10),
+                                        child: _agoraService!.getRemoteView(
+                                          remoteUid,
+                                          widget.roomId,
+                                        ),
                                       ),
                                     ),
                                   );
@@ -1154,7 +1292,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                 tooltip: _isMicMuted
                                     ? 'Unmute microphone'
                                     : 'Mute microphone',
-                                onPressed: isHost || isCohost
+                                onPressed: RoomPermissions.canUseMic(role)
                                     ? _toggleMic
                                     : null,
                                 icon: Icon(
@@ -1166,7 +1304,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                 tooltip: _isVideoEnabled
                                     ? 'Turn camera off'
                                     : 'Turn camera on',
-                                onPressed: isHost || isCohost
+                                onPressed: RoomPermissions.canUseCamera(role)
                                     ? _toggleVideo
                                     : null,
                                 icon: Icon(
@@ -1317,6 +1455,158 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                               .toggleAllowGifts(widget.roomId),
                                         ),
                                       ),
+                                      SizedBox(
+                                        width: 220,
+                                        child: DropdownButtonFormField<int>(
+                                          initialValue:
+                                              roomPolicyAsync.valueOrNull
+                                                  ?.micLimit ??
+                                              6,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Mic seats',
+                                          ),
+                                          items: const [
+                                            DropdownMenuItem(
+                                              value: 2,
+                                              child: Text('2 seats'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: 4,
+                                              child: Text('4 seats'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: 6,
+                                              child: Text('6 seats'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: 8,
+                                              child: Text('8 seats'),
+                                            ),
+                                          ],
+                                          onChanged: (value) {
+                                            if (value == null) return;
+                                            roomPolicyController.setMicLimit(
+                                              widget.roomId,
+                                              value,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 220,
+                                        child: DropdownButtonFormField<int>(
+                                          initialValue:
+                                              roomPolicyAsync.valueOrNull
+                                                  ?.camLimit ??
+                                              6,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Camera seats',
+                                          ),
+                                          items: const [
+                                            DropdownMenuItem(
+                                              value: 2,
+                                              child: Text('2 seats'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: 4,
+                                              child: Text('4 seats'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: 6,
+                                              child: Text('6 seats'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: 8,
+                                              child: Text('8 seats'),
+                                            ),
+                                          ],
+                                          onChanged: (value) {
+                                            if (value == null) return;
+                                            roomPolicyController.setCamLimit(
+                                              widget.roomId,
+                                              value,
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 240,
+                                        child: DropdownButtonFormField<String>(
+                                          initialValue:
+                                              roomPolicyAsync.valueOrNull
+                                                  ?.defaultCamViewPolicy
+                                                  .name ??
+                                              CamViewPolicy.approvedOnly.name,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Default cam policy',
+                                          ),
+                                          items: CamViewPolicy.values
+                                              .map(
+                                                (policy) => DropdownMenuItem(
+                                                  value: policy.name,
+                                                  child: Text(policy.name),
+                                                ),
+                                              )
+                                              .toList(growable: false),
+                                          onChanged: (value) {
+                                            if (value == null) return;
+                                            final policy = CamViewPolicy.values
+                                                .firstWhere(
+                                                  (item) =>
+                                                      item.name == value,
+                                                  orElse: () =>
+                                                      CamViewPolicy.approvedOnly,
+                                                );
+                                            roomPolicyController
+                                                .setDefaultCamViewPolicy(
+                                                  widget.roomId,
+                                                  policy,
+                                                );
+                                          },
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 220,
+                                        child: DropdownButtonFormField<String>(
+                                          initialValue:
+                                              roomPolicyAsync
+                                                  .valueOrNull
+                                                  ?.visibility
+                                                  .name ??
+                                              MixVyRoomVisibility.public.name,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Room visibility',
+                                          ),
+                                          items: MixVyRoomVisibility.values
+                                              .map(
+                                                (visibility) =>
+                                                    DropdownMenuItem(
+                                                      value: visibility.name,
+                                                      child: Text(
+                                                        visibility.name,
+                                                      ),
+                                                    ),
+                                              )
+                                              .toList(growable: false),
+                                          onChanged: (value) {
+                                            if (value == null) return;
+                                            final visibility =
+                                                MixVyRoomVisibility.values
+                                                    .firstWhere(
+                                                      (item) =>
+                                                          item.name == value,
+                                                      orElse: () =>
+                                                          MixVyRoomVisibility
+                                                              .public,
+                                                    );
+                                            roomPolicyController
+                                                .setVisibility(
+                                                  widget.roomId,
+                                                  visibility,
+                                                );
+                                          },
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: 8),
@@ -1422,6 +1712,116 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                     error: (e, _) =>
                                         Text('Could not load cam requests: $e'),
                                   ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Mic request queue',
+                                    style: Theme.of(context).textTheme.titleSmall,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  micRequestsAsync.when(
+                                    data: (requests) {
+                                      final pendingRequests = requests
+                                          .where(
+                                            (request) =>
+                                                request.status == 'pending',
+                                          )
+                                          .toList(growable: false);
+                                      if (pendingRequests.isEmpty) {
+                                        return const Text(
+                                          'No pending mic requests.',
+                                        );
+                                      }
+
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: pendingRequests
+                                            .map((request) {
+                                              return Card(
+                                                child: ListTile(
+                                                  title: Text(
+                                                    'Mic request from ${request.requesterId}',
+                                                  ),
+                                                  subtitle: Text(
+                                                    'Approve for stage audio access • Priority ${request.priority}',
+                                                  ),
+                                                  trailing: Wrap(
+                                                    spacing: 8,
+                                                    children: [
+                                                      IconButton(
+                                                        onPressed: () =>
+                                                            micAccessController
+                                                                .bumpPriority(
+                                                                  widget.roomId,
+                                                                  request.id,
+                                                                ),
+                                                        icon: const Icon(
+                                                          Icons.arrow_upward,
+                                                        ),
+                                                        tooltip: 'Bump priority',
+                                                      ),
+                                                      IconButton(
+                                                        onPressed: () =>
+                                                            micAccessController
+                                                                .lowerPriority(
+                                                                  widget.roomId,
+                                                                  request.id,
+                                                                ),
+                                                        icon: const Icon(
+                                                          Icons.arrow_downward,
+                                                        ),
+                                                        tooltip: 'Lower priority',
+                                                      ),
+                                                      IconButton(
+                                                        onPressed: () =>
+                                                            micAccessController
+                                                                .approveRequest(
+                                                                  widget.roomId,
+                                                                  request,
+                                                                ),
+                                                        icon: const Icon(
+                                                          Icons
+                                                              .check_circle_outline,
+                                                        ),
+                                                        tooltip: 'Approve',
+                                                      ),
+                                                      IconButton(
+                                                        onPressed: () =>
+                                                            micAccessController
+                                                                .denyRequest(
+                                                                  widget.roomId,
+                                                                  request.id,
+                                                                ),
+                                                        icon: const Icon(
+                                                          Icons.cancel_outlined,
+                                                        ),
+                                                        tooltip: 'Deny',
+                                                      ),
+                                                      IconButton(
+                                                        onPressed: () =>
+                                                            micAccessController
+                                                                .expireNow(
+                                                                  widget.roomId,
+                                                                  request.id,
+                                                                ),
+                                                        icon: const Icon(
+                                                          Icons.timer_off_outlined,
+                                                        ),
+                                                        tooltip: 'Expire now',
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            })
+                                            .toList(growable: false),
+                                      );
+                                    },
+                                    loading: () =>
+                                        const LinearProgressIndicator(),
+                                    error: (e, _) =>
+                                        Text('Could not load mic requests: $e'),
+                                  ),
                                 ],
                               ),
                             ),
@@ -1511,6 +1911,65 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                 error: (e, _) =>
                                     Text('Could not load request status: $e'),
                               ),
+                              const SizedBox(height: 8),
+                              myMicRequestAsync.when(
+                                data: (request) {
+                                  final requestStatus = request?.status;
+                                  return Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      OutlinedButton.icon(
+                                        onPressed:
+                                            !allowMicRequests ||
+                                                hostId.isEmpty ||
+                                                requestStatus == 'pending'
+                                            ? null
+                                            : () async {
+                                                try {
+                                                  await micAccessController
+                                                      .requestAccess(
+                                                        roomId: widget.roomId,
+                                                        requesterId: user.id,
+                                                        hostId: hostId,
+                                                      );
+                                                  if (!context.mounted) return;
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        'Mic access request sent.',
+                                                      ),
+                                                    ),
+                                                  );
+                                                } catch (e) {
+                                                  if (!context.mounted) return;
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        'Could not send request: $e',
+                                                      ),
+                                                    ),
+                                                  );
+                                                }
+                                              },
+                                        icon: const Icon(Icons.mic_none),
+                                        label: const Text('Request Mic Access'),
+                                      ),
+                                      if (requestStatus != null)
+                                        Chip(
+                                          label: Text('Mic: $requestStatus'),
+                                        ),
+                                    ],
+                                  );
+                                },
+                                loading: () => const LinearProgressIndicator(),
+                                error: (e, _) =>
+                                    Text('Could not load mic request status: $e'),
+                              ),
                             ],
                           ),
                         ),
@@ -1536,6 +1995,33 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                             error: (e, _) => const Text('—'),
                           ),
                           const Spacer(),
+                          presenceAsync.when(
+                            data: (presence) {
+                              final activeCutoff = DateTime.now().subtract(
+                                const Duration(seconds: 50),
+                              );
+                              final onlineCount = presence
+                                  .where(
+                                    (entry) =>
+                                        entry.isOnline &&
+                                        (entry.lastHeartbeatAt == null ||
+                                            entry.lastHeartbeatAt!
+                                                .isAfter(activeCutoff)),
+                                  )
+                                  .length;
+                              return Chip(
+                                avatar: const Icon(
+                                  Icons.circle,
+                                  color: Colors.green,
+                                  size: 10,
+                                ),
+                                label: Text('$onlineCount online'),
+                              );
+                            },
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, _) => const SizedBox.shrink(),
+                          ),
+                          const SizedBox(width: 8),
                           IconButton(
                             tooltip: 'People in room',
                             onPressed: participantsInRoom.isEmpty

@@ -4,12 +4,18 @@ import 'package:flutter/material.dart'; // For Widget, VoidCallback
 class AgoraService {
     // List of remote user IDs
     final List<int> _remoteUids = [];
+  final Set<int> _speakingUids = <int>{};
+  bool _localSpeaking = false;
 
     // Callbacks for UI updates
     VoidCallback? onRemoteUserJoined;
     VoidCallback? onRemoteUserLeft;
+  VoidCallback? onSpeakerActivityChanged;
 
     List<int> get remoteUids => List.unmodifiable(_remoteUids);
+  bool get localSpeaking => _localSpeaking;
+
+  bool isRemoteSpeaking(int uid) => _speakingUids.contains(uid);
 
     /// Get the local video view widget
     Widget getLocalView() {
@@ -51,6 +57,11 @@ class AgoraService {
     await _engine.setClientRole(role: ClientRoleType.clientRoleAudience);
     await _engine.enableVideo();
     await _engine.enableAudio();
+    await _engine.enableAudioVolumeIndication(
+      interval: 300,
+      smooth: 3,
+      reportVad: true,
+    );
 
     // Set up event handlers
     _engine.registerEventHandler(
@@ -61,7 +72,45 @@ class AgoraService {
         },
         onUserOffline: (connection, remoteUid, reason) {
           _remoteUids.remove(remoteUid);
+          _speakingUids.remove(remoteUid);
           if (onRemoteUserLeft != null) onRemoteUserLeft!();
+        },
+        onAudioVolumeIndication: (
+          connection,
+          speakers,
+          speakerNumber,
+          totalVolume,
+        ) {
+          final nextSpeakingUids = <int>{};
+          var nextLocalSpeaking = false;
+          for (final speaker in speakers) {
+            final uid = speaker.uid ?? 0;
+            final volume = speaker.volume ?? 0;
+            if (volume <= 10) {
+              continue;
+            }
+            if (uid == 0) {
+              nextLocalSpeaking = true;
+            } else {
+              nextSpeakingUids.add(uid);
+            }
+          }
+
+          final changed =
+              nextLocalSpeaking != _localSpeaking ||
+              nextSpeakingUids.length != _speakingUids.length ||
+              !nextSpeakingUids.containsAll(_speakingUids);
+          if (!changed) {
+            return;
+          }
+
+          _localSpeaking = nextLocalSpeaking;
+          _speakingUids
+            ..clear()
+            ..addAll(nextSpeakingUids);
+          if (onSpeakerActivityChanged != null) {
+            onSpeakerActivityChanged!();
+          }
         },
       ),
     );
@@ -142,6 +191,8 @@ class AgoraService {
     if (!_initialized) return;
     await _engine.leaveChannel();
     await _engine.release();
+    _speakingUids.clear();
+    _localSpeaking = false;
     _initialized = false;
   }
 }

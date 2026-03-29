@@ -186,6 +186,7 @@ class RoomRosterSheet extends StatelessWidget {
                       'Host',
                     if (participant.role == 'moderator') 'Moderator',
                     if (participant.role == 'cohost') 'Cohost',
+                    if (participant.role == 'stage') 'Stage',
                     if (participant.role == 'audience') 'Audience',
                     if (participant.isMuted) 'Muted',
                     if (participant.isBanned) 'Banned',
@@ -227,7 +228,10 @@ class RoomRosterSheet extends StatelessWidget {
     if (participant.role == 'cohost') {
       return 2;
     }
-    return 3;
+    if (participant.role == 'stage') {
+      return 3;
+    }
+    return 4;
   }
 
   static IconData _roleIcon(
@@ -242,6 +246,9 @@ class RoomRosterSheet extends StatelessWidget {
     }
     if (participant.role == 'cohost') {
       return Icons.mic;
+    }
+    if (participant.role == 'stage') {
+      return Icons.record_voice_over_outlined;
     }
     return Icons.person;
   }

@@ -9,6 +9,19 @@ class NotificationService {
 
 	final FirebaseFirestore _firestore;
 
+	String _safeActorId(String fallbackUserId) {
+		try {
+			final authUid = FirebaseAuth.instance.currentUser?.uid;
+			if (authUid != null && authUid.trim().isNotEmpty) {
+				return authUid.trim();
+			}
+		} catch (_) {
+			// FirebaseAuth may be unavailable in unit tests.
+		}
+		final fallback = fallbackUserId.trim();
+		return fallback.isEmpty ? 'system' : fallback;
+	}
+
 	Stream<List<NotificationModel>> notificationsForUser(String userId) {
 		return _firestore
 				.collection('notifications')
@@ -67,7 +80,7 @@ class NotificationService {
 	}
 
 	Future<void> pushNotification(String userId, String message) async {
-		final actorId = FirebaseAuth.instance.currentUser?.uid ?? userId;
+		final actorId = _safeActorId(userId);
 		await _firestore.collection('notifications').add({
 			'userId': userId,
 			'actorId': actorId,
@@ -79,7 +92,7 @@ class NotificationService {
 	}
 
 	Future<void> inAppNotification(String userId, String message) async {
-		final actorId = FirebaseAuth.instance.currentUser?.uid ?? userId;
+		final actorId = _safeActorId(userId);
 		await _firestore.collection('notifications').add({
 			'userId': userId,
 			'actorId': actorId,
