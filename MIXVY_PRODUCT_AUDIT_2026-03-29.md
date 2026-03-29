@@ -178,5 +178,5 @@ This audit compares MixVy against a universal social app baseline (auth, profile
 - [x] P1-02 Language selector and localization baseline
 - [x] P1-03 App version/build diagnostics panel
 - [x] P1-04 Moderation dashboard
-- [ ] P1-05 Automated content moderation pipeline
+- [x] P1-05 Automated content moderation pipeline
 
