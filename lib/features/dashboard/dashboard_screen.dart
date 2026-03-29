@@ -7,6 +7,8 @@ import 'package:go_router/go_router.dart';
 import '../feed/providers/feed_providers.dart';
 import '../feed/screens/discovery_feed_screen.dart';
 import '../feed/models/post_model.dart';
+import '../profile/profile_completion.dart';
+import '../profile/profile_controller.dart';
 import '../profile/profile_screen.dart';
 import '../../widgets/mixvy_drawer.dart';
 
@@ -41,11 +43,21 @@ import '../../core/firestore/firestore_error_utils.dart';
                 final postsAsync = ref.watch(postsStreamProvider);
                 final roomsAsync = ref.watch(roomsStreamProvider);
                 final eventsAsync = ref.watch(eventsStreamProvider);
+                final profileState = ref.watch(profileControllerProvider);
+                final setupItems = ProfileCompletion.guidedSetupItems(profileState);
+                final profileCompletion = ProfileCompletion.completeness(profileState);
                 return SingleChildScrollView(
                   padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (setupItems.isNotEmpty)
+                        _profileNudgeCard(
+                          completion: profileCompletion,
+                          missingCount: setupItems.length,
+                          firstAction: setupItems.first,
+                        ),
+                      if (setupItems.isNotEmpty) const SizedBox(height: 12),
                       _quickActions(context),
                       const SizedBox(height: 20),
                       const Text('Live Posts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
@@ -141,6 +153,56 @@ import '../../core/firestore/firestore_error_utils.dart';
             onPressed: () => context.go('/payments'),
           ),
         ],
+      );
+    }
+
+    Widget _profileNudgeCard({
+      required double completion,
+      required int missingCount,
+      required String firstAction,
+    }) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Colors.blue.withValues(alpha: 0.15),
+              Colors.cyan.withValues(alpha: 0.09),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: Colors.blue.withValues(alpha: 0.28)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Profile ${((completion * 100).round())}% complete',
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(height: 4),
+            Text('Next best step: $firstAction'),
+            const SizedBox(height: 8),
+            LinearProgressIndicator(value: completion, minHeight: 7, borderRadius: BorderRadius.circular(999)),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Text('$missingCount items left', style: const TextStyle(fontWeight: FontWeight.w500)),
+                const Spacer(),
+                TextButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _currentIndex = 2;
+                    });
+                  },
+                  icon: const Icon(Icons.person_outline),
+                  label: const Text('Finish setup'),
+                ),
+              ],
+            ),
+          ],
+        ),
       );
     }
 

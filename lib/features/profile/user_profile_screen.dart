@@ -20,6 +20,27 @@ class UserProfileScreen extends StatefulWidget {
 class _UserProfileScreenState extends State<UserProfileScreen> {
   final ModerationService _moderationService = ModerationService();
   final FollowService _followService = FollowService();
+  late Future<Map<String, dynamic>> _profileFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _profileFuture = _loadProfile();
+  }
+
+  @override
+  void didUpdateWidget(covariant UserProfileScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.userId != widget.userId) {
+      _profileFuture = _loadProfile();
+    }
+  }
+
+  void _refreshProfile() {
+    setState(() {
+      _profileFuture = _loadProfile();
+    });
+  }
 
   Future<Map<String, dynamic>> _loadProfile() async {
     final firestore = FirebaseFirestore.instance;
@@ -69,7 +90,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         await _followService.followUser(widget.userId);
       }
       if (!mounted) return;
-      setState(() {});
+      _refreshProfile();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(currentlyFollowing ? 'Unfollowed user.' : 'Now following user.')),
       );
@@ -104,7 +125,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
         await _moderationService.blockUser(widget.userId);
       }
       if (!mounted) return;
-      setState(() {});
+      _refreshProfile();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(currentlyBlocked ? 'User unblocked.' : 'User blocked.')),
       );
@@ -182,7 +203,7 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: FutureBuilder<Map<String, dynamic>>(
-        future: _loadProfile(),
+        future: _profileFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

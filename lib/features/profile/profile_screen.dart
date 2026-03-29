@@ -17,6 +17,7 @@ import 'package:mixvy/models/room_policy_model.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../auth/controllers/auth_controller.dart';
+import 'profile_completion.dart';
 import 'profile_controller.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -185,29 +186,6 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
     return '$kind upload failed (${e.code}): ${message.isEmpty ? 'unknown error' : message}';
   }
 
-  List<String> _requiredSetupItems(ProfileState state) {
-    final items = <String>[];
-    if ((state.username ?? '').trim().length < 2) {
-      items.add('Add a display name');
-    }
-    if ((state.email ?? '').trim().isEmpty) {
-      items.add('Add an email on your account');
-    }
-    return items;
-  }
-
-  double _profileCompleteness(ProfileState state) {
-    var score = 0;
-    if ((state.username ?? '').trim().length >= 2) score++;
-    if ((state.avatarUrl ?? '').trim().isNotEmpty) score++;
-    if ((state.coverPhotoUrl ?? '').trim().isNotEmpty) score++;
-    if ((state.bio ?? '').trim().isNotEmpty) score++;
-    if ((state.aboutMe ?? '').trim().isNotEmpty) score++;
-    if (state.interests.isNotEmpty) score++;
-    if ((state.introVideoUrl ?? '').trim().isNotEmpty) score++;
-    return score / 7;
-  }
-
   Future<void> _openIntroVideo(String url) async {
     final uri = Uri.tryParse(url);
     if (uri == null) {
@@ -230,8 +208,17 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
   /// Target dimensions: 1200x525 (16:7 ratio) for optimal quality vs file size.
   Uint8List _resizeCoverPhoto(Uint8List bytes) {
     try {
+      developer.log('Starting cover photo resize. Original size: ${bytes.lengthInBytes} bytes', 
+        name: 'ProfileUpload');
+      
       final image = img.decodeImage(bytes);
-      if (image == null) return bytes;
+      if (image == null) {
+        developer.log('Failed to decode image, returning original', name: 'ProfileUpload');
+        return bytes;
+      }
+
+      developer.log('Image decoded. Dimensions: ${image.width}x${image.height}', 
+        name: 'ProfileUpload');
 
       final targetAspect = 16 / 7;
       final currentAspect = image.width / image.height;
@@ -255,6 +242,9 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
         cropY = ((image.height - cropHeight) / 2).toInt();
       }
 
+      developer.log('Crop: $cropWidth x $cropHeight at ($cropX, $cropY)', 
+        name: 'ProfileUpload');
+
       // Crop to 16:7 ratio
       final cropped = img.copyCrop(
         image,
@@ -268,9 +258,13 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       final resized = img.copyResize(cropped, width: 1200, height: 525, interpolation: img.Interpolation.linear);
 
       // Encode as JPEG with quality 85 for smaller file size
-      return Uint8List.fromList(img.encodeJpg(resized, quality: 85));
-    } catch (e) {
-      developer.log('Error resizing cover photo: $e', name: 'ProfileUpload', error: e);
+      final encoded = Uint8List.fromList(img.encodeJpg(resized, quality: 85));
+      developer.log('Resize complete. New size: ${encoded.lengthInBytes} bytes', 
+        name: 'ProfileUpload');
+      return encoded;
+    } catch (e, st) {
+      developer.log('Error resizing cover photo: $e', 
+        name: 'ProfileUpload', error: e, stackTrace: st);
       return bytes; // Return original if resize fails
     }
   }
@@ -697,8 +691,11 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
   Widget build(BuildContext context) {
     final state = ref.watch(profileControllerProvider);
     _hydrateForm(state);
-    final requiredItems = _requiredSetupItems(state);
+    final requiredItems = ProfileCompletion.requiredSetupItems(state);
+    final guidedItems = ProfileCompletion.guidedSetupItems(state);
     final isSetupComplete = requiredItems.isEmpty;
+    final profileStrength = ProfileCompletion.completeness(state);
+    final hasPendingUploads = _isUploadingPhoto || _isUploadingCover || _isUploadingGallery || _isUploadingVideo;
 
     if (state.isLoading && state.userId == null) {
       return const Center(child: CircularProgressIndicator());
@@ -747,9 +744,16 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
                       ],
                     ),
                   ),
+                _ProfileActionBar(
+                  profileStrength: profileStrength,
+                  isLoading: state.isLoading,
+                  hasPendingUploads: hasPendingUploads,
+                  onSave: _saveProfile,
+                ),
+                const SizedBox(height: 14),
                 _HeroCard(
                   state: state,
-                  profileStrength: _profileCompleteness(state),
+                  profileStrength: profileStrength,
                   onUploadAvatar: _uploadPhoto,
                   onUploadCover: _uploadCoverPhoto,
                   onUploadGallery: _uploadGalleryPhoto,
@@ -758,6 +762,34 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
                   isUploadingCover: _isUploadingCover,
                   isUploadingGallery: _isUploadingGallery,
                   isUploadingVideo: _isUploadingVideo,
+                ),
+                const SizedBox(height: 18),
+                _SectionCard(
+                  title: 'Guided setup',
+                  subtitle: guidedItems.isEmpty
+                      ? 'Everything essential is complete. Tune details anytime.'
+                      : 'Finish these steps to improve discovery and trust.',
+                  child: guidedItems.isEmpty
+                      ? Row(
+                          children: [
+                            Icon(Icons.verified_rounded, color: Theme.of(context).colorScheme.primary),
+                            const SizedBox(width: 8),
+                            const Expanded(child: Text('Profile basics complete. Great start.')),
+                          ],
+                        )
+                      : Column(
+                          children: guidedItems
+                              .take(4)
+                              .map(
+                                (item) => ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  dense: true,
+                                  leading: const Icon(Icons.radio_button_unchecked, size: 18),
+                                  title: Text(item),
+                                ),
+                              )
+                              .toList(growable: false),
+                        ),
                 ),
                 const SizedBox(height: 18),
                 _SectionCard(
@@ -1103,21 +1135,76 @@ class _HeroCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          AspectRatio(
-            aspectRatio: 16 / 7,
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: Container(
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                child: (state.coverPhotoUrl ?? '').trim().isNotEmpty
-                    ? Image.network(
-                        state.coverPhotoUrl!.trim(),
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => const Icon(Icons.landscape_rounded, size: 40),
-                      )
-                    : const Icon(Icons.landscape_rounded, size: 40),
+          Stack(
+            children: [
+              AspectRatio(
+                aspectRatio: 16 / 7,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: Container(
+                    color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    child: (state.coverPhotoUrl ?? '').trim().isNotEmpty
+                        ? Image.network(
+                            state.coverPhotoUrl!.trim(),
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => const Icon(Icons.landscape_rounded, size: 40),
+                          )
+                        : const Icon(Icons.landscape_rounded, size: 40),
+                  ),
+                ),
               ),
-            ),
+              Positioned.fill(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(18),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.black.withValues(alpha: 0.06),
+                          Colors.black.withValues(alpha: 0.38),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                right: 12,
+                bottom: 12,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(
+                          value: profileStrength,
+                          strokeWidth: 2.6,
+                          backgroundColor: Colors.white.withValues(alpha: 0.28),
+                          valueColor: const AlwaysStoppedAnimation(Colors.white),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        '${(100 * profileStrength).round()}% ready',
+                        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
           Transform.translate(
             offset: const Offset(0, -24),
@@ -1154,6 +1241,21 @@ class _HeroCard extends StatelessWidget {
             (state.username ?? '').trim().isEmpty ? 'Your profile' : state.username!.trim(),
             style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.center,
+            children: [
+              if ((state.age?.toString() ?? '').isNotEmpty) _FactChip(icon: Icons.cake_outlined, text: '${state.age}'),
+              if ((state.location ?? '').trim().isNotEmpty)
+                _FactChip(icon: Icons.place_outlined, text: state.location!.trim()),
+              if ((state.gender ?? '').trim().isNotEmpty)
+                _FactChip(icon: Icons.person_outline, text: state.gender!.trim()),
+              if ((state.relationshipStatus ?? '').trim().isNotEmpty)
+                _FactChip(icon: Icons.favorite_border, text: state.relationshipStatus!.trim()),
+            ],
+          ),
           const SizedBox(height: 6),
           LinearProgressIndicator(
             value: profileStrength,
@@ -1182,7 +1284,7 @@ class _HeroCard extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: isUploadingPhoto ? null : () => safeRunUpload(onUploadAvatar),
                 icon: const Icon(Icons.photo_camera_back_outlined),
-                label: Text(isUploadingPhoto ? 'Uploading...' : 'Profile Picture Upload'),
+                label: Text(isUploadingPhoto ? 'Uploading...' : 'Avatar'),
               ),
               OutlinedButton.icon(
                 onPressed: isUploadingCover ? null : () => safeRunUpload(onUploadCover),
@@ -1201,6 +1303,116 @@ class _HeroCard extends StatelessWidget {
               ),
             ],
           ),
+          if (state.galleryUrls.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            SizedBox(
+              height: 72,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: state.galleryUrls.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final url = state.galleryUrls[index];
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: Image.network(
+                        url,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, _, _) => Container(
+                          color: Theme.of(context).colorScheme.surfaceContainerHighest,
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.broken_image_outlined, size: 18),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileActionBar extends StatelessWidget {
+  const _ProfileActionBar({
+    required this.profileStrength,
+    required this.isLoading,
+    required this.hasPendingUploads,
+    required this.onSave,
+  });
+
+  final double profileStrength;
+  final bool isLoading;
+  final bool hasPendingUploads;
+  final Future<void> Function() onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Profile readiness ${(profileStrength * 100).round()}%',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  hasPendingUploads ? 'Uploads in progress. You can still save now.' : 'Keep editing until everything feels true to you.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          FilledButton.icon(
+            onPressed: isLoading ? null : onSave,
+            icon: isLoading
+                ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                : const Icon(Icons.publish_outlined),
+            label: Text(isLoading ? 'Saving...' : 'Publish'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FactChip extends StatelessWidget {
+  const _FactChip({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface.withValues(alpha: 0.72),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14),
+          const SizedBox(width: 6),
+          Text(text, style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
