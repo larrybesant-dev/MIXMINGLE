@@ -58,6 +58,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isCallReady = false;
   bool _isMicMuted = false;
   bool _isVideoEnabled = true;
+  bool _isMicActionInFlight = false;
+  bool _isVideoActionInFlight = false;
   String? _callError;
   Set<String> _excludedUserIds = const <String>{};
   String? _appliedMediaRole;
@@ -190,9 +192,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       await service.dispose();
       if (mounted) {
         setState(() {
+          final mappedError = _mapMediaError(e, canBroadcast: canBroadcast);
           _callError = canBroadcast
-              ? 'Audio/video connection failed. ${e.toString()}'
-              : 'Live media preview is unavailable right now, but room chat and requests still work. ${e.toString()}';
+              ? mappedError
+              : 'Live media preview is unavailable right now, but room chat and requests still work. $mappedError';
           _isCallReady = false;
         });
       }
@@ -207,26 +210,60 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
   Future<void> _toggleMic() async {
     final service = _agoraService;
-    if (service == null || !_isCallReady) return;
+    if (service == null || !_isCallReady || _isMicActionInFlight) return;
     final next = !_isMicMuted;
-    await service.mute(next);
-    if (mounted) {
-      setState(() {
-        _isMicMuted = next;
-      });
+    setState(() => _isMicActionInFlight = true);
+    try {
+      await service.mute(next);
+      if (mounted) {
+        setState(() {
+          _isMicMuted = next;
+        });
+      }
+    } catch (e) {
+      _showSnackBar(_mapMediaError(e, canBroadcast: true));
+    } finally {
+      if (mounted) {
+        setState(() => _isMicActionInFlight = false);
+      }
     }
   }
 
   Future<void> _toggleVideo() async {
     final service = _agoraService;
-    if (service == null || !_isCallReady) return;
+    if (service == null || !_isCallReady || _isVideoActionInFlight) return;
     final next = !_isVideoEnabled;
-    await service.enableVideo(next);
-    if (mounted) {
-      setState(() {
-        _isVideoEnabled = next;
-      });
+    setState(() => _isVideoActionInFlight = true);
+    try {
+      await service.enableVideo(next);
+      if (mounted) {
+        setState(() {
+          _isVideoEnabled = next;
+        });
+      }
+    } catch (e) {
+      _showSnackBar(_mapMediaError(e, canBroadcast: true));
+    } finally {
+      if (mounted) {
+        setState(() => _isVideoActionInFlight = false);
+      }
     }
+  }
+
+  String _mapMediaError(Object error, {required bool canBroadcast}) {
+    final lower = error.toString().toLowerCase();
+    if (lower.contains('permission') || lower.contains('denied')) {
+      return canBroadcast
+          ? 'Camera/microphone permission denied. Enable permissions in app settings and retry.'
+          : 'Microphone permission denied. Enable permissions in app settings and retry.';
+    }
+    if (lower.contains('network') || lower.contains('socket')) {
+      return 'Network issue while connecting audio/video. Check your connection and retry.';
+    }
+    if (lower.contains('camera') || lower.contains('microphone') || lower.contains('device')) {
+      return 'Camera or microphone is unavailable on this device.';
+    }
+    return 'Audio/video operation failed. Please retry.';
   }
 
   void _startPresenceHeartbeat(String userId) {
@@ -1250,8 +1287,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     WidgetsBinding.instance.removeObserver(this);
     _presenceHeartbeatTimer?.cancel();
     _giftToastTimer?.cancel();
-    _disconnectCall();
-    _leaveRoom();
+    unawaited(_disconnectCall());
+    unawaited(_leaveRoom());
     messageController.dispose();
     scrollController.dispose();
     super.dispose();
@@ -1581,7 +1618,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 tooltip: _isMicMuted
                                     ? 'Unmute microphone'
                                     : 'Mute microphone',
-                                onPressed: RoomPermissions.canUseMic(role)
+                                onPressed: RoomPermissions.canUseMic(role) &&
+                                        !_isMicActionInFlight
                                     ? _toggleMic
                                     : null,
                                 icon: Icon(
@@ -1593,7 +1631,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 tooltip: _isVideoEnabled
                                     ? 'Turn camera off'
                                     : 'Turn camera on',
-                                onPressed: RoomPermissions.canUseCamera(role)
+                                onPressed:
+                                  RoomPermissions.canUseCamera(role) &&
+                                    !_isVideoActionInFlight
                                     ? _toggleVideo
                                     : null,
                                 icon: Icon(
@@ -2409,6 +2449,31 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       ),
                     ),
                   ],
+                  if (topGifters.isNotEmpty)
+                    SizedBox(
+                      height: 36,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        itemCount: topGifters.length,
+                        separatorBuilder: (_, separatorIndex) =>
+                            const SizedBox(width: 6),
+                        itemBuilder: (ctx, i) {
+                          final gifter = topGifters[i];
+                          return Chip(
+                            visualDensity: VisualDensity.compact,
+                            avatar: Text(
+                              '${i + 1}',
+                              style: const TextStyle(fontSize: 10),
+                            ),
+                            label: Text(
+                              '${gifter.displayName} - ${gifter.totalCoins} coins',
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
                   Expanded(
                     child: messageStreamAsync.when(
                       data: (messages) {
@@ -2494,6 +2559,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     ),
                     child: Row(
                       children: [
+                        if (allowGifts &&
+                            !isHost &&
+                            hostId.isNotEmpty &&
+                            hostId != user.id)
+                          IconButton(
+                            tooltip: 'Send a gift',
+                            icon: const Icon(Icons.card_giftcard),
+                            onPressed: () => _showGiftSheet(
+                              hostId: hostId,
+                              hostName: 'Host',
+                              senderName: user.username,
+                              coinBalance:
+                                  walletAsync.valueOrNull?.coinBalance ?? 0,
+                            ),
+                          ),
                         Expanded(
                           child: TextField(
                             controller: messageController,
@@ -2592,6 +2672,51 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   ),
                 ],
               ),
+              if (_giftToasts.isNotEmpty)
+                Positioned(
+                  top: 8,
+                  left: 16,
+                  right: 16,
+                  child: IgnorePointer(
+                    child: Column(
+                      children: _giftToasts.take(3).map((toast) {
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.75),
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                toast.giftEmoji,
+                                style: const TextStyle(fontSize: 22),
+                              ),
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  '${toast.senderName} sent ${toast.giftName}',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+            ],
+          ),
               floatingActionButton: FloatingActionButton.extended(
                 onPressed: () async {
                   await _disconnectCall();

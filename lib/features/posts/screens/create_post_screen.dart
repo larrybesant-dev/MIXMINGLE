@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CreatePostScreen extends ConsumerStatefulWidget {
   final String userId;
@@ -23,6 +27,12 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
   late TextEditingController _contentController;
   late TextEditingController _tagsController;
   bool _isPosting = false;
+  bool _isUploadingMedia = false;
+  String? _imageUrl;
+  String? _videoUrl;
+
+  static const int _maxPhotoBytes = 20 * 1024 * 1024;
+  static const int _maxVideoBytes = 120 * 1024 * 1024;
 
   @override
   void initState() {
@@ -59,6 +69,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
         'authorName': widget.username,
         'authorAvatarUrl': widget.avatarUrl,
         'content': content,
+        'imageUrl': _imageUrl,
+        'videoUrl': _videoUrl,
         'tags': tags,
         'hashtags': tags,
         'createdAt': Timestamp.fromDate(DateTime.now()),
@@ -85,6 +97,105 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
     }
   }
 
+  Future<String> _uploadToStorage({
+    required XFile file,
+    required String folder,
+    required String extension,
+    required String contentType,
+  }) async {
+    final bytes = await file.readAsBytes().timeout(const Duration(seconds: 20));
+    final maxBytes = contentType.startsWith('video/')
+        ? _maxVideoBytes
+        : _maxPhotoBytes;
+    if (bytes.lengthInBytes > maxBytes) {
+      throw Exception(
+        contentType.startsWith('video/')
+            ? 'Video is too large. Choose one under 120MB.'
+            : 'Photo is too large. Choose one under 20MB.',
+      );
+    }
+
+    final path =
+        'users/${widget.userId}/posts/$folder/${DateTime.now().millisecondsSinceEpoch}.$extension';
+    final ref = FirebaseStorage.instance.ref(path);
+    await ref
+        .putData(bytes, SettableMetadata(contentType: contentType))
+        .timeout(const Duration(seconds: 60));
+    return ref.getDownloadURL();
+  }
+
+  Future<void> _pickPhoto() async {
+    if (_isUploadingMedia || _isPosting) return;
+    final picker = ImagePicker();
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 88,
+    );
+    if (file == null) return;
+
+    setState(() => _isUploadingMedia = true);
+    try {
+      final imageUrl = await _uploadToStorage(
+        file: file,
+        folder: 'images',
+        extension: 'jpg',
+        contentType: 'image/jpeg',
+      );
+      if (!mounted) return;
+      setState(() {
+        _imageUrl = imageUrl;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Post photo uploaded.')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Photo upload failed: $e')));
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingMedia = false);
+      }
+    }
+  }
+
+  Future<void> _pickVideo() async {
+    if (_isUploadingMedia || _isPosting) return;
+    final picker = ImagePicker();
+    final file = await picker.pickVideo(
+      source: ImageSource.gallery,
+      maxDuration: const Duration(seconds: 60),
+    );
+    if (file == null) return;
+
+    setState(() => _isUploadingMedia = true);
+    try {
+      final videoUrl = await _uploadToStorage(
+        file: file,
+        folder: 'videos',
+        extension: 'mp4',
+        contentType: 'video/mp4',
+      );
+      if (!mounted) return;
+      setState(() {
+        _videoUrl = videoUrl;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Post video uploaded.')));
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Video upload failed: $e')));
+    } finally {
+      if (mounted) {
+        setState(() => _isUploadingMedia = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -101,7 +212,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
                   : ElevatedButton(
-                      onPressed: _publishPost,
+                      onPressed: _isUploadingMedia ? null : _publishPost,
                       child: const Text('Post'),
                     ),
             ),
@@ -159,26 +270,57 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               ),
             ),
             const SizedBox(height: 24),
+            if (_isUploadingMedia)
+              const Padding(
+                padding: EdgeInsets.only(bottom: 12),
+                child: LinearProgressIndicator(),
+              ),
+            if (_imageUrl != null || _videoUrl != null)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    if (_imageUrl != null)
+                      const Chip(
+                        avatar: Icon(Icons.image, size: 16),
+                        label: Text('Photo attached'),
+                      ),
+                    if (_videoUrl != null)
+                      const Chip(
+                        avatar: Icon(Icons.videocam, size: 16),
+                        label: Text('Video attached'),
+                      ),
+                    TextButton.icon(
+                      onPressed: _isUploadingMedia
+                          ? null
+                          : () => setState(() {
+                              _imageUrl = null;
+                              _videoUrl = null;
+                            }),
+                      icon: const Icon(Icons.clear),
+                      label: const Text('Remove media'),
+                    ),
+                  ],
+                ),
+              ),
             Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 IconButton(
                   icon: const Icon(Icons.image),
                   tooltip: 'Add photo',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Photo upload coming soon')),
-                    );
-                  },
+                  onPressed: (_isUploadingMedia || _isPosting)
+                      ? null
+                      : _pickPhoto,
                 ),
                 IconButton(
                   icon: const Icon(Icons.video_camera_back),
                   tooltip: 'Add video',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Video upload coming soon')),
-                    );
-                  },
+                  onPressed: (_isUploadingMedia || _isPosting)
+                      ? null
+                      : _pickVideo,
                 ),
                 IconButton(
                   icon: const Icon(Icons.emoji_emotions),

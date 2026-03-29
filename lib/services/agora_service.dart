@@ -71,7 +71,9 @@ class AgoraService {
     _engine.registerEventHandler(
       RtcEngineEventHandler(
         onUserJoined: (connection, remoteUid, elapsed) {
-          _remoteUids.add(remoteUid);
+          if (!_remoteUids.contains(remoteUid)) {
+            _remoteUids.add(remoteUid);
+          }
           if (onRemoteUserJoined != null) onRemoteUserJoined!();
         },
         onUserOffline: (connection, remoteUid, reason) {
@@ -226,7 +228,12 @@ class AgoraService {
   /// Leave the current channel
   Future<void> leaveChannel() async {
     if (!_initialized) return;
-    await _engine.leaveChannel();
+    if (_joinedChannel) {
+      await _engine.leaveChannel();
+    }
+    _remoteUids.clear();
+    _speakingUids.clear();
+    _localSpeaking = false;
     _joinedChannel = false;
     _broadcasterMode = false;
   }
@@ -250,8 +257,11 @@ class AgoraService {
 
   Future<void> dispose() async {
     if (!_initialized) return;
-    await _engine.leaveChannel();
+    if (_joinedChannel) {
+      await _engine.leaveChannel();
+    }
     await _engine.release();
+    _remoteUids.clear();
     _speakingUids.clear();
     _localSpeaking = false;
     _joinedChannel = false;

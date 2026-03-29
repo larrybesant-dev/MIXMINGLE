@@ -57,7 +57,7 @@ final topGiftersProvider =
             .toList();
       },
       loading: () => const [],
-      error: (_, __) => const [],
+      error: (_, errorStack) => const [],
     );
   },
 );
