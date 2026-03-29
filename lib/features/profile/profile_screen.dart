@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:developer' as developer;
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
@@ -84,6 +86,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
   bool _isUploadingGallery = false;
 
   static const int _maxPhotoBytes = 20 * 1024 * 1024;
+  static const int _maxInlineProfilePhotoBytes = 700 * 1024;
   static const int _maxVideoBytes = 120 * 1024 * 1024;
   static const List<String> _genderOptions = [
     'Woman',
@@ -232,15 +235,38 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
     final storage = FirebaseStorage.instance;
     final ref = storage.ref(path);
     final metadata = SettableMetadata(contentType: contentType);
+    final isImage = contentType.toLowerCase().startsWith('image/');
 
     try {
-      await ref.putData(bytes, metadata).timeout(const Duration(seconds: 45));
+      if (kIsWeb && isImage) {
+        final dataUrl = 'data:$contentType;base64,${base64Encode(bytes)}';
+        await ref
+            .putString(
+              dataUrl,
+              format: PutStringFormat.dataUrl,
+              metadata: metadata,
+            )
+            .timeout(const Duration(seconds: 45));
+      } else {
+        await ref.putData(bytes, metadata).timeout(const Duration(seconds: 45));
+      }
     } on FirebaseException catch (e) {
       final code = e.code.toLowerCase();
       final shouldRetry = code == 'unauthenticated' || code == 'permission-denied' || code == 'unauthorized';
       if (!shouldRetry) rethrow;
       await FirebaseAuth.instance.currentUser?.getIdToken(true);
-      await ref.putData(bytes, metadata).timeout(const Duration(seconds: 45));
+      if (kIsWeb && isImage) {
+        final dataUrl = 'data:$contentType;base64,${base64Encode(bytes)}';
+        await ref
+            .putString(
+              dataUrl,
+              format: PutStringFormat.dataUrl,
+              metadata: metadata,
+            )
+            .timeout(const Duration(seconds: 45));
+      } else {
+        await ref.putData(bytes, metadata).timeout(const Duration(seconds: 45));
+      }
     } on TimeoutException {
       throw FirebaseException(
         plugin: 'firebase_storage',
@@ -324,13 +350,28 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
 
       if (!mounted) return;
       setState(() => setBusy(true));
-      final url = await _uploadToStorage(
-        bytes: bytes,
-        userId: userId,
-        folder: folder,
-        extension: 'jpg',
-        contentType: 'image/jpeg',
-      );
+
+      String url;
+      // Web-specific fallback for profile photo to avoid intermittent storage plugin crashes.
+      if (kIsWeb && folder == 'profile_photos') {
+        if (bytes.lengthInBytes > _maxInlineProfilePhotoBytes) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile Picture is too large for web upload fallback. Try a smaller image.')),
+          );
+          return;
+        }
+        url = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+      } else {
+        url = await _uploadToStorage(
+          bytes: bytes,
+          userId: userId,
+          folder: folder,
+          extension: 'jpg',
+          contentType: 'image/jpeg',
+        );
+      }
+
       final controller = ref.read(profileControllerProvider.notifier);
       final current = ref.read(profileControllerProvider);
       final next = transform(current, url);
