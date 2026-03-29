@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:image/image.dart' as img;
 import 'package:mixvy/models/adult_profile_model.dart';
 import 'package:mixvy/models/profile_privacy_model.dart';
 import 'package:mixvy/models/room_policy_model.dart';
@@ -225,6 +226,55 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
     }
   }
 
+  /// Resize cover photo to fit 16:7 aspect ratio and compress for storage.
+  /// Target dimensions: 1200x525 (16:7 ratio) for optimal quality vs file size.
+  Uint8List _resizeCoverPhoto(Uint8List bytes) {
+    try {
+      final image = img.decodeImage(bytes);
+      if (image == null) return bytes;
+
+      final targetAspect = 16 / 7;
+      final currentAspect = image.width / image.height;
+
+      late int cropWidth;
+      late int cropHeight;
+      late int cropX;
+      late int cropY;
+
+      if (currentAspect > targetAspect) {
+        // Image is too wide, crop horizontally
+        cropHeight = image.height;
+        cropWidth = (image.height * targetAspect).toInt();
+        cropX = ((image.width - cropWidth) / 2).toInt();
+        cropY = 0;
+      } else {
+        // Image is too tall, crop vertically
+        cropWidth = image.width;
+        cropHeight = (image.width / targetAspect).toInt();
+        cropX = 0;
+        cropY = ((image.height - cropHeight) / 2).toInt();
+      }
+
+      // Crop to 16:7 ratio
+      final cropped = img.copyCrop(
+        image,
+        x: cropX,
+        y: cropY,
+        width: cropWidth,
+        height: cropHeight,
+      );
+
+      // Resize to target dimensions (1200x525)
+      final resized = img.copyResize(cropped, width: 1200, height: 525, interpolation: img.Interpolation.linear);
+
+      // Encode as JPEG with quality 85 for smaller file size
+      return Uint8List.fromList(img.encodeJpg(resized, quality: 85));
+    } catch (e) {
+      developer.log('Error resizing cover photo: $e', name: 'ProfileUpload', error: e);
+      return bytes; // Return original if resize fails
+    }
+  }
+
   Future<String> _uploadToStorage({
     required Uint8List bytes,
     required String userId,
@@ -353,6 +403,12 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
       if (!mounted) return;
       setState(() => setBusy(true));
 
+      // Resize cover photos to fit 16:7 aspect ratio before upload
+      var uploadBytes = bytes;
+      if (folder == 'cover_photos') {
+        uploadBytes = _resizeCoverPhoto(bytes);
+      }
+
       String url;
       // Web fallback: keep image uploads in-profile as data URLs to avoid storage web host API crashes.
       if (kIsWeb) {
@@ -362,17 +418,17 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
           'gallery_photos' => _maxInlineGalleryPhotoBytes,
           _ => _maxInlineProfilePhotoBytes,
         };
-        if (bytes.lengthInBytes > inlineLimit) {
+        if (uploadBytes.lengthInBytes > inlineLimit) {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(content: Text('Image is too large for web upload. Please choose a smaller file.')),
           );
           return;
         }
-        url = 'data:image/jpeg;base64,${base64Encode(bytes)}';
+        url = 'data:image/jpeg;base64,${base64Encode(uploadBytes)}';
       } else {
         url = await _uploadToStorage(
-          bytes: bytes,
+          bytes: uploadBytes,
           userId: userId,
           folder: folder,
           extension: 'jpg',
