@@ -23,7 +23,9 @@ import '../../features/room/providers/mic_access_provider.dart';
 import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/room/providers/host_provider.dart';
 import '../../features/room/providers/room_policy_provider.dart';
+import '../../features/room/providers/room_gift_provider.dart';
 import '../../features/room/room_permissions.dart';
+import '../../presentation/providers/wallet_provider.dart';
 import '../../services/analytics_service.dart';
 import '../../services/agora_service.dart';
 import '../../services/follow_service.dart';
@@ -61,6 +63,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   String? _appliedMediaRole;
   bool _isHandlingParticipantRemoval = false;
   Timer? _presenceHeartbeatTimer;
+  DateTime? _roomJoinedAt;
+  final Set<String> _shownGiftEventIds = {};
+  final List<_GiftToast> _giftToasts = [];
+  Timer? _giftToastTimer;
 
   bool _looksLikeAgoraAppId(String value) {
     final trimmed = value.trim();
@@ -184,7 +190,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       await service.dispose();
       if (mounted) {
         setState(() {
-          _callError = 'Video connection failed: ${e.toString()}';
+          _callError = canBroadcast
+              ? 'Audio/video connection failed. ${e.toString()}'
+              : 'Live media preview is unavailable right now, but room chat and requests still work. ${e.toString()}';
           _isCallReady = false;
         });
       }
@@ -972,6 +980,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         );
       }
       _startPresenceHeartbeat(userId);
+      _roomJoinedAt = DateTime.now();
     } catch (_) {
       if (mounted) {
         setState(
@@ -1003,10 +1012,244 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
   }
 
+  String _requestStatusLabel(String? status) {
+    switch (status) {
+      case 'pending':
+        return 'Waiting for host approval';
+      case 'approved':
+        return 'Approved';
+      case 'denied':
+        return 'Denied';
+      case 'expired':
+        return 'Expired';
+      default:
+        return 'Not requested';
+    }
+  }
+
+  String _cameraAccessHint({
+    required String role,
+    required String? camRequestStatus,
+  }) {
+    if (RoomPermissions.canUseCamera(role)) {
+      return 'Camera controls are unlocked. Use the camera button above to turn video on.';
+    }
+    if (camRequestStatus == 'pending') {
+      return 'Your camera request is pending. The host must approve it before your camera controls unlock.';
+    }
+    if (camRequestStatus == 'denied') {
+      return 'Your last camera request was denied. You can send another request when you are ready.';
+    }
+    if (camRequestStatus == 'expired') {
+      return 'Your last camera request expired. Send a new request to unlock camera controls.';
+    }
+    return 'You are currently in the audience. Request camera access to unlock the camera button.';
+  }
+
+  String _micAccessHint({
+    required String role,
+    required String? micRequestStatus,
+  }) {
+    if (RoomPermissions.canUseMic(role)) {
+      return 'Mic controls are unlocked.';
+    }
+    if (micRequestStatus == 'pending') {
+      return 'Your mic request is pending host approval.';
+    }
+    if (micRequestStatus == 'denied') {
+      return 'Your last mic request was denied.';
+    }
+    if (micRequestStatus == 'expired') {
+      return 'Your last mic request expired.';
+    }
+    return 'Request mic access if you want to speak without camera.';
+  }
+
+  void _addGiftToast(RoomGiftEvent event) {
+    final catalog = RoomGiftCatalog.findById(event.giftId);
+    final toast = _GiftToast(
+      senderId: event.senderId,
+      senderName: event.senderName.isNotEmpty ? event.senderName : event.senderId,
+      giftEmoji: catalog?.emoji ?? '🎁',
+      giftName: catalog?.displayName ?? event.giftId,
+      coinCost: event.coinCost,
+    );
+    if (mounted) {
+      setState(() => _giftToasts.insert(0, toast));
+      _giftToastTimer?.cancel();
+      _giftToastTimer = Timer(const Duration(seconds: 4), () {
+        if (mounted) setState(() => _giftToasts.clear());
+      });
+    }
+  }
+
+  Future<void> _showGiftSheet({
+    required String hostId,
+    required String hostName,
+    required String senderName,
+    required int coinBalance,
+  }) async {
+    RoomGiftItem? selectedGift;
+    bool isSending = false;
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (ctx, setSheetState) {
+            return Padding(
+              padding: MediaQuery.of(ctx).viewInsets,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Send a Gift to $hostName',
+                            style: Theme.of(ctx).textTheme.titleMedium,
+                          ),
+                        ),
+                        Chip(
+                          avatar: const Icon(Icons.monetization_on, size: 14),
+                          label: Text('$coinBalance coins'),
+                        ),
+                      ],
+                    ),
+                  ),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.all(12),
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      mainAxisSpacing: 8,
+                      crossAxisSpacing: 8,
+                      childAspectRatio: 0.85,
+                    ),
+                    itemCount: RoomGiftCatalog.items.length,
+                    itemBuilder: (ctx, i) {
+                      final gift = RoomGiftCatalog.items[i];
+                      final chosen = selectedGift?.id == gift.id;
+                      return GestureDetector(
+                        onTap: isSending
+                            ? null
+                            : () => setSheetState(() => selectedGift = gift),
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 150),
+                          decoration: BoxDecoration(
+                            color: chosen
+                                ? Theme.of(ctx).colorScheme.primaryContainer
+                                : Theme.of(ctx).colorScheme.surfaceContainerHighest,
+                            borderRadius: BorderRadius.circular(12),
+                            border: chosen
+                                ? Border.all(
+                                    color: Theme.of(ctx).colorScheme.primary,
+                                    width: 2,
+                                  )
+                                : null,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                gift.emoji,
+                                style: const TextStyle(fontSize: 28),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                gift.displayName,
+                                style: Theme.of(ctx).textTheme.labelSmall,
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                '${gift.coinCost}🪙',
+                                style: Theme.of(ctx).textTheme.labelSmall
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: FilledButton.icon(
+                        onPressed: selectedGift == null ||
+                                isSending ||
+                                coinBalance < (selectedGift?.coinCost ?? 0)
+                            ? null
+                            : () async {
+                                setSheetState(() => isSending = true);
+                                try {
+                                  await ref
+                                      .read(roomGiftControllerProvider)
+                                      .sendGift(
+                                        roomId: widget.roomId,
+                                        receiverId: hostId,
+                                        senderName: senderName,
+                                        gift: selectedGift!,
+                                      );
+                                  if (sheetCtx.mounted) {
+                                    Navigator.of(sheetCtx).pop();
+                                  }
+                                  _showSnackBar(
+                                    'Sent ${selectedGift!.emoji} ${selectedGift!.displayName}!',
+                                  );
+                                } catch (e) {
+                                  if (sheetCtx.mounted) {
+                                    setSheetState(() => isSending = false);
+                                    ScaffoldMessenger.of(sheetCtx).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'Could not send gift: $e',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
+                        icon: isSending
+                            ? const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              )
+                            : const Icon(Icons.card_giftcard),
+                        label: Text(
+                          selectedGift == null
+                              ? 'Select a gift'
+                              : coinBalance < (selectedGift?.coinCost ?? 0)
+                                  ? 'Not enough coins'
+                                  : 'Send ${selectedGift!.emoji} for ${selectedGift!.coinCost} coins',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _presenceHeartbeatTimer?.cancel();
+    _giftToastTimer?.cancel();
     _disconnectCall();
     _leaveRoom();
     messageController.dispose();
@@ -1073,6 +1316,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final camAccessController = ref.read(camAccessControllerProvider);
     final micAccessController = ref.read(micAccessControllerProvider);
     final roomPolicyController = ref.read(roomPolicyControllerProvider);
+    final walletAsync = ref.watch(walletDetailsProvider);
+    final topGifters = ref.watch(topGiftersProvider(widget.roomId));
+
+    // Listen for new gift events and show toasts for gifts sent after join time.
+    ref.listen(roomGiftStreamProvider(widget.roomId), (prev, next) {
+      next.whenData((events) {
+        final joinedAt = _roomJoinedAt;
+        for (final event in events) {
+          if (_shownGiftEventIds.contains(event.id)) continue;
+          if (joinedAt != null && event.sentAt.isBefore(joinedAt)) {
+            _shownGiftEventIds.add(event.id);
+            continue;
+          }
+          _shownGiftEventIds.add(event.id);
+          _addGiftToast(event);
+        }
+      });
+    });
 
     return currentParticipantAsync.when(
       data: (participant) {
@@ -1092,6 +1353,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             requesterId: user.id,
           )),
         );
+        final camRequestStatus = myCamRequestAsync.valueOrNull?.status;
+        final micRequestStatus = myMicRequestAsync.valueOrNull?.status;
         final firestore = ref.watch(roomFirestoreProvider);
         if (_isCallReady && _appliedMediaRole != role) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1192,7 +1455,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   ),
                 ],
               ),
-              body: Column(
+              body: Stack(
+                children: [
+                  Column(
                 children: [
                   if (_callError != null)
                     Padding(
@@ -1239,7 +1504,31 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(12),
-                                child: _agoraService!.getLocalView(),
+                                child: _agoraService!.canRenderLocalView
+                                    ? _agoraService!.getLocalView()
+                                    : ColoredBox(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .surfaceContainerHighest,
+                                        child: Center(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              const Icon(
+                                                Icons.videocam_off,
+                                                size: 40,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                RoomPermissions.canUseCamera(role)
+                                                    ? 'Camera is available. Use the camera button to start video.'
+                                                    : 'Camera unlocks after host approval.',
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
                               ),
                             ),
                           ),
@@ -1314,6 +1603,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 ),
                               ),
                             ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _cameraAccessHint(
+                              role: role,
+                              camRequestStatus: camRequestStatus,
+                            ),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
                       ),
@@ -1845,7 +2143,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               const SizedBox(height: 6),
                               Text(
                                 allowCamRequests
-                                    ? 'Request host approval to come on stage and use your mic and camera in this room.'
+                                ? 'Request host approval to unlock your camera in this room. After approval, the camera button above becomes available.'
                                     : 'Host has paused cam access requests for this room.',
                               ),
                               const SizedBox(height: 8),
@@ -1896,13 +2194,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         icon: const Icon(
                                           Icons.videocam_outlined,
                                         ),
-                                        label: const Text(
-                                          'Request Stage Access',
-                                        ),
+                                        label: const Text('Request Camera Access'),
                                       ),
                                       if (requestStatus != null)
                                         Chip(
-                                          label: Text('Status: $requestStatus'),
+                                          avatar: Icon(
+                                            requestStatus == 'approved'
+                                                ? Icons.check_circle_outline
+                                                : requestStatus == 'pending'
+                                                ? Icons.hourglass_top
+                                                : Icons.info_outline,
+                                            size: 16,
+                                          ),
+                                          label: Text(
+                                            _requestStatusLabel(requestStatus),
+                                          ),
                                         ),
                                     ],
                                   );
@@ -1910,6 +2216,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 loading: () => const LinearProgressIndicator(),
                                 error: (e, _) =>
                                     Text('Could not load request status: $e'),
+                              ),
+                              const SizedBox(height: 6),
+                              Text(
+                                _micAccessHint(
+                                  role: role,
+                                  micRequestStatus: micRequestStatus,
+                                ),
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
                               const SizedBox(height: 8),
                               myMicRequestAsync.when(
@@ -1961,7 +2275,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       ),
                                       if (requestStatus != null)
                                         Chip(
-                                          label: Text('Mic: $requestStatus'),
+                                          avatar: Icon(
+                                            requestStatus == 'approved'
+                                                ? Icons.check_circle_outline
+                                                : requestStatus == 'pending'
+                                                ? Icons.hourglass_top
+                                                : Icons.info_outline,
+                                            size: 16,
+                                          ),
+                                          label: Text(
+                                            'Mic: ${_requestStatusLabel(requestStatus)}',
+                                          ),
                                         ),
                                     ],
                                   );
@@ -2286,4 +2610,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// Gift toast data class
+// ---------------------------------------------------------------------------
+
+class _GiftToast {
+  final String senderId;
+  final String senderName;
+  final String giftEmoji;
+  final String giftName;
+  final int coinCost;
+
+  const _GiftToast({
+    required this.senderId,
+    required this.senderName,
+    required this.giftEmoji,
+    required this.giftName,
+    required this.coinCost,
+  });
 }

@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart'; // For Widget, VoidCallback
 
@@ -6,6 +8,8 @@ class AgoraService {
     final List<int> _remoteUids = [];
   final Set<int> _speakingUids = <int>{};
   bool _localSpeaking = false;
+  bool _joinedChannel = false;
+  bool _broadcasterMode = false;
 
     // Callbacks for UI updates
     VoidCallback? onRemoteUserJoined;
@@ -14,11 +18,18 @@ class AgoraService {
 
     List<int> get remoteUids => List.unmodifiable(_remoteUids);
   bool get localSpeaking => _localSpeaking;
+  bool get canRenderLocalView => _initialized && _joinedChannel && _broadcasterMode;
 
   bool isRemoteSpeaking(int uid) => _speakingUids.contains(uid);
 
     /// Get the local video view widget
     Widget getLocalView() {
+      if (!canRenderLocalView) {
+        return const ColoredBox(
+          color: Colors.black12,
+          child: Center(child: Icon(Icons.videocam_off, size: 36)),
+        );
+      }
       return AgoraVideoView(
         controller: VideoViewController(
           rtcEngine: _engine,
@@ -55,13 +66,6 @@ class AgoraService {
       ),
     );
     await _engine.setClientRole(role: ClientRoleType.clientRoleAudience);
-    await _engine.enableVideo();
-    await _engine.enableAudio();
-    await _engine.enableAudioVolumeIndication(
-      interval: 300,
-      smooth: 3,
-      reportVad: true,
-    );
 
     // Set up event handlers
     _engine.registerEventHandler(
@@ -114,6 +118,32 @@ class AgoraService {
         },
       ),
     );
+
+    // Media features are best-effort on web and should not block room join.
+    try {
+      await _engine.enableAudio();
+    } catch (error, stackTrace) {
+      developer.log(
+        'Agora enableAudio failed',
+        name: 'AgoraService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+    try {
+      await _engine.enableAudioVolumeIndication(
+        interval: 300,
+        smooth: 3,
+        reportVad: true,
+      );
+    } catch (error, stackTrace) {
+      developer.log(
+        'Agora audio volume indication failed',
+        name: 'AgoraService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
     _initialized = true;
   }
 
@@ -141,6 +171,19 @@ class AgoraService {
         ? ClientRoleType.clientRoleBroadcaster
         : ClientRoleType.clientRoleAudience;
 
+    if (asBroadcaster) {
+      try {
+        await _engine.enableVideo();
+      } catch (error, stackTrace) {
+        developer.log(
+          'Agora enableVideo failed before join',
+          name: 'AgoraService',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }
+    }
+
     await _engine.joinChannel(
       token: normalizedToken,
       channelId: normalizedChannelName,
@@ -154,6 +197,8 @@ class AgoraService {
         publishMicrophoneTrack: asBroadcaster,
       ),
     );
+    _joinedChannel = true;
+    _broadcasterMode = asBroadcaster;
   }
 
   Future<void> setBroadcaster(bool enabled) async {
@@ -163,12 +208,27 @@ class AgoraService {
           ? ClientRoleType.clientRoleBroadcaster
           : ClientRoleType.clientRoleAudience,
     );
+    _broadcasterMode = enabled;
+    if (enabled) {
+      try {
+        await _engine.enableVideo();
+      } catch (error, stackTrace) {
+        developer.log(
+          'Agora enableVideo failed while switching role',
+          name: 'AgoraService',
+          error: error,
+          stackTrace: stackTrace,
+        );
+      }
+    }
   }
 
   /// Leave the current channel
   Future<void> leaveChannel() async {
     if (!_initialized) return;
     await _engine.leaveChannel();
+    _joinedChannel = false;
+    _broadcasterMode = false;
   }
 
   /// Mute/unmute local audio
@@ -182,6 +242,7 @@ class AgoraService {
     if (!_initialized) return;
     if (enabled) {
       await _engine.enableVideo();
+      _broadcasterMode = true;
     } else {
       await _engine.disableVideo();
     }
@@ -193,6 +254,8 @@ class AgoraService {
     await _engine.release();
     _speakingUids.clear();
     _localSpeaking = false;
+    _joinedChannel = false;
+    _broadcasterMode = false;
     _initialized = false;
   }
 }

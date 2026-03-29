@@ -16,6 +16,7 @@ const RATE_LIMITS = {
   recordStripePaymentSuccess: {windowMs: 60 * 1000, maxRequests: 20},
   sendCoinTransfer: {windowMs: 60 * 1000, maxRequests: 18},
   requestCoinTransfer: {windowMs: 60 * 1000, maxRequests: 18},
+  sendRoomGift: {windowMs: 60 * 1000, maxRequests: 30},
   getStripeConnectStatus: {windowMs: 60 * 1000, maxRequests: 40},
   createStripeConnectOnboardingLink: {windowMs: 60 * 1000, maxRequests: 10},
   createStripeConnectDashboardLink: {windowMs: 60 * 1000, maxRequests: 20},
@@ -407,6 +408,81 @@ exports.requestCoinTransfer = onCall(async (request) =>
   requestCoinTransferHandler(request),
 );
 
+async function sendRoomGiftHandler(request, deps = {}) {
+  const senderId = requireAuth(request);
+  enforceRateLimit("sendRoomGift", senderId);
+  const roomId = parseIdField(request.data && request.data.roomId, "roomId");
+  const receiverId = parseIdField(
+    request.data && request.data.receiverId,
+    "receiverId",
+  );
+  const giftId = parseIdField(request.data && request.data.giftId, "giftId");
+  const coinCost = parsePositiveAmount(request.data && request.data.coinCost);
+  const senderName =
+    typeof (request.data && request.data.senderName) === "string"
+      ? request.data.senderName.trim().slice(0, 64)
+      : "";
+  const firestore = deps.firestore || db;
+
+  if (receiverId === senderId) {
+    throw new HttpsError(
+      "invalid-argument",
+      "Cannot send a gift to yourself.",
+    );
+  }
+
+  const PLATFORM_FEE = 0.15;
+  const receiverAmount = Math.max(1, Math.floor(coinCost * (1 - PLATFORM_FEE)));
+
+  const giftEventId = await firestore.runTransaction(async (txn) => {
+    const senderRef = firestore.collection("users").doc(senderId);
+    const receiverRef = firestore.collection("users").doc(receiverId);
+    const giftEventRef = firestore
+      .collection("rooms")
+      .doc(roomId)
+      .collection("gift_events")
+      .doc();
+
+    const [senderSnap, receiverSnap] = await Promise.all([
+      txn.get(senderRef),
+      txn.get(receiverRef),
+    ]);
+
+    const senderBalance = Number(
+      (senderSnap.data() && senderSnap.data().balance) || 0,
+    );
+    if (senderBalance < coinCost) {
+      throw new HttpsError(
+        "failed-precondition",
+        "Insufficient coin balance.",
+      );
+    }
+
+    const receiverBalance = Number(
+      (receiverSnap.data() && receiverSnap.data().balance) || 0,
+    );
+
+    txn.update(senderRef, {balance: senderBalance - coinCost});
+    txn.update(receiverRef, {balance: receiverBalance + receiverAmount});
+    txn.set(giftEventRef, {
+      id: giftEventRef.id,
+      senderId,
+      senderName,
+      receiverId,
+      roomId,
+      giftId,
+      coinCost,
+      sentAt: admin.firestore.FieldValue.serverTimestamp(),
+    });
+
+    return giftEventRef.id;
+  });
+
+  return {giftEventId};
+}
+
+exports.sendRoomGift = onCall(async (request) => sendRoomGiftHandler(request));
+
 async function getStripeConnectStatusHandler(request, deps = {}) {
   const uid = requireAuth(request);
   enforceRateLimit("getStripeConnectStatus", uid);
@@ -695,6 +771,7 @@ exports.__testing = {
   generateAgoraTokenHandler,
   createCheckoutSessionHandler,
   requestRefundHandler,
+  sendRoomGiftHandler,
   cleanupDeletedUserData,
   classifyModerationText,
   buildModerationReviewPayload,
