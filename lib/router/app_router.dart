@@ -1,4 +1,3 @@
-
 import 'dart:developer' as developer;
 
 import 'package:go_router/go_router.dart';
@@ -20,11 +19,23 @@ import 'package:mixvy/presentation/screens/app_info_screen.dart';
 import 'package:mixvy/presentation/screens/moderation_dashboard_screen.dart';
 import 'package:mixvy/features/speed_dating/screens/speed_dating_screen.dart';
 import 'package:mixvy/core/services/app_settings_service.dart';
+import 'package:mixvy/features/messaging/screens/messages_screen.dart';
+import 'package:mixvy/features/messaging/screens/chat_screen.dart';
+import 'package:mixvy/features/messaging/screens/new_message_screen.dart';
+import 'package:mixvy/features/search/screens/search_screen.dart';
+import 'package:mixvy/features/bookmarks/screens/bookmarks_screen.dart';
+import 'package:mixvy/presentation/providers/user_provider.dart';
+import 'package:mixvy/features/follow/screens/follow_screens.dart';
+import 'package:mixvy/features/posts/screens/create_post_screen.dart';
+import 'package:mixvy/features/stories/screens/create_story_screen.dart';
+import 'package:mixvy/features/groups/screens/groups_screen.dart';
+import 'package:mixvy/features/groups/screens/create_group_screen.dart';
+import 'package:mixvy/features/groups/screens/group_details_screen.dart';
+import 'package:mixvy/features/trending/screens/trending_screen.dart';
 
 import '../features/auth/register_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/payments/payments_screen.dart';
-
 
 // Supabase logic removed.
 
@@ -41,8 +52,10 @@ class _CacheEntry<T> {
 class _RouterGateCache {
   static const Duration _profileTtl = Duration(seconds: 20);
 
-  final Map<String, _CacheEntry<bool>> _profileByUid = <String, _CacheEntry<bool>>{};
-  final Map<String, Future<bool>> _inFlightProfileChecks = <String, Future<bool>>{};
+  final Map<String, _CacheEntry<bool>> _profileByUid =
+      <String, _CacheEntry<bool>>{};
+  final Map<String, Future<bool>> _inFlightProfileChecks =
+      <String, Future<bool>>{};
 
   Future<bool> isFirstRun() async {
     // Do not cache here: FirstRunService already caches internally and updates
@@ -62,17 +75,19 @@ class _RouterGateCache {
       return inFlight;
     }
 
-    final future = ProfileGateService.isProfileComplete(uid).then((isComplete) {
-      _profileByUid[uid] = _CacheEntry<bool>(
-        value: isComplete,
-        loadedAt: DateTime.now(),
-      );
-      _inFlightProfileChecks.remove(uid);
-      return isComplete;
-    }).catchError((error) {
-      _inFlightProfileChecks.remove(uid);
-      throw error;
-    });
+    final future = ProfileGateService.isProfileComplete(uid)
+        .then((isComplete) {
+          _profileByUid[uid] = _CacheEntry<bool>(
+            value: isComplete,
+            loadedAt: DateTime.now(),
+          );
+          _inFlightProfileChecks.remove(uid);
+          return isComplete;
+        })
+        .catchError((error) {
+          _inFlightProfileChecks.remove(uid);
+          throw error;
+        });
 
     _inFlightProfileChecks[uid] = future;
     return future;
@@ -110,7 +125,8 @@ Future<String?> evaluateAppRedirect({
   required LegalAcceptedCheck isLegalAccepted,
 }) async {
   final loggedIn = uid != null;
-  final isLoggingIn = matchedLocation == '/login' || matchedLocation == '/register';
+  final isLoggingIn =
+      matchedLocation == '/login' || matchedLocation == '/register';
   final isOnboarding = matchedLocation == '/onboarding';
   final isLegalRoute = matchedLocation.startsWith('/legal/');
   final isProfile = matchedLocation == '/profile';
@@ -162,34 +178,189 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
     },
     routes: [
-      GoRoute(path: '/onboarding', builder: (context, state) => const OnboardingScreen()),
+      GoRoute(
+        path: '/onboarding',
+        builder: (context, state) => const OnboardingScreen(),
+      ),
       GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
-      GoRoute(path: '/discover', builder: (context, state) => const DiscoveryFeedScreen()),
+      GoRoute(
+        path: '/discover',
+        builder: (context, state) => const DiscoveryFeedScreen(),
+      ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
-      GoRoute(path: '/register', builder: (context, state) => const RegisterScreen()),
-      GoRoute(path: '/profile', builder: (context, state) => const ProfileScreen()),
+      GoRoute(
+        path: '/register',
+        builder: (context, state) => const RegisterScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
       GoRoute(
         path: '/profile/:userId',
-        builder: (context, state) => UserProfileScreen(
-          userId: state.pathParameters['userId']!,
-        ),
+        builder: (context, state) =>
+            UserProfileScreen(userId: state.pathParameters['userId']!),
       ),
-      GoRoute(path: '/payments', builder: (context, state) => const PaymentsScreen()),
-      GoRoute(path: '/speed-dating', builder: (context, state) => const SpeedDatingScreen()),
-      GoRoute(path: '/friends', builder: (context, state) => const FriendListScreen()),
+      GoRoute(
+        path: '/payments',
+        builder: (context, state) => const PaymentsScreen(),
+      ),
+      GoRoute(
+        path: '/speed-dating',
+        builder: (context, state) => const SpeedDatingScreen(),
+      ),
+      GoRoute(
+        path: '/friends',
+        builder: (context, state) => const FriendListScreen(),
+      ),
       GoRoute(
         path: '/room/:roomId',
-        builder: (context, state) => LiveRoomScreen(
-          roomId: state.pathParameters['roomId']!,
-        ),
+        builder: (context, state) =>
+            LiveRoomScreen(roomId: state.pathParameters['roomId']!),
       ),
-      GoRoute(path: '/notifications', builder: (context, state) => const NotificationsScreen()),
-      GoRoute(path: '/settings', builder: (context, state) => const SettingsScreen()),
-      GoRoute(path: '/account', builder: (context, state) => const AccountCenterScreen()),
-      GoRoute(path: '/legal/terms', builder: (context, state) => const LegalTermsScreen()),
-      GoRoute(path: '/legal/privacy', builder: (context, state) => const LegalPrivacyScreen()),
-      GoRoute(path: '/about', builder: (context, state) => const AppInfoScreen()),
-      GoRoute(path: '/moderation', builder: (context, state) => const ModerationDashboardScreen()),
+      GoRoute(
+        path: '/notifications',
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        path: '/settings',
+        builder: (context, state) => const SettingsScreen(),
+      ),
+      GoRoute(
+        path: '/account',
+        builder: (context, state) => const AccountCenterScreen(),
+      ),
+      GoRoute(
+        path: '/legal/terms',
+        builder: (context, state) => const LegalTermsScreen(),
+      ),
+      GoRoute(
+        path: '/legal/privacy',
+        builder: (context, state) => const LegalPrivacyScreen(),
+      ),
+      GoRoute(
+        path: '/about',
+        builder: (context, state) => const AppInfoScreen(),
+      ),
+      GoRoute(
+        path: '/moderation',
+        builder: (context, state) => const ModerationDashboardScreen(),
+      ),
+      // Messaging routes
+      GoRoute(
+        path: '/messages',
+        builder: (context, state) {
+          final user = ref.read(userProvider);
+          return MessagesScreen(
+            userId: user?.id ?? 'unknown',
+            username: user?.username ?? 'User',
+          );
+        },
+      ),
+      GoRoute(
+        path: '/messages/new',
+        builder: (context, state) {
+          final user = ref.read(userProvider);
+          return NewMessageScreen(
+            userId: user?.id ?? 'unknown',
+            username: user?.username ?? 'User',
+            avatarUrl: user?.avatarUrl,
+          );
+        },
+      ),
+      GoRoute(
+        path: '/messages/:conversationId',
+        builder: (context, state) {
+          final user = ref.read(userProvider);
+          return ChatScreen(
+            conversationId: state.pathParameters['conversationId']!,
+            userId: user?.id ?? 'unknown',
+            username: user?.username ?? 'User',
+            avatarUrl: user?.avatarUrl,
+          );
+        },
+      ),
+      // Search route
+      GoRoute(
+        path: '/search',
+        builder: (context, state) => const SearchScreen(),
+      ),
+      // Bookmarks route
+      GoRoute(
+        path: '/bookmarks',
+        builder: (context, state) {
+          final user = ref.read(userProvider);
+          return BookmarksScreen(userId: user?.id ?? 'unknown');
+        },
+      ),
+      // Followers/Following routes
+      GoRoute(
+        path: '/followers/:userId',
+        builder: (context, state) {
+          return FollowersScreen(userId: state.pathParameters['userId']!);
+        },
+      ),
+      GoRoute(
+        path: '/following/:userId',
+        builder: (context, state) {
+          return FollowingScreen(userId: state.pathParameters['userId']!);
+        },
+      ),
+      // Post creation route
+      GoRoute(
+        path: '/create-post',
+        builder: (context, state) {
+          final user = ref.read(userProvider);
+          return CreatePostScreen(
+            userId: user?.id ?? 'unknown',
+            username: user?.username ?? 'User',
+            avatarUrl: user?.avatarUrl,
+          );
+        },
+      ),
+      // Story creation route
+      GoRoute(
+        path: '/create-story',
+        builder: (context, state) {
+          final user = ref.read(userProvider);
+          return CreateStoryScreen(
+            userId: user?.id ?? 'unknown',
+            username: user?.username ?? 'User',
+            avatarUrl: user?.avatarUrl,
+          );
+        },
+      ),
+      // Groups routes
+      GoRoute(
+        path: '/groups',
+        builder: (context, state) {
+          final user = ref.read(userProvider);
+          return GroupsScreen(userId: user?.id ?? 'unknown');
+        },
+      ),
+      GoRoute(
+        path: '/create-group',
+        builder: (context, state) {
+          final user = ref.read(userProvider);
+          return CreateGroupScreen(userId: user?.id ?? 'unknown');
+        },
+      ),
+      GoRoute(
+        path: '/group/:groupId',
+        builder: (context, state) {
+          final user = ref.read(userProvider);
+          return GroupDetailsScreen(
+            groupId: state.pathParameters['groupId']!,
+            userId: user?.id ?? 'unknown',
+          );
+        },
+      ),
+      // Trending route
+      GoRoute(
+        path: '/trending',
+        builder: (context, state) => const TrendingScreen(),
+      ),
     ],
   );
 });
+

@@ -173,7 +173,7 @@ class RoomRosterSheet extends StatelessWidget {
               child: ListView.separated(
                 shrinkWrap: true,
                 itemCount: sortedParticipants.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
+                separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final participant = sortedParticipants[index];
                   final presentation =

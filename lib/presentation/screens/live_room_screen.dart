@@ -129,18 +129,22 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     };
 
     try {
+      print('[LiveRoom] Starting Agora call connection for userId: $userId, canBroadcast: $canBroadcast');
       final rtcUid = _buildRtcUid(userId);
       final credentials = await _fetchAgoraToken(
         channelName: widget.roomId,
         rtcUid: rtcUid,
       );
+      print('[LiveRoom] Agora token fetched successfully');
       await service.initialize(credentials.appId);
+      print('[LiveRoom] Agora service initialized');
       await service.joinChannel(
         credentials.token,
         widget.roomId,
         rtcUid,
         asBroadcaster: canBroadcast,
       );
+      print('[LiveRoom] Successfully joined Agora channel');
       if (!mounted) {
         await service.dispose();
         return;
@@ -153,10 +157,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         _isVideoEnabled = canBroadcast;
       });
     } catch (e) {
+      print('[LiveRoom] Error connecting to Agora: $e');
       await service.dispose();
       if (mounted) {
         setState(() {
-          _callError = 'Audio/video connection failed. ${e.toString()}';
+          _callError = 'Video connection failed: ${e.toString()}';
           _isCallReady = false;
         });
       }
@@ -862,8 +867,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       }
 
       final participantRole = doc.exists
-          ? ((doc.data() as Map<String, dynamic>?)?['role'] as String? ??
-                'audience')
+          ? (doc.data()?['role'] as String? ?? 'audience')
           : (hostId == userId ? 'host' : 'audience');
       await _connectCall(
         userId,
@@ -1192,7 +1196,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                       SizedBox(
                                         width: 190,
                                         child: DropdownButtonFormField<int>(
-                                          value: slowModeSeconds,
+                                          initialValue: slowModeSeconds,
                                           decoration: const InputDecoration(
                                             labelText: 'Slow mode',
                                           ),
@@ -1701,8 +1705,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   hasBlockedParticipantInRoom
                               ? null
                               : () async {
-                                  if (messageController.text.trim().isEmpty)
+                                  if (messageController.text.trim().isEmpty) {
                                     return;
+                                  }
                                   if (slowModeSeconds > 0 &&
                                       lastMessageTime != null) {
                                     final secondsSinceLastMessage =

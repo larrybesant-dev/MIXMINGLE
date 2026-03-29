@@ -1,4 +1,3 @@
-
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -114,23 +113,39 @@ class ProfileState {
       isLoading: isLoading ?? this.isLoading,
       error: identical(error, _unset) ? this.error : error as String?,
       userId: identical(userId, _unset) ? this.userId : userId as String?,
-      username: identical(username, _unset) ? this.username : username as String?,
+      username: identical(username, _unset)
+          ? this.username
+          : username as String?,
       email: identical(email, _unset) ? this.email : email as String?,
-      avatarUrl: identical(avatarUrl, _unset) ? this.avatarUrl : avatarUrl as String?,
-        coverPhotoUrl: identical(coverPhotoUrl, _unset) ? this.coverPhotoUrl : coverPhotoUrl as String?,
+      avatarUrl: identical(avatarUrl, _unset)
+          ? this.avatarUrl
+          : avatarUrl as String?,
+      coverPhotoUrl: identical(coverPhotoUrl, _unset)
+          ? this.coverPhotoUrl
+          : coverPhotoUrl as String?,
       galleryUrls: galleryUrls ?? this.galleryUrls,
-      introVideoUrl: identical(introVideoUrl, _unset) ? this.introVideoUrl : introVideoUrl as String?,
+      introVideoUrl: identical(introVideoUrl, _unset)
+          ? this.introVideoUrl
+          : introVideoUrl as String?,
       bio: identical(bio, _unset) ? this.bio : bio as String?,
-        aboutMe: identical(aboutMe, _unset) ? this.aboutMe : aboutMe as String?,
-        age: age ?? this.age,
-        gender: identical(gender, _unset) ? this.gender : gender as String?,
-        location: identical(location, _unset) ? this.location : location as String?,
-        relationshipStatus: identical(relationshipStatus, _unset)
+      aboutMe: identical(aboutMe, _unset) ? this.aboutMe : aboutMe as String?,
+      age: age ?? this.age,
+      gender: identical(gender, _unset) ? this.gender : gender as String?,
+      location: identical(location, _unset)
+          ? this.location
+          : location as String?,
+      relationshipStatus: identical(relationshipStatus, _unset)
           ? this.relationshipStatus
           : relationshipStatus as String?,
-      vibePrompt: identical(vibePrompt, _unset) ? this.vibePrompt : vibePrompt as String?,
-      firstDatePrompt: identical(firstDatePrompt, _unset) ? this.firstDatePrompt : firstDatePrompt as String?,
-      musicTastePrompt: identical(musicTastePrompt, _unset) ? this.musicTastePrompt : musicTastePrompt as String?,
+      vibePrompt: identical(vibePrompt, _unset)
+          ? this.vibePrompt
+          : vibePrompt as String?,
+      firstDatePrompt: identical(firstDatePrompt, _unset)
+          ? this.firstDatePrompt
+          : firstDatePrompt as String?,
+      musicTastePrompt: identical(musicTastePrompt, _unset)
+          ? this.musicTastePrompt
+          : musicTastePrompt as String?,
       interests: interests ?? this.interests,
       coinBalance: coinBalance ?? this.coinBalance,
       membershipLevel: identical(membershipLevel, _unset)
@@ -150,17 +165,23 @@ class ProfileState {
   }
 }
 
-final profileControllerProvider = NotifierProvider<ProfileController, ProfileState>(
-  () => ProfileController(),
-);
+final profileControllerProvider =
+    NotifierProvider<ProfileController, ProfileState>(
+      () => ProfileController(),
+    );
 
 class ProfileController extends Notifier<ProfileState> {
   final FirebaseAuth _auth;
   final ProfileService _profileService;
 
-  ProfileController({FirebaseFirestore? firestore, FirebaseAuth? auth, ProfileService? profileService})
-      : _auth = auth ?? FirebaseAuth.instance,
-        _profileService = profileService ?? ProfileService(firestore: firestore ?? FirebaseFirestore.instance);
+  ProfileController({
+    FirebaseFirestore? firestore,
+    FirebaseAuth? auth,
+    ProfileService? profileService,
+  }) : _auth = auth ?? FirebaseAuth.instance,
+       _profileService =
+           profileService ??
+           ProfileService(firestore: firestore ?? FirebaseFirestore.instance);
 
   @override
   ProfileState build() {
@@ -209,7 +230,7 @@ class ProfileController extends Notifier<ProfileState> {
       final normalizedEmail = (profile.email ?? user?.email ?? '').trim();
       final normalizedAvatar = (profile.avatarUrl ?? '').trim();
       final normalizedCover = (profile.coverPhotoUrl ?? '').trim();
-        final normalizedGallery = profile.galleryUrls
+      final normalizedGallery = profile.galleryUrls
           .map((item) => item.trim())
           .where((item) => item.isNotEmpty)
           .toSet()
@@ -219,38 +240,46 @@ class ProfileController extends Notifier<ProfileState> {
       final normalizedAboutMe = (profile.aboutMe ?? '').trim();
       final normalizedLocation = (profile.location ?? '').trim();
       final normalizedGender = (profile.gender ?? '').trim();
-      final normalizedRelationshipStatus = (profile.relationshipStatus ?? '').trim();
-        final normalizedVibe = (profile.vibePrompt ?? '').trim();
-        final normalizedFirstDate = (profile.firstDatePrompt ?? '').trim();
-        final normalizedMusic = (profile.musicTastePrompt ?? '').trim();
+      final normalizedRelationshipStatus = (profile.relationshipStatus ?? '')
+          .trim();
+      final normalizedVibe = (profile.vibePrompt ?? '').trim();
+      final normalizedFirstDate = (profile.firstDatePrompt ?? '').trim();
+      final normalizedMusic = (profile.musicTastePrompt ?? '').trim();
       final normalizedInterests = profile.interests
           .map((item) => item.trim().toLowerCase())
           .where((item) => item.isNotEmpty)
           .toSet()
           .toList();
+
+      print('[ProfileController] Starting profile save for userId: $userId');
+
       await _profileService.saveProfile(
         userId: userId,
         userData: {
-        'username': normalizedUsername,
-        'email': normalizedEmail,
-        'avatarUrl': normalizedAvatar.isEmpty ? null : normalizedAvatar,
-        'coverPhotoUrl': normalizedCover.isEmpty ? null : normalizedCover,
-        'galleryUrls': normalizedGallery,
-        'introVideoUrl': normalizedVideo.isEmpty ? null : normalizedVideo,
-        'bio': normalizedBio.isEmpty ? null : normalizedBio,
-        'aboutMe': normalizedAboutMe.isEmpty ? null : normalizedAboutMe,
-        'age': profile.age,
-        'gender': normalizedGender.isEmpty ? null : normalizedGender,
-        'location': normalizedLocation.isEmpty ? null : normalizedLocation,
-        'relationshipStatus': normalizedRelationshipStatus.isEmpty ? null : normalizedRelationshipStatus,
-        'vibePrompt': normalizedVibe.isEmpty ? null : normalizedVibe,
-        'firstDatePrompt': normalizedFirstDate.isEmpty ? null : normalizedFirstDate,
-        'musicTastePrompt': normalizedMusic.isEmpty ? null : normalizedMusic,
-        'interests': normalizedInterests,
-        'themeId': profile.themeId,
-        'camViewPolicy': profile.camViewPolicy.name,
-        'adultModeEnabled': profile.adultModeEnabled,
-        'adultConsentAccepted': profile.adultConsentAccepted,
+          'username': normalizedUsername,
+          'email': normalizedEmail,
+          'avatarUrl': normalizedAvatar.isEmpty ? null : normalizedAvatar,
+          'coverPhotoUrl': normalizedCover.isEmpty ? null : normalizedCover,
+          'galleryUrls': normalizedGallery,
+          'introVideoUrl': normalizedVideo.isEmpty ? null : normalizedVideo,
+          'bio': normalizedBio.isEmpty ? null : normalizedBio,
+          'aboutMe': normalizedAboutMe.isEmpty ? null : normalizedAboutMe,
+          'age': profile.age,
+          'gender': normalizedGender.isEmpty ? null : normalizedGender,
+          'location': normalizedLocation.isEmpty ? null : normalizedLocation,
+          'relationshipStatus': normalizedRelationshipStatus.isEmpty
+              ? null
+              : normalizedRelationshipStatus,
+          'vibePrompt': normalizedVibe.isEmpty ? null : normalizedVibe,
+          'firstDatePrompt': normalizedFirstDate.isEmpty
+              ? null
+              : normalizedFirstDate,
+          'musicTastePrompt': normalizedMusic.isEmpty ? null : normalizedMusic,
+          'interests': normalizedInterests,
+          'themeId': profile.themeId,
+          'camViewPolicy': profile.camViewPolicy.name,
+          'adultModeEnabled': profile.adultModeEnabled,
+          'adultConsentAccepted': profile.adultConsentAccepted,
         },
         privacy: profile.privacy,
         adultProfile: AdultProfileModel(
@@ -263,6 +292,11 @@ class ProfileController extends Notifier<ProfileState> {
           lookingFor: profile.adultLookingFor,
         ),
       );
+
+      print(
+        '[ProfileController] Profile saved successfully for userId: $userId',
+      );
+
       // Keep profile data in Firestore only.
       // This avoids Auth accounts:update failures (notably on web profile photo updates).
       state = profile.copyWith(
@@ -280,9 +314,13 @@ class ProfileController extends Notifier<ProfileState> {
         age: profile.age,
         gender: normalizedGender.isEmpty ? null : normalizedGender,
         location: normalizedLocation.isEmpty ? null : normalizedLocation,
-        relationshipStatus: normalizedRelationshipStatus.isEmpty ? null : normalizedRelationshipStatus,
+        relationshipStatus: normalizedRelationshipStatus.isEmpty
+            ? null
+            : normalizedRelationshipStatus,
         vibePrompt: normalizedVibe.isEmpty ? null : normalizedVibe,
-        firstDatePrompt: normalizedFirstDate.isEmpty ? null : normalizedFirstDate,
+        firstDatePrompt: normalizedFirstDate.isEmpty
+            ? null
+            : normalizedFirstDate,
         musicTastePrompt: normalizedMusic.isEmpty ? null : normalizedMusic,
         interests: normalizedInterests,
         themeId: profile.themeId,
@@ -296,7 +334,11 @@ class ProfileController extends Notifier<ProfileState> {
         adultLookingFor: profile.adultLookingFor,
       );
     } catch (e) {
-      state = state.copyWith(isLoading: false, error: e.toString());
+      print('[ProfileController] Error saving profile: $e');
+      state = state.copyWith(
+        isLoading: false,
+        error: 'Failed to save profile: ${e.toString()}',
+      );
     }
   }
 
@@ -345,7 +387,9 @@ class ProfileController extends Notifier<ProfileState> {
         isLoading: false,
         error: null,
         userId: user.id.isNotEmpty ? user.id : resolvedUserId,
-        username: user.username.isNotEmpty ? user.username : _auth.currentUser?.displayName,
+        username: user.username.isNotEmpty
+            ? user.username
+            : _auth.currentUser?.displayName,
         email: user.email.isNotEmpty ? user.email : _auth.currentUser?.email,
         avatarUrl: user.avatarUrl,
         coverPhotoUrl: user.coverPhotoUrl,
