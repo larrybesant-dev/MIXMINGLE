@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mixvy/services/room_service.dart';
 
 import '../repository/feed_repository.dart';
 import '../models/post_model.dart';
@@ -19,7 +20,7 @@ final postsStreamProvider = StreamProvider<List<PostModel>>((ref) {
 });
 
 final roomsStreamProvider = StreamProvider<List<RoomModel>>((ref) {
-  return ref.read(feedRepositoryProvider).roomsStream();
+  return ref.read(roomServiceProvider).watchLiveRooms(limit: 50);
 });
 
 final eventsStreamProvider = StreamProvider<List<EventModel>>((ref) {

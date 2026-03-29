@@ -2,15 +2,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../repository/host_controls_repository.dart';
 import '../../../models/room_model.dart';
+import '../../../services/room_service.dart';
 
 final hostControlsRepositoryProvider = Provider<HostControlsRepository>((ref) {
   return HostControlsRepository(FirebaseFirestore.instance);
 });
 
 final roomStreamProvider = StreamProvider.family<RoomModel, String>((ref, roomId) {
-  return FirebaseFirestore.instance
-      .collection('rooms')
-      .doc(roomId)
-      .snapshots()
-      .map((doc) => RoomModel.fromJson(doc.data()!, doc.id));
+  return ref.read(roomServiceProvider).watchRoomById(roomId).map((room) {
+    if (room != null) {
+      return room;
+    }
+    return RoomModel(
+      id: roomId,
+      name: 'Room unavailable',
+      hostId: '',
+      isLive: false,
+    );
+  });
 });

@@ -18,17 +18,17 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static String _envOrDefault(String key, String fallback) {
+  static String _requiredEnv(String key) {
     final value = dotenv.env[key];
     if (value == null || value.isEmpty) {
-      return fallback;
+      throw StateError('Missing required Firebase config value: $key');
     }
     return value;
   }
 
   /// FirebaseOptions for web
   static FirebaseOptions get web => FirebaseOptions(
-      apiKey: _envOrDefault('FIREBASE_API_KEY_WEB', 'AIzaSyBBmz9ybuDRCA2dAVjFZVj7R7wrDL0wTYU'),
+      apiKey: _requiredEnv('FIREBASE_API_KEY_WEB'),
         authDomain: 'mix-and-mingle-v2.firebaseapp.com',
         projectId: 'mix-and-mingle-v2',
         storageBucket: 'mix-and-mingle-v2.firebasestorage.app',
@@ -39,7 +39,7 @@ class DefaultFirebaseOptions {
 
   /// FirebaseOptions for Windows
   static FirebaseOptions get windows => FirebaseOptions(
-      apiKey: _envOrDefault('FIREBASE_API_KEY_WINDOWS', 'AIzaSyBBmz9ybuDRCA2dAVjFZVj7R7wrDL0wTYU'),
+      apiKey: _requiredEnv('FIREBASE_API_KEY_WINDOWS'),
         authDomain: 'mix-and-mingle-v2.firebaseapp.com',
         projectId: 'mix-and-mingle-v2',
         storageBucket: 'mix-and-mingle-v2.firebasestorage.app',

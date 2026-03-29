@@ -25,28 +25,113 @@ import '../features/payments/payments_screen.dart';
 import 'package:mixvy/features/auth/screens/login_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 
+class _CacheEntry<T> {
+  const _CacheEntry({required this.value, required this.loadedAt});
+
+  final T value;
+  final DateTime loadedAt;
+}
+
+class _RouterGateCache {
+  static const Duration _profileTtl = Duration(seconds: 20);
+
+  bool? _isFirstRun;
+  final Map<String, _CacheEntry<bool>> _profileByUid = <String, _CacheEntry<bool>>{};
+  final Map<String, Future<bool>> _inFlightProfileChecks = <String, Future<bool>>{};
+
+  Future<bool> isFirstRun() async {
+    if (_isFirstRun != null) {
+      return _isFirstRun!;
+    }
+    _isFirstRun = await FirstRunService.isFirstRun();
+    return _isFirstRun!;
+  }
+
+  Future<bool> isProfileComplete(String uid) async {
+    final now = DateTime.now();
+    final cached = _profileByUid[uid];
+    if (cached != null && now.difference(cached.loadedAt) < _profileTtl) {
+      return cached.value;
+    }
+
+    final inFlight = _inFlightProfileChecks[uid];
+    if (inFlight != null) {
+      return inFlight;
+    }
+
+    final future = ProfileGateService.isProfileComplete(uid).then((isComplete) {
+      _profileByUid[uid] = _CacheEntry<bool>(
+        value: isComplete,
+        loadedAt: DateTime.now(),
+      );
+      _inFlightProfileChecks.remove(uid);
+      return isComplete;
+    }).catchError((error) {
+      _inFlightProfileChecks.remove(uid);
+      throw error;
+    });
+
+    _inFlightProfileChecks[uid] = future;
+    return future;
+  }
+}
+
+final _routerGateCacheProvider = Provider<_RouterGateCache>((ref) {
+  return _RouterGateCache();
+});
+
+typedef FirstRunCheck = Future<bool> Function();
+typedef ProfileCompleteCheck = Future<bool> Function(String uid);
+
+final firstRunCheckProvider = Provider<FirstRunCheck>((ref) {
+  final gateCache = ref.read(_routerGateCacheProvider);
+  return () => gateCache.isFirstRun();
+});
+
+final profileCompleteCheckProvider = Provider<ProfileCompleteCheck>((ref) {
+  final gateCache = ref.read(_routerGateCacheProvider);
+  return (uid) => gateCache.isProfileComplete(uid);
+});
+
+Future<String?> evaluateAppRedirect({
+  required String matchedLocation,
+  required String? uid,
+  required FirstRunCheck isFirstRun,
+  required ProfileCompleteCheck isProfileComplete,
+}) async {
+  final loggedIn = uid != null;
+  final isLoggingIn = matchedLocation == '/login' || matchedLocation == '/register';
+  final isOnboarding = matchedLocation == '/onboarding';
+  final isProfile = matchedLocation == '/profile';
+  final firstRun = await isFirstRun();
+
+  if (firstRun && !isOnboarding) return '/onboarding';
+  if (!firstRun && isOnboarding) return loggedIn ? '/' : '/login';
+  if (!loggedIn && !isLoggingIn) return '/login';
+  if (loggedIn) {
+    final profileComplete = await isProfileComplete(uid);
+    if (!profileComplete && !isProfile) return '/profile';
+    if (profileComplete && isProfile && !firstRun) return '/';
+  }
+  if (loggedIn && isLoggingIn) return '/';
+  return null;
+}
+
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authControllerProvider);
+  final firstRunCheck = ref.read(firstRunCheckProvider);
+  final profileCompleteCheck = ref.read(profileCompleteCheckProvider);
+
   return GoRouter(
     initialLocation: '/',
     redirect: (context, state) async {
       try {
-        final loggedIn = authState.uid != null;
-        final isLoggingIn = state.matchedLocation == '/login' || state.matchedLocation == '/register';
-        final isOnboarding = state.matchedLocation == '/onboarding';
-        final isProfile = state.matchedLocation == '/profile';
-        final isFirstRun = await FirstRunService.isFirstRun();
-
-        if (isFirstRun && !isOnboarding) return '/onboarding';
-        if (!isFirstRun && isOnboarding) return loggedIn ? '/' : '/login';
-        if (!loggedIn && !isLoggingIn) return '/login';
-        if (loggedIn) {
-          final profileComplete = await ProfileGateService.isProfileComplete(authState.uid!);
-          if (!profileComplete && !isProfile) return '/profile';
-          if (profileComplete && isProfile && !isFirstRun) return '/';
-        }
-        if (loggedIn && isLoggingIn) return '/';
-        return null;
+        return evaluateAppRedirect(
+          matchedLocation: state.matchedLocation,
+          uid: authState.uid,
+          isFirstRun: firstRunCheck,
+          isProfileComplete: profileCompleteCheck,
+        );
       } catch (error, stackTrace) {
         developer.log(
           'Router redirect failed for ${state.matchedLocation}',

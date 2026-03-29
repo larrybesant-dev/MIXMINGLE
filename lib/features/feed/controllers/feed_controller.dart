@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../models/room_model.dart';
 import '../../../models/user.dart' as feed_user;
 import '../../../services/moderation_service.dart';
+import '../../../services/room_service.dart';
 import '../../../core/firestore/firestore_error_utils.dart';
 
 class FeedState {
@@ -39,12 +40,14 @@ class FeedController extends Notifier<FeedState> {
   late final FirebaseFirestore _firestore;
   late final FirebaseAuth _auth;
   late final ModerationService _moderationService;
+  late final RoomService _roomService;
 
   @override
   FeedState build() {
     _firestore = FirebaseFirestore.instance;
     _auth = FirebaseAuth.instance;
     _moderationService = ModerationService(firestore: _firestore, auth: _auth);
+    _roomService = ref.read(roomServiceProvider);
     return const FeedState();
   }
 
@@ -55,14 +58,7 @@ class FeedController extends Notifier<FeedState> {
       final blockedIds = currentUserId == null
           ? const <String>{}
           : await _moderationService.getExcludedUserIds(currentUserId);
-      final roomsSnap = await _firestore
-          .collection('rooms')
-          .where('isLive', isEqualTo: true)
-          .orderBy('liveSince', descending: true)
-          .limit(20)
-          .get();
-      final liveRooms = roomsSnap.docs
-          .map((doc) => RoomModel.fromJson(doc.data(), doc.id))
+        final liveRooms = (await _roomService.getLiveRooms(limit: 20))
           .where((room) => !blockedIds.contains(room.hostId))
           .toList();
       final usersSnap = await _firestore
