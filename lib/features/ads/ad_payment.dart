@@ -10,14 +10,14 @@ class AdPayment {
   static Future<void> payForAd(String businessId, double amount) async {
     // Use PaymentApi to create a payment intent for ad payments
     try {
-      final clientSecret = await PaymentApi.createIntent(
+      final intent = await PaymentApi.createIntent(
         amount: amount,
         currency: 'usd',
         recipientId: businessId,
       );
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: clientSecret,
+          paymentIntentClientSecret: intent.clientSecret,
           merchantDisplayName: 'MixVy',
         ),
       );

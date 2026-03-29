@@ -256,6 +256,34 @@ function parsePositiveAmount(value) {
   return amount;
 }
 
+function parseOptionalIdempotencyKey(value) {
+  if (value == null) {
+    return null;
+  }
+  if (typeof value !== "string") {
+    throw new HttpsError(
+      "invalid-argument",
+      "idempotencyKey must be a string when provided.",
+    );
+  }
+  const normalized = value.trim();
+  if (!normalized) {
+    return null;
+  }
+  if (!/^[a-zA-Z0-9_\-:.]{8,120}$/.test(normalized)) {
+    throw new HttpsError(
+      "invalid-argument",
+      "idempotencyKey format is invalid.",
+    );
+  }
+  return normalized;
+}
+
+function buildIdempotentTransactionDocId(prefix, uid, idempotencyKey) {
+  const raw = `${prefix}_${uid}_${idempotencyKey}`;
+  return raw.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 180);
+}
+
 async function createPaymentIntentHandler(request, deps = {}) {
   const senderId = requireAuth(request);
   enforceRateLimit("createPaymentIntent", senderId);
@@ -265,10 +293,13 @@ async function createPaymentIntentHandler(request, deps = {}) {
   );
   const currency = request.data && request.data.currency;
   const amount = parsePositiveAmount(request.data && request.data.amount);
+  const idempotencyKey = parseOptionalIdempotencyKey(
+    request.data && request.data.idempotencyKey,
+  );
   const stripeClient = deps.stripeClient || stripe;
 
   const normalizedCurrency = typeof currency === "string" ? currency.toLowerCase() : "usd";
-  const paymentIntent = await stripeClient.paymentIntents.create({
+  const paymentIntentRequest = {
     amount: Math.round(amount * 100),
     currency: normalizedCurrency,
     metadata: {
@@ -276,14 +307,22 @@ async function createPaymentIntentHandler(request, deps = {}) {
       recipientId,
       amount: amount.toString(),
       kind: "mixvy_coin_payment",
+      idempotencyKey: idempotencyKey || "",
     },
     automatic_payment_methods: {
       enabled: true,
     },
-  });
+  };
+  const stripeRequestOptions = idempotencyKey ? {idempotencyKey} : undefined;
+  const paymentIntent = await stripeClient.paymentIntents.create(
+    paymentIntentRequest,
+    stripeRequestOptions,
+  );
 
   return {
     clientSecret: paymentIntent.client_secret,
+    paymentIntentId: paymentIntent.id,
+    idempotencyKey,
   };
 }
 
@@ -299,9 +338,26 @@ async function recordStripePaymentSuccessHandler(request, deps = {}) {
     "recipientId",
   );
   const amount = parsePositiveAmount(request.data && request.data.amount);
+  const paymentIntentId =
+    typeof (request.data && request.data.paymentIntentId) === "string"
+      ? request.data.paymentIntentId.trim()
+      : "";
+  const idempotencyKey = parseOptionalIdempotencyKey(
+    request.data && request.data.idempotencyKey,
+  );
   const firestore = deps.firestore || db;
 
-  const transactionRef = firestore.collection("transactions").doc();
+  const transactionRef = idempotencyKey
+    ? firestore.collection("transactions").doc(
+      buildIdempotentTransactionDocId("stripe", senderId, idempotencyKey),
+    )
+    : firestore.collection("transactions").doc();
+
+  const existingSnap = await transactionRef.get();
+  if (existingSnap.exists) {
+    return {transactionId: transactionRef.id, deduplicated: true};
+  }
+
   await transactionRef.set({
     id: transactionRef.id,
     senderId,
@@ -311,9 +367,11 @@ async function recordStripePaymentSuccessHandler(request, deps = {}) {
     timestamp: new Date().toISOString(),
     status: "completed",
     source: "stripe",
+    paymentIntentId,
+    idempotencyKey,
   });
 
-  return {transactionId: transactionRef.id};
+  return {transactionId: transactionRef.id, deduplicated: false};
 }
 
 exports.recordStripePaymentSuccess = onCall(async (request) =>
@@ -328,6 +386,9 @@ async function sendCoinTransferHandler(request, deps = {}) {
     "receiverId",
   );
   const amount = parsePositiveAmount(request.data && request.data.amount);
+  const idempotencyKey = parseOptionalIdempotencyKey(
+    request.data && request.data.idempotencyKey,
+  );
   const firestore = deps.firestore || db;
 
   if (receiverId === senderId) {
@@ -337,10 +398,20 @@ async function sendCoinTransferHandler(request, deps = {}) {
   await ensureUserExists(senderId, firestore);
   await ensureUserExists(receiverId, firestore);
 
+  const transactionRef = idempotencyKey
+    ? firestore.collection("transactions").doc(
+      buildIdempotentTransactionDocId("balance", senderId, idempotencyKey),
+    )
+    : firestore.collection("transactions").doc();
+
   const transactionId = await firestore.runTransaction(async (txn) => {
     const senderRef = firestore.collection("users").doc(senderId);
     const receiverRef = firestore.collection("users").doc(receiverId);
-    const transactionRef = firestore.collection("transactions").doc();
+
+    const existingTransaction = await txn.get(transactionRef);
+    if (existingTransaction.exists) {
+      return transactionRef.id;
+    }
 
     const [senderSnap, receiverSnap] = await Promise.all([
       txn.get(senderRef),
@@ -365,6 +436,7 @@ async function sendCoinTransferHandler(request, deps = {}) {
       timestamp: new Date().toISOString(),
       status: "sent",
       source: "balance",
+      idempotencyKey,
     });
 
     return transactionRef.id;
@@ -383,13 +455,26 @@ async function requestCoinTransferHandler(request, deps = {}) {
     "targetId",
   );
   const amount = parsePositiveAmount(request.data && request.data.amount);
+  const idempotencyKey = parseOptionalIdempotencyKey(
+    request.data && request.data.idempotencyKey,
+  );
   const firestore = deps.firestore || db;
 
   if (targetId === requesterId) {
     throw new HttpsError("invalid-argument", "Cannot request a payment from yourself.");
   }
 
-  const transactionRef = firestore.collection("transactions").doc();
+  const transactionRef = idempotencyKey
+    ? firestore.collection("transactions").doc(
+      buildIdempotentTransactionDocId("request", requesterId, idempotencyKey),
+    )
+    : firestore.collection("transactions").doc();
+
+  const existingSnap = await transactionRef.get();
+  if (existingSnap.exists) {
+    return {transactionId: transactionRef.id, deduplicated: true};
+  }
+
   await transactionRef.set({
     id: transactionRef.id,
     senderId: requesterId,
@@ -399,10 +484,120 @@ async function requestCoinTransferHandler(request, deps = {}) {
     timestamp: new Date().toISOString(),
     status: "requested",
     source: "request",
+    idempotencyKey,
   });
 
-  return {transactionId: transactionRef.id};
+  return {transactionId: transactionRef.id, deduplicated: false};
 }
+
+async function registerFcmTokenHandler(request, deps = {}) {
+  const uid = requireAuth(request);
+  const token = parseIdField(request.data && request.data.token, "token");
+  const platform =
+    typeof (request.data && request.data.platform) === "string"
+      ? request.data.platform.trim().slice(0, 32)
+      : "unknown";
+  const firestore = deps.firestore || db;
+
+  const tokenRef = firestore
+    .collection("users")
+    .doc(uid)
+    .collection("notification_tokens")
+    .doc(token);
+
+  await tokenRef.set({
+    token,
+    userId: uid,
+    platform,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    createdAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, {merge: true});
+
+  return {ok: true};
+}
+
+exports.registerFcmToken = onCall(async (request) =>
+  registerFcmTokenHandler(request),
+);
+
+async function sendPushForNotification(event, deps = {}) {
+  if (!event.data) {
+    return;
+  }
+
+  const firestore = deps.firestore || db;
+  const messaging = deps.messaging || admin.messaging();
+  const notificationData = event.data.data() || {};
+  const userId = typeof notificationData.userId === "string"
+    ? notificationData.userId.trim()
+    : "";
+  if (!userId) {
+    return;
+  }
+
+  const tokenSnapshot = await firestore
+    .collection("users")
+    .doc(userId)
+    .collection("notification_tokens")
+    .limit(200)
+    .get();
+
+  const tokens = tokenSnapshot.docs
+    .map((doc) => (doc.data().token || "").trim())
+    .filter((value) => value.length > 0);
+
+  if (tokens.length === 0) {
+    return;
+  }
+
+  const payload = {
+    notification: {
+      title: "MixVy",
+      body: typeof notificationData.content === "string"
+        ? notificationData.content.slice(0, 180)
+        : "You have a new notification.",
+    },
+    data: {
+      type: String(notificationData.type || "in_app"),
+      notificationId: event.data.id,
+      userId,
+    },
+    tokens,
+  };
+
+  const result = await messaging.sendEachForMulticast(payload);
+  const invalidTokens = [];
+  result.responses.forEach((response, index) => {
+    if (response.success) {
+      return;
+    }
+    const code = response.error && response.error.code;
+    if (
+      code === "messaging/registration-token-not-registered" ||
+      code === "messaging/invalid-argument"
+    ) {
+      invalidTokens.push(tokens[index]);
+    }
+  });
+
+  if (invalidTokens.length > 0) {
+    const batch = firestore.batch();
+    invalidTokens.forEach((token) => {
+      const tokenRef = firestore
+        .collection("users")
+        .doc(userId)
+        .collection("notification_tokens")
+        .doc(token);
+      batch.delete(tokenRef);
+    });
+    await batch.commit();
+  }
+}
+
+exports.sendPushForNotification = onDocumentCreated(
+  "notifications/{notificationId}",
+  async (event) => sendPushForNotification(event),
+);
 
 exports.requestCoinTransfer = onCall(async (request) =>
   requestCoinTransferHandler(request),
@@ -783,4 +978,8 @@ exports.__testing = {
   ensureUserExists,
   enforceRateLimit,
   parseIdField,
+  parseOptionalIdempotencyKey,
+  buildIdempotentTransactionDocId,
+  registerFcmTokenHandler,
+  sendPushForNotification,
 };

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:uuid/uuid.dart';
 
 abstract class PaymentFunctionsGateway {
   Future<Map<String, dynamic>> call(
@@ -150,8 +151,21 @@ class StripeConnectStatus {
   }
 }
 
+class PaymentIntentResult {
+  const PaymentIntentResult({
+    required this.clientSecret,
+    required this.paymentIntentId,
+    required this.idempotencyKey,
+  });
+
+  final String clientSecret;
+  final String paymentIntentId;
+  final String idempotencyKey;
+}
+
 class PaymentApi {
   static final _firestore = FirebaseFirestore.instance;
+  static const _uuid = Uuid();
   static PaymentFunctionsGateway? _functionsGateway;
   static PaymentAuthGateway? _authGateway;
 
@@ -189,27 +203,48 @@ class PaymentApi {
   }
 
   /// Creates a payment intent by calling a backend endpoint that integrates with Stripe
-  static Future<String> createIntent({
+  static Future<PaymentIntentResult> createIntent({
     required double amount,
     required String currency,
     required String recipientId,
+    String? idempotencyKey,
   }) async {
+    final resolvedIdempotencyKey =
+        (idempotencyKey == null || idempotencyKey.trim().isEmpty)
+            ? 'intent_${_uuid.v4()}'
+            : idempotencyKey.trim();
+
     final data = await _callFunction<Map<String, dynamic>>('createPaymentIntent', {
       'amount': amount,
       'currency': currency,
       'recipientId': recipientId,
+      'idempotencyKey': resolvedIdempotencyKey,
     });
     final clientSecret = data['clientSecret'] as String?;
+    final paymentIntentId = (data['paymentIntentId'] as String?)?.trim() ?? '';
+    final returnedIdempotencyKey =
+        (data['idempotencyKey'] as String?)?.trim().isNotEmpty == true
+            ? (data['idempotencyKey'] as String).trim()
+            : resolvedIdempotencyKey;
     if (clientSecret == null || clientSecret.isEmpty) {
       throw Exception('clientSecret missing in response');
     }
-    return clientSecret;
+    if (paymentIntentId.isEmpty) {
+      throw Exception('paymentIntentId missing in response');
+    }
+    return PaymentIntentResult(
+      clientSecret: clientSecret,
+      paymentIntentId: paymentIntentId,
+      idempotencyKey: returnedIdempotencyKey,
+    );
   }
 
   /// Notifies backend of successful payment (records transaction in Firestore)
   static Future<void> notifySuccess({
     required String recipientId,
     required double amount,
+    required String paymentIntentId,
+    String? idempotencyKey,
   }) async {
     final user = _resolvedAuthGateway.currentUser;
     if (user == null) {
@@ -218,12 +253,15 @@ class PaymentApi {
     await _callFunction<Map<String, dynamic>>('recordStripePaymentSuccess', {
       'recipientId': recipientId,
       'amount': amount,
+      'paymentIntentId': paymentIntentId,
+      'idempotencyKey': idempotencyKey,
     });
   }
 
   static Future<void> sendPayment(
     String receiverId,
     double amount,
+    {String? idempotencyKey}
   ) async {
     final user = _resolvedAuthGateway.currentUser;
     if (user == null) {
@@ -232,6 +270,7 @@ class PaymentApi {
     await _callFunction<Map<String, dynamic>>('sendCoinTransfer', {
       'receiverId': receiverId,
       'amount': amount,
+      'idempotencyKey': idempotencyKey ?? 'send_${_uuid.v4()}',
     });
   }
 
@@ -239,6 +278,7 @@ class PaymentApi {
     String requesterId,
     String targetId,
     double amount,
+    {String? idempotencyKey}
   ) async {
     final user = _resolvedAuthGateway.currentUser;
     if (user == null) {
@@ -250,6 +290,7 @@ class PaymentApi {
     await _callFunction<Map<String, dynamic>>('requestCoinTransfer', {
       'targetId': targetId,
       'amount': amount,
+      'idempotencyKey': idempotencyKey ?? 'request_${_uuid.v4()}',
     });
   }
 

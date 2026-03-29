@@ -45,14 +45,14 @@ class _SendPaymentPageState extends ConsumerState<SendPaymentPage> {
         return;
       }
       // User is assumed to be logged in (null check handled in PaymentApi).
-      final clientSecret = await PaymentApi.createIntent(
+      final intent = await PaymentApi.createIntent(
         amount: amount,
         currency: 'usd',
         recipientId: widget.recipientId,
       );
       await Stripe.instance.initPaymentSheet(
         paymentSheetParameters: SetupPaymentSheetParameters(
-          paymentIntentClientSecret: clientSecret,
+          paymentIntentClientSecret: intent.clientSecret,
           merchantDisplayName: 'MixVy',
         ),
       );
@@ -61,6 +61,8 @@ class _SendPaymentPageState extends ConsumerState<SendPaymentPage> {
       await PaymentApi.notifySuccess(
         recipientId: widget.recipientId,
         amount: amount,
+        paymentIntentId: intent.paymentIntentId,
+        idempotencyKey: intent.idempotencyKey,
       );
       if (!mounted) return;
       ScaffoldMessenger.of(
