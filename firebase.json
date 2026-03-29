@@ -20,6 +20,10 @@
           {
             "key": "Cache-Control",
             "value": "no-cache, no-store, must-revalidate"
+          },
+          {
+            "key": "Clear-Site-Data",
+            "value": "\"cache\", \"storage\""
           }
         ]
       },
@@ -34,6 +38,24 @@
       },
       {
         "source": "/flutter_service_worker.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/main.dart.js",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-cache, no-store, must-revalidate"
+          }
+        ]
+      },
+      {
+        "source": "/version.json",
         "headers": [
           {
             "key": "Cache-Control",

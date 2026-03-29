@@ -1,6 +1,5 @@
 // Corrected FirebaseOptions for MixVy
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
@@ -18,17 +17,10 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static String _requiredEnv(String key) {
-    final value = dotenv.env[key];
-    if (value == null || value.isEmpty) {
-      throw StateError('Missing required Firebase config value: $key');
-    }
-    return value;
-  }
-
   /// FirebaseOptions for web
+  // Note: apiKey is public and safe to hardcode in web apps
   static FirebaseOptions get web => FirebaseOptions(
-      apiKey: _requiredEnv('FIREBASE_API_KEY_WEB'),
+      apiKey: 'AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4',
         authDomain: 'mix-and-mingle-v2.firebaseapp.com',
         projectId: 'mix-and-mingle-v2',
         storageBucket: 'mix-and-mingle-v2.firebasestorage.app',
@@ -39,7 +31,7 @@ class DefaultFirebaseOptions {
 
   /// FirebaseOptions for Windows
   static FirebaseOptions get windows => FirebaseOptions(
-      apiKey: _requiredEnv('FIREBASE_API_KEY_WINDOWS'),
+      apiKey: 'AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4',
         authDomain: 'mix-and-mingle-v2.firebaseapp.com',
         projectId: 'mix-and-mingle-v2',
         storageBucket: 'mix-and-mingle-v2.firebasestorage.app',
