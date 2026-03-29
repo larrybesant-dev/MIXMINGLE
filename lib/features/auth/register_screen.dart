@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixvy/services/analytics_service.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -45,6 +47,44 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     if (authState.error == null && authState.uid != null) {
       context.go('/profile');
     }
+  }
+
+  Future<void> _signInWithGoogle() async {
+    final controller = ref.read(authControllerProvider.notifier);
+    await controller.signInWithGoogle();
+    final authState = ref.read(authControllerProvider);
+    if (!mounted) return;
+    setState(() {
+      _localError = authState.error;
+    });
+    if (authState.error == null && authState.uid != null) {
+      await AnalyticsService().logLogin(method: 'google');
+      if (!mounted) return;
+      context.go('/');
+    }
+  }
+
+  Future<void> _signInWithApple() async {
+    final controller = ref.read(authControllerProvider.notifier);
+    await controller.signInWithApple();
+    final authState = ref.read(authControllerProvider);
+    if (!mounted) return;
+    setState(() {
+      _localError = authState.error;
+    });
+    if (authState.error == null && authState.uid != null) {
+      await AnalyticsService().logLogin(method: 'apple');
+      if (!mounted) return;
+      context.go('/');
+    }
+  }
+
+  bool _supportsAppleSignIn() {
+    if (kIsWeb) {
+      return true;
+    }
+    return defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS;
   }
 
   @override
@@ -138,6 +178,37 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  const Row(
+                    children: [
+                      Expanded(child: Divider()),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12),
+                        child: Text('or continue with'),
+                      ),
+                      Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: isLoading ? null : _signInWithGoogle,
+                      icon: const Icon(Icons.login),
+                      label: const Text('Continue with Google'),
+                    ),
+                  ),
+                  if (_supportsAppleSignIn()) ...[
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: isLoading ? null : _signInWithApple,
+                        icon: const Icon(Icons.apple),
+                        label: const Text('Continue with Apple'),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   Semantics(
                     label: 'Login navigation button',

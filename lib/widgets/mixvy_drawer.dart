@@ -53,6 +53,7 @@ class MixVyDrawer extends StatelessWidget {
           _navItem(context, icon: Icons.person_rounded, title: 'Profile', route: '/profile'),
           _navItem(context, icon: Icons.payments_rounded, title: 'Payments', route: '/payments'),
           _navItem(context, icon: Icons.notifications_active_rounded, title: 'Notifications', route: '/notifications'),
+          _navItem(context, icon: Icons.admin_panel_settings_rounded, title: 'Moderation', route: '/moderation'),
           _navItem(context, icon: Icons.settings_rounded, title: 'Settings', route: '/settings'),
         ],
       ),

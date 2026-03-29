@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
@@ -125,6 +126,34 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     }
   }
 
+  Future<void> _signInWithApple() async {
+    final authController = ref.read(authControllerProvider.notifier);
+    await authController.signInWithApple();
+
+    if (!mounted) return;
+
+    final authState = ref.read(authControllerProvider);
+    if (authState.error != null) {
+      await _showMessage(authState.error ?? '', isError: true);
+      return;
+    }
+
+    if (authState.uid != null) {
+      await AnalyticsService().logLogin(method: 'apple');
+      if (mounted) {
+        context.go('/');
+      }
+    }
+  }
+
+  bool _supportsAppleSignIn() {
+    if (kIsWeb) {
+      return true;
+    }
+    return defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS;
+  }
+
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authControllerProvider);
@@ -222,6 +251,17 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
                         label: const Text('Continue with Google'),
                       ),
                     ),
+                    if (_supportsAppleSignIn()) ...[
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: authState.isLoading ? null : _signInWithApple,
+                          icon: const Icon(Icons.apple),
+                          label: const Text('Continue with Apple'),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 8),
                     TextButton(
                       onPressed: authState.isLoading

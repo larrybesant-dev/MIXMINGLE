@@ -69,6 +69,37 @@ class ModerationService {
     await reportRef.set(report.toJson());
   }
 
+  Stream<List<ReportRecordModel>> watchRecentReports({int limit = 100}) {
+    final cappedLimit = limit <= 0 ? 25 : limit;
+
+    return _firestore
+        .collection('reports')
+        .orderBy('createdAt', descending: true)
+        .limit(cappedLimit)
+        .snapshots()
+        .map((snapshot) {
+          final reports = snapshot.docs
+              .map((doc) => ReportRecordModel.fromJson(doc.data()))
+              .toList(growable: false);
+          return reports;
+        });
+  }
+
+  Future<void> updateReportStatus({
+    required String reportId,
+    required ModerationStatus status,
+  }) async {
+    final normalizedReportId = reportId.trim();
+    if (normalizedReportId.isEmpty) {
+      throw Exception('reportId is required');
+    }
+
+    await _firestore.collection('reports').doc(normalizedReportId).set({
+      'status': status.name,
+      'updatedAt': DateTime.now().toUtc().toIso8601String(),
+    }, SetOptions(merge: true));
+  }
+
   Future<Set<String>> getExcludedUserIds(String userId) async {
     if (userId.trim().isEmpty) {
       return const <String>{};

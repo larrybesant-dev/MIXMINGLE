@@ -1,4 +1,5 @@
 const {onRequest, onCall, HttpsError} = require("firebase-functions/v2/https");
+const {onDocumentCreated} = require("firebase-functions/v2/firestore");
 const {onRequest: onRequestV1} = require("firebase-functions/v1/https");
 const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
@@ -23,6 +24,34 @@ const RATE_LIMITS = {
 };
 
 const rateLimitState = new Map();
+
+const HIGH_RISK_TERMS = [
+  "scam",
+  "fraud",
+  "chargeback",
+  "threat",
+  "kill",
+  "blackmail",
+  "extort",
+  "hate",
+  "violent",
+  "weapon",
+  "underage",
+  "exploit",
+  "abuse",
+];
+
+const MEDIUM_RISK_TERMS = [
+  "spam",
+  "harass",
+  "bully",
+  "nsfw",
+  "bot",
+  "fake",
+  "impersonat",
+  "offensive",
+  "slur",
+];
 
 function enforceRateLimit(functionName, uid) {
   const config = RATE_LIMITS[functionName];
@@ -58,6 +87,44 @@ function parseIdField(value, fieldName) {
     throw new HttpsError("invalid-argument", `${fieldName} is too long.`);
   }
   return normalized;
+}
+
+function classifyModerationText(reason = "", details = "") {
+  const sourceText = `${reason} ${details}`.toLowerCase();
+  const matchedHigh = HIGH_RISK_TERMS.filter((term) => sourceText.includes(term));
+  const matchedMedium = MEDIUM_RISK_TERMS.filter((term) => sourceText.includes(term));
+
+  const score = matchedHigh.length * 3 + matchedMedium.length;
+  let riskLevel = "low";
+  if (matchedHigh.length > 0 || score >= 5) {
+    riskLevel = "high";
+  } else if (matchedMedium.length > 0 || score >= 2) {
+    riskLevel = "medium";
+  }
+
+  return {
+    riskLevel,
+    score,
+    matchedTerms: [...new Set([...matchedHigh, ...matchedMedium])],
+    needsManualReview: riskLevel !== "low",
+  };
+}
+
+function buildModerationReviewPayload(reportData = {}) {
+  const reason = typeof reportData.reason === "string" ? reportData.reason : "";
+  const details = typeof reportData.details === "string" ? reportData.details : "";
+  const classification = classifyModerationText(reason, details);
+
+  return {
+    moderationReview: {
+      riskLevel: classification.riskLevel,
+      score: classification.score,
+      matchedTerms: classification.matchedTerms,
+      needsManualReview: classification.needsManualReview,
+      classifiedAt: new Date().toISOString(),
+      classifierVersion: "v1-baseline",
+    },
+  };
 }
 
 function getCheckoutBaseUrl() {
@@ -560,6 +627,21 @@ exports.cleanupDeletedUser = functionsV1.auth.user().onDelete(async (user) => {
   await cleanupDeletedUserData(user.uid);
 });
 
+exports.classifyNewReport = onDocumentCreated("reports/{reportId}", async (event) => {
+  if (!event.data) {
+    return;
+  }
+
+  const snapshot = event.data;
+  const reportData = snapshot.data() || {};
+  if (reportData.moderationReview && reportData.moderationReview.classifiedAt) {
+    return;
+  }
+
+  const payload = buildModerationReviewPayload(reportData);
+  await snapshot.ref.set(payload, {merge: true});
+});
+
 // Create Stripe Checkout Session
 exports.createCheckoutSession = onRequest(async (req, res) =>
   createCheckoutSessionHandler(req, res),
@@ -614,6 +696,8 @@ exports.__testing = {
   createCheckoutSessionHandler,
   requestRefundHandler,
   cleanupDeletedUserData,
+  classifyModerationText,
+  buildModerationReviewPayload,
   getCheckoutBaseUrl,
   mapStripeConnectAccount,
   ensureStripeConnectAccount,

@@ -3,7 +3,7 @@
   "description": "Cloud Functions for Firebase",
   "scripts": {
     "lint": "eslint .",
-    "test": "node --test test/payments.spec.js",
+    "test": "node --test test/payments.spec.js test/moderation.spec.js",
     "backfill:transactions:participants": "node scripts/backfill-transactions-participants.js",
     "backfill:transactions:participants:apply": "node scripts/backfill-transactions-participants.js --apply",
     "serve": "firebase emulators:start --only functions",

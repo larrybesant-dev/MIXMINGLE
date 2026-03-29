@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../presentation/screens/google_sign_in_helper.dart';
+import '../../../presentation/screens/apple_sign_in_helper.dart';
 
 class AuthState {
   final bool isLoading;
@@ -35,7 +36,8 @@ final authControllerProvider = NotifierProvider<AuthController, AuthState>(
 
 
 class AuthController extends Notifier<AuthState> {
-  final GoogleSignInHelper _googleSignInHelper = getGoogleSignInHelper();
+  final GoogleSignInHelper _googleSignInHelper;
+  final AppleSignInHelper _appleSignInHelper;
 
   StreamSubscription<User?>? _authStateSubscription;
 
@@ -54,9 +56,16 @@ class AuthController extends Notifier<AuthState> {
   final FirebaseAuth _auth;
   final FirebaseFirestore? _firestore;
 
-  AuthController({FirebaseAuth? auth, FirebaseFirestore? firestore})
+  AuthController({
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+    GoogleSignInHelper? googleSignInHelper,
+    AppleSignInHelper? appleSignInHelper,
+  })
       : _auth = auth ?? FirebaseAuth.instance,
-        _firestore = firestore;
+        _firestore = firestore,
+        _googleSignInHelper = googleSignInHelper ?? getGoogleSignInHelper(),
+        _appleSignInHelper = appleSignInHelper ?? getAppleSignInHelper();
 
   @override
   AuthState build() {
@@ -118,6 +127,7 @@ class AuthController extends Notifier<AuthState> {
   Future<void> _completeRedirectSignInIfNeeded() async {
     try {
       await _googleSignInHelper.completePendingRedirectSignIn();
+      await _appleSignInHelper.completePendingRedirectSignIn();
       final uid = _auth.currentUser?.uid;
       if (uid != null) {
         await _ensureUserDocument(_auth.currentUser!);
@@ -193,6 +203,7 @@ class AuthController extends Notifier<AuthState> {
       case 'popup-blocked':
       case 'popup-closed-by-user':
       case 'web-context-cancelled':
+      case 'canceled':
         return 'Sign-in was cancelled. Please try again.';
       case 'email-already-in-use':
         return 'Email already in use';
@@ -200,6 +211,23 @@ class AuthController extends Notifier<AuthState> {
         return 'Password is too weak';
       default:
         return 'Login failed: $code';
+    }
+  }
+
+  Future<void> signInWithApple() async {
+    state = state.copyWith(isLoading: true, error: null);
+    try {
+      await _appleSignInHelper.signInWithApple();
+      final user = _auth.currentUser;
+      if (user != null) {
+        await _ensureUserDocument(user);
+      }
+      state = state.copyWith(isLoading: false, uid: user?.uid);
+    } on FirebaseAuthException catch (e, st) {
+      _logAuthException(e, st, context: 'apple-sign-in');
+      state = state.copyWith(isLoading: false, error: _getReadableError(e.code));
+    } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
     }
   }
 

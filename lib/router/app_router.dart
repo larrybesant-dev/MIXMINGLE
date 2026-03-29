@@ -17,6 +17,7 @@ import 'package:mixvy/presentation/screens/account_center_screen.dart';
 import 'package:mixvy/presentation/screens/legal_terms_screen.dart';
 import 'package:mixvy/presentation/screens/legal_privacy_screen.dart';
 import 'package:mixvy/presentation/screens/app_info_screen.dart';
+import 'package:mixvy/presentation/screens/moderation_dashboard_screen.dart';
 import 'package:mixvy/features/speed_dating/screens/speed_dating_screen.dart';
 import 'package:mixvy/core/services/app_settings_service.dart';
 
@@ -191,6 +192,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/legal/terms', builder: (context, state) => const LegalTermsScreen()),
       GoRoute(path: '/legal/privacy', builder: (context, state) => const LegalPrivacyScreen()),
       GoRoute(path: '/about', builder: (context, state) => const AppInfoScreen()),
+      GoRoute(path: '/moderation', builder: (context, state) => const ModerationDashboardScreen()),
     ],
   );
 });
