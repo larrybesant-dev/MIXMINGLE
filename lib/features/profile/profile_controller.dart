@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -251,7 +253,10 @@ class ProfileController extends Notifier<ProfileState> {
           .toSet()
           .toList();
 
-      print('[ProfileController] Starting profile save for userId: $userId');
+      developer.log(
+        'Starting profile save for userId: $userId',
+        name: 'ProfileController',
+      );
 
       await _profileService.saveProfile(
         userId: userId,
@@ -293,8 +298,9 @@ class ProfileController extends Notifier<ProfileState> {
         ),
       );
 
-      print(
-        '[ProfileController] Profile saved successfully for userId: $userId',
+      developer.log(
+        'Profile saved successfully for userId: $userId',
+        name: 'ProfileController',
       );
 
       // Keep profile data in Firestore only.
@@ -333,8 +339,13 @@ class ProfileController extends Notifier<ProfileState> {
         adultBoundaries: profile.adultBoundaries,
         adultLookingFor: profile.adultLookingFor,
       );
-    } catch (e) {
-      print('[ProfileController] Error saving profile: $e');
+    } catch (e, stackTrace) {
+      developer.log(
+        'Error saving profile',
+        name: 'ProfileController',
+        error: e,
+        stackTrace: stackTrace,
+      );
       state = state.copyWith(
         isLoading: false,
         error: 'Failed to save profile: ${e.toString()}',

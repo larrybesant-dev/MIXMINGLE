@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -129,22 +131,25 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     };
 
     try {
-      print('[LiveRoom] Starting Agora call connection for userId: $userId, canBroadcast: $canBroadcast');
+      developer.log(
+        'Starting Agora call connection for userId: $userId, canBroadcast: $canBroadcast',
+        name: 'LiveRoom',
+      );
       final rtcUid = _buildRtcUid(userId);
       final credentials = await _fetchAgoraToken(
         channelName: widget.roomId,
         rtcUid: rtcUid,
       );
-      print('[LiveRoom] Agora token fetched successfully');
+      developer.log('Agora token fetched successfully', name: 'LiveRoom');
       await service.initialize(credentials.appId);
-      print('[LiveRoom] Agora service initialized');
+      developer.log('Agora service initialized', name: 'LiveRoom');
       await service.joinChannel(
         credentials.token,
         widget.roomId,
         rtcUid,
         asBroadcaster: canBroadcast,
       );
-      print('[LiveRoom] Successfully joined Agora channel');
+      developer.log('Successfully joined Agora channel', name: 'LiveRoom');
       if (!mounted) {
         await service.dispose();
         return;
@@ -156,8 +161,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         _isMicMuted = !canBroadcast;
         _isVideoEnabled = canBroadcast;
       });
-    } catch (e) {
-      print('[LiveRoom] Error connecting to Agora: $e');
+    } catch (e, stackTrace) {
+      developer.log(
+        'Error connecting to Agora',
+        name: 'LiveRoom',
+        error: e,
+        stackTrace: stackTrace,
+      );
       await service.dispose();
       if (mounted) {
         setState(() {
