@@ -5,17 +5,21 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/agora_constants.dart';
+import '../../models/moderation_model.dart';
+import '../../models/room_participant_model.dart';
 import '../providers/user_provider.dart';
 import '../../features/room/providers/room_firestore_provider.dart';
 import '../../features/room/providers/participant_providers.dart';
 import '../../features/room/providers/message_providers.dart';
 import '../../features/room/widgets/message_bubble.dart';
+import '../../features/room/widgets/room_control_sheets.dart';
 import '../../features/room/providers/cam_access_provider.dart';
 import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/room/providers/host_provider.dart';
 import '../../features/room/providers/room_policy_provider.dart';
 import '../../services/analytics_service.dart';
 import '../../services/agora_service.dart';
+import '../../services/follow_service.dart';
 import '../../services/moderation_service.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
@@ -47,6 +51,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   String? _callError;
   Set<String> _excludedUserIds = const <String>{};
   String? _appliedMediaRole;
+  bool _isHandlingParticipantRemoval = false;
+
+  bool _looksLikeAgoraAppId(String value) {
+    final trimmed = value.trim();
+    if (trimmed.length != 32) {
+      return false;
+    }
+    return RegExp(r'^[a-zA-Z0-9]{32}$').hasMatch(trimmed);
+  }
 
   @override
   void initState() {
@@ -66,29 +79,37 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     return userId.hashCode.abs() % 2147483647;
   }
 
-  Future<String> _fetchAgoraToken({required String channelName, required int rtcUid}) async {
-    final callable = FirebaseFunctions.instance.httpsCallable('generateAgoraToken');
+  Future<({String token, String appId})> _fetchAgoraToken({
+    required String channelName,
+    required int rtcUid,
+  }) async {
+    final callable = FirebaseFunctions.instance.httpsCallable(
+      'generateAgoraToken',
+    );
     final result = await callable.call<Map<String, dynamic>>({
       'channelName': channelName,
       'rtcUid': rtcUid,
     });
     final data = Map<String, dynamic>.from(result.data);
     final token = (data['token'] as String?)?.trim() ?? '';
+    final serverAppId = (data['appId'] as String?)?.trim() ?? '';
     if (token.isEmpty) {
       throw Exception('Missing Agora token from backend response.');
     }
-    return token;
+
+    final localAppId = AgoraConstants.appId.trim();
+    final resolvedAppId = serverAppId.isNotEmpty ? serverAppId : localAppId;
+    if (!_looksLikeAgoraAppId(resolvedAppId)) {
+      throw Exception(
+        'Invalid AGORA_APP_ID. Expected a 32-character Agora App ID.',
+      );
+    }
+
+    return (token: token, appId: resolvedAppId);
   }
 
-  Future<void> _connectCall(String userId) async {
+  Future<void> _connectCall(String userId, {required bool canBroadcast}) async {
     if (_isCallConnecting || _isCallReady) return;
-    final appId = AgoraConstants.appId.trim();
-    if (appId.isEmpty) {
-      setState(() {
-        _callError = 'Audio/video unavailable: missing AGORA_APP_ID.';
-      });
-      return;
-    }
 
     setState(() {
       _isCallConnecting = true;
@@ -109,9 +130,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
     try {
       final rtcUid = _buildRtcUid(userId);
-      final token = await _fetchAgoraToken(channelName: widget.roomId, rtcUid: rtcUid);
-      await service.initialize(appId);
-      await service.joinChannel(token, widget.roomId, rtcUid);
+      final credentials = await _fetchAgoraToken(
+        channelName: widget.roomId,
+        rtcUid: rtcUid,
+      );
+      await service.initialize(credentials.appId);
+      await service.joinChannel(
+        credentials.token,
+        widget.roomId,
+        rtcUid,
+        asBroadcaster: canBroadcast,
+      );
       if (!mounted) {
         await service.dispose();
         return;
@@ -119,6 +148,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       setState(() {
         _agoraService = service;
         _isCallReady = true;
+        _appliedMediaRole = canBroadcast ? 'cohost' : 'audience';
+        _isMicMuted = !canBroadcast;
+        _isVideoEnabled = canBroadcast;
       });
     } catch (e) {
       await service.dispose();
@@ -178,6 +210,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     }
 
     final canBroadcast = role == 'host' || role == 'cohost';
+    await service.setBroadcaster(canBroadcast);
     await service.mute(!canBroadcast);
     await service.enableVideo(canBroadcast);
 
@@ -206,6 +239,530 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     });
   }
 
+  void _showSnackBar(String message) {
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  Future<bool> _confirmAction({
+    required String title,
+    required String message,
+    String confirmLabel = 'Confirm',
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
+    );
+
+    return confirmed == true;
+  }
+
+  Future<void> _reportTarget({
+    required String targetId,
+    required ReportTargetType targetType,
+    required String title,
+    required String fallbackReason,
+  }) async {
+    final reasonController = TextEditingController();
+    final detailsController = TextEditingController();
+
+    final submitted = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(title),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: reasonController,
+              decoration: const InputDecoration(labelText: 'Reason'),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: detailsController,
+              decoration: const InputDecoration(labelText: 'Details'),
+              maxLines: 3,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Submit'),
+          ),
+        ],
+      ),
+    );
+
+    if (submitted != true) {
+      return;
+    }
+
+    try {
+      await ModerationService().reportTarget(
+        targetId: targetId,
+        targetType: targetType,
+        reason: reasonController.text.trim().isEmpty
+            ? fallbackReason
+            : reasonController.text.trim(),
+        details: detailsController.text.trim(),
+      );
+      _showSnackBar('Report submitted.');
+    } catch (e) {
+      _showSnackBar('Could not submit report: $e');
+    }
+  }
+
+  Future<void> _handleForcedRoomExit(String message) async {
+    if (_isHandlingParticipantRemoval) {
+      return;
+    }
+
+    _isHandlingParticipantRemoval = true;
+    await _disconnectCall();
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _roomJoinError = message;
+      _joinedUserId = null;
+    });
+    _showSnackBar(message);
+    _exitRoom();
+  }
+
+  Future<void> _showParticipantActions({
+    required RoomParticipantModel target,
+    required RoomParticipantModel? currentParticipant,
+    required String currentUserId,
+    required String hostId,
+    required bool isHost,
+    required bool isModerator,
+    required HostControls hostControls,
+    required Map<String, RoomUserPresentation> presentationByUserId,
+  }) async {
+    final isSelf = target.userId == currentUserId;
+    final targetIsHost = target.userId == hostId || target.role == 'host';
+    final actorIsModeratorOnly = isModerator && !isHost;
+    final canModerateTarget =
+        !targetIsHost && (!actorIsModeratorOnly || target.role == 'audience');
+    final canManageParticipant =
+        !isSelf && (isHost || isModerator) && canModerateTarget;
+    final moderationService = ModerationService();
+    final followService = FollowService();
+    var isBlocked = false;
+    var isFollowing = false;
+
+    if (!isSelf) {
+      try {
+        isBlocked = await moderationService.isBlocked(target.userId);
+        isFollowing = await followService.isFollowing(
+          currentUserId,
+          target.userId,
+        );
+      } catch (_) {
+        isBlocked = false;
+        isFollowing = false;
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        Future<void> runAction(Future<void> Function() action) async {
+          Navigator.of(sheetContext).pop();
+          await action();
+        }
+
+        final actions = <RoomActionItem>[
+          RoomActionItem(
+            label: 'View profile',
+            icon: Icons.person_outline,
+            onTap: () {
+              Navigator.of(sheetContext).pop();
+              context.go('/profile/${target.userId}');
+            },
+          ),
+          if (!isSelf)
+            RoomActionItem(
+              label: isFollowing ? 'Unfollow user' : 'Follow user',
+              icon: isFollowing
+                  ? Icons.person_remove_outlined
+                  : Icons.person_add_alt_1_outlined,
+              onTap: () => runAction(() async {
+                try {
+                  if (isFollowing) {
+                    await followService.unfollowUser(target.userId);
+                    _showSnackBar('Unfollowed ${target.userId}.');
+                  } else {
+                    await followService.followUser(target.userId);
+                    _showSnackBar('Now following ${target.userId}.');
+                  }
+                } catch (e) {
+                  _showSnackBar('Could not update follow status: $e');
+                }
+              }),
+            ),
+          if (!isSelf)
+            RoomActionItem(
+              label: isBlocked ? 'Unblock user' : 'Block user',
+              icon: isBlocked ? Icons.lock_open_outlined : Icons.block_outlined,
+              destructive: !isBlocked,
+              onTap: () => runAction(() async {
+                try {
+                  if (isBlocked) {
+                    await moderationService.unblockUser(target.userId);
+                    _showSnackBar('User unblocked.');
+                  } else {
+                    final confirmed = await _confirmAction(
+                      title: 'Block user',
+                      message:
+                          'You will stop seeing each other in rooms and discovery.',
+                      confirmLabel: 'Block',
+                    );
+                    if (!confirmed) {
+                      return;
+                    }
+                    await moderationService.blockUser(target.userId);
+                    _showSnackBar('User blocked.');
+                  }
+                } catch (e) {
+                  _showSnackBar('Could not update block status: $e');
+                }
+              }),
+            ),
+          if (!isSelf)
+            RoomActionItem(
+              label: 'Report user',
+              icon: Icons.flag_outlined,
+              destructive: true,
+              onTap: () => runAction(() {
+                return _reportTarget(
+                  targetId: target.userId,
+                  targetType: ReportTargetType.user,
+                  title: 'Report user',
+                  fallbackReason: 'In-room user review requested',
+                );
+              }),
+            ),
+          if (canManageParticipant)
+            RoomActionItem(
+              label: target.isMuted ? 'Unmute user chat' : 'Mute user chat',
+              icon: target.isMuted
+                  ? Icons.volume_up_outlined
+                  : Icons.volume_off_outlined,
+              onTap: () => runAction(() async {
+                try {
+                  if (target.isMuted) {
+                    await hostControls.unmuteUser(widget.roomId, target.userId);
+                    _showSnackBar('${target.userId} can chat again.');
+                  } else {
+                    await hostControls.muteUser(widget.roomId, target.userId);
+                    _showSnackBar('${target.userId} was muted.');
+                  }
+                } catch (e) {
+                  _showSnackBar('Could not update mute status: $e');
+                }
+              }),
+            ),
+          if (isHost && !isSelf && !targetIsHost)
+            RoomActionItem(
+              label: target.role == 'moderator'
+                  ? 'Remove moderator'
+                  : 'Make moderator',
+              icon: target.role == 'moderator'
+                  ? Icons.shield_moon_outlined
+                  : Icons.shield_outlined,
+              onTap: () => runAction(() async {
+                try {
+                  if (target.role == 'moderator') {
+                    await hostControls.demoteToAudience(
+                      widget.roomId,
+                      target.userId,
+                    );
+                    _showSnackBar('${target.userId} is now audience.');
+                  } else {
+                    await hostControls.promoteToModerator(
+                      widget.roomId,
+                      target.userId,
+                    );
+                    _showSnackBar('${target.userId} is now a moderator.');
+                  }
+                } catch (e) {
+                  _showSnackBar('Could not update moderator role: $e');
+                }
+              }),
+            ),
+          if (isHost && !isSelf && !targetIsHost)
+            RoomActionItem(
+              label: target.role == 'cohost'
+                  ? 'Move to audience'
+                  : 'Invite to stage',
+              icon: target.role == 'cohost'
+                  ? Icons.keyboard_double_arrow_down
+                  : Icons.keyboard_double_arrow_up,
+              onTap: () => runAction(() async {
+                try {
+                  if (target.role == 'cohost') {
+                    await hostControls.demoteToAudience(
+                      widget.roomId,
+                      target.userId,
+                    );
+                    _showSnackBar('${target.userId} moved to the audience.');
+                  } else {
+                    await hostControls.promoteToCohost(
+                      widget.roomId,
+                      target.userId,
+                    );
+                    _showSnackBar('${target.userId} invited to the stage.');
+                  }
+                } catch (e) {
+                  _showSnackBar('Could not update role: $e');
+                }
+              }),
+            ),
+          if (isHost && !isSelf && !targetIsHost)
+            RoomActionItem(
+              label: target.isBanned ? 'Unban user' : 'Ban user',
+              icon: target.isBanned
+                  ? Icons.verified_user_outlined
+                  : Icons.gpp_bad_outlined,
+              destructive: !target.isBanned,
+              onTap: () => runAction(() async {
+                try {
+                  if (target.isBanned) {
+                    await hostControls.unbanUser(widget.roomId, target.userId);
+                    _showSnackBar('${target.userId} was unbanned.');
+                  } else {
+                    final confirmed = await _confirmAction(
+                      title: 'Ban user',
+                      message:
+                          'This removes the user from the room until you unban them.',
+                      confirmLabel: 'Ban',
+                    );
+                    if (!confirmed) {
+                      return;
+                    }
+                    await hostControls.banUser(widget.roomId, target.userId);
+                    _showSnackBar('${target.userId} was banned.');
+                  }
+                } catch (e) {
+                  _showSnackBar('Could not update ban status: $e');
+                }
+              }),
+            ),
+          if (canManageParticipant)
+            RoomActionItem(
+              label: 'Remove from room',
+              icon: Icons.exit_to_app,
+              destructive: true,
+              onTap: () => runAction(() async {
+                final confirmed = await _confirmAction(
+                  title: 'Remove user',
+                  message:
+                      'This kicks ${target.userId} out of the room right now.',
+                  confirmLabel: 'Remove',
+                );
+                if (!confirmed) {
+                  return;
+                }
+                try {
+                  await hostControls.removeUser(widget.roomId, target.userId);
+                  _showSnackBar('${target.userId} was removed from the room.');
+                } catch (e) {
+                  _showSnackBar('Could not remove user: $e');
+                }
+              }),
+            ),
+          if (isSelf)
+            RoomActionItem(
+              label: 'Leave room',
+              icon: Icons.logout,
+              destructive: true,
+              onTap: () => runAction(() async {
+                await _disconnectCall();
+                await _leaveRoom();
+                if (mounted) {
+                  context.pop();
+                }
+              }),
+            ),
+        ];
+
+        return RoomParticipantActionSheet(
+          participant: currentParticipant != null && isSelf
+              ? currentParticipant
+              : target,
+          userPresentation:
+              presentationByUserId[target.userId] ??
+              RoomUserPresentation(displayName: target.userId),
+          currentUserId: currentUserId,
+          hostUserId: hostId,
+          actions: actions,
+        );
+      },
+    );
+  }
+
+  Future<void> _showPeopleSheet({
+    required List<RoomParticipantModel> participants,
+    required RoomParticipantModel? currentParticipant,
+    required String currentUserId,
+    required String hostId,
+    required bool isHost,
+    required bool isModerator,
+    required HostControls hostControls,
+    required Map<String, RoomUserPresentation> presentationByUserId,
+  }) async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return FractionallySizedBox(
+          heightFactor: 0.8,
+          child: RoomRosterSheet(
+            participants: participants,
+            presentationByUserId: presentationByUserId,
+            currentUserId: currentUserId,
+            hostUserId: hostId,
+            onParticipantTap: (selected) {
+              Navigator.of(sheetContext).pop();
+              _showParticipantActions(
+                target: selected,
+                currentParticipant: currentParticipant,
+                currentUserId: currentUserId,
+                hostId: hostId,
+                isHost: isHost,
+                isModerator: isModerator,
+                hostControls: hostControls,
+                presentationByUserId: presentationByUserId,
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Future<Map<String, RoomUserPresentation>> _loadParticipantPresentation({
+    required List<RoomParticipantModel> participants,
+    required String currentUserId,
+    required String currentUsername,
+    required String? currentAvatarUrl,
+  }) async {
+    final firestore = _firestore ?? ref.read(roomFirestoreProvider);
+    final participantIds = participants
+        .map((participant) => participant.userId.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+    if (firestore == null || participantIds.isEmpty) {
+      return const <String, RoomUserPresentation>{};
+    }
+
+    final presentationByUserId = <String, RoomUserPresentation>{};
+    for (var i = 0; i < participantIds.length; i += 10) {
+      final upperBound = (i + 10 > participantIds.length)
+          ? participantIds.length
+          : i + 10;
+      final batchIds = participantIds.sublist(i, upperBound);
+      final userDocs = await firestore
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: batchIds)
+          .get();
+
+      for (final userDoc in userDocs.docs) {
+        final data = userDoc.data();
+        final username = (data['username'] as String?)?.trim() ?? '';
+        final avatarUrl = (data['avatarUrl'] as String?)?.trim();
+        presentationByUserId[userDoc.id] = RoomUserPresentation(
+          displayName: username.isEmpty ? userDoc.id : username,
+          avatarUrl: avatarUrl == null || avatarUrl.isEmpty ? null : avatarUrl,
+        );
+      }
+    }
+
+    presentationByUserId[currentUserId] = RoomUserPresentation(
+      displayName: currentUsername.trim().isEmpty
+          ? currentUserId
+          : currentUsername.trim(),
+      avatarUrl: currentAvatarUrl == null || currentAvatarUrl.trim().isEmpty
+          ? presentationByUserId[currentUserId]?.avatarUrl
+          : currentAvatarUrl.trim(),
+    );
+
+    for (final participantId in participantIds) {
+      presentationByUserId.putIfAbsent(
+        participantId,
+        () => RoomUserPresentation(displayName: participantId),
+      );
+    }
+
+    return presentationByUserId;
+  }
+
+  Future<void> _openPeopleSheet({
+    required List<RoomParticipantModel> participants,
+    required RoomParticipantModel? currentParticipant,
+    required String currentUserId,
+    required String currentUsername,
+    required String? currentAvatarUrl,
+    required String hostId,
+    required bool isHost,
+    required bool isModerator,
+    required HostControls hostControls,
+  }) async {
+    final presentationByUserId = await _loadParticipantPresentation(
+      participants: participants,
+      currentUserId: currentUserId,
+      currentUsername: currentUsername,
+      currentAvatarUrl: currentAvatarUrl,
+    );
+    if (!mounted) {
+      return;
+    }
+
+    await _showPeopleSheet(
+      participants: participants,
+      currentParticipant: currentParticipant,
+      currentUserId: currentUserId,
+      hostId: hostId,
+      isHost: isHost,
+      isModerator: isModerator,
+      hostControls: hostControls,
+      presentationByUserId: presentationByUserId,
+    );
+  }
+
   Future<void> _joinRoom(String userId) async {
     final firestore = _firestore;
     if (firestore == null || _isJoiningRoom) return;
@@ -218,7 +775,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     try {
       _joinedUserId = userId;
       final now = DateTime.now();
-      final roomDoc = await firestore.collection('rooms').doc(widget.roomId).get();
+      final roomDoc = await firestore
+          .collection('rooms')
+          .doc(widget.roomId)
+          .get();
       if (!roomDoc.exists) {
         setState(() => _roomJoinError = 'This room no longer exists.');
         _joinedUserId = null;
@@ -231,7 +791,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       _excludedUserIds = await moderationService.getExcludedUserIds(userId);
 
       if (hostId.isNotEmpty) {
-        final hasBlockingRelationship = await moderationService.hasBlockingRelationship(userId, hostId);
+        final hasBlockingRelationship = await moderationService
+            .hasBlockingRelationship(userId, hostId);
         if (hasBlockingRelationship) {
           setState(() => _roomJoinError = 'You cannot join this room.');
           _joinedUserId = null;
@@ -248,11 +809,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             .get();
         final hasBlockedParticipant = participantsSnapshot.docs.any((doc) {
           final participantData = doc.data();
-          final participantId = (participantData['userId'] as String? ?? doc.id).trim();
-          return participantId.isNotEmpty && participantId != userId && _excludedUserIds.contains(participantId);
+          final participantId = (participantData['userId'] as String? ?? doc.id)
+              .trim();
+          return participantId.isNotEmpty &&
+              participantId != userId &&
+              _excludedUserIds.contains(participantId);
         });
         if (hasBlockedParticipant) {
-          setState(() => _roomJoinError = 'You cannot join while a blocked user is in this room.');
+          setState(
+            () => _roomJoinError =
+                'You cannot join while a blocked user is in this room.',
+          );
           _joinedUserId = null;
           _exitRoom();
           return;
@@ -267,7 +834,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         return;
       }
 
-      final docRef = firestore.collection('rooms').doc(widget.roomId).collection('participants').doc(userId);
+      final docRef = firestore
+          .collection('rooms')
+          .doc(widget.roomId)
+          .collection('participants')
+          .doc(userId);
       final doc = await docRef.get();
       if (doc.exists) {
         final data = doc.data() as Map<String, dynamic>;
@@ -277,13 +848,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           _exitRoom();
           return;
         }
-        await docRef.update({
-          'lastActiveAt': now,
-        });
+        await docRef.update({'lastActiveAt': now});
       } else {
+        final participantRole = hostId == userId ? 'host' : 'audience';
         await docRef.set({
           'userId': userId,
-          'role': 'audience',
+          'role': participantRole,
           'isMuted': false,
           'isBanned': false,
           'joinedAt': now,
@@ -291,18 +861,27 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         });
       }
 
-      await _connectCall(userId);
+      final participantRole = doc.exists
+          ? ((doc.data() as Map<String, dynamic>?)?['role'] as String? ??
+                'audience')
+          : (hostId == userId ? 'host' : 'audience');
+      await _connectCall(
+        userId,
+        canBroadcast: participantRole == 'host' || participantRole == 'cohost',
+      );
 
       if (!_hasTrackedRoomJoin) {
         _hasTrackedRoomJoin = true;
-        await AnalyticsService().logEvent('room_joined', params: {
-          'room_id': widget.roomId,
-          'user_id': userId,
-        });
+        await AnalyticsService().logEvent(
+          'room_joined',
+          params: {'room_id': widget.roomId, 'user_id': userId},
+        );
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _roomJoinError = 'Could not join room. Please try again.');
+        setState(
+          () => _roomJoinError = 'Could not join room. Please try again.',
+        );
       }
     } finally {
       if (mounted) {
@@ -316,7 +895,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final firestore = _firestore;
     if (userId == null || firestore == null) return;
 
-    final docRef = firestore.collection('rooms').doc(widget.roomId).collection('participants').doc(userId);
+    final docRef = firestore
+        .collection('rooms')
+        .doc(widget.roomId)
+        .collection('participants')
+        .doc(userId);
     try {
       await docRef.delete();
     } catch (_) {
@@ -348,15 +931,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       });
     }
     final currentParticipantAsync = ref.watch(
-      currentParticipantProvider(CurrentParticipantParams(roomId: widget.roomId, userId: user.id)),
+      currentParticipantProvider(
+        CurrentParticipantParams(roomId: widget.roomId, userId: user.id),
+      ),
     );
-    final participantsAsync = ref.watch(participantsStreamProvider(widget.roomId));
+    final participantsAsync = ref.watch(
+      participantsStreamProvider(widget.roomId),
+    );
     final messageStreamAsync = ref.watch(messageStreamProvider(widget.roomId));
-    final participantCountAsync = ref.watch(participantCountProvider(widget.roomId));
+    final participantCountAsync = ref.watch(
+      participantCountProvider(widget.roomId),
+    );
     final hostAsync = ref.watch(hostProvider(widget.roomId));
     final coHostsAsync = ref.watch(coHostsProvider(widget.roomId));
     final roomPolicyAsync = ref.watch(roomPolicyProvider(widget.roomId));
-    final camRequestsAsync = ref.watch(roomCamAccessRequestsProvider(widget.roomId));
+    final camRequestsAsync = ref.watch(
+      roomCamAccessRequestsProvider(widget.roomId),
+    );
     final hostControls = ref.read(hostControlsProvider);
     final camAccessController = ref.read(camAccessControllerProvider);
 
@@ -364,8 +955,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       data: (participant) {
         final isHost = ref.watch(isHostProvider(participant));
         final isCohost = ref.watch(isCohostProvider(participant));
+        final isModerator = participant?.role == 'moderator';
         final role = participant?.role ?? 'audience';
-        final myCamRequestAsync = ref.watch(myCamAccessRequestProvider((roomId: widget.roomId, requesterId: user.id)));
+        final myCamRequestAsync = ref.watch(
+          myCamAccessRequestProvider((
+            roomId: widget.roomId,
+            requesterId: user.id,
+          )),
+        );
         final firestore = ref.watch(roomFirestoreProvider);
         if (_isCallReady && _appliedMediaRole != role) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -379,16 +976,38 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             slowModeSeconds = roomData?['slowModeSeconds'] ?? 0;
             final isLocked = roomData?['isLocked'] ?? false;
             final hostId = (roomData?['hostId'] as String? ?? '').trim();
+            final allowGifts = roomPolicyAsync.valueOrNull?.allowGifts ?? true;
+            final allowMicRequests =
+                roomPolicyAsync.valueOrNull?.allowMicRequests ?? true;
             // Ban enforcement
             if (participant?.isBanned == true) {
-              return const Scaffold(body: Center(child: Text('You are banned from this room.')));
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _handleForcedRoomExit('You were banned from this room.');
+              });
+              return const Scaffold(
+                body: Center(child: Text('You are banned from this room.')),
+              );
+            }
+            if (participant == null &&
+                _hasTrackedRoomJoin &&
+                !_isJoiningRoom &&
+                _joinedUserId == user.id) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _handleForcedRoomExit('You were removed from this room.');
+              });
+              return const Scaffold(
+                body: Center(child: Text('You were removed from this room.')),
+              );
             }
             if (_roomJoinError != null && _joinedUserId == null) {
               return Scaffold(body: Center(child: Text(_roomJoinError!)));
             }
             final sendMessage = ref.read(sendMessageProvider(widget.roomId));
-            final participantsInRoom = participantsAsync.valueOrNull ?? const [];
-            final hasBlockedParticipantInRoom = participantsInRoom.any((participantItem) {
+            final participantsInRoom =
+                participantsAsync.valueOrNull ?? const [];
+            final hasBlockedParticipantInRoom = participantsInRoom.any((
+              participantItem,
+            ) {
               final participantId = participantItem.userId.trim();
               if (participantId.isEmpty || participantId == user.id) {
                 return false;
@@ -396,31 +1015,85 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
               return _excludedUserIds.contains(participantId);
             });
             final allowChat = roomPolicyAsync.valueOrNull?.allowChat ?? true;
-            final allowCamRequests = roomPolicyAsync.valueOrNull?.allowCamRequests ?? true;
-            if (isLocked && !isHost && !isCohost) {
-              return const Scaffold(body: Center(child: Text('Room is locked.')));
+            final allowCamRequests =
+                roomPolicyAsync.valueOrNull?.allowCamRequests ?? true;
+            if (isLocked && !isHost && !isCohost && !isModerator) {
+              return const Scaffold(
+                body: Center(child: Text('Room is locked.')),
+              );
             }
             return Scaffold(
-              appBar: AppBar(title: Text('Live Room ($role)')),
+              appBar: AppBar(
+                title: Text('Live Room ($role)'),
+                actions: [
+                  IconButton(
+                    tooltip: 'People in room',
+                    onPressed: participantsInRoom.isEmpty
+                        ? null
+                        : () => _openPeopleSheet(
+                            participants: participantsInRoom,
+                            currentParticipant: participant,
+                            currentUserId: user.id,
+                            currentUsername: user.username,
+                            currentAvatarUrl: user.avatarUrl,
+                            hostId: hostId,
+                            isHost: isHost,
+                            isModerator: isModerator,
+                            hostControls: hostControls,
+                          ),
+                    icon: const Icon(Icons.people_alt_outlined),
+                  ),
+                  PopupMenuButton<String>(
+                    onSelected: (value) {
+                      if (value == 'report_room') {
+                        _reportTarget(
+                          targetId: widget.roomId,
+                          targetType: ReportTargetType.room,
+                          title: 'Report room',
+                          fallbackReason: 'Live room review requested',
+                        );
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem<String>(
+                        value: 'report_room',
+                        child: Text('Report room'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
               body: Column(
                 children: [
                   if (_callError != null)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       child: Text(
                         _callError!,
-                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.w600),
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.w600,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                     ),
                   if (_isCallConnecting)
                     const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       child: LinearProgressIndicator(),
                     ),
                   if (_isCallReady && _agoraService != null)
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                       child: Column(
                         children: [
                           SizedBox(
@@ -437,35 +1110,56 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               child: ListView.separated(
                                 scrollDirection: Axis.horizontal,
                                 itemBuilder: (context, index) {
-                                  final remoteUid = _agoraService!.remoteUids[index];
+                                  final remoteUid =
+                                      _agoraService!.remoteUids[index];
                                   return SizedBox(
                                     width: 150,
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(10),
-                                      child: _agoraService!.getRemoteView(remoteUid, widget.roomId),
+                                      child: _agoraService!.getRemoteView(
+                                        remoteUid,
+                                        widget.roomId,
+                                      ),
                                     ),
                                   );
                                 },
-                                separatorBuilder: (_, unusedIndex) => const SizedBox(width: 8),
+                                separatorBuilder: (_, unusedIndex) =>
+                                    const SizedBox(width: 8),
                                 itemCount: _agoraService!.remoteUids.length,
                               ),
                             )
                           else
-                            const Text('Waiting for other participants to join video...'),
+                            const Text(
+                              'Waiting for other participants to join video...',
+                            ),
                           const SizedBox(height: 8),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               IconButton.filledTonal(
-                                tooltip: _isMicMuted ? 'Unmute microphone' : 'Mute microphone',
-                                onPressed: isHost || isCohost ? _toggleMic : null,
-                                icon: Icon(_isMicMuted ? Icons.mic_off : Icons.mic),
+                                tooltip: _isMicMuted
+                                    ? 'Unmute microphone'
+                                    : 'Mute microphone',
+                                onPressed: isHost || isCohost
+                                    ? _toggleMic
+                                    : null,
+                                icon: Icon(
+                                  _isMicMuted ? Icons.mic_off : Icons.mic,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               IconButton.filledTonal(
-                                tooltip: _isVideoEnabled ? 'Turn camera off' : 'Turn camera on',
-                                onPressed: isHost || isCohost ? _toggleVideo : null,
-                                icon: Icon(_isVideoEnabled ? Icons.videocam : Icons.videocam_off),
+                                tooltip: _isVideoEnabled
+                                    ? 'Turn camera off'
+                                    : 'Turn camera on',
+                                onPressed: isHost || isCohost
+                                    ? _toggleVideo
+                                    : null,
+                                icon: Icon(
+                                  _isVideoEnabled
+                                      ? Icons.videocam
+                                      : Icons.videocam_off,
+                                ),
                               ),
                             ],
                           ),
@@ -475,140 +1169,254 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                   if (isHost)
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Host Controls', style: Theme.of(context).textTheme.titleMedium),
-                          Row(
-                            children: [
-                              Text('Slow Mode:'),
-                              const SizedBox(width: 8),
-                              DropdownButton<int>(
-                                value: slowModeSeconds,
-                                items: const [
-                                  DropdownMenuItem(value: 0, child: Text('Off')),
-                                  DropdownMenuItem(value: 5, child: Text('5s')),
-                                  DropdownMenuItem(value: 10, child: Text('10s')),
-                                  DropdownMenuItem(value: 30, child: Text('30s')),
-                                ],
-                                onChanged: (val) {
-                                  if (val != null) hostControls.toggleSlowMode(widget.roomId, val);
-                                },
-                              ),
-                              const SizedBox(width: 24),
-                              Text('Room:'),
-                              const SizedBox(width: 8),
-                              Switch(
-                                value: isLocked,
-                                onChanged: (_) => hostControls.toggleLockRoom(widget.roomId),
-                                activeThumbColor: Colors.red,
-                                inactiveThumbColor: Colors.green,
-                              ),
-                              Text(isLocked ? 'Locked' : 'Open'),
-                              const SizedBox(width: 24),
-                              Text('Chat:'),
-                              const SizedBox(width: 8),
-                              Switch(
-                                value: allowChat,
-                                onChanged: (_) => hostControls.toggleAllowChat(widget.roomId),
-                              ),
-                              Text(allowChat ? 'On' : 'Off'),
-                              const SizedBox(width: 24),
-                              Text('Cam Req:'),
-                              const SizedBox(width: 8),
-                              Switch(
-                                value: allowCamRequests,
-                                onChanged: (_) => hostControls.toggleAllowCamRequests(widget.roomId),
-                              ),
-                              Text(allowCamRequests ? 'On' : 'Off'),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          camRequestsAsync.when(
-                            data: (requests) {
-                              final pendingRequests = requests.where((request) => request.status == 'pending').toList(growable: false);
-                              if (pendingRequests.isEmpty) {
-                                return const Text('No pending cam requests.');
-                              }
-
-                              return Column(
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 280),
+                            child: SingleChildScrollView(
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                children: pendingRequests.map((request) {
-                                  return Card(
-                                    child: ListTile(
-                                      title: Text('Cam request from ${request.requesterId}'),
-                                      subtitle: Text('Scope: ${request.decisionScope}'),
-                                      trailing: Wrap(
-                                        spacing: 8,
-                                        children: [
-                                          IconButton(
-                                            onPressed: () => camAccessController.approveRequest(widget.roomId, request),
-                                            icon: const Icon(Icons.check_circle_outline),
-                                            tooltip: 'Approve',
-                                          ),
-                                          IconButton(
-                                            onPressed: () => camAccessController.denyRequest(widget.roomId, request.id),
-                                            icon: const Icon(Icons.cancel_outlined),
-                                            tooltip: 'Deny',
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                }).toList(growable: false),
-                              );
-                            },
-                            loading: () => const LinearProgressIndicator(),
-                            error: (e, _) => Text('Could not load cam requests: $e'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (isHost)
-                    Expanded(
-                      child: participantsAsync.when(
-                        data: (participants) {
-                          return ListView(
-                            children: participants.map((p) => ListTile(
-                              title: Text(p.userId),
-                              subtitle: Text('${p.role}${p.isMuted ? ' (muted)' : ''}${p.isBanned ? ' (banned)' : ''}'),
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  IconButton(
-                                    icon: Icon(p.isMuted ? Icons.volume_off : Icons.volume_up),
-                                    tooltip: p.isMuted ? 'Unmute' : 'Mute',
-                                    onPressed: () => p.isMuted
-                                        ? hostControls.unmuteUser(widget.roomId, p.userId)
-                                        : hostControls.muteUser(widget.roomId, p.userId),
+                                  Text(
+                                    'Host Controls',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
                                   ),
-                                  IconButton(
-                                    icon: Icon(p.isBanned ? Icons.block : Icons.check),
-                                    tooltip: p.isBanned ? 'Unban' : 'Ban',
-                                    onPressed: () => p.isBanned
-                                        ? hostControls.unbanUser(widget.roomId, p.userId)
-                                        : hostControls.banUser(widget.roomId, p.userId),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 12,
+                                    runSpacing: 12,
+                                    children: [
+                                      SizedBox(
+                                        width: 190,
+                                        child: DropdownButtonFormField<int>(
+                                          value: slowModeSeconds,
+                                          decoration: const InputDecoration(
+                                            labelText: 'Slow mode',
+                                          ),
+                                          items: const [
+                                            DropdownMenuItem(
+                                              value: 0,
+                                              child: Text('Off'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: 5,
+                                              child: Text('5 seconds'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: 10,
+                                              child: Text('10 seconds'),
+                                            ),
+                                            DropdownMenuItem(
+                                              value: 30,
+                                              child: Text('30 seconds'),
+                                            ),
+                                          ],
+                                          onChanged: (val) {
+                                            if (val != null) {
+                                              hostControls.toggleSlowMode(
+                                                widget.roomId,
+                                                val,
+                                              );
+                                            }
+                                          },
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 220,
+                                        child: SwitchListTile.adaptive(
+                                          contentPadding: EdgeInsets.zero,
+                                          title: const Text('Lock room'),
+                                          subtitle: Text(
+                                            isLocked
+                                                ? 'New listeners blocked'
+                                                : 'Room is open',
+                                          ),
+                                          value: isLocked,
+                                          onChanged: (_) => hostControls
+                                              .toggleLockRoom(widget.roomId),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 220,
+                                        child: SwitchListTile.adaptive(
+                                          contentPadding: EdgeInsets.zero,
+                                          title: const Text('Chat'),
+                                          subtitle: Text(
+                                            allowChat
+                                                ? 'Members can message'
+                                                : 'Chat paused',
+                                          ),
+                                          value: allowChat,
+                                          onChanged: (_) => hostControls
+                                              .toggleAllowChat(widget.roomId),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 220,
+                                        child: SwitchListTile.adaptive(
+                                          contentPadding: EdgeInsets.zero,
+                                          title: const Text('Mic requests'),
+                                          subtitle: Text(
+                                            allowMicRequests
+                                                ? 'Users can request stage access'
+                                                : 'Requests paused',
+                                          ),
+                                          value: allowMicRequests,
+                                          onChanged: (_) => hostControls
+                                              .toggleAllowMicRequests(
+                                                widget.roomId,
+                                              ),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 220,
+                                        child: SwitchListTile.adaptive(
+                                          contentPadding: EdgeInsets.zero,
+                                          title: const Text('Cam requests'),
+                                          subtitle: Text(
+                                            allowCamRequests
+                                                ? 'Users can request camera'
+                                                : 'Camera requests paused',
+                                          ),
+                                          value: allowCamRequests,
+                                          onChanged: (_) => hostControls
+                                              .toggleAllowCamRequests(
+                                                widget.roomId,
+                                              ),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        width: 220,
+                                        child: SwitchListTile.adaptive(
+                                          contentPadding: EdgeInsets.zero,
+                                          title: const Text('Gifts'),
+                                          subtitle: Text(
+                                            allowGifts
+                                                ? 'Gift interactions enabled'
+                                                : 'Gifts paused',
+                                          ),
+                                          value: allowGifts,
+                                          onChanged: (_) => hostControls
+                                              .toggleAllowGifts(widget.roomId),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                  IconButton(
-                                    icon: Icon(p.role == 'cohost' ? Icons.keyboard_double_arrow_down : Icons.keyboard_double_arrow_up),
-                                    tooltip: p.role == 'cohost' ? 'Demote to audience' : 'Promote to cohost',
-                                    onPressed: p.userId == user.id
-                                        ? null
-                                        : () => p.role == 'cohost'
-                                            ? hostControls.demoteToAudience(widget.roomId, p.userId)
-                                            : hostControls.promoteToCohost(widget.roomId, p.userId),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: [
+                                      OutlinedButton.icon(
+                                        onPressed: participantsInRoom.isEmpty
+                                            ? null
+                                            : () => _openPeopleSheet(
+                                                participants:
+                                                    participantsInRoom,
+                                                currentParticipant: participant,
+                                                currentUserId: user.id,
+                                                currentUsername: user.username,
+                                                currentAvatarUrl:
+                                                    user.avatarUrl,
+                                                hostId: hostId,
+                                                isHost: true,
+                                                isModerator: false,
+                                                hostControls: hostControls,
+                                              ),
+                                        icon: const Icon(
+                                          Icons.manage_accounts_outlined,
+                                        ),
+                                        label: const Text('Manage people'),
+                                      ),
+                                      if (participantsInRoom.isNotEmpty)
+                                        Chip(
+                                          label: Text(
+                                            '${participantsInRoom.length} participants',
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 8),
+                                  camRequestsAsync.when(
+                                    data: (requests) {
+                                      final pendingRequests = requests
+                                          .where(
+                                            (request) =>
+                                                request.status == 'pending',
+                                          )
+                                          .toList(growable: false);
+                                      if (pendingRequests.isEmpty) {
+                                        return const Text(
+                                          'No pending cam requests.',
+                                        );
+                                      }
+
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: pendingRequests
+                                            .map((request) {
+                                              return Card(
+                                                child: ListTile(
+                                                  title: Text(
+                                                    'Cam request from ${request.requesterId}',
+                                                  ),
+                                                  subtitle: Text(
+                                                    'Scope: ${request.decisionScope}',
+                                                  ),
+                                                  trailing: Wrap(
+                                                    spacing: 8,
+                                                    children: [
+                                                      IconButton(
+                                                        onPressed: () =>
+                                                            camAccessController
+                                                                .approveRequest(
+                                                                  widget.roomId,
+                                                                  request,
+                                                                ),
+                                                        icon: const Icon(
+                                                          Icons
+                                                              .check_circle_outline,
+                                                        ),
+                                                        tooltip: 'Approve',
+                                                      ),
+                                                      IconButton(
+                                                        onPressed: () =>
+                                                            camAccessController
+                                                                .denyRequest(
+                                                                  widget.roomId,
+                                                                  request.id,
+                                                                ),
+                                                        icon: const Icon(
+                                                          Icons.cancel_outlined,
+                                                        ),
+                                                        tooltip: 'Deny',
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              );
+                                            })
+                                            .toList(growable: false),
+                                      );
+                                    },
+                                    loading: () =>
+                                        const LinearProgressIndicator(),
+                                    error: (e, _) =>
+                                        Text('Could not load cam requests: $e'),
                                   ),
                                 ],
                               ),
-                            )).toList(),
-                          );
-                        },
-                        loading: () => const Center(child: CircularProgressIndicator()),
-                        error: (e, _) => Center(child: Text('Error: $e')),
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   if (!isHost) ...[
-                    if (!isCohost)
+                    if (!isCohost && !isModerator)
                       Card(
                         margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                         child: Padding(
@@ -616,11 +1424,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Stage & camera access', style: Theme.of(context).textTheme.titleSmall),
+                              Text(
+                                'Stage & camera access',
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
                               const SizedBox(height: 6),
                               Text(
                                 allowCamRequests
-                                    ? 'Request host approval to speak and use your camera in this room.'
+                                    ? 'Request host approval to come on stage and use your mic and camera in this room.'
                                     : 'Host has paused cam access requests for this room.',
                               ),
                               const SizedBox(height: 8),
@@ -632,36 +1443,59 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                     runSpacing: 8,
                                     children: [
                                       FilledButton.icon(
-                                        onPressed: !allowCamRequests || hostId.isEmpty || requestStatus == 'pending'
+                                        onPressed:
+                                            !allowCamRequests ||
+                                                hostId.isEmpty ||
+                                                requestStatus == 'pending'
                                             ? null
                                             : () async {
                                                 try {
-                                                  await camAccessController.requestAccess(
-                                                    roomId: widget.roomId,
-                                                    requesterId: user.id,
-                                                    broadcasterId: hostId,
-                                                  );
+                                                  await camAccessController
+                                                      .requestAccess(
+                                                        roomId: widget.roomId,
+                                                        requesterId: user.id,
+                                                        broadcasterId: hostId,
+                                                      );
                                                   if (!context.mounted) return;
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    const SnackBar(content: Text('Cam access request sent.')),
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        'Stage access request sent.',
+                                                      ),
+                                                    ),
                                                   );
                                                 } catch (e) {
                                                   if (!context.mounted) return;
-                                                  ScaffoldMessenger.of(context).showSnackBar(
-                                                    SnackBar(content: Text('Could not send request: $e')),
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        'Could not send request: $e',
+                                                      ),
+                                                    ),
                                                   );
                                                 }
                                               },
-                                        icon: const Icon(Icons.videocam_outlined),
-                                        label: const Text('Request Cam Access'),
+                                        icon: const Icon(
+                                          Icons.videocam_outlined,
+                                        ),
+                                        label: const Text(
+                                          'Request Stage Access',
+                                        ),
                                       ),
                                       if (requestStatus != null)
-                                        Chip(label: Text('Status: $requestStatus')),
+                                        Chip(
+                                          label: Text('Status: $requestStatus'),
+                                        ),
                                     ],
                                   );
                                 },
                                 loading: () => const LinearProgressIndicator(),
-                                error: (e, _) => Text('Could not load request status: $e'),
+                                error: (e, _) =>
+                                    Text('Could not load request status: $e'),
                               ),
                             ],
                           ),
@@ -669,42 +1503,82 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       ),
                     // Presence header and avatar strip
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16.0,
+                        vertical: 8.0,
+                      ),
                       child: Row(
                         children: [
                           participantCountAsync.when(
-                              data: (participantCount) => Text(
-                                '$participantCount in room',
-                              style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                            data: (participantCount) => Text(
+                              '$participantCount in room',
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
-                            loading: () => const SizedBox(width: 60, child: LinearProgressIndicator()),
+                            loading: () => const SizedBox(
+                              width: 60,
+                              child: LinearProgressIndicator(),
+                            ),
                             error: (e, _) => const Text('—'),
                           ),
                           const Spacer(),
+                          IconButton(
+                            tooltip: 'People in room',
+                            onPressed: participantsInRoom.isEmpty
+                                ? null
+                                : () => _openPeopleSheet(
+                                    participants: participantsInRoom,
+                                    currentParticipant: participant,
+                                    currentUserId: user.id,
+                                    currentUsername: user.username,
+                                    currentAvatarUrl: user.avatarUrl,
+                                    hostId: hostId,
+                                    isHost: isHost,
+                                    isModerator: isModerator,
+                                    hostControls: hostControls,
+                                  ),
+                            icon: const Icon(Icons.people_outline),
+                          ),
                           hostAsync.when(
                             data: (host) => host != null
                                 ? CircleAvatar(
                                     radius: 16,
                                     backgroundColor: Colors.amber,
-                                    child: Text('H', style: TextStyle(color: Colors.white)),
+                                    child: Text(
+                                      'H',
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                                   )
                                 : const SizedBox.shrink(),
-                            loading: () => const CircleAvatar(radius: 16, backgroundColor: Colors.grey),
+                            loading: () => const CircleAvatar(
+                              radius: 16,
+                              backgroundColor: Colors.grey,
+                            ),
                             error: (e, _) => const SizedBox.shrink(),
                           ),
                           const SizedBox(width: 8),
                           coHostsAsync.when(
                             data: (cohosts) => Row(
-                              children: cohosts.map((cohost) => Padding(
-                                padding: const EdgeInsets.only(left: 2.0),
-                                child: CircleAvatar(
-                                  radius: 14,
-                                  backgroundColor: Colors.blue,
-                                  child: Text('C', style: TextStyle(color: Colors.white)),
-                                ),
-                              )).toList(),
+                              children: cohosts
+                                  .map(
+                                    (cohost) => Padding(
+                                      padding: const EdgeInsets.only(left: 2.0),
+                                      child: CircleAvatar(
+                                        radius: 14,
+                                        backgroundColor: Colors.blue,
+                                        child: Text(
+                                          'C',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                  .toList(),
                             ),
-                            loading: () => const SizedBox(width: 32, child: LinearProgressIndicator()),
+                            loading: () => const SizedBox(
+                              width: 32,
+                              child: LinearProgressIndicator(),
+                            ),
                             error: (e, _) => const SizedBox.shrink(),
                           ),
                         ],
@@ -716,7 +1590,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       data: (messages) {
                         WidgetsBinding.instance.addPostFrameCallback((_) {
                           if (scrollController.hasClients) {
-                            scrollController.jumpTo(scrollController.position.maxScrollExtent);
+                            scrollController.jumpTo(
+                              scrollController.position.maxScrollExtent,
+                            );
                           }
                         });
                         if (messages.isEmpty) {
@@ -735,7 +1611,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           },
                         );
                       },
-                      loading: () => const Center(child: CircularProgressIndicator()),
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
                       error: (e, _) => Center(child: Text('Error: $e')),
                     ),
                   ),
@@ -763,8 +1640,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         ),
                         child: Text(
                           'Blocked relationship detected in this room. Leave to continue safely.',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: Theme.of(context).colorScheme.onErrorContainer,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onErrorContainer,
                               ),
                         ),
                       );
@@ -777,46 +1657,60 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Text(
                         cooldownMessage,
-                        style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.red,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16.0,
+                      vertical: 8.0,
+                    ),
                     child: Row(
                       children: [
                         Expanded(
                           child: TextField(
                             controller: messageController,
-                            enabled: !isSending
-                                && participant?.isMuted != true
-                                && participant?.isBanned != true
-                                && !hasBlockedParticipantInRoom,
+                            enabled:
+                                !isSending &&
+                                participant?.isMuted != true &&
+                                participant?.isBanned != true &&
+                                !hasBlockedParticipantInRoom,
                             decoration: InputDecoration(
                               hintText: participant?.isMuted == true
                                   ? 'You are muted'
                                   : participant?.isBanned == true
-                                      ? 'You are banned'
-                                      : hasBlockedParticipantInRoom
-                                          ? 'Blocked relationship in room'
-                                        : !allowChat
-                                          ? 'Chat disabled by host'
-                                      : 'Type your message...',
+                                  ? 'You are banned'
+                                  : hasBlockedParticipantInRoom
+                                  ? 'Blocked relationship in room'
+                                  : !allowChat
+                                  ? 'Chat disabled by host'
+                                  : 'Type your message...',
                             ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton(
-                          onPressed: isSending
-                                  || participant?.isMuted == true
-                                  || participant?.isBanned == true
-                                    || !allowChat
-                                  || hasBlockedParticipantInRoom
+                          onPressed:
+                              isSending ||
+                                  participant?.isMuted == true ||
+                                  participant?.isBanned == true ||
+                                  !allowChat ||
+                                  hasBlockedParticipantInRoom
                               ? null
                               : () async {
-                                  if (messageController.text.trim().isEmpty) return;
-                                  if (slowModeSeconds > 0 && lastMessageTime != null) {
-                                    final secondsSinceLastMessage = DateTime.now().difference(lastMessageTime!).inSeconds;
-                                    if (secondsSinceLastMessage < slowModeSeconds) {
+                                  if (messageController.text.trim().isEmpty)
+                                    return;
+                                  if (slowModeSeconds > 0 &&
+                                      lastMessageTime != null) {
+                                    final secondsSinceLastMessage =
+                                        DateTime.now()
+                                            .difference(lastMessageTime!)
+                                            .inSeconds;
+                                    if (secondsSinceLastMessage <
+                                        slowModeSeconds) {
                                       setState(() {
                                         cooldownMessage =
                                             'Slow mode is on. Wait ${slowModeSeconds - secondsSinceLastMessage}s.';
@@ -827,21 +1721,28 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
 
                                   setState(() => isSending = true);
                                   try {
-                                    await sendMessage(messageController.text.trim());
+                                    await sendMessage(
+                                      messageController.text.trim(),
+                                    );
                                     lastMessageTime = DateTime.now();
                                     cooldownMessage = '';
                                     messageController.clear();
 
                                     if (!_hasTrackedFirstMessage) {
                                       _hasTrackedFirstMessage = true;
-                                      await AnalyticsService().logEvent('first_message_sent', params: {
-                                        'room_id': widget.roomId,
-                                        'user_id': user.id,
-                                      });
+                                      await AnalyticsService().logEvent(
+                                        'first_message_sent',
+                                        params: {
+                                          'room_id': widget.roomId,
+                                          'user_id': user.id,
+                                        },
+                                      );
                                     }
                                   } catch (e) {
                                     if (context.mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
                                         SnackBar(content: Text(e.toString())),
                                       );
                                     }
@@ -852,7 +1753,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   }
                                 },
                           child: isSending
-                              ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
                               : const Text('Send'),
                         ),
                       ],
@@ -873,7 +1780,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
           },
         );
       },
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
     );
   }

@@ -21,11 +21,15 @@ void main() async {
 
       if (!isTest) {
         try {
-          // Load environment variables
+          // Load environment variables. On web, hidden files like .env may be ignored by hosting.
           try {
-            await dotenv.load(fileName: 'assets/.env');
+            await dotenv.load(fileName: 'assets/env/app_env');
           } catch (_) {
-            await dotenv.load();
+            try {
+              await dotenv.load(fileName: 'assets/.env');
+            } catch (_) {
+              await dotenv.load();
+            }
           }
 
           // Initialize Firebase

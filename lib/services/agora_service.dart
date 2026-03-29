@@ -36,8 +36,19 @@ class AgoraService {
 
   /// Initialize Agora engine with your App ID
   Future<void> initialize(String appId) async {
+    final normalizedAppId = appId.trim();
+    if (normalizedAppId.isEmpty) {
+      throw ArgumentError('Agora appId cannot be empty.');
+    }
+
     _engine = createAgoraRtcEngine();
-    await _engine.initialize(RtcEngineContext(appId: appId));
+    await _engine.initialize(
+      RtcEngineContext(
+        appId: normalizedAppId,
+        channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+      ),
+    );
+    await _engine.setClientRole(role: ClientRoleType.clientRoleAudience);
     await _engine.enableVideo();
     await _engine.enableAudio();
 
@@ -58,12 +69,50 @@ class AgoraService {
   }
 
   /// Join a video channel
-  Future<void> joinChannel(String token, String channelName, int uid) async {
+  Future<void> joinChannel(
+    String token,
+    String channelName,
+    int uid, {
+    required bool asBroadcaster,
+  }) async {
+    if (!_initialized) {
+      throw StateError('Agora engine must be initialized before joining a channel.');
+    }
+
+    final normalizedToken = token.trim();
+    final normalizedChannelName = channelName.trim();
+    if (normalizedToken.isEmpty) {
+      throw ArgumentError('Agora token cannot be empty.');
+    }
+    if (normalizedChannelName.isEmpty) {
+      throw ArgumentError('Agora channelName cannot be empty.');
+    }
+
+    final role = asBroadcaster
+        ? ClientRoleType.clientRoleBroadcaster
+        : ClientRoleType.clientRoleAudience;
+
     await _engine.joinChannel(
-      token: token,
-      channelId: channelName,
+      token: normalizedToken,
+      channelId: normalizedChannelName,
       uid: uid,
-      options: const ChannelMediaOptions(),
+      options: ChannelMediaOptions(
+        channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+        clientRoleType: role,
+        autoSubscribeAudio: true,
+        autoSubscribeVideo: true,
+        publishCameraTrack: asBroadcaster,
+        publishMicrophoneTrack: asBroadcaster,
+      ),
+    );
+  }
+
+  Future<void> setBroadcaster(bool enabled) async {
+    if (!_initialized) return;
+    await _engine.setClientRole(
+      role: enabled
+          ? ClientRoleType.clientRoleBroadcaster
+          : ClientRoleType.clientRoleAudience,
     );
   }
 

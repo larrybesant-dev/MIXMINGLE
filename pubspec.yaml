@@ -71,6 +71,7 @@
       - assets/images/
       - assets/icons/
       - assets/fonts/
+      - assets/env/app_env
       - assets/.env
     uses-material-design: true
 

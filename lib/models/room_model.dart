@@ -47,25 +47,76 @@ class RoomModel {
         ...audienceUserIds,
       ];
 
+  static String _asString(dynamic value, {String fallback = ''}) {
+    if (value is String) {
+      return value;
+    }
+    return fallback;
+  }
+
+  static bool _asBool(dynamic value, {bool fallback = false}) {
+    if (value is bool) {
+      return value;
+    }
+    return fallback;
+  }
+
+  static int _asInt(dynamic value, {int fallback = 0}) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    return fallback;
+  }
+
+  static List<String> _asStringList(dynamic value) {
+    if (value is List) {
+      return value
+          .whereType<String>()
+          .map((item) => item.trim())
+          .where((item) => item.isNotEmpty)
+          .toList(growable: false);
+    }
+    return const <String>[];
+  }
+
+  static Timestamp? _asTimestamp(dynamic value) {
+    if (value is Timestamp) {
+      return value;
+    }
+    if (value is DateTime) {
+      return Timestamp.fromDate(value);
+    }
+    if (value is String) {
+      final parsed = DateTime.tryParse(value);
+      if (parsed != null) {
+        return Timestamp.fromDate(parsed);
+      }
+    }
+    return null;
+  }
+
   factory RoomModel.fromJson(Map<String, dynamic> json, String documentId) {
     return RoomModel(
       id: documentId,
-      name: json['name'] ?? 'Untitled Room',
-      description: json['description'],
-      rules: json['rules'],
-      hostId: json['hostId'] ?? '',
-      isLive: json['isLive'] ?? false,
-      thumbnailUrl: json['thumbnailUrl'],
-      createdAt: json['createdAt'],
-      updatedAt: json['updatedAt'],
-      stageUserIds: List<String>.from(json['stageUserIds'] ?? []),
-      audienceUserIds: List<String>.from(json['audienceUserIds'] ?? []),
-      memberCount: json['memberCount'] ?? 0,
-      category: json['category'],
-      tags: List<String>.from(json['tags'] ?? []),
-      coHosts: List<String>.from(json['coHosts'] ?? []),
-      isLocked: json['isLocked'] ?? false,
-      slowModeSeconds: json['slowModeSeconds'],
+      name: _asString(json['name'], fallback: 'Untitled Room'),
+      description: json['description'] is String ? json['description'] as String : null,
+      rules: json['rules'] is String ? json['rules'] as String : null,
+      hostId: _asString(json['hostId']),
+      isLive: _asBool(json['isLive']),
+      thumbnailUrl: json['thumbnailUrl'] is String ? json['thumbnailUrl'] as String : null,
+      createdAt: _asTimestamp(json['createdAt']),
+      updatedAt: _asTimestamp(json['updatedAt']),
+      stageUserIds: _asStringList(json['stageUserIds']),
+      audienceUserIds: _asStringList(json['audienceUserIds']),
+      memberCount: _asInt(json['memberCount']),
+      category: json['category'] is String ? json['category'] as String : null,
+      tags: _asStringList(json['tags']),
+      coHosts: _asStringList(json['coHosts']),
+      isLocked: _asBool(json['isLocked']),
+      slowModeSeconds: json['slowModeSeconds'] is num ? (json['slowModeSeconds'] as num).toInt() : null,
     );
   }
 

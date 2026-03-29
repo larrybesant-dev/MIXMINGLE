@@ -1,7 +1,25 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 enum MixVyRoomVisibility {
   public,
   private,
   password,
+}
+
+DateTime? _parseFirestoreDateTime(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is String) {
+    return DateTime.tryParse(value);
+  }
+  return null;
 }
 
 enum MixVyRoomRole {
@@ -81,7 +99,7 @@ class RoomPolicyModel {
         (value) => value.name == json['defaultCamViewPolicy'],
         orElse: () => CamViewPolicy.approvedOnly,
       ),
-      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
+      updatedAt: _parseFirestoreDateTime(json['updatedAt']),
     );
   }
 }
@@ -129,8 +147,8 @@ class CamAccessRequestModel {
       broadcasterId: json['broadcasterId'] as String? ?? '',
       status: json['status'] as String? ?? 'pending',
       decisionScope: json['decisionScope'] as String? ?? 'single_session',
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
-      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
+      createdAt: _parseFirestoreDateTime(json['createdAt']),
+      updatedAt: _parseFirestoreDateTime(json['updatedAt']),
     );
   }
 }

@@ -8,29 +8,55 @@ class HostControls {
 
   final FirebaseFirestore _db;
 
+  DocumentReference<Map<String, dynamic>> _roomRef(String roomId) {
+    return _db.collection('rooms').doc(roomId);
+  }
+
+  DocumentReference<Map<String, dynamic>> _policyRef(String roomId) {
+    return _roomRef(roomId).collection('policies').doc('settings');
+  }
+
   Future<void> toggleSlowMode(String roomId, int seconds) {
-    return _db.collection('rooms').doc(roomId).update({'slowModeSeconds': seconds});
+    return _roomRef(roomId).update({'slowModeSeconds': seconds});
   }
 
   Future<void> toggleLockRoom(String roomId) async {
-    final roomRef = _db.collection('rooms').doc(roomId);
+    final roomRef = _roomRef(roomId);
     final snapshot = await roomRef.get();
     final currentValue = (snapshot.data()?['isLocked'] ?? false) as bool;
     await roomRef.update({'isLocked': !currentValue});
   }
 
   Future<void> toggleAllowChat(String roomId) async {
-    final policyRef = _db.collection('rooms').doc(roomId).collection('policies').doc('settings');
+    final policyRef = _policyRef(roomId);
     final snapshot = await policyRef.get();
     final currentValue = (snapshot.data()?['allowChat'] ?? true) as bool;
     await policyRef.set({'allowChat': !currentValue}, SetOptions(merge: true));
   }
 
   Future<void> toggleAllowCamRequests(String roomId) async {
-    final policyRef = _db.collection('rooms').doc(roomId).collection('policies').doc('settings');
+    final policyRef = _policyRef(roomId);
     final snapshot = await policyRef.get();
     final currentValue = (snapshot.data()?['allowCamRequests'] ?? true) as bool;
-    await policyRef.set({'allowCamRequests': !currentValue}, SetOptions(merge: true));
+    await policyRef.set({
+      'allowCamRequests': !currentValue,
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> toggleAllowMicRequests(String roomId) async {
+    final policyRef = _policyRef(roomId);
+    final snapshot = await policyRef.get();
+    final currentValue = (snapshot.data()?['allowMicRequests'] ?? true) as bool;
+    await policyRef.set({
+      'allowMicRequests': !currentValue,
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> toggleAllowGifts(String roomId) async {
+    final policyRef = _policyRef(roomId);
+    final snapshot = await policyRef.get();
+    final currentValue = (snapshot.data()?['allowGifts'] ?? true) as bool;
+    await policyRef.set({'allowGifts': !currentValue}, SetOptions(merge: true));
   }
 
   Future<void> muteUser(String roomId, String userId) {
@@ -53,12 +79,23 @@ class HostControls {
     return _participantRef(roomId, userId).update({'role': 'cohost'});
   }
 
+  Future<void> promoteToModerator(String roomId, String userId) {
+    return _participantRef(roomId, userId).update({'role': 'moderator'});
+  }
+
   Future<void> demoteToAudience(String roomId, String userId) {
     return _participantRef(roomId, userId).update({'role': 'audience'});
   }
 
-  DocumentReference<Map<String, dynamic>> _participantRef(String roomId, String userId) {
-    return _db.collection('rooms').doc(roomId).collection('participants').doc(userId);
+  Future<void> removeUser(String roomId, String userId) {
+    return _participantRef(roomId, userId).delete();
+  }
+
+  DocumentReference<Map<String, dynamic>> _participantRef(
+    String roomId,
+    String userId,
+  ) {
+    return _roomRef(roomId).collection('participants').doc(userId);
   }
 }
 
