@@ -1,26 +1,56 @@
-# mixvy
+# MixVy
 
-A new Flutter project.
+MixVy is a Flutter social/live-room app with Firebase, Riverpod, payments, moderation, and web support.
 
-## Getting Started
+## Prerequisites
+- Flutter SDK (stable)
+- Dart SDK (bundled with Flutter)
+- Firebase project configured for Auth, Firestore, Functions, Storage
+- Node.js (for Firebase Functions)
 
-This project is a starting point for a Flutter application.
+## Local Setup
+1. Install dependencies:
+	- flutter pub get
+2. Install function dependencies:
+	- cd functions && npm install
+3. Ensure required environment values are available for runtime:
+	- FIREBASE_API_KEY_WEB
+	- FIREBASE_API_KEY_WINDOWS
+	- AGORA_APP_ID (if using live A/V)
+	- STRIPE keys and function env vars for payment features
 
-A few resources to get you started if this is your first Flutter project:
+## Running the App
+- Mobile/Desktop:
+  - flutter run
+- Web (Chrome):
+  - flutter run -d chrome
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+## Web Build and Deploy Workflow
+1. Build release web:
+	- flutter build web --release --base-href "/"
+2. Optional runtime compatibility patch:
+	- powershell -ExecutionPolicy Bypass -File tools/patch_flutter_web_runtime.ps1
+3. Deploy hosting:
+	- firebase deploy --only hosting
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Web Stability Notes
+- Hosting rewrites are configured in firebase.json to route all paths to /index.html.
+- Entry boot script is now stable and no longer force-clears browser caches every load.
+- Cache-control headers are configured for index/bootstrap/service worker in firebase.json.
 
-## Test Coverage
-- AuthController
-- ProfileController
-- PaymentsController
-- HomeController
-- RoomController
+## Tests
+Run focused tests:
+- flutter test test/app_router_redirect_test.dart
+- flutter test test/room_service_test.dart
 
-Add more tests for widgets, screens, and services as needed.
+Run full suite:
+- flutter test
+
+## Key Project Docs
+- MIXVY_PRODUCT_AUDIT_2026-03-29.md
+- MIXVY_AUDIT_SUMMARY.md
+- ONBOARDING.md
+
+## Current Product Audit Direction
+- Apple Sign In is intentionally deferred until web behavior is validated and stable in production.
+- Current priority is web reliability, safety hardening, and account-control completion.
