@@ -262,6 +262,39 @@ service cloud.firestore {
       allow update, delete: if false;
     }
 
+    match /beta_feedback/{feedbackId} {
+      allow create: if signedIn()
+        && request.resource.data.keys().hasOnly([
+          'category',
+          'message',
+          'route',
+          'uid',
+          'email',
+          'platform',
+          'isWeb',
+          'status',
+          'createdAt'
+        ])
+        && request.resource.data.category in ['bug', 'ux', 'performance', 'feature-request']
+        && request.resource.data.message is string
+        && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 4000
+        && request.resource.data.route is string
+        && request.resource.data.route.size() > 0
+        && request.resource.data.route.size() <= 500
+        && request.resource.data.uid == request.auth.uid
+        && (
+          !('email' in request.resource.data)
+          || request.resource.data.email == null
+          || request.resource.data.email is string
+        )
+        && request.resource.data.platform is string
+        && request.resource.data.isWeb is bool
+        && request.resource.data.status == 'new'
+        && request.resource.data.createdAt == request.time;
+      allow read, update, delete: if false;
+    }
+
     match /speed_dating_actions/{actionId} {
       allow read: if signedIn()
         && (resource.data.fromUserId == request.auth.uid || resource.data.toUserId == request.auth.uid);
