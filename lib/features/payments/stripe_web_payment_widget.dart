@@ -1,9 +1,8 @@
 // lib/features/payments/stripe_web_payment_widget.dart
 
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -36,7 +35,7 @@ class _StripeWebPaymentWidgetState
 
       // 🔥 CALL YOUR BACKEND / FIREBASE FUNCTION HERE
       // This should return a Stripe Checkout URL
-      final checkoutUrl = await createCheckoutSession(user.uid);
+      final checkoutUrl = await createCheckoutSession();
 
       if (checkoutUrl == null) {
         throw Exception("Failed to create checkout session");
@@ -55,19 +54,14 @@ class _StripeWebPaymentWidgetState
     }
   }
 
-  Future<String?> createCheckoutSession(String userId) async {
+  Future<String?> createCheckoutSession() async {
     try {
-      final response = await http.post(
-        Uri.parse("https://us-central1-mix-and-mingle-v2.cloudfunctions.net/createCheckoutSession"),
-        headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"userId": userId}),
+      final callable = FirebaseFunctions.instance.httpsCallable(
+        'createCheckoutSessionCallable',
       );
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data["url"];
-      } else {
-        throw Exception("Failed to create session: \\${response.body}");
-      }
+      final result = await callable.call<Map<String, dynamic>>(<String, dynamic>{});
+      final data = Map<String, dynamic>.from(result.data);
+      return data['url'] as String?;
     } catch (e, stack) {
       // Integrate Crashlytics for error reporting (not on web)
       if (!kIsWeb) {

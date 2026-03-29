@@ -221,6 +221,32 @@ async function createCheckoutSessionHandler(req, res, deps = {}) {
   }
 }
 
+async function createCheckoutSessionCallableHandler(request, deps = {}) {
+  const uid = requireAuth(request);
+  const stripeClient = deps.stripeClient || stripe;
+
+  const checkoutBaseUrl = getCheckoutBaseUrl();
+  const session = await stripeClient.checkout.sessions.create({
+    payment_method_types: ["card"],
+    mode: "payment",
+    line_items: [
+      {
+        price_data: {
+          currency: "usd",
+          product_data: {name: "MixVy Coins"},
+          unit_amount: 500,
+        },
+        quantity: 1,
+      },
+    ],
+    metadata: {userId: uid},
+    success_url: `${checkoutBaseUrl}/success`,
+    cancel_url: `${checkoutBaseUrl}/cancel`,
+  });
+
+  return {url: session.url};
+}
+
 async function ensureUserExists(uid, firestore = db, defaultBalance = 100) {
   const userRef = firestore.collection("users").doc(uid);
   const userSnap = await userRef.get();
@@ -1029,6 +1055,10 @@ exports.createCheckoutSession = onRequest(async (req, res) =>
   createCheckoutSessionHandler(req, res),
 );
 
+exports.createCheckoutSessionCallable = onCall(async (request) =>
+  createCheckoutSessionCallableHandler(request),
+);
+
 // Stripe Webhook
 exports.stripeWebhook = onRequestV1(async (req, res) => {
   const sig = req.headers["stripe-signature"];
@@ -1076,6 +1106,7 @@ exports.__testing = {
   createStripeConnectDashboardLinkHandler,
   generateAgoraTokenHandler,
   createCheckoutSessionHandler,
+  createCheckoutSessionCallableHandler,
   requestRefundHandler,
   sendRoomGiftHandler,
   cleanupDeletedUserData,
