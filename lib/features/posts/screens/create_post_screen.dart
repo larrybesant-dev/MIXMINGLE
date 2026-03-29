@@ -324,12 +324,8 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.emoji_emotions),
-                  tooltip: 'Add emoji',
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Emoji picker coming soon')),
-                    );
-                  },
+                  tooltip: 'Emoji picker not enabled in beta',
+                  onPressed: null,
                 ),
               ],
             ),

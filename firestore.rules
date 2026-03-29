@@ -87,6 +87,14 @@ service cloud.firestore {
         || (signedIn() && isFriendLinkUpdate());
       allow delete: if isSelf(userId);
 
+      match /stories/{storyId} {
+        allow read: if signedIn();
+        allow create: if isSelf(userId)
+          && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if isSelf(userId)
+          && resource.data.userId == request.auth.uid;
+      }
+
       match /adult_profile/{documentId} {
         allow read: if isSelf(userId)
           || (canReadSharedAdultProfile(userId)

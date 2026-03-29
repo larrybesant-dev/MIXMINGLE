@@ -45,6 +45,30 @@ service firebase.storage {
       allow delete: if isOwner(userId);
     }
 
+    match /users/{userId}/stories/images/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if isOwner(userId) && isImageUpload();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/stories/videos/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if isOwner(userId) && isVideoUpload();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/posts/images/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if isOwner(userId) && isImageUpload();
+      allow delete: if isOwner(userId);
+    }
+
+    match /users/{userId}/posts/videos/{fileName} {
+      allow read: if signedIn();
+      allow create, update: if isOwner(userId) && isVideoUpload();
+      allow delete: if isOwner(userId);
+    }
+
     // Deny all other Storage paths by default.
     match /{allPaths=**} {
       allow read, write: if false;

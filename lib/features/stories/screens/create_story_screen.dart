@@ -279,14 +279,8 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                     ),
                     IconButton(
                       icon: const Icon(Icons.palette),
-                      tooltip: 'Change color',
-                      onPressed: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Color picker coming soon'),
-                          ),
-                        );
-                      },
+                      tooltip: 'Color themes are not enabled in beta',
+                      onPressed: null,
                     ),
                   ],
                 ),

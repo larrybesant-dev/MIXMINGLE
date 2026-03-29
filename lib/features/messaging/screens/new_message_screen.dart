@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -61,7 +62,7 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     }
   }
 
-  void _searchUsers(String query) async {
+  Future<void> _searchUsers(String query) async {
     if (query.isEmpty) {
       setState(() {
         _searchResults = [];
@@ -74,19 +75,40 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
     });
 
     try {
-      // This would normally query Firestore for users
-      // For now, showing placeholder
+      final normalized = query.trim();
+      final snapshot = await FirebaseFirestore.instance
+          .collection('users')
+          .where('username', isGreaterThanOrEqualTo: normalized)
+          .where('username', isLessThanOrEqualTo: '$normalized\uf8ff')
+          .limit(20)
+          .get();
+
+      final matches = snapshot.docs
+          .where((doc) => doc.id != widget.userId)
+          .map((doc) {
+            final data = doc.data();
+            final username = (data['username'] as String?)?.trim();
+            return {
+              'id': doc.id,
+              'name': username == null || username.isEmpty ? doc.id : username,
+              'avatar': (data['avatarUrl'] as String?)?.trim() ?? '',
+            };
+          })
+          .toList(growable: false);
+
+      if (!mounted) return;
       setState(() {
-        _searchResults = [
-          {'id': 'user123', 'name': 'John Doe', 'avatar': ''},
-          {'id': 'user456', 'name': 'Jane Smith', 'avatar': ''},
-        ];
+        _searchResults = matches;
         _isSearching = false;
       });
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isSearching = false;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Search failed: $e')),
+      );
     }
   }
 
