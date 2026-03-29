@@ -165,7 +165,11 @@ void main() {
         password: 'P@ssword123!',
       );
 
-      await PaymentApi.notifySuccess(recipientId: receiverId, amount: 11);
+      await PaymentApi.notifySuccess(
+        recipientId: receiverId,
+        amount: 11,
+        paymentIntentId: 'pi_emulator_test',
+      );
 
       final transactions = await FirebaseFirestore.instance
           .collection('transactions')

@@ -330,6 +330,73 @@ exports.createPaymentIntent = onCall(async (request) =>
   createPaymentIntentHandler(request),
 );
 
+function shouldSkipStripePaymentVerification(deps = {}) {
+  if (deps.forceStripeVerification === true) {
+    return false;
+  }
+
+  if (deps.skipStripeVerification === true) {
+    return true;
+  }
+
+  const configuredSecret = process.env.STRIPE_SECRET;
+  return !configuredSecret || configuredSecret === "sk_test_dummy";
+}
+
+async function validateStripePaymentIntent({
+  stripeClient,
+  paymentIntentId,
+  senderId,
+  recipientId,
+  amount,
+}) {
+  const paymentIntent = await stripeClient.paymentIntents.retrieve(paymentIntentId);
+  if (!paymentIntent || !paymentIntent.id) {
+    throw new HttpsError("failed-precondition", "Payment intent not found.");
+  }
+
+  const status = String(paymentIntent.status || "");
+  if (
+    status !== "succeeded" &&
+    status !== "processing" &&
+    status !== "requires_capture"
+  ) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Payment intent is not in a payable state.",
+    );
+  }
+
+  const metadata = paymentIntent.metadata || {};
+  const metadataSender = typeof metadata.senderId === "string" ? metadata.senderId : "";
+  const metadataRecipient =
+    typeof metadata.recipientId === "string" ? metadata.recipientId : "";
+  const metadataAmount = Number(metadata.amount || 0);
+
+  if (metadataSender !== senderId || metadataRecipient !== recipientId) {
+    throw new HttpsError(
+      "permission-denied",
+      "Payment intent participants do not match authenticated request.",
+    );
+  }
+
+  if (Math.abs(metadataAmount - amount) > 0.0001) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Payment amount does not match payment intent metadata.",
+    );
+  }
+
+  const expectedAmountCents = Math.round(amount * 100);
+  const intentAmountCents = Number(paymentIntent.amount || 0);
+  if (intentAmountCents !== expectedAmountCents) {
+    throw new HttpsError(
+      "failed-precondition",
+      "Payment amount does not match payment intent amount.",
+    );
+  }
+}
+
 async function recordStripePaymentSuccessHandler(request, deps = {}) {
   const senderId = requireAuth(request);
   enforceRateLimit("recordStripePaymentSuccess", senderId);
@@ -338,14 +405,15 @@ async function recordStripePaymentSuccessHandler(request, deps = {}) {
     "recipientId",
   );
   const amount = parsePositiveAmount(request.data && request.data.amount);
-  const paymentIntentId =
-    typeof (request.data && request.data.paymentIntentId) === "string"
-      ? request.data.paymentIntentId.trim()
-      : "";
+  const paymentIntentId = parseIdField(
+    request.data && request.data.paymentIntentId,
+    "paymentIntentId",
+  );
   const idempotencyKey = parseOptionalIdempotencyKey(
     request.data && request.data.idempotencyKey,
   );
   const firestore = deps.firestore || db;
+  const stripeClient = deps.stripeClient || stripe;
 
   const transactionRef = idempotencyKey
     ? firestore.collection("transactions").doc(
@@ -356,6 +424,16 @@ async function recordStripePaymentSuccessHandler(request, deps = {}) {
   const existingSnap = await transactionRef.get();
   if (existingSnap.exists) {
     return {transactionId: transactionRef.id, deduplicated: true};
+  }
+
+  if (!shouldSkipStripePaymentVerification(deps)) {
+    await validateStripePaymentIntent({
+      stripeClient,
+      paymentIntentId,
+      senderId,
+      recipientId,
+      amount,
+    });
   }
 
   await transactionRef.set({
@@ -518,6 +596,39 @@ async function registerFcmTokenHandler(request, deps = {}) {
 
 exports.registerFcmToken = onCall(async (request) =>
   registerFcmTokenHandler(request),
+);
+
+async function unregisterFcmTokenHandler(request, deps = {}) {
+  const uid = requireAuth(request);
+  const firestore = deps.firestore || db;
+  const rawToken = request.data && request.data.token;
+  const token = typeof rawToken === "string" ? rawToken.trim() : "";
+
+  const tokensRef = firestore
+    .collection("users")
+    .doc(uid)
+    .collection("notification_tokens");
+
+  if (token) {
+    await tokensRef.doc(token).delete();
+    return {ok: true, deleted: 1};
+  }
+
+  const snapshot = await tokensRef.limit(200).get();
+  if (snapshot.empty) {
+    return {ok: true, deleted: 0};
+  }
+
+  const batch = firestore.batch();
+  snapshot.docs.forEach((doc) => {
+    batch.delete(doc.ref);
+  });
+  await batch.commit();
+  return {ok: true, deleted: snapshot.size};
+}
+
+exports.unregisterFcmToken = onCall(async (request) =>
+  unregisterFcmTokenHandler(request),
 );
 
 async function sendPushForNotification(event, deps = {}) {
@@ -980,6 +1091,8 @@ exports.__testing = {
   parseIdField,
   parseOptionalIdempotencyKey,
   buildIdempotentTransactionDocId,
+  validateStripePaymentIntent,
   registerFcmTokenHandler,
+  unregisterFcmTokenHandler,
   sendPushForNotification,
 };

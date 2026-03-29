@@ -32,6 +32,7 @@ import 'package:mixvy/features/groups/screens/groups_screen.dart';
 import 'package:mixvy/features/groups/screens/create_group_screen.dart';
 import 'package:mixvy/features/groups/screens/group_details_screen.dart';
 import 'package:mixvy/features/trending/screens/trending_screen.dart';
+import 'package:mixvy/presentation/screens/not_found_screen.dart';
 
 import '../features/auth/register_screen.dart';
 import '../features/profile/profile_screen.dart';
@@ -158,6 +159,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: '/',
+    errorBuilder: (context, state) =>
+        NotFoundScreen(path: state.uri.toString()),
     redirect: (context, state) async {
       try {
         return evaluateAppRedirect(

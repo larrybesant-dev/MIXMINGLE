@@ -29,6 +29,7 @@
     connectivity_plus: ^7.0.0
     lottie: ^3.3.2
     firebase_core: ^4.5.0
+    firebase_messaging: ^16.0.3
     firebase_storage: ^13.0.3
     path_provider: ^2.1.2
     cloud_firestore: ^6.1.3

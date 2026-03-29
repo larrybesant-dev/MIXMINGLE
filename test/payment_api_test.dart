@@ -51,27 +51,34 @@ void main() {
 
   test('createIntent calls createPaymentIntent with expected payload', () async {
     final gateway = FakePaymentFunctionsGateway(
-      responses: const <String, dynamic>{'clientSecret': 'secret_abc'},
+      responses: const <String, dynamic>{
+        'clientSecret': 'secret_abc',
+        'paymentIntentId': 'pi_123',
+      },
     );
     PaymentApi.configureForTesting(
       functionsGateway: gateway,
       authGateway: FakePaymentAuthGateway(mockUser),
     );
 
-    final secret = await PaymentApi.createIntent(
+    final result = await PaymentApi.createIntent(
       amount: 12.5,
       currency: 'usd',
       recipientId: 'receiver-1',
     );
 
-    expect(secret, 'secret_abc');
+    expect(result.clientSecret, 'secret_abc');
+    expect(result.paymentIntentId, 'pi_123');
+    expect(result.idempotencyKey, startsWith('intent_'));
     expect(gateway.calls, hasLength(1));
     expect(gateway.calls.single.name, 'createPaymentIntent');
-    expect(gateway.calls.single.payload, <String, dynamic>{
-      'amount': 12.5,
-      'currency': 'usd',
-      'recipientId': 'receiver-1',
-    });
+    expect(gateway.calls.single.payload['amount'], 12.5);
+    expect(gateway.calls.single.payload['currency'], 'usd');
+    expect(gateway.calls.single.payload['recipientId'], 'receiver-1');
+    expect(
+      gateway.calls.single.payload['idempotencyKey'] as String,
+      startsWith('intent_'),
+    );
   });
 
   test('notifySuccess requires authenticated user', () async {
@@ -81,7 +88,11 @@ void main() {
     );
 
     await expectLater(
-      () => PaymentApi.notifySuccess(recipientId: 'receiver-1', amount: 5),
+      () => PaymentApi.notifySuccess(
+        recipientId: 'receiver-1',
+        amount: 5,
+        paymentIntentId: 'pi_missing_auth',
+      ),
       throwsA(isA<Exception>()),
     );
   });
@@ -97,10 +108,12 @@ void main() {
 
     expect(gateway.calls, hasLength(1));
     expect(gateway.calls.single.name, 'sendCoinTransfer');
-    expect(gateway.calls.single.payload, <String, dynamic>{
-      'receiverId': 'receiver-9',
-      'amount': 42.0,
-    });
+    expect(gateway.calls.single.payload['receiverId'], 'receiver-9');
+    expect(gateway.calls.single.payload['amount'], 42.0);
+    expect(
+      gateway.calls.single.payload['idempotencyKey'] as String,
+      startsWith('send_'),
+    );
   });
 
   test('requestPayment rejects mismatched requesterId', () async {
@@ -128,10 +141,12 @@ void main() {
 
     expect(gateway.calls, hasLength(1));
     expect(gateway.calls.single.name, 'requestCoinTransfer');
-    expect(gateway.calls.single.payload, <String, dynamic>{
-      'targetId': 'target-1',
-      'amount': 9.0,
-    });
+    expect(gateway.calls.single.payload['targetId'], 'target-1');
+    expect(gateway.calls.single.payload['amount'], 9.0);
+    expect(
+      gateway.calls.single.payload['idempotencyKey'] as String,
+      startsWith('request_'),
+    );
   });
 
   test('requestRefund validates reason length before calling backend', () async {

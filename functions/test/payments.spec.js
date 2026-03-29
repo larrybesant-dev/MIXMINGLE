@@ -147,33 +147,63 @@ describe("payment callable handlers", () => {
 
   it("createPaymentIntentHandler validates payload and creates Stripe intent", async () => {
     let capturedPayload;
+    let capturedOptions;
     const stripeClient = {
       paymentIntents: {
-        create: async (payload) => {
+        create: async (payload, options) => {
           capturedPayload = payload;
-          return {client_secret: "pi_secret_123"};
+          capturedOptions = options;
+          return {client_secret: "pi_secret_123", id: "pi_123"};
         },
       },
     };
 
     const response = await createPaymentIntentHandler(
-        makeRequest({amount: 12.34, currency: "USD", recipientId: "user-2"}),
+        makeRequest({
+          amount: 12.34,
+          currency: "USD",
+          recipientId: "user-2",
+          idempotencyKey: "idem-key-0001",
+        }),
         {stripeClient},
     );
 
-    assert.deepEqual(response, {clientSecret: "pi_secret_123"});
+    assert.deepEqual(response, {
+      clientSecret: "pi_secret_123",
+      paymentIntentId: "pi_123",
+      idempotencyKey: "idem-key-0001",
+    });
     assert.equal(capturedPayload.amount, 1234);
     assert.equal(capturedPayload.currency, "usd");
     assert.equal(capturedPayload.metadata.senderId, "user-1");
     assert.equal(capturedPayload.metadata.recipientId, "user-2");
+    assert.equal(capturedOptions.idempotencyKey, "idem-key-0001");
   });
 
   it("recordStripePaymentSuccessHandler records a completed transaction", async () => {
     const firestore = createFirestoreDouble();
+    const stripeClient = {
+      paymentIntents: {
+        retrieve: async () => ({
+          id: "pi_777",
+          status: "succeeded",
+          amount: 700,
+          metadata: {
+            senderId: "user-1",
+            recipientId: "user-2",
+            amount: "7",
+          },
+        }),
+      },
+    };
 
     const response = await recordStripePaymentSuccessHandler(
-        makeRequest({recipientId: "user-2", amount: 7}),
-        {firestore},
+        makeRequest({
+          recipientId: "user-2",
+          amount: 7,
+          paymentIntentId: "pi_777",
+        }),
+        {firestore, stripeClient, forceStripeVerification: true},
     );
 
     const recorded = firestore.__state.transactions.get(response.transactionId);
@@ -182,6 +212,37 @@ describe("payment callable handlers", () => {
     assert.deepEqual(recorded.participants, ["user-1", "user-2"]);
     assert.equal(recorded.amount, 7);
     assert.equal(recorded.status, "completed");
+    assert.equal(recorded.paymentIntentId, "pi_777");
+  });
+
+  it("recordStripePaymentSuccessHandler rejects mismatched stripe metadata", async () => {
+    const firestore = createFirestoreDouble();
+    const stripeClient = {
+      paymentIntents: {
+        retrieve: async () => ({
+          id: "pi_bad",
+          status: "succeeded",
+          amount: 500,
+          metadata: {
+            senderId: "other-user",
+            recipientId: "user-2",
+            amount: "5",
+          },
+        }),
+      },
+    };
+
+    await assert.rejects(
+        () => recordStripePaymentSuccessHandler(
+            makeRequest({
+              recipientId: "user-2",
+              amount: 5,
+              paymentIntentId: "pi_bad",
+            }),
+            {firestore, stripeClient, forceStripeVerification: true},
+        ),
+        (error) => error.code === "permission-denied",
+    );
   });
 
   it("sendCoinTransferHandler rejects insufficient balance", async () => {

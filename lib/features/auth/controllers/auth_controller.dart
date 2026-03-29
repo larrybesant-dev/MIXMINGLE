@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../../../presentation/screens/google_sign_in_helper.dart';
 import '../../../presentation/screens/apple_sign_in_helper.dart';
+import '../../../services/push_messaging_service.dart';
 
 class AuthState {
   final bool isLoading;
@@ -232,6 +233,7 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
+    await PushMessagingService.instance.unregisterCurrentToken();
     await _auth.signOut();
     state = state.copyWith(uid: null);
   }

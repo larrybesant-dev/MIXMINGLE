@@ -1,8 +1,16 @@
 import 'package:patrol/patrol.dart';
+import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/main.dart' as app;
 import 'test_helpers.dart';
 
 void main() {
+  if (skipIntegrationTests) {
+    testWidgets('Patrol test skipped unless RUN_INTEGRATION_TESTS=true', (
+      tester,
+    ) async {});
+    return;
+  }
+
   patrolTest(
     'App launches and navigates main dashboard tabs',
     ($) async {
@@ -30,6 +38,6 @@ void main() {
       // Optional: Verify something exists on screen
       // expect($(#profileScreen), findsOneWidget);
     },
-    skip: skipIntegrationTests,
+    skip: false,
   );
 }

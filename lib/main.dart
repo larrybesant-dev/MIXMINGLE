@@ -10,7 +10,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:mixvy/firebase_options.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:mixvy/dev/firebase_emulator_bootstrap.dart';
+import 'package:mixvy/services/push_messaging_service.dart';
 
 void main() async {
   runZonedGuarded(
@@ -37,7 +39,12 @@ void main() async {
             options: DefaultFirebaseOptions.currentPlatform,
           );
 
+          FirebaseMessaging.onBackgroundMessage(
+            firebaseMessagingBackgroundHandler,
+          );
+
           await FirebaseEmulatorBootstrap.configure();
+          await PushMessagingService.instance.initialize();
 
           // Global async/sync error handling for all platforms.
           FlutterError.onError = (FlutterErrorDetails details) {
