@@ -6,6 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
 import '../firebase_options.dart';
 
@@ -66,12 +67,33 @@ class PushMessagingService {
 
     await _requestPermission();
 
-    final initialMessage = await _messaging.getInitialMessage();
-    if (initialMessage != null) {
-      _onOpenedMessage(initialMessage);
-    }
+    await _handleInitialMessage();
 
     await _registerCurrentToken();
+  }
+
+  Future<void> _handleInitialMessage() async {
+    try {
+      final initialMessage = await _messaging.getInitialMessage();
+      if (initialMessage != null) {
+        _onOpenedMessage(initialMessage);
+      }
+    } on MissingPluginException catch (error, stackTrace) {
+      // Some web runtime/plugin combinations do not implement getInitialMessage.
+      developer.log(
+        'Push initial message not available on this platform runtime.',
+        name: 'PushMessagingService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    } catch (error, stackTrace) {
+      developer.log(
+        'Failed to process initial push message',
+        name: 'PushMessagingService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   Future<void> _requestPermission() async {

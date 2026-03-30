@@ -45,9 +45,11 @@ void main() async {
             options: DefaultFirebaseOptions.currentPlatform,
           );
 
-          FirebaseMessaging.onBackgroundMessage(
-            firebaseMessagingBackgroundHandler,
-          );
+          if (!kIsWeb) {
+            FirebaseMessaging.onBackgroundMessage(
+              firebaseMessagingBackgroundHandler,
+            );
+          }
 
           await FirebaseEmulatorBootstrap.configure();
           await PushMessagingService.instance.initialize();

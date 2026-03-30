@@ -80,6 +80,11 @@ service cloud.firestore {
       return isRoomHost(roomId) || isRoomModerator(roomId);
     }
 
+    function isRoomParticipant(roomId) {
+      return signedIn()
+        && participantDoc(roomId, request.auth.uid).data.userId == request.auth.uid;
+    }
+
     match /users/{userId} {
       allow read: if signedIn();
       allow create: if isSelf(userId);
@@ -158,7 +163,8 @@ service cloud.firestore {
         allow read: if signedIn()
           && (resource.data.requesterId == request.auth.uid
             || resource.data.broadcasterId == request.auth.uid
-            || isRoomStaff(roomId));
+            || isRoomStaff(roomId)
+            || isRoomParticipant(roomId));
         allow create: if signedIn()
           && request.resource.data.requesterId == request.auth.uid
           && request.resource.data.broadcasterId is string
@@ -173,7 +179,8 @@ service cloud.firestore {
         allow read: if signedIn()
           && (resource.data.requesterId == request.auth.uid
             || resource.data.hostId == request.auth.uid
-            || isRoomStaff(roomId));
+            || isRoomStaff(roomId)
+            || isRoomParticipant(roomId));
         allow create: if signedIn()
           && request.resource.data.requesterId == request.auth.uid
           && request.resource.data.hostId is string

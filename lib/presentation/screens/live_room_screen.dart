@@ -150,29 +150,59 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     required String channelName,
     required int rtcUid,
   }) async {
-    final callable = FirebaseFunctions.instance.httpsCallable(
-      'generateAgoraToken',
-    );
-    final result = await callable.call<Map<String, dynamic>>({
-      'channelName': channelName,
-      'rtcUid': rtcUid,
-    });
-    final data = Map<String, dynamic>.from(result.data);
-    final token = _asString(data['token']);
-    final serverAppId = _asString(data['appId']);
-    if (token.isEmpty) {
-      throw Exception('Missing Agora token from backend response.');
-    }
-
-    final localAppId = AgoraConstants.appId.trim();
-    final resolvedAppId = serverAppId.isNotEmpty ? serverAppId : localAppId;
-    if (!_looksLikeAgoraAppId(resolvedAppId)) {
-      throw Exception(
-        'Invalid AGORA_APP_ID. Expected a 32-character Agora App ID.',
+    try {
+      final callable = FirebaseFunctions.instance.httpsCallable(
+        'generateAgoraToken',
       );
-    }
+      final result = await callable.call<Map<String, dynamic>>({
+        'channelName': channelName,
+        'rtcUid': rtcUid,
+      });
+      final data = Map<String, dynamic>.from(result.data);
+      final token = _asString(data['token']);
+      final serverAppId = _asString(data['appId']);
+      if (token.isEmpty) {
+        throw const AgoraServiceException(
+          code: 'agora-token-missing',
+          message: 'Live media token is missing from backend response.',
+        );
+      }
 
-    return (token: token, appId: resolvedAppId);
+      final localAppId = AgoraConstants.appId.trim();
+      final resolvedAppId = serverAppId.isNotEmpty ? serverAppId : localAppId;
+      if (!_looksLikeAgoraAppId(resolvedAppId)) {
+        throw const AgoraServiceException(
+          code: 'agora-appid-invalid',
+          message: 'AGORA_APP_ID is missing or invalid (expected 32 chars).',
+        );
+      }
+
+      return (token: token, appId: resolvedAppId);
+    } on FirebaseFunctionsException catch (e) {
+      if (e.code == 'failed-precondition') {
+        throw AgoraServiceException(
+          code: 'agora-backend-misconfigured',
+          message:
+              'Live media backend is not configured. Please set AGORA_APP_ID and AGORA_APP_CERTIFICATE in Cloud Functions.',
+          cause: e,
+        );
+      }
+      if (e.code == 'resource-exhausted') {
+        throw AgoraServiceException(
+          code: 'agora-rate-limited',
+          message: 'Too many live-media attempts. Please wait a moment and retry.',
+          cause: e,
+        );
+      }
+      if (e.code == 'unauthenticated' || e.code == 'permission-denied') {
+        throw AgoraServiceException(
+          code: 'permission-denied',
+          message: 'Your session is not authorized for live media. Please sign in again.',
+          cause: e,
+        );
+      }
+      rethrow;
+    }
   }
 
   Future<void> _connectCall(String userId, {required bool canBroadcast}) async {
@@ -314,6 +344,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           return 'This browser is not fully supported for live media. Use the latest Chrome or Edge.';
         case 'insecure-context':
           return 'Live media requires HTTPS (or localhost). Open MixVy on a secure origin.';
+        case 'agora-backend-misconfigured':
+          return 'Live media is temporarily unavailable due to server configuration. Please contact support.';
+        case 'agora-rate-limited':
+          return 'Too many live-media attempts right now. Please wait a moment and retry.';
+        case 'agora-token-missing':
+        case 'agora-appid-invalid':
+          return 'Live media backend configuration is invalid. Please contact support.';
         default:
           return error.message;
       }
@@ -337,10 +374,26 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     if (lower.contains('network') || lower.contains('socket')) {
       return 'Network issue while connecting audio/video. Check your connection and retry.';
     }
+    if (lower.contains('agora server credentials are not configured') ||
+        lower.contains('failed-precondition')) {
+      return 'Live media backend is not configured. AGORA credentials must be set in Cloud Functions.';
+    }
     if (lower.contains('camera') || lower.contains('microphone') || lower.contains('device')) {
       return 'Camera or microphone is unavailable on this device.';
     }
     return 'Audio/video operation failed. Please retry.';
+  }
+
+  String _requestStatusErrorText(Object error, {required String kind}) {
+    final lower = error.toString().toLowerCase();
+    if (lower.contains('permission-denied') ||
+        lower.contains('insufficient permissions')) {
+      return 'Could not load $kind status due to room permissions.';
+    }
+    if (lower.contains('unauthenticated')) {
+      return 'Could not load $kind status. Please sign in again.';
+    }
+    return 'Could not load $kind status right now.';
   }
 
   void _startPresenceHeartbeat(String userId) {
@@ -2316,7 +2369,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 },
                                 loading: () => const LinearProgressIndicator(),
                                 error: (e, _) =>
-                                    Text('Could not load request status: $e'),
+                                  Text(_requestStatusErrorText(e, kind: 'camera request')),
                               ),
                               const SizedBox(height: 6),
                               Text(
@@ -2393,7 +2446,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 },
                                 loading: () => const LinearProgressIndicator(),
                                 error: (e, _) =>
-                                    Text('Could not load mic request status: $e'),
+                                  Text(_requestStatusErrorText(e, kind: 'mic request')),
                               ),
                             ],
                           ),
