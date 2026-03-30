@@ -35,30 +35,44 @@ class MicAccessController {
     return _db.collection('rooms').doc(roomId).collection('mic_access_requests');
   }
 
+  String _requestDocId(String requesterId, String hostId) {
+    return '${requesterId}_$hostId';
+  }
+
   Future<int> _nextPriority(String roomId) async {
     final snapshot = await _requestCollection(roomId)
         .where('status', isEqualTo: 'pending')
-        .orderBy('priority', descending: true)
-        .limit(1)
         .get();
     if (snapshot.docs.isEmpty) {
       return 100;
     }
-    final value = _asInt(snapshot.docs.first.data()['priority']);
-    return value + 10;
+    var highestPriority = 100;
+    for (final doc in snapshot.docs) {
+      final value = _asInt(doc.data()['priority']);
+      if (value > highestPriority) {
+        highestPriority = value;
+      }
+    }
+    return highestPriority + 10;
   }
 
   Future<void> _expireStalePendingRequests(String roomId) async {
-    final now = Timestamp.fromDate(DateTime.now());
-    final staleSnapshot = await _requestCollection(roomId)
+    final now = DateTime.now();
+    final pendingSnapshot = await _requestCollection(roomId)
         .where('status', isEqualTo: 'pending')
-        .where('expiresAt', isLessThanOrEqualTo: now)
         .get();
-    if (staleSnapshot.docs.isEmpty) {
+    final staleDocs = pendingSnapshot.docs.where((doc) {
+      final expiresAt = doc.data()['expiresAt'];
+      if (expiresAt is! Timestamp) {
+        return false;
+      }
+      return !expiresAt.toDate().isAfter(now);
+    }).toList(growable: false);
+    if (staleDocs.isEmpty) {
       return;
     }
     final batch = _db.batch();
-    for (final staleDoc in staleSnapshot.docs) {
+    for (final staleDoc in staleDocs) {
       batch.update(staleDoc.reference, {
         'status': 'expired',
         'updatedAt': FieldValue.serverTimestamp(),
@@ -75,20 +89,17 @@ class MicAccessController {
   }) async {
     await _expireStalePendingRequests(roomId);
 
-    final existing = await _requestCollection(roomId)
-        .where('requesterId', isEqualTo: requesterId)
-        .where('hostId', isEqualTo: hostId)
-        .where('status', isEqualTo: 'pending')
-        .limit(1)
-        .get();
-    if (existing.docs.isNotEmpty) {
+    final requestId = _requestDocId(requesterId, hostId);
+    final requestRef = _requestCollection(roomId).doc(requestId);
+    final existingSnapshot = await requestRef.get();
+    final existingData = existingSnapshot.data();
+    if (existingData != null && _asNullableString(existingData['status']) == 'pending') {
       return;
     }
 
     final resolvedPriority = priority ?? await _nextPriority(roomId);
-    final requestRef = _requestCollection(roomId).doc();
     await requestRef.set({
-      'id': requestRef.id,
+      'id': requestId,
       'roomId': roomId,
       'requesterId': requesterId,
       'hostId': hostId,

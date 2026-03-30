@@ -22,24 +22,25 @@ class CamAccessController {
     return _db.collection('rooms').doc(roomId).collection('cam_access_requests');
   }
 
+  String _requestDocId(String requesterId, String broadcasterId) {
+    return '${requesterId}_$broadcasterId';
+  }
+
   Future<void> requestAccess({
     required String roomId,
     required String requesterId,
     required String broadcasterId,
   }) async {
-    final existing = await _requestCollection(roomId)
-        .where('requesterId', isEqualTo: requesterId)
-        .where('broadcasterId', isEqualTo: broadcasterId)
-        .where('status', isEqualTo: 'pending')
-        .limit(1)
-        .get();
-    if (existing.docs.isNotEmpty) {
+    final requestId = _requestDocId(requesterId, broadcasterId);
+    final requestRef = _requestCollection(roomId).doc(requestId);
+    final existingSnapshot = await requestRef.get();
+    final existingData = existingSnapshot.data();
+    if (existingData != null && _asNullableString(existingData['status']) == 'pending') {
       return;
     }
 
-    final requestRef = _requestCollection(roomId).doc();
     await requestRef.set({
-      'id': requestRef.id,
+      'id': requestId,
       'roomId': roomId,
       'requesterId': requesterId,
       'broadcasterId': broadcasterId,
