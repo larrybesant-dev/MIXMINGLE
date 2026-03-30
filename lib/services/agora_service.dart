@@ -486,6 +486,66 @@ class AgoraService {
     }
   }
 
+  /// On web, role-switching alone does not reliably renegotiate the WebRTC
+  /// publish track. This method leaves and rejoins the channel as broadcaster
+  /// so the browser negotiates a fresh publish path.
+  Future<void> rejoinAsBroadcaster(
+    String token,
+    String channelName,
+    int uid,
+  ) async {
+    if (!_initialized) return;
+    developer.log(
+      'rejoinAsBroadcaster: leaving channel to force publish track renegotiation',
+      name: 'AgoraService',
+    );
+    // --- leave ---
+    if (_joinedChannel) {
+      try {
+        await _engine.leaveChannel();
+      } catch (e) {
+        developer.log('rejoinAsBroadcaster: leaveChannel error (ignored): $e', name: 'AgoraService');
+      }
+    }
+    _joinedChannel = false;
+    _broadcasterMode = false;
+    _localVideoCapturing = false;
+
+    // --- re‑enable video engine before join ---
+    try {
+      await _engine.enableVideo();
+    } catch (_) {}
+
+    // --- rejoin as broadcaster ---
+    try {
+      await _engine.joinChannel(
+        token: token.trim(),
+        channelId: channelName.trim(),
+        uid: uid,
+        options: const ChannelMediaOptions(
+          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+          autoSubscribeAudio: true,
+          autoSubscribeVideo: true,
+          publishCameraTrack: true,
+          publishMicrophoneTrack: false,
+        ),
+      );
+      await _engine.enableLocalVideo(true);
+      await _engine.muteLocalVideoStream(false);
+      try { await _engine.startPreview(); } catch (_) {}
+    } catch (error) {
+      _throwMappedAgoraError(error, operation: 'rejoin as broadcaster');
+    }
+
+    _joinedChannel = true;
+    _broadcasterMode = true;
+    developer.log(
+      'rejoinAsBroadcaster: successfully rejoined as broadcaster',
+      name: 'AgoraService',
+    );
+  }
+
   /// Leave the current channel
   Future<void> leaveChannel() async {
     if (!_initialized) return;
