@@ -18,12 +18,12 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
   static const int _sessionLengthSeconds = 90;
 
   final SpeedDatingService _service = SpeedDatingService();
+  final ValueNotifier<int> _secondsLeftNotifier = ValueNotifier<int>(
+    _sessionLengthSeconds,
+  );
   int _candidateIndex = 0;
-  int _secondsLeft = _sessionLengthSeconds;
   Timer? _timer;
   bool _isSubmitting = false;
-
-  double get _progress => _secondsLeft / _sessionLengthSeconds;
 
   @override
   void initState() {
@@ -34,25 +34,24 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
   @override
   void dispose() {
     _timer?.cancel();
+    _secondsLeftNotifier.dispose();
     super.dispose();
   }
 
   void _startTimer() {
     _timer?.cancel();
-    _secondsLeft = _sessionLengthSeconds;
+    _secondsLeftNotifier.value = _sessionLengthSeconds;
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
         return;
       }
-      if (_secondsLeft <= 1) {
+      if (_secondsLeftNotifier.value <= 1) {
         timer.cancel();
         _nextCandidate();
         return;
       }
-      setState(() {
-        _secondsLeft -= 1;
-      });
+      _secondsLeftNotifier.value = _secondsLeftNotifier.value - 1;
     });
   }
 
@@ -76,7 +75,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
         fromUserId: currentUserId,
         toUserId: candidate.id,
         liked: liked,
-        sessionSeconds: _sessionLengthSeconds - _secondsLeft,
+        sessionSeconds: _sessionLengthSeconds - _secondsLeftNotifier.value,
       );
 
       if (!mounted) return;
@@ -334,9 +333,14 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
                         const Icon(Icons.timer),
                         const SizedBox(width: 10),
                         Expanded(
-                          child: Text(
-                            'Time left: ${_secondsLeft}s',
-                            style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                          child: ValueListenableBuilder<int>(
+                            valueListenable: _secondsLeftNotifier,
+                            builder: (context, secondsLeft, _) => Text(
+                              'Time left: ${secondsLeft}s',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                           ),
                         ),
                         Text('Queue: ${candidates.length}'),
@@ -345,10 +349,14 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
                     const SizedBox(height: 8),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(999),
-                      child: LinearProgressIndicator(
-                        value: _progress,
-                        minHeight: 8,
-                        backgroundColor: Colors.white.withValues(alpha: 0.15),
+                      child: ValueListenableBuilder<int>(
+                        valueListenable: _secondsLeftNotifier,
+                        builder: (context, secondsLeft, _) =>
+                            LinearProgressIndicator(
+                          value: secondsLeft / _sessionLengthSeconds,
+                          minHeight: 8,
+                          backgroundColor: Colors.white.withValues(alpha: 0.15),
+                        ),
                       ),
                     ),
                   ],

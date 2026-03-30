@@ -25,6 +25,16 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
   List<Map<String, String>> _searchResults = [];
   bool _isSearching = false;
 
+  String _asString(dynamic value, {String fallback = ''}) {
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return fallback;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -87,11 +97,11 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
           .where((doc) => doc.id != widget.userId)
           .map((doc) {
             final data = doc.data();
-            final username = (data['username'] as String?)?.trim();
+            final username = _asString(data['username']);
             return {
               'id': doc.id,
-              'name': username == null || username.isEmpty ? doc.id : username,
-              'avatar': (data['avatarUrl'] as String?)?.trim() ?? '',
+              'name': username.isEmpty ? doc.id : username,
+              'avatar': _asString(data['avatarUrl']),
             };
           })
           .toList(growable: false);
@@ -151,17 +161,22 @@ class _NewMessageScreenState extends ConsumerState<NewMessageScreen> {
                 separatorBuilder: (_, _) => const Divider(height: 1),
                 itemBuilder: (context, index) {
                   final user = _searchResults[index];
+                  final userId = (user['id'] ?? '').trim();
+                  final userName = (user['name'] ?? '').trim();
+                  final safeName = userName.isEmpty ? 'Unknown' : userName;
                   return ListTile(
                     leading: CircleAvatar(
-                      child: Text(user['name']![0]),
+                      child: Text(safeName.substring(0, 1).toUpperCase()),
                     ),
-                    title: Text(user['name']!),
+                    title: Text(safeName),
                     trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                    onTap: () => _startConversation(
-                      user['id']!,
-                      user['name']!,
-                      user['avatar'],
-                    ),
+                    onTap: userId.isEmpty
+                        ? null
+                        : () => _startConversation(
+                            userId,
+                            safeName,
+                            user['avatar'],
+                          ),
                   );
                 },
               ),

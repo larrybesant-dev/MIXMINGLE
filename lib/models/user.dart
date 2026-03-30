@@ -11,11 +11,21 @@ class User {
     required this.coinBalance,
   });
 
+  static String _asString(dynamic value, {String fallback = ''}) {
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return fallback;
+  }
+
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
-      id: json['id'] as String,
-      username: json['username'] as String? ?? '',
-      avatarUrl: json['avatarUrl'] as String? ?? '',
+      id: _asString(json['id']),
+      username: _asString(json['username']),
+      avatarUrl: _asString(json['avatarUrl']),
       coinBalance: ((json['balance'] ?? json['coinBalance']) as num?)?.toInt() ?? 0,
     );
   }

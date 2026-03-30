@@ -1,5 +1,78 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+DateTime _parseDateTime(dynamic value) {
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is String) {
+    return DateTime.tryParse(value) ?? DateTime.now();
+  }
+  return DateTime.now();
+}
+
+String _asString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
+String? _asNullableString(dynamic value) {
+  if (value is String) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+  return null;
+}
+
+bool _asBool(dynamic value, {bool fallback = false}) {
+  if (value is bool) {
+    return value;
+  }
+  if (value is num) {
+    return value != 0;
+  }
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true' || normalized == '1') {
+      return true;
+    }
+    if (normalized == 'false' || normalized == '0') {
+      return false;
+    }
+  }
+  return fallback;
+}
+
+List<String> _asStringList(dynamic value) {
+  if (value is List) {
+    return value
+        .map((item) => item is String ? item.trim() : item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+  }
+  return const <String>[];
+}
+
+Map<String, String> _asStringMap(dynamic value) {
+  if (value is Map) {
+    final parsed = <String, String>{};
+    value.forEach((key, raw) {
+      if (key is String) {
+        parsed[key] = _asString(raw);
+      }
+    });
+    return parsed;
+  }
+  return const <String, String>{};
+}
+
 class Conversation {
   final String id;
   final String type; // 'direct' or 'group'
@@ -34,21 +107,35 @@ class Conversation {
   factory Conversation.fromJson(Map<String, dynamic> json, String docId) {
     return Conversation(
       id: docId,
-      type: json['type'] as String? ?? 'direct',
-      participantIds: List<String>.from((json['participantIds'] as List<dynamic>?) ?? []),
-      participantNames: Map<String, String>.from((json['participantNames'] as Map<String, dynamic>?) ?? {}),
-      groupName: json['groupName'] as String?,
-      groupAvatarUrl: json['groupAvatarUrl'] as String?,
-      lastMessageId: json['lastMessageId'] as String?,
-      lastMessagePreview: json['lastMessagePreview'] as String?,
-      lastMessageSenderId: json['lastMessageSenderId'] as String?,
-      lastMessageAt: (json['lastMessageAt'] as Timestamp?)?.toDate(),
-      createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      lastReadAt: (json['lastReadAt'] as Map<String, dynamic>?)?.cast<String, DateTime>().map(
-        (key, value) => MapEntry(key, (value as Timestamp).toDate()),
-      ) ?? {},
-      isArchived: json['isArchived'] as bool? ?? false,
+      type: _asString(json['type'], fallback: 'direct'),
+      participantIds: _asStringList(json['participantIds']),
+      participantNames: _asStringMap(json['participantNames']),
+      groupName: _asNullableString(json['groupName']),
+      groupAvatarUrl: _asNullableString(json['groupAvatarUrl']),
+      lastMessageId: _asNullableString(json['lastMessageId']),
+      lastMessagePreview: _asNullableString(json['lastMessagePreview']),
+      lastMessageSenderId: _asNullableString(json['lastMessageSenderId']),
+      lastMessageAt: json['lastMessageAt'] == null
+          ? null
+          : _parseDateTime(json['lastMessageAt']),
+      createdAt: _parseDateTime(json['createdAt']),
+      lastReadAt: _parseLastReadAt(json['lastReadAt']),
+      isArchived: _asBool(json['isArchived']),
     );
+  }
+
+  static Map<String, DateTime> _parseLastReadAt(dynamic value) {
+    if (value is! Map) {
+      return const <String, DateTime>{};
+    }
+
+    final parsed = <String, DateTime>{};
+    value.forEach((key, raw) {
+      if (key is String) {
+        parsed[key] = _parseDateTime(raw);
+      }
+    });
+    return parsed;
   }
 
   Map<String, dynamic> toJson() {

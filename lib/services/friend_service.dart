@@ -17,6 +17,34 @@ class FriendService {
   final AnalyticsService _analyticsService;
   final ModerationService _moderationService;
 
+  List<String> _asStringList(dynamic value) {
+    if (value is! List) {
+      return const <String>[];
+    }
+    return value
+        .map((entry) => entry is String ? entry.trim() : '')
+        .where((entry) => entry.isNotEmpty)
+        .toList(growable: false);
+  }
+
+  String _asString(dynamic value, {String fallback = ''}) {
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return fallback;
+  }
+
+  String? _asNullableString(dynamic value) {
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+    return null;
+  }
+
   Future<void> sendFriendRequest(String fromUserId, String toUserId) async {
     if (fromUserId.trim().isEmpty || toUserId.trim().isEmpty || fromUserId == toUserId) {
       return;
@@ -32,7 +60,9 @@ class FriendService {
       return;
     }
 
-    final fromFriends = List<String>.from((fromUserDoc.data() ?? <String, dynamic>{})['friends'] ?? const <String>[]);
+    final fromFriends = _asStringList(
+      (fromUserDoc.data() ?? <String, dynamic>{})['friends'],
+    );
     if (fromFriends.contains(toUserId)) {
       return;
     }
@@ -91,10 +121,10 @@ class FriendService {
     final requestRef = _firestore.collection('friend_requests').doc(requestId);
     final requestSnap = await requestRef.get();
     if (!requestSnap.exists) return;
-    final data = requestSnap.data() as Map<String, dynamic>;
-    final fromUserId = data['fromUserId'] as String?;
-    final toUserId = data['toUserId'] as String?;
-    final status = data['status'] as String? ?? 'pending';
+    final data = requestSnap.data() ?? <String, dynamic>{};
+    final fromUserId = _asNullableString(data['fromUserId']);
+    final toUserId = _asNullableString(data['toUserId']);
+    final status = _asString(data['status'], fallback: 'pending');
     if (fromUserId == null || toUserId == null || status != 'pending') {
       return;
     }
@@ -143,8 +173,8 @@ class FriendService {
       return;
     }
 
-    final data = requestSnap.data() as Map<String, dynamic>;
-    if ((data['status'] as String? ?? 'pending') != 'pending') {
+    final data = requestSnap.data() ?? <String, dynamic>{};
+    if (_asString(data['status'], fallback: 'pending') != 'pending') {
       return;
     }
 
@@ -201,8 +231,8 @@ class FriendService {
   Future<List<String>> getFriendIds(String userId) async {
     final userDoc = await _firestore.collection('users').doc(userId).get();
     if (!userDoc.exists) return const [];
-    final data = userDoc.data() as Map<String, dynamic>;
-    return List<String>.from(data['friends'] ?? const <String>[]);
+    final data = userDoc.data() ?? <String, dynamic>{};
+    return _asStringList(data['friends']);
   }
 
   Future<List<String>> getIncomingRequesterIds(String userId) async {
@@ -213,7 +243,7 @@ class FriendService {
         .get();
 
     return snapshot.docs
-        .map((doc) => doc.data()['fromUserId'] as String? ?? '')
+      .map((doc) => _asString(doc.data()['fromUserId']))
         .where((id) => id.isNotEmpty)
         .toList(growable: false);
   }
@@ -226,7 +256,7 @@ class FriendService {
         .get();
 
     return snapshot.docs
-        .map((doc) => doc.data()['toUserId'] as String? ?? '')
+      .map((doc) => _asString(doc.data()['toUserId']))
         .where((id) => id.isNotEmpty)
         .toList(growable: false);
   }
@@ -293,7 +323,7 @@ class FriendService {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => doc.data()['toUserId'] as String? ?? '')
+              .map((doc) => _asString(doc.data()['toUserId']))
               .where((id) => id.isNotEmpty)
               .toList(growable: false),
         );

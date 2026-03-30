@@ -1,5 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+String _asString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
 class CashOutRequestModel {
   const CashOutRequestModel({
     required this.id,
@@ -19,9 +29,9 @@ class CashOutRequestModel {
     final createdAt = json['createdAt'];
     return CashOutRequestModel(
       id: id,
-      userId: json['userId'] as String? ?? '',
+      userId: _asString(json['userId']),
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
-      status: json['status'] as String? ?? 'pending',
+      status: _asString(json['status'], fallback: 'pending'),
       createdAt: createdAt is Timestamp
           ? createdAt.toDate()
           : DateTime.tryParse(createdAt?.toString() ?? ''),

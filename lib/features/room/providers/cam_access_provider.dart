@@ -10,6 +10,14 @@ class CamAccessController {
 
   final FirebaseFirestore _db;
 
+  String? _asNullableString(dynamic value) {
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+    return null;
+  }
+
   CollectionReference<Map<String, dynamic>> _requestCollection(String roomId) {
     return _db.collection('rooms').doc(roomId).collection('cam_access_requests');
   }
@@ -72,7 +80,7 @@ class CamAccessController {
 
   Future<void> denyRequest(String roomId, String requestId) async {
     final requestSnapshot = await _requestCollection(roomId).doc(requestId).get();
-    final requesterId = (requestSnapshot.data()?['requesterId'] as String?)?.trim();
+    final requesterId = _asNullableString(requestSnapshot.data()?['requesterId']);
     await _requestCollection(roomId).doc(requestId).update({
       'status': 'denied',
       'updatedAt': FieldValue.serverTimestamp(),

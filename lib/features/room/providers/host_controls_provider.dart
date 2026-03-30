@@ -9,6 +9,35 @@ class HostControls {
 
   final FirebaseFirestore _db;
 
+  bool _asBool(dynamic value, {required bool fallback}) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
+        return true;
+      }
+      if (normalized == 'false' || normalized == '0' || normalized == 'no') {
+        return false;
+      }
+    }
+    return fallback;
+  }
+
+  String _asString(dynamic value, {String fallback = ''}) {
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return fallback;
+  }
+
   DocumentReference<Map<String, dynamic>> _roomRef(String roomId) {
     return _db.collection('rooms').doc(roomId);
   }
@@ -24,21 +53,24 @@ class HostControls {
   Future<void> toggleLockRoom(String roomId) async {
     final roomRef = _roomRef(roomId);
     final snapshot = await roomRef.get();
-    final currentValue = (snapshot.data()?['isLocked'] ?? false) as bool;
+    final currentValue = _asBool(snapshot.data()?['isLocked'], fallback: false);
     await roomRef.update({'isLocked': !currentValue});
   }
 
   Future<void> toggleAllowChat(String roomId) async {
     final policyRef = _policyRef(roomId);
     final snapshot = await policyRef.get();
-    final currentValue = (snapshot.data()?['allowChat'] ?? true) as bool;
+    final currentValue = _asBool(snapshot.data()?['allowChat'], fallback: true);
     await policyRef.set({'allowChat': !currentValue}, SetOptions(merge: true));
   }
 
   Future<void> toggleAllowCamRequests(String roomId) async {
     final policyRef = _policyRef(roomId);
     final snapshot = await policyRef.get();
-    final currentValue = (snapshot.data()?['allowCamRequests'] ?? true) as bool;
+    final currentValue = _asBool(
+      snapshot.data()?['allowCamRequests'],
+      fallback: true,
+    );
     await policyRef.set({
       'allowCamRequests': !currentValue,
     }, SetOptions(merge: true));
@@ -47,7 +79,10 @@ class HostControls {
   Future<void> toggleAllowMicRequests(String roomId) async {
     final policyRef = _policyRef(roomId);
     final snapshot = await policyRef.get();
-    final currentValue = (snapshot.data()?['allowMicRequests'] ?? true) as bool;
+    final currentValue = _asBool(
+      snapshot.data()?['allowMicRequests'],
+      fallback: true,
+    );
     await policyRef.set({
       'allowMicRequests': !currentValue,
     }, SetOptions(merge: true));
@@ -56,7 +91,7 @@ class HostControls {
   Future<void> toggleAllowGifts(String roomId) async {
     final policyRef = _policyRef(roomId);
     final snapshot = await policyRef.get();
-    final currentValue = (snapshot.data()?['allowGifts'] ?? true) as bool;
+    final currentValue = _asBool(snapshot.data()?['allowGifts'], fallback: true);
     await policyRef.set({'allowGifts': !currentValue}, SetOptions(merge: true));
   }
 
@@ -108,13 +143,16 @@ class HostControls {
     if (!roomSnapshot.exists) {
       throw StateError('Room not found.');
     }
-    final currentHostId = (roomSnapshot.data()?['hostId'] as String? ?? '').trim();
+    final currentHostId = _asString(roomSnapshot.data()?['hostId']);
     if (currentHostId != fromUserId) {
       throw StateError('Only the current room host can transfer ownership.');
     }
 
     final targetParticipantSnapshot = await _participantRef(roomId, toUserId).get();
-    final targetIsBanned = (targetParticipantSnapshot.data()?['isBanned'] ?? false) as bool;
+    final targetIsBanned = _asBool(
+      targetParticipantSnapshot.data()?['isBanned'],
+      fallback: false,
+    );
     if (targetIsBanned) {
       throw StateError('Cannot transfer host ownership to a banned participant.');
     }

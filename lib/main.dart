@@ -9,6 +9,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 import 'package:mixvy/firebase_options.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:mixvy/dev/firebase_emulator_bootstrap.dart';
@@ -20,6 +21,11 @@ void main() async {
       WidgetsFlutterBinding.ensureInitialized();
 
       const isTest = bool.fromEnvironment('FLUTTER_TEST', defaultValue: false);
+
+      if (kIsWeb) {
+        // Use path-based URLs so direct navigation, refresh, and browser history work naturally.
+        usePathUrlStrategy();
+      }
 
       if (!isTest) {
         try {

@@ -13,21 +13,27 @@
       margin: 0;
       padding: 0;
       font-family: Roboto, sans-serif;
-      overflow: hidden;
+      background: #ffffff;
     }
   </style>
 </head>
 <body>
   <script>
-    // Force-refresh strategy: clear any stale service workers from previous deployments.
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then((registrations) => {
-        for (const registration of registrations) {
-          registration.unregister();
-        }
-      });
-    }
+    (function () {
+      var baseTag = document.querySelector('base');
+      var baseHref = baseTag ? baseTag.getAttribute('href') : '/';
+      if (!baseHref || baseHref.indexOf('$FLUTTER_BASE_HREF') !== -1) {
+        baseHref = '/';
+      }
+      if (!baseHref.endsWith('/')) {
+        baseHref += '/';
+      }
+
+      var script = document.createElement('script');
+      script.src = baseHref + 'flutter_bootstrap.js';
+      script.async = true;
+      document.body.appendChild(script);
+    })();
   </script>
-  <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

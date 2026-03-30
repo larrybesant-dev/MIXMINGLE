@@ -2,6 +2,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'room_firestore_provider.dart';
 
+String? _asNullableString(dynamic value) {
+  if (value is String) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+  return null;
+}
+
 class Host {
   final String userId;
 
@@ -12,7 +20,7 @@ final hostProvider = StreamProvider.autoDispose.family<Host?, String>((ref, room
   final firestore = ref.watch(roomFirestoreProvider);
   return firestore.collection('rooms').doc(roomId).snapshots().map((doc) {
     final data = doc.data();
-    final hostId = data?['hostId'] as String?;
+    final hostId = _asNullableString(data?['hostId']);
     if (hostId == null || hostId.isEmpty) {
       return null;
     }

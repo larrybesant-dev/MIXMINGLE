@@ -13,10 +13,37 @@ class PresenceModel {
 		this.lastSeen,
 	});
 
+	static String? _asNullableString(dynamic value) {
+		if (value is String) {
+			final trimmed = value.trim();
+			return trimmed.isEmpty ? null : trimmed;
+		}
+		return null;
+	}
+
+	static bool _asBool(dynamic value, {bool fallback = true}) {
+		if (value is bool) {
+			return value;
+		}
+		if (value is num) {
+			return value != 0;
+		}
+		if (value is String) {
+			final normalized = value.trim().toLowerCase();
+			if (normalized == 'true' || normalized == '1') {
+				return true;
+			}
+			if (normalized == 'false' || normalized == '0') {
+				return false;
+			}
+		}
+		return fallback;
+	}
+
 	factory PresenceModel.fromJson(Map<String, dynamic> json) => PresenceModel(
-				id: json['id'],
-				userId: json['userId'],
-				isOnline: json['isOnline'] as bool? ?? true,
+				id: _asNullableString(json['id']),
+				userId: _asNullableString(json['userId']),
+				isOnline: _asBool(json['isOnline']),
 				lastSeen: _parseDateTime(json['lastSeen'] ?? json['lastActiveAt']),
 			);
 

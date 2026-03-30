@@ -5,6 +5,16 @@ final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
 
+String _asString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
 // Stream of all bookmarked posts for current user
 final bookmarkedPostsProvider =
     StreamProvider.family<List<Map<String, dynamic>>, String>((ref, userId) {
@@ -18,7 +28,10 @@ final bookmarkedPostsProvider =
       .asyncMap((snapshot) async {
     final bookmarks = <Map<String, dynamic>>[];
     for (final doc in snapshot.docs) {
-      final postId = doc['postId'] as String;
+      final postId = _asString(doc.data()['postId']);
+      if (postId.isEmpty) {
+        continue;
+      }
       try {
         final postDoc = await firestore.collection('posts').doc(postId).get();
         if (postDoc.exists) {

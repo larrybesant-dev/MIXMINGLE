@@ -4,6 +4,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
+
+DateTime _parseCreatedAt(dynamic value) {
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is String) {
+    return DateTime.tryParse(value) ?? DateTime.fromMillisecondsSinceEpoch(0);
+  }
+  return DateTime.fromMillisecondsSinceEpoch(0);
+}
+
 final followingFeedProvider =
     StreamProvider.family<List<Map<String, dynamic>>, String>((ref, userId) {
   final firestore = ref.watch(firestoreProvider);
@@ -51,8 +65,8 @@ final followingFeedProvider =
     }
 
     allPosts.sort((a, b) {
-      final aTime = (a['createdAt'] as Timestamp).toDate();
-      final bTime = (b['createdAt'] as Timestamp).toDate();
+      final aTime = _parseCreatedAt(a['createdAt']);
+      final bTime = _parseCreatedAt(b['createdAt']);
       return bTime.compareTo(aTime);
     });
 

@@ -20,12 +20,31 @@ class ProfilePrivacyModel {
     };
   }
 
+  static bool _asBool(dynamic value, {bool fallback = false}) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1') {
+        return true;
+      }
+      if (normalized == 'false' || normalized == '0') {
+        return false;
+      }
+    }
+    return fallback;
+  }
+
   factory ProfilePrivacyModel.fromJson(Map<String, dynamic>? json) {
     return ProfilePrivacyModel(
-      showAge: json?['showAge'] as bool? ?? false,
-      showGender: json?['showGender'] as bool? ?? false,
-      showLocation: json?['showLocation'] as bool? ?? false,
-      showRelationshipStatus: json?['showRelationshipStatus'] as bool? ?? false,
+      showAge: _asBool(json?['showAge']),
+      showGender: _asBool(json?['showGender']),
+      showLocation: _asBool(json?['showLocation']),
+      showRelationshipStatus: _asBool(json?['showRelationshipStatus']),
     );
   }
 

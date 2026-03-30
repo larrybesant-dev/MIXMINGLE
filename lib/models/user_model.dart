@@ -49,29 +49,73 @@ class UserModel {
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
-        id: json['id'] ?? json['uid'] ?? '',
-        email: json['email'] ?? '',
-        username: json['username'] ?? json['displayName'] ?? '',
-        avatarUrl: json['avatarUrl'],
-        coverPhotoUrl: json['coverPhotoUrl'],
-        bio: json['bio'],
-        aboutMe: json['aboutMe'],
+        id: _stringOrEmpty(json['id'] ?? json['uid']),
+        email: _stringOrEmpty(json['email']),
+        username: _stringOrEmpty(json['username'] ?? json['displayName']),
+        avatarUrl: _stringOrNull(json['avatarUrl']),
+        coverPhotoUrl: _stringOrNull(json['coverPhotoUrl']),
+        bio: _stringOrNull(json['bio']),
+        aboutMe: _stringOrNull(json['aboutMe']),
         age: (json['age'] as num?)?.toInt(),
-        gender: json['gender'],
-        location: json['location'],
-        relationshipStatus: json['relationshipStatus'],
-        interests: List<String>.from(json['interests'] ?? []),
+        gender: _stringOrNull(json['gender']),
+        location: _stringOrNull(json['location']),
+        relationshipStatus: _stringOrNull(json['relationshipStatus']),
+        interests: _stringList(json['interests']),
         createdAt: (json['createdAt'] is Timestamp)
             ? (json['createdAt'] as Timestamp).toDate()
-            : DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+            : DateTime.tryParse(json['createdAt']?.toString() ?? '') ?? DateTime.now(),
         coinBalance: ((json['balance'] ?? json['coinBalance']) as num?)?.toInt() ?? 0,
-        membershipLevel: json['membershipLevel'] ?? 'basic',
-        followers: List<String>.from(json['followers'] ?? []),
-        camViewPolicy: json['camViewPolicy'] ?? 'approvedOnly',
-        adultModeEnabled: json['adultModeEnabled'] as bool? ?? false,
-        adultConsentAccepted: json['adultConsentAccepted'] as bool? ?? false,
-        themeId: json['themeId'] ?? 'midnight',
+        membershipLevel: _stringOrEmpty(json['membershipLevel'], fallback: 'basic'),
+        followers: _stringList(json['followers']),
+        camViewPolicy: _stringOrEmpty(json['camViewPolicy'], fallback: 'approvedOnly'),
+        adultModeEnabled: _boolOr(json['adultModeEnabled'], fallback: false),
+        adultConsentAccepted: _boolOr(json['adultConsentAccepted'], fallback: false),
+        themeId: _stringOrEmpty(json['themeId'], fallback: 'midnight'),
       );
+
+  static bool _boolOr(dynamic value, {required bool fallback}) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
+        return true;
+      }
+      if (normalized == 'false' || normalized == '0' || normalized == 'no') {
+        return false;
+      }
+    }
+    return fallback;
+  }
+
+  static String? _stringOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+    return value.toString().trim().isEmpty ? null : value.toString().trim();
+  }
+
+  static String _stringOrEmpty(dynamic value, {String fallback = ''}) {
+    final parsed = _stringOrNull(value);
+    return parsed ?? fallback;
+  }
+
+  static List<String> _stringList(dynamic value) {
+    if (value is! List) {
+      return const <String>[];
+    }
+    return value
+        .map((item) => _stringOrNull(item))
+        .whereType<String>()
+        .toSet()
+        .toList(growable: false);
+  }
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -97,5 +141,5 @@ class UserModel {
       };
 
   factory UserModel.fromFirestore(DocumentSnapshot doc) =>
-      UserModel.fromJson(doc.data() as Map<String, dynamic>);
+      UserModel.fromJson((doc.data() as Map<String, dynamic>?) ?? const <String, dynamic>{});
 }

@@ -5,6 +5,43 @@ final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
 
+String _asString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
+String? _asNullableString(dynamic value) {
+  if (value is String) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+  return null;
+}
+
+bool _asBool(dynamic value, {bool fallback = false}) {
+  if (value is bool) {
+    return value;
+  }
+  if (value is num) {
+    return value != 0;
+  }
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true' || normalized == '1') {
+      return true;
+    }
+    if (normalized == 'false' || normalized == '0') {
+      return false;
+    }
+  }
+  return fallback;
+}
+
 class UserFollow {
   final String userId;
   final String username;
@@ -21,9 +58,9 @@ class UserFollow {
   factory UserFollow.fromJson(Map<String, dynamic> json, String docId) {
     return UserFollow(
       userId: docId,
-      username: json['username'] as String? ?? '',
-      avatarUrl: json['avatarUrl'] as String?,
-      isVerified: json['isVerified'] as bool? ?? false,
+      username: _asString(json['username']),
+      avatarUrl: _asNullableString(json['avatarUrl']),
+      isVerified: _asBool(json['isVerified']),
     );
   }
 }

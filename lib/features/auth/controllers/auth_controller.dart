@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -72,9 +73,10 @@ class AuthController extends Notifier<AuthState> {
   AuthState build() {
     _authStateSubscription?.cancel();
     _authStateSubscription = _auth.authStateChanges().listen((user) {
-      state = state.copyWith(uid: user?.uid);
+      state = state.copyWith(uid: user?.uid, isLoading: false, error: null);
     });
 
+    unawaited(_configureWebPersistence());
     unawaited(_repairInvalidCachedSession());
     unawaited(_completeRedirectSignInIfNeeded());
 
@@ -82,7 +84,26 @@ class AuthController extends Notifier<AuthState> {
       _authStateSubscription?.cancel();
     });
 
-    return AuthState(uid: _auth.currentUser?.uid);
+    return AuthState(isLoading: true, uid: _auth.currentUser?.uid);
+  }
+
+  Future<void> _configureWebPersistence() async {
+    if (!kIsWeb) {
+      return;
+    }
+
+    try {
+      await _auth.setPersistence(Persistence.LOCAL);
+    } on FirebaseAuthException catch (e, st) {
+      _logAuthException(e, st, context: 'set-persistence');
+    } catch (e, st) {
+      developer.log(
+        'Failed to configure web auth persistence',
+        name: 'AuthController',
+        error: e,
+        stackTrace: st,
+      );
+    }
   }
 
   Future<void> _repairInvalidCachedSession() async {
@@ -132,11 +153,14 @@ class AuthController extends Notifier<AuthState> {
       final uid = _auth.currentUser?.uid;
       if (uid != null) {
         await _ensureUserDocument(_auth.currentUser!);
-        state = state.copyWith(uid: uid, error: null);
+        state = state.copyWith(uid: uid, isLoading: false, error: null);
       }
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'redirect-result');
-      state = state.copyWith(error: _getReadableError(e.code));
+      state = state.copyWith(
+        isLoading: false,
+        error: _getReadableError(e.code),
+      );
     } catch (_) {
       // Ignore non-auth redirect completion errors to avoid noisy startup failures.
     }
@@ -235,7 +259,7 @@ class AuthController extends Notifier<AuthState> {
   Future<void> logout() async {
     await PushMessagingService.instance.unregisterCurrentToken();
     await _auth.signOut();
-    state = state.copyWith(uid: null);
+    state = state.copyWith(isLoading: false, uid: null, error: null);
   }
 
   Future<void> _ensureUserDocument(User user) async {

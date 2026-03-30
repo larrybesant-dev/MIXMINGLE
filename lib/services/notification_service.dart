@@ -9,6 +9,16 @@ class NotificationService {
 
 	final FirebaseFirestore _firestore;
 
+	String _asString(dynamic value, {String fallback = ''}) {
+		if (value is String) {
+			final trimmed = value.trim();
+			if (trimmed.isNotEmpty) {
+				return trimmed;
+			}
+		}
+		return fallback;
+	}
+
 	String _safeActorId(String fallbackUserId) {
 		try {
 			final authUid = FirebaseAuth.instance.currentUser?.uid;
@@ -68,8 +78,8 @@ class NotificationService {
 			return;
 		}
 
-		final data = snap.data() as Map<String, dynamic>;
-		if ((data['userId'] as String?) != userId) {
+		final data = snap.data() ?? <String, dynamic>{};
+		if (_asString(data['userId']) != userId.trim()) {
 			return;
 		}
 

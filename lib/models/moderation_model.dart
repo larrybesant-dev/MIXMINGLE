@@ -12,6 +12,31 @@ enum ModerationStatus {
   dismissed,
 }
 
+String _asString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
+String? _asNullableString(dynamic value) {
+  if (value is String) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+  return null;
+}
+
+DateTime? _parseNullableDate(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  return DateTime.tryParse(value.toString());
+}
+
 class BlockRecordModel {
   const BlockRecordModel({
     required this.id,
@@ -37,10 +62,10 @@ class BlockRecordModel {
 
   factory BlockRecordModel.fromJson(Map<String, dynamic> json) {
     return BlockRecordModel(
-      id: json['id'] as String? ?? '',
-      blockerUserId: json['blockerUserId'] as String? ?? '',
-      blockedUserId: json['blockedUserId'] as String? ?? '',
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+      id: _asString(json['id']),
+      blockerUserId: _asString(json['blockerUserId']),
+      blockedUserId: _asString(json['blockedUserId']),
+      createdAt: _parseNullableDate(json['createdAt']),
     );
   }
 }
@@ -80,21 +105,23 @@ class ReportRecordModel {
   }
 
   factory ReportRecordModel.fromJson(Map<String, dynamic> json) {
+    final targetTypeName = _asString(json['targetType']);
+    final statusName = _asString(json['status']);
     return ReportRecordModel(
-      id: json['id'] as String? ?? '',
-      reporterUserId: json['reporterUserId'] as String? ?? '',
-      targetId: json['targetId'] as String? ?? '',
+      id: _asString(json['id']),
+      reporterUserId: _asString(json['reporterUserId']),
+      targetId: _asString(json['targetId']),
       targetType: ReportTargetType.values.firstWhere(
-        (value) => value.name == json['targetType'],
+        (value) => value.name == targetTypeName,
         orElse: () => ReportTargetType.user,
       ),
-      reason: json['reason'] as String? ?? '',
-      details: json['details'] as String?,
+      reason: _asString(json['reason']),
+      details: _asNullableString(json['details']),
       status: ModerationStatus.values.firstWhere(
-        (value) => value.name == json['status'],
+        (value) => value.name == statusName,
         orElse: () => ModerationStatus.open,
       ),
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+      createdAt: _parseNullableDate(json['createdAt']),
     );
   }
 }

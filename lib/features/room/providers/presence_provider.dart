@@ -27,9 +27,25 @@ class RoomPresenceModel {
       return null;
     }
 
+    bool toBool(dynamic value) {
+      if (value is bool) {
+        return value;
+      }
+      if (value is num) {
+        return value != 0;
+      }
+      if (value is String) {
+        final normalized = value.trim().toLowerCase();
+        if (normalized == 'true' || normalized == '1') {
+          return true;
+        }
+      }
+      return false;
+    }
+
     return RoomPresenceModel(
       userId: userId,
-      isOnline: (data['isOnline'] ?? false) as bool,
+      isOnline: toBool(data['isOnline']),
       lastHeartbeatAt: toDate(data['lastHeartbeatAt']),
       lastSeenAt: toDate(data['lastSeenAt']),
     );

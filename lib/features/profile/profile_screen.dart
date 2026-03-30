@@ -630,7 +630,7 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
   }
 
   Future<void> _saveProfile() async {
-    if (!_formKey.currentState!.validate()) {
+    if (_formKey.currentState?.validate() != true) {
       return;
     }
     if (_adultModeEnabled && !_adultConsentAccepted) {

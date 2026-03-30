@@ -2,6 +2,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/message_model.dart';
 
+DateTime _parseDateTime(dynamic value) {
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is String) {
+    return DateTime.tryParse(value) ?? DateTime.now();
+  }
+  return DateTime.now();
+}
+
 class ChatService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -25,7 +38,7 @@ class ChatService {
         .map((doc) => MessageModel.fromJson({
               ...doc.data(),
               'id': doc.id,
-              'sentAt': (doc.data()['sentAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+            'sentAt': _parseDateTime(doc.data()['sentAt']),
             }))
         .toList();
   }
@@ -41,7 +54,7 @@ class ChatService {
             .map((doc) => MessageModel.fromJson({
                   ...doc.data(),
                   'id': doc.id,
-                  'sentAt': (doc.data()['sentAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+                  'sentAt': _parseDateTime(doc.data()['sentAt']),
                 }))
             .toList());
   }

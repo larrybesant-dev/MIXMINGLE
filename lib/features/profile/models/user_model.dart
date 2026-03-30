@@ -80,8 +80,8 @@ class UserModel {
         membershipLevel: _stringOrEmpty(json['membershipLevel'], fallback: 'basic'),
         followers: _stringList(json['followers']),
         camViewPolicy: _stringOrEmpty(json['camViewPolicy'], fallback: 'approvedOnly'),
-        adultModeEnabled: json['adultModeEnabled'] as bool? ?? false,
-        adultConsentAccepted: json['adultConsentAccepted'] as bool? ?? false,
+        adultModeEnabled: _boolOr(json['adultModeEnabled'], fallback: false),
+        adultConsentAccepted: _boolOr(json['adultConsentAccepted'], fallback: false),
         themeId: _stringOrEmpty(json['themeId'], fallback: 'midnight'),
       );
 
@@ -108,6 +108,25 @@ class UserModel {
         .whereType<String>()
         .toSet()
         .toList(growable: false);
+  }
+
+  static bool _boolOr(dynamic value, {required bool fallback}) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
+        return true;
+      }
+      if (normalized == 'false' || normalized == '0' || normalized == 'no') {
+        return false;
+      }
+    }
+    return fallback;
   }
 
   Map<String, dynamic> toJson() => {

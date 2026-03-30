@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+
 class EventModel {
   final String id;
   final String title;
@@ -19,8 +20,21 @@ class EventModel {
       id: id,
       title: data['title'] ?? '',
       hostId: data['hostId'] ?? '',
-      date: (data['date'] as Timestamp).toDate(),
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      date: _parseDateTime(data['date']),
+      createdAt: _parseDateTime(data['createdAt']),
     );
+  }
+
+  static DateTime _parseDateTime(dynamic value) {
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is String) {
+      return DateTime.tryParse(value) ?? DateTime.now();
+    }
+    return DateTime.now();
   }
 }

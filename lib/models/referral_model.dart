@@ -1,3 +1,39 @@
+String _asString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
+bool _asBool(dynamic value, {bool fallback = false}) {
+  if (value is bool) {
+    return value;
+  }
+  if (value is num) {
+    return value != 0;
+  }
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true' || normalized == '1') {
+      return true;
+    }
+    if (normalized == 'false' || normalized == '0') {
+      return false;
+    }
+  }
+  return fallback;
+}
+
+DateTime? _parseNullableDate(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  return DateTime.tryParse(value.toString());
+}
+
 class ReferralCodeModel {
   const ReferralCodeModel({
     required this.code,
@@ -22,10 +58,10 @@ class ReferralCodeModel {
 
   factory ReferralCodeModel.fromJson(Map<String, dynamic> json) {
     return ReferralCodeModel(
-      code: json['code'] as String? ?? '',
-      ownerUserId: json['ownerUserId'] as String? ?? '',
-      isActive: json['isActive'] as bool? ?? true,
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+      code: _asString(json['code']),
+      ownerUserId: _asString(json['ownerUserId']),
+      isActive: _asBool(json['isActive'], fallback: true),
+      createdAt: _parseNullableDate(json['createdAt']),
     );
   }
 }
@@ -67,14 +103,14 @@ class ReferralAttributionModel {
 
   factory ReferralAttributionModel.fromJson(Map<String, dynamic> json) {
     return ReferralAttributionModel(
-      id: json['id'] as String? ?? '',
-      referrerUserId: json['referrerUserId'] as String? ?? '',
-      referredUserId: json['referredUserId'] as String? ?? '',
-      referralCode: json['referralCode'] as String? ?? '',
-      subscriptionStatus: json['subscriptionStatus'] as String? ?? 'pending',
-      rewardStatus: json['rewardStatus'] as String? ?? 'pending',
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
-      conversionAt: DateTime.tryParse(json['conversionAt'] as String? ?? ''),
+      id: _asString(json['id']),
+      referrerUserId: _asString(json['referrerUserId']),
+      referredUserId: _asString(json['referredUserId']),
+      referralCode: _asString(json['referralCode']),
+      subscriptionStatus: _asString(json['subscriptionStatus'], fallback: 'pending'),
+      rewardStatus: _asString(json['rewardStatus'], fallback: 'pending'),
+      createdAt: _parseNullableDate(json['createdAt']),
+      conversionAt: _parseNullableDate(json['conversionAt']),
     );
   }
 }
@@ -115,14 +151,14 @@ class ReferralEarningModel {
 
   factory ReferralEarningModel.fromJson(Map<String, dynamic> json) {
     return ReferralEarningModel(
-      id: json['id'] as String? ?? '',
-      referralId: json['referralId'] as String? ?? '',
-      beneficiaryUserId: json['beneficiaryUserId'] as String? ?? '',
-      sourceUserId: json['sourceUserId'] as String? ?? '',
+      id: _asString(json['id']),
+      referralId: _asString(json['referralId']),
+      beneficiaryUserId: _asString(json['beneficiaryUserId']),
+      sourceUserId: _asString(json['sourceUserId']),
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
-      currency: json['currency'] as String? ?? 'usd',
-      status: json['status'] as String? ?? 'pending',
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+      currency: _asString(json['currency'], fallback: 'usd'),
+      status: _asString(json['status'], fallback: 'pending'),
+      createdAt: _parseNullableDate(json['createdAt']),
     );
   }
 }

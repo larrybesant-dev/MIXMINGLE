@@ -3,6 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:mixvy/router/app_router.dart';
 
 class BetaFeedbackOverlay extends StatelessWidget {
   const BetaFeedbackOverlay({super.key, required this.child});
@@ -22,8 +23,14 @@ class BetaFeedbackOverlay extends StatelessWidget {
             icon: const Icon(Icons.bug_report_outlined),
             label: const Text('Report Issue'),
             onPressed: () {
+              final navigatorContext = rootNavigatorKey.currentContext;
+              if (navigatorContext == null) {
+                return;
+              }
+
               showModalBottomSheet<void>(
-                context: context,
+                context: navigatorContext,
+                useRootNavigator: true,
                 isScrollControlled: true,
                 showDragHandle: true,
                 builder: (_) => const _BetaFeedbackSheet(),

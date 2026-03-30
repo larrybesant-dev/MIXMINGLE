@@ -1,5 +1,6 @@
 import 'dart:developer' as developer;
 
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
@@ -103,6 +104,14 @@ typedef FirstRunCheck = Future<bool> Function();
 typedef ProfileCompleteCheck = Future<bool> Function(String uid);
 typedef LegalAcceptedCheck = Future<bool> Function();
 
+String? _pathParamOrNull(GoRouterState state, String key) {
+  final value = state.pathParameters[key];
+  if (value == null || value.trim().isEmpty) {
+    return null;
+  }
+  return value;
+}
+
 final firstRunCheckProvider = Provider<FirstRunCheck>((ref) {
   final gateCache = ref.read(_routerGateCacheProvider);
   return () => gateCache.isFirstRun();
@@ -124,7 +133,12 @@ Future<String?> evaluateAppRedirect({
   required FirstRunCheck isFirstRun,
   required ProfileCompleteCheck isProfileComplete,
   required LegalAcceptedCheck isLegalAccepted,
+  bool isRouteError = false,
 }) async {
+  if (isRouteError || matchedLocation == '/404') {
+    return null;
+  }
+
   final loggedIn = uid != null;
   final isLoggingIn =
       matchedLocation == '/login' || matchedLocation == '/register';
@@ -158,6 +172,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   final legalAcceptedCheck = ref.read(legalAcceptedCheckProvider);
 
   return GoRouter(
+    navigatorKey: rootNavigatorKey,
     initialLocation: '/',
     errorBuilder: (context, state) =>
         NotFoundScreen(path: state.uri.toString()),
@@ -169,6 +184,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           isFirstRun: firstRunCheck,
           isProfileComplete: profileCompleteCheck,
           isLegalAccepted: legalAcceptedCheck,
+          isRouteError: state.error != null,
         );
       } catch (error, stackTrace) {
         developer.log(
@@ -201,8 +217,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/profile/:userId',
-        builder: (context, state) =>
-            UserProfileScreen(userId: state.pathParameters['userId']!),
+        builder: (context, state) {
+          final userId = _pathParamOrNull(state, 'userId');
+          if (userId == null) {
+            return NotFoundScreen(path: state.uri.toString());
+          }
+          return UserProfileScreen(userId: userId);
+        },
       ),
       GoRoute(
         path: '/payments',
@@ -218,8 +239,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/room/:roomId',
-        builder: (context, state) =>
-            LiveRoomScreen(roomId: state.pathParameters['roomId']!),
+        builder: (context, state) {
+          final roomId = _pathParamOrNull(state, 'roomId');
+          if (roomId == null) {
+            return NotFoundScreen(path: state.uri.toString());
+          }
+          return LiveRoomScreen(roomId: roomId);
+        },
       ),
       GoRoute(
         path: '/notifications',
@@ -244,6 +270,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/about',
         builder: (context, state) => const AppInfoScreen(),
+      ),
+      GoRoute(
+        path: '/404',
+        builder: (context, state) =>
+            NotFoundScreen(path: state.uri.toString()),
       ),
       GoRoute(
         path: '/moderation',
@@ -274,9 +305,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/messages/:conversationId',
         builder: (context, state) {
+          final conversationId = _pathParamOrNull(state, 'conversationId');
+          if (conversationId == null) {
+            return NotFoundScreen(path: state.uri.toString());
+          }
           final user = ref.read(userProvider);
           return ChatScreen(
-            conversationId: state.pathParameters['conversationId']!,
+            conversationId: conversationId,
             userId: user?.id ?? 'unknown',
             username: user?.username ?? 'User',
             avatarUrl: user?.avatarUrl,
@@ -300,13 +335,21 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/followers/:userId',
         builder: (context, state) {
-          return FollowersScreen(userId: state.pathParameters['userId']!);
+          final userId = _pathParamOrNull(state, 'userId');
+          if (userId == null) {
+            return NotFoundScreen(path: state.uri.toString());
+          }
+          return FollowersScreen(userId: userId);
         },
       ),
       GoRoute(
         path: '/following/:userId',
         builder: (context, state) {
-          return FollowingScreen(userId: state.pathParameters['userId']!);
+          final userId = _pathParamOrNull(state, 'userId');
+          if (userId == null) {
+            return NotFoundScreen(path: state.uri.toString());
+          }
+          return FollowingScreen(userId: userId);
         },
       ),
       // Post creation route
@@ -351,9 +394,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/group/:groupId',
         builder: (context, state) {
+          final groupId = _pathParamOrNull(state, 'groupId');
+          if (groupId == null) {
+            return NotFoundScreen(path: state.uri.toString());
+          }
           final user = ref.read(userProvider);
           return GroupDetailsScreen(
-            groupId: state.pathParameters['groupId']!,
+            groupId: groupId,
             userId: user?.id ?? 'unknown',
           );
         },
@@ -366,4 +413,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     ],
   );
 });
+
+final GlobalKey<NavigatorState> rootNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'mixvy-root-navigator');
 

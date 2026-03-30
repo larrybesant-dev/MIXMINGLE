@@ -6,6 +6,35 @@ import '../../../models/message_model.dart';
 import '../../../services/moderation_service.dart';
 import 'room_firestore_provider.dart';
 
+bool _asBool(dynamic value, {required bool fallback}) {
+	if (value is bool) {
+		return value;
+	}
+	if (value is num) {
+		return value != 0;
+	}
+	if (value is String) {
+		final normalized = value.trim().toLowerCase();
+		if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
+			return true;
+		}
+		if (normalized == 'false' || normalized == '0' || normalized == 'no') {
+			return false;
+		}
+	}
+	return fallback;
+}
+
+String _asString(dynamic value, {String fallback = ''}) {
+	if (value is String) {
+		final trimmed = value.trim();
+		if (trimmed.isNotEmpty) {
+			return trimmed;
+		}
+	}
+	return fallback;
+}
+
 final messageStreamProvider = StreamProvider.autoDispose.family<List<MessageModel>, String>((ref, roomId) {
 	final firestore = ref.watch(roomFirestoreProvider);
 	return firestore
@@ -46,9 +75,9 @@ final messageStreamProvider = StreamProvider.autoDispose.family<List<MessageMode
 						final sentAt = data['sentAt'] ?? data['clientSentAt'];
 						return MessageModel(
 							id: doc.id,
-							senderId: data['senderId'] as String? ?? '',
-							roomId: data['roomId'] as String? ?? roomId,
-							content: data['content'] as String? ?? '',
+							senderId: _asString(data['senderId']),
+							roomId: _asString(data['roomId'], fallback: roomId),
+							content: _asString(data['content']),
 							sentAt: sentAt is Timestamp
 									? sentAt.toDate()
 									: DateTime.tryParse(sentAt?.toString() ?? '') ?? DateTime.now(),
@@ -81,7 +110,7 @@ final sendMessageProvider =
 				.collection('policies')
 				.doc('settings')
 				.get();
-		final allowChat = (policySnapshot.data()?['allowChat'] as bool?) ?? true;
+		final allowChat = _asBool(policySnapshot.data()?['allowChat'], fallback: true);
 		if (!allowChat) {
 			throw StateError('Chat is currently disabled in this room.');
 		}
@@ -94,7 +123,7 @@ final sendMessageProvider =
 					.get();
 			final hasBlockedParticipant = participantsSnapshot.docs.any((doc) {
 				final participantData = doc.data();
-				final participantId = (participantData['userId'] as String? ?? doc.id).trim();
+				final participantId = _asString(participantData['userId'], fallback: doc.id);
 				if (participantId.isEmpty || participantId == user.id) {
 					return false;
 				}
@@ -106,7 +135,7 @@ final sendMessageProvider =
 		}
 
 		final roomSnapshot = await firestore.collection('rooms').doc(roomId).get();
-		final hostId = (roomSnapshot.data()?['hostId'] as String? ?? '').trim();
+		final hostId = _asString(roomSnapshot.data()?['hostId']);
 		if (hostId.isNotEmpty) {
 			final hasBlockingRelationship = await moderationService.hasBlockingRelationship(user.id, hostId);
 			if (hasBlockingRelationship) {

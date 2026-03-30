@@ -10,6 +10,52 @@ enum AdultProfileVisibility {
   privateOnly,
 }
 
+String _asString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
+bool _asBool(dynamic value, {bool fallback = false}) {
+  if (value is bool) {
+    return value;
+  }
+  if (value is num) {
+    return value != 0;
+  }
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true' || normalized == '1') {
+      return true;
+    }
+    if (normalized == 'false' || normalized == '0') {
+      return false;
+    }
+  }
+  return fallback;
+}
+
+DateTime? _parseNullableDateTime(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  return DateTime.tryParse(value.toString());
+}
+
+List<String> _asStringList(dynamic value) {
+  if (value is List) {
+    return value
+        .map((item) => item is String ? item.trim() : item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+  }
+  return const <String>[];
+}
+
 class AdultProfileModel {
   const AdultProfileModel({
     required this.userId,
@@ -48,18 +94,19 @@ class AdultProfileModel {
   }
 
   factory AdultProfileModel.fromJson(Map<String, dynamic> json) {
+    final visibilityRaw = _asString(json['visibility']);
     return AdultProfileModel(
-      userId: json['userId'] as String? ?? '',
-      enabled: json['enabled'] as bool? ?? false,
-      adultConsentAccepted: json['adultConsentAccepted'] as bool? ?? false,
+      userId: _asString(json['userId']),
+      enabled: _asBool(json['enabled']),
+      adultConsentAccepted: _asBool(json['adultConsentAccepted']),
       visibility: AdultProfileVisibility.values.firstWhere(
-        (value) => value.name == json['visibility'],
+        (value) => value.name == visibilityRaw,
         orElse: () => AdultProfileVisibility.optedInAdultsOnly,
       ),
-      kinks: List<String>.from(json['kinks'] ?? const []),
-      preferences: List<String>.from(json['preferences'] ?? const []),
-      boundaries: List<String>.from(json['boundaries'] ?? const []),
-      lookingFor: List<String>.from(json['lookingFor'] ?? const [])
+      kinks: _asStringList(json['kinks']),
+      preferences: _asStringList(json['preferences']),
+      boundaries: _asStringList(json['boundaries']),
+      lookingFor: _asStringList(json['lookingFor'])
           .map(
             (value) => AdultRelationshipIntent.values.firstWhere(
               (item) => item.name == value,
@@ -67,7 +114,7 @@ class AdultProfileModel {
             ),
           )
           .toList(growable: false),
-      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
+      updatedAt: _parseNullableDateTime(json['updatedAt']),
     );
   }
 }

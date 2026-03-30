@@ -20,6 +20,14 @@ class _StripeWebPaymentWidgetState
   bool isLoading = false;
   String? error;
 
+  String? _asNullableString(dynamic value) {
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+    return null;
+  }
+
   Future<void> startCheckout() async {
     setState(() {
       isLoading = true;
@@ -61,7 +69,7 @@ class _StripeWebPaymentWidgetState
       );
       final result = await callable.call<Map<String, dynamic>>(<String, dynamic>{});
       final data = Map<String, dynamic>.from(result.data);
-      return data['url'] as String?;
+      return _asNullableString(data['url']);
     } catch (e, stack) {
       // Integrate Crashlytics for error reporting (not on web)
       if (!kIsWeb) {

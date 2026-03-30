@@ -1,6 +1,19 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 export 'event_model.dart';
 
+DateTime _toDateTime(dynamic value) {
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is String) {
+    return DateTime.tryParse(value) ?? DateTime.now();
+  }
+  return DateTime.now();
+}
+
 class UserProfile {
   final String uid;
   final String name;
@@ -23,7 +36,7 @@ class UserProfile {
   });
 
   factory UserProfile.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = (doc.data() as Map<String, dynamic>?) ?? const <String, dynamic>{};
     return UserProfile(
       uid: doc.id,
       name: data['name'] ?? '',
@@ -32,7 +45,7 @@ class UserProfile {
       bio: data['bio'],
       interests: List<String>.from(data['interests'] ?? []),
       location: data['location'],
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
+      createdAt: _toDateTime(data['createdAt']),
     );
   }
 
@@ -65,12 +78,12 @@ class MixEvent {
   });
 
   factory MixEvent.fromFirestore(DocumentSnapshot doc) {
-    final data = doc.data() as Map<String, dynamic>;
+    final data = (doc.data() as Map<String, dynamic>?) ?? const <String, dynamic>{};
     return MixEvent(
       id: doc.id,
       title: data['title'] ?? '',
       creatorId: data['creatorId'] ?? '',
-      startTime: (data['startTime'] as Timestamp).toDate(),
+      startTime: _toDateTime(data['startTime']),
       participants: List<String>.from(data['participants'] ?? []),
     );
   }

@@ -1,5 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+String _asString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
 class FriendRequestModel {
   final String id;
   final String fromUserId;
@@ -19,9 +29,9 @@ class FriendRequestModel {
     final createdAt = json['createdAt'];
     return FriendRequestModel(
       id: id,
-      fromUserId: json['fromUserId'] as String? ?? '',
-      toUserId: json['toUserId'] as String? ?? '',
-      status: json['status'] as String? ?? 'pending',
+      fromUserId: _asString(json['fromUserId']),
+      toUserId: _asString(json['toUserId']),
+      status: _asString(json['status'], fallback: 'pending'),
       createdAt: createdAt is Timestamp
           ? createdAt.toDate()
           : DateTime.tryParse(createdAt?.toString() ?? '') ?? DateTime.now(),

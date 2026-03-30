@@ -10,6 +10,27 @@ class MicAccessController {
 
   final FirebaseFirestore _db;
 
+  int _asInt(dynamic value, {int fallback = 100}) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(value.trim()) ?? fallback;
+    }
+    return fallback;
+  }
+
+  String? _asNullableString(dynamic value) {
+    if (value is String) {
+      final trimmed = value.trim();
+      return trimmed.isEmpty ? null : trimmed;
+    }
+    return null;
+  }
+
   CollectionReference<Map<String, dynamic>> _requestCollection(String roomId) {
     return _db.collection('rooms').doc(roomId).collection('mic_access_requests');
   }
@@ -23,7 +44,7 @@ class MicAccessController {
     if (snapshot.docs.isEmpty) {
       return 100;
     }
-    final value = (snapshot.docs.first.data()['priority'] as int?) ?? 100;
+    final value = _asInt(snapshot.docs.first.data()['priority']);
     return value + 10;
   }
 
@@ -90,7 +111,7 @@ class MicAccessController {
     if (!snapshot.exists) {
       return;
     }
-    final current = (snapshot.data()?['priority'] as int?) ?? 100;
+    final current = _asInt(snapshot.data()?['priority']);
     final next = current <= 0 ? 0 : current - 10;
     await requestRef.update({
       'priority': next,
@@ -104,7 +125,7 @@ class MicAccessController {
     if (!snapshot.exists) {
       return;
     }
-    final current = (snapshot.data()?['priority'] as int?) ?? 100;
+    final current = _asInt(snapshot.data()?['priority']);
     await requestRef.update({
       'priority': current + 10,
       'updatedAt': FieldValue.serverTimestamp(),
@@ -117,7 +138,7 @@ class MicAccessController {
     if (!snapshot.exists) {
       return;
     }
-    final requesterId = (snapshot.data()?['requesterId'] as String?)?.trim();
+    final requesterId = _asNullableString(snapshot.data()?['requesterId']);
     await requestRef.update({
       'status': 'expired',
       'updatedAt': FieldValue.serverTimestamp(),
@@ -155,7 +176,7 @@ class MicAccessController {
 
   Future<void> denyRequest(String roomId, String requestId) async {
     final requestSnapshot = await _requestCollection(roomId).doc(requestId).get();
-    final requesterId = (requestSnapshot.data()?['requesterId'] as String?)?.trim();
+    final requesterId = _asNullableString(requestSnapshot.data()?['requesterId']);
     await _requestCollection(roomId).doc(requestId).update({
       'status': 'denied',
       'updatedAt': FieldValue.serverTimestamp(),

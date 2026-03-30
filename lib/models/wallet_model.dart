@@ -1,3 +1,23 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+String _asString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
+String? _asNullableString(dynamic value) {
+  if (value is String) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+  return null;
+}
+
 class WalletModel {
   const WalletModel({
     required this.userId,
@@ -34,14 +54,14 @@ class WalletModel {
 
   factory WalletModel.fromJson(Map<String, dynamic> json) {
     return WalletModel(
-      userId: json['userId'] as String? ?? '',
+      userId: _asString(json['userId']),
       coinBalance: (json['coinBalance'] as num?)?.toInt() ?? 0,
       cashBalance: (json['cashBalance'] as num?)?.toDouble() ?? 0,
       referralEarnings: (json['referralEarnings'] as num?)?.toDouble() ?? 0,
       roomEarnings: (json['roomEarnings'] as num?)?.toDouble() ?? 0,
       giftEarnings: (json['giftEarnings'] as num?)?.toDouble() ?? 0,
       pendingCashOut: (json['pendingCashOut'] as num?)?.toDouble() ?? 0,
-      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
+      updatedAt: _parseDateTime(json['updatedAt']),
     );
   }
 }
@@ -85,15 +105,28 @@ class WalletLedgerEntry {
 
   factory WalletLedgerEntry.fromJson(Map<String, dynamic> json) {
     return WalletLedgerEntry(
-      id: json['id'] as String? ?? '',
-      userId: json['userId'] as String? ?? '',
-      type: json['type'] as String? ?? 'unknown',
+      id: _asString(json['id']),
+      userId: _asString(json['userId']),
+      type: _asString(json['type'], fallback: 'unknown'),
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
-      currency: json['currency'] as String? ?? 'usd',
-      status: json['status'] as String? ?? 'pending',
-      referenceId: json['referenceId'] as String?,
+      currency: _asString(json['currency'], fallback: 'usd'),
+      status: _asString(json['status'], fallback: 'pending'),
+      referenceId: _asNullableString(json['referenceId']),
       metadata: Map<String, dynamic>.from(json['metadata'] ?? const <String, dynamic>{}),
-      createdAt: DateTime.tryParse(json['createdAt'] as String? ?? ''),
+      createdAt: _parseDateTime(json['createdAt']),
     );
   }
+}
+
+DateTime? _parseDateTime(dynamic value) {
+  if (value == null) {
+    return null;
+  }
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+  return DateTime.tryParse(value.toString());
 }

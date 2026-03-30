@@ -4,6 +4,50 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:uuid/uuid.dart';
 
+String _asTrimmedString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final normalized = value.trim();
+    return normalized.isEmpty ? fallback : normalized;
+  }
+  if (value == null) {
+    return fallback;
+  }
+  final normalized = value.toString().trim();
+  return normalized.isEmpty ? fallback : normalized;
+}
+
+bool _asBool(dynamic value, {required bool fallback}) {
+  if (value is bool) {
+    return value;
+  }
+  if (value is num) {
+    return value != 0;
+  }
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
+      return true;
+    }
+    if (normalized == 'false' || normalized == '0' || normalized == 'no') {
+      return false;
+    }
+  }
+  return fallback;
+}
+
+DateTime _asDateTime(dynamic value) {
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+  if (value is String) {
+    return DateTime.tryParse(value) ?? DateTime.now();
+  }
+  return DateTime.now();
+}
+
 abstract class PaymentFunctionsGateway {
   Future<Map<String, dynamic>> call(
     String name,
@@ -70,12 +114,12 @@ class CoinTransaction {
 
   factory CoinTransaction.fromJson(Map<String, dynamic> json) =>
       CoinTransaction(
-        id: json['id'],
-        senderId: json['senderId'],
-        receiverId: json['receiverId'],
-        amount: (json['amount'] as num).toDouble(),
-        timestamp: DateTime.parse(json['timestamp']),
-        status: json['status'],
+        id: _asTrimmedString(json['id']),
+        senderId: _asTrimmedString(json['senderId']),
+        receiverId: _asTrimmedString(json['receiverId']),
+        amount: (json['amount'] as num?)?.toDouble() ?? 0,
+        timestamp: _asDateTime(json['timestamp']),
+        status: _asTrimmedString(json['status'], fallback: 'pending'),
       );
 }
 
@@ -108,12 +152,12 @@ class RefundRequest {
     }
 
     return RefundRequest(
-      id: (json['id'] as String?)?.trim() ?? '',
-      transactionId: (json['transactionId'] as String?)?.trim() ?? '',
-      requesterId: (json['requesterId'] as String?)?.trim() ?? '',
+      id: _asTrimmedString(json['id']),
+      transactionId: _asTrimmedString(json['transactionId']),
+      requesterId: _asTrimmedString(json['requesterId']),
       amount: (json['amount'] as num?)?.toDouble() ?? 0,
-      status: (json['status'] as String?)?.trim() ?? 'pending',
-      reason: (json['reason'] as String?)?.trim() ?? '',
+      status: _asTrimmedString(json['status'], fallback: 'pending'),
+      reason: _asTrimmedString(json['reason']),
       createdAt: createdAt,
     );
   }
@@ -140,13 +184,20 @@ class StripeConnectStatus {
 
   factory StripeConnectStatus.fromJson(Map<String, dynamic> json) {
     return StripeConnectStatus(
-      hasAccount: json['hasAccount'] as bool? ?? ((json['accountId'] as String?)?.isNotEmpty ?? false),
-      chargesEnabled: json['chargesEnabled'] as bool? ?? false,
-      payoutsEnabled: json['payoutsEnabled'] as bool? ?? false,
-      detailsSubmitted: json['detailsSubmitted'] as bool? ?? false,
-      onboardingComplete: json['onboardingComplete'] as bool? ?? false,
-      accountId: (json['accountId'] as String?)?.trim(),
-      country: (json['country'] as String?)?.trim(),
+      hasAccount: _asBool(
+        json['hasAccount'],
+        fallback: _asTrimmedString(json['accountId']).isNotEmpty,
+      ),
+      chargesEnabled: _asBool(json['chargesEnabled'], fallback: false),
+      payoutsEnabled: _asBool(json['payoutsEnabled'], fallback: false),
+      detailsSubmitted: _asBool(json['detailsSubmitted'], fallback: false),
+      onboardingComplete: _asBool(json['onboardingComplete'], fallback: false),
+      accountId: _asTrimmedString(json['accountId']).isEmpty
+          ? null
+          : _asTrimmedString(json['accountId']),
+      country: _asTrimmedString(json['country']).isEmpty
+          ? null
+          : _asTrimmedString(json['country']),
     );
   }
 }
@@ -220,13 +271,13 @@ class PaymentApi {
       'recipientId': recipientId,
       'idempotencyKey': resolvedIdempotencyKey,
     });
-    final clientSecret = data['clientSecret'] as String?;
-    final paymentIntentId = (data['paymentIntentId'] as String?)?.trim() ?? '';
-    final returnedIdempotencyKey =
-        (data['idempotencyKey'] as String?)?.trim().isNotEmpty == true
-            ? (data['idempotencyKey'] as String).trim()
-            : resolvedIdempotencyKey;
-    if (clientSecret == null || clientSecret.isEmpty) {
+    final clientSecret = _asTrimmedString(data['clientSecret']);
+    final paymentIntentId = _asTrimmedString(data['paymentIntentId']);
+    final returnedIdempotencyKey = _asTrimmedString(
+      data['idempotencyKey'],
+      fallback: resolvedIdempotencyKey,
+    );
+    if (clientSecret.isEmpty) {
       throw Exception('clientSecret missing in response');
     }
     if (paymentIntentId.isEmpty) {
@@ -311,8 +362,8 @@ class PaymentApi {
     }
 
     final data = await _callFunction<Map<String, dynamic>>('createStripeConnectOnboardingLink', {});
-    final url = (data['url'] as String?)?.trim();
-    if (url == null || url.isEmpty) {
+    final url = _asTrimmedString(data['url']);
+    if (url.isEmpty) {
       throw Exception('Onboarding URL missing in response');
     }
     return url;
@@ -325,8 +376,8 @@ class PaymentApi {
     }
 
     final data = await _callFunction<Map<String, dynamic>>('createStripeConnectDashboardLink', {});
-    final url = (data['url'] as String?)?.trim();
-    if (url == null || url.isEmpty) {
+    final url = _asTrimmedString(data['url']);
+    if (url.isEmpty) {
       throw Exception('Dashboard URL missing in response');
     }
     return url;

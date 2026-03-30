@@ -22,6 +22,51 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   final FollowService _followService = FollowService();
   late Future<Map<String, dynamic>> _profileFuture;
 
+  String? _stringOrNull(dynamic value) {
+    if (value == null) return null;
+    if (value is String) {
+      final normalized = value.trim();
+      return normalized.isEmpty ? null : normalized;
+    }
+    final normalized = value.toString().trim();
+    return normalized.isEmpty ? null : normalized;
+  }
+
+  List<String> _stringList(dynamic value) {
+    if (value is! List) {
+      return const <String>[];
+    }
+    return value
+        .map((entry) => _stringOrNull(entry))
+        .whereType<String>()
+        .toList(growable: false);
+  }
+
+  bool _asBool(dynamic value, {required bool fallback}) {
+    if (value is bool) return value;
+    if (value is num) return value != 0;
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
+        return true;
+      }
+      if (normalized == 'false' || normalized == '0' || normalized == 'no') {
+        return false;
+      }
+    }
+    return fallback;
+  }
+
+  int _asInt(dynamic value, {required int fallback}) {
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(value) ?? fallback;
+    }
+    return fallback;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -220,46 +265,46 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
 
           final data = userSnapshot.data() ?? const <String, dynamic>{};
           final privacy = Map<String, dynamic>.from(payload['privacy'] as Map<String, dynamic>? ?? const <String, dynamic>{});
-          final isBlocked = payload['isBlocked'] as bool? ?? false;
-          final isFollowing = payload['isFollowing'] as bool? ?? false;
-          final followerCount = payload['followerCount'] as int? ?? 0;
-          final followingCount = payload['followingCount'] as int? ?? 0;
+          final isBlocked = _asBool(payload['isBlocked'], fallback: false);
+          final isFollowing = _asBool(payload['isFollowing'], fallback: false);
+          final followerCount = _asInt(payload['followerCount'], fallback: 0);
+          final followingCount = _asInt(payload['followingCount'], fallback: 0);
           final viewerId = FirebaseAuth.instance.currentUser?.uid;
           final isOwnProfile = viewerId == widget.userId;
 
-          final username = (data['username'] as String?)?.trim();
-          final avatarUrl = (data['avatarUrl'] as String?)?.trim();
-          final coverPhotoUrl = (data['coverPhotoUrl'] as String?)?.trim();
-          final bio = (data['bio'] as String?)?.trim();
-          final aboutMe = (data['aboutMe'] as String?)?.trim();
-          final introVideoUrl = (data['introVideoUrl'] as String?)?.trim();
-          final galleryUrls = List<String>.from(data['galleryUrls'] ?? const []);
-          final vibePrompt = (data['vibePrompt'] as String?)?.trim();
-          final firstDatePrompt = (data['firstDatePrompt'] as String?)?.trim();
-          final musicTastePrompt = (data['musicTastePrompt'] as String?)?.trim();
-          final interests = List<String>.from(data['interests'] ?? const []);
+          final username = _stringOrNull(data['username']);
+          final avatarUrl = _stringOrNull(data['avatarUrl']);
+          final coverPhotoUrl = _stringOrNull(data['coverPhotoUrl']);
+          final bio = _stringOrNull(data['bio']);
+          final aboutMe = _stringOrNull(data['aboutMe']);
+          final introVideoUrl = _stringOrNull(data['introVideoUrl']);
+          final galleryUrls = _stringList(data['galleryUrls']);
+          final vibePrompt = _stringOrNull(data['vibePrompt']);
+          final firstDatePrompt = _stringOrNull(data['firstDatePrompt']);
+          final musicTastePrompt = _stringOrNull(data['musicTastePrompt']);
+          final interests = _stringList(data['interests']);
           final age = (data['age'] as num?)?.toInt();
-          final gender = (data['gender'] as String?)?.trim();
-          final location = (data['location'] as String?)?.trim();
-          final relationshipStatus = (data['relationshipStatus'] as String?)?.trim();
-          final camViewPolicy = (data['camViewPolicy'] as String?)?.trim();
-          final themeId = (data['themeId'] as String?)?.trim();
+          final gender = _stringOrNull(data['gender']);
+          final location = _stringOrNull(data['location']);
+          final relationshipStatus = _stringOrNull(data['relationshipStatus']);
+          final camViewPolicy = _stringOrNull(data['camViewPolicy']);
+          final themeId = _stringOrNull(data['themeId']);
           final coverImageUrl = (coverPhotoUrl ?? '').isNotEmpty
               ? coverPhotoUrl!.trim()
               : (galleryUrls.isNotEmpty ? galleryUrls.first.trim() : (avatarUrl ?? '').trim());
           final displayName = (username == null || username.isEmpty) ? 'MixVy user' : username;
 
           final details = <String>[];
-          if (isOwnProfile || (privacy['showAge'] as bool? ?? false)) {
+          if (isOwnProfile || _asBool(privacy['showAge'], fallback: false)) {
             if (age != null) details.add('$age');
           }
-          if (isOwnProfile || (privacy['showGender'] as bool? ?? false)) {
+          if (isOwnProfile || _asBool(privacy['showGender'], fallback: false)) {
             if ((gender ?? '').isNotEmpty) details.add(gender!);
           }
-          if (isOwnProfile || (privacy['showLocation'] as bool? ?? false)) {
+          if (isOwnProfile || _asBool(privacy['showLocation'], fallback: false)) {
             if ((location ?? '').isNotEmpty) details.add(location!);
           }
-          if (isOwnProfile || (privacy['showRelationshipStatus'] as bool? ?? false)) {
+          if (isOwnProfile || _asBool(privacy['showRelationshipStatus'], fallback: false)) {
             if ((relationshipStatus ?? '').isNotEmpty) details.add(relationshipStatus!);
           }
 

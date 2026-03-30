@@ -1,6 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+bool _asBool(dynamic value, {required bool fallback}) {
+  if (value is bool) {
+    return value;
+  }
+  if (value is num) {
+    return value != 0;
+  }
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
+      return true;
+    }
+    if (normalized == 'false' || normalized == '0' || normalized == 'no') {
+      return false;
+    }
+  }
+  return fallback;
+}
+
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
@@ -15,7 +34,7 @@ final userVerificationProvider =
       .snapshots()
       .map((snapshot) {
     if (!snapshot.exists) return false;
-    return snapshot.data()?['isVerified'] as bool? ?? false;
+    return _asBool(snapshot.data()?['isVerified'], fallback: false);
   });
 });
 

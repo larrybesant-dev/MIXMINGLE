@@ -4,6 +4,25 @@ class TypingRepository {
   final FirebaseFirestore _db;
   TypingRepository(this._db);
 
+  bool _asBool(dynamic value, {bool fallback = false}) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1') {
+        return true;
+      }
+      if (normalized == 'false' || normalized == '0') {
+        return false;
+      }
+    }
+    return fallback;
+  }
+
   Stream<Map<String, bool>> typingStream(String roomId) {
     return _db
       .collection('rooms')
@@ -12,7 +31,7 @@ class TypingRepository {
       .snapshots()
       .map((snap) => {
         for (var doc in snap.docs)
-          doc.id: (doc.data()['typing'] ?? false) as bool
+          doc.id: _asBool(doc.data()['typing'])
       });
   }
 

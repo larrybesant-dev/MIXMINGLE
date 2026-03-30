@@ -66,9 +66,40 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isHandlingParticipantRemoval = false;
   Timer? _presenceHeartbeatTimer;
   DateTime? _roomJoinedAt;
+  int _lastRenderedMessageCount = 0;
   final Set<String> _shownGiftEventIds = {};
   final List<_GiftToast> _giftToasts = [];
   Timer? _giftToastTimer;
+  ProviderSubscription<AsyncValue<List<RoomGiftEvent>>>? _giftEventsSubscription;
+
+  String _asString(dynamic value, {String fallback = ''}) {
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return fallback;
+  }
+
+  bool _asBool(dynamic value, {bool fallback = false}) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
+        return true;
+      }
+      if (normalized == 'false' || normalized == '0' || normalized == 'no') {
+        return false;
+      }
+    }
+    return fallback;
+  }
 
   bool _looksLikeAgoraAppId(String value) {
     final trimmed = value.trim();
@@ -91,6 +122,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       _joinedUserId = user.id;
       _joinRoom(user.id);
     }
+
+    _giftEventsSubscription = ref.listenManual<AsyncValue<List<RoomGiftEvent>>>(
+      roomGiftStreamProvider(widget.roomId),
+      (previous, next) {
+        next.whenData((events) {
+          final joinedAt = _roomJoinedAt;
+          for (final event in events) {
+            if (_shownGiftEventIds.contains(event.id)) continue;
+            if (joinedAt != null && event.sentAt.isBefore(joinedAt)) {
+              _shownGiftEventIds.add(event.id);
+              continue;
+            }
+            _shownGiftEventIds.add(event.id);
+            _addGiftToast(event);
+          }
+        });
+      },
+    );
   }
 
   int _buildRtcUid(String userId) {
@@ -109,8 +158,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       'rtcUid': rtcUid,
     });
     final data = Map<String, dynamic>.from(result.data);
-    final token = (data['token'] as String?)?.trim() ?? '';
-    final serverAppId = (data['appId'] as String?)?.trim() ?? '';
+    final token = _asString(data['token']);
+    final serverAppId = _asString(data['appId']);
     if (token.isEmpty) {
       throw Exception('Missing Agora token from backend response.');
     }
@@ -251,7 +300,35 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   }
 
   String _mapMediaError(Object error, {required bool canBroadcast}) {
+    if (error is AgoraServiceException) {
+      switch (error.code) {
+        case 'permission-denied':
+          return canBroadcast
+              ? 'Camera/microphone access was denied. Allow permissions in browser site settings, then rejoin the room.'
+              : 'Microphone access was denied. Allow permission in browser site settings, then retry.';
+        case 'no-media-devices':
+          return 'No camera/microphone was detected. Connect a device and retry.';
+        case 'device-in-use':
+          return 'Camera/microphone is busy in another app or tab. Close the other session and retry.';
+        case 'unsupported-browser':
+          return 'This browser is not fully supported for live media. Use the latest Chrome or Edge.';
+        case 'insecure-context':
+          return 'Live media requires HTTPS (or localhost). Open MixVy on a secure origin.';
+        default:
+          return error.message;
+      }
+    }
+
     final lower = error.toString().toLowerCase();
+    if (lower.contains('unsupported browser') ||
+        lower.contains('webrtc is not supported') ||
+        lower.contains('not supported on this browser')) {
+      return 'This browser is not fully supported for live media. Use the latest Chrome or Edge.';
+    }
+    if (lower.contains('secure context') ||
+        lower.contains('only secure origins')) {
+      return 'Live media requires HTTPS (or localhost). Open MixVy on a secure origin.';
+    }
     if (lower.contains('permission') || lower.contains('denied')) {
       return canBroadcast
           ? 'Camera/microphone permission denied. Enable permissions in app settings and retry.'
@@ -839,11 +916,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
       for (final userDoc in userDocs.docs) {
         final data = userDoc.data();
-        final username = (data['username'] as String?)?.trim() ?? '';
-        final avatarUrl = (data['avatarUrl'] as String?)?.trim();
+        final username = _asString(data['username']);
+        final avatarUrl = _asString(data['avatarUrl']);
         presentationByUserId[userDoc.id] = RoomUserPresentation(
           displayName: username.isEmpty ? userDoc.id : username,
-          avatarUrl: avatarUrl == null || avatarUrl.isEmpty ? null : avatarUrl,
+          avatarUrl: avatarUrl.isEmpty ? null : avatarUrl,
         );
       }
     }
@@ -923,7 +1000,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         return;
       }
 
-      final hostId = (roomDoc.data()?['hostId'] as String? ?? '').trim();
+      final hostId = _asString(roomDoc.data()?['hostId']);
       final moderationService = ModerationService(firestore: firestore);
       _excludedUserIds = await moderationService.getExcludedUserIds(userId);
 
@@ -946,8 +1023,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             .get();
         final hasBlockedParticipant = participantsSnapshot.docs.any((doc) {
           final participantData = doc.data();
-          final participantId = (participantData['userId'] as String? ?? doc.id)
-              .trim();
+          final participantId = _asString(participantData['userId'], fallback: doc.id);
           return participantId.isNotEmpty &&
               participantId != userId &&
               _excludedUserIds.contains(participantId);
@@ -963,7 +1039,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         }
       }
 
-      final isLocked = (roomDoc.data()?['isLocked'] ?? false) as bool;
+      final isLocked = _asBool(roomDoc.data()?['isLocked']);
       if (isLocked) {
         setState(() => _roomJoinError = 'Room is locked by host.');
         _joinedUserId = null;
@@ -999,7 +1075,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       }
 
       final participantRole = doc.exists
-          ? (doc.data()?['role'] as String? ?? 'audience')
+          ? _asString(doc.data()?['role'], fallback: 'audience')
           : (hostId == userId ? 'host' : 'audience');
       await _connectCall(
         userId,
@@ -1287,6 +1363,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     WidgetsBinding.instance.removeObserver(this);
     _presenceHeartbeatTimer?.cancel();
     _giftToastTimer?.cancel();
+    _giftEventsSubscription?.close();
     unawaited(_disconnectCall());
     unawaited(_leaveRoom());
     messageController.dispose();
@@ -1356,22 +1433,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final walletAsync = ref.watch(walletDetailsProvider);
     final topGifters = ref.watch(topGiftersProvider(widget.roomId));
 
-    // Listen for new gift events and show toasts for gifts sent after join time.
-    ref.listen(roomGiftStreamProvider(widget.roomId), (prev, next) {
-      next.whenData((events) {
-        final joinedAt = _roomJoinedAt;
-        for (final event in events) {
-          if (_shownGiftEventIds.contains(event.id)) continue;
-          if (joinedAt != null && event.sentAt.isBefore(joinedAt)) {
-            _shownGiftEventIds.add(event.id);
-            continue;
-          }
-          _shownGiftEventIds.add(event.id);
-          _addGiftToast(event);
-        }
-      });
-    });
-
     return currentParticipantAsync.when(
       data: (participant) {
         final isHost = ref.watch(isHostProvider(participant));
@@ -1404,7 +1465,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             final roomData = roomSnap.data?.data() as Map<String, dynamic>?;
             slowModeSeconds = roomData?['slowModeSeconds'] ?? 0;
             final isLocked = roomData?['isLocked'] ?? false;
-            final hostId = (roomData?['hostId'] as String? ?? '').trim();
+            final hostId = _asString(roomData?['hostId']);
             final allowGifts = roomPolicyAsync.valueOrNull?.allowGifts ?? true;
             final allowMicRequests =
                 roomPolicyAsync.valueOrNull?.allowMicRequests ?? true;
@@ -2477,13 +2538,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   Expanded(
                     child: messageStreamAsync.when(
                       data: (messages) {
-                        WidgetsBinding.instance.addPostFrameCallback((_) {
-                          if (scrollController.hasClients) {
-                            scrollController.jumpTo(
-                              scrollController.position.maxScrollExtent,
-                            );
-                          }
-                        });
+                        if (messages.length != _lastRenderedMessageCount) {
+                          _lastRenderedMessageCount = messages.length;
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (scrollController.hasClients) {
+                              scrollController.jumpTo(
+                                scrollController.position.maxScrollExtent,
+                              );
+                            }
+                          });
+                        }
                         if (messages.isEmpty) {
                           return const Center(child: Text('No messages yet.'));
                         }

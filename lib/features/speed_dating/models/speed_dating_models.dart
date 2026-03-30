@@ -1,5 +1,23 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+String? _asNullableString(dynamic value) {
+  if (value is String) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+  return null;
+}
+
+List<String> _asStringList(dynamic value) {
+  if (value is List) {
+    return value
+        .map((item) => item is String ? item.trim() : item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+  }
+  return const <String>[];
+}
+
 class SpeedDateCandidate {
   final String id;
   final String username;
@@ -17,13 +35,13 @@ class SpeedDateCandidate {
 
   factory SpeedDateCandidate.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? <String, dynamic>{};
-    final username = (data['username'] as String?)?.trim();
+    final username = _asNullableString(data['username']);
     return SpeedDateCandidate(
       id: doc.id,
       username: (username == null || username.isEmpty) ? 'MixVy User' : username,
-      avatarUrl: data['avatarUrl'] as String?,
-      bio: data['bio'] as String?,
-      interests: List<String>.from(data['interests'] ?? const []),
+      avatarUrl: _asNullableString(data['avatarUrl']),
+      bio: _asNullableString(data['bio']),
+      interests: _asStringList(data['interests']),
     );
   }
 }
@@ -49,9 +67,9 @@ class SpeedDatingMatch {
     final data = doc.data() ?? <String, dynamic>{};
     return SpeedDatingMatch(
       id: doc.id,
-      participantIds: List<String>.from(data['participantIds'] ?? const []),
+      participantIds: _asStringList(data['participantIds']),
       createdAt: data['createdAt'] as Timestamp?,
-      latestRoomId: data['latestRoomId'] as String?,
+      latestRoomId: _asNullableString(data['latestRoomId']),
     );
   }
 }

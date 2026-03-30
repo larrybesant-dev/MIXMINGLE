@@ -3,6 +3,21 @@ import 'dart:developer' as developer;
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart'; // For Widget, VoidCallback
 
+class AgoraServiceException implements Exception {
+  const AgoraServiceException({
+    required this.code,
+    required this.message,
+    this.cause,
+  });
+
+  final String code;
+  final String message;
+  final Object? cause;
+
+  @override
+  String toString() => 'AgoraServiceException($code): $message';
+}
+
 class AgoraService {
     // List of remote user IDs
     final List<int> _remoteUids = [];
@@ -51,6 +66,75 @@ class AgoraService {
   late RtcEngine _engine;
   bool _initialized = false;
 
+  Never _throwMappedAgoraError(Object error, {required String operation}) {
+    final raw = error.toString();
+    final lower = raw.toLowerCase();
+
+    if (lower.contains('notallowederror') ||
+        lower.contains('permission denied') ||
+        lower.contains('permission denied by system')) {
+      throw AgoraServiceException(
+        code: 'permission-denied',
+        message:
+            'Camera/microphone permission was denied. Please allow access and retry.',
+        cause: error,
+      );
+    }
+
+    if (lower.contains('notfounderror') ||
+        lower.contains('requested device not found') ||
+        lower.contains('no audio input') ||
+        lower.contains('no video input') ||
+        lower.contains('devicesnotfound')) {
+      throw AgoraServiceException(
+        code: 'no-media-devices',
+        message:
+            'No working camera or microphone was found on this device.',
+        cause: error,
+      );
+    }
+
+    if (lower.contains('notreadableerror') ||
+        lower.contains('track is already in use') ||
+        lower.contains('device in use')) {
+      throw AgoraServiceException(
+        code: 'device-in-use',
+        message:
+            'Camera or microphone is currently in use by another app or tab.',
+        cause: error,
+      );
+    }
+
+    if (lower.contains('notsupportederror') ||
+      lower.contains('unsupported browser') ||
+      lower.contains('webrtc is not supported') ||
+      lower.contains('not supported on this browser')) {
+      throw AgoraServiceException(
+        code: 'unsupported-browser',
+        message:
+            'This browser does not fully support required WebRTC features. Use latest Chrome or Edge.',
+        cause: error,
+      );
+    }
+
+    if (lower.contains('secure context') ||
+        lower.contains('https') ||
+        lower.contains('only secure origins')) {
+      throw AgoraServiceException(
+        code: 'insecure-context',
+        message:
+            'Camera/microphone requires HTTPS (or localhost). Open the app over a secure origin.',
+        cause: error,
+      );
+    }
+
+    throw AgoraServiceException(
+      code: 'agora-$operation-failed',
+      message: 'Failed to $operation. Please retry.',
+      cause: error,
+    );
+  }
+
   /// Initialize Agora engine with your App ID
   Future<void> initialize(String appId) async {
     final normalizedAppId = appId.trim();
@@ -58,14 +142,18 @@ class AgoraService {
       throw ArgumentError('Agora appId cannot be empty.');
     }
 
-    _engine = createAgoraRtcEngine();
-    await _engine.initialize(
-      RtcEngineContext(
-        appId: normalizedAppId,
-        channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-      ),
-    );
-    await _engine.setClientRole(role: ClientRoleType.clientRoleAudience);
+    try {
+      _engine = createAgoraRtcEngine();
+      await _engine.initialize(
+        RtcEngineContext(
+          appId: normalizedAppId,
+          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+        ),
+      );
+      await _engine.setClientRole(role: ClientRoleType.clientRoleAudience);
+    } catch (error) {
+      _throwMappedAgoraError(error, operation: 'initialize live media');
+    }
 
     // Set up event handlers
     _engine.registerEventHandler(
@@ -117,6 +205,12 @@ class AgoraService {
           if (onSpeakerActivityChanged != null) {
             onSpeakerActivityChanged!();
           }
+        },
+        onError: (err, msg) {
+          developer.log(
+            'Agora engine error: $err $msg',
+            name: 'AgoraService',
+          );
         },
       ),
     );
@@ -186,30 +280,38 @@ class AgoraService {
       }
     }
 
-    await _engine.joinChannel(
-      token: normalizedToken,
-      channelId: normalizedChannelName,
-      uid: uid,
-      options: ChannelMediaOptions(
-        channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-        clientRoleType: role,
-        autoSubscribeAudio: true,
-        autoSubscribeVideo: true,
-        publishCameraTrack: asBroadcaster,
-        publishMicrophoneTrack: asBroadcaster,
-      ),
-    );
+    try {
+      await _engine.joinChannel(
+        token: normalizedToken,
+        channelId: normalizedChannelName,
+        uid: uid,
+        options: ChannelMediaOptions(
+          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+          clientRoleType: role,
+          autoSubscribeAudio: true,
+          autoSubscribeVideo: true,
+          publishCameraTrack: asBroadcaster,
+          publishMicrophoneTrack: asBroadcaster,
+        ),
+      );
+    } catch (error) {
+      _throwMappedAgoraError(error, operation: 'join room');
+    }
     _joinedChannel = true;
     _broadcasterMode = asBroadcaster;
   }
 
   Future<void> setBroadcaster(bool enabled) async {
     if (!_initialized) return;
-    await _engine.setClientRole(
-      role: enabled
-          ? ClientRoleType.clientRoleBroadcaster
-          : ClientRoleType.clientRoleAudience,
-    );
+    try {
+      await _engine.setClientRole(
+        role: enabled
+            ? ClientRoleType.clientRoleBroadcaster
+            : ClientRoleType.clientRoleAudience,
+      );
+    } catch (error) {
+      _throwMappedAgoraError(error, operation: 'switch role');
+    }
     _broadcasterMode = enabled;
     if (enabled) {
       try {
@@ -241,17 +343,25 @@ class AgoraService {
   /// Mute/unmute local audio
   Future<void> mute(bool muted) async {
     if (!_initialized) return;
-    await _engine.muteLocalAudioStream(muted);
+    try {
+      await _engine.muteLocalAudioStream(muted);
+    } catch (error) {
+      _throwMappedAgoraError(error, operation: 'toggle microphone');
+    }
   }
 
   /// Enable/disable video
   Future<void> enableVideo(bool enabled) async {
     if (!_initialized) return;
-    if (enabled) {
-      await _engine.enableVideo();
-      _broadcasterMode = true;
-    } else {
-      await _engine.disableVideo();
+    try {
+      if (enabled) {
+        await _engine.enableVideo();
+        _broadcasterMode = true;
+      } else {
+        await _engine.disableVideo();
+      }
+    } catch (error) {
+      _throwMappedAgoraError(error, operation: 'toggle camera');
     }
   }
 

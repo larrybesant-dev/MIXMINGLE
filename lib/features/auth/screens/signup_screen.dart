@@ -64,7 +64,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   }
 
   Future<void> _signup() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
 
     final controller = ref.read(authControllerProvider.notifier);
     await controller.signup(_email.text.trim(), _password.text.trim());

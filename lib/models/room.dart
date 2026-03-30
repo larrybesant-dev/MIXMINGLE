@@ -13,13 +13,33 @@ class Room {
     required this.audienceUserIds,
   });
 
+  static String _asString(dynamic value, {String fallback = ''}) {
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return fallback;
+  }
+
+  static List<String> _asStringList(dynamic value) {
+    if (value is List) {
+      return value
+          .map((item) => item is String ? item.trim() : item?.toString().trim() ?? '')
+          .where((item) => item.isNotEmpty)
+          .toList(growable: false);
+    }
+    return const <String>[];
+  }
+
   factory Room.fromJson(Map<String, dynamic> json) {
     return Room(
-      id: json['id'] as String,
-      name: json['name'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      stageUserIds: (json['stageUserIds'] as List<dynamic>? ?? []).map((e) => e as String).toList(),
-      audienceUserIds: (json['audienceUserIds'] as List<dynamic>? ?? []).map((e) => e as String).toList(),
+      id: _asString(json['id']),
+      name: _asString(json['name']),
+      description: _asString(json['description']),
+      stageUserIds: _asStringList(json['stageUserIds']),
+      audienceUserIds: _asStringList(json['audienceUserIds']),
     );
   }
 }

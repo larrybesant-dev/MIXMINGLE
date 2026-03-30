@@ -10,6 +10,26 @@ class BookmarksScreen extends ConsumerWidget {
     required this.userId,
   });
 
+  String _asString(dynamic value, {String fallback = ''}) {
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return fallback;
+  }
+
+  List<String> _asStringList(dynamic value) {
+    if (value is List) {
+      return value
+          .map((item) => item is String ? item.trim() : item?.toString().trim() ?? '')
+          .where((item) => item.isNotEmpty)
+          .toList(growable: false);
+    }
+    return const <String>[];
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bookmarksAsync = ref.watch(bookmarkedPostsProvider(userId));
@@ -47,6 +67,14 @@ class BookmarksScreen extends ConsumerWidget {
             itemCount: posts.length,
             itemBuilder: (context, index) {
               final post = posts[index];
+              final authorName = _asString(post['authorName']);
+              final safeAuthorName =
+                  authorName.isEmpty
+                  ? 'Unknown'
+                  : authorName;
+              final bookmarkId = _asString(post['bookmarkId']);
+              final content = _asString(post['content']);
+              final tags = _asStringList(post['tags']);
               return Card(
                 margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
                 child: Padding(
@@ -58,7 +86,7 @@ class BookmarksScreen extends ConsumerWidget {
                         children: [
                           CircleAvatar(
                             child: Text(
-                              (post['authorName'] as String? ?? 'U')[0].toUpperCase(),
+                              safeAuthorName.substring(0, 1).toUpperCase(),
                             ),
                           ),
                           const SizedBox(width: 12),
@@ -67,7 +95,7 @@ class BookmarksScreen extends ConsumerWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  post['authorName'] as String? ?? 'Unknown',
+                                  safeAuthorName,
                                   style: const TextStyle(fontWeight: FontWeight.bold),
                                 ),
                                 Text(
@@ -79,23 +107,27 @@ class BookmarksScreen extends ConsumerWidget {
                           ),
                           IconButton(
                             icon: const Icon(Icons.bookmark, color: Colors.blue),
-                            onPressed: () {
-                              ref.read(bookmarkControllerProvider).removeBookmark(
-                                    userId: userId,
-                                    bookmarkId: post['bookmarkId'] as String,
-                                  );
-                            },
+                            onPressed: bookmarkId.isEmpty
+                                ? null
+                                : () {
+                                    ref
+                                        .read(bookmarkControllerProvider)
+                                        .removeBookmark(
+                                          userId: userId,
+                                          bookmarkId: bookmarkId,
+                                        );
+                                  },
                           ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(post['content'] as String? ?? ''),
-                      if ((post['tags'] as List<dynamic>?)?.isNotEmpty == true)
+                      Text(content),
+                      if (tags.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 8),
                           child: Wrap(
                             spacing: 4,
-                            children: (post['tags'] as List<dynamic>)
+                            children: tags
                                 .map((tag) => Chip(
                                       label: Text('#$tag', style: const TextStyle(fontSize: 12)),
                                       visualDensity: VisualDensity.compact,

@@ -16,6 +16,35 @@ class FollowService {
   final FirebaseAuth _auth;
   final ModerationService _moderationService;
 
+  String _asString(dynamic value, {String fallback = ''}) {
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return fallback;
+  }
+
+  bool _asBool(dynamic value, {bool fallback = false}) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1') {
+        return true;
+      }
+      if (normalized == 'false' || normalized == '0') {
+        return false;
+      }
+    }
+    return fallback;
+  }
+
   String _followDocId(String followerUserId, String followedUserId) {
     return '${followerUserId}_$followedUserId';
   }
@@ -66,7 +95,7 @@ class FollowService {
     }
 
     final currentUserSnapshot = await _firestore.collection('users').doc(followerUserId).get();
-    final actorName = ((currentUserSnapshot.data() ?? const <String, dynamic>{})['username'] as String?)?.trim();
+  final actorName = _asString((currentUserSnapshot.data() ?? const <String, dynamic>{})['username']);
 
     await _firestore.collection('follows').doc(_followDocId(followerUserId, followedUserId)).set({
       'followerUserId': followerUserId,
@@ -78,7 +107,7 @@ class FollowService {
       'userId': followedUserId,
       'actorId': followerUserId,
       'type': 'follow',
-      'content': '${actorName == null || actorName.isEmpty ? 'Someone' : actorName} started following you.',
+      'content': '${actorName.isEmpty ? 'Someone' : actorName} started following you.',
       'isRead': false,
       'createdAt': FieldValue.serverTimestamp(),
     });
@@ -115,17 +144,17 @@ class FollowService {
     }
 
     final preferredRoom = roomDocs.cast<QueryDocumentSnapshot<Map<String, dynamic>>?>().firstWhere(
-          (doc) => (doc?.data()['isLive'] as bool? ?? false) == true,
+          (doc) => _asBool(doc?.data()['isLive']),
           orElse: () => roomDocs.first,
         );
     final roomData = preferredRoom?.data() ?? const <String, dynamic>{};
     final roomId = preferredRoom?.id ?? '';
-    final roomName = (roomData['name'] as String?)?.trim();
+        final roomName = _asString(roomData['name']);
 
     final inviterSnapshot = await _firestore.collection('users').doc(inviterUserId).get();
-    final inviterName = ((inviterSnapshot.data() ?? const <String, dynamic>{})['username'] as String?)?.trim();
-    final safeInviterName = inviterName == null || inviterName.isEmpty ? 'Someone' : inviterName;
-    final safeRoomName = roomName == null || roomName.isEmpty ? 'their room' : roomName;
+        final inviterName = _asString((inviterSnapshot.data() ?? const <String, dynamic>{})['username']);
+        final safeInviterName = inviterName.isEmpty ? 'Someone' : inviterName;
+        final safeRoomName = roomName.isEmpty ? 'their room' : roomName;
 
     await _firestore.collection('notifications').add({
       'userId': invitedUserId,

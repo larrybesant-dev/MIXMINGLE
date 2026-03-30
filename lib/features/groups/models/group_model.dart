@@ -1,5 +1,59 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+DateTime _parseDateTime(dynamic value) {
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is String) {
+    return DateTime.tryParse(value) ?? DateTime.now();
+  }
+  return DateTime.now();
+}
+
+String _asString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
+String? _asNullableString(dynamic value) {
+  if (value is String) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+  return null;
+}
+
+int _asInt(dynamic value, {int fallback = 0}) {
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  if (value is String) {
+    return int.tryParse(value.trim()) ?? fallback;
+  }
+  return fallback;
+}
+
+List<String> _asStringList(dynamic value) {
+  if (value is List) {
+    return value
+        .map((item) => item is String ? item.trim() : item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+  }
+  return const <String>[];
+}
+
 class Group {
   final String id;
   final String name;
@@ -24,13 +78,13 @@ class Group {
   factory Group.fromJson(Map<String, dynamic> json, String id) {
     return Group(
       id: id,
-      name: json['name'] as String? ?? '',
-      description: json['description'] as String? ?? '',
-      adminId: json['adminId'] as String? ?? '',
-      memberIds: List<String>.from(json['memberIds'] as List? ?? []),
-      coverImageUrl: json['coverImageUrl'] as String?,
-      createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      memberCount: json['memberCount'] as int? ?? 0,
+      name: _asString(json['name']),
+      description: _asString(json['description']),
+      adminId: _asString(json['adminId']),
+      memberIds: _asStringList(json['memberIds']),
+      coverImageUrl: _asNullableString(json['coverImageUrl']),
+      createdAt: _parseDateTime(json['createdAt']),
+      memberCount: _asInt(json['memberCount']),
     );
   }
 
@@ -78,15 +132,15 @@ class GroupPost {
   factory GroupPost.fromJson(Map<String, dynamic> json, String id) {
     return GroupPost(
       id: id,
-      groupId: json['groupId'] as String? ?? '',
-      authorId: json['authorId'] as String? ?? '',
-      authorName: json['authorName'] as String? ?? '',
-      authorAvatarUrl: json['authorAvatarUrl'] as String?,
-      content: json['content'] as String? ?? '',
-      tags: List<String>.from(json['tags'] as List? ?? []),
-      createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      likeCount: json['likeCount'] as int? ?? 0,
-      likedBy: List<String>.from(json['likedBy'] as List? ?? []),
+      groupId: _asString(json['groupId']),
+      authorId: _asString(json['authorId']),
+      authorName: _asString(json['authorName']),
+      authorAvatarUrl: _asNullableString(json['authorAvatarUrl']),
+      content: _asString(json['content']),
+      tags: _asStringList(json['tags']),
+      createdAt: _parseDateTime(json['createdAt']),
+      likeCount: _asInt(json['likeCount']),
+      likedBy: _asStringList(json['likedBy']),
     );
   }
 

@@ -22,6 +22,35 @@ DateTime? _parseFirestoreDateTime(dynamic value) {
   return null;
 }
 
+String _asString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
+bool _asBool(dynamic value, {bool fallback = false}) {
+  if (value is bool) {
+    return value;
+  }
+  if (value is num) {
+    return value != 0;
+  }
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true' || normalized == '1') {
+      return true;
+    }
+    if (normalized == 'false' || normalized == '0') {
+      return false;
+    }
+  }
+  return fallback;
+}
+
 enum MixVyRoomRole {
   owner,
   admin,
@@ -82,21 +111,23 @@ class RoomPolicyModel {
   }
 
   factory RoomPolicyModel.fromJson(Map<String, dynamic> json) {
+    final visibilityName = _asString(json['visibility']);
+    final camViewPolicyName = _asString(json['defaultCamViewPolicy']);
     return RoomPolicyModel(
-      roomId: json['roomId'] as String? ?? '',
+      roomId: _asString(json['roomId']),
       visibility: MixVyRoomVisibility.values.firstWhere(
-        (value) => value.name == json['visibility'],
+        (value) => value.name == visibilityName,
         orElse: () => MixVyRoomVisibility.public,
       ),
       minimumAge: (json['minimumAge'] as num?)?.toInt() ?? 18,
       camLimit: (json['camLimit'] as num?)?.toInt() ?? 6,
       micLimit: (json['micLimit'] as num?)?.toInt() ?? 6,
-      allowChat: json['allowChat'] as bool? ?? true,
-      allowGifts: json['allowGifts'] as bool? ?? true,
-      allowMicRequests: json['allowMicRequests'] as bool? ?? true,
-      allowCamRequests: json['allowCamRequests'] as bool? ?? true,
+      allowChat: _asBool(json['allowChat'], fallback: true),
+      allowGifts: _asBool(json['allowGifts'], fallback: true),
+      allowMicRequests: _asBool(json['allowMicRequests'], fallback: true),
+      allowCamRequests: _asBool(json['allowCamRequests'], fallback: true),
       defaultCamViewPolicy: CamViewPolicy.values.firstWhere(
-        (value) => value.name == json['defaultCamViewPolicy'],
+        (value) => value.name == camViewPolicyName,
         orElse: () => CamViewPolicy.approvedOnly,
       ),
       updatedAt: _parseFirestoreDateTime(json['updatedAt']),
@@ -141,12 +172,12 @@ class CamAccessRequestModel {
 
   factory CamAccessRequestModel.fromJson(Map<String, dynamic> json) {
     return CamAccessRequestModel(
-      id: json['id'] as String? ?? '',
-      roomId: json['roomId'] as String? ?? '',
-      requesterId: json['requesterId'] as String? ?? '',
-      broadcasterId: json['broadcasterId'] as String? ?? '',
-      status: json['status'] as String? ?? 'pending',
-      decisionScope: json['decisionScope'] as String? ?? 'single_session',
+      id: _asString(json['id']),
+      roomId: _asString(json['roomId']),
+      requesterId: _asString(json['requesterId']),
+      broadcasterId: _asString(json['broadcasterId']),
+      status: _asString(json['status'], fallback: 'pending'),
+      decisionScope: _asString(json['decisionScope'], fallback: 'single_session'),
       createdAt: _parseFirestoreDateTime(json['createdAt']),
       updatedAt: _parseFirestoreDateTime(json['updatedAt']),
     );

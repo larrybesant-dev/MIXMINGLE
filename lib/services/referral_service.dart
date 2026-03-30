@@ -11,6 +11,35 @@ class ReferralService {
   final FirebaseFirestore _firestore;
   static const _alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
+  String _asString(dynamic value, {String fallback = ''}) {
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return fallback;
+  }
+
+  bool _asBool(dynamic value, {bool fallback = true}) {
+    if (value is bool) {
+      return value;
+    }
+    if (value is num) {
+      return value != 0;
+    }
+    if (value is String) {
+      final normalized = value.trim().toLowerCase();
+      if (normalized == 'true' || normalized == '1') {
+        return true;
+      }
+      if (normalized == 'false' || normalized == '0') {
+        return false;
+      }
+    }
+    return fallback;
+  }
+
   Future<String> generateReferralCode(String userId) async {
     if (userId.trim().isEmpty) {
       throw ArgumentError('userId is required');
@@ -62,8 +91,8 @@ class ReferralService {
     }
 
     final codeData = codeSnapshot.data() ?? <String, dynamic>{};
-    final ownerUserId = (codeData['ownerUserId'] as String? ?? '').trim();
-    final isActive = codeData['isActive'] as bool? ?? true;
+    final ownerUserId = _asString(codeData['ownerUserId']);
+    final isActive = _asBool(codeData['isActive']);
     if (!isActive || ownerUserId.isEmpty || ownerUserId == userId) {
       return false;
     }

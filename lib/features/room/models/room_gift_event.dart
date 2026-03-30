@@ -21,6 +21,16 @@ class RoomGiftEvent {
     required this.sentAt,
   });
 
+  static String _asString(dynamic value, {String fallback = ''}) {
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return fallback;
+  }
+
   factory RoomGiftEvent.fromJson(String docId, Map<String, dynamic> data) {
     final sentAtRaw = data['sentAt'];
     DateTime sentAt;
@@ -33,11 +43,11 @@ class RoomGiftEvent {
     }
     return RoomGiftEvent(
       id: docId,
-      senderId: (data['senderId'] as String?) ?? '',
-      senderName: (data['senderName'] as String?) ?? '',
-      receiverId: (data['receiverId'] as String?) ?? '',
-      roomId: (data['roomId'] as String?) ?? '',
-      giftId: (data['giftId'] as String?) ?? '',
+      senderId: _asString(data['senderId']),
+      senderName: _asString(data['senderName']),
+      receiverId: _asString(data['receiverId']),
+      roomId: _asString(data['roomId']),
+      giftId: _asString(data['giftId']),
       coinCost: (data['coinCost'] as num?)?.toInt() ?? 0,
       sentAt: sentAt,
     );

@@ -11,6 +11,16 @@ class ModerationService {
   final FirebaseFirestore _firestore;
   final FirebaseAuth? _auth;
 
+  String _asString(dynamic value, {String fallback = ''}) {
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return fallback;
+  }
+
   String get _currentUserId {
     final userId = (_auth ?? FirebaseAuth.instance).currentUser?.uid;
     if (userId == null || userId.isEmpty) {
@@ -115,10 +125,10 @@ class ModerationService {
 
     return {
       ...blockedByCurrent.docs
-          .map((doc) => doc.data()['blockedUserId'] as String? ?? '')
+          .map((doc) => _asString(doc.data()['blockedUserId']))
           .where((id) => id.isNotEmpty),
       ...blockingCurrent.docs
-          .map((doc) => doc.data()['blockerUserId'] as String? ?? '')
+          .map((doc) => _asString(doc.data()['blockerUserId']))
           .where((id) => id.isNotEmpty),
     };
   }

@@ -23,6 +23,29 @@ class MicAccessRequestModel {
     required this.updatedAt,
   });
 
+  static String _asString(dynamic value, {String fallback = ''}) {
+    if (value is String) {
+      final trimmed = value.trim();
+      if (trimmed.isNotEmpty) {
+        return trimmed;
+      }
+    }
+    return fallback;
+  }
+
+  static int _asInt(dynamic value, {int fallback = 100}) {
+    if (value is int) {
+      return value;
+    }
+    if (value is num) {
+      return value.toInt();
+    }
+    if (value is String) {
+      return int.tryParse(value.trim()) ?? fallback;
+    }
+    return fallback;
+  }
+
   factory MicAccessRequestModel.fromJson(Map<String, dynamic> json) {
     DateTime parseDate(dynamic value) {
       if (value is Timestamp) {
@@ -35,12 +58,12 @@ class MicAccessRequestModel {
     }
 
     return MicAccessRequestModel(
-      id: (json['id'] as String? ?? '').trim(),
-      roomId: (json['roomId'] as String? ?? '').trim(),
-      requesterId: (json['requesterId'] as String? ?? '').trim(),
-      hostId: (json['hostId'] as String? ?? '').trim(),
-      status: (json['status'] as String? ?? 'pending').trim(),
-      priority: (json['priority'] as int?) ?? 100,
+      id: _asString(json['id']),
+      roomId: _asString(json['roomId']),
+      requesterId: _asString(json['requesterId']),
+      hostId: _asString(json['hostId']),
+      status: _asString(json['status'], fallback: 'pending'),
+      priority: _asInt(json['priority']),
       expiresAt: parseDate(json['expiresAt']),
       createdAt: parseDate(json['createdAt']),
       updatedAt: parseDate(json['updatedAt']),

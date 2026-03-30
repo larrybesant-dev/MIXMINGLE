@@ -1,6 +1,66 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+DateTime _parseDateTime(dynamic value) {
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is String) {
+    return DateTime.tryParse(value) ?? DateTime.now();
+  }
+  return DateTime.now();
+}
+
+String _asString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
+String? _asNullableString(dynamic value) {
+  if (value is String) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+  return null;
+}
+
+bool _asBool(dynamic value, {bool fallback = false}) {
+  if (value is bool) {
+    return value;
+  }
+  if (value is num) {
+    return value != 0;
+  }
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true' || normalized == '1') {
+      return true;
+    }
+    if (normalized == 'false' || normalized == '0') {
+      return false;
+    }
+  }
+  return fallback;
+}
+
+List<String> _asStringList(dynamic value) {
+  if (value is List) {
+    return value
+        .map((item) => item is String ? item.trim() : item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+  }
+  return const <String>[];
+}
+
 class Story {
   final String id;
   final String userId;
@@ -31,16 +91,18 @@ class Story {
   factory Story.fromJson(Map<String, dynamic> json, String docId) {
     return Story(
       id: docId,
-      userId: json['userId'] as String? ?? '',
-      username: json['username'] as String? ?? '',
-      userAvatarUrl: json['userAvatarUrl'] as String?,
-      imageUrl: json['imageUrl'] as String?,
-      videoUrl: json['videoUrl'] as String?,
-      content: json['content'] as String?,
-      createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      expiresAt: (json['expiresAt'] as Timestamp?)?.toDate() ?? DateTime.now().add(const Duration(hours: 24)),
-      viewedBy: List<String>.from((json['viewedBy'] as List<dynamic>?) ?? []),
-      isDeleted: json['isDeleted'] as bool? ?? false,
+      userId: _asString(json['userId']),
+      username: _asString(json['username']),
+      userAvatarUrl: _asNullableString(json['userAvatarUrl']),
+      imageUrl: _asNullableString(json['imageUrl']),
+      videoUrl: _asNullableString(json['videoUrl']),
+      content: _asNullableString(json['content']),
+      createdAt: _parseDateTime(json['createdAt']),
+      expiresAt: json['expiresAt'] == null
+          ? DateTime.now().add(const Duration(hours: 24))
+          : _parseDateTime(json['expiresAt']),
+      viewedBy: _asStringList(json['viewedBy']),
+      isDeleted: _asBool(json['isDeleted']),
     );
   }
 

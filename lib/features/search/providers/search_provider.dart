@@ -1,6 +1,79 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+DateTime _parseDateTime(dynamic value) {
+  if (value is Timestamp) {
+    return value.toDate();
+  }
+  if (value is DateTime) {
+    return value;
+  }
+  if (value is String) {
+    return DateTime.tryParse(value) ?? DateTime.now();
+  }
+  return DateTime.now();
+}
+
+String _asString(dynamic value, {String fallback = ''}) {
+  if (value is String) {
+    final trimmed = value.trim();
+    if (trimmed.isNotEmpty) {
+      return trimmed;
+    }
+  }
+  return fallback;
+}
+
+String? _asNullableString(dynamic value) {
+  if (value is String) {
+    final trimmed = value.trim();
+    return trimmed.isEmpty ? null : trimmed;
+  }
+  return null;
+}
+
+bool _asBool(dynamic value, {bool fallback = false}) {
+  if (value is bool) {
+    return value;
+  }
+  if (value is num) {
+    return value != 0;
+  }
+  if (value is String) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized == 'true' || normalized == '1') {
+      return true;
+    }
+    if (normalized == 'false' || normalized == '0') {
+      return false;
+    }
+  }
+  return fallback;
+}
+
+int _asInt(dynamic value, {int fallback = 0}) {
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  if (value is String) {
+    return int.tryParse(value.trim()) ?? fallback;
+  }
+  return fallback;
+}
+
+List<String> _asStringList(dynamic value) {
+  if (value is List) {
+    return value
+        .map((item) => item is String ? item.trim() : item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .toList(growable: false);
+  }
+  return const <String>[];
+}
+
 class SearchUser {
   final String id;
   final String username;
@@ -19,10 +92,10 @@ class SearchUser {
   factory SearchUser.fromJson(Map<String, dynamic> json, String docId) {
     return SearchUser(
       id: docId,
-      username: json['username'] as String? ?? '',
-      avatarUrl: json['avatarUrl'] as String?,
-      isVerified: json['isVerified'] as bool? ?? false,
-      followerCount: json['followerCount'] as int? ?? 0,
+      username: _asString(json['username']),
+      avatarUrl: _asNullableString(json['avatarUrl']),
+      isVerified: _asBool(json['isVerified']),
+      followerCount: _asInt(json['followerCount']),
     );
   }
 }
@@ -51,13 +124,13 @@ class SearchPost {
   factory SearchPost.fromJson(Map<String, dynamic> json, String docId) {
     return SearchPost(
       id: docId,
-      authorId: json['authorId'] as String? ?? '',
-      authorName: json['authorName'] as String? ?? 'Unknown',
-      authorAvatarUrl: json['authorAvatarUrl'] as String?,
-      content: json['content'] as String? ?? '',
-      hashtags: List<String>.from((json['hashtags'] as List<dynamic>?) ?? []),
-      createdAt: (json['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      likeCount: json['likeCount'] as int? ?? 0,
+      authorId: _asString(json['authorId']),
+      authorName: _asString(json['authorName'], fallback: 'Unknown'),
+      authorAvatarUrl: _asNullableString(json['authorAvatarUrl']),
+      content: _asString(json['content']),
+      hashtags: _asStringList(json['hashtags']),
+      createdAt: _parseDateTime(json['createdAt']),
+      likeCount: _asInt(json['likeCount']),
     );
   }
 }
@@ -76,8 +149,8 @@ class SearchHashtag {
   factory SearchHashtag.fromJson(Map<String, dynamic> json, String docId) {
     return SearchHashtag(
       hashtag: docId,
-      postCount: json['postCount'] as int? ?? 0,
-      lastUsedAt: (json['lastUsedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      postCount: _asInt(json['postCount']),
+      lastUsedAt: _parseDateTime(json['lastUsedAt']),
     );
   }
 }

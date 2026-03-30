@@ -58,7 +58,7 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
   }
 
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (_formKey.currentState?.validate() != true) return;
     
     // Read all necessary values before starting async operations
     final authController = ref.read(authControllerProvider.notifier);
