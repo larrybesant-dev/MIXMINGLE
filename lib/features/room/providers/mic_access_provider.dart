@@ -234,15 +234,16 @@ final myMicAccessRequestProvider = StreamProvider.autoDispose.family<MicAccessRe
       .doc(params.roomId)
       .collection('mic_access_requests')
       .where('requesterId', isEqualTo: params.requesterId)
-      .orderBy('createdAt', descending: true)
-      .limit(1)
       .snapshots()
       .map((snapshot) {
         if (snapshot.docs.isEmpty) {
           return null;
         }
-        final doc = snapshot.docs.first;
-        final request = MicAccessRequestModel.fromJson({'id': doc.id, ...doc.data()});
+        final requests = snapshot.docs
+            .map((doc) => MicAccessRequestModel.fromJson({'id': doc.id, ...doc.data()}))
+            .toList(growable: false)
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        final request = requests.first;
         if (request.status == 'pending' && request.isExpired) {
           return null;
         }

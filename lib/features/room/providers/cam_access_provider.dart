@@ -120,14 +120,19 @@ final myCamAccessRequestProvider = StreamProvider.autoDispose.family<CamAccessRe
       .doc(params.roomId)
       .collection('cam_access_requests')
       .where('requesterId', isEqualTo: params.requesterId)
-      .orderBy('createdAt', descending: true)
-      .limit(1)
       .snapshots()
       .map((snapshot) {
         if (snapshot.docs.isEmpty) {
           return null;
         }
-        final doc = snapshot.docs.first;
-        return CamAccessRequestModel.fromJson({'id': doc.id, ...doc.data()});
+        final requests = snapshot.docs
+            .map((doc) => CamAccessRequestModel.fromJson({'id': doc.id, ...doc.data()}))
+            .toList(growable: false)
+          ..sort((a, b) {
+            final aCreated = a.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            final bCreated = b.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+            return bCreated.compareTo(aCreated);
+          });
+        return requests.first;
       });
 });

@@ -17,11 +17,11 @@ class BetaFeedbackOverlay extends StatelessWidget {
         child,
         Positioned(
           right: 16,
-          bottom: 90,
-          child: FloatingActionButton.extended(
+          top: 84,
+          child: FloatingActionButton.small(
             heroTag: 'beta-feedback-fab',
-            icon: const Icon(Icons.bug_report_outlined),
-            label: const Text('Report Issue'),
+            tooltip: 'Report Issue',
+            child: const Icon(Icons.bug_report_outlined),
             onPressed: () {
               final navigatorContext = rootNavigatorKey.currentContext;
               if (navigatorContext == null) {

@@ -1563,6 +1563,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             final allowChat = roomPolicyAsync.valueOrNull?.allowChat ?? true;
             final allowCamRequests =
                 roomPolicyAsync.valueOrNull?.allowCamRequests ?? true;
+            final isDesktopLayout = MediaQuery.sizeOf(context).width >= 1180;
             if (isLocked && !isHost && !isCohost && !isModerator) {
               return const Scaffold(
                 body: Center(child: Text('Room is locked.')),
@@ -1572,6 +1573,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               appBar: AppBar(
                 title: Text('Live Room ($role)'),
                 actions: [
+                  IconButton(
+                    tooltip: 'Leave Room',
+                    onPressed: () async {
+                      await _disconnectCall();
+                      await _leaveRoom();
+                      if (context.mounted) {
+                        context.pop();
+                      }
+                    },
+                    icon: const Icon(Icons.logout),
+                  ),
                   IconButton(
                     tooltip: 'People in room',
                     onPressed: participantsInRoom.isEmpty
@@ -1611,7 +1623,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               ),
               body: Stack(
                 children: [
-                  Column(
+                  Padding(
+                    padding: EdgeInsets.only(right: isDesktopLayout ? 420 : 0),
+                    child: Column(
                 children: [
                   if (_callError != null)
                     Padding(
@@ -2615,219 +2629,365 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         },
                       ),
                     ),
-                  Expanded(
-                    child: messageStreamAsync.when(
-                      data: (messages) {
-                        if (messages.length != _lastRenderedMessageCount) {
-                          _lastRenderedMessageCount = messages.length;
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (scrollController.hasClients) {
-                              scrollController.jumpTo(
-                                scrollController.position.maxScrollExtent,
+                  if (!isDesktopLayout) ...[
+                    Expanded(
+                      child: messageStreamAsync.when(
+                        data: (messages) {
+                          if (messages.length != _lastRenderedMessageCount) {
+                            _lastRenderedMessageCount = messages.length;
+                            WidgetsBinding.instance.addPostFrameCallback((_) {
+                              if (scrollController.hasClients) {
+                                scrollController.jumpTo(
+                                  scrollController.position.maxScrollExtent,
+                                );
+                              }
+                            });
+                          }
+                          if (messages.isEmpty) {
+                            return const Center(child: Text('No messages yet.'));
+                          }
+                          return ListView.builder(
+                            controller: scrollController,
+                            padding: const EdgeInsets.all(8),
+                            itemCount: messages.length,
+                            itemBuilder: (context, i) {
+                              final msg = messages[i];
+                              return MessageBubble(
+                                message: msg,
+                                isMe: msg.senderId == user.id,
                               );
-                            }
-                          });
+                            },
+                          );
+                        },
+                        loading: () =>
+                            const Center(child: CircularProgressIndicator()),
+                        error: (e, _) => Center(child: Text('Error: $e')),
+                      ),
+                    ),
+                    participantsAsync.when(
+                      data: (participants) {
+                        final hasBlockedParticipant = participants.any((p) {
+                          final participantId = p.userId.trim();
+                          if (participantId.isEmpty || participantId == user.id) {
+                            return false;
+                          }
+                          return _excludedUserIds.contains(participantId);
+                        });
+
+                        if (!hasBlockedParticipant) {
+                          return const SizedBox.shrink();
                         }
-                        if (messages.isEmpty) {
-                          return const Center(child: Text('No messages yet.'));
-                        }
-                        return ListView.builder(
-                          controller: scrollController,
-                          padding: const EdgeInsets.all(8),
-                          itemCount: messages.length,
-                          itemBuilder: (context, i) {
-                            final msg = messages[i];
-                            return MessageBubble(
-                              message: msg,
-                              isMe: msg.senderId == user.id,
-                            );
-                          },
+
+                        return Container(
+                          width: double.infinity,
+                          margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            'Blocked relationship detected in this room. Leave to continue safely.',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onErrorContainer,
+                                ),
+                          ),
                         );
                       },
-                      loading: () =>
-                          const Center(child: CircularProgressIndicator()),
-                      error: (e, _) => Center(child: Text('Error: $e')),
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
                     ),
-                  ),
-                  participantsAsync.when(
-                    data: (participants) {
-                      final hasBlockedParticipant = participants.any((p) {
-                        final participantId = p.userId.trim();
-                        if (participantId.isEmpty || participantId == user.id) {
-                          return false;
-                        }
-                        return _excludedUserIds.contains(participantId);
-                      });
-
-                      if (!hasBlockedParticipant) {
-                        return const SizedBox.shrink();
-                      }
-
-                      return Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.errorContainer,
-                          borderRadius: BorderRadius.circular(10),
-                        ),
+                    if (cooldownMessage.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
                         child: Text(
-                          'Blocked relationship detected in this room. Leave to continue safely.',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.onErrorContainer,
-                              ),
-                        ),
-                      );
-                    },
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, _) => const SizedBox.shrink(),
-                  ),
-                  if (cooldownMessage.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8.0),
-                      child: Text(
-                        cooldownMessage,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  SafeArea(
-                    top: false,
-                    minimum: const EdgeInsets.only(bottom: 90),
-                    child: Container(
-                      margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                        ),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Row(
-                        children: [
-                          if (allowGifts &&
-                              !isHost &&
-                              hostId.isNotEmpty &&
-                              hostId != user.id)
-                            IconButton(
-                              tooltip: 'Send a gift',
-                              icon: const Icon(Icons.card_giftcard),
-                              onPressed: () => _showGiftSheet(
-                                hostId: hostId,
-                                hostName: 'Host',
-                                senderName: user.username,
-                                coinBalance:
-                                    walletAsync.valueOrNull?.coinBalance ?? 0,
-                              ),
-                            ),
-                          Expanded(
-                            child: TextField(
-                              controller: messageController,
-                              enabled:
-                                  !isSending &&
-                                  participant?.isMuted != true &&
-                                  participant?.isBanned != true &&
-                                  !hasBlockedParticipantInRoom,
-                              decoration: InputDecoration(
-                                hintText: participant?.isMuted == true
-                                    ? 'You are muted'
-                                    : participant?.isBanned == true
-                                    ? 'You are banned'
-                                    : hasBlockedParticipantInRoom
-                                    ? 'Blocked relationship in room'
-                                    : !allowChat
-                                    ? 'Chat disabled by host'
-                                    : 'Type your message...',
-                              ),
-                            ),
+                          cooldownMessage,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontWeight: FontWeight.bold,
                           ),
-                          const SizedBox(width: 8),
-                          ElevatedButton(
-                            onPressed:
-                                isSending ||
-                                    participant?.isMuted == true ||
-                                    participant?.isBanned == true ||
-                                    !allowChat ||
-                                    hasBlockedParticipantInRoom
-                                ? null
-                                : () async {
-                                    if (messageController.text.trim().isEmpty) {
-                                      return;
-                                    }
-                                    if (slowModeSeconds > 0 &&
-                                        lastMessageTime != null) {
-                                      final secondsSinceLastMessage =
-                                          DateTime.now()
-                                              .difference(lastMessageTime!)
-                                              .inSeconds;
-                                      if (secondsSinceLastMessage <
-                                          slowModeSeconds) {
-                                        setState(() {
-                                          cooldownMessage =
-                                              'Slow mode is on. Wait ${slowModeSeconds - secondsSinceLastMessage}s.';
-                                        });
+                        ),
+                      ),
+                    SafeArea(
+                      top: false,
+                      minimum: const EdgeInsets.only(bottom: 90),
+                      child: Container(
+                        margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.surface,
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          children: [
+                            if (allowGifts &&
+                                !isHost &&
+                                hostId.isNotEmpty &&
+                                hostId != user.id)
+                              IconButton(
+                                tooltip: 'Send a gift',
+                                icon: const Icon(Icons.card_giftcard),
+                                onPressed: () => _showGiftSheet(
+                                  hostId: hostId,
+                                  hostName: 'Host',
+                                  senderName: user.username,
+                                  coinBalance:
+                                      walletAsync.valueOrNull?.coinBalance ?? 0,
+                                ),
+                              ),
+                            Expanded(
+                              child: TextField(
+                                controller: messageController,
+                                enabled:
+                                    !isSending &&
+                                    participant?.isMuted != true &&
+                                    participant?.isBanned != true &&
+                                    !hasBlockedParticipantInRoom,
+                                decoration: InputDecoration(
+                                  hintText: participant?.isMuted == true
+                                      ? 'You are muted'
+                                      : participant?.isBanned == true
+                                      ? 'You are banned'
+                                      : hasBlockedParticipantInRoom
+                                      ? 'Blocked relationship in room'
+                                      : !allowChat
+                                      ? 'Chat disabled by host'
+                                      : 'Type your message...',
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            ElevatedButton(
+                              onPressed:
+                                  isSending ||
+                                      participant?.isMuted == true ||
+                                      participant?.isBanned == true ||
+                                      !allowChat ||
+                                      hasBlockedParticipantInRoom
+                                  ? null
+                                  : () async {
+                                      if (messageController.text.trim().isEmpty) {
                                         return;
                                       }
-                                    }
+                                      if (slowModeSeconds > 0 &&
+                                          lastMessageTime != null) {
+                                        final secondsSinceLastMessage =
+                                            DateTime.now()
+                                                .difference(lastMessageTime!)
+                                                .inSeconds;
+                                        if (secondsSinceLastMessage <
+                                            slowModeSeconds) {
+                                          setState(() {
+                                            cooldownMessage =
+                                                'Slow mode is on. Wait ${slowModeSeconds - secondsSinceLastMessage}s.';
+                                          });
+                                          return;
+                                        }
+                                      }
 
-                                    setState(() => isSending = true);
-                                    try {
-                                      await sendMessage(
-                                        messageController.text.trim(),
-                                      );
-                                      lastMessageTime = DateTime.now();
-                                      cooldownMessage = '';
-                                      messageController.clear();
+                                      setState(() => isSending = true);
+                                      try {
+                                        await sendMessage(
+                                          messageController.text.trim(),
+                                        );
+                                        lastMessageTime = DateTime.now();
+                                        cooldownMessage = '';
+                                        messageController.clear();
 
-                                      if (!_hasTrackedFirstMessage) {
-                                        _hasTrackedFirstMessage = true;
-                                        await AnalyticsService().logEvent(
-                                          'first_message_sent',
-                                          params: {
-                                            'room_id': widget.roomId,
-                                            'user_id': user.id,
-                                          },
-                                        );
+                                        if (!_hasTrackedFirstMessage) {
+                                          _hasTrackedFirstMessage = true;
+                                          await AnalyticsService().logEvent(
+                                            'first_message_sent',
+                                            params: {
+                                              'room_id': widget.roomId,
+                                              'user_id': user.id,
+                                            },
+                                          );
+                                        }
+                                      } catch (e) {
+                                        if (context.mounted) {
+                                          ScaffoldMessenger.of(
+                                            context,
+                                          ).showSnackBar(
+                                            SnackBar(content: Text(e.toString())),
+                                          );
+                                        }
+                                      } finally {
+                                        if (context.mounted) {
+                                          setState(() => isSending = false);
+                                        }
                                       }
-                                    } catch (e) {
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(
-                                          context,
-                                        ).showSnackBar(
-                                          SnackBar(content: Text(e.toString())),
-                                        );
-                                      }
-                                    } finally {
-                                      if (context.mounted) {
-                                        setState(() => isSending = false);
-                                      }
-                                    }
+                                    },
+                              child: isSending
+                                  ? const SizedBox(
+                                      width: 16,
+                                      height: 16,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text('Send'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+                  ),
+              if (isDesktopLayout)
+                Positioned(
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: SizedBox(
+                    width: 420,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        border: Border(
+                          left: BorderSide(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Room Chat',
+                                  style: Theme.of(context).textTheme.titleMedium,
+                                ),
+                                const Spacer(),
+                                Text(
+                                  '${participantsInRoom.length} joined',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Divider(height: 1),
+                          Expanded(
+                            child: messageStreamAsync.when(
+                              data: (messages) {
+                                if (messages.isEmpty) {
+                                  return const Center(child: Text('No messages yet.'));
+                                }
+                                return ListView.builder(
+                                  padding: const EdgeInsets.all(8),
+                                  itemCount: messages.length,
+                                  itemBuilder: (context, i) {
+                                    final msg = messages[i];
+                                    return MessageBubble(
+                                      message: msg,
+                                      isMe: msg.senderId == user.id,
+                                    );
                                   },
-                            child: isSending
-                                ? const SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
+                                );
+                              },
+                              loading: () => const Center(child: CircularProgressIndicator()),
+                              error: (e, _) => Center(child: Text('Error: $e')),
+                            ),
+                          ),
+                          if (cooldownMessage.isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 6),
+                              child: Text(
+                                cooldownMessage,
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          SafeArea(
+                            top: false,
+                            minimum: const EdgeInsets.fromLTRB(8, 0, 8, 88),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextField(
+                                    controller: messageController,
+                                    enabled:
+                                        !isSending &&
+                                        participant?.isMuted != true &&
+                                        participant?.isBanned != true &&
+                                        !hasBlockedParticipantInRoom,
+                                    decoration: InputDecoration(
+                                      hintText: participant?.isMuted == true
+                                          ? 'You are muted'
+                                          : participant?.isBanned == true
+                                          ? 'You are banned'
+                                          : hasBlockedParticipantInRoom
+                                          ? 'Blocked relationship in room'
+                                          : !allowChat
+                                          ? 'Chat disabled by host'
+                                          : 'Type your message...',
                                     ),
-                                  )
-                                : const Text('Send'),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                FilledButton(
+                                  onPressed:
+                                      isSending ||
+                                          participant?.isMuted == true ||
+                                          participant?.isBanned == true ||
+                                          !allowChat ||
+                                          hasBlockedParticipantInRoom
+                                      ? null
+                                      : () async {
+                                          if (messageController.text.trim().isEmpty) {
+                                            return;
+                                          }
+                                          if (slowModeSeconds > 0 &&
+                                              lastMessageTime != null) {
+                                            final secondsSinceLastMessage =
+                                                DateTime.now()
+                                                    .difference(lastMessageTime!)
+                                                    .inSeconds;
+                                            if (secondsSinceLastMessage < slowModeSeconds) {
+                                              setState(() {
+                                                cooldownMessage =
+                                                    'Slow mode is on. Wait ${slowModeSeconds - secondsSinceLastMessage}s.';
+                                              });
+                                              return;
+                                            }
+                                          }
+                                          setState(() => isSending = true);
+                                          try {
+                                            await sendMessage(messageController.text.trim());
+                                            lastMessageTime = DateTime.now();
+                                            cooldownMessage = '';
+                                            messageController.clear();
+                                          } finally {
+                                            if (context.mounted) {
+                                              setState(() => isSending = false);
+                                            }
+                                          }
+                                        },
+                                  child: const Text('Send'),
+                                ),
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
               if (_giftToasts.isNotEmpty)
                 Positioned(
                   top: 8,
@@ -2873,15 +3033,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 ),
             ],
           ),
-              floatingActionButton: FloatingActionButton.extended(
-                onPressed: () async {
-                  await _disconnectCall();
-                  await _leaveRoom();
-                  if (context.mounted) context.pop();
-                },
-                icon: const Icon(Icons.exit_to_app),
-                label: const Text('Leave Room'),
-              ),
             );
           },
         );
