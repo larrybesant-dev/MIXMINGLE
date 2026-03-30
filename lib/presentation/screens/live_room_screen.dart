@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -331,35 +332,77 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   }
 
   Future<void> _toggleVideo() async {
+    developer.log('Camera toggle started', name: 'LiveRoomScreen');
     final service = _agoraService;
+    developer.log(
+      'Camera toggle precheck: service=${service != null}, callReady=$_isCallReady, inFlight=$_isVideoActionInFlight',
+      name: 'LiveRoomScreen',
+    );
+    
     if (service == null || !_isCallReady || _isVideoActionInFlight) {
       if (service == null) {
+        developer.log('Camera toggle blocked: Agora service not initialized', name: 'LiveRoomScreen');
         _showSnackBar('Agora service not initialized.');
+      } else if (!_isCallReady) {
+        developer.log('Camera toggle blocked: call not ready', name: 'LiveRoomScreen');
+        _showSnackBar('Call not ready. Wait a moment and retry.');
+      } else {
+        developer.log('Camera toggle blocked: action already in flight', name: 'LiveRoomScreen');
+        _showSnackBar('Camera action in progress...');
       }
       return;
     }
+    
     final next = !_isVideoEnabled;
+    developer.log('Camera toggle target state: $next', name: 'LiveRoomScreen');
     setState(() => _isVideoActionInFlight = true);
     try {
       if (next) {
-        _showSnackBar('Checking camera access...');
-        await service.ensureDeviceAccess(video: true, audio: false);
+        if (!kIsWeb) {
+          developer.log('Camera toggle step: ensure device access', name: 'LiveRoomScreen');
+          _showSnackBar('Checking camera access...');
+          await service.ensureDeviceAccess(video: true, audio: false);
+          developer.log('Camera toggle step: device access confirmed', name: 'LiveRoomScreen');
+        } else {
+          developer.log(
+            'Camera toggle step: skipping preflight on web to avoid temporary camera contention',
+            name: 'LiveRoomScreen',
+          );
+        }
         await service.setBroadcaster(true);
+        developer.log('Camera toggle step: broadcaster mode set', name: 'LiveRoomScreen');
       }
+      developer.log('Camera toggle step: enableVideo($next)', name: 'LiveRoomScreen');
       await service.enableVideo(next);
+      developer.log('Camera toggle step: enableVideo completed', name: 'LiveRoomScreen');
       if (mounted) {
         setState(() {
           _isVideoEnabled = next;
         });
-        _showSnackBar(next ? 'Camera turned on.' : 'Camera turned off.');
+        if (next) {
+          Future<void>.delayed(const Duration(milliseconds: 450), () {
+            if (mounted) {
+              setState(() {});
+            }
+          });
+        }
+        final msg = next ? 'Camera turned on.' : 'Camera turned off.';
+        developer.log('Camera toggle success: $msg', name: 'LiveRoomScreen');
+        _showSnackBar(msg);
       }
-    } catch (e) {
-      print('Camera toggle error: $e');
+    } catch (e, st) {
+      developer.log(
+        'Camera toggle failed: $e',
+        name: 'LiveRoomScreen',
+        error: e,
+        stackTrace: st,
+      );
       _showSnackBar(_mapMediaError(e, canBroadcast: true));
     } finally {
       if (mounted) {
         setState(() => _isVideoActionInFlight = false);
       }
+      developer.log('Camera toggle ended', name: 'LiveRoomScreen');
     }
   }
 

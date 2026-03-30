@@ -2,6 +2,7 @@ import 'dart:developer' as developer;
 import 'dart:async';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart'; // For Widget, VoidCallback
 
 import 'web_media_probe_stub.dart'
@@ -40,7 +41,10 @@ class AgoraService {
     List<int> get remoteUids => List.unmodifiable(_remoteUids);
   bool get localSpeaking => _localSpeaking;
   bool get canRenderLocalView =>
-      _initialized && _joinedChannel && _broadcasterMode && _localVideoCapturing;
+      _initialized &&
+      _joinedChannel &&
+      _broadcasterMode &&
+      (_localVideoCapturing || kIsWeb);
 
   bool isRemoteSpeaking(int uid) => _speakingUids.contains(uid);
 
@@ -185,8 +189,12 @@ class AgoraService {
     }
   }
 
-  Future<void> _awaitLocalVideoCapturing({Duration timeout = const Duration(seconds: 4)}) async {
+  Future<void> _awaitLocalVideoCapturing({Duration timeout = const Duration(seconds: 8)}) async {
     if (_localVideoCapturing) {
+      developer.log(
+        'Video already capturing',
+        name: 'AgoraService',
+      );
       return;
     }
     final completer = Completer<void>();
@@ -446,28 +454,35 @@ class AgoraService {
   }
 
   Future<void> setBroadcaster(bool enabled) async {
-    if (!_initialized) return;
+    if (!_initialized) {
+      developer.log(
+        'setBroadcaster called but service not initialized',
+        name: 'AgoraService',
+      );
+      return;
+    }
     try {
+      developer.log(
+        'Setting client role to ${enabled ? "broadcaster" : "audience"}',
+        name: 'AgoraService',
+      );
       await _engine.setClientRole(
         role: enabled
             ? ClientRoleType.clientRoleBroadcaster
             : ClientRoleType.clientRoleAudience,
       );
+      _broadcasterMode = enabled;
+      developer.log(
+        'Client role changed successfully',
+        name: 'AgoraService',
+      );
     } catch (error) {
+      developer.log(
+        'Error setting client role: $error',
+        name: 'AgoraService',
+        error: error,
+      );
       _throwMappedAgoraError(error, operation: 'switch role');
-    }
-    _broadcasterMode = enabled;
-    if (enabled) {
-      try {
-        await _engine.enableVideo();
-      } catch (error, stackTrace) {
-        developer.log(
-          'Agora enableVideo failed while switching role',
-          name: 'AgoraService',
-          error: error,
-          stackTrace: stackTrace,
-        );
-      }
     }
   }
 
@@ -553,6 +568,14 @@ class AgoraService {
           name: 'AgoraService',
         );
         await _awaitLocalVideoCapturing();
+        if (!_localVideoCapturing && kIsWeb) {
+          // Web runtimes may miss local video state callbacks; keep UI in sync.
+          _localVideoCapturing = true;
+          developer.log(
+            'Applying web fallback: local video marked capturing after successful enable flow',
+            name: 'AgoraService',
+          );
+        }
         developer.log(
           'enableVideo($enabled) - completed successfully',
           name: 'AgoraService',
