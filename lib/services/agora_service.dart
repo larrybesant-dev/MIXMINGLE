@@ -3,6 +3,9 @@ import 'dart:developer' as developer;
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart'; // For Widget, VoidCallback
 
+import 'web_media_probe_stub.dart'
+  if (dart.library.html) 'web_media_probe_web.dart' as web_media_probe;
+
 class AgoraServiceException implements Exception {
   const AgoraServiceException({
     required this.code,
@@ -65,6 +68,17 @@ class AgoraService {
     }
   late RtcEngine _engine;
   bool _initialized = false;
+
+  Future<void> ensureDeviceAccess({required bool video, required bool audio}) async {
+    try {
+      await web_media_probe.ensureUserMediaAccess(video: video, audio: audio);
+    } catch (error) {
+      _throwMappedAgoraError(
+        error,
+        operation: video ? 'access camera' : 'access microphone',
+      );
+    }
+  }
 
   Never _throwMappedAgoraError(Object error, {required String operation}) {
     final raw = error.toString();
@@ -150,7 +164,6 @@ class AgoraService {
           channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
         ),
       );
-      await _engine.setClientRole(role: ClientRoleType.clientRoleAudience);
     } catch (error) {
       _throwMappedAgoraError(error, operation: 'initialize live media');
     }
@@ -216,6 +229,18 @@ class AgoraService {
     );
 
     // Media features are best-effort on web and should not block room join.
+    try {
+      // On web, this can fail before channel join on some runtimes; keep it non-fatal.
+      await _engine.setClientRole(role: ClientRoleType.clientRoleAudience);
+    } catch (error, stackTrace) {
+      developer.log(
+        'Agora setClientRole(audience) skipped during initialize',
+        name: 'AgoraService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+
     try {
       await _engine.enableAudio();
     } catch (error, stackTrace) {
@@ -387,6 +412,7 @@ class AgoraService {
               autoSubscribeAudio: true,
               autoSubscribeVideo: true,
               publishCameraTrack: true,
+              publishMicrophoneTrack: false,
             ),
           );
         }
@@ -406,6 +432,7 @@ class AgoraService {
               autoSubscribeAudio: true,
               autoSubscribeVideo: true,
               publishCameraTrack: false,
+              publishMicrophoneTrack: false,
             ),
           );
         }

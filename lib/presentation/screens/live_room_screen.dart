@@ -311,6 +311,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final next = !_isMicMuted;
     setState(() => _isMicActionInFlight = true);
     try {
+      if (!next) {
+        await service.ensureDeviceAccess(video: false, audio: true);
+        await service.setBroadcaster(true);
+      }
       await service.mute(next);
       if (mounted) {
         setState(() {
@@ -332,6 +336,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final next = !_isVideoEnabled;
     setState(() => _isVideoActionInFlight = true);
     try {
+      if (next) {
+        await service.ensureDeviceAccess(video: true, audio: false);
+        await service.setBroadcaster(true);
+      }
       await service.enableVideo(next);
       if (mounted) {
         setState(() {
@@ -444,9 +452,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       return;
     }
 
-    final micAllowed = RoomPermissions.canUseMic(role);
     try {
-      await service.mute(!micAllowed);
+      await service.mute(_isMicMuted);
       if (_isVideoEnabled) {
         await service.enableVideo(true);
       }
@@ -463,7 +470,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
     setState(() {
       _appliedMediaRole = role;
-      _isMicMuted = !micAllowed;
     });
   }
 
@@ -1262,10 +1268,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         });
       }
 
-      await _connectCall(
-        userId,
-        canBroadcast: true,
-      );
+      await _connectCall(userId, canBroadcast: false);
 
       if (!_hasTrackedRoomJoin) {
         _hasTrackedRoomJoin = true;
@@ -1727,7 +1730,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     if (!mounted) {
                                       return;
                                     }
-                                      await _connectCall(user.id, canBroadcast: true);
+                                    await _connectCall(
+                                      user.id,
+                                      canBroadcast: false,
+                                    );
                                   },
                             icon: const Icon(Icons.refresh),
                             label: const Text('Retry live media'),
