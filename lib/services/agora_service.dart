@@ -392,6 +392,8 @@ class AgoraService {
     String channelName,
     int uid, {
     required bool asBroadcaster,
+    bool publishCameraTrackOnJoin = true,
+    bool publishMicrophoneTrackOnJoin = true,
   }) async {
     if (!_initialized) {
       throw StateError('Agora engine must be initialized before joining a channel.');
@@ -409,6 +411,8 @@ class AgoraService {
     final role = asBroadcaster
         ? ClientRoleType.clientRoleBroadcaster
         : ClientRoleType.clientRoleAudience;
+    final shouldPublishCamera = asBroadcaster && publishCameraTrackOnJoin;
+    final shouldPublishMicrophone = asBroadcaster && publishMicrophoneTrackOnJoin;
 
     if (asBroadcaster) {
       try {
@@ -433,12 +437,12 @@ class AgoraService {
           clientRoleType: role,
           autoSubscribeAudio: true,
           autoSubscribeVideo: true,
-          publishCameraTrack: asBroadcaster,
-          publishMicrophoneTrack: asBroadcaster,
+          publishCameraTrack: shouldPublishCamera,
+          publishMicrophoneTrack: shouldPublishMicrophone,
         ),
       );
       // Ensure local camera track state is explicitly enabled after join for web reliability.
-      if (asBroadcaster) {
+      if (shouldPublishCamera) {
         await _engine.enableLocalVideo(true);
         await _engine.muteLocalVideoStream(false);
         try {

@@ -262,11 +262,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       developer.log('Agora token fetched successfully', name: 'LiveRoom');
       await service.initialize(credentials.appId);
       developer.log('Agora service initialized', name: 'LiveRoom');
+      final joinAsBroadcaster = canBroadcast || kIsWeb;
       await service.joinChannel(
         credentials.token,
         widget.roomId,
         rtcUid,
-        asBroadcaster: canBroadcast,
+        asBroadcaster: joinAsBroadcaster,
+        publishCameraTrackOnJoin: canBroadcast,
+        publishMicrophoneTrackOnJoin: canBroadcast,
       );
       developer.log('Successfully joined Agora channel', name: 'LiveRoom');
       if (!mounted) {
@@ -276,9 +279,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       setState(() {
         _agoraService = service;
         _isCallReady = true;
-        _appliedMediaRole = canBroadcast ? 'cohost' : 'audience';
-        _isMicMuted = !canBroadcast;
-        _isVideoEnabled = canBroadcast;
+        // Keep local UI defaults muted/off for audience, even if web joins
+        // with broadcaster role to avoid renegotiation issues.
+        _appliedMediaRole = joinAsBroadcaster ? 'cohost' : 'audience';
+        _isMicMuted = true;
+        _isVideoEnabled = false;
       });
     } catch (e, stackTrace) {
       developer.log(
@@ -383,6 +388,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     try {
       if (next) {
         if (kIsWeb) {
+          if (service.isBroadcaster) {
+            developer.log(
+              'Camera toggle (web): already broadcaster, enabling camera in-place',
+              name: 'LiveRoomScreen',
+            );
+            await service.enableVideo(true);
+            if (mounted) setState(() => _appliedMediaRole = 'cohost');
+          } else {
           // ----------------------------------------------------------------
           // Web: in-place role switch does NOT reliably renegotiate the WebRTC
           // publish track.  Leave and rejoin as broadcaster with a fresh token
@@ -442,6 +455,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           );
           // Mark role as cohost so _applyRoleMediaState doesn't re‑disable video
           if (mounted) setState(() => _appliedMediaRole = 'cohost');
+          }
         } else {
           developer.log('Camera toggle step: ensure device access', name: 'LiveRoomScreen');
           _showSnackBar('Checking camera access...');
