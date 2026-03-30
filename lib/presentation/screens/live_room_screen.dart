@@ -437,11 +437,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       return;
     }
 
-    final canBroadcast = role == 'host' || role == 'cohost' || role == 'stage';
-    final videoEnabled = role == 'host' || role == 'cohost';
+    const canBroadcast = true;
+    final micAllowed = RoomPermissions.canUseMic(role);
     await service.setBroadcaster(canBroadcast);
-    await service.mute(!canBroadcast);
-    await service.enableVideo(videoEnabled);
+    await service.mute(!micAllowed);
+    await service.enableVideo(_isVideoEnabled);
 
     if (!mounted) {
       return;
@@ -449,8 +449,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
     setState(() {
       _appliedMediaRole = role;
-      _isMicMuted = !canBroadcast;
-      _isVideoEnabled = videoEnabled;
+      _isMicMuted = !micAllowed;
     });
   }
 
@@ -1127,15 +1126,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         });
       }
 
-      final participantRole = doc.exists
-          ? _asString(doc.data()?['role'], fallback: 'audience')
-          : (hostId == userId ? 'host' : 'audience');
       await _connectCall(
         userId,
-        canBroadcast:
-            participantRole == 'host' ||
-            participantRole == 'cohost' ||
-            participantRole == 'stage',
+        canBroadcast: true,
       );
 
       if (!_hasTrackedRoomJoin) {
@@ -1197,19 +1190,29 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     required String role,
     required String? camRequestStatus,
   }) {
-    if (RoomPermissions.canUseCamera(role)) {
-      return 'Camera controls are unlocked. Use the camera button above to turn video on.';
+    if (camRequestStatus == 'approved' ||
+        role == RoomPermissions.host ||
+        role == RoomPermissions.cohost ||
+        role == RoomPermissions.moderator) {
+      return 'Camera viewing is unlocked. You can watch other participants on video.';
     }
     if (camRequestStatus == 'pending') {
-      return 'Your camera request is pending. The host must approve it before your camera controls unlock.';
+      return 'Your camera viewing request is pending. The host must approve it before other participants\' cameras unlock.';
     }
     if (camRequestStatus == 'denied') {
-      return 'Your last camera request was denied. You can send another request when you are ready.';
+      return 'Your last camera viewing request was denied. You can send another request when ready.';
     }
     if (camRequestStatus == 'expired') {
-      return 'Your last camera request expired. Send a new request to unlock camera controls.';
+      return 'Your last camera viewing request expired. Send a new request to unlock viewing.';
     }
-    return 'You are currently in the audience. Request camera access to unlock the camera button.';
+    return 'You can publish your own camera anytime. Request approval to view other participants\' cameras.';
+  }
+
+  bool _canViewRemoteCams({required String role, required String? camRequestStatus}) {
+    return role == RoomPermissions.host ||
+        role == RoomPermissions.cohost ||
+        role == RoomPermissions.moderator ||
+        camRequestStatus == 'approved';
   }
 
   String _micAccessHint({
@@ -1616,13 +1619,31 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         horizontal: 12,
                         vertical: 8,
                       ),
-                      child: Text(
-                        _callError!,
-                        style: const TextStyle(
-                          color: Colors.red,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        textAlign: TextAlign.center,
+                      child: Column(
+                        children: [
+                          Text(
+                            _callError!,
+                            style: const TextStyle(
+                              color: Colors.red,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          OutlinedButton.icon(
+                            onPressed: _isCallConnecting
+                                ? null
+                                : () async {
+                                    await _disconnectCall();
+                                    if (!mounted) {
+                                      return;
+                                    }
+                                      await _connectCall(user.id, canBroadcast: true);
+                                  },
+                            icon: const Icon(Icons.refresh),
+                            label: const Text('Retry live media'),
+                          ),
+                        ],
                       ),
                     ),
                   if (_isCallConnecting)
@@ -1671,9 +1692,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                               ),
                                               const SizedBox(height: 8),
                                               Text(
-                                                RoomPermissions.canUseCamera(role)
-                                                    ? 'Camera is available. Use the camera button to start video.'
-                                                    : 'Camera unlocks after host approval.',
+                                                'You can publish your own camera. Viewing others requires approval.',
                                                 textAlign: TextAlign.center,
                                               ),
                                             ],
@@ -1684,7 +1703,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             ),
                           ),
                           const SizedBox(height: 8),
-                          if (_agoraService!.remoteUids.isNotEmpty)
+                          if (_agoraService!.remoteUids.isNotEmpty &&
+                              _canViewRemoteCams(
+                                role: role,
+                                camRequestStatus: camRequestStatus,
+                              ))
                             SizedBox(
                               height: 120,
                               child: ListView.separated(
@@ -1719,6 +1742,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     const SizedBox(width: 8),
                                 itemCount: _agoraService!.remoteUids.length,
                               ),
+                            )
+                          else if (_agoraService!.remoteUids.isNotEmpty)
+                            const Text(
+                              'Request camera viewing approval to see other participants\' cameras.',
                             )
                           else
                             const Text(
@@ -2297,7 +2324,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               const SizedBox(height: 6),
                               Text(
                                 allowCamRequests
-                                ? 'Request host approval to unlock your camera in this room. After approval, the camera button above becomes available.'
+                                ? 'Anyone can publish their own camera. Request host approval to view other participants\' cameras.'
                                     : 'Host has paused cam access requests for this room.',
                               ),
                               const SizedBox(height: 8),
@@ -2348,7 +2375,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         icon: const Icon(
                                           Icons.videocam_outlined,
                                         ),
-                                        label: const Text('Request Camera Access'),
+                                        label: const Text('Request Camera Viewing'),
                                       ),
                                       if (requestStatus != null)
                                         Chip(
@@ -2462,7 +2489,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         children: [
                           participantCountAsync.when(
                             data: (participantCount) => Text(
-                              '$participantCount in room',
+                              '$participantCount total joined',
                               style: Theme.of(context).textTheme.bodyMedium
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
@@ -2669,122 +2696,134 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         ),
                       ),
                     ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16.0,
-                      vertical: 8.0,
-                    ),
-                    child: Row(
-                      children: [
-                        if (allowGifts &&
-                            !isHost &&
-                            hostId.isNotEmpty &&
-                            hostId != user.id)
-                          IconButton(
-                            tooltip: 'Send a gift',
-                            icon: const Icon(Icons.card_giftcard),
-                            onPressed: () => _showGiftSheet(
-                              hostId: hostId,
-                              hostName: 'Host',
-                              senderName: user.username,
-                              coinBalance:
-                                  walletAsync.valueOrNull?.coinBalance ?? 0,
-                            ),
-                          ),
-                        Expanded(
-                          child: TextField(
-                            controller: messageController,
-                            enabled:
-                                !isSending &&
-                                participant?.isMuted != true &&
-                                participant?.isBanned != true &&
-                                !hasBlockedParticipantInRoom,
-                            decoration: InputDecoration(
-                              hintText: participant?.isMuted == true
-                                  ? 'You are muted'
-                                  : participant?.isBanned == true
-                                  ? 'You are banned'
-                                  : hasBlockedParticipantInRoom
-                                  ? 'Blocked relationship in room'
-                                  : !allowChat
-                                  ? 'Chat disabled by host'
-                                  : 'Type your message...',
-                            ),
-                          ),
+                  SafeArea(
+                    top: false,
+                    minimum: const EdgeInsets.only(bottom: 90),
+                    child: Container(
+                      margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.outlineVariant,
                         ),
-                        const SizedBox(width: 8),
-                        ElevatedButton(
-                          onPressed:
-                              isSending ||
-                                  participant?.isMuted == true ||
-                                  participant?.isBanned == true ||
-                                  !allowChat ||
-                                  hasBlockedParticipantInRoom
-                              ? null
-                              : () async {
-                                  if (messageController.text.trim().isEmpty) {
-                                    return;
-                                  }
-                                  if (slowModeSeconds > 0 &&
-                                      lastMessageTime != null) {
-                                    final secondsSinceLastMessage =
-                                        DateTime.now()
-                                            .difference(lastMessageTime!)
-                                            .inSeconds;
-                                    if (secondsSinceLastMessage <
-                                        slowModeSeconds) {
-                                      setState(() {
-                                        cooldownMessage =
-                                            'Slow mode is on. Wait ${slowModeSeconds - secondsSinceLastMessage}s.';
-                                      });
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Row(
+                        children: [
+                          if (allowGifts &&
+                              !isHost &&
+                              hostId.isNotEmpty &&
+                              hostId != user.id)
+                            IconButton(
+                              tooltip: 'Send a gift',
+                              icon: const Icon(Icons.card_giftcard),
+                              onPressed: () => _showGiftSheet(
+                                hostId: hostId,
+                                hostName: 'Host',
+                                senderName: user.username,
+                                coinBalance:
+                                    walletAsync.valueOrNull?.coinBalance ?? 0,
+                              ),
+                            ),
+                          Expanded(
+                            child: TextField(
+                              controller: messageController,
+                              enabled:
+                                  !isSending &&
+                                  participant?.isMuted != true &&
+                                  participant?.isBanned != true &&
+                                  !hasBlockedParticipantInRoom,
+                              decoration: InputDecoration(
+                                hintText: participant?.isMuted == true
+                                    ? 'You are muted'
+                                    : participant?.isBanned == true
+                                    ? 'You are banned'
+                                    : hasBlockedParticipantInRoom
+                                    ? 'Blocked relationship in room'
+                                    : !allowChat
+                                    ? 'Chat disabled by host'
+                                    : 'Type your message...',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          ElevatedButton(
+                            onPressed:
+                                isSending ||
+                                    participant?.isMuted == true ||
+                                    participant?.isBanned == true ||
+                                    !allowChat ||
+                                    hasBlockedParticipantInRoom
+                                ? null
+                                : () async {
+                                    if (messageController.text.trim().isEmpty) {
                                       return;
                                     }
-                                  }
+                                    if (slowModeSeconds > 0 &&
+                                        lastMessageTime != null) {
+                                      final secondsSinceLastMessage =
+                                          DateTime.now()
+                                              .difference(lastMessageTime!)
+                                              .inSeconds;
+                                      if (secondsSinceLastMessage <
+                                          slowModeSeconds) {
+                                        setState(() {
+                                          cooldownMessage =
+                                              'Slow mode is on. Wait ${slowModeSeconds - secondsSinceLastMessage}s.';
+                                        });
+                                        return;
+                                      }
+                                    }
 
-                                  setState(() => isSending = true);
-                                  try {
-                                    await sendMessage(
-                                      messageController.text.trim(),
-                                    );
-                                    lastMessageTime = DateTime.now();
-                                    cooldownMessage = '';
-                                    messageController.clear();
+                                    setState(() => isSending = true);
+                                    try {
+                                      await sendMessage(
+                                        messageController.text.trim(),
+                                      );
+                                      lastMessageTime = DateTime.now();
+                                      cooldownMessage = '';
+                                      messageController.clear();
 
-                                    if (!_hasTrackedFirstMessage) {
-                                      _hasTrackedFirstMessage = true;
-                                      await AnalyticsService().logEvent(
-                                        'first_message_sent',
-                                        params: {
-                                          'room_id': widget.roomId,
-                                          'user_id': user.id,
-                                        },
-                                      );
+                                      if (!_hasTrackedFirstMessage) {
+                                        _hasTrackedFirstMessage = true;
+                                        await AnalyticsService().logEvent(
+                                          'first_message_sent',
+                                          params: {
+                                            'room_id': widget.roomId,
+                                            'user_id': user.id,
+                                          },
+                                        );
+                                      }
+                                    } catch (e) {
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          SnackBar(content: Text(e.toString())),
+                                        );
+                                      }
+                                    } finally {
+                                      if (context.mounted) {
+                                        setState(() => isSending = false);
+                                      }
                                     }
-                                  } catch (e) {
-                                    if (context.mounted) {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(content: Text(e.toString())),
-                                      );
-                                    }
-                                  } finally {
-                                    if (context.mounted) {
-                                      setState(() => isSending = false);
-                                    }
-                                  }
-                                },
-                          child: isSending
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text('Send'),
-                        ),
-                      ],
+                                  },
+                            child: isSending
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : const Text('Send'),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
