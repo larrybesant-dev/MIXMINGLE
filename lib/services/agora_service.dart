@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'dart:async';
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:flutter/material.dart'; // For Widget, VoidCallback
@@ -28,6 +29,8 @@ class AgoraService {
   bool _localSpeaking = false;
   bool _joinedChannel = false;
   bool _broadcasterMode = false;
+  bool _localVideoCapturing = false;
+  Completer<void>? _localVideoCaptureCompleter;
 
     // Callbacks for UI updates
     VoidCallback? onRemoteUserJoined;
@@ -36,7 +39,8 @@ class AgoraService {
 
     List<int> get remoteUids => List.unmodifiable(_remoteUids);
   bool get localSpeaking => _localSpeaking;
-  bool get canRenderLocalView => _initialized && _joinedChannel && _broadcasterMode;
+  bool get canRenderLocalView =>
+      _initialized && _joinedChannel && _broadcasterMode && _localVideoCapturing;
 
   bool isRemoteSpeaking(int uid) => _speakingUids.contains(uid);
 
@@ -149,6 +153,59 @@ class AgoraService {
     );
   }
 
+  AgoraServiceException _mapLocalVideoReason(LocalVideoStreamReason reason) {
+    switch (reason) {
+      case LocalVideoStreamReason.localVideoStreamReasonDeviceNoPermission:
+        return const AgoraServiceException(
+          code: 'permission-denied',
+          message: 'Camera permission was denied by browser or OS settings.',
+        );
+      case LocalVideoStreamReason.localVideoStreamReasonDeviceBusy:
+        return const AgoraServiceException(
+          code: 'device-in-use',
+          message: 'Camera is busy in another app or browser tab.',
+        );
+      case LocalVideoStreamReason.localVideoStreamReasonDeviceNotFound:
+        return const AgoraServiceException(
+          code: 'no-media-devices',
+          message: 'No camera device was found on this computer.',
+        );
+      case LocalVideoStreamReason.localVideoStreamReasonCaptureFailure:
+      case LocalVideoStreamReason.localVideoStreamReasonDeviceInterrupt:
+      case LocalVideoStreamReason.localVideoStreamReasonDeviceFatalError:
+        return const AgoraServiceException(
+          code: 'camera-start-failed',
+          message: 'Camera failed to start. Close other camera apps/tabs and retry.',
+        );
+      default:
+        return const AgoraServiceException(
+          code: 'camera-not-started',
+          message: 'Camera did not start successfully.',
+        );
+    }
+  }
+
+  Future<void> _awaitLocalVideoCapturing({Duration timeout = const Duration(seconds: 4)}) async {
+    if (_localVideoCapturing) {
+      return;
+    }
+    final completer = Completer<void>();
+    _localVideoCaptureCompleter = completer;
+    try {
+      await completer.future.timeout(
+        timeout,
+        onTimeout: () => throw const AgoraServiceException(
+          code: 'camera-not-started',
+          message: 'Camera did not start in time. Check camera permissions and device usage.',
+        ),
+      );
+    } finally {
+      if (identical(_localVideoCaptureCompleter, completer)) {
+        _localVideoCaptureCompleter = null;
+      }
+    }
+  }
+
   /// Initialize Agora engine with your App ID
   Future<void> initialize(String appId) async {
     final normalizedAppId = appId.trim();
@@ -224,6 +281,37 @@ class AgoraService {
             'Agora engine error: $err $msg',
             name: 'AgoraService',
           );
+        },
+        onLocalVideoStateChanged: (source, state, reason) {
+          if (!source.name.startsWith('videoSourceCamera')) {
+            return;
+          }
+          developer.log(
+            'Local video state: $state, reason: $reason',
+            name: 'AgoraService',
+          );
+          if (state == LocalVideoStreamState.localVideoStreamStateCapturing ||
+              state == LocalVideoStreamState.localVideoStreamStateEncoding) {
+            _localVideoCapturing = true;
+            final waiter = _localVideoCaptureCompleter;
+            if (waiter != null && !waiter.isCompleted) {
+              waiter.complete();
+            }
+            return;
+          }
+
+          if (state == LocalVideoStreamState.localVideoStreamStateFailed) {
+            _localVideoCapturing = false;
+            final waiter = _localVideoCaptureCompleter;
+            if (waiter != null && !waiter.isCompleted) {
+              waiter.completeError(_mapLocalVideoReason(reason));
+            }
+            return;
+          }
+
+          if (state == LocalVideoStreamState.localVideoStreamStateStopped) {
+            _localVideoCapturing = false;
+          }
         },
       ),
     );
@@ -373,6 +461,7 @@ class AgoraService {
     _localSpeaking = false;
     _joinedChannel = false;
     _broadcasterMode = false;
+    _localVideoCapturing = false;
   }
 
   /// Mute/unmute local audio
@@ -416,9 +505,11 @@ class AgoraService {
             ),
           );
         }
+        await _awaitLocalVideoCapturing();
       } else {
         await _engine.muteLocalVideoStream(true);
         await _engine.enableLocalVideo(false);
+        _localVideoCapturing = false;
         try {
           await _engine.stopPreview();
         } catch (_) {
@@ -438,6 +529,9 @@ class AgoraService {
         }
       }
     } catch (error) {
+      if (error is AgoraServiceException) {
+        rethrow;
+      }
       _throwMappedAgoraError(error, operation: 'toggle camera');
     }
   }
@@ -453,6 +547,7 @@ class AgoraService {
     _localSpeaking = false;
     _joinedChannel = false;
     _broadcasterMode = false;
+    _localVideoCapturing = false;
     _initialized = false;
   }
 }
