@@ -313,8 +313,32 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     setState(() => _isMicActionInFlight = true);
     try {
       if (!next) {
-        await service.ensureDeviceAccess(video: false, audio: true);
-        await service.setBroadcaster(true);
+        if (kIsWeb && !service.isBroadcaster) {
+          final userId = _joinedUserId;
+          if (userId == null || userId.isEmpty) {
+            throw const AgoraServiceException(
+              code: 'permission-denied',
+              message: 'Unable to resolve user identity for live media.',
+            );
+          }
+          final uid = _buildRtcUid(userId);
+          final tokenResult = await _fetchAgoraToken(
+            channelName: widget.roomId,
+            rtcUid: uid,
+          );
+          await service.rejoinAsBroadcaster(
+            tokenResult.token,
+            widget.roomId,
+            uid,
+            publishMicrophoneTrack: true,
+          );
+          if (mounted) {
+            setState(() => _appliedMediaRole = 'cohost');
+          }
+        } else {
+          await service.ensureDeviceAccess(video: false, audio: true);
+          await service.setBroadcaster(true);
+        }
       }
       await service.mute(next);
       if (mounted) {
@@ -338,7 +362,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       'Camera toggle precheck: service=${service != null}, callReady=$_isCallReady, inFlight=$_isVideoActionInFlight',
       name: 'LiveRoomScreen',
     );
-    
+
     if (service == null || !_isCallReady || _isVideoActionInFlight) {
       if (service == null) {
         developer.log('Camera toggle blocked: Agora service not initialized', name: 'LiveRoomScreen');
@@ -352,38 +376,95 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       }
       return;
     }
-    
+
     final next = !_isVideoEnabled;
     developer.log('Camera toggle target state: $next', name: 'LiveRoomScreen');
     setState(() => _isVideoActionInFlight = true);
     try {
       if (next) {
-        if (!kIsWeb) {
+        if (kIsWeb) {
+          // ----------------------------------------------------------------
+          // Web: in-place role switch does NOT reliably renegotiate the WebRTC
+          // publish track.  Leave and rejoin as broadcaster with a fresh token
+          // so the browser opens a real publish pipeline.
+          // ----------------------------------------------------------------
+          developer.log(
+            'Camera toggle (web): fetching fresh token for broadcaster rejoin',
+            name: 'LiveRoomScreen',
+          );
+          _showSnackBar('Starting camera…');
+          final userId = _joinedUserId ?? ref.read(userProvider)?.id ?? '';
+          if (userId.isEmpty) {
+            throw const AgoraServiceException(
+              code: 'permission-denied',
+              message: 'Unable to resolve user identity for live media.',
+            );
+          }
+          final uid = _buildRtcUid(userId);
+          var tokenResult = await _fetchAgoraToken(
+            channelName: widget.roomId,
+            rtcUid: uid,
+          );
+          developer.log(
+            'Camera toggle (web): token fetched, rejoining as broadcaster uid=$uid',
+            name: 'LiveRoomScreen',
+          );
+          try {
+            await service.rejoinAsBroadcaster(
+              tokenResult.token,
+              widget.roomId,
+              uid,
+              publishMicrophoneTrack: !_isMicMuted,
+            );
+          } catch (firstError, firstStack) {
+            developer.log(
+              'Camera toggle (web): first broadcaster rejoin failed, retrying once: $firstError',
+              name: 'LiveRoomScreen',
+              error: firstError,
+              stackTrace: firstStack,
+            );
+            await Future<void>.delayed(const Duration(milliseconds: 350));
+            tokenResult = await _fetchAgoraToken(
+              channelName: widget.roomId,
+              rtcUid: uid,
+            );
+            await service.rejoinAsBroadcaster(
+              tokenResult.token,
+              widget.roomId,
+              uid,
+              publishMicrophoneTrack: !_isMicMuted,
+            );
+          }
+          await service.enableVideo(true);
+          developer.log(
+            'Camera toggle (web): broadcaster rejoin complete',
+            name: 'LiveRoomScreen',
+          );
+          // Mark role as cohost so _applyRoleMediaState doesn't re‑disable video
+          if (mounted) setState(() => _appliedMediaRole = 'cohost');
+        } else {
           developer.log('Camera toggle step: ensure device access', name: 'LiveRoomScreen');
           _showSnackBar('Checking camera access...');
           await service.ensureDeviceAccess(video: true, audio: false);
           developer.log('Camera toggle step: device access confirmed', name: 'LiveRoomScreen');
-        } else {
-          developer.log(
-            'Camera toggle step: skipping preflight on web to avoid temporary camera contention',
-            name: 'LiveRoomScreen',
-          );
+          await service.setBroadcaster(true);
+          developer.log('Camera toggle step: broadcaster mode set', name: 'LiveRoomScreen');
+          developer.log('Camera toggle step: enableVideo(true)', name: 'LiveRoomScreen');
+          await service.enableVideo(true);
+          developer.log('Camera toggle step: enableVideo completed', name: 'LiveRoomScreen');
         }
-        await service.setBroadcaster(true);
-        developer.log('Camera toggle step: broadcaster mode set', name: 'LiveRoomScreen');
+      } else {
+        // Turning camera off — same path on all platforms
+        developer.log('Camera toggle step: enableVideo(false)', name: 'LiveRoomScreen');
+        await service.enableVideo(false);
+        developer.log('Camera toggle step: enableVideo(false) completed', name: 'LiveRoomScreen');
       }
-      developer.log('Camera toggle step: enableVideo($next)', name: 'LiveRoomScreen');
-      await service.enableVideo(next);
-      developer.log('Camera toggle step: enableVideo completed', name: 'LiveRoomScreen');
+
       if (mounted) {
-        setState(() {
-          _isVideoEnabled = next;
-        });
+        setState(() => _isVideoEnabled = next);
         if (next) {
           Future<void>.delayed(const Duration(milliseconds: 450), () {
-            if (mounted) {
-              setState(() {});
-            }
+            if (mounted) setState(() {});
           });
         }
         final msg = next ? 'Camera turned on.' : 'Camera turned off.';
@@ -498,7 +579,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
   Future<void> _applyRoleMediaState(String role) async {
     final service = _agoraService;
-    if (service == null || !_isCallReady || _appliedMediaRole == role) {
+    if (
+      service == null ||
+      !_isCallReady ||
+      _appliedMediaRole == role ||
+      _isMicActionInFlight ||
+      _isVideoActionInFlight
+    ) {
       return;
     }
 

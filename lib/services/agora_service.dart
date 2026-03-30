@@ -45,6 +45,7 @@ class AgoraService {
       _joinedChannel &&
       _broadcasterMode &&
       (_localVideoCapturing || kIsWeb);
+  bool get isBroadcaster => _broadcasterMode;
 
   bool isRemoteSpeaking(int uid) => _speakingUids.contains(uid);
 
@@ -493,23 +494,23 @@ class AgoraService {
     String token,
     String channelName,
     int uid,
+    {
+      bool publishMicrophoneTrack = false,
+    }
   ) async {
     if (!_initialized) return;
     developer.log(
       'rejoinAsBroadcaster: leaving channel to force publish track renegotiation',
       name: 'AgoraService',
     );
-    // --- leave ---
-    if (_joinedChannel) {
-      try {
-        await _engine.leaveChannel();
-      } catch (e) {
-        developer.log('rejoinAsBroadcaster: leaveChannel error (ignored): $e', name: 'AgoraService');
-      }
+    // --- leave (full cleanup via existing method) ---
+    try {
+      await leaveChannel();
+    } catch (e) {
+      developer.log('rejoinAsBroadcaster: leaveChannel error (ignored): $e', name: 'AgoraService');
     }
-    _joinedChannel = false;
-    _broadcasterMode = false;
-    _localVideoCapturing = false;
+    // Give web runtimes a short moment to fully release previous tracks.
+    await Future<void>.delayed(const Duration(milliseconds: 250));
 
     // --- re‑enable video engine before join ---
     try {
@@ -522,13 +523,13 @@ class AgoraService {
         token: token.trim(),
         channelId: channelName.trim(),
         uid: uid,
-        options: const ChannelMediaOptions(
+        options: ChannelMediaOptions(
           channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
           clientRoleType: ClientRoleType.clientRoleBroadcaster,
           autoSubscribeAudio: true,
           autoSubscribeVideo: true,
           publishCameraTrack: true,
-          publishMicrophoneTrack: false,
+          publishMicrophoneTrack: publishMicrophoneTrack,
         ),
       );
       await _engine.enableLocalVideo(true);
