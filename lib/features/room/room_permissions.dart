@@ -10,7 +10,8 @@ class RoomPermissions {
   static bool isStaff(String role) => role == host || role == moderator;
 
   static bool canUseMic(String role) {
-    return role == host || role == cohost || role == stage;
+    // Mic is open to all participants without host approval.
+    return role.isNotEmpty;
   }
 
   static bool canUseCamera(String role) {

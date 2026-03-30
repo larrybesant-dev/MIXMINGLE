@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../config/agora_constants.dart';
 import '../../models/moderation_model.dart';
+import '../../models/message_model.dart';
 import '../../models/room_policy_model.dart';
 import '../../models/room_participant_model.dart';
 import '../providers/user_provider.dart';
@@ -60,6 +61,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isVideoEnabled = true;
   bool _isMicActionInFlight = false;
   bool _isVideoActionInFlight = false;
+  bool _showEmojiTray = false;
   String? _callError;
   Set<String> _excludedUserIds = const <String>{};
   String? _appliedMediaRole;
@@ -71,6 +73,22 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   final List<_GiftToast> _giftToasts = [];
   Timer? _giftToastTimer;
   ProviderSubscription<AsyncValue<List<RoomGiftEvent>>>? _giftEventsSubscription;
+  final Map<String, String> _senderDisplayNameById = <String, String>{};
+  final Set<String> _senderLookupInFlight = <String>{};
+  static const List<String> _quickEmojis = <String>[
+    '😀',
+    '😂',
+    '😍',
+    '🔥',
+    '👏',
+    '🙏',
+    '💯',
+    '🎉',
+    '❤️',
+    '👍',
+    '👀',
+    '😎',
+  ];
 
   String _asString(dynamic value, {String fallback = ''}) {
     if (value is String) {
@@ -319,6 +337,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         setState(() {
           _isVideoEnabled = next;
         });
+        _showSnackBar(next ? 'Camera turned on.' : 'Camera turned off.');
       }
     } catch (e) {
       _showSnackBar(_mapMediaError(e, canBroadcast: true));
@@ -384,18 +403,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     return 'Audio/video operation failed. Please retry.';
   }
 
-  String _requestStatusErrorText(Object error, {required String kind}) {
-    final lower = error.toString().toLowerCase();
-    if (lower.contains('permission-denied') ||
-        lower.contains('insufficient permissions')) {
-      return 'Could not load $kind status due to room permissions.';
-    }
-    if (lower.contains('unauthenticated')) {
-      return 'Could not load $kind status. Please sign in again.';
-    }
-    return 'Could not load $kind status right now.';
-  }
-
   void _startPresenceHeartbeat(String userId) {
     _presenceHeartbeatTimer?.cancel();
     final presenceController = ref.read(roomPresenceControllerProvider);
@@ -437,11 +444,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       return;
     }
 
-    const canBroadcast = true;
     final micAllowed = RoomPermissions.canUseMic(role);
-    await service.setBroadcaster(canBroadcast);
-    await service.mute(!micAllowed);
-    await service.enableVideo(_isVideoEnabled);
+    try {
+      await service.mute(!micAllowed);
+      if (_isVideoEnabled) {
+        await service.enableVideo(true);
+      }
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar(_mapMediaError(e, canBroadcast: true));
+      }
+      return;
+    }
 
     if (!mounted) {
       return;
@@ -475,6 +489,128 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _appendEmoji(String emoji) {
+    final text = messageController.text;
+    final selection = messageController.selection;
+    if (!selection.isValid) {
+      messageController.text = '$text$emoji';
+      messageController.selection = TextSelection.collapsed(
+        offset: messageController.text.length,
+      );
+      return;
+    }
+
+    final start = selection.start;
+    final end = selection.end;
+    final newText = text.replaceRange(start, end, emoji);
+    messageController.text = newText;
+    messageController.selection = TextSelection.collapsed(
+      offset: start + emoji.length,
+    );
+  }
+
+  Widget _buildEmojiTray() {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+      ),
+      child: Wrap(
+        spacing: 6,
+        runSpacing: 6,
+        children: _quickEmojis.map((emoji) {
+          return InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () {
+              setState(() {
+                _appendEmoji(emoji);
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Text(emoji, style: const TextStyle(fontSize: 22)),
+            ),
+          );
+        }).toList(growable: false),
+      ),
+    );
+  }
+
+  String _senderLabelFor({
+    required String senderId,
+    required String currentUserId,
+    required String currentUsername,
+  }) {
+    if (senderId == currentUserId) {
+      final trimmed = currentUsername.trim();
+      return trimmed.isEmpty ? 'You' : trimmed;
+    }
+    return _senderDisplayNameById[senderId] ?? senderId;
+  }
+
+  Future<void> _hydrateSenderDisplayNames({
+    required List<MessageModel> messages,
+    required String currentUserId,
+  }) async {
+    final senderIds = messages
+        .map((message) => message.senderId.trim())
+        .where((id) => id.isNotEmpty && id != currentUserId)
+        .toSet();
+    final missingIds = senderIds
+        .where(
+          (id) =>
+              !_senderDisplayNameById.containsKey(id) &&
+              !_senderLookupInFlight.contains(id),
+        )
+        .toList(growable: false);
+    if (missingIds.isEmpty) {
+      return;
+    }
+
+    _senderLookupInFlight.addAll(missingIds);
+    final FirebaseFirestore firestore =
+      _firestore ?? ref.read(roomFirestoreProvider);
+    final resolved = <String, String>{};
+
+    try {
+      for (var i = 0; i < missingIds.length; i += 10) {
+        final upperBound = (i + 10 > missingIds.length)
+            ? missingIds.length
+            : i + 10;
+        final batchIds = missingIds.sublist(i, upperBound);
+        final snapshot = await firestore
+            .collection('users')
+            .where(FieldPath.documentId, whereIn: batchIds)
+            .get();
+        for (final doc in snapshot.docs) {
+          final data = doc.data();
+          final username = _asString(data['username']);
+          resolved[doc.id] = username.isEmpty ? doc.id : username;
+        }
+      }
+
+      // Prevent repeated lookups for missing docs by falling back to the id.
+      for (final id in missingIds) {
+        resolved.putIfAbsent(id, () => id);
+      }
+
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _senderDisplayNameById.addAll(resolved);
+      });
+    } catch (_) {
+      // Best effort only; fall back to sender id in UI if lookup fails.
+    } finally {
+      _senderLookupInFlight.removeAll(missingIds);
+    }
   }
 
   Future<bool> _confirmAction({
@@ -1171,67 +1307,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
   }
 
-  String _requestStatusLabel(String? status) {
-    switch (status) {
-      case 'pending':
-        return 'Waiting for host approval';
-      case 'approved':
-        return 'Approved';
-      case 'denied':
-        return 'Denied';
-      case 'expired':
-        return 'Expired';
-      default:
-        return 'Not requested';
-    }
-  }
-
   String _cameraAccessHint({
     required String role,
     required String? camRequestStatus,
   }) {
-    if (camRequestStatus == 'approved' ||
-        role == RoomPermissions.host ||
-        role == RoomPermissions.cohost ||
-        role == RoomPermissions.moderator) {
-      return 'Camera viewing is unlocked. You can watch other participants on video.';
-    }
-    if (camRequestStatus == 'pending') {
-      return 'Your camera viewing request is pending. The host must approve it before other participants\' cameras unlock.';
-    }
-    if (camRequestStatus == 'denied') {
-      return 'Your last camera viewing request was denied. You can send another request when ready.';
-    }
-    if (camRequestStatus == 'expired') {
-      return 'Your last camera viewing request expired. Send a new request to unlock viewing.';
-    }
-    return 'You can publish your own camera anytime. Request approval to view other participants\' cameras.';
-  }
-
-  bool _canViewRemoteCams({required String role, required String? camRequestStatus}) {
-    return role == RoomPermissions.host ||
-        role == RoomPermissions.cohost ||
-        role == RoomPermissions.moderator ||
-        camRequestStatus == 'approved';
+    return 'Camera controls are open. You can publish and view participant video directly.';
   }
 
   String _micAccessHint({
     required String role,
     required String? micRequestStatus,
   }) {
-    if (RoomPermissions.canUseMic(role)) {
-      return 'Mic controls are unlocked.';
-    }
-    if (micRequestStatus == 'pending') {
-      return 'Your mic request is pending host approval.';
-    }
-    if (micRequestStatus == 'denied') {
-      return 'Your last mic request was denied.';
-    }
-    if (micRequestStatus == 'expired') {
-      return 'Your last mic request expired.';
-    }
-    return 'Request mic access if you want to speak without camera.';
+    return 'Mic controls are unlocked. Speak anytime.';
   }
 
   void _addGiftToast(RoomGiftEvent event) {
@@ -1495,20 +1582,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         final isCohost = ref.watch(isCohostProvider(participant));
         final isModerator = participant?.role == 'moderator';
         final role = participant?.role ?? 'audience';
-        final myCamRequestAsync = ref.watch(
-          myCamAccessRequestProvider((
-            roomId: widget.roomId,
-            requesterId: user.id,
-          )),
-        );
-        final myMicRequestAsync = ref.watch(
-          myMicAccessRequestProvider((
-            roomId: widget.roomId,
-            requesterId: user.id,
-          )),
-        );
-        final camRequestStatus = myCamRequestAsync.valueOrNull?.status;
-        final micRequestStatus = myMicRequestAsync.valueOrNull?.status;
+        const String? camRequestStatus = null;
+        const String? micRequestStatus = null;
         final firestore = ref.watch(roomFirestoreProvider);
         if (_isCallReady && _appliedMediaRole != role) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -1676,6 +1751,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       ),
                       child: Column(
                         children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'Camera Stage',
+                              style: Theme.of(context).textTheme.titleSmall,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
                           SizedBox(
                             height: 170,
                             child: DecoratedBox(
@@ -1706,7 +1789,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                               ),
                                               const SizedBox(height: 8),
                                               Text(
-                                                'You can publish your own camera. Viewing others requires approval.',
+                                                _isVideoEnabled
+                                                    ? 'Camera feed is preparing. If this stays blank, tap the cam button off and on once.'
+                                                    : 'Camera is off. Tap the camera icon to start your live feed.',
                                                 textAlign: TextAlign.center,
                                               ),
                                             ],
@@ -1717,11 +1802,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             ),
                           ),
                           const SizedBox(height: 8),
-                          if (_agoraService!.remoteUids.isNotEmpty &&
-                              _canViewRemoteCams(
-                                role: role,
-                                camRequestStatus: camRequestStatus,
-                              ))
+                          if (_agoraService!.remoteUids.isNotEmpty)
                             SizedBox(
                               height: 120,
                               child: ListView.separated(
@@ -1756,10 +1837,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     const SizedBox(width: 8),
                                 itemCount: _agoraService!.remoteUids.length,
                               ),
-                            )
-                          else if (_agoraService!.remoteUids.isNotEmpty)
-                            const Text(
-                              'Request camera viewing approval to see other participants\' cameras.',
                             )
                           else
                             const Text(
@@ -2336,82 +2413,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 style: Theme.of(context).textTheme.titleSmall,
                               ),
                               const SizedBox(height: 6),
-                              Text(
-                                allowCamRequests
-                                ? 'Anyone can publish their own camera. Request host approval to view other participants\' cameras.'
-                                    : 'Host has paused cam access requests for this room.',
+                              const Text(
+                                'Host approval is not required. Mic and camera are available immediately in this room.',
                               ),
                               const SizedBox(height: 8),
-                              myCamRequestAsync.when(
-                                data: (request) {
-                                  final requestStatus = request?.status;
-                                  return Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      FilledButton.icon(
-                                        onPressed:
-                                            !allowCamRequests ||
-                                                hostId.isEmpty ||
-                                                requestStatus == 'pending'
-                                            ? null
-                                            : () async {
-                                                try {
-                                                  await camAccessController
-                                                      .requestAccess(
-                                                        roomId: widget.roomId,
-                                                        requesterId: user.id,
-                                                        broadcasterId: hostId,
-                                                      );
-                                                  if (!context.mounted) return;
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    const SnackBar(
-                                                      content: Text(
-                                                        'Stage access request sent.',
-                                                      ),
-                                                    ),
-                                                  );
-                                                } catch (e) {
-                                                  if (!context.mounted) return;
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        'Could not send request: $e',
-                                                      ),
-                                                    ),
-                                                  );
-                                                }
-                                              },
-                                        icon: const Icon(
-                                          Icons.videocam_outlined,
-                                        ),
-                                        label: const Text('Request Camera Viewing'),
-                                      ),
-                                      if (requestStatus != null)
-                                        Chip(
-                                          avatar: Icon(
-                                            requestStatus == 'approved'
-                                                ? Icons.check_circle_outline
-                                                : requestStatus == 'pending'
-                                                ? Icons.hourglass_top
-                                                : Icons.info_outline,
-                                            size: 16,
-                                          ),
-                                          label: Text(
-                                            _requestStatusLabel(requestStatus),
-                                          ),
-                                        ),
-                                    ],
-                                  );
-                                },
-                                loading: () => const LinearProgressIndicator(),
-                                error: (e, _) =>
-                                  Text(_requestStatusErrorText(e, kind: 'camera request')),
-                              ),
                               const SizedBox(height: 6),
                               Text(
                                 _micAccessHint(
@@ -2419,75 +2424,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                   micRequestStatus: micRequestStatus,
                                 ),
                                 style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                              const SizedBox(height: 8),
-                              myMicRequestAsync.when(
-                                data: (request) {
-                                  final requestStatus = request?.status;
-                                  return Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      OutlinedButton.icon(
-                                        onPressed:
-                                            !allowMicRequests ||
-                                                hostId.isEmpty ||
-                                                requestStatus == 'pending'
-                                            ? null
-                                            : () async {
-                                                try {
-                                                  await micAccessController
-                                                      .requestAccess(
-                                                        roomId: widget.roomId,
-                                                        requesterId: user.id,
-                                                        hostId: hostId,
-                                                      );
-                                                  if (!context.mounted) return;
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    const SnackBar(
-                                                      content: Text(
-                                                        'Mic access request sent.',
-                                                      ),
-                                                    ),
-                                                  );
-                                                } catch (e) {
-                                                  if (!context.mounted) return;
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        'Could not send request: $e',
-                                                      ),
-                                                    ),
-                                                  );
-                                                }
-                                              },
-                                        icon: const Icon(Icons.mic_none),
-                                        label: const Text('Request Mic Access'),
-                                      ),
-                                      if (requestStatus != null)
-                                        Chip(
-                                          avatar: Icon(
-                                            requestStatus == 'approved'
-                                                ? Icons.check_circle_outline
-                                                : requestStatus == 'pending'
-                                                ? Icons.hourglass_top
-                                                : Icons.info_outline,
-                                            size: 16,
-                                          ),
-                                          label: Text(
-                                            'Mic: ${_requestStatusLabel(requestStatus)}',
-                                          ),
-                                        ),
-                                    ],
-                                  );
-                                },
-                                loading: () => const LinearProgressIndicator(),
-                                error: (e, _) =>
-                                  Text(_requestStatusErrorText(e, kind: 'mic request')),
                               ),
                             ],
                           ),
@@ -2651,10 +2587,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             padding: const EdgeInsets.all(8),
                             itemCount: messages.length,
                             itemBuilder: (context, i) {
+                              if (i == 0) {
+                                WidgetsBinding.instance.addPostFrameCallback((_) {
+                                  _hydrateSenderDisplayNames(
+                                    messages: messages,
+                                    currentUserId: user.id,
+                                  );
+                                });
+                              }
                               final msg = messages[i];
                               return MessageBubble(
                                 message: msg,
                                 isMe: msg.senderId == user.id,
+                                senderLabel: _senderLabelFor(
+                                  senderId: msg.senderId,
+                                  currentUserId: user.id,
+                                  currentUsername: user.username,
+                                ),
                               );
                             },
                           );
@@ -2711,6 +2660,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           ),
                         ),
                       ),
+                    if (_showEmojiTray) _buildEmojiTray(),
                     SafeArea(
                       top: false,
                       minimum: const EdgeInsets.only(bottom: 90),
@@ -2744,6 +2694,20 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       walletAsync.valueOrNull?.coinBalance ?? 0,
                                 ),
                               ),
+                            IconButton(
+                              tooltip: 'Emojis',
+                              icon: Icon(
+                                _showEmojiTray
+                                    ? Icons.emoji_emotions
+                                    : Icons.emoji_emotions_outlined,
+                              ),
+                              onPressed: () {
+                                FocusScope.of(context).unfocus();
+                                setState(() {
+                                  _showEmojiTray = !_showEmojiTray;
+                                });
+                              },
+                            ),
                             Expanded(
                               child: TextField(
                                 controller: messageController,
@@ -2802,6 +2766,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         lastMessageTime = DateTime.now();
                                         cooldownMessage = '';
                                         messageController.clear();
+                                            _showEmojiTray = false;
 
                                         if (!_hasTrackedFirstMessage) {
                                           _hasTrackedFirstMessage = true;
@@ -2890,10 +2855,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                   padding: const EdgeInsets.all(8),
                                   itemCount: messages.length,
                                   itemBuilder: (context, i) {
+                                    if (i == 0) {
+                                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                                        _hydrateSenderDisplayNames(
+                                          messages: messages,
+                                          currentUserId: user.id,
+                                        );
+                                      });
+                                    }
                                     final msg = messages[i];
                                     return MessageBubble(
                                       message: msg,
                                       isMe: msg.senderId == user.id,
+                                      senderLabel: _senderLabelFor(
+                                        senderId: msg.senderId,
+                                        currentUserId: user.id,
+                                        currentUsername: user.username,
+                                      ),
                                     );
                                   },
                                 );
@@ -2913,11 +2891,30 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 ),
                               ),
                             ),
+                          if (_showEmojiTray)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+                              child: _buildEmojiTray(),
+                            ),
                           SafeArea(
                             top: false,
                             minimum: const EdgeInsets.fromLTRB(8, 0, 8, 88),
                             child: Row(
                               children: [
+                                IconButton(
+                                  tooltip: 'Emojis',
+                                  icon: Icon(
+                                    _showEmojiTray
+                                        ? Icons.emoji_emotions
+                                        : Icons.emoji_emotions_outlined,
+                                  ),
+                                  onPressed: () {
+                                    FocusScope.of(context).unfocus();
+                                    setState(() {
+                                      _showEmojiTray = !_showEmojiTray;
+                                    });
+                                  },
+                                ),
                                 Expanded(
                                   child: TextField(
                                     controller: messageController,
@@ -2972,6 +2969,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                             lastMessageTime = DateTime.now();
                                             cooldownMessage = '';
                                             messageController.clear();
+                                            _showEmojiTray = false;
                                           } finally {
                                             if (context.mounted) {
                                               setState(() => isSending = false);

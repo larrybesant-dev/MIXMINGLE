@@ -294,6 +294,16 @@ class AgoraService {
           publishMicrophoneTrack: asBroadcaster,
         ),
       );
+      // Ensure local camera track state is explicitly enabled after join for web reliability.
+      if (asBroadcaster) {
+        await _engine.enableLocalVideo(true);
+        await _engine.muteLocalVideoStream(false);
+        try {
+          await _engine.startPreview();
+        } catch (_) {
+          // Some runtimes do not require preview; ignore and continue.
+        }
+      }
     } catch (error) {
       _throwMappedAgoraError(error, operation: 'join room');
     }
@@ -355,10 +365,50 @@ class AgoraService {
     if (!_initialized) return;
     try {
       if (enabled) {
+        if (!_broadcasterMode) {
+          await _engine.setClientRole(
+            role: ClientRoleType.clientRoleBroadcaster,
+          );
+          _broadcasterMode = true;
+        }
         await _engine.enableVideo();
-        _broadcasterMode = true;
+        await _engine.enableLocalVideo(true);
+        await _engine.muteLocalVideoStream(false);
+        try {
+          await _engine.startPreview();
+        } catch (_) {
+          // Best effort on web/native combinations.
+        }
+        if (_joinedChannel) {
+          await _engine.updateChannelMediaOptions(
+            ChannelMediaOptions(
+              channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+              clientRoleType: ClientRoleType.clientRoleBroadcaster,
+              autoSubscribeAudio: true,
+              autoSubscribeVideo: true,
+              publishCameraTrack: true,
+            ),
+          );
+        }
       } else {
-        await _engine.disableVideo();
+        await _engine.muteLocalVideoStream(true);
+        await _engine.enableLocalVideo(false);
+        try {
+          await _engine.stopPreview();
+        } catch (_) {
+          // Best effort cleanup.
+        }
+        if (_joinedChannel) {
+          await _engine.updateChannelMediaOptions(
+            ChannelMediaOptions(
+              channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+              clientRoleType: ClientRoleType.clientRoleBroadcaster,
+              autoSubscribeAudio: true,
+              autoSubscribeVideo: true,
+              publishCameraTrack: false,
+            ),
+          );
+        }
       }
     } catch (error) {
       _throwMappedAgoraError(error, operation: 'toggle camera');
