@@ -332,11 +332,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
   Future<void> _toggleVideo() async {
     final service = _agoraService;
-    if (service == null || !_isCallReady || _isVideoActionInFlight) return;
+    if (service == null || !_isCallReady || _isVideoActionInFlight) {
+      if (service == null) {
+        _showSnackBar('Agora service not initialized.');
+      }
+      return;
+    }
     final next = !_isVideoEnabled;
     setState(() => _isVideoActionInFlight = true);
     try {
       if (next) {
+        _showSnackBar('Checking camera access...');
         await service.ensureDeviceAccess(video: true, audio: false);
         await service.setBroadcaster(true);
       }
@@ -348,6 +354,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         _showSnackBar(next ? 'Camera turned on.' : 'Camera turned off.');
       }
     } catch (e) {
+      print('Camera toggle error: $e');
       _showSnackBar(_mapMediaError(e, canBroadcast: true));
     } finally {
       if (mounted) {
@@ -2736,61 +2743,63 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               ),
                             ),
                             const SizedBox(width: 8),
-                            ElevatedButton(
-                              onPressed:
-                                  isSending ||
-                                      participant?.isMuted == true ||
-                                      participant?.isBanned == true ||
-                                      !allowChat ||
-                                      hasBlockedParticipantInRoom
-                                  ? null
-                                  : () async {
-                                      if (messageController.text.trim().isEmpty) {
-                                        return;
-                                      }
-                                      if (slowModeSeconds > 0 &&
-                                          lastMessageTime != null) {
-                                        final secondsSinceLastMessage =
-                                            DateTime.now()
-                                                .difference(lastMessageTime!)
-                                                .inSeconds;
-                                        if (secondsSinceLastMessage <
-                                            slowModeSeconds) {
-                                          setState(() {
-                                            cooldownMessage =
-                                                'Slow mode is on. Wait ${slowModeSeconds - secondsSinceLastMessage}s.';
-                                          });
+                            SizedBox(
+                              width: 50,
+                              child: ElevatedButton(
+                                onPressed:
+                                    isSending ||
+                                        participant?.isMuted == true ||
+                                        participant?.isBanned == true ||
+                                        !allowChat ||
+                                        hasBlockedParticipantInRoom
+                                    ? null
+                                    : () async {
+                                        if (messageController.text.trim().isEmpty) {
                                           return;
                                         }
-                                      }
-
-                                      setState(() => isSending = true);
-                                      try {
-                                        await sendMessage(
-                                          messageController.text.trim(),
-                                        );
-                                        lastMessageTime = DateTime.now();
-                                        cooldownMessage = '';
-                                        messageController.clear();
-                                            _showEmojiTray = false;
-
-                                        if (!_hasTrackedFirstMessage) {
-                                          _hasTrackedFirstMessage = true;
-                                          await AnalyticsService().logEvent(
-                                            'first_message_sent',
-                                            params: {
-                                              'room_id': widget.roomId,
-                                              'user_id': user.id,
-                                            },
-                                          );
+                                        if (slowModeSeconds > 0 &&
+                                            lastMessageTime != null) {
+                                          final secondsSinceLastMessage =
+                                              DateTime.now()
+                                                  .difference(lastMessageTime!)
+                                                  .inSeconds;
+                                          if (secondsSinceLastMessage <
+                                              slowModeSeconds) {
+                                            setState(() {
+                                              cooldownMessage =
+                                                  'Slow mode is on. Wait ${slowModeSeconds - secondsSinceLastMessage}s.';
+                                            });
+                                            return;
+                                          }
                                         }
-                                      } catch (e) {
-                                        if (context.mounted) {
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(content: Text(e.toString())),
+
+                                        setState(() => isSending = true);
+                                        try {
+                                          await sendMessage(
+                                            messageController.text.trim(),
                                           );
+                                          lastMessageTime = DateTime.now();
+                                          cooldownMessage = '';
+                                          messageController.clear();
+                                              _showEmojiTray = false;
+
+                                          if (!_hasTrackedFirstMessage) {
+                                            _hasTrackedFirstMessage = true;
+                                            await AnalyticsService().logEvent(
+                                              'first_message_sent',
+                                              params: {
+                                                'room_id': widget.roomId,
+                                                'user_id': user.id,
+                                              },
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(content: Text(e.toString())),
+                                            );
                                         }
                                       } finally {
                                         if (context.mounted) {
@@ -2807,6 +2816,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       ),
                                     )
                                   : const Text('Send'),
+                              ),
                             ),
                           ],
                         ),
