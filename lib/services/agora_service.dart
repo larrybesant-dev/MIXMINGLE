@@ -28,6 +28,8 @@ class AgoraService {
   // List of remote user IDs
   final List<int> _remoteUids = [];
   final Set<int> _speakingUids = <int>{};
+  final Map<int, VideoStreamType> _remoteStreamTypes =
+      <int, VideoStreamType>{};
   bool _localSpeaking = false;
   bool _joinedChannel = false;
   bool _broadcasterMode = false;
@@ -160,11 +162,38 @@ class AgoraService {
   Future<void> setRemoteVideoSubscription(
     int uid, {
     required bool subscribe,
+    bool highQuality = false,
   }) async {
     if (!_initialized || !_joinedChannel) {
       return;
     }
     await _engine.muteRemoteVideoStream(uid: uid, mute: !subscribe);
+    if (!subscribe) {
+      _remoteStreamTypes.remove(uid);
+      return;
+    }
+
+    final targetStreamType = highQuality
+        ? VideoStreamType.videoStreamHigh
+        : VideoStreamType.videoStreamLow;
+    if (_remoteStreamTypes[uid] == targetStreamType) {
+      return;
+    }
+
+    try {
+      await _engine.setRemoteVideoStreamType(
+        uid: uid,
+        streamType: targetStreamType,
+      );
+      _remoteStreamTypes[uid] = targetStreamType;
+    } catch (error, stackTrace) {
+      developer.log(
+        'setRemoteVideoStreamType failed for uid=$uid highQuality=$highQuality',
+        name: 'AgoraService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
   }
 
   Future<void> ensureDeviceAccess({
@@ -416,6 +445,7 @@ class AgoraService {
         },
         onUserOffline: (connection, remoteUid, reason) {
           _remoteUids.remove(remoteUid);
+          _remoteStreamTypes.remove(remoteUid);
           _speakingUids.remove(remoteUid);
           if (onRemoteUserLeft != null) onRemoteUserLeft!();
         },
@@ -522,6 +552,16 @@ class AgoraService {
     } catch (error, stackTrace) {
       developer.log(
         'Agora enableAudio failed',
+        name: 'AgoraService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+    try {
+      await _engine.enableDualStreamMode(enabled: true);
+    } catch (error, stackTrace) {
+      developer.log(
+        'Agora enableDualStreamMode failed',
         name: 'AgoraService',
         error: error,
         stackTrace: stackTrace,
@@ -756,6 +796,7 @@ class AgoraService {
       await _engine.leaveChannel();
     }
     _remoteUids.clear();
+    _remoteStreamTypes.clear();
     _speakingUids.clear();
     _localSpeaking = false;
     _joinedChannel = false;

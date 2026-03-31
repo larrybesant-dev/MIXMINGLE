@@ -43,6 +43,7 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
 
 class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     with WidgetsBindingObserver {
+  static const int _maxMainGridRemoteTiles = 8;
   late TextEditingController messageController;
   late ScrollController scrollController;
   FirebaseFirestore? _firestore;
@@ -79,6 +80,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   _giftEventsSubscription;
   final Map<String, String> _senderDisplayNameById = <String, String>{};
   final Set<String> _senderLookupInFlight = <String>{};
+  Set<int> _requestedHighQualityRemoteUids = <int>{};
+  Set<int> _requestedLowQualityRemoteUids = <int>{};
+  bool _remoteLayoutSyncQueued = false;
   static const List<String> _quickEmojis = <String>[
     '😀',
     '😂',
@@ -177,6 +181,67 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     return null;
   }
 
+  void _logLiveRoom(
+    String message, {
+    Object? error,
+    StackTrace? stackTrace,
+  }) {
+    developer.log(
+      message,
+      name: 'LiveRoom',
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
+
+  bool _sameIntSet(Set<int> left, Set<int> right) {
+    return left.length == right.length && left.containsAll(right);
+  }
+
+  void _scheduleRemoteVideoLayoutSync({
+    required Set<int> highQualityUids,
+    required Set<int> lowQualityUids,
+  }) {
+    final normalizedHighQuality = Set<int>.from(highQualityUids);
+    final normalizedLowQuality = Set<int>.from(lowQualityUids)
+      ..removeWhere(normalizedHighQuality.contains);
+
+    if (_sameIntSet(_requestedHighQualityRemoteUids, normalizedHighQuality) &&
+        _sameIntSet(_requestedLowQualityRemoteUids, normalizedLowQuality)) {
+      return;
+    }
+
+    _requestedHighQualityRemoteUids = normalizedHighQuality;
+    _requestedLowQualityRemoteUids = normalizedLowQuality;
+
+    if (_remoteLayoutSyncQueued) {
+      return;
+    }
+
+    _remoteLayoutSyncQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _remoteLayoutSyncQueued = false;
+      final service = _agoraService;
+      if (!mounted || service == null || !_isCallReady) {
+        return;
+      }
+
+      final highQuality = Set<int>.from(_requestedHighQualityRemoteUids);
+      final lowQuality = Set<int>.from(_requestedLowQualityRemoteUids);
+      for (final uid in service.remoteUids) {
+        final wantsHighQuality = highQuality.contains(uid);
+        final wantsLowQuality = lowQuality.contains(uid);
+        unawaited(
+          service.setRemoteVideoSubscription(
+            uid,
+            subscribe: wantsHighQuality || wantsLowQuality,
+            highQuality: wantsHighQuality,
+          ),
+        );
+      }
+    });
+  }
+
   Future<({String token, String appId})> _fetchAgoraToken({
     required String channelName,
     required int rtcUid,
@@ -264,12 +329,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     };
 
     try {
-      developer.log(
-        'Starting Agora call connection for userId: $userId',
-        name: 'LiveRoom',
+      _logLiveRoom(
+        'connect:start user=$userId room=${widget.roomId} role=broadcaster',
       );
-      print('[CAMDBG] connect:start user=$userId room=${widget.roomId}');
-      print('AGORA ROLE: broadcaster (we always join as broadcaster)');
       if (mounted) {
         setState(() => _cameraStatus = 'Connecting: requesting token...');
       }
@@ -285,14 +347,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               message: 'Timed out fetching live media token.',
             ),
           );
-      developer.log('Agora token fetched successfully', name: 'LiveRoom');
-      print('[CAMDBG] connect:token_ok uid=$rtcUid');
+      _logLiveRoom('connect:token_ok uid=$rtcUid');
       if (mounted) {
         setState(
           () => _cameraStatus = 'Connecting: initializing media engine...',
         );
       }
-      print('[CAMDBG] connect:init_begin');
+      _logLiveRoom('connect:init_begin');
       await service
           .initialize(credentials.appId)
           .timeout(
@@ -302,8 +363,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               message: 'Timed out initializing live media engine.',
             ),
           );
-      developer.log('Agora service initialized', name: 'LiveRoom');
-      print('[CAMDBG] connect:agora_initialized');
+      _logLiveRoom('connect:agora_initialized');
       if (mounted) {
         setState(() => _cameraStatus = 'Connecting: joining live room...');
       }
@@ -322,8 +382,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               message: 'Timed out joining live media channel.',
             ),
           );
-      developer.log('Successfully joined Agora channel', name: 'LiveRoom');
-      print('[CAMDBG] connect:joined role=broadcaster');
+      _logLiveRoom('connect:joined role=broadcaster');
       if (!mounted) {
         await service.dispose();
         return;
@@ -337,15 +396,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         _cameraStatus = 'Live media ready. Tap camera to publish.';
       });
     } catch (e, stackTrace) {
-      print('[CAMDBG] connect:failed error=$e');
-      if (e is AgoraServiceException) {
-        print(
-          '[CAMDBG] connect:failed code=${e.code} message=${e.message} cause=${e.cause}',
-        );
-      }
-      developer.log(
-        'Error connecting to Agora',
-        name: 'LiveRoom',
+      _logLiveRoom(
+        'connect:failed',
         error: e,
         stackTrace: stackTrace,
       );
@@ -397,61 +449,48 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   }
 
   Future<void> _toggleVideo() async {
-    developer.log('Camera toggle started', name: 'LiveRoomScreen');
-    print(
-      '[CAMDBG] toggle_video:start enabled=$_isVideoEnabled callReady=$_isCallReady inFlight=$_isVideoActionInFlight',
+    _logLiveRoom(
+      'toggle_video:start enabled=$_isVideoEnabled callReady=$_isCallReady inFlight=$_isVideoActionInFlight',
     );
     final service = _agoraService;
-    developer.log(
-      'Camera toggle precheck: service=${service != null}, callReady=$_isCallReady, inFlight=$_isVideoActionInFlight',
-      name: 'LiveRoomScreen',
+    _logLiveRoom(
+      'toggle_video:precheck service=${service != null} callReady=$_isCallReady inFlight=$_isVideoActionInFlight',
     );
 
     if (service == null || !_isCallReady || _isVideoActionInFlight) {
       if (service == null) {
-        developer.log(
-          'Camera toggle blocked: Agora service not initialized',
-          name: 'LiveRoomScreen',
-        );
-        print('[CAMDBG] toggle_video:blocked service_null');
-        if (mounted)
+        _logLiveRoom('toggle_video:blocked service_null');
+        if (mounted) {
           setState(
             () => _cameraStatus =
                 'Camera blocked: live media service not initialized.',
           );
+        }
         _showSnackBar('Agora service not initialized.');
       } else if (!_isCallReady) {
-        developer.log(
-          'Camera toggle blocked: call not ready',
-          name: 'LiveRoomScreen',
-        );
-        print('[CAMDBG] toggle_video:blocked call_not_ready');
-        if (mounted)
+        _logLiveRoom('toggle_video:blocked call_not_ready');
+        if (mounted) {
           setState(
             () => _cameraStatus = 'Camera blocked: live media not ready yet.',
           );
+        }
         _showSnackBar('Call not ready. Wait a moment and retry.');
       } else {
-        developer.log(
-          'Camera toggle blocked: action already in flight',
-          name: 'LiveRoomScreen',
-        );
-        print('[CAMDBG] toggle_video:blocked already_in_flight');
-        if (mounted)
+        _logLiveRoom('toggle_video:blocked already_in_flight');
+        if (mounted) {
           setState(
             () => _cameraStatus = 'Camera action already in progress...',
           );
+        }
         _showSnackBar('Camera action in progress...');
       }
       return;
     }
 
     final next = !_isVideoEnabled;
-    print('CAM TOGGLE: enabled=$next');
-    print(
-      '[CAMDBG] toggle_video:next=$next broadcaster=${service.isBroadcaster} joined=${service.isJoinedChannel}',
+    _logLiveRoom(
+      'toggle_video:next=$next broadcaster=${service.isBroadcaster} joined=${service.isJoinedChannel}',
     );
-    developer.log('Camera toggle target state: $next', name: 'LiveRoomScreen');
     setState(() {
       _isVideoActionInFlight = true;
       _cameraStatus = next ? 'Starting camera...' : 'Stopping camera...';
@@ -471,19 +510,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         }
       } else {
         // Turning camera off — same path on all platforms
-        developer.log(
-          'Camera toggle step: enableVideo(false)',
-          name: 'LiveRoomScreen',
-        );
+        _logLiveRoom('toggle_video:step enableVideo(false)');
         await service.publishLocalVideoStream(false);
         await service.enableVideo(false);
-        developer.log(
-          'Camera toggle step: enableVideo(false) completed',
-          name: 'LiveRoomScreen',
-        );
+        _logLiveRoom('toggle_video:step enableVideo(false) completed');
       }
 
-      print('[CAMDBG] toggle_video:success next=$next mounted=$mounted');
+      _logLiveRoom('toggle_video:success next=$next mounted=$mounted');
       if (mounted) {
         setState(() {
           _isVideoEnabled = next;
@@ -495,7 +528,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           });
         }
         final msg = next ? 'Camera turned on.' : 'Camera turned off.';
-        developer.log('Camera toggle success: $msg', name: 'LiveRoomScreen');
+        _logLiveRoom('toggle_video:success_message $msg');
         _showSnackBar(msg);
 
         if (next && kIsWeb) {
@@ -510,15 +543,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         }
       }
     } catch (e, st) {
-      print('[CAMDBG] toggle_video:failed error=$e');
-      if (e is AgoraServiceException) {
-        print(
-          '[CAMDBG] toggle_video:failed code=${e.code} message=${e.message} cause=${e.cause}',
-        );
-      }
-      developer.log(
-        'Camera toggle failed: $e',
-        name: 'LiveRoomScreen',
+      _logLiveRoom(
+        'toggle_video:failed',
         error: e,
         stackTrace: st,
       );
@@ -534,8 +560,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       if (mounted) {
         setState(() => _isVideoActionInFlight = false);
       }
-      print('[CAMDBG] toggle_video:end');
-      developer.log('Camera toggle ended', name: 'LiveRoomScreen');
+      _logLiveRoom('toggle_video:end');
     }
   }
 
@@ -554,13 +579,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
 
     if (service.isLocalVideoCapturing) {
-      print('[CAMDBG] toggle_video:self_heal_skip_already_capturing');
+      _logLiveRoom('toggle_video:self_heal_skip_already_capturing');
       return;
     }
 
     _isVideoSelfHealInFlight = true;
     try {
-      print('[CAMDBG] toggle_video:self_heal_reassert_enable');
+      _logLiveRoom('toggle_video:self_heal_reassert_enable');
       await service
           .enableVideo(true)
           .timeout(
@@ -573,18 +598,139 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       if (mounted) {
         setState(() => _cameraStatus = 'Camera active.');
       }
-      print('[CAMDBG] toggle_video:self_heal_success');
+      _logLiveRoom('toggle_video:self_heal_success');
     } catch (error, stackTrace) {
-      developer.log(
-        'Camera self-heal failed: $error',
-        name: 'LiveRoomScreen',
+      _logLiveRoom(
+        'toggle_video:self_heal_failed',
         error: error,
         stackTrace: stackTrace,
       );
-      print('[CAMDBG] toggle_video:self_heal_failed error=$error');
     } finally {
       _isVideoSelfHealInFlight = false;
     }
+  }
+
+  Widget _buildVideoTileFrame({
+    required Widget child,
+    required bool speaking,
+    required String label,
+  }) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: speaking ? Colors.green : Colors.transparent,
+          width: 3,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            child,
+            Positioned(
+              left: 8,
+              right: 8,
+              bottom: 8,
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    color: Colors.black54,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocalCamTile() {
+    final service = _agoraService;
+    final child = service != null && service.canRenderLocalView
+        ? service.getLocalView()
+        : ColoredBox(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.videocam_off, size: 40),
+                    const SizedBox(height: 8),
+                    Text(
+                      _isVideoEnabled
+                          ? 'Camera feed is preparing.'
+                          : 'Camera is off.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+
+    return _buildVideoTileFrame(
+      child: child,
+      speaking: service?.localSpeaking ?? false,
+      label: 'You',
+    );
+  }
+
+  Widget _buildRemoteCamTile({
+    required int remoteUid,
+    required String? remoteUserId,
+    required bool canViewRemote,
+  }) {
+    final service = _agoraService;
+    final child = canViewRemote && service != null
+        ? service.getRemoteView(remoteUid, widget.roomId)
+        : ColoredBox(
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            child: Center(
+              child: Padding(
+                padding: const EdgeInsets.all(8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.lock_outline, size: 24),
+                    const SizedBox(height: 6),
+                    Text(
+                      canViewRemote ? 'Loading video...' : 'Cam access locked',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+
+    return _buildVideoTileFrame(
+      child: child,
+      speaking: service?.isRemoteSpeaking(remoteUid) ?? false,
+      label: remoteUserId ?? 'Guest $remoteUid',
+    );
   }
 
   String _mapMediaError(Object error, {required bool canBroadcast}) {
@@ -678,6 +824,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     _agoraService = null;
     _isCallReady = false;
     _appliedMediaRole = null;
+    _requestedHighQualityRemoteUids = <int>{};
+    _requestedLowQualityRemoteUids = <int>{};
     if (service != null) {
       await service.dispose();
     }
@@ -2121,147 +2269,156 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 Align(
                                   alignment: Alignment.centerLeft,
                                   child: Text(
-                                    'Camera Stage',
+                                    'Camera Wall',
                                     style: Theme.of(
                                       context,
                                     ).textTheme.titleSmall,
                                   ),
                                 ),
                                 const SizedBox(height: 6),
-                                SizedBox(
-                                  height: 170,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: _agoraService!.localSpeaking
-                                            ? Colors.green
-                                            : Colors.transparent,
-                                        width: 3,
-                                      ),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(12),
-                                      child: _agoraService!.canRenderLocalView
-                                          ? _agoraService!.getLocalView()
-                                          : ColoredBox(
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .surfaceContainerHighest,
-                                              child: Center(
-                                                child: Column(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    const Icon(
-                                                      Icons.videocam_off,
-                                                      size: 40,
-                                                    ),
-                                                    const SizedBox(height: 8),
-                                                    Text(
-                                                      _isVideoEnabled
-                                                          ? 'Camera feed is preparing. If this stays blank, tap the cam button off and on once.'
-                                                          : 'Camera is off. Tap the camera icon to start your live feed.',
-                                                      textAlign:
-                                                          TextAlign.center,
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                if (_agoraService!.remoteUids.isNotEmpty)
-                                  SizedBox(
-                                    height: 120,
-                                    child: ListView.separated(
-                                      scrollDirection: Axis.horizontal,
-                                      itemBuilder: (context, index) {
-                                        final remoteUid =
-                                            _agoraService!.remoteUids[index];
-                                        final remoteUserId = _userIdForRtcUid(
-                                          remoteUid,
-                                          participantsInRoom,
-                                        );
-                                        final allowedViewers =
-                                            remoteUserId == null
-                                            ? const <String>[]
-                                            : ref
-                                                      .watch(
-                                                        userCamAllowedViewersProvider(
-                                                          remoteUserId,
-                                                        ),
-                                                      )
-                                                      .valueOrNull ??
-                                                  const <String>[];
-                                        final canViewRemote =
-                                            remoteUserId != null &&
-                                            allowedViewers.contains(user.id);
-                                        unawaited(
-                                          _agoraService!
-                                              .setRemoteVideoSubscription(
-                                                remoteUid,
-                                                subscribe: canViewRemote,
-                                              ),
-                                        );
-                                        return SizedBox(
-                                          width: 150,
-                                          child: DecoratedBox(
-                                            decoration: BoxDecoration(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              border: Border.all(
-                                                color:
-                                                    _agoraService!
-                                                        .isRemoteSpeaking(
-                                                          remoteUid,
-                                                        )
-                                                    ? Colors.green
-                                                    : Colors.transparent,
-                                                width: 3,
-                                              ),
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius:
-                                                  BorderRadius.circular(10),
-                                              child: canViewRemote
-                                                  ? _agoraService!
-                                                        .getRemoteView(
-                                                          remoteUid,
-                                                          widget.roomId,
-                                                        )
-                                                  : ColoredBox(
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .surfaceContainerHighest,
-                                                      child: const Center(
-                                                        child: Padding(
-                                                          padding:
-                                                              EdgeInsets.all(8),
-                                                          child: Text(
-                                                            'This user has not granted you cam access.',
-                                                            textAlign: TextAlign
-                                                                .center,
-                                                          ),
-                                                        ),
+                                Builder(
+                                  builder: (context) {
+                                    final viewableRemoteTiles =
+                                        <_RemoteCamTileData>[];
+                                    final blockedRemoteTiles =
+                                        <_RemoteCamTileData>[];
+
+                                    for (final remoteUid
+                                        in _agoraService!.remoteUids) {
+                                      final remoteUserId = _userIdForRtcUid(
+                                        remoteUid,
+                                        participantsInRoom,
+                                      );
+                                      final allowedViewers =
+                                          remoteUserId == null
+                                          ? const <String>[]
+                                          : ref
+                                                    .watch(
+                                                      userCamAllowedViewersProvider(
+                                                        remoteUserId,
                                                       ),
-                                                    ),
-                                            ),
+                                                    )
+                                                    .valueOrNull ??
+                                                const <String>[];
+                                      final canViewRemote =
+                                          remoteUserId != null &&
+                                          allowedViewers.contains(user.id);
+                                      final tile = _RemoteCamTileData(
+                                        uid: remoteUid,
+                                        userId: remoteUserId,
+                                        canView: canViewRemote,
+                                      );
+                                      if (canViewRemote) {
+                                        viewableRemoteTiles.add(tile);
+                                      } else {
+                                        blockedRemoteTiles.add(tile);
+                                      }
+                                    }
+
+                                    final mainGridRemoteTiles =
+                                        viewableRemoteTiles
+                                            .take(_maxMainGridRemoteTiles)
+                                            .toList(growable: false);
+                                    final overflowRemoteTiles =
+                                        <_RemoteCamTileData>[
+                                          ...viewableRemoteTiles.skip(
+                                            _maxMainGridRemoteTiles,
                                           ),
-                                        );
-                                      },
-                                      separatorBuilder: (_, unusedIndex) =>
-                                          const SizedBox(width: 8),
-                                      itemCount:
-                                          _agoraService!.remoteUids.length,
-                                    ),
-                                  )
-                                else
-                                  const Text(
-                                    'Waiting for other participants to join video...',
-                                  ),
+                                          ...blockedRemoteTiles,
+                                        ];
+
+                                    _scheduleRemoteVideoLayoutSync(
+                                      highQualityUids: mainGridRemoteTiles
+                                          .map((tile) => tile.uid)
+                                          .toSet(),
+                                      lowQualityUids: overflowRemoteTiles
+                                          .where((tile) => tile.canView)
+                                          .map((tile) => tile.uid)
+                                          .toSet(),
+                                    );
+
+                                    final mainGridTiles = <Widget>[
+                                      _buildLocalCamTile(),
+                                      ...mainGridRemoteTiles.map(
+                                        (tile) => _buildRemoteCamTile(
+                                          remoteUid: tile.uid,
+                                          remoteUserId: tile.userId,
+                                          canViewRemote: tile.canView,
+                                        ),
+                                      ),
+                                    ];
+
+                                    final tileCount = mainGridTiles.length;
+                                    final crossAxisCount = tileCount <= 2
+                                        ? 1
+                                        : tileCount <= 4
+                                        ? 2
+                                        : 3;
+                                    final mainGridHeight = tileCount <= 1
+                                        ? 180.0
+                                        : tileCount <= 4
+                                        ? 280.0
+                                        : 360.0;
+
+                                    return Column(
+                                      children: [
+                                        SizedBox(
+                                          height: mainGridHeight,
+                                          child: GridView.builder(
+                                            shrinkWrap: true,
+                                            physics:
+                                                const NeverScrollableScrollPhysics(),
+                                            gridDelegate:
+                                                SliverGridDelegateWithFixedCrossAxisCount(
+                                                  crossAxisCount:
+                                                      crossAxisCount,
+                                                  mainAxisSpacing: 8,
+                                                  crossAxisSpacing: 8,
+                                                  childAspectRatio: 16 / 9,
+                                                ),
+                                            itemCount: mainGridTiles.length,
+                                            itemBuilder: (context, index) {
+                                              return mainGridTiles[index];
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        if (overflowRemoteTiles.isNotEmpty)
+                                          SizedBox(
+                                            height: 92,
+                                            child: ListView.separated(
+                                              scrollDirection:
+                                                  Axis.horizontal,
+                                              itemBuilder: (context, index) {
+                                                final tile =
+                                                    overflowRemoteTiles[index];
+                                                return SizedBox(
+                                                  width: 132,
+                                                  child: _buildRemoteCamTile(
+                                                    remoteUid: tile.uid,
+                                                    remoteUserId: tile.userId,
+                                                    canViewRemote:
+                                                        tile.canView,
+                                                  ),
+                                                );
+                                              },
+                                              separatorBuilder:
+                                                  (_, unusedIndex) =>
+                                                      const SizedBox(width: 8),
+                                              itemCount:
+                                                  overflowRemoteTiles.length,
+                                            ),
+                                          )
+                                        else if (_agoraService!
+                                            .remoteUids
+                                            .isEmpty)
+                                          const Text(
+                                            'Waiting for other participants to join video...',
+                                          ),
+                                      ],
+                                    );
+                                  },
+                                ),
                                 const SizedBox(height: 8),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -3699,4 +3856,16 @@ class _GiftToast {
     required this.giftName,
     required this.coinCost,
   });
+}
+
+class _RemoteCamTileData {
+  const _RemoteCamTileData({
+    required this.uid,
+    required this.userId,
+    required this.canView,
+  });
+
+  final int uid;
+  final String? userId;
+  final bool canView;
 }
