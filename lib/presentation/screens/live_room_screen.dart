@@ -298,6 +298,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       });
     } catch (e, stackTrace) {
       print('[CAMDBG] connect:failed error=$e');
+      if (e is AgoraServiceException) {
+        print(
+          '[CAMDBG] connect:failed code=${e.code} message=${e.message} cause=${e.cause}',
+        );
+      }
       developer.log(
         'Error connecting to Agora',
         name: 'LiveRoom',
@@ -308,9 +313,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       if (mounted) {
         setState(() {
           final mappedError = _mapMediaError(e, canBroadcast: canBroadcast);
+          final debugSuffix = e is AgoraServiceException
+              ? ' [${e.code}] ${e.cause ?? e.message}'
+              : ' [$e]';
           _callError = canBroadcast
-              ? mappedError
-              : 'Live media preview is unavailable right now, but room chat and requests still work. $mappedError';
+              ? '$mappedError$debugSuffix'
+              : 'Live media preview is unavailable right now, but room chat and requests still work. $mappedError$debugSuffix';
+          _cameraStatus = 'Live media connect failed: $mappedError$debugSuffix';
           _isCallReady = false;
         });
       }
@@ -417,6 +426,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     try {
       if (next) {
         if (kIsWeb) {
+          if (mounted) {
+            setState(() => _cameraStatus = 'Requesting browser camera access...');
+          }
+          // Force a real browser media call so web failures surface explicitly.
+          await service.ensureDeviceAccess(video: true, audio: false);
+          print('[CAMDBG] toggle_video:web_preflight_initial_ok');
           if (service.isBroadcaster) {
             print('[CAMDBG] toggle_video:web_in_place_enable');
             developer.log(
@@ -608,15 +623,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       }
     } catch (e, st) {
       print('[CAMDBG] toggle_video:failed error=$e');
+      if (e is AgoraServiceException) {
+        print(
+          '[CAMDBG] toggle_video:failed code=${e.code} message=${e.message} cause=${e.cause}',
+        );
+      }
       developer.log(
         'Camera toggle failed: $e',
         name: 'LiveRoomScreen',
         error: e,
         stackTrace: st,
       );
-      _showSnackBar(_mapMediaError(e, canBroadcast: true));
+      final mapped = _mapMediaError(e, canBroadcast: true);
+      _showSnackBar(mapped);
       if (mounted) {
-        setState(() => _cameraStatus = 'Camera failed: ${_mapMediaError(e, canBroadcast: true)}');
+        final detail = e is AgoraServiceException
+            ? ' [${e.code}] ${e.cause ?? e.message}'
+            : ' [$e]';
+        setState(() => _cameraStatus = 'Camera failed: $mapped$detail');
       }
     } finally {
       if (mounted) {
