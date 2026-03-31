@@ -95,7 +95,7 @@ class AgoraService {
         channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
         clientRoleType: _broadcasterMode
             ? ClientRoleType.clientRoleBroadcaster
-            : ClientRoleType.clientRoleBroadcaster,
+            : ClientRoleType.clientRoleAudience,
         autoSubscribeAudio: true,
         autoSubscribeVideo: true,
         publishCameraTrack: enabled,
@@ -113,7 +113,7 @@ class AgoraService {
         channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
         clientRoleType: _broadcasterMode
             ? ClientRoleType.clientRoleBroadcaster
-            : ClientRoleType.clientRoleBroadcaster,
+            : ClientRoleType.clientRoleAudience,
         autoSubscribeAudio: true,
         autoSubscribeVideo: true,
         publishCameraTrack: _localVideoCapturing,
@@ -341,23 +341,30 @@ class AgoraService {
       name: 'AgoraService',
     );
     try {
-      await completer.future.timeout(
-        timeout,
-        onTimeout: () {
-          developer.log(
-            'Local video capturing timeout after ${timeout.inSeconds}s - permitting on web (state event may not fire reliably)',
-            name: 'AgoraService',
-            level: 701, // INFO level
-          );
-          // On web, the video state event may not fire reliably from Agora SDK.
-          // Since ensureDeviceAccess (preflight) already confirmed camera access,
-          // we complete successfully to avoid blocking the UI.
-        },
-      );
+      await completer.future.timeout(timeout);
       developer.log(
-        'Local video stream is ready (capturing started or timeout occurred)',
+        'Local video stream is ready (capturing started)',
         name: 'AgoraService',
       );
+    } on TimeoutException catch (e) {
+      // On web, the video state event may not fire reliably from Agora SDK.
+      // Since ensureDeviceAccess (preflight) already confirmed camera access,
+      // mark video as capturing and continue.
+      if (kIsWeb) {
+        developer.log(
+          'Local video capturing timeout after ${timeout.inSeconds}s - permitting on web (state event may not fire reliably)',
+          name: 'AgoraService',
+          level: 701, // INFO level
+        );
+        _localVideoCapturing = true;
+      } else {
+        developer.log(
+          'Local video capturing timeout on $kIsWeb platform',
+          name: 'AgoraService',
+          error: e,
+        );
+        rethrow;
+      }
     } catch (e) {
       developer.log(
         'Local video capturing failed: $e',
@@ -693,12 +700,15 @@ class AgoraService {
       return;
     }
     try {
+      final targetRole = enabled
+          ? ClientRoleType.clientRoleBroadcaster
+          : ClientRoleType.clientRoleAudience;
       developer.log(
         'Setting client role to ${enabled ? "broadcaster" : "audience"}',
         name: 'AgoraService',
       );
-      await _engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
-      _broadcasterMode = true;
+      await _engine.setClientRole(role: targetRole);
+      _broadcasterMode = enabled;
       developer.log('Client role changed successfully', name: 'AgoraService');
     } catch (error) {
       developer.log(
