@@ -46,6 +46,8 @@ class AgoraService {
       _broadcasterMode &&
       (_localVideoCapturing || kIsWeb);
   bool get isBroadcaster => _broadcasterMode;
+  bool get isJoinedChannel => _joinedChannel;
+  bool get isLocalVideoCapturing => _localVideoCapturing;
 
   bool isRemoteSpeaking(int uid) => _speakingUids.contains(uid);
 
@@ -145,8 +147,8 @@ class AgoraService {
     }
 
     if (lower.contains('secure context') ||
-        lower.contains('https') ||
-        lower.contains('only secure origins')) {
+      lower.contains('only secure origins') ||
+      lower.contains('insecure context')) {
       throw AgoraServiceException(
         code: 'insecure-context',
         message:

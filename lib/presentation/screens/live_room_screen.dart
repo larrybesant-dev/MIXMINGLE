@@ -259,6 +259,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       final credentials = await _fetchAgoraToken(
         channelName: widget.roomId,
         rtcUid: rtcUid,
+      ).timeout(
+        const Duration(seconds: 12),
+        onTimeout: () => throw const AgoraServiceException(
+          code: 'agora-token-missing',
+          message: 'Timed out fetching live media token.',
+        ),
       );
       developer.log('Agora token fetched successfully', name: 'LiveRoom');
       await service.initialize(credentials.appId);
@@ -331,6 +337,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           final tokenResult = await _fetchAgoraToken(
             channelName: widget.roomId,
             rtcUid: uid,
+          ).timeout(
+            const Duration(seconds: 12),
+            onTimeout: () => throw const AgoraServiceException(
+              code: 'agora-token-missing',
+              message: 'Timed out fetching live media token.',
+            ),
           );
           await service.rejoinAsBroadcaster(
             tokenResult.token,
@@ -372,12 +384,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     if (service == null || !_isCallReady || _isVideoActionInFlight) {
       if (service == null) {
         developer.log('Camera toggle blocked: Agora service not initialized', name: 'LiveRoomScreen');
+        if (mounted) setState(() => _cameraStatus = 'Camera blocked: live media service not initialized.');
         _showSnackBar('Agora service not initialized.');
       } else if (!_isCallReady) {
         developer.log('Camera toggle blocked: call not ready', name: 'LiveRoomScreen');
+        if (mounted) setState(() => _cameraStatus = 'Camera blocked: live media not ready yet.');
         _showSnackBar('Call not ready. Wait a moment and retry.');
       } else {
         developer.log('Camera toggle blocked: action already in flight', name: 'LiveRoomScreen');
+        if (mounted) setState(() => _cameraStatus = 'Camera action already in progress...');
         _showSnackBar('Camera action in progress...');
       }
       return;
@@ -460,6 +475,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           var tokenResult = await _fetchAgoraToken(
             channelName: widget.roomId,
             rtcUid: uid,
+          ).timeout(
+            const Duration(seconds: 12),
+            onTimeout: () => throw const AgoraServiceException(
+              code: 'agora-token-missing',
+              message: 'Timed out fetching live media token.',
+            ),
           );
           developer.log(
             'Camera toggle (web): token fetched, rejoining as broadcaster uid=$uid',
@@ -494,6 +515,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             tokenResult = await _fetchAgoraToken(
               channelName: widget.roomId,
               rtcUid: uid,
+            ).timeout(
+              const Duration(seconds: 12),
+              onTimeout: () => throw const AgoraServiceException(
+                code: 'agora-token-missing',
+                message: 'Timed out fetching live media token.',
+              ),
             );
             await service
                 .rejoinAsBroadcaster(
@@ -2139,6 +2166,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               textAlign: TextAlign.center,
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                 color: Theme.of(context).colorScheme.secondary,
+                              ),
+                            ),
+                          ],
+                          if (_agoraService != null) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              'debug: ready=$_isCallReady joined=${_agoraService!.isJoinedChannel} broadcaster=${_agoraService!.isBroadcaster} capturing=${_agoraService!.isLocalVideoCapturing} video=$_isVideoEnabled inFlight=$_isVideoActionInFlight',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.outline,
+                                fontSize: 11,
                               ),
                             ),
                           ],
