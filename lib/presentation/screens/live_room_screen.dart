@@ -400,15 +400,43 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             if (mounted) {
               setState(() => _cameraStatus = 'Publishing camera track...');
             }
-            await service
-                .enableVideo(true)
-                .timeout(
-                  const Duration(seconds: 12),
-                  onTimeout: () => throw const AgoraServiceException(
-                    code: 'camera-start-failed',
-                    message: 'Camera startup timed out while publishing video.',
-                  ),
-                );
+            try {
+              await service
+                  .enableVideo(true)
+                  .timeout(
+                    const Duration(seconds: 12),
+                    onTimeout: () => throw const AgoraServiceException(
+                      code: 'camera-start-failed',
+                      message:
+                          'Camera startup timed out while publishing video.',
+                    ),
+                  );
+            } catch (firstEnableError, firstEnableStack) {
+              developer.log(
+                'Camera toggle (web): in-place enable failed, retrying after browser preflight: $firstEnableError',
+                name: 'LiveRoomScreen',
+                error: firstEnableError,
+                stackTrace: firstEnableStack,
+              );
+              if (mounted) {
+                setState(() => _cameraStatus = 'Requesting browser camera access...');
+              }
+              await service.ensureDeviceAccess(video: true, audio: false);
+              await Future<void>.delayed(const Duration(milliseconds: 220));
+              if (mounted) {
+                setState(() => _cameraStatus = 'Retrying camera publish...');
+              }
+              await service
+                  .enableVideo(true)
+                  .timeout(
+                    const Duration(seconds: 12),
+                    onTimeout: () => throw const AgoraServiceException(
+                      code: 'camera-start-failed',
+                      message:
+                          'Camera startup timed out after browser access check.',
+                    ),
+                  );
+            }
             if (mounted) setState(() => _appliedMediaRole = 'cohost');
           } else {
           // ----------------------------------------------------------------
@@ -2074,10 +2102,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     ? 'Turn camera off'
                                     : 'Turn camera on',
                                 onPressed:
-                                  RoomPermissions.canUseCamera(role) &&
-                                    !_isVideoActionInFlight
-                                    ? _toggleVideo
-                                    : null,
+                                    RoomPermissions.canUseCamera(role) &&
+                                            !_isVideoActionInFlight
+                                        ? () {
+                                            if (mounted) {
+                                              setState(
+                                                () =>
+                                                    _cameraStatus =
+                                                        'Camera button pressed. Initializing...',
+                                              );
+                                            }
+                                            _toggleVideo();
+                                          }
+                                        : null,
                                 icon: Icon(
                                   _isVideoEnabled
                                       ? Icons.videocam
