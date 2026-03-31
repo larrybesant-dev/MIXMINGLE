@@ -351,15 +351,34 @@ class AgoraService {
     }
 
     final maxAttempts = kIsWeb ? 2 : 1;
+    final attemptTimeout = kIsWeb
+        ? const Duration(seconds: 18)
+        : const Duration(seconds: 10);
     Object? lastInitError;
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
         _engine = createAgoraRtcEngine();
-        await _engine.initialize(
-          RtcEngineContext(
-            appId: normalizedAppId,
-            channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-          ),
+        developer.log(
+          'Agora initialize attempt $attempt/$maxAttempts starting',
+          name: 'AgoraService',
+        );
+        await _engine
+            .initialize(
+              RtcEngineContext(
+                appId: normalizedAppId,
+                channelProfile:
+                    ChannelProfileType.channelProfileLiveBroadcasting,
+              ),
+            )
+            .timeout(
+              attemptTimeout,
+              onTimeout: () => throw TimeoutException(
+                'Agora initialize attempt timed out after ${attemptTimeout.inSeconds}s',
+              ),
+            );
+        developer.log(
+          'Agora initialize attempt $attempt/$maxAttempts succeeded',
+          name: 'AgoraService',
         );
         lastInitError = null;
         break;

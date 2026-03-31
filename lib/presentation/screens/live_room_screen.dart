@@ -292,10 +292,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           () => _cameraStatus = 'Connecting: initializing media engine...',
         );
       }
+      print('[CAMDBG] connect:init_begin');
       await service
           .initialize(credentials.appId)
           .timeout(
-            const Duration(seconds: 120),
+            const Duration(seconds: 45),
             onTimeout: () => throw const AgoraServiceException(
               code: 'agora-initialize-live-media-failed',
               message: 'Timed out initializing live media engine.',

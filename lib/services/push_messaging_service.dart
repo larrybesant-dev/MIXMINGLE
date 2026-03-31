@@ -98,6 +98,16 @@ class PushMessagingService {
 
   Future<void> _requestPermission() async {
     try {
+      final currentSettings = await _messaging.getNotificationSettings();
+      if (currentSettings.authorizationStatus !=
+          AuthorizationStatus.notDetermined) {
+        developer.log(
+          'Push permission already resolved: ${currentSettings.authorizationStatus.name}',
+          name: 'PushMessagingService',
+        );
+        return;
+      }
+
       final settings = await _messaging.requestPermission(
         alert: true,
         badge: true,
@@ -146,7 +156,8 @@ class PushMessagingService {
       return;
     }
 
-    if (_lastRegisteredUid == user.uid && _lastRegisteredToken == trimmedToken) {
+    if (_lastRegisteredUid == user.uid &&
+        _lastRegisteredToken == trimmedToken) {
       return;
     }
 
