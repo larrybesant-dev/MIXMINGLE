@@ -256,6 +256,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         name: 'LiveRoom',
       );
       print('[CAMDBG] connect:start user=$userId canBroadcast=$canBroadcast room=${widget.roomId}');
+      if (mounted) {
+        setState(() => _cameraStatus = 'Connecting: requesting token...');
+      }
       final rtcUid = _buildRtcUid(userId);
       final credentials = await _fetchAgoraToken(
         channelName: widget.roomId,
@@ -269,18 +272,38 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       );
       developer.log('Agora token fetched successfully', name: 'LiveRoom');
       print('[CAMDBG] connect:token_ok uid=$rtcUid');
-      await service.initialize(credentials.appId);
+      if (mounted) {
+        setState(() => _cameraStatus = 'Connecting: initializing media engine...');
+      }
+      await service.initialize(credentials.appId).timeout(
+        const Duration(seconds: 12),
+        onTimeout: () => throw const AgoraServiceException(
+          code: 'agora-initialize-live-media-failed',
+          message: 'Timed out initializing live media engine.',
+        ),
+      );
       developer.log('Agora service initialized', name: 'LiveRoom');
       print('[CAMDBG] connect:agora_initialized');
       final joinAsBroadcaster = canBroadcast || kIsWeb;
-      await service.joinChannel(
-        credentials.token,
-        widget.roomId,
-        rtcUid,
-        asBroadcaster: joinAsBroadcaster,
-        publishCameraTrackOnJoin: canBroadcast,
-        publishMicrophoneTrackOnJoin: canBroadcast,
-      );
+      if (mounted) {
+        setState(() => _cameraStatus = 'Connecting: joining live room...');
+      }
+      await service
+          .joinChannel(
+            credentials.token,
+            widget.roomId,
+            rtcUid,
+            asBroadcaster: joinAsBroadcaster,
+            publishCameraTrackOnJoin: canBroadcast,
+            publishMicrophoneTrackOnJoin: canBroadcast,
+          )
+          .timeout(
+            const Duration(seconds: 15),
+            onTimeout: () => throw const AgoraServiceException(
+              code: 'agora-join-room-failed',
+              message: 'Timed out joining live media channel.',
+            ),
+          );
       developer.log('Successfully joined Agora channel', name: 'LiveRoom');
       print('[CAMDBG] connect:joined joinAsBroadcaster=$joinAsBroadcaster');
       if (!mounted) {
@@ -295,6 +318,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         _appliedMediaRole = joinAsBroadcaster ? 'cohost' : 'audience';
         _isMicMuted = true;
         _isVideoEnabled = false;
+        _cameraStatus = 'Live media ready. Tap camera to publish.';
       });
     } catch (e, stackTrace) {
       print('[CAMDBG] connect:failed error=$e');
@@ -675,6 +699,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           return 'Live media backend configuration is invalid. Please contact support.';
         case 'agora-initialize-live-media-failed':
           return 'Live media engine failed to start in this browser session. Reload the page and try again.';
+        case 'agora-join-room-failed':
+          return 'Live media channel join timed out. Check connection and retry.';
         default:
           return error.message;
       }
@@ -2225,6 +2251,83 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             ),
                           ],
                         ],
+                      ),
+                    ),
+                  if (!_isCallReady || _agoraService == null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Camera Stage',
+                                style: Theme.of(context).textTheme.titleSmall,
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Live media is not ready yet. Tap below to initialize camera controls.',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              const SizedBox(height: 10),
+                              FilledButton.icon(
+                                onPressed: _isCallConnecting || _isVideoActionInFlight
+                                    ? null
+                                    : () async {
+                                        if (mounted) {
+                                          setState(() {
+                                            _cameraStatus =
+                                                'Initializing live media...';
+                                          });
+                                        }
+                                        await _connectCall(
+                                          user.id,
+                                          canBroadcast: false,
+                                        );
+                                        if (!mounted) {
+                                          return;
+                                        }
+                                        if (_isCallReady && _agoraService != null) {
+                                          await _toggleVideo();
+                                        }
+                                      },
+                                icon: const Icon(Icons.videocam),
+                                label: Text(
+                                  _isCallConnecting
+                                      ? 'Initializing...'
+                                      : 'Turn on cam',
+                                ),
+                              ),
+                              if (_cameraStatus != null) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  _cameraStatus!,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall,
+                                ),
+                              ],
+                              const SizedBox(height: 4),
+                              Text(
+                                'debug: ready=$_isCallReady connecting=$_isCallConnecting service=${_agoraService != null}',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .outline,
+                                      fontSize: 11,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   if (isHost)
