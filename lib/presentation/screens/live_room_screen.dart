@@ -62,6 +62,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isVideoEnabled = true;
   bool _isMicActionInFlight = false;
   bool _isVideoActionInFlight = false;
+  String? _cameraStatus;
   bool _showEmojiTray = false;
   String? _callError;
   Set<String> _excludedUserIds = const <String>{};
@@ -384,7 +385,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
     final next = !_isVideoEnabled;
     developer.log('Camera toggle target state: $next', name: 'LiveRoomScreen');
-    setState(() => _isVideoActionInFlight = true);
+    setState(() {
+      _isVideoActionInFlight = true;
+      _cameraStatus = next ? 'Starting camera...' : 'Stopping camera...';
+    });
     try {
       if (next) {
         if (kIsWeb) {
@@ -393,7 +397,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               'Camera toggle (web): already broadcaster, enabling camera in-place',
               name: 'LiveRoomScreen',
             );
-            await service.enableVideo(true);
+            if (mounted) {
+              setState(() => _cameraStatus = 'Publishing camera track...');
+            }
+            await service
+                .enableVideo(true)
+                .timeout(
+                  const Duration(seconds: 12),
+                  onTimeout: () => throw const AgoraServiceException(
+                    code: 'camera-start-failed',
+                    message: 'Camera startup timed out while publishing video.',
+                  ),
+                );
             if (mounted) setState(() => _appliedMediaRole = 'cohost');
           } else {
           // ----------------------------------------------------------------
@@ -422,13 +437,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             'Camera toggle (web): token fetched, rejoining as broadcaster uid=$uid',
             name: 'LiveRoomScreen',
           );
+          if (mounted) {
+            setState(() => _cameraStatus = 'Joining video channel...');
+          }
           try {
-            await service.rejoinAsBroadcaster(
-              tokenResult.token,
-              widget.roomId,
-              uid,
-              publishMicrophoneTrack: !_isMicMuted,
-            );
+            await service
+                .rejoinAsBroadcaster(
+                  tokenResult.token,
+                  widget.roomId,
+                  uid,
+                  publishMicrophoneTrack: !_isMicMuted,
+                )
+                .timeout(
+                  const Duration(seconds: 12),
+                  onTimeout: () => throw const AgoraServiceException(
+                    code: 'camera-start-failed',
+                    message: 'Camera startup timed out while joining live video.',
+                  ),
+                );
           } catch (firstError, firstStack) {
             developer.log(
               'Camera toggle (web): first broadcaster rejoin failed, retrying once: $firstError',
@@ -441,14 +467,33 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               channelName: widget.roomId,
               rtcUid: uid,
             );
-            await service.rejoinAsBroadcaster(
-              tokenResult.token,
-              widget.roomId,
-              uid,
-              publishMicrophoneTrack: !_isMicMuted,
-            );
+            await service
+                .rejoinAsBroadcaster(
+                  tokenResult.token,
+                  widget.roomId,
+                  uid,
+                  publishMicrophoneTrack: !_isMicMuted,
+                )
+                .timeout(
+                  const Duration(seconds: 12),
+                  onTimeout: () => throw const AgoraServiceException(
+                    code: 'camera-start-failed',
+                    message: 'Camera startup timed out on retry.',
+                  ),
+                );
           }
-          await service.enableVideo(true);
+          if (mounted) {
+            setState(() => _cameraStatus = 'Publishing camera track...');
+          }
+          await service
+              .enableVideo(true)
+              .timeout(
+                const Duration(seconds: 12),
+                onTimeout: () => throw const AgoraServiceException(
+                  code: 'camera-start-failed',
+                  message: 'Camera startup timed out while publishing video.',
+                ),
+              );
           developer.log(
             'Camera toggle (web): broadcaster rejoin complete',
             name: 'LiveRoomScreen',
@@ -475,7 +520,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       }
 
       if (mounted) {
-        setState(() => _isVideoEnabled = next);
+        setState(() {
+          _isVideoEnabled = next;
+          _cameraStatus = next ? 'Camera active.' : 'Camera off.';
+        });
         if (next) {
           Future<void>.delayed(const Duration(milliseconds: 450), () {
             if (mounted) setState(() {});
@@ -493,6 +541,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         stackTrace: st,
       );
       _showSnackBar(_mapMediaError(e, canBroadcast: true));
+      if (mounted) {
+        setState(() => _cameraStatus = 'Camera failed: ${_mapMediaError(e, canBroadcast: true)}');
+      }
     } finally {
       if (mounted) {
         setState(() => _isVideoActionInFlight = false);
@@ -523,6 +574,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         case 'agora-token-missing':
         case 'agora-appid-invalid':
           return 'Live media backend configuration is invalid. Please contact support.';
+        case 'agora-initialize-live-media-failed':
+          return 'Live media engine failed to start in this browser session. Reload the page and try again.';
         default:
           return error.message;
       }
@@ -2042,6 +2095,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             textAlign: TextAlign.center,
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
+                          if (_cameraStatus != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              _cameraStatus!,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: Theme.of(context).colorScheme.secondary,
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),

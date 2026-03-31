@@ -92,6 +92,10 @@ class AgoraService {
   Never _throwMappedAgoraError(Object error, {required String operation}) {
     final raw = error.toString();
     final lower = raw.toLowerCase();
+    final operationCode = operation
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '-')
+        .replaceAll(RegExp(r'^-+|-+$'), '');
 
     if (lower.contains('notallowederror') ||
         lower.contains('permission denied') ||
@@ -151,8 +155,20 @@ class AgoraService {
       );
     }
 
+    if (lower.contains('v8breakiterator') ||
+        lower.contains('segmenter') ||
+        lower.contains('webassembly') ||
+        lower.contains('wasm')) {
+      throw AgoraServiceException(
+        code: 'unsupported-browser',
+        message:
+            'Browser runtime compatibility issue detected. Update browser and reload the page.',
+        cause: error,
+      );
+    }
+
     throw AgoraServiceException(
-      code: 'agora-$operation-failed',
+      code: 'agora-$operationCode-failed',
       message: 'Failed to $operation. Please retry.',
       cause: error,
     );
@@ -243,16 +259,40 @@ class AgoraService {
       throw ArgumentError('Agora appId cannot be empty.');
     }
 
-    try {
-      _engine = createAgoraRtcEngine();
-      await _engine.initialize(
-        RtcEngineContext(
-          appId: normalizedAppId,
-          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-        ),
-      );
-    } catch (error) {
-      _throwMappedAgoraError(error, operation: 'initialize live media');
+    final maxAttempts = kIsWeb ? 2 : 1;
+    Object? lastInitError;
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        _engine = createAgoraRtcEngine();
+        await _engine.initialize(
+          RtcEngineContext(
+            appId: normalizedAppId,
+            channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+          ),
+        );
+        lastInitError = null;
+        break;
+      } catch (error, stackTrace) {
+        lastInitError = error;
+        developer.log(
+          'Agora initialize attempt $attempt/$maxAttempts failed: $error',
+          name: 'AgoraService',
+          error: error,
+          stackTrace: stackTrace,
+        );
+        try {
+          await _engine.release();
+        } catch (_) {
+          // Ignore cleanup failures between attempts.
+        }
+        if (attempt < maxAttempts) {
+          await Future<void>.delayed(const Duration(milliseconds: 350));
+        }
+      }
+    }
+
+    if (lastInitError != null) {
+      _throwMappedAgoraError(lastInitError, operation: 'initialize live media');
     }
 
     // Set up event handlers
