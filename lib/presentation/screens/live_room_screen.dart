@@ -255,6 +255,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         'Starting Agora call connection for userId: $userId, canBroadcast: $canBroadcast',
         name: 'LiveRoom',
       );
+      print('[CAMDBG] connect:start user=$userId canBroadcast=$canBroadcast room=${widget.roomId}');
       final rtcUid = _buildRtcUid(userId);
       final credentials = await _fetchAgoraToken(
         channelName: widget.roomId,
@@ -267,8 +268,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         ),
       );
       developer.log('Agora token fetched successfully', name: 'LiveRoom');
+      print('[CAMDBG] connect:token_ok uid=$rtcUid');
       await service.initialize(credentials.appId);
       developer.log('Agora service initialized', name: 'LiveRoom');
+      print('[CAMDBG] connect:agora_initialized');
       final joinAsBroadcaster = canBroadcast || kIsWeb;
       await service.joinChannel(
         credentials.token,
@@ -279,6 +282,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         publishMicrophoneTrackOnJoin: canBroadcast,
       );
       developer.log('Successfully joined Agora channel', name: 'LiveRoom');
+      print('[CAMDBG] connect:joined joinAsBroadcaster=$joinAsBroadcaster');
       if (!mounted) {
         await service.dispose();
         return;
@@ -293,6 +297,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         _isVideoEnabled = false;
       });
     } catch (e, stackTrace) {
+      print('[CAMDBG] connect:failed error=$e');
       developer.log(
         'Error connecting to Agora',
         name: 'LiveRoom',
@@ -375,6 +380,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
   Future<void> _toggleVideo() async {
     developer.log('Camera toggle started', name: 'LiveRoomScreen');
+    print('[CAMDBG] toggle_video:start enabled=$_isVideoEnabled callReady=$_isCallReady inFlight=$_isVideoActionInFlight');
     final service = _agoraService;
     developer.log(
       'Camera toggle precheck: service=${service != null}, callReady=$_isCallReady, inFlight=$_isVideoActionInFlight',
@@ -384,14 +390,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     if (service == null || !_isCallReady || _isVideoActionInFlight) {
       if (service == null) {
         developer.log('Camera toggle blocked: Agora service not initialized', name: 'LiveRoomScreen');
+        print('[CAMDBG] toggle_video:blocked service_null');
         if (mounted) setState(() => _cameraStatus = 'Camera blocked: live media service not initialized.');
         _showSnackBar('Agora service not initialized.');
       } else if (!_isCallReady) {
         developer.log('Camera toggle blocked: call not ready', name: 'LiveRoomScreen');
+        print('[CAMDBG] toggle_video:blocked call_not_ready');
         if (mounted) setState(() => _cameraStatus = 'Camera blocked: live media not ready yet.');
         _showSnackBar('Call not ready. Wait a moment and retry.');
       } else {
         developer.log('Camera toggle blocked: action already in flight', name: 'LiveRoomScreen');
+        print('[CAMDBG] toggle_video:blocked already_in_flight');
         if (mounted) setState(() => _cameraStatus = 'Camera action already in progress...');
         _showSnackBar('Camera action in progress...');
       }
@@ -399,6 +408,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
 
     final next = !_isVideoEnabled;
+    print('[CAMDBG] toggle_video:next=$next broadcaster=${service.isBroadcaster} joined=${service.isJoinedChannel}');
     developer.log('Camera toggle target state: $next', name: 'LiveRoomScreen');
     setState(() {
       _isVideoActionInFlight = true;
@@ -408,6 +418,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       if (next) {
         if (kIsWeb) {
           if (service.isBroadcaster) {
+            print('[CAMDBG] toggle_video:web_in_place_enable');
             developer.log(
               'Camera toggle (web): already broadcaster, enabling camera in-place',
               name: 'LiveRoomScreen',
@@ -427,6 +438,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     ),
                   );
             } catch (firstEnableError, firstEnableStack) {
+              print('[CAMDBG] toggle_video:web_in_place_enable_failed error=$firstEnableError');
               developer.log(
                 'Camera toggle (web): in-place enable failed, retrying after browser preflight: $firstEnableError',
                 name: 'LiveRoomScreen',
@@ -437,6 +449,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 setState(() => _cameraStatus = 'Requesting browser camera access...');
               }
               await service.ensureDeviceAccess(video: true, audio: false);
+              print('[CAMDBG] toggle_video:web_preflight_ok');
               await Future<void>.delayed(const Duration(milliseconds: 220));
               if (mounted) {
                 setState(() => _cameraStatus = 'Retrying camera publish...');
@@ -454,6 +467,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             }
             if (mounted) setState(() => _appliedMediaRole = 'cohost');
           } else {
+          print('[CAMDBG] toggle_video:web_rejoin_path');
           // ----------------------------------------------------------------
           // Web: in-place role switch does NOT reliably renegotiate the WebRTC
           // publish track.  Leave and rejoin as broadcaster with a fresh token
@@ -482,6 +496,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               message: 'Timed out fetching live media token.',
             ),
           );
+          print('[CAMDBG] toggle_video:web_rejoin_token_ok uid=$uid');
           developer.log(
             'Camera toggle (web): token fetched, rejoining as broadcaster uid=$uid',
             name: 'LiveRoomScreen',
@@ -505,6 +520,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   ),
                 );
           } catch (firstError, firstStack) {
+            print('[CAMDBG] toggle_video:web_rejoin_first_fail error=$firstError');
             developer.log(
               'Camera toggle (web): first broadcaster rejoin failed, retrying once: $firstError',
               name: 'LiveRoomScreen',
@@ -522,6 +538,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 message: 'Timed out fetching live media token.',
               ),
             );
+            print('[CAMDBG] toggle_video:web_rejoin_retry_token_ok uid=$uid');
             await service
                 .rejoinAsBroadcaster(
                   tokenResult.token,
@@ -585,10 +602,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           });
         }
         final msg = next ? 'Camera turned on.' : 'Camera turned off.';
+        print('[CAMDBG] toggle_video:success next=$next');
         developer.log('Camera toggle success: $msg', name: 'LiveRoomScreen');
         _showSnackBar(msg);
       }
     } catch (e, st) {
+      print('[CAMDBG] toggle_video:failed error=$e');
       developer.log(
         'Camera toggle failed: $e',
         name: 'LiveRoomScreen',
@@ -603,6 +622,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       if (mounted) {
         setState(() => _isVideoActionInFlight = false);
       }
+      print('[CAMDBG] toggle_video:end');
       developer.log('Camera toggle ended', name: 'LiveRoomScreen');
     }
   }
