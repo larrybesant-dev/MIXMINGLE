@@ -31,6 +31,7 @@ class AgoraService {
   bool _joinedChannel = false;
   bool _broadcasterMode = false;
   bool _localVideoCapturing = false;
+  bool _enableVideoInFlight = false;  // Track if we're actively enabling/disabling video
   Completer<void>? _localVideoCaptureCompleter;
 
     // Callbacks for UI updates
@@ -381,8 +382,17 @@ class AgoraService {
             return;
           }
 
+          // Ignore STOPPED events while we're actively enabling/disabling video
+          // to avoid race conditions where the callback fires before the operation completes.
           if (state == LocalVideoStreamState.localVideoStreamStateStopped) {
-            _localVideoCapturing = false;
+            if (!_enableVideoInFlight) {
+              _localVideoCapturing = false;
+            } else {
+              developer.log(
+                'Ignoring STOPPED state before enableVideo operation completes',
+                name: 'AgoraService',
+              );
+            }
           }
         },
       ),
@@ -630,6 +640,7 @@ class AgoraService {
       'enableVideo($enabled) - started',
       name: 'AgoraService',
     );
+    _enableVideoInFlight = true;
     try {
       if (enabled) {
         if (!_broadcasterMode) {
@@ -727,6 +738,9 @@ class AgoraService {
         rethrow;
       }
       _throwMappedAgoraError(error, operation: 'toggle camera');
+    } finally {
+      _enableVideoInFlight = false;
+    }
     }
   }
 
