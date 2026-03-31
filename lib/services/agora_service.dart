@@ -575,6 +575,9 @@ class AgoraService {
 
     // --- rejoin as broadcaster ---
     try {
+      await _engine.setClientRole(
+        role: ClientRoleType.clientRoleBroadcaster,
+      );
       await _engine.joinChannel(
         token: token.trim(),
         channelId: channelName.trim(),
@@ -588,9 +591,29 @@ class AgoraService {
           publishMicrophoneTrack: publishMicrophoneTrack,
         ),
       );
+      await _engine.enableVideo();
       await _engine.enableLocalVideo(true);
       await _engine.muteLocalVideoStream(false);
+      await _engine.updateChannelMediaOptions(
+        ChannelMediaOptions(
+          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+          autoSubscribeAudio: true,
+          autoSubscribeVideo: true,
+          publishCameraTrack: true,
+          publishMicrophoneTrack: publishMicrophoneTrack,
+        ),
+      );
       try { await _engine.startPreview(); } catch (_) {}
+      _enableVideoInFlight = true;
+      try {
+        await _awaitLocalVideoCapturing();
+      } finally {
+        _enableVideoInFlight = false;
+      }
+      if (!_localVideoCapturing && kIsWeb) {
+        _localVideoCapturing = true;
+      }
     } catch (error) {
       _throwMappedAgoraError(error, operation: 'rejoin as broadcaster');
     }
@@ -740,7 +763,6 @@ class AgoraService {
       _throwMappedAgoraError(error, operation: 'toggle camera');
     } finally {
       _enableVideoInFlight = false;
-    }
     }
   }
 

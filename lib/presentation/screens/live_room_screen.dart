@@ -598,15 +598,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           if (mounted) {
             setState(() => _cameraStatus = 'Publishing camera track...');
           }
-          await service
-              .enableVideo(true)
-              .timeout(
-                const Duration(seconds: 12),
-                onTimeout: () => throw const AgoraServiceException(
-                  code: 'camera-start-failed',
-                  message: 'Camera startup timed out while publishing video.',
-                ),
-              );
           developer.log(
             'Camera toggle (web): broadcaster rejoin complete',
             name: 'LiveRoomScreen',
