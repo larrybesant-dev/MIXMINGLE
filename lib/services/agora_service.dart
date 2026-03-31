@@ -81,6 +81,79 @@ class AgoraService {
   late RtcEngine _engine;
   bool _initialized = false;
 
+  Future<void> publishLocalVideoStream(bool enabled) async {
+    if (!_initialized || !_joinedChannel) {
+      return;
+    }
+    await _engine.updateChannelMediaOptions(
+      ChannelMediaOptions(
+        channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+        clientRoleType: _broadcasterMode
+            ? ClientRoleType.clientRoleBroadcaster
+            : ClientRoleType.clientRoleAudience,
+        autoSubscribeAudio: true,
+        autoSubscribeVideo: true,
+        publishCameraTrack: enabled,
+        publishMicrophoneTrack: _broadcasterMode,
+      ),
+    );
+  }
+
+  Future<void> publishLocalAudioStream(bool enabled) async {
+    if (!_initialized || !_joinedChannel) {
+      return;
+    }
+    await _engine.updateChannelMediaOptions(
+      ChannelMediaOptions(
+        channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
+        clientRoleType: _broadcasterMode
+            ? ClientRoleType.clientRoleBroadcaster
+            : ClientRoleType.clientRoleAudience,
+        autoSubscribeAudio: true,
+        autoSubscribeVideo: true,
+        publishCameraTrack: _localVideoCapturing,
+        publishMicrophoneTrack: enabled,
+      ),
+    );
+  }
+
+  Future<void> _startCameraCaptureAfterRoleUpgrade() async {
+    try {
+      await _engine.startCameraCapture(
+        sourceType: VideoSourceType.videoSourceCameraPrimary,
+        config: const CameraCapturerConfiguration(),
+      );
+      developer.log(
+        'startCameraCapture called after role upgrade',
+        name: 'AgoraService',
+      );
+    } catch (error, stackTrace) {
+      // Some platforms (notably web) can rely on enableVideo/startPreview instead.
+      developer.log(
+        'startCameraCapture skipped: $error',
+        name: 'AgoraService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  Future<void> _ensurePublishPipelineAfterRoleUpgrade({
+    required bool publishAudio,
+  }) async {
+    await publishLocalVideoStream(true);
+    await publishLocalAudioStream(publishAudio);
+    await _startCameraCaptureAfterRoleUpgrade();
+    await _engine.enableLocalVideo(true);
+    await _engine.muteLocalVideoStream(false);
+    await _engine.muteLocalAudioStream(!publishAudio);
+    try {
+      await _engine.startPreview();
+    } catch (_) {
+      // Best effort preview start.
+    }
+  }
+
   Future<void> ensureDeviceAccess({required bool video, required bool audio}) async {
     try {
       await web_media_probe.ensureUserMediaAccess(video: video, audio: audio);
@@ -439,11 +512,12 @@ class AgoraService {
   }
 
   /// Join a video channel
-  Future<void> joinChannel(
+  Future<void> joinRoom(
     String token,
     String channelName,
     int uid, {
-    required bool asBroadcaster,
+    required bool isBroadcaster,
+    required bool canBroadcast,
     bool publishCameraTrackOnJoin = true,
     bool publishMicrophoneTrackOnJoin = true,
   }) async {
@@ -460,13 +534,32 @@ class AgoraService {
       throw ArgumentError('Agora channelName cannot be empty.');
     }
 
-    final role = asBroadcaster
+    final joinAsBroadcaster = isBroadcaster && canBroadcast;
+    final role = joinAsBroadcaster
         ? ClientRoleType.clientRoleBroadcaster
         : ClientRoleType.clientRoleAudience;
-    final shouldPublishCamera = asBroadcaster && publishCameraTrackOnJoin;
-    final shouldPublishMicrophone = asBroadcaster && publishMicrophoneTrackOnJoin;
+    final shouldPublishCamera = joinAsBroadcaster && publishCameraTrackOnJoin;
+    final shouldPublishMicrophone =
+        joinAsBroadcaster && publishMicrophoneTrackOnJoin;
 
-    if (asBroadcaster) {
+    developer.log(
+      'ROLE CHECK: broadcaster=$isBroadcaster canBroadcast=$canBroadcast',
+      name: 'AgoraService',
+    );
+
+    try {
+      await _engine.setClientRole(role: role);
+    } catch (error, stackTrace) {
+      developer.log(
+        'Agora setClientRole before join failed',
+        name: 'AgoraService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      _throwMappedAgoraError(error, operation: 'set client role');
+    }
+
+    if (joinAsBroadcaster) {
       try {
         await _engine.enableVideo();
       } catch (error, stackTrace) {
@@ -493,21 +586,37 @@ class AgoraService {
           publishMicrophoneTrack: shouldPublishMicrophone,
         ),
       );
-      // Ensure local camera track state is explicitly enabled after join for web reliability.
       if (shouldPublishCamera) {
-        await _engine.enableLocalVideo(true);
-        await _engine.muteLocalVideoStream(false);
-        try {
-          await _engine.startPreview();
-        } catch (_) {
-          // Some runtimes do not require preview; ignore and continue.
-        }
+        await _ensurePublishPipelineAfterRoleUpgrade(
+          publishAudio: shouldPublishMicrophone,
+        );
       }
     } catch (error) {
       _throwMappedAgoraError(error, operation: 'join room');
     }
+
     _joinedChannel = true;
-    _broadcasterMode = asBroadcaster;
+    _broadcasterMode = joinAsBroadcaster;
+  }
+
+  /// Join a video channel
+  Future<void> joinChannel(
+    String token,
+    String channelName,
+    int uid, {
+    required bool asBroadcaster,
+    bool publishCameraTrackOnJoin = true,
+    bool publishMicrophoneTrackOnJoin = true,
+  }) async {
+    await joinRoom(
+      token,
+      channelName,
+      uid,
+      isBroadcaster: asBroadcaster,
+      canBroadcast: asBroadcaster,
+      publishCameraTrackOnJoin: publishCameraTrackOnJoin,
+      publishMicrophoneTrackOnJoin: publishMicrophoneTrackOnJoin,
+    );
   }
 
   Future<void> setBroadcaster(bool enabled) async {
@@ -551,10 +660,17 @@ class AgoraService {
     String channelName,
     int uid,
     {
+      required bool canBroadcast,
       bool publishMicrophoneTrack = false,
     }
   ) async {
     if (!_initialized) return;
+    if (!canBroadcast) {
+      throw const AgoraServiceException(
+        code: 'permission-denied',
+        message: 'Host approval is required before broadcasting camera.',
+      );
+    }
     developer.log(
       'rejoinAsBroadcaster: leaving channel to force publish track renegotiation',
       name: 'AgoraService',
@@ -575,6 +691,10 @@ class AgoraService {
 
     // --- rejoin as broadcaster ---
     try {
+      developer.log(
+        'ROLE CHECK: broadcaster=true canBroadcast=$canBroadcast',
+        name: 'AgoraService',
+      );
       await _engine.setClientRole(
         role: ClientRoleType.clientRoleBroadcaster,
       );
@@ -592,19 +712,9 @@ class AgoraService {
         ),
       );
       await _engine.enableVideo();
-      await _engine.enableLocalVideo(true);
-      await _engine.muteLocalVideoStream(false);
-      await _engine.updateChannelMediaOptions(
-        ChannelMediaOptions(
-          channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-          clientRoleType: ClientRoleType.clientRoleBroadcaster,
-          autoSubscribeAudio: true,
-          autoSubscribeVideo: true,
-          publishCameraTrack: true,
-          publishMicrophoneTrack: publishMicrophoneTrack,
-        ),
+      await _ensurePublishPipelineAfterRoleUpgrade(
+        publishAudio: publishMicrophoneTrack,
       );
-      try { await _engine.startPreview(); } catch (_) {}
       _enableVideoInFlight = true;
       try {
         await _awaitLocalVideoCapturing();

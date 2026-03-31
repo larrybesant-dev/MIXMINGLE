@@ -62,6 +62,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isVideoEnabled = true;
   bool _isMicActionInFlight = false;
   bool _isVideoActionInFlight = false;
+  bool _isVideoSelfHealInFlight = false;
   String? _cameraStatus;
   bool _showEmojiTray = false;
   String? _callError;
@@ -166,6 +167,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     return userId.hashCode.abs() % 2147483647;
   }
 
+  bool _roleCanBroadcast(String role) {
+    return role == RoomPermissions.host || role == RoomPermissions.cohost;
+  }
+
   Future<({String token, String appId})> _fetchAgoraToken({
     required String channelName,
     required int rtcUid,
@@ -225,7 +230,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
   }
 
-  Future<void> _connectCall(String userId, {required bool canBroadcast}) async {
+  Future<void> _connectCall(
+    String userId, {
+    required bool isBroadcaster,
+    required bool canBroadcast,
+  }) async {
     if (_isCallConnecting || _isCallReady) return;
 
     setState(() {
@@ -252,10 +261,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
     try {
       developer.log(
-        'Starting Agora call connection for userId: $userId, canBroadcast: $canBroadcast',
+        'Starting Agora call connection for userId: $userId, isBroadcaster: $isBroadcaster, canBroadcast: $canBroadcast',
         name: 'LiveRoom',
       );
-      print('[CAMDBG] connect:start user=$userId canBroadcast=$canBroadcast room=${widget.roomId}');
+      final joinAsBroadcaster = isBroadcaster && canBroadcast;
+      print('[CAMDBG] connect:start user=$userId canBroadcast=$canBroadcast isBroadcaster=$isBroadcaster room=${widget.roomId}');
+      print('ROLE CHECK: broadcaster=$joinAsBroadcaster canBroadcast=$canBroadcast');
       if (mounted) {
         setState(() => _cameraStatus = 'Connecting: requesting token...');
       }
@@ -284,20 +295,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       );
       developer.log('Agora service initialized', name: 'LiveRoom');
       print('[CAMDBG] connect:agora_initialized');
-      // Only join as broadcaster if user can actually broadcast
-      // Web audience members should join as audience to reduce initialization overhead
-      final joinAsBroadcaster = canBroadcast;
       if (mounted) {
         setState(() => _cameraStatus = 'Connecting: joining live room...');
       }
       await service
-          .joinChannel(
+          .joinRoom(
             credentials.token,
             widget.roomId,
             rtcUid,
-            asBroadcaster: joinAsBroadcaster,
-            publishCameraTrackOnJoin: canBroadcast,
-            publishMicrophoneTrackOnJoin: canBroadcast,
+            isBroadcaster: joinAsBroadcaster,
+            canBroadcast: canBroadcast,
+            publishCameraTrackOnJoin: joinAsBroadcaster,
+            publishMicrophoneTrackOnJoin: joinAsBroadcaster,
           )
           .timeout(
             const Duration(seconds: 25),
@@ -388,6 +397,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             tokenResult.token,
             widget.roomId,
             uid,
+            canBroadcast: true,
             publishMicrophoneTrack: true,
           );
           if (mounted) {
@@ -413,7 +423,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
   }
 
-  Future<void> _toggleVideo() async {
+  Future<void> _toggleVideo({
+    required bool canBroadcast,
+    required String hostId,
+    required bool allowCamRequests,
+  }) async {
     developer.log('Camera toggle started', name: 'LiveRoomScreen');
     print('[CAMDBG] toggle_video:start enabled=$_isVideoEnabled callReady=$_isCallReady inFlight=$_isVideoActionInFlight');
     final service = _agoraService;
@@ -451,74 +465,45 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     });
     try {
       if (next) {
-        if (kIsWeb) {
-          if (mounted) {
-            setState(() => _cameraStatus = 'Requesting browser camera access...');
-          }
-          // Force a real browser media call so web failures surface explicitly.
-          await service.ensureDeviceAccess(video: true, audio: false);
-          print('[CAMDBG] toggle_video:web_preflight_initial_ok');
-          if (service.isBroadcaster) {
-            print('[CAMDBG] toggle_video:web_in_place_enable');
-            developer.log(
-              'Camera toggle (web): already broadcaster, enabling camera in-place',
-              name: 'LiveRoomScreen',
+        if (!canBroadcast) {
+          if (!allowCamRequests || hostId.isEmpty) {
+            throw const AgoraServiceException(
+              code: 'permission-denied',
+              message: 'Camera access requires host approval in this room.',
             );
-            if (mounted) {
-              setState(() => _cameraStatus = 'Publishing camera track...');
-            }
-            try {
-              await service
-                  .enableVideo(true)
-                  .timeout(
-                    const Duration(seconds: 12),
-                    onTimeout: () => throw const AgoraServiceException(
-                      code: 'camera-start-failed',
-                      message:
-                          'Camera startup timed out while publishing video.',
-                    ),
-                  );
-            } catch (firstEnableError, firstEnableStack) {
-              print('[CAMDBG] toggle_video:web_in_place_enable_failed error=$firstEnableError');
-              developer.log(
-                'Camera toggle (web): in-place enable failed, retrying after browser preflight: $firstEnableError',
-                name: 'LiveRoomScreen',
-                error: firstEnableError,
-                stackTrace: firstEnableStack,
+          }
+          final userId = _joinedUserId ?? ref.read(userProvider)?.id ?? '';
+          if (userId.isEmpty) {
+            throw const AgoraServiceException(
+              code: 'permission-denied',
+              message: 'Unable to resolve user identity for camera request.',
+            );
+          }
+          await ref
+              .read(camAccessControllerProvider)
+              .requestAccess(
+                roomId: widget.roomId,
+                requesterId: userId,
+                broadcasterId: hostId,
               );
-              if (mounted) {
-                setState(() => _cameraStatus = 'Requesting browser camera access...');
-              }
-              await service.ensureDeviceAccess(video: true, audio: false);
-              print('[CAMDBG] toggle_video:web_preflight_ok');
-              await Future<void>.delayed(const Duration(milliseconds: 220));
-              if (mounted) {
-                setState(() => _cameraStatus = 'Retrying camera publish...');
-              }
-              await service
-                  .enableVideo(true)
-                  .timeout(
-                    const Duration(seconds: 12),
-                    onTimeout: () => throw const AgoraServiceException(
-                      code: 'camera-start-failed',
-                      message:
-                          'Camera startup timed out after browser access check.',
-                    ),
-                  );
-            }
-            if (mounted) setState(() => _appliedMediaRole = 'cohost');
-          } else {
-          print('[CAMDBG] toggle_video:web_rejoin_path');
-          // ----------------------------------------------------------------
-          // Web: in-place role switch does NOT reliably renegotiate the WebRTC
-          // publish track.  Leave and rejoin as broadcaster with a fresh token
-          // so the browser opens a real publish pipeline.
-          // ----------------------------------------------------------------
-          developer.log(
-            'Camera toggle (web): fetching fresh token for broadcaster rejoin',
-            name: 'LiveRoomScreen',
-          );
-          _showSnackBar('Starting camera…');
+          if (mounted) {
+            setState(
+              () => _cameraStatus =
+                  'Camera request sent. Waiting for host approval.',
+            );
+          }
+          _showSnackBar('Camera request sent to the room owner.');
+          return;
+        }
+
+        if (mounted) {
+          setState(() => _cameraStatus = 'Requesting browser camera access...');
+        }
+        await service.ensureDeviceAccess(video: true, audio: false);
+
+        final shouldUpgradeRole = !service.isBroadcaster || !service.isJoinedChannel;
+        print('ROLE CHECK: broadcaster=true canBroadcast=$canBroadcast');
+        if (shouldUpgradeRole) {
           final userId = _joinedUserId ?? ref.read(userProvider)?.id ?? '';
           if (userId.isEmpty) {
             throw const AgoraServiceException(
@@ -527,7 +512,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             );
           }
           final uid = _buildRtcUid(userId);
-          var tokenResult = await _fetchAgoraToken(
+          final tokenResult = await _fetchAgoraToken(
             channelName: widget.roomId,
             rtcUid: uid,
           ).timeout(
@@ -537,92 +522,43 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               message: 'Timed out fetching live media token.',
             ),
           );
-          print('[CAMDBG] toggle_video:web_rejoin_token_ok uid=$uid');
-          developer.log(
-            'Camera toggle (web): token fetched, rejoining as broadcaster uid=$uid',
-            name: 'LiveRoomScreen',
-          );
           if (mounted) {
-            setState(() => _cameraStatus = 'Joining video channel...');
+            setState(() => _cameraStatus = 'Rejoining as broadcaster...');
           }
-          try {
-            await service
-                .rejoinAsBroadcaster(
-                  tokenResult.token,
-                  widget.roomId,
-                  uid,
-                  publishMicrophoneTrack: !_isMicMuted,
-                )
-                .timeout(
-                  const Duration(seconds: 12),
-                  onTimeout: () => throw const AgoraServiceException(
-                    code: 'camera-start-failed',
-                    message: 'Camera startup timed out while joining live video.',
-                  ),
-                );
-          } catch (firstError, firstStack) {
-            print('[CAMDBG] toggle_video:web_rejoin_first_fail error=$firstError');
-            developer.log(
-              'Camera toggle (web): first broadcaster rejoin failed, retrying once: $firstError',
-              name: 'LiveRoomScreen',
-              error: firstError,
-              stackTrace: firstStack,
-            );
-            await Future<void>.delayed(const Duration(milliseconds: 350));
-            tokenResult = await _fetchAgoraToken(
-              channelName: widget.roomId,
-              rtcUid: uid,
-            ).timeout(
-              const Duration(seconds: 12),
-              onTimeout: () => throw const AgoraServiceException(
-                code: 'agora-token-missing',
-                message: 'Timed out fetching live media token.',
-              ),
-            );
-            print('[CAMDBG] toggle_video:web_rejoin_retry_token_ok uid=$uid');
-            await service
-                .rejoinAsBroadcaster(
-                  tokenResult.token,
-                  widget.roomId,
-                  uid,
-                  publishMicrophoneTrack: !_isMicMuted,
-                )
-                .timeout(
-                  const Duration(seconds: 12),
-                  onTimeout: () => throw const AgoraServiceException(
-                    code: 'camera-start-failed',
-                    message: 'Camera startup timed out on retry.',
-                  ),
-                );
-          }
-          if (mounted) {
-            setState(() => _cameraStatus = 'Publishing camera track...');
-          }
-          developer.log(
-            'Camera toggle (web): broadcaster rejoin complete',
-            name: 'LiveRoomScreen',
-          );
-          // Mark role as cohost so _applyRoleMediaState doesn't re‑disable video
-          if (mounted) setState(() => _appliedMediaRole = 'cohost');
-          }
+          await service
+              .rejoinAsBroadcaster(
+                tokenResult.token,
+                widget.roomId,
+                uid,
+                canBroadcast: canBroadcast,
+                publishMicrophoneTrack: true,
+              )
+              .timeout(
+                const Duration(seconds: 12),
+                onTimeout: () => throw const AgoraServiceException(
+                  code: 'camera-start-failed',
+                  message: 'Camera startup timed out while rejoining media.',
+                ),
+              );
         } else {
-          developer.log('Camera toggle step: ensure device access', name: 'LiveRoomScreen');
-          _showSnackBar('Checking camera access...');
-          await service.ensureDeviceAccess(video: true, audio: false);
-          developer.log('Camera toggle step: device access confirmed', name: 'LiveRoomScreen');
           await service.setBroadcaster(true);
-          developer.log('Camera toggle step: broadcaster mode set', name: 'LiveRoomScreen');
-          developer.log('Camera toggle step: enableVideo(true)', name: 'LiveRoomScreen');
-          await service.enableVideo(true);
-          developer.log('Camera toggle step: enableVideo completed', name: 'LiveRoomScreen');
+        }
+
+        await service.publishLocalVideoStream(true);
+        await service.publishLocalAudioStream(true);
+        await service.enableVideo(true);
+        if (mounted) {
+          setState(() => _appliedMediaRole = 'cohost');
         }
       } else {
         // Turning camera off — same path on all platforms
         developer.log('Camera toggle step: enableVideo(false)', name: 'LiveRoomScreen');
+        await service.publishLocalVideoStream(false);
         await service.enableVideo(false);
         developer.log('Camera toggle step: enableVideo(false) completed', name: 'LiveRoomScreen');
       }
 
+      print('[CAMDBG] toggle_video:success next=$next mounted=$mounted');
       if (mounted) {
         setState(() {
           _isVideoEnabled = next;
@@ -634,9 +570,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           });
         }
         final msg = next ? 'Camera turned on.' : 'Camera turned off.';
-        print('[CAMDBG] toggle_video:success next=$next');
         developer.log('Camera toggle success: $msg', name: 'LiveRoomScreen');
         _showSnackBar(msg);
+
+        if (next && kIsWeb) {
+          // Some web runtimes briefly drop camera capture after successful toggle.
+          // Re-check shortly after and re-assert publishing if needed.
+          Future<void>.delayed(const Duration(seconds: 2), () {
+            _ensureVideoPublishingOnWeb();
+          });
+          Future<void>.delayed(const Duration(seconds: 5), () {
+            _ensureVideoPublishingOnWeb();
+          });
+        }
       }
     } catch (e, st) {
       print('[CAMDBG] toggle_video:failed error=$e');
@@ -651,7 +597,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         error: e,
         stackTrace: st,
       );
-      final mapped = _mapMediaError(e, canBroadcast: true);
+      final mapped = _mapMediaError(e, canBroadcast: canBroadcast);
       _showSnackBar(mapped);
       if (mounted) {
         final detail = e is AgoraServiceException
@@ -665,6 +611,56 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       }
       print('[CAMDBG] toggle_video:end');
       developer.log('Camera toggle ended', name: 'LiveRoomScreen');
+    }
+  }
+
+  Future<void> _ensureVideoPublishingOnWeb() async {
+    if (!kIsWeb || !mounted) {
+      return;
+    }
+
+    final service = _agoraService;
+    if (
+      service == null ||
+      !_isCallReady ||
+      !_isVideoEnabled ||
+      _isVideoActionInFlight ||
+      _isVideoSelfHealInFlight
+    ) {
+      return;
+    }
+
+    if (service.isLocalVideoCapturing) {
+      print('[CAMDBG] toggle_video:self_heal_skip_already_capturing');
+      return;
+    }
+
+    _isVideoSelfHealInFlight = true;
+    try {
+      print('[CAMDBG] toggle_video:self_heal_reassert_enable');
+      await service
+          .enableVideo(true)
+          .timeout(
+            const Duration(seconds: 8),
+            onTimeout: () => throw const AgoraServiceException(
+              code: 'camera-start-failed',
+              message: 'Camera self-heal timed out while re-enabling publish.',
+            ),
+          );
+      if (mounted) {
+        setState(() => _cameraStatus = 'Camera active.');
+      }
+      print('[CAMDBG] toggle_video:self_heal_success');
+    } catch (error, stackTrace) {
+      developer.log(
+        'Camera self-heal failed: $error',
+        name: 'LiveRoomScreen',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      print('[CAMDBG] toggle_video:self_heal_failed error=$error');
+    } finally {
+      _isVideoSelfHealInFlight = false;
     }
   }
 
@@ -1590,7 +1586,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         });
       }
 
-      await _connectCall(userId, canBroadcast: false);
+      await _connectCall(
+        userId,
+        isBroadcaster: false,
+        canBroadcast: false,
+      );
 
       if (!_hasTrackedRoomJoin) {
         _hasTrackedRoomJoin = true;
@@ -1636,7 +1636,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     required String role,
     required String? camRequestStatus,
   }) {
-    return 'Camera controls are open. You can publish and view participant video directly.';
+    if (_roleCanBroadcast(role)) {
+      return 'Camera access approved. You can publish as broadcaster.';
+    }
+    if (camRequestStatus == 'pending') {
+      return 'Camera request pending. Waiting for host approval.';
+    }
+    if (camRequestStatus == 'denied') {
+      return 'Camera request denied. Ask the host to approve camera access.';
+    }
+    return 'Camera publishing requires host approval. Send a request to go live.';
   }
 
   String _micAccessHint({
@@ -1891,6 +1900,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final camRequestsAsync = ref.watch(
       roomCamAccessRequestsProvider(widget.roomId),
     );
+    final myCamRequestAsync = ref.watch(
+      myCamAccessRequestProvider((roomId: widget.roomId, requesterId: user.id)),
+    );
     final micRequestsAsync = ref.watch(
       roomMicAccessRequestsProvider(widget.roomId),
     );
@@ -1907,7 +1919,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         final isCohost = ref.watch(isCohostProvider(participant));
         final isModerator = participant?.role == 'moderator';
         final role = participant?.role ?? 'audience';
-        const String? camRequestStatus = null;
+        final canBroadcast = _roleCanBroadcast(role);
+        final camRequestStatus = myCamRequestAsync.valueOrNull?.status;
         const String? micRequestStatus = null;
         final firestore = ref.watch(roomFirestoreProvider);
         if (_isCallReady && _appliedMediaRole != role) {
@@ -2054,7 +2067,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     }
                                     await _connectCall(
                                       user.id,
-                                      canBroadcast: false,
+                                      isBroadcaster: canBroadcast,
+                                      canBroadcast: canBroadcast,
                                     );
                                   },
                             icon: const Icon(Icons.refresh),
@@ -2192,7 +2206,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     ? 'Turn camera off'
                                     : 'Turn camera on',
                                 onPressed:
-                                    RoomPermissions.canUseCamera(role) &&
+                                    (canBroadcast || allowCamRequests) &&
                                             !_isVideoActionInFlight
                                         ? () {
                                             if (mounted) {
@@ -2202,7 +2216,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                                         'Camera button pressed. Initializing...',
                                               );
                                             }
-                                            _toggleVideo();
+                                            _toggleVideo(
+                                              canBroadcast: canBroadcast,
+                                              hostId: hostId,
+                                              allowCamRequests: allowCamRequests,
+                                            );
                                           }
                                         : null,
                                 icon: Icon(
@@ -2280,13 +2298,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         }
                                         await _connectCall(
                                           user.id,
-                                          canBroadcast: false,
+                                          isBroadcaster: canBroadcast,
+                                          canBroadcast: canBroadcast,
                                         );
                                         if (!mounted) {
                                           return;
                                         }
                                         if (_isCallReady && _agoraService != null) {
-                                          await _toggleVideo();
+                                          await _toggleVideo(
+                                            canBroadcast: canBroadcast,
+                                            hostId: hostId,
+                                            allowCamRequests: allowCamRequests,
+                                          );
                                         }
                                       },
                                 icon: const Icon(Icons.videocam),
@@ -2849,9 +2872,41 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               ),
                               const SizedBox(height: 6),
                               const Text(
-                                'Host approval is not required. Mic and camera are available immediately in this room.',
+                                'Host approval is required before camera publishing.',
                               ),
                               const SizedBox(height: 8),
+                              if (!canBroadcast &&
+                                  allowCamRequests &&
+                                  hostId.isNotEmpty &&
+                                  hostId != user.id)
+                                OutlinedButton.icon(
+                                  onPressed: camRequestStatus == 'pending'
+                                      ? null
+                                      : () async {
+                                          await camAccessController.requestAccess(
+                                            roomId: widget.roomId,
+                                            requesterId: user.id,
+                                            broadcasterId: hostId,
+                                          );
+                                          _showSnackBar(
+                                            'Camera request sent to room owner.',
+                                          );
+                                        },
+                                  icon: const Icon(Icons.videocam_outlined),
+                                  label: Text(
+                                    camRequestStatus == 'pending'
+                                        ? 'Camera request pending'
+                                        : 'Request camera access',
+                                  ),
+                                ),
+                              const SizedBox(height: 6),
+                              Text(
+                                _cameraAccessHint(
+                                  role: role,
+                                  camRequestStatus: camRequestStatus,
+                                ),
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
                               const SizedBox(height: 6),
                               Text(
                                 _micAccessHint(

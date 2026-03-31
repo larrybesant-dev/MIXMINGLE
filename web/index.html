@@ -20,6 +20,17 @@
 <body>
   <script>
     (function () {
+      // Prevent stale Flutter service workers from serving HTML for JS asset URLs.
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (registrations) {
+          registrations.forEach(function (registration) {
+            registration.unregister();
+          });
+        }).catch(function () {
+          // Ignore service worker cleanup errors.
+        });
+      }
+
       var baseTag = document.querySelector('base');
       var baseHref = baseTag ? baseTag.getAttribute('href') : '/';
       if (!baseHref || baseHref.indexOf('$FLUTTER_BASE_HREF') !== -1) {
@@ -30,6 +41,7 @@
       }
 
       var script = document.createElement('script');
+      // Use an absolute path to avoid route-relative script requests on deep links.
       script.src = baseHref + 'flutter_bootstrap.js';
       script.async = true;
       document.body.appendChild(script);
