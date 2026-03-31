@@ -373,7 +373,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             widget.roomId,
             rtcUid,
             publishCameraTrackOnJoin: false,
-            publishMicrophoneTrackOnJoin: true,
+            publishMicrophoneTrackOnJoin: false,
           )
           .timeout(
             const Duration(seconds: 25),
@@ -501,10 +501,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           setState(() => _cameraStatus = 'Requesting browser camera access...');
         }
         await service.ensureDeviceAccess(video: true, audio: false);
-        await service.setBroadcaster(true);
-        await service.publishLocalVideoStream(true);
-        await service.publishLocalAudioStream(true);
-        await service.enableVideo(true);
+        // enableVideo handles broadcaster role, channel options, startPreview, and
+        // local video capture wait. Pass the current mic mute state so enabling
+        // the camera does not silently re-enable a muted microphone.
+        await service.enableVideo(true, publishMicrophoneTrack: !_isMicMuted);
         if (mounted) {
           setState(() => _appliedMediaRole = 'member');
         }
@@ -587,7 +587,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     try {
       _logLiveRoom('toggle_video:self_heal_reassert_enable');
       await service
-          .enableVideo(true)
+          .enableVideo(true, publishMicrophoneTrack: !_isMicMuted)
           .timeout(
             const Duration(seconds: 8),
             onTimeout: () => throw const AgoraServiceException(
@@ -777,7 +777,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     try {
       await service.mute(_isMicMuted);
       if (_isVideoEnabled) {
-        await service.enableVideo(true);
+        await service.enableVideo(true, publishMicrophoneTrack: !_isMicMuted);
       }
     } catch (e) {
       if (mounted) {

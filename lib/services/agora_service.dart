@@ -824,8 +824,13 @@ class AgoraService {
     }
   }
 
-  /// Enable/disable video
-  Future<void> enableVideo(bool enabled) async {
+  /// Enable/disable video.
+  ///
+  /// [publishMicrophoneTrack] controls whether the microphone track is
+  /// published when enabling video. Pass `false` when the user's mic is
+  /// currently muted so that enabling the camera does not silently re-enable
+  /// audio. Defaults to `true` for backward-compatible behaviour.
+  Future<void> enableVideo(bool enabled, {bool publishMicrophoneTrack = true}) async {
     if (!_initialized) {
       developer.log(
         'enableVideo called but service not initialized',
@@ -868,7 +873,7 @@ class AgoraService {
               autoSubscribeAudio: true,
               autoSubscribeVideo: true,
               publishCameraTrack: true,
-              publishMicrophoneTrack: true,
+              publishMicrophoneTrack: publishMicrophoneTrack,
             ),
           );
         }
