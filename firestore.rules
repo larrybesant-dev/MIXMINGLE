@@ -61,7 +61,10 @@ service cloud.firestore {
     }
 
     function isRoomHost(roomId) {
-      return signedIn() && roomDoc(roomId).data.hostId == request.auth.uid;
+      return signedIn() && (
+        roomDoc(roomId).data.ownerId == request.auth.uid
+        || roomDoc(roomId).data.hostId == request.auth.uid
+      );
     }
 
     function participantDoc(roomId, userId) {
@@ -114,15 +117,29 @@ service cloud.firestore {
 
     match /rooms/{roomId} {
       allow read: if signedIn();
-      allow create: if signedIn() && request.resource.data.hostId == request.auth.uid;
+      allow create: if signedIn()
+        && (
+          request.resource.data.ownerId == request.auth.uid
+          || request.resource.data.hostId == request.auth.uid
+        );
       allow update, delete: if isRoomHost(roomId);
+
+      match /members/{memberId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && memberId == request.auth.uid
+          && request.resource.data.userId == request.auth.uid
+          && request.resource.data.role in ['owner', 'mod', 'member'];
+        allow update: if memberId == request.auth.uid || isRoomHost(roomId);
+        allow delete: if memberId == request.auth.uid || isRoomHost(roomId);
+      }
 
       match /participants/{participantId} {
         allow read: if signedIn();
         allow create: if signedIn()
           && participantId == request.auth.uid
           && request.resource.data.userId == request.auth.uid
-          && request.resource.data.role in ['audience', 'host']
+          && request.resource.data.role in ['audience', 'host', 'cohost', 'moderator', 'stage', 'owner', 'mod', 'member']
           && request.resource.data.isBanned == false
           && request.resource.data.isMuted == false;
         allow update: if isRoomHost(roomId)
@@ -192,6 +209,14 @@ service cloud.firestore {
         allow update: if signedIn() && isRoomStaff(roomId);
         allow delete: if false;
       }
+    }
+
+    match /userCamPermissions/{userId} {
+      allow read: if isSelf(userId);
+      allow create, update: if isSelf(userId)
+        && request.resource.data.keys().hasOnly(['allowedViewers', 'updatedAt'])
+        && request.resource.data.allowedViewers is list;
+      allow delete: if isSelf(userId);
     }
 
     match /posts/{postId} {

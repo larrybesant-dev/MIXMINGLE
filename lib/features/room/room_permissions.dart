@@ -15,8 +15,8 @@ class RoomPermissions {
   }
 
   static bool canUseCamera(String role) {
-    // Camera publishing is reserved for host-approved broadcasters.
-    return role == host || role == cohost;
+    // Any room member can publish their own camera.
+    return role.isNotEmpty;
   }
 
   static bool canManageParticipant({
@@ -53,6 +53,8 @@ class RoomPermissions {
     required String targetUserId,
     required String hostUserId,
   }) {
-    return isHost(actorRole) && actorUserId == hostUserId && actorUserId != targetUserId;
+    return isHost(actorRole) &&
+        actorUserId == hostUserId &&
+        actorUserId != targetUserId;
   }
 }

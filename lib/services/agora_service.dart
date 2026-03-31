@@ -6,7 +6,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart'; // For Widget, VoidCallback
 
 import 'web_media_probe_stub.dart'
-  if (dart.library.html) 'web_media_probe_web.dart' as web_media_probe;
+    if (dart.library.html) 'web_media_probe_web.dart'
+    as web_media_probe;
 
 class AgoraServiceException implements Exception {
   const AgoraServiceException({
@@ -24,22 +25,23 @@ class AgoraServiceException implements Exception {
 }
 
 class AgoraService {
-    // List of remote user IDs
-    final List<int> _remoteUids = [];
+  // List of remote user IDs
+  final List<int> _remoteUids = [];
   final Set<int> _speakingUids = <int>{};
   bool _localSpeaking = false;
   bool _joinedChannel = false;
   bool _broadcasterMode = false;
   bool _localVideoCapturing = false;
-  bool _enableVideoInFlight = false;  // Track if we're actively enabling/disabling video
+  bool _enableVideoInFlight =
+      false; // Track if we're actively enabling/disabling video
   Completer<void>? _localVideoCaptureCompleter;
 
-    // Callbacks for UI updates
-    VoidCallback? onRemoteUserJoined;
-    VoidCallback? onRemoteUserLeft;
+  // Callbacks for UI updates
+  VoidCallback? onRemoteUserJoined;
+  VoidCallback? onRemoteUserLeft;
   VoidCallback? onSpeakerActivityChanged;
 
-    List<int> get remoteUids => List.unmodifiable(_remoteUids);
+  List<int> get remoteUids => List.unmodifiable(_remoteUids);
   bool get localSpeaking => _localSpeaking;
   bool get canRenderLocalView =>
       _initialized &&
@@ -52,32 +54,33 @@ class AgoraService {
 
   bool isRemoteSpeaking(int uid) => _speakingUids.contains(uid);
 
-    /// Get the local video view widget
-    Widget getLocalView() {
-      if (!canRenderLocalView) {
-        return const ColoredBox(
-          color: Colors.black12,
-          child: Center(child: Icon(Icons.videocam_off, size: 36)),
-        );
-      }
-      return AgoraVideoView(
-        controller: VideoViewController(
-          rtcEngine: _engine,
-          canvas: const VideoCanvas(uid: 0),
-        ),
+  /// Get the local video view widget
+  Widget getLocalView() {
+    if (!canRenderLocalView) {
+      return const ColoredBox(
+        color: Colors.black12,
+        child: Center(child: Icon(Icons.videocam_off, size: 36)),
       );
     }
+    return AgoraVideoView(
+      controller: VideoViewController(
+        rtcEngine: _engine,
+        canvas: const VideoCanvas(uid: 0),
+      ),
+    );
+  }
 
-    /// Get the remote video view widget for a given uid and channel
-    Widget getRemoteView(int uid, String channelId) {
-      return AgoraVideoView(
-        controller: VideoViewController.remote(
-          rtcEngine: _engine,
-          canvas: VideoCanvas(uid: uid),
-          connection: RtcConnection(channelId: channelId),
-        ),
-      );
-    }
+  /// Get the remote video view widget for a given uid and channel
+  Widget getRemoteView(int uid, String channelId) {
+    return AgoraVideoView(
+      controller: VideoViewController.remote(
+        rtcEngine: _engine,
+        canvas: VideoCanvas(uid: uid),
+        connection: RtcConnection(channelId: channelId),
+      ),
+    );
+  }
+
   late RtcEngine _engine;
   bool _initialized = false;
 
@@ -90,7 +93,7 @@ class AgoraService {
         channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
         clientRoleType: _broadcasterMode
             ? ClientRoleType.clientRoleBroadcaster
-            : ClientRoleType.clientRoleAudience,
+            : ClientRoleType.clientRoleBroadcaster,
         autoSubscribeAudio: true,
         autoSubscribeVideo: true,
         publishCameraTrack: enabled,
@@ -108,7 +111,7 @@ class AgoraService {
         channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
         clientRoleType: _broadcasterMode
             ? ClientRoleType.clientRoleBroadcaster
-            : ClientRoleType.clientRoleAudience,
+            : ClientRoleType.clientRoleBroadcaster,
         autoSubscribeAudio: true,
         autoSubscribeVideo: true,
         publishCameraTrack: _localVideoCapturing,
@@ -154,7 +157,20 @@ class AgoraService {
     }
   }
 
-  Future<void> ensureDeviceAccess({required bool video, required bool audio}) async {
+  Future<void> setRemoteVideoSubscription(
+    int uid, {
+    required bool subscribe,
+  }) async {
+    if (!_initialized || !_joinedChannel) {
+      return;
+    }
+    await _engine.muteRemoteVideoStream(uid: uid, mute: !subscribe);
+  }
+
+  Future<void> ensureDeviceAccess({
+    required bool video,
+    required bool audio,
+  }) async {
     try {
       await web_media_probe.ensureUserMediaAccess(video: video, audio: audio);
     } catch (error) {
@@ -191,8 +207,7 @@ class AgoraService {
         lower.contains('devicesnotfound')) {
       throw AgoraServiceException(
         code: 'no-media-devices',
-        message:
-            'No working camera or microphone was found on this device.',
+        message: 'No working camera or microphone was found on this device.',
         cause: error,
       );
     }
@@ -209,9 +224,9 @@ class AgoraService {
     }
 
     if (lower.contains('notsupportederror') ||
-      lower.contains('unsupported browser') ||
-      lower.contains('webrtc is not supported') ||
-      lower.contains('not supported on this browser')) {
+        lower.contains('unsupported browser') ||
+        lower.contains('webrtc is not supported') ||
+        lower.contains('not supported on this browser')) {
       throw AgoraServiceException(
         code: 'unsupported-browser',
         message:
@@ -221,8 +236,8 @@ class AgoraService {
     }
 
     if (lower.contains('secure context') ||
-      lower.contains('only secure origins') ||
-      lower.contains('insecure context')) {
+        lower.contains('only secure origins') ||
+        lower.contains('insecure context')) {
       throw AgoraServiceException(
         code: 'insecure-context',
         message:
@@ -272,7 +287,8 @@ class AgoraService {
       case LocalVideoStreamReason.localVideoStreamReasonDeviceFatalError:
         return const AgoraServiceException(
           code: 'camera-start-failed',
-          message: 'Camera failed to start. Close other camera apps/tabs and retry.',
+          message:
+              'Camera failed to start. Close other camera apps/tabs and retry.',
         );
       default:
         return const AgoraServiceException(
@@ -282,12 +298,11 @@ class AgoraService {
     }
   }
 
-  Future<void> _awaitLocalVideoCapturing({Duration timeout = const Duration(seconds: 8)}) async {
+  Future<void> _awaitLocalVideoCapturing({
+    Duration timeout = const Duration(seconds: 8),
+  }) async {
     if (_localVideoCapturing) {
-      developer.log(
-        'Video already capturing',
-        name: 'AgoraService',
-      );
+      developer.log('Video already capturing', name: 'AgoraService');
       return;
     }
     final completer = Completer<void>();
@@ -303,7 +318,7 @@ class AgoraService {
           developer.log(
             'Local video capturing timeout after ${timeout.inSeconds}s - permitting on web (state event may not fire reliably)',
             name: 'AgoraService',
-            level: 701,  // INFO level
+            level: 701, // INFO level
           );
           // On web, the video state event may not fire reliably from Agora SDK.
           // Since ensureDeviceAccess (preflight) already confirmed camera access,
@@ -385,48 +400,41 @@ class AgoraService {
           _speakingUids.remove(remoteUid);
           if (onRemoteUserLeft != null) onRemoteUserLeft!();
         },
-        onAudioVolumeIndication: (
-          connection,
-          speakers,
-          speakerNumber,
-          totalVolume,
-        ) {
-          final nextSpeakingUids = <int>{};
-          var nextLocalSpeaking = false;
-          for (final speaker in speakers) {
-            final uid = speaker.uid ?? 0;
-            final volume = speaker.volume ?? 0;
-            if (volume <= 10) {
-              continue;
-            }
-            if (uid == 0) {
-              nextLocalSpeaking = true;
-            } else {
-              nextSpeakingUids.add(uid);
-            }
-          }
+        onAudioVolumeIndication:
+            (connection, speakers, speakerNumber, totalVolume) {
+              final nextSpeakingUids = <int>{};
+              var nextLocalSpeaking = false;
+              for (final speaker in speakers) {
+                final uid = speaker.uid ?? 0;
+                final volume = speaker.volume ?? 0;
+                if (volume <= 10) {
+                  continue;
+                }
+                if (uid == 0) {
+                  nextLocalSpeaking = true;
+                } else {
+                  nextSpeakingUids.add(uid);
+                }
+              }
 
-          final changed =
-              nextLocalSpeaking != _localSpeaking ||
-              nextSpeakingUids.length != _speakingUids.length ||
-              !nextSpeakingUids.containsAll(_speakingUids);
-          if (!changed) {
-            return;
-          }
+              final changed =
+                  nextLocalSpeaking != _localSpeaking ||
+                  nextSpeakingUids.length != _speakingUids.length ||
+                  !nextSpeakingUids.containsAll(_speakingUids);
+              if (!changed) {
+                return;
+              }
 
-          _localSpeaking = nextLocalSpeaking;
-          _speakingUids
-            ..clear()
-            ..addAll(nextSpeakingUids);
-          if (onSpeakerActivityChanged != null) {
-            onSpeakerActivityChanged!();
-          }
-        },
+              _localSpeaking = nextLocalSpeaking;
+              _speakingUids
+                ..clear()
+                ..addAll(nextSpeakingUids);
+              if (onSpeakerActivityChanged != null) {
+                onSpeakerActivityChanged!();
+              }
+            },
         onError: (err, msg) {
-          developer.log(
-            'Agora engine error: $err $msg',
-            name: 'AgoraService',
-          );
+          developer.log('Agora engine error: $err $msg', name: 'AgoraService');
         },
         onLocalVideoStateChanged: (source, state, reason) {
           if (!source.name.startsWith('videoSourceCamera')) {
@@ -471,13 +479,19 @@ class AgoraService {
       ),
     );
 
-    // Media features are best-effort on web and should not block room join.
+    // Profile/role are enforced as broadcaster for this app model.
     try {
-      // On web, this can fail before channel join on some runtimes; keep it non-fatal.
-      await _engine.setClientRole(role: ClientRoleType.clientRoleAudience);
+      await _engine.setChannelProfile(
+        ChannelProfileType.channelProfileLiveBroadcasting,
+      );
+      await _engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
+      developer.log(
+        'AGORA ROLE: broadcaster (we always join as broadcaster)',
+        name: 'AgoraService',
+      );
     } catch (error, stackTrace) {
       developer.log(
-        'Agora setClientRole(audience) skipped during initialize',
+        'Agora channelProfile/clientRole setup skipped during initialize',
         name: 'AgoraService',
         error: error,
         stackTrace: stackTrace,
@@ -516,13 +530,13 @@ class AgoraService {
     String token,
     String channelName,
     int uid, {
-    required bool isBroadcaster,
-    required bool canBroadcast,
     bool publishCameraTrackOnJoin = true,
     bool publishMicrophoneTrackOnJoin = true,
   }) async {
     if (!_initialized) {
-      throw StateError('Agora engine must be initialized before joining a channel.');
+      throw StateError(
+        'Agora engine must be initialized before joining a channel.',
+      );
     }
 
     final normalizedToken = token.trim();
@@ -534,24 +548,21 @@ class AgoraService {
       throw ArgumentError('Agora channelName cannot be empty.');
     }
 
-    final joinAsBroadcaster = isBroadcaster && canBroadcast;
-    final role = joinAsBroadcaster
-        ? ClientRoleType.clientRoleBroadcaster
-        : ClientRoleType.clientRoleAudience;
-    final shouldPublishCamera = joinAsBroadcaster && publishCameraTrackOnJoin;
-    final shouldPublishMicrophone =
-        joinAsBroadcaster && publishMicrophoneTrackOnJoin;
-
-    developer.log(
-      'ROLE CHECK: broadcaster=$isBroadcaster canBroadcast=$canBroadcast',
-      name: 'AgoraService',
-    );
+    final shouldPublishCamera = publishCameraTrackOnJoin;
+    final shouldPublishMicrophone = publishMicrophoneTrackOnJoin;
 
     try {
-      await _engine.setClientRole(role: role);
+      await _engine.setChannelProfile(
+        ChannelProfileType.channelProfileLiveBroadcasting,
+      );
+      await _engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
+      developer.log(
+        'AGORA ROLE: broadcaster (we always join as broadcaster)',
+        name: 'AgoraService',
+      );
     } catch (error, stackTrace) {
       developer.log(
-        'Agora setClientRole before join failed',
+        'Agora channelProfile/clientRole before join failed',
         name: 'AgoraService',
         error: error,
         stackTrace: stackTrace,
@@ -559,17 +570,15 @@ class AgoraService {
       _throwMappedAgoraError(error, operation: 'set client role');
     }
 
-    if (joinAsBroadcaster) {
-      try {
-        await _engine.enableVideo();
-      } catch (error, stackTrace) {
-        developer.log(
-          'Agora enableVideo failed before join',
-          name: 'AgoraService',
-          error: error,
-          stackTrace: stackTrace,
-        );
-      }
+    try {
+      await _engine.enableVideo();
+    } catch (error, stackTrace) {
+      developer.log(
+        'Agora enableVideo failed before join',
+        name: 'AgoraService',
+        error: error,
+        stackTrace: stackTrace,
+      );
     }
 
     try {
@@ -579,7 +588,7 @@ class AgoraService {
         uid: uid,
         options: ChannelMediaOptions(
           channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-          clientRoleType: role,
+          clientRoleType: ClientRoleType.clientRoleBroadcaster,
           autoSubscribeAudio: true,
           autoSubscribeVideo: true,
           publishCameraTrack: shouldPublishCamera,
@@ -596,7 +605,7 @@ class AgoraService {
     }
 
     _joinedChannel = true;
-    _broadcasterMode = joinAsBroadcaster;
+    _broadcasterMode = true;
   }
 
   /// Join a video channel
@@ -604,7 +613,6 @@ class AgoraService {
     String token,
     String channelName,
     int uid, {
-    required bool asBroadcaster,
     bool publishCameraTrackOnJoin = true,
     bool publishMicrophoneTrackOnJoin = true,
   }) async {
@@ -612,8 +620,6 @@ class AgoraService {
       token,
       channelName,
       uid,
-      isBroadcaster: asBroadcaster,
-      canBroadcast: asBroadcaster,
       publishCameraTrackOnJoin: publishCameraTrackOnJoin,
       publishMicrophoneTrackOnJoin: publishMicrophoneTrackOnJoin,
     );
@@ -632,16 +638,9 @@ class AgoraService {
         'Setting client role to ${enabled ? "broadcaster" : "audience"}',
         name: 'AgoraService',
       );
-      await _engine.setClientRole(
-        role: enabled
-            ? ClientRoleType.clientRoleBroadcaster
-            : ClientRoleType.clientRoleAudience,
-      );
-      _broadcasterMode = enabled;
-      developer.log(
-        'Client role changed successfully',
-        name: 'AgoraService',
-      );
+      await _engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
+      _broadcasterMode = true;
+      developer.log('Client role changed successfully', name: 'AgoraService');
     } catch (error) {
       developer.log(
         'Error setting client role: $error',
@@ -658,19 +657,10 @@ class AgoraService {
   Future<void> rejoinAsBroadcaster(
     String token,
     String channelName,
-    int uid,
-    {
-      required bool canBroadcast,
-      bool publishMicrophoneTrack = false,
-    }
-  ) async {
+    int uid, {
+    bool publishMicrophoneTrack = false,
+  }) async {
     if (!_initialized) return;
-    if (!canBroadcast) {
-      throw const AgoraServiceException(
-        code: 'permission-denied',
-        message: 'Host approval is required before broadcasting camera.',
-      );
-    }
     developer.log(
       'rejoinAsBroadcaster: leaving channel to force publish track renegotiation',
       name: 'AgoraService',
@@ -679,7 +669,10 @@ class AgoraService {
     try {
       await leaveChannel();
     } catch (e) {
-      developer.log('rejoinAsBroadcaster: leaveChannel error (ignored): $e', name: 'AgoraService');
+      developer.log(
+        'rejoinAsBroadcaster: leaveChannel error (ignored): $e',
+        name: 'AgoraService',
+      );
     }
     // Give web runtimes a short moment to fully release previous tracks.
     await Future<void>.delayed(const Duration(milliseconds: 250));
@@ -692,12 +685,13 @@ class AgoraService {
     // --- rejoin as broadcaster ---
     try {
       developer.log(
-        'ROLE CHECK: broadcaster=true canBroadcast=$canBroadcast',
+        'AGORA ROLE: broadcaster (we always join as broadcaster)',
         name: 'AgoraService',
       );
-      await _engine.setClientRole(
-        role: ClientRoleType.clientRoleBroadcaster,
+      await _engine.setChannelProfile(
+        ChannelProfileType.channelProfileLiveBroadcasting,
       );
+      await _engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
       await _engine.joinChannel(
         token: token.trim(),
         channelId: channelName.trim(),
@@ -769,10 +763,7 @@ class AgoraService {
       );
       return;
     }
-    developer.log(
-      'enableVideo($enabled) - started',
-      name: 'AgoraService',
-    );
+    developer.log('enableVideo($enabled) - started', name: 'AgoraService');
     _enableVideoInFlight = true;
     try {
       if (enabled) {
@@ -786,10 +777,7 @@ class AgoraService {
           );
           _broadcasterMode = true;
         }
-        developer.log(
-          'Enabling video engine',
-          name: 'AgoraService',
-        );
+        developer.log('Enabling video engine', name: 'AgoraService');
         await _engine.enableVideo();
         await _engine.enableLocalVideo(true);
         await _engine.muteLocalVideoStream(false);
@@ -810,7 +798,7 @@ class AgoraService {
               autoSubscribeAudio: true,
               autoSubscribeVideo: true,
               publishCameraTrack: true,
-              publishMicrophoneTrack: false,
+              publishMicrophoneTrack: true,
             ),
           );
         }
@@ -832,10 +820,8 @@ class AgoraService {
           name: 'AgoraService',
         );
       } else {
-        developer.log(
-          'Disabling video',
-          name: 'AgoraService',
-        );
+        await _engine.disableVideo();
+        developer.log('Disabling video', name: 'AgoraService');
         await _engine.muteLocalVideoStream(true);
         await _engine.enableLocalVideo(false);
         _localVideoCapturing = false;
@@ -856,10 +842,7 @@ class AgoraService {
             ),
           );
         }
-        developer.log(
-          'enableVideo(false) - completed',
-          name: 'AgoraService',
-        );
+        developer.log('enableVideo(false) - completed', name: 'AgoraService');
       }
     } catch (error) {
       developer.log(
