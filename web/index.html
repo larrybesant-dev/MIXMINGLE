@@ -20,22 +20,7 @@
 <body>
   <script>
     (function () {
-      // Keep push service workers intact; only clean stale Flutter workers.
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function (registrations) {
-          registrations.forEach(function (registration) {
-            var active = registration.active && registration.active.scriptURL ? registration.active.scriptURL : '';
-            var waiting = registration.waiting && registration.waiting.scriptURL ? registration.waiting.scriptURL : '';
-            var installing = registration.installing && registration.installing.scriptURL ? registration.installing.scriptURL : '';
-            var scriptUrl = active || waiting || installing;
-            if (scriptUrl.indexOf('flutter_service_worker.js') !== -1) {
-              registration.unregister();
-            }
-          });
-        }).catch(function () {
-          // Ignore service worker cleanup errors.
-        });
-
         // Register Firebase messaging worker at an absolute root path.
         navigator.serviceWorker.register('/firebase-messaging-sw.js').catch(function () {
           // Ignore optional push setup failures.

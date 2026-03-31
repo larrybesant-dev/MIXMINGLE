@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mixvy/app/app.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:mixvy/firebase_options.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -59,6 +60,15 @@ void main() async {
             options: DefaultFirebaseOptions.currentPlatform,
           );
           _bootstrapLog('Firebase initialized');
+
+          if (kIsWeb) {
+            FirebaseFirestore.instance.settings = const Settings(
+              sslEnabled: true,
+              persistenceEnabled: true,
+              webExperimentalAutoDetectLongPolling: true,
+            );
+            _bootstrapLog('Firestore web transport fallback enabled');
+          }
 
           if (!kIsWeb) {
             FirebaseMessaging.onBackgroundMessage(

@@ -596,7 +596,11 @@ async function requestCoinTransferHandler(request, deps = {}) {
 
 async function registerFcmTokenHandler(request, deps = {}) {
   const uid = requireAuth(request);
-  const token = parseIdField(request.data && request.data.token, "token");
+  // FCM tokens can be 150-500+ characters; parseIdField's 128-char cap is too short.
+  const rawToken = request.data && request.data.token;
+  const token = typeof rawToken === "string" ? rawToken.trim() : "";
+  if (!token) throw new HttpsError("invalid-argument", "token is required.");
+  if (token.length > 4096) throw new HttpsError("invalid-argument", "token is too long.");
   const platform =
     typeof (request.data && request.data.platform) === "string"
       ? request.data.platform.trim().slice(0, 32)
