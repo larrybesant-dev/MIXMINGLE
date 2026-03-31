@@ -276,7 +276,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         setState(() => _cameraStatus = 'Connecting: initializing media engine...');
       }
       await service.initialize(credentials.appId).timeout(
-        const Duration(seconds: 90),
+        const Duration(seconds: 120),
         onTimeout: () => throw const AgoraServiceException(
           code: 'agora-initialize-live-media-failed',
           message: 'Timed out initializing live media engine.',
@@ -284,7 +284,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       );
       developer.log('Agora service initialized', name: 'LiveRoom');
       print('[CAMDBG] connect:agora_initialized');
-      final joinAsBroadcaster = canBroadcast || kIsWeb;
+      // Only join as broadcaster if user can actually broadcast
+      // Web audience members should join as audience to reduce initialization overhead
+      final joinAsBroadcaster = canBroadcast;
       if (mounted) {
         setState(() => _cameraStatus = 'Connecting: joining live room...');
       }
