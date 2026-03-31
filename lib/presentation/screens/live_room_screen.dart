@@ -19,6 +19,7 @@ import '../../features/room/providers/participant_providers.dart';
 import '../../features/room/providers/message_providers.dart';
 import '../../features/room/providers/presence_provider.dart';
 import '../../features/room/widgets/message_bubble.dart';
+import '../../features/room/widgets/camera_wall.dart';
 import '../../features/room/widgets/room_control_sheets.dart';
 import '../../features/room/providers/mic_access_provider.dart';
 import '../../features/room/providers/host_controls_provider.dart';
@@ -43,7 +44,6 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
 
 class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     with WidgetsBindingObserver {
-  static const int _maxMainGridRemoteTiles = 8;
   late TextEditingController messageController;
   late ScrollController scrollController;
   FirebaseFirestore? _firestore;
@@ -610,63 +610,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
   }
 
-  Widget _buildVideoTileFrame({
-    required Widget child,
-    required bool speaking,
-    required String label,
-  }) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: speaking ? Colors.green : Colors.transparent,
-          width: 3,
-        ),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            child,
-            Positioned(
-              left: 8,
-              right: 8,
-              bottom: 8,
-              child: Align(
-                alignment: Alignment.bottomLeft,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Colors.black54,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildLocalCamTile() {
+  Widget _buildLocalCamContent() {
     final service = _agoraService;
-    final child = service != null && service.canRenderLocalView
+    return service != null && service.canRenderLocalView
         ? service.getLocalView()
         : ColoredBox(
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -689,21 +635,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               ),
             ),
           );
-
-    return _buildVideoTileFrame(
-      child: child,
-      speaking: service?.localSpeaking ?? false,
-      label: 'You',
-    );
   }
 
-  Widget _buildRemoteCamTile({
+  Widget _buildRemoteCamContent({
     required int remoteUid,
-    required String? remoteUserId,
     required bool canViewRemote,
   }) {
     final service = _agoraService;
-    final child = canViewRemote && service != null
+    return canViewRemote && service != null
         ? service.getRemoteView(remoteUid, widget.roomId)
         : ColoredBox(
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
@@ -725,12 +664,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               ),
             ),
           );
-
-    return _buildVideoTileFrame(
-      child: child,
-      speaking: service?.isRemoteSpeaking(remoteUid) ?? false,
-      label: remoteUserId ?? 'Guest $remoteUid',
-    );
   }
 
   String _mapMediaError(Object error, {required bool canBroadcast}) {
@@ -2278,144 +2211,59 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 const SizedBox(height: 6),
                                 Builder(
                                   builder: (context) {
-                                    final viewableRemoteTiles =
-                                        <_RemoteCamTileData>[];
-                                    final blockedRemoteTiles =
-                                        <_RemoteCamTileData>[];
+                                    final remoteTiles = _agoraService!.remoteUids
+                                        .map((remoteUid) {
+                                          final remoteUserId = _userIdForRtcUid(
+                                            remoteUid,
+                                            participantsInRoom,
+                                          );
+                                          final allowedViewers =
+                                              remoteUserId == null
+                                              ? const <String>[]
+                                              : ref
+                                                        .watch(
+                                                          userCamAllowedViewersProvider(
+                                                            remoteUserId,
+                                                          ),
+                                                        )
+                                                        .valueOrNull ??
+                                                    const <String>[];
+                                          final canViewRemote =
+                                              remoteUserId != null &&
+                                              allowedViewers.contains(user.id);
+                                          return CameraWallRemoteTileData(
+                                            uid: remoteUid,
+                                            label:
+                                                remoteUserId ?? 'Guest $remoteUid',
+                                            canView: canViewRemote,
+                                            isSpeaking: _agoraService!
+                                                .isRemoteSpeaking(remoteUid),
+                                          );
+                                        })
+                                        .toList(growable: false);
 
-                                    for (final remoteUid
-                                        in _agoraService!.remoteUids) {
-                                      final remoteUserId = _userIdForRtcUid(
-                                        remoteUid,
-                                        participantsInRoom,
-                                      );
-                                      final allowedViewers =
-                                          remoteUserId == null
-                                          ? const <String>[]
-                                          : ref
-                                                    .watch(
-                                                      userCamAllowedViewersProvider(
-                                                        remoteUserId,
-                                                      ),
-                                                    )
-                                                    .valueOrNull ??
-                                                const <String>[];
-                                      final canViewRemote =
-                                          remoteUserId != null &&
-                                          allowedViewers.contains(user.id);
-                                      final tile = _RemoteCamTileData(
-                                        uid: remoteUid,
-                                        userId: remoteUserId,
-                                        canView: canViewRemote,
-                                      );
-                                      if (canViewRemote) {
-                                        viewableRemoteTiles.add(tile);
-                                      } else {
-                                        blockedRemoteTiles.add(tile);
-                                      }
-                                    }
-
-                                    final mainGridRemoteTiles =
-                                        viewableRemoteTiles
-                                            .take(_maxMainGridRemoteTiles)
-                                            .toList(growable: false);
-                                    final overflowRemoteTiles =
-                                        <_RemoteCamTileData>[
-                                          ...viewableRemoteTiles.skip(
-                                            _maxMainGridRemoteTiles,
-                                          ),
-                                          ...blockedRemoteTiles,
-                                        ];
-
-                                    _scheduleRemoteVideoLayoutSync(
-                                      highQualityUids: mainGridRemoteTiles
-                                          .map((tile) => tile.uid)
-                                          .toSet(),
-                                      lowQualityUids: overflowRemoteTiles
-                                          .where((tile) => tile.canView)
-                                          .map((tile) => tile.uid)
-                                          .toSet(),
-                                    );
-
-                                    final mainGridTiles = <Widget>[
-                                      _buildLocalCamTile(),
-                                      ...mainGridRemoteTiles.map(
-                                        (tile) => _buildRemoteCamTile(
+                                    return CameraWall(
+                                      roomId: widget.roomId,
+                                      localLabel: 'You',
+                                      localSpeaking:
+                                          _agoraService!.localSpeaking,
+                                      localTile: _buildLocalCamContent(),
+                                      remoteTiles: remoteTiles,
+                                      remoteTileBuilder: (tile) {
+                                        return _buildRemoteCamContent(
                                           remoteUid: tile.uid,
-                                          remoteUserId: tile.userId,
                                           canViewRemote: tile.canView,
-                                        ),
-                                      ),
-                                    ];
-
-                                    final tileCount = mainGridTiles.length;
-                                    final crossAxisCount = tileCount <= 2
-                                        ? 1
-                                        : tileCount <= 4
-                                        ? 2
-                                        : 3;
-                                    final mainGridHeight = tileCount <= 1
-                                        ? 180.0
-                                        : tileCount <= 4
-                                        ? 280.0
-                                        : 360.0;
-
-                                    return Column(
-                                      children: [
-                                        SizedBox(
-                                          height: mainGridHeight,
-                                          child: GridView.builder(
-                                            shrinkWrap: true,
-                                            physics:
-                                                const NeverScrollableScrollPhysics(),
-                                            gridDelegate:
-                                                SliverGridDelegateWithFixedCrossAxisCount(
-                                                  crossAxisCount:
-                                                      crossAxisCount,
-                                                  mainAxisSpacing: 8,
-                                                  crossAxisSpacing: 8,
-                                                  childAspectRatio: 16 / 9,
-                                                ),
-                                            itemCount: mainGridTiles.length,
-                                            itemBuilder: (context, index) {
-                                              return mainGridTiles[index];
-                                            },
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        if (overflowRemoteTiles.isNotEmpty)
-                                          SizedBox(
-                                            height: 92,
-                                            child: ListView.separated(
-                                              scrollDirection:
-                                                  Axis.horizontal,
-                                              itemBuilder: (context, index) {
-                                                final tile =
-                                                    overflowRemoteTiles[index];
-                                                return SizedBox(
-                                                  width: 132,
-                                                  child: _buildRemoteCamTile(
-                                                    remoteUid: tile.uid,
-                                                    remoteUserId: tile.userId,
-                                                    canViewRemote:
-                                                        tile.canView,
-                                                  ),
-                                                );
-                                              },
-                                              separatorBuilder:
-                                                  (_, unusedIndex) =>
-                                                      const SizedBox(width: 8),
-                                              itemCount:
-                                                  overflowRemoteTiles.length,
-                                            ),
-                                          )
-                                        else if (_agoraService!
-                                            .remoteUids
-                                            .isEmpty)
-                                          const Text(
-                                            'Waiting for other participants to join video...',
-                                          ),
-                                      ],
+                                        );
+                                      },
+                                      onSubscriptionPlanChanged: (
+                                        highQualityUids,
+                                        lowQualityUids,
+                                      ) {
+                                        _scheduleRemoteVideoLayoutSync(
+                                          highQualityUids: highQualityUids,
+                                          lowQualityUids: lowQualityUids,
+                                        );
+                                      },
                                     );
                                   },
                                 ),
@@ -3856,16 +3704,4 @@ class _GiftToast {
     required this.giftName,
     required this.coinCost,
   });
-}
-
-class _RemoteCamTileData {
-  const _RemoteCamTileData({
-    required this.uid,
-    required this.userId,
-    required this.canView,
-  });
-
-  final int uid;
-  final String? userId;
-  final bool canView;
 }
