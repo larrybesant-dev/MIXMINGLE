@@ -381,7 +381,7 @@ class AgoraService {
 
     final maxAttempts = kIsWeb ? 2 : 1;
     final attemptTimeout = kIsWeb
-        ? const Duration(seconds: 18)
+        ? const Duration(seconds: 25)
         : const Duration(seconds: 10);
     Object? lastInitError;
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {

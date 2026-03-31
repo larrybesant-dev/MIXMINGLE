@@ -27,6 +27,7 @@ class CameraWall extends ConsumerWidget {
     required this.remoteTiles,
     required this.remoteTileBuilder,
     required this.onSubscriptionPlanChanged,
+    required this.roomName,
     this.maxMainGridRemoteTiles = 8,
     this.overflowPageSize = 6,
   });
@@ -39,6 +40,7 @@ class CameraWall extends ConsumerWidget {
   final Widget Function(CameraWallRemoteTileData tile) remoteTileBuilder;
   final void Function(Set<int> highQualityUids, Set<int> lowQualityUids)
   onSubscriptionPlanChanged;
+  final String roomName;
   final int maxMainGridRemoteTiles;
   final int overflowPageSize;
 
@@ -153,7 +155,7 @@ class CameraWall extends ConsumerWidget {
                 Row(
                   children: [
                     Text(
-                      'Cam Room',
+                      roomName,
                       style: theme.textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),

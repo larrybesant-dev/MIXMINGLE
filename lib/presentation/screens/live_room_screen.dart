@@ -357,7 +357,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       await service
           .initialize(credentials.appId)
           .timeout(
-            const Duration(seconds: 45),
+            const Duration(seconds: 60),
             onTimeout: () => throw const AgoraServiceException(
               code: 'agora-initialize-live-media-failed',
               message: 'Timed out initializing live media engine.',
@@ -2092,9 +2092,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 body: Center(child: Text('Room is locked.')),
               );
             }
+            final roomName = _asString(roomData?['name'], fallback: 'Live Room');
             return Scaffold(
               appBar: AppBar(
-                title: Text('Live Room ($role)'),
+                title: Text(roomName),
                 actions: [
                   IconButton(
                     tooltip: 'Leave Room',
@@ -2244,6 +2245,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
                                     return CameraWall(
                                       roomId: widget.roomId,
+                                      roomName: roomName,
                                       localLabel: 'You',
                                       localSpeaking:
                                           _agoraService!.localSpeaking,
