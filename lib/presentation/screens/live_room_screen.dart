@@ -276,7 +276,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         setState(() => _cameraStatus = 'Connecting: initializing media engine...');
       }
       await service.initialize(credentials.appId).timeout(
-        const Duration(seconds: 12),
+        const Duration(seconds: 30),
         onTimeout: () => throw const AgoraServiceException(
           code: 'agora-initialize-live-media-failed',
           message: 'Timed out initializing live media engine.',
@@ -298,7 +298,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             publishMicrophoneTrackOnJoin: canBroadcast,
           )
           .timeout(
-            const Duration(seconds: 15),
+            const Duration(seconds: 25),
             onTimeout: () => throw const AgoraServiceException(
               code: 'agora-join-room-failed',
               message: 'Timed out joining live media channel.',
