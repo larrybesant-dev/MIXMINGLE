@@ -24,3 +24,10 @@ foreach ($relativePath in $files) {
     Write-Host "Patched $relativePath"
   }
 }
+
+$sourceMessagingWorker = 'web/firebase-messaging-sw.js'
+$targetMessagingWorker = 'build/web/firebase-messaging-sw.js'
+if (Test-Path $sourceMessagingWorker) {
+  Copy-Item -Path $sourceMessagingWorker -Destination $targetMessagingWorker -Force
+  Write-Host "Copied $sourceMessagingWorker -> $targetMessagingWorker"
+}
