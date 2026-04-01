@@ -348,15 +348,14 @@ class AgoraService {
       );
     } on TimeoutException catch (e) {
       // On web, the video state event may not fire reliably from Agora SDK.
-      // Since ensureDeviceAccess (preflight) already confirmed camera access,
-      // mark video as capturing and continue.
+      // Do not force local capture=true here; that can create false positives
+      // where UI says camera is on while no stream is actually published.
       if (kIsWeb) {
         developer.log(
-          'Local video capturing timeout after ${timeout.inSeconds}s - permitting on web (state event may not fire reliably)',
+          'Local video capturing timeout after ${timeout.inSeconds}s on web; capture not confirmed yet',
           name: 'AgoraService',
           level: 701, // INFO level
         );
-        _localVideoCapturing = true;
       } else {
         developer.log(
           'Local video capturing timeout on $kIsWeb platform',
@@ -784,9 +783,6 @@ class AgoraService {
       } finally {
         _enableVideoInFlight = false;
       }
-      if (!_localVideoCapturing && kIsWeb) {
-        _localVideoCapturing = true;
-      }
     } catch (error) {
       _throwMappedAgoraError(error, operation: 'rejoin as broadcaster');
     }
@@ -885,14 +881,6 @@ class AgoraService {
           name: 'AgoraService',
         );
         await _awaitLocalVideoCapturing();
-        if (!_localVideoCapturing && kIsWeb) {
-          // Web runtimes may miss local video state callbacks; keep UI in sync.
-          _localVideoCapturing = true;
-          developer.log(
-            'Applying web fallback: local video marked capturing after successful enable flow',
-            name: 'AgoraService',
-          );
-        }
         developer.log(
           'enableVideo($enabled) - completed successfully',
           name: 'AgoraService',
