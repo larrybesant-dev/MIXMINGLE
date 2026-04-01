@@ -88,6 +88,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   Set<int> _requestedHighQualityRemoteUids = <int>{};
   Set<int> _requestedLowQualityRemoteUids = <int>{};
   bool _remoteLayoutSyncQueued = false;
+  int _localViewEpoch = 0;
   static const List<String> _quickEmojis = <String>[
     '😀',
     '😂',
@@ -493,6 +494,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         _appliedMediaRole = 'member';
         _isMicMuted = true;
         _isVideoEnabled = false;
+        _localViewEpoch++;
         _connectPhase = 'ready';
         _cameraStatus = 'Live media ready. Starting camera...';
       });
@@ -760,7 +762,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   Widget _buildLocalCamContent() {
     final service = _agoraService;
     return service != null && service.canRenderLocalView
-        ? service.getLocalView()
+        ? KeyedSubtree(
+            key: ValueKey<String>('local-view-$_localViewEpoch'),
+            child: service.getLocalView(),
+          )
         : ColoredBox(
             color: Theme.of(context).colorScheme.surfaceContainerHighest,
             child: Center(
@@ -934,7 +939,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
 
     if (!mounted) {
-      return;
+            setState(() {
+              _localViewEpoch++;
+              _cameraStatus = 'Camera active (recovered).';
+            });
     }
 
     setState(() {
