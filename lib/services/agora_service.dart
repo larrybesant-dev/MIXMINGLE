@@ -170,9 +170,8 @@ class AgoraService {
   }
 
   Future<void> _stopPreviewSafe() async {
-    if (!_previewRunning) {
-      return;
-    }
+    // On web, stale preview tracks can exist even when local state says
+    // preview is not running, so always attempt stop as best effort.
     try {
       await _engine.stopPreview();
       developer.log('stopPreview called', name: 'AgoraService');
@@ -197,11 +196,7 @@ class AgoraService {
     await _engine.enableLocalVideo(true);
     await _engine.muteLocalVideoStream(false);
     await _engine.muteLocalAudioStream(!publishAudio);
-    try {
-      await _engine.startPreview();
-    } catch (_) {
-      // Best effort preview start.
-    }
+    await _startPreviewSafe();
   }
 
   Future<void> setRemoteVideoSubscription(
@@ -703,6 +698,11 @@ class AgoraService {
     try {
       if (kIsWeb) {
         await _stopPreviewSafe();
+        try {
+          await _engine.disableVideo();
+        } catch (_) {
+          // Best effort track cleanup before joining.
+        }
       }
       await _engine.joinChannel(
         token: normalizedToken,
