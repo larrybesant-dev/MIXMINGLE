@@ -65,6 +65,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isVideoActionInFlight = false;
   bool _isVideoSelfHealInFlight = false;
   bool _hasTriedAutoStartCamera = false;
+  String? _lastAgoraToken;
+  int? _lastAgoraRtcUid;
   String? _cameraStatus;
   String _connectPhase = 'idle';
   String? _connectErrorCode;
@@ -370,6 +372,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           rtcUid: rtcUid,
         ),
       );
+      _lastAgoraToken = credentials.token;
+      _lastAgoraRtcUid = rtcUid;
       _logLiveRoom('connect:token_ok uid=$rtcUid');
       const maxConnectAttempts = 2;
       for (var attempt = 1; attempt <= maxConnectAttempts; attempt++) {
@@ -717,6 +721,37 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         error: error,
         stackTrace: stackTrace,
       );
+      final token = _lastAgoraToken;
+      final uid = _lastAgoraRtcUid;
+      if (token != null && uid != null && mounted) {
+        try {
+          _logLiveRoom('toggle_video:self_heal_rejoin_begin');
+          await service
+              .rejoinAsBroadcaster(
+                token,
+                widget.roomId,
+                uid,
+                publishMicrophoneTrack: !_isMicMuted,
+              )
+              .timeout(
+                const Duration(seconds: 20),
+                onTimeout: () => throw const AgoraServiceException(
+                  code: 'camera-start-failed',
+                  message: 'Camera rejoin recovery timed out.',
+                ),
+              );
+          if (mounted) {
+            setState(() => _cameraStatus = 'Camera active (recovered).');
+          }
+          _logLiveRoom('toggle_video:self_heal_rejoin_success');
+        } catch (rejoinError, rejoinStackTrace) {
+          _logLiveRoom(
+            'toggle_video:self_heal_rejoin_failed',
+            error: rejoinError,
+            stackTrace: rejoinStackTrace,
+          );
+        }
+      }
     } finally {
       _isVideoSelfHealInFlight = false;
     }

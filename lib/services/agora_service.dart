@@ -34,6 +34,7 @@ class AgoraService {
   bool _joinedChannel = false;
   bool _broadcasterMode = false;
   bool _localVideoCapturing = false;
+  bool _previewRunning = false;
   bool _enableVideoInFlight =
       false; // Track if we're actively enabling/disabling video
   Completer<void>? _localVideoCaptureCompleter;
@@ -123,6 +124,13 @@ class AgoraService {
   }
 
   Future<void> _startCameraCaptureAfterRoleUpgrade() async {
+    if (kIsWeb) {
+      developer.log(
+        'startCameraCapture skipped on web; using preview/local-video controls',
+        name: 'AgoraService',
+      );
+      return;
+    }
     try {
       await _engine.startCameraCapture(
         sourceType: VideoSourceType.videoSourceCameraPrimary,
@@ -140,6 +148,43 @@ class AgoraService {
         error: error,
         stackTrace: stackTrace,
       );
+    }
+  }
+
+  Future<void> _startPreviewSafe() async {
+    if (_previewRunning) {
+      return;
+    }
+    try {
+      await _engine.startPreview();
+      _previewRunning = true;
+      developer.log('startPreview called', name: 'AgoraService');
+    } catch (error, stackTrace) {
+      developer.log(
+        'startPreview skipped: $error',
+        name: 'AgoraService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
+  Future<void> _stopPreviewSafe() async {
+    if (!_previewRunning) {
+      return;
+    }
+    try {
+      await _engine.stopPreview();
+      developer.log('stopPreview called', name: 'AgoraService');
+    } catch (error, stackTrace) {
+      developer.log(
+        'stopPreview skipped: $error',
+        name: 'AgoraService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    } finally {
+      _previewRunning = false;
     }
   }
 
@@ -380,12 +425,21 @@ class AgoraService {
 
   /// Initialize Agora engine with your App ID
   Future<void> initialize(String appId) async {
+    if (_initialized) {
+      developer.log(
+        'initialize skipped: already initialized',
+        name: 'AgoraService',
+      );
+      return;
+    }
     final normalizedAppId = appId.trim();
     if (normalizedAppId.isEmpty) {
       throw ArgumentError('Agora appId cannot be empty.');
     }
 
-    final maxAttempts = kIsWeb ? 2 : 1;
+    // Keep one init attempt here. LiveRoomScreen manages outer retry with a
+    // fresh AgoraService instance so we avoid nested retries contending for tracks.
+    final maxAttempts = 1;
     final attemptTimeout = kIsWeb
         ? const Duration(seconds: 25)
         : const Duration(seconds: 10);
@@ -647,6 +701,9 @@ class AgoraService {
     }
 
     try {
+      if (kIsWeb) {
+        await _stopPreviewSafe();
+      }
       await _engine.joinChannel(
         token: normalizedToken,
         channelId: normalizedChannelName,
@@ -798,6 +855,7 @@ class AgoraService {
   /// Leave the current channel
   Future<void> leaveChannel() async {
     if (!_initialized) return;
+    await _stopPreviewSafe();
     if (_joinedChannel) {
       await _engine.leaveChannel();
     }
@@ -808,6 +866,7 @@ class AgoraService {
     _joinedChannel = false;
     _broadcasterMode = false;
     _localVideoCapturing = false;
+    _previewRunning = false;
   }
 
   /// Mute/unmute local audio
@@ -855,11 +914,8 @@ class AgoraService {
         await _startCameraCaptureAfterRoleUpgrade();
         await _engine.enableLocalVideo(true);
         await _engine.muteLocalVideoStream(false);
-        try {
-          await _engine.startPreview();
-        } catch (_) {
-          // Best effort on web/native combinations.
-        }
+        await _stopPreviewSafe();
+        await _startPreviewSafe();
         if (_joinedChannel) {
           developer.log(
             'Updating channel media options for video publishing',
@@ -891,11 +947,7 @@ class AgoraService {
         await _engine.muteLocalVideoStream(true);
         await _engine.enableLocalVideo(false);
         _localVideoCapturing = false;
-        try {
-          await _engine.stopPreview();
-        } catch (_) {
-          // Best effort cleanup.
-        }
+        await _stopPreviewSafe();
         if (_joinedChannel) {
           await _engine.updateChannelMediaOptions(
             ChannelMediaOptions(
@@ -927,6 +979,7 @@ class AgoraService {
 
   Future<void> dispose() async {
     if (!_initialized) return;
+    await _stopPreviewSafe();
     if (_joinedChannel) {
       await _engine.leaveChannel();
     }
@@ -937,6 +990,7 @@ class AgoraService {
     _joinedChannel = false;
     _broadcasterMode = false;
     _localVideoCapturing = false;
+    _previewRunning = false;
     _initialized = false;
   }
 }
