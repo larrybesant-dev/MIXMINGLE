@@ -177,8 +177,13 @@ class AgoraService {
     // On web, stale preview tracks can exist even when local state says
     // preview is not running, so always attempt stop as best effort.
     try {
-      await _engine.stopPreview();
+      await _engine.stopPreview().timeout(const Duration(seconds: 2));
       developer.log('stopPreview called', name: 'AgoraService');
+    } on TimeoutException {
+      developer.log(
+        'stopPreview timed out; continuing with best-effort cleanup',
+        name: 'AgoraService',
+      );
     } catch (error, stackTrace) {
       developer.log(
         'stopPreview skipped: $error',
@@ -424,32 +429,31 @@ class AgoraService {
 
   /// Initialize Agora engine with your App ID
   Future<void> initialize(String appId) async {
-    if (_initialized) {
-      developer.log(
-        'initialize skipped: already initialized',
-        name: 'AgoraService',
-      );
-      return;
-    }
     final normalizedAppId = appId.trim();
     if (normalizedAppId.isEmpty) {
       throw ArgumentError('Agora appId cannot be empty.');
     }
 
-    // Keep one init attempt here. LiveRoomScreen manages outer retry with a
-    // fresh AgoraService instance so we avoid nested retries contending for tracks.
-    final maxAttempts = 1;
-    final attemptTimeout = kIsWeb
-        ? const Duration(seconds: 25)
-        : const Duration(seconds: 10);
-    Object? lastInitError;
-    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+    if (_sharedEngine == null) {
+      _sharedEngine = createAgoraRtcEngine();
+      developer.log('ENGINE CREATED ONCE', name: 'AgoraService');
+    }
+    _engine = _sharedEngine!;
+
+    if (!_sharedInitialized) {
+      final attemptTimeout = kIsWeb
+          ? const Duration(seconds: 75)
+          : const Duration(seconds: 10);
       try {
-        _engine = createAgoraRtcEngine();
-        developer.log(
-          'Agora initialize attempt $attempt/$maxAttempts starting',
-          name: 'AgoraService',
-        );
+        if (kIsWeb) {
+          await _stopPreviewSafe();
+          try {
+            await _engine.disableVideo();
+          } catch (_) {
+            // Best effort stale track cleanup before initialize on web.
+          }
+        }
+        developer.log('Agora initialize attempt 1/1 starting', name: 'AgoraService');
         await _engine
             .initialize(
               RtcEngineContext(
@@ -464,16 +468,11 @@ class AgoraService {
                 'Agora initialize attempt timed out after ${attemptTimeout.inSeconds}s',
               ),
             );
-        developer.log(
-          'Agora initialize attempt $attempt/$maxAttempts succeeded',
-          name: 'AgoraService',
-        );
-        lastInitError = null;
-        break;
+        _sharedInitialized = true;
+        developer.log('INITIALIZE CALLED ONCE: success', name: 'AgoraService');
       } catch (error, stackTrace) {
-        lastInitError = error;
         developer.log(
-          'Agora initialize attempt $attempt/$maxAttempts failed: $error',
+          'Agora initialize attempt 1/1 failed: $error',
           name: 'AgoraService',
           error: error,
           stackTrace: stackTrace,
@@ -481,16 +480,15 @@ class AgoraService {
         try {
           await _engine.release();
         } catch (_) {
-          // Ignore cleanup failures between attempts.
+          // Best effort cleanup before next retry click.
         }
-        if (attempt < maxAttempts) {
-          await Future<void>.delayed(const Duration(milliseconds: 350));
-        }
+        _sharedEngine = null;
+        _sharedInitialized = false;
+        _initialized = false;
+        _throwMappedAgoraError(error, operation: 'initialize live media');
       }
-    }
-
-    if (lastInitError != null) {
-      _throwMappedAgoraError(lastInitError, operation: 'initialize live media');
+    } else {
+      developer.log('INITIALIZE CALLED ONCE: already initialized', name: 'AgoraService');
     }
 
     // Set up event handlers
@@ -558,6 +556,9 @@ class AgoraService {
             _localVideoCapturing = true;
             if (changed && onLocalVideoCaptureChanged != null) {
               onLocalVideoCaptureChanged!();
+            }
+            if (changed) {
+              print('CAMERA TRACK STARTED');
             }
             final waiter = _localVideoCaptureCompleter;
             if (waiter != null && !waiter.isCompleted) {
@@ -958,12 +959,12 @@ class AgoraService {
           name: 'AgoraService',
         );
       } else {
+        await _stopPreviewSafe();
         await _engine.disableVideo();
         developer.log('Disabling video', name: 'AgoraService');
         await _engine.muteLocalVideoStream(true);
         await _engine.enableLocalVideo(false);
         _localVideoCapturing = false;
-        await _stopPreviewSafe();
         if (_joinedChannel) {
           await _engine.updateChannelMediaOptions(
             ChannelMediaOptions(
@@ -999,7 +1000,7 @@ class AgoraService {
     if (_joinedChannel) {
       await _engine.leaveChannel();
     }
-    await _engine.release();
+    // Shared engine is kept for the current page lifetime.
     _remoteUids.clear();
     _speakingUids.clear();
     _localSpeaking = false;

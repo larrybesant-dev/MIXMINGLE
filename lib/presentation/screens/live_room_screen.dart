@@ -376,6 +376,36 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       _lastAgoraToken = credentials.token;
       _lastAgoraRtcUid = rtcUid;
       _logLiveRoom('connect:token_ok uid=$rtcUid');
+
+      if (kIsWeb) {
+        final permissionProbe = AgoraService();
+        try {
+          _logLiveRoom('connect:permission_probe_begin');
+          if (mounted) {
+            setState(() {
+              _cameraStatus = 'Checking browser camera permission...';
+            });
+          }
+          await _runWithWatchdog<void>(
+            phase: 'permission-probe',
+            timeout: const Duration(seconds: 10),
+            timeoutCode: 'permission-denied',
+            timeoutMessage:
+                'Camera permission check timed out. Please verify browser permissions and retry.',
+            action: () =>
+                permissionProbe.ensureDeviceAccess(video: true, audio: false),
+          );
+          _logLiveRoom('connect:permission_probe_ok');
+        } catch (error, stackTrace) {
+          _logLiveRoom(
+            'connect:permission_probe_failed',
+            error: error,
+            stackTrace: stackTrace,
+          );
+          rethrow;
+        }
+      }
+
       const maxConnectAttempts = 2;
       for (var attempt = 1; attempt <= maxConnectAttempts; attempt++) {
         final service = AgoraService();
@@ -402,22 +432,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
         try {
           if (kIsWeb) {
-            if (mounted) {
-              setState(() {
-                _cameraStatus =
-                    'Connecting: preparing browser media (attempt $attempt/$maxConnectAttempts)...';
-              });
-            }
             // Give web runtime/auth/render loop a brief settle window before Agora init.
             await Future<void>.delayed(const Duration(milliseconds: 800));
-            await _runWithWatchdog<void>(
-              phase: 'prewarm-attempt-$attempt',
-              timeout: const Duration(seconds: 10),
-              timeoutCode: 'permission-denied',
-              timeoutMessage:
-                  'Timed out while requesting camera access from browser.',
-              action: () => service.ensureDeviceAccess(video: true, audio: false),
-            );
           }
 
           if (mounted) {
@@ -429,7 +445,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           _logLiveRoom('connect:init_begin attempt=$attempt');
           await _runWithWatchdog<void>(
             phase: 'init-attempt-$attempt',
-            timeout: const Duration(seconds: 60),
+            timeout: const Duration(seconds: 90),
             timeoutCode: 'agora-initialize-live-media-failed',
             timeoutMessage: 'Timed out initializing live media engine.',
             action: () => service.initialize(credentials.appId),
@@ -463,21 +479,22 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             stackTrace: stackTrace,
           );
           await service.dispose();
-
-          final code = _extractErrorCode(error);
-          final canRetry = attempt < maxConnectAttempts &&
-              (code == 'agora-initialize-live-media-failed');
+          final errorCode = _extractErrorCode(error);
+          final canRetry =
+              attempt < maxConnectAttempts &&
+              errorCode == 'agora-initialize-live-media-failed';
           if (canRetry) {
             if (mounted) {
               setState(() {
-                _cameraStatus =
-                    'Initialization stalled. Retrying with a fresh media engine...';
                 _connectPhase = 'retrying-init';
+                _cameraStatus =
+                    'Retrying media engine initialization...';
               });
             }
-            await Future<void>.delayed(const Duration(seconds: 1));
+            await Future<void>.delayed(const Duration(milliseconds: 450));
             continue;
           }
+
           rethrow;
         }
       }
@@ -501,9 +518,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         _isVideoEnabled = false;
         _localViewEpoch++;
         _connectPhase = 'ready';
-        _cameraStatus = 'Live media ready. Starting camera...';
+        _cameraStatus = 'Live media ready. Tap camera to publish.';
       });
-      unawaited(_autoStartCameraAfterConnect());
     } catch (e, stackTrace) {
       _logLiveRoom(
         'connect:failed',
@@ -515,8 +531,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       }
       if (mounted) {
         setState(() {
-          final mappedError = _mapMediaError(e, canBroadcast: true);
           final errorCode = _extractErrorCode(e);
+          final mappedError = errorCode == 'agora-initialize-live-media-failed'
+              ? "We couldn't access your camera. Check browser permissions and try again."
+              : _mapMediaError(e, canBroadcast: true);
           final debugSuffix = e is AgoraServiceException
               ? ' [${e.code}] ${e.cause ?? e.message}'
               : ' [$e]';
