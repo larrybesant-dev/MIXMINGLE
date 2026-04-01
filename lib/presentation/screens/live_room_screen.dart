@@ -653,17 +653,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         final msg = next ? 'Camera turned on.' : 'Camera turned off.';
         _logLiveRoom('toggle_video:success_message $msg');
         _showSnackBar(msg);
-
-        if (next && kIsWeb) {
-          // Some web runtimes briefly drop camera capture after successful toggle.
-          // Re-check shortly after and re-assert publishing if needed.
-          Future<void>.delayed(const Duration(seconds: 2), () {
-            _ensureVideoPublishingOnWeb();
-          });
-          Future<void>.delayed(const Duration(seconds: 5), () {
-            _ensureVideoPublishingOnWeb();
-          });
-        }
       }
     } catch (e, st) {
       _logLiveRoom(
