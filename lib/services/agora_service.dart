@@ -854,6 +854,9 @@ class AgoraService {
         }
         developer.log('Enabling video engine', name: 'AgoraService');
         await _engine.enableVideo();
+        // When joining with publishCameraTrack=false and enabling later,
+        // some runtimes need an explicit camera-capture start.
+        await _startCameraCaptureAfterRoleUpgrade();
         await _engine.enableLocalVideo(true);
         await _engine.muteLocalVideoStream(false);
         try {

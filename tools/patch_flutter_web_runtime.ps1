@@ -19,6 +19,13 @@ foreach ($relativePath in $files) {
   $updated = $updated -replace 's\(\$,"bTu","bt2",\(\)=>\{var q="v8BreakIterator"\s*if\(A\.Z\(A\.Z\(A\.rP\(\),"Intl"\),q\)==null\)A\.a8\(A\.e5\("v8BreakIterator is not supported\."\)\)\s*return A\.bGC\(A\.V3\(A\.V3\(A\.rP\(\),"Intl"\),q\),A\.byq\(\[\]\),A\.bjj\(B\.a5F\)\)\}\)', 's($,"bTu","bt2",()=>A.boA("word"))'
   $updated = $updated -replace 's\(\$,"ce5","bMz",\(\)=>\{var q="v8BreakIterator"\s*if\(A\.a5\(A\.a5\(A\.uj\(\),"Intl"\),q\)==null\)A\.ab\(A\.dx\("v8BreakIterator is not supported\."\)\)\s*return A\.c0n\(A\.Yu\(A\.Yu\(A\.uj\(\),"Intl"\),q\),A\.bSF\(\[\]\),A\.bCl\(B\.ara\)\)\}\)', 's($,"ce5","bMz",()=>A.bHU("word"))'
 
+  # For flutter_bootstrap.js: use platform emoji font instead of downloading Noto fonts,
+  # which spams the console with "Could not find a set of Noto fonts" on every animation frame.
+  if ($relativePath -like '*flutter_bootstrap*' -and $updated -notmatch 'useColorEmoji') {
+    $updated = $updated -replace '(?s)(_flutter\.loader\.load\(\{\r?\n  serviceWorkerSettings: \{\r?\n    serviceWorkerVersion: ")(\d+)("[^\r\n]*)\r?\n  \}\r?\n\}\);',
+      ('$1$2$3' + "`n" + '  },' + "`n" + '  onEntrypointLoaded: async function(engineInitializer) {' + "`n" + '    const appRunner = await engineInitializer.initializeEngine({ useColorEmoji: true });' + "`n" + '    await appRunner.runApp();' + "`n" + '  }' + "`n" + '});')
+  }
+
   if ($updated -ne $content) {
     Set-Content -Path $relativePath -Value $updated -NoNewline
     Write-Host "Patched $relativePath"

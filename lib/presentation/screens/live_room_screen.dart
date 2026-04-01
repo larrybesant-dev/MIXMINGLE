@@ -64,7 +64,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isMicActionInFlight = false;
   bool _isVideoActionInFlight = false;
   bool _isVideoSelfHealInFlight = false;
+  bool _hasTriedAutoStartCamera = false;
   String? _cameraStatus;
+  String _connectPhase = 'idle';
+  String? _connectErrorCode;
   bool _showEmojiTray = false;
   String? _callError;
   Set<String> _excludedUserIds = const <String>{};
@@ -303,30 +306,53 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
   }
 
+  Future<T> _runWithWatchdog<T>({
+    required String phase,
+    required Duration timeout,
+    required String timeoutCode,
+    required String timeoutMessage,
+    required Future<T> Function() action,
+  }) async {
+    if (mounted) {
+      setState(() {
+        _connectPhase = phase;
+      });
+    }
+    return action().timeout(
+      timeout,
+      onTimeout: () => throw AgoraServiceException(
+        code: timeoutCode,
+        message: timeoutMessage,
+      ),
+    );
+  }
+
+  String _extractErrorCode(Object error) {
+    if (error is AgoraServiceException) {
+      return error.code;
+    }
+    final text = error.toString().toLowerCase();
+    if (text.contains('timeout')) {
+      return 'timeout';
+    }
+    if (text.contains('permission')) {
+      return 'permission-denied';
+    }
+    return 'unknown';
+  }
+
   Future<void> _connectCall(String userId) async {
     if (_isCallConnecting || _isCallReady) return;
 
     setState(() {
       _isCallConnecting = true;
       _callError = null;
+      _connectErrorCode = null;
+      _connectPhase = 'starting';
+      _hasTriedAutoStartCamera = false;
     });
 
-    final service = AgoraService();
-    service.onRemoteUserJoined = () {
-      if (mounted) {
-        setState(() {});
-      }
-    };
-    service.onRemoteUserLeft = () {
-      if (mounted) {
-        setState(() {});
-      }
-    };
-    service.onSpeakerActivityChanged = () {
-      if (mounted) {
-        setState(() {});
-      }
-    };
+    AgoraService? connectedService;
 
     try {
       _logLiveRoom(
@@ -336,78 +362,138 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         setState(() => _cameraStatus = 'Connecting: requesting token...');
       }
       final rtcUid = _buildRtcUid(userId);
-      final credentials =
-          await _fetchAgoraToken(
-            channelName: widget.roomId,
-            rtcUid: rtcUid,
-          ).timeout(
-            const Duration(seconds: 12),
-            onTimeout: () => throw const AgoraServiceException(
-              code: 'agora-token-missing',
-              message: 'Timed out fetching live media token.',
+      final credentials = await _runWithWatchdog<({String token, String appId})>(
+        phase: 'token',
+        timeout: const Duration(seconds: 12),
+        timeoutCode: 'agora-token-missing',
+        timeoutMessage: 'Timed out fetching live media token.',
+        action: () => _fetchAgoraToken(
+          channelName: widget.roomId,
+          rtcUid: rtcUid,
+        ),
+      );
+      _logLiveRoom('connect:token_ok uid=$rtcUid');
+      const maxConnectAttempts = 2;
+      for (var attempt = 1; attempt <= maxConnectAttempts; attempt++) {
+        final service = AgoraService();
+        service.onRemoteUserJoined = () {
+          if (mounted) {
+            setState(() {});
+          }
+        };
+        service.onRemoteUserLeft = () {
+          if (mounted) {
+            setState(() {});
+          }
+        };
+        service.onSpeakerActivityChanged = () {
+          if (mounted) {
+            setState(() {});
+          }
+        };
+
+        try {
+          if (mounted) {
+            setState(() {
+              _cameraStatus =
+                  'Connecting: initializing media engine (attempt $attempt/$maxConnectAttempts)...';
+            });
+          }
+          _logLiveRoom('connect:init_begin attempt=$attempt');
+          await _runWithWatchdog<void>(
+            phase: 'init-attempt-$attempt',
+            timeout: const Duration(seconds: 60),
+            timeoutCode: 'agora-initialize-live-media-failed',
+            timeoutMessage: 'Timed out initializing live media engine.',
+            action: () => service.initialize(credentials.appId),
+          );
+
+          _logLiveRoom('connect:agora_initialized attempt=$attempt');
+          if (mounted) {
+            setState(() => _cameraStatus = 'Connecting: joining live room...');
+          }
+          await _runWithWatchdog<void>(
+            phase: 'join-attempt-$attempt',
+            timeout: const Duration(seconds: 25),
+            timeoutCode: 'agora-join-room-failed',
+            timeoutMessage: 'Timed out joining live media channel.',
+            action: () => service.joinRoom(
+              credentials.token,
+              widget.roomId,
+              rtcUid,
+              publishCameraTrackOnJoin: false,
+              publishMicrophoneTrackOnJoin: false,
             ),
           );
-      _logLiveRoom('connect:token_ok uid=$rtcUid');
-      if (mounted) {
-        setState(
-          () => _cameraStatus = 'Connecting: initializing media engine...',
+
+          connectedService = service;
+          _logLiveRoom('connect:joined role=broadcaster attempt=$attempt');
+          break;
+        } catch (error, stackTrace) {
+          _logLiveRoom(
+            'connect:attempt_failed attempt=$attempt',
+            error: error,
+            stackTrace: stackTrace,
+          );
+          await service.dispose();
+
+          final code = _extractErrorCode(error);
+          final canRetry = attempt < maxConnectAttempts &&
+              (code == 'agora-initialize-live-media-failed');
+          if (canRetry) {
+            if (mounted) {
+              setState(() {
+                _cameraStatus =
+                    'Initialization stalled. Retrying with a fresh media engine...';
+                _connectPhase = 'retrying-init';
+              });
+            }
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+            continue;
+          }
+          rethrow;
+        }
+      }
+
+      if (connectedService == null) {
+        throw const AgoraServiceException(
+          code: 'agora-initialize-live-media-failed',
+          message: 'Unable to initialize live media engine.',
         );
       }
-      _logLiveRoom('connect:init_begin');
-      await service
-          .initialize(credentials.appId)
-          .timeout(
-            const Duration(seconds: 60),
-            onTimeout: () => throw const AgoraServiceException(
-              code: 'agora-initialize-live-media-failed',
-              message: 'Timed out initializing live media engine.',
-            ),
-          );
-      _logLiveRoom('connect:agora_initialized');
-      if (mounted) {
-        setState(() => _cameraStatus = 'Connecting: joining live room...');
-      }
-      await service
-          .joinRoom(
-            credentials.token,
-            widget.roomId,
-            rtcUid,
-            publishCameraTrackOnJoin: false,
-            publishMicrophoneTrackOnJoin: false,
-          )
-          .timeout(
-            const Duration(seconds: 25),
-            onTimeout: () => throw const AgoraServiceException(
-              code: 'agora-join-room-failed',
-              message: 'Timed out joining live media channel.',
-            ),
-          );
-      _logLiveRoom('connect:joined role=broadcaster');
+
       if (!mounted) {
-        await service.dispose();
+        await connectedService.dispose();
         return;
       }
       setState(() {
-        _agoraService = service;
+        _agoraService = connectedService;
         _isCallReady = true;
         _appliedMediaRole = 'member';
         _isMicMuted = true;
         _isVideoEnabled = false;
-        _cameraStatus = 'Live media ready. Tap camera to publish.';
+        _connectPhase = 'ready';
+        _cameraStatus = 'Live media ready. Starting camera...';
       });
+      unawaited(_autoStartCameraAfterConnect());
     } catch (e, stackTrace) {
       _logLiveRoom(
         'connect:failed',
         error: e,
         stackTrace: stackTrace,
       );
-      await service.dispose();
+      if (connectedService != null) {
+        await connectedService.dispose();
+      }
       if (mounted) {
         setState(() {
           final mappedError = _mapMediaError(e, canBroadcast: true);
+          final errorCode = _extractErrorCode(e);
           final debugSuffix = e is AgoraServiceException
               ? ' [${e.code}] ${e.cause ?? e.message}'
               : ' [$e]';
+          _connectErrorCode = errorCode;
+          _connectPhase = 'failed';
           _callError = '$mappedError$debugSuffix';
           _cameraStatus = 'Live media connect failed: $mappedError$debugSuffix';
           _isCallReady = false;
@@ -446,6 +532,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         setState(() => _isMicActionInFlight = false);
       }
     }
+  }
+
+  Future<void> _autoStartCameraAfterConnect() async {
+    if (_hasTriedAutoStartCamera || !_isCallReady || _isVideoEnabled) {
+      return;
+    }
+    _hasTriedAutoStartCamera = true;
+    await _toggleVideo();
   }
 
   Future<void> _toggleVideo() async {
@@ -2350,7 +2444,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 if (_agoraService != null) ...[
                                   const SizedBox(height: 2),
                                   Text(
-                                    'debug: ready=$_isCallReady joined=${_agoraService!.isJoinedChannel} broadcaster=${_agoraService!.isBroadcaster} capturing=${_agoraService!.isLocalVideoCapturing} video=$_isVideoEnabled inFlight=$_isVideoActionInFlight',
+                                    'debug: phase=$_connectPhase code=${_connectErrorCode ?? "none"} ready=$_isCallReady joined=${_agoraService!.isJoinedChannel} broadcaster=${_agoraService!.isBroadcaster} capturing=${_agoraService!.isLocalVideoCapturing} video=$_isVideoEnabled inFlight=$_isVideoActionInFlight',
                                     textAlign: TextAlign.center,
                                     style: Theme.of(context).textTheme.bodySmall
                                         ?.copyWith(
@@ -2429,7 +2523,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     ],
                                     const SizedBox(height: 4),
                                     Text(
-                                      'debug: ready=$_isCallReady connecting=$_isCallConnecting service=${_agoraService != null}',
+                                      'debug: phase=$_connectPhase code=${_connectErrorCode ?? "none"} ready=$_isCallReady connecting=$_isCallConnecting service=${_agoraService != null}',
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodySmall
