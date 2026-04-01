@@ -43,6 +43,7 @@ class AgoraService {
   VoidCallback? onRemoteUserJoined;
   VoidCallback? onRemoteUserLeft;
   VoidCallback? onSpeakerActivityChanged;
+  VoidCallback? onLocalVideoCaptureChanged;
 
   List<int> get remoteUids => List.unmodifiable(_remoteUids);
   bool get localSpeaking => _localSpeaking;
@@ -550,7 +551,11 @@ class AgoraService {
           );
           if (state == LocalVideoStreamState.localVideoStreamStateCapturing ||
               state == LocalVideoStreamState.localVideoStreamStateEncoding) {
+            final changed = !_localVideoCapturing;
             _localVideoCapturing = true;
+            if (changed && onLocalVideoCaptureChanged != null) {
+              onLocalVideoCaptureChanged!();
+            }
             final waiter = _localVideoCaptureCompleter;
             if (waiter != null && !waiter.isCompleted) {
               waiter.complete();
@@ -559,7 +564,11 @@ class AgoraService {
           }
 
           if (state == LocalVideoStreamState.localVideoStreamStateFailed) {
+            final changed = _localVideoCapturing;
             _localVideoCapturing = false;
+            if (changed && onLocalVideoCaptureChanged != null) {
+              onLocalVideoCaptureChanged!();
+            }
             final waiter = _localVideoCaptureCompleter;
             if (waiter != null && !waiter.isCompleted) {
               waiter.completeError(_mapLocalVideoReason(reason));
@@ -571,7 +580,11 @@ class AgoraService {
           // to avoid race conditions where the callback fires before the operation completes.
           if (state == LocalVideoStreamState.localVideoStreamStateStopped) {
             if (!_enableVideoInFlight) {
+              final changed = _localVideoCapturing;
               _localVideoCapturing = false;
+              if (changed && onLocalVideoCaptureChanged != null) {
+                onLocalVideoCaptureChanged!();
+              }
             } else {
               developer.log(
                 'Ignoring STOPPED state before enableVideo operation completes',

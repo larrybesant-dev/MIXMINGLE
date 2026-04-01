@@ -394,6 +394,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             setState(() {});
           }
         };
+        service.onLocalVideoCaptureChanged = () {
+          if (mounted) {
+            setState(() {});
+          }
+        };
 
         try {
           if (kIsWeb) {
