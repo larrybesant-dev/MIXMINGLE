@@ -190,17 +190,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     StackTrace? stackTrace,
   }) {
     print('[LIVE_ROOM] $message');
-    debugPrint('[LIVE_ROOM] $message');
     if (error != null) {
       print('[LIVE_ROOM] error: $error');
-      debugPrint('[LIVE_ROOM] error: $error');
     }
-    developer.log(
-      message,
-      name: 'LiveRoom',
-      error: error,
-      stackTrace: stackTrace,
-    );
   }
 
   bool _sameIntSet(Set<int> left, Set<int> right) {
@@ -399,6 +391,25 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         };
 
         try {
+          if (kIsWeb) {
+            if (mounted) {
+              setState(() {
+                _cameraStatus =
+                    'Connecting: preparing browser media (attempt $attempt/$maxConnectAttempts)...';
+              });
+            }
+            // Give web runtime/auth/render loop a brief settle window before Agora init.
+            await Future<void>.delayed(const Duration(milliseconds: 800));
+            await _runWithWatchdog<void>(
+              phase: 'prewarm-attempt-$attempt',
+              timeout: const Duration(seconds: 10),
+              timeoutCode: 'permission-denied',
+              timeoutMessage:
+                  'Timed out while requesting camera access from browser.',
+              action: () => service.ensureDeviceAccess(video: true, audio: false),
+            );
+          }
+
           if (mounted) {
             setState(() {
               _cameraStatus =
@@ -454,7 +465,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 _connectPhase = 'retrying-init';
               });
             }
-            await Future<void>.delayed(const Duration(milliseconds: 300));
+            await Future<void>.delayed(const Duration(seconds: 1));
             continue;
           }
           rethrow;
