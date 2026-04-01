@@ -189,6 +189,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     Object? error,
     StackTrace? stackTrace,
   }) {
+    print('[LIVE_ROOM] $message');
+    debugPrint('[LIVE_ROOM] $message');
+    if (error != null) {
+      print('[LIVE_ROOM] error: $error');
+      debugPrint('[LIVE_ROOM] error: $error');
+    }
     developer.log(
       message,
       name: 'LiveRoom',
@@ -495,7 +501,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           _connectErrorCode = errorCode;
           _connectPhase = 'failed';
           _callError = '$mappedError$debugSuffix';
-          _cameraStatus = 'Live media connect failed: $mappedError$debugSuffix';
+          _cameraStatus =
+              'Live media connect failed (phase=$_connectPhase code=$errorCode): $mappedError$debugSuffix';
           _isCallReady = false;
         });
       }
@@ -1714,7 +1721,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         });
       }
 
-      await _connectCall(userId);
+      // On web, defer Agora initialization to explicit user action
+      // (camera button) to avoid browser gesture/startup deadlocks.
+      if (!kIsWeb) {
+        await _connectCall(userId);
+      } else if (mounted) {
+        setState(() {
+          _cameraStatus = 'Room joined. Tap Turn on cam to initialize media.';
+        });
+      }
 
       if (!_hasTrackedRoomJoin) {
         _hasTrackedRoomJoin = true;
@@ -2497,13 +2512,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                                 });
                                               }
                                               await _connectCall(user.id);
-                                              if (!mounted) {
-                                                return;
-                                              }
-                                              if (_isCallReady &&
-                                                  _agoraService != null) {
-                                                await _toggleVideo();
-                                              }
                                             },
                                       icon: const Icon(Icons.videocam),
                                       label: Text(
