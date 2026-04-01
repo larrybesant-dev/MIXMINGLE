@@ -25,6 +25,9 @@ class AgoraServiceException implements Exception {
 }
 
 class AgoraService {
+  static RtcEngine? _sharedEngine;
+  static bool _sharedInitialized = false;
+
   // List of remote user IDs
   final List<int> _remoteUids = [];
   final Set<int> _speakingUids = <int>{};
