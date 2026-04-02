@@ -20,6 +20,7 @@ class RoomModel {
   final List<String> coHosts;
   final bool isLocked;
   final int? slowModeSeconds;
+  final int maxBroadcasters;
 
   RoomModel({
     required this.id,
@@ -39,6 +40,7 @@ class RoomModel {
     this.coHosts = const [],
     this.isLocked = false,
     this.slowModeSeconds,
+    this.maxBroadcasters = 6,
   });
 
   /// Combined members list (used by UI)
@@ -117,6 +119,7 @@ class RoomModel {
       coHosts: _asStringList(json['coHosts']),
       isLocked: _asBool(json['isLocked']),
       slowModeSeconds: json['slowModeSeconds'] is num ? (json['slowModeSeconds'] as num).toInt() : null,
+      maxBroadcasters: json['maxBroadcasters'] is num ? (json['maxBroadcasters'] as num).toInt() : 6,
     );
   }
 
@@ -138,6 +141,7 @@ class RoomModel {
       'coHosts': coHosts,
       'isLocked': isLocked,
       'slowModeSeconds': slowModeSeconds,
+      'maxBroadcasters': maxBroadcasters,
     };
   }
 
@@ -159,6 +163,7 @@ class RoomModel {
     List<String>? coHosts,
     bool? isLocked,
     int? slowModeSeconds,
+    int? maxBroadcasters,
   }) {
     return RoomModel(
       id: id ?? this.id,
@@ -178,6 +183,7 @@ class RoomModel {
       coHosts: coHosts ?? this.coHosts,
       isLocked: isLocked ?? this.isLocked,
       slowModeSeconds: slowModeSeconds ?? this.slowModeSeconds,
+      maxBroadcasters: maxBroadcasters ?? this.maxBroadcasters,
     );
   }
 }

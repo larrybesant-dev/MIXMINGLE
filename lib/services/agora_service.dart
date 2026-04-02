@@ -27,6 +27,8 @@ class AgoraServiceException implements Exception {
 class AgoraService {
   static RtcEngine? _sharedEngine;
   static bool _sharedInitialized = false;
+  // Serializes concurrent initialize() calls (e.g. pre-warm racing with cam-tap).
+  static Completer<void>? _initInProgress;
 
   // List of remote user IDs
   final List<int> _remoteUids = [];
@@ -47,6 +49,12 @@ class AgoraService {
   VoidCallback? onRemoteUserLeft;
   VoidCallback? onSpeakerActivityChanged;
   VoidCallback? onLocalVideoCaptureChanged;
+  /// Called when the token will expire — caller should fetch a fresh token
+  /// and pass it to [renewToken].
+  VoidCallback? onTokenWillExpire;
+  /// Called when the SDK connection is lost so the screen can trigger a
+  /// reconnect flow.
+  VoidCallback? onConnectionLost;
 
   List<int> get remoteUids => List.unmodifiable(_remoteUids);
   bool get localSpeaking => _localSpeaking;
@@ -128,26 +136,18 @@ class AgoraService {
   }
 
   Future<void> _startCameraCaptureAfterRoleUpgrade() async {
-    if (kIsWeb) {
-      developer.log(
-        'startCameraCapture skipped on web; using preview/local-video controls',
-        name: 'AgoraService',
-      );
-      return;
-    }
     try {
       await _engine.startCameraCapture(
         sourceType: VideoSourceType.videoSourceCameraPrimary,
         config: const CameraCapturerConfiguration(),
       );
       developer.log(
-        'startCameraCapture called after role upgrade',
+        'startCameraCapture called',
         name: 'AgoraService',
       );
     } catch (error, stackTrace) {
-      // Some platforms (notably web) can rely on enableVideo/startPreview instead.
       developer.log(
-        'startCameraCapture skipped: $error',
+        'startCameraCapture failed: $error',
         name: 'AgoraService',
         error: error,
         stackTrace: stackTrace,
@@ -440,7 +440,22 @@ class AgoraService {
     }
     _engine = _sharedEngine!;
 
-    if (!_sharedInitialized) {
+    if (_sharedInitialized) {
+      developer.log('INITIALIZE CALLED ONCE: already initialized', name: 'AgoraService');
+    } else if (_initInProgress != null) {
+      // Another caller is already running initialize() — wait for it instead
+      // of firing a second concurrent call that would conflict on the engine.
+      developer.log('INITIALIZE: waiting for in-progress init', name: 'AgoraService');
+      try {
+        await _initInProgress!.future;
+        developer.log('INITIALIZE: in-progress init completed, reusing result', name: 'AgoraService');
+      } catch (error) {
+        // The in-progress init failed; propagate so caller can retry.
+        _throwMappedAgoraError(error, operation: 'initialize live media');
+      }
+    } else {
+      final completer = Completer<void>();
+      _initInProgress = completer;
       final attemptTimeout = kIsWeb
           ? const Duration(seconds: 75)
           : const Duration(seconds: 10);
@@ -469,6 +484,8 @@ class AgoraService {
               ),
             );
         _sharedInitialized = true;
+        _initInProgress = null;
+        completer.complete();
         developer.log('INITIALIZE CALLED ONCE: success', name: 'AgoraService');
       } catch (error, stackTrace) {
         developer.log(
@@ -477,6 +494,8 @@ class AgoraService {
           error: error,
           stackTrace: stackTrace,
         );
+        _initInProgress = null;
+        completer.completeError(error, stackTrace);
         try {
           await _engine.release();
         } catch (_) {
@@ -487,8 +506,6 @@ class AgoraService {
         _initialized = false;
         _throwMappedAgoraError(error, operation: 'initialize live media');
       }
-    } else {
-      developer.log('INITIALIZE CALLED ONCE: already initialized', name: 'AgoraService');
     }
 
     // Set up event handlers
@@ -542,6 +559,23 @@ class AgoraService {
         onError: (err, msg) {
           developer.log('Agora engine error: $err $msg', name: 'AgoraService');
         },
+        onTokenPrivilegeWillExpire: (connection, token) {
+          developer.log(
+            'Agora token will expire — triggering renewal',
+            name: 'AgoraService',
+          );
+          if (onTokenWillExpire != null) onTokenWillExpire!();
+        },
+        onConnectionStateChanged: (connection, state, reason) {
+          developer.log(
+            'Agora connection state: $state reason: $reason',
+            name: 'AgoraService',
+          );
+          if (state == ConnectionStateType.connectionStateDisconnected ||
+              state == ConnectionStateType.connectionStateFailed) {
+            if (onConnectionLost != null) onConnectionLost!();
+          }
+        },
         onLocalVideoStateChanged: (source, state, reason) {
           if (!source.name.startsWith('videoSourceCamera')) {
             return;
@@ -558,7 +592,10 @@ class AgoraService {
               onLocalVideoCaptureChanged!();
             }
             if (changed) {
-              print('CAMERA TRACK STARTED');
+              developer.log(
+                'CAMERA TRACK STARTED',
+                name: 'AgoraService',
+              );
             }
             final waiter = _localVideoCaptureCompleter;
             if (waiter != null && !waiter.isCompleted) {
@@ -600,14 +637,15 @@ class AgoraService {
       ),
     );
 
-    // Profile/role are enforced as broadcaster for this app model.
+    // Default role is audience; the role is upgraded to broadcaster only when
+    // the user actually enables camera or microphone in joinRoom().
     try {
       await _engine.setChannelProfile(
         ChannelProfileType.channelProfileLiveBroadcasting,
       );
-      await _engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
+      await _engine.setClientRole(role: ClientRoleType.clientRoleAudience);
       developer.log(
-        'AGORA ROLE: broadcaster (we always join as broadcaster)',
+        'AGORA ROLE: audience (default; upgraded to broadcaster on cam/mic enable)',
         name: 'AgoraService',
       );
     } catch (error, stackTrace) {
@@ -682,13 +720,20 @@ class AgoraService {
     final shouldPublishCamera = publishCameraTrackOnJoin;
     final shouldPublishMicrophone = publishMicrophoneTrackOnJoin;
 
+    // Join as audience when not publishing anything so Agora allocates the
+    // correct resources and does not waste a broadcaster slot.
+    final isBroadcastJoin = shouldPublishCamera || shouldPublishMicrophone;
+    final initialRole = isBroadcastJoin
+        ? ClientRoleType.clientRoleBroadcaster
+        : ClientRoleType.clientRoleAudience;
+
     try {
       await _engine.setChannelProfile(
         ChannelProfileType.channelProfileLiveBroadcasting,
       );
-      await _engine.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
+      await _engine.setClientRole(role: initialRole);
       developer.log(
-        'AGORA ROLE: broadcaster (we always join as broadcaster)',
+        'AGORA ROLE: ${isBroadcastJoin ? "broadcaster" : "audience"} (publishing: cam=$shouldPublishCamera mic=$shouldPublishMicrophone)',
         name: 'AgoraService',
       );
     } catch (error, stackTrace) {
@@ -702,32 +747,13 @@ class AgoraService {
     }
 
     try {
-      await _engine.enableVideo();
-    } catch (error, stackTrace) {
-      developer.log(
-        'Agora enableVideo failed before join',
-        name: 'AgoraService',
-        error: error,
-        stackTrace: stackTrace,
-      );
-    }
-
-    try {
-      if (kIsWeb) {
-        await _stopPreviewSafe();
-        try {
-          await _engine.disableVideo();
-        } catch (_) {
-          // Best effort track cleanup before joining.
-        }
-      }
       await _engine.joinChannel(
         token: normalizedToken,
         channelId: normalizedChannelName,
         uid: uid,
         options: ChannelMediaOptions(
           channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-          clientRoleType: ClientRoleType.clientRoleBroadcaster,
+          clientRoleType: initialRole,
           autoSubscribeAudio: true,
           autoSubscribeVideo: true,
           publishCameraTrack: shouldPublishCamera,
@@ -744,7 +770,7 @@ class AgoraService {
     }
 
     _joinedChannel = true;
-    _broadcasterMode = true;
+    _broadcasterMode = isBroadcastJoin;
   }
 
   /// Join a video channel
@@ -869,6 +895,25 @@ class AgoraService {
     );
   }
 
+  /// Renews the Agora token without leaving the channel.
+  /// Call this from the [onTokenWillExpire] callback.
+  Future<void> renewToken(String newToken) async {
+    if (!_initialized || !_joinedChannel) return;
+    final trimmed = newToken.trim();
+    if (trimmed.isEmpty) return;
+    try {
+      await _engine.renewToken(trimmed);
+      developer.log('renewToken: token refreshed', name: 'AgoraService');
+    } catch (error, stackTrace) {
+      developer.log(
+        'renewToken failed: $error',
+        name: 'AgoraService',
+        error: error,
+        stackTrace: stackTrace,
+      );
+    }
+  }
+
   /// Leave the current channel
   Future<void> leaveChannel() async {
     if (!_initialized) return;
@@ -926,13 +971,21 @@ class AgoraService {
         }
         developer.log('Enabling video engine', name: 'AgoraService');
         await _engine.enableVideo();
-        // When joining with publishCameraTrack=false and enabling later,
-        // some runtimes need an explicit camera-capture start.
-        await _startCameraCaptureAfterRoleUpgrade();
         await _engine.enableLocalVideo(true);
         await _engine.muteLocalVideoStream(false);
-        await _stopPreviewSafe();
-        await _startPreviewSafe();
+        // startPreview() is the API that actually activates the hardware camera
+        // on web. We do NOT call stopPreview first in the enable path because:
+        // (a) the camera is already off so stopPreview is a no-op, and
+        // (b) calling stopPreview right before startPreview caused a brief
+        //     hardware flash (light on/off) when re-enabling.
+        // On native: use the standard stopPreview + startCameraCapture dance.
+        if (kIsWeb) {
+          await _startPreviewSafe();
+        } else {
+          await _stopPreviewSafe();
+          await _startCameraCaptureAfterRoleUpgrade();
+          await _startPreviewSafe();
+        }
         if (_joinedChannel) {
           developer.log(
             'Updating channel media options for video publishing',
@@ -954,6 +1007,17 @@ class AgoraService {
           name: 'AgoraService',
         );
         await _awaitLocalVideoCapturing();
+        if (kIsWeb && !_localVideoCapturing) {
+          // On web, the Agora SDK does not reliably fire onLocalVideoStateChanged
+          // after enableVideo(). If the full API sequence completed without error,
+          // treat the camera as capturing — the hardware is on.
+          developer.log(
+            'Web: camera capturing event not received; assuming capture is active after successful API sequence.',
+            name: 'AgoraService',
+          );
+          _localVideoCapturing = true;
+          if (onLocalVideoCaptureChanged != null) onLocalVideoCaptureChanged!();
+        }
         developer.log(
           'enableVideo($enabled) - completed successfully',
           name: 'AgoraService',
@@ -966,10 +1030,17 @@ class AgoraService {
         await _engine.enableLocalVideo(false);
         _localVideoCapturing = false;
         if (_joinedChannel) {
+          // Downgrade to audience when not publishing camera or audio.
+          // This frees the broadcaster slot and prevents Agora from keeping
+          // an inactive publish path open.
+          _broadcasterMode = false;
+          await _engine.setClientRole(
+            role: ClientRoleType.clientRoleAudience,
+          );
           await _engine.updateChannelMediaOptions(
             ChannelMediaOptions(
               channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-              clientRoleType: ClientRoleType.clientRoleBroadcaster,
+              clientRoleType: ClientRoleType.clientRoleAudience,
               autoSubscribeAudio: true,
               autoSubscribeVideo: true,
               publishCameraTrack: false,

@@ -145,7 +145,8 @@ service cloud.firestore {
         allow update: if isRoomHost(roomId)
           || (
             participantId == request.auth.uid
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastActiveAt'])
+            && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['lastActiveAt', 'camOn', 'micOn'])
           );
         allow delete: if isRoomHost(roomId) || participantId == request.auth.uid;
       }
@@ -208,6 +209,35 @@ service cloud.firestore {
           && request.resource.data.expiresAt is timestamp;
         allow update: if signedIn() && isRoomStaff(roomId);
         allow delete: if false;
+      }
+
+      // Camera broadcaster slots.
+      // Slots are single-field docs: { userId: string }.
+      // A vacant slot has no document or an empty userId.
+      match /slots/{slotId} {
+        // Any signed-in user in a room can read the slot list (drives CameraWall).
+        allow read: if signedIn();
+
+        // Claim a vacant slot: only the requesting user can set their own userId.
+        allow create: if signedIn()
+          && request.resource.data.keys().hasOnly(['userId'])
+          && request.resource.data.userId == request.auth.uid;
+
+        // Update: re-confirm own slot (same userId) OR take a genuinely vacant
+        // slot (existing userId is absent or empty).  Host may also clear slots.
+        allow update: if isRoomHost(roomId)
+          || (signedIn()
+            && request.resource.data.keys().hasOnly(['userId'])
+            && request.resource.data.userId == request.auth.uid
+            && (
+              !('userId' in resource.data)
+              || resource.data.userId == ''
+              || resource.data.userId == request.auth.uid
+            ));
+
+        // Release (delete): only the slot owner or the room host.
+        allow delete: if signedIn()
+          && (resource.data.userId == request.auth.uid || isRoomHost(roomId));
       }
     }
 

@@ -27,6 +27,7 @@ import '../../features/room/providers/host_provider.dart';
 import '../../features/room/providers/room_policy_provider.dart';
 import '../../features/room/providers/room_gift_provider.dart';
 import '../../features/room/providers/user_cam_permissions_provider.dart';
+import '../../features/room/providers/room_slot_provider.dart';
 import '../../features/room/room_permissions.dart';
 import '../../presentation/providers/wallet_provider.dart';
 import '../../services/analytics_service.dart';
@@ -63,18 +64,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isVideoEnabled = true;
   bool _isMicActionInFlight = false;
   bool _isVideoActionInFlight = false;
-  bool _isVideoSelfHealInFlight = false;
-  bool _hasTriedAutoStartCamera = false;
-  String? _lastAgoraToken;
-  int? _lastAgoraRtcUid;
   String? _cameraStatus;
   String _connectPhase = 'idle';
   String? _connectErrorCode;
   bool _showEmojiTray = false;
   String? _callError;
+  int? _currentRtcUid;
+  /// Slot id in rooms/{roomId}/slots currently held by this user, if any.
+  String? _claimedSlotId;
   Set<String> _excludedUserIds = const <String>{};
   String? _appliedMediaRole;
   bool _isHandlingParticipantRemoval = false;
+  bool _preWarmDone = false;
   Timer? _presenceHeartbeatTimer;
   DateTime? _roomJoinedAt;
   int _lastRenderedMessageCount = 0;
@@ -153,6 +154,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       _firestore = ref.read(roomFirestoreProvider);
       _joinedUserId = user.id;
       _joinRoom(user.id);
+      if (kIsWeb) {
+        // Pre-warm the Agora SDK in the background so the WASM cold-start
+        // completes before the user ever taps "Turn on cam".
+        _preWarmAgora(user.id);
+      }
     }
 
     _giftEventsSubscription = ref.listenManual<AsyncValue<List<RoomGiftEvent>>>(
@@ -174,6 +180,33 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     );
   }
 
+  /// Silently fetch a token + initialize the Agora engine in the background
+  /// so the WASM cold-start is done before the user taps "Turn on cam".
+  Future<void> _preWarmAgora(String userId) async {
+    // Small delay so the room join HTTP calls get priority first.
+    await Future<void>.delayed(const Duration(seconds: 2));
+    if (!mounted || _preWarmDone || _isCallReady || _isCallConnecting) return;
+    try {
+      final rtcUid = _buildRtcUid(userId);
+      final credentials = await _fetchAgoraToken(
+        channelName: widget.roomId,
+        rtcUid: rtcUid,
+      );
+      if (!mounted || _preWarmDone || _isCallReady || _isCallConnecting) return;
+      final warmService = AgoraService();
+      await warmService.initialize(credentials.appId);
+      // Don't join the channel — just getting the SDK ready.
+      await warmService.dispose();
+      if (mounted) {
+        _preWarmDone = true;
+      }
+      _logLiveRoom('prewarm:done');
+    } catch (e) {
+      // Pre-warm is best-effort; failures are silent.
+      _logLiveRoom('prewarm:failed (non-fatal)', error: e);
+    }
+  }
+
   int _buildRtcUid(String userId) {
     return userId.hashCode.abs() % 2147483647;
   }
@@ -192,9 +225,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     Object? error,
     StackTrace? stackTrace,
   }) {
-    print('[LIVE_ROOM] $message');
+    developer.log(message, name: 'LIVE_ROOM');
+    debugPrint('[LIVE_ROOM] $message');
     if (error != null) {
-      print('[LIVE_ROOM] error: $error');
+      developer.log(
+        'error: $error',
+        name: 'LIVE_ROOM',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      debugPrint('[LIVE_ROOM] error: $error');
     }
   }
 
@@ -350,7 +390,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       _callError = null;
       _connectErrorCode = null;
       _connectPhase = 'starting';
-      _hasTriedAutoStartCamera = false;
     });
 
     AgoraService? connectedService;
@@ -373,8 +412,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           rtcUid: rtcUid,
         ),
       );
-      _lastAgoraToken = credentials.token;
-      _lastAgoraRtcUid = rtcUid;
       _logLiveRoom('connect:token_ok uid=$rtcUid');
 
       if (kIsWeb) {
@@ -388,7 +425,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           }
           await _runWithWatchdog<void>(
             phase: 'permission-probe',
-            timeout: const Duration(seconds: 10),
+            timeout: const Duration(seconds: 20),
             timeoutCode: 'permission-denied',
             timeoutMessage:
                 'Camera permission check timed out. Please verify browser permissions and retry.',
@@ -402,7 +439,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             error: error,
             stackTrace: stackTrace,
           );
-          rethrow;
+          // A timeout here means Chrome was slow to respond — not a genuine
+          // permission denial. Continue anyway; enableVideo() will surface a
+          // clean error if the camera is actually blocked by the user.
+          final isTimeout = error is AgoraServiceException &&
+              error.message.toLowerCase().contains('timed out');
+          if (isTimeout) {
+            _logLiveRoom('connect:permission_probe_timeout_ignored');
+            // fall through and continue with init
+          } else {
+            rethrow;
+          }
         }
       }
 
@@ -429,6 +476,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             setState(() {});
           }
         };
+        service.onTokenWillExpire = () {
+          _logLiveRoom('token_will_expire: scheduling renewal');
+          _renewAgoraToken();
+        };
+        service.onConnectionLost = () {
+          _logLiveRoom('connection_lost: scheduling reconnect');
+          _handleConnectionLost();
+        };
 
         try {
           if (kIsWeb) {
@@ -438,14 +493,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
           if (mounted) {
             setState(() {
-              _cameraStatus =
-                  'Connecting: initializing media engine (attempt $attempt/$maxConnectAttempts)...';
+              _cameraStatus = (_preWarmDone && attempt == 1)
+                  ? 'Connecting to live room…'
+                  : attempt == 1
+                  ? 'Loading live media engine\u2026 (may take up to 60 s on first load)'
+                  : 'Retrying media engine initialization…';
             });
           }
-          _logLiveRoom('connect:init_begin attempt=$attempt');
+          _logLiveRoom('connect:init_begin attempt=$attempt preWarm=$_preWarmDone');
+          // If pre-warm already initialized the shared engine, initialize() is
+          // a near-instant no-op (hits the _sharedInitialized guard).
+          // On web cold-start without pre-warm, allow 70 s for WASM load.
+          final initTimeout = (_preWarmDone || !kIsWeb || attempt > 1)
+              ? const Duration(seconds: 30)
+              : const Duration(seconds: 70);
           await _runWithWatchdog<void>(
             phase: 'init-attempt-$attempt',
-            timeout: const Duration(seconds: 90),
+            timeout: initTimeout,
             timeoutCode: 'agora-initialize-live-media-failed',
             timeoutMessage: 'Timed out initializing live media engine.',
             action: () => service.initialize(credentials.appId),
@@ -510,6 +574,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         await connectedService.dispose();
         return;
       }
+      // Store uid for later token renewal without channel rejoin.
+      _currentRtcUid = rtcUid;
       setState(() {
         _agoraService = connectedService;
         _isCallReady = true;
@@ -581,14 +647,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
   }
 
-  Future<void> _autoStartCameraAfterConnect() async {
-    if (_hasTriedAutoStartCamera || !_isCallReady || _isVideoEnabled) {
-      return;
-    }
-    _hasTriedAutoStartCamera = true;
-    await _toggleVideo();
-  }
-
   Future<void> _toggleVideo() async {
     _logLiveRoom(
       'toggle_video:start enabled=$_isVideoEnabled callReady=$_isCallReady inFlight=$_isVideoActionInFlight',
@@ -619,9 +677,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       } else {
         _logLiveRoom('toggle_video:blocked already_in_flight');
         if (mounted) {
-          setState(
-            () => _cameraStatus = 'Camera action already in progress...',
-          );
+          setState(() => _cameraStatus = 'Camera action already in progress...');
         }
         _showSnackBar('Camera action in progress...');
       }
@@ -641,7 +697,44 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         if (mounted) {
           setState(() => _cameraStatus = 'Requesting browser camera access...');
         }
-        await service.ensureDeviceAccess(video: true, audio: false);
+
+        // Claim a broadcaster slot in Firebase before enabling the camera.
+        // If no slot is available the request is blocked with feedback.
+        final userId = _joinedUserId;
+        if (userId != null) {
+          final slotService = ref.read(roomSlotServiceProvider);
+          // Read maxBroadcasters from Firestore room doc (default 6).
+          final firestore = _firestore;
+          int maxBroadcasters = 6;
+          if (firestore != null) {
+            try {
+              final roomDoc = await firestore
+                  .collection('rooms')
+                  .doc(widget.roomId)
+                  .get();
+              final raw = roomDoc.data()?['maxBroadcasters'];
+              if (raw is num) maxBroadcasters = raw.toInt();
+            } catch (_) {}
+          }
+          final slotId = await slotService.claimSlot(
+            widget.roomId,
+            userId,
+            maxBroadcasters: maxBroadcasters,
+          );
+          if (slotId == null) {
+            if (mounted) {
+              setState(() {
+                _isVideoActionInFlight = false;
+                _cameraStatus = 'All camera slots are full.';
+              });
+              _showSnackBar('All camera slots are full. Try again later.');
+            }
+            return;
+          }
+          _claimedSlotId = slotId;
+          _logLiveRoom('slot_claimed: slotId=$slotId');
+        }
+
         // enableVideo handles broadcaster role, channel options, startPreview, and
         // local video capture wait. Pass the current mic mute state so enabling
         // the camera does not silently re-enable a muted microphone.
@@ -650,7 +743,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           setState(() => _appliedMediaRole = 'member');
         }
       } else {
-        // Turning camera off — same path on all platforms
+        // Turning camera off — release the slot first.
+        final userId = _joinedUserId;
+        if (userId != null && _claimedSlotId != null) {
+          final slotService = ref.read(roomSlotServiceProvider);
+          unawaited(slotService.releaseSlot(widget.roomId, userId));
+          _claimedSlotId = null;
+        }
         _logLiveRoom('toggle_video:step enableVideo(false)');
         await service.publishLocalVideoStream(false);
         await service.enableVideo(false);
@@ -691,83 +790,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         setState(() => _isVideoActionInFlight = false);
       }
       _logLiveRoom('toggle_video:end');
-    }
-  }
-
-  Future<void> _ensureVideoPublishingOnWeb() async {
-    if (!kIsWeb || !mounted) {
-      return;
-    }
-
-    final service = _agoraService;
-    if (service == null ||
-        !_isCallReady ||
-        !_isVideoEnabled ||
-        _isVideoActionInFlight ||
-        _isVideoSelfHealInFlight) {
-      return;
-    }
-
-    if (service.isLocalVideoCapturing) {
-      _logLiveRoom('toggle_video:self_heal_skip_already_capturing');
-      return;
-    }
-
-    _isVideoSelfHealInFlight = true;
-    try {
-      _logLiveRoom('toggle_video:self_heal_reassert_enable');
-      await service
-          .enableVideo(true, publishMicrophoneTrack: !_isMicMuted)
-          .timeout(
-            const Duration(seconds: 8),
-            onTimeout: () => throw const AgoraServiceException(
-              code: 'camera-start-failed',
-              message: 'Camera self-heal timed out while re-enabling publish.',
-            ),
-          );
-      if (mounted) {
-        setState(() => _cameraStatus = 'Camera active.');
-      }
-      _logLiveRoom('toggle_video:self_heal_success');
-    } catch (error, stackTrace) {
-      _logLiveRoom(
-        'toggle_video:self_heal_failed',
-        error: error,
-        stackTrace: stackTrace,
-      );
-      final token = _lastAgoraToken;
-      final uid = _lastAgoraRtcUid;
-      if (token != null && uid != null && mounted) {
-        try {
-          _logLiveRoom('toggle_video:self_heal_rejoin_begin');
-          await service
-              .rejoinAsBroadcaster(
-                token,
-                widget.roomId,
-                uid,
-                publishMicrophoneTrack: !_isMicMuted,
-              )
-              .timeout(
-                const Duration(seconds: 20),
-                onTimeout: () => throw const AgoraServiceException(
-                  code: 'camera-start-failed',
-                  message: 'Camera rejoin recovery timed out.',
-                ),
-              );
-          if (mounted) {
-            setState(() => _cameraStatus = 'Camera active (recovered).');
-          }
-          _logLiveRoom('toggle_video:self_heal_rejoin_success');
-        } catch (rejoinError, rejoinStackTrace) {
-          _logLiveRoom(
-            'toggle_video:self_heal_rejoin_failed',
-            error: rejoinError,
-            stackTrace: rejoinStackTrace,
-          );
-        }
-      }
-    } finally {
-      _isVideoSelfHealInFlight = false;
     }
   }
 
@@ -916,6 +938,89 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
   }
 
+  /// Fetches a replacement token and calls engine.renewToken() so the channel
+  /// never disconnects due to expiry. Called from onTokenWillExpire.
+  Future<void> _renewAgoraToken() async {
+    final service = _agoraService;
+    final rtcUid = _currentRtcUid;
+    if (service == null || rtcUid == null || !_isCallReady) return;
+    try {
+      final credentials = await _fetchAgoraToken(
+        channelName: widget.roomId,
+        rtcUid: rtcUid,
+      );
+      await service.renewToken(credentials.token);
+      _logLiveRoom('token_renewed: ok');
+    } catch (e) {
+      _logLiveRoom('token_renewal_failed', error: e);
+    }
+  }
+
+  /// Handles an unexpected Agora connection drop. On web we attempt a full
+  /// reconnect so the camera comes back automatically.
+  Future<void> _handleConnectionLost() async {
+    if (!mounted || !_isCallReady) return;
+    final userId = _joinedUserId;
+    if (userId == null) return;
+
+    // Snapshot whether the user had a camera slot before disconnecting.
+    final hadCameraSlot = _claimedSlotId != null;
+    final previousRole = _appliedMediaRole;
+
+    _logLiveRoom('connection_lost: reconnecting hadSlot=$hadCameraSlot');
+    await _disconnectCall();
+    if (!mounted) return;
+
+    setState(() {
+      _callError = null;
+      _cameraStatus = 'Reconnecting…';
+    });
+    await _connectCall(userId);
+
+    // After reconnect the channel join resets media state to audience/cam-off.
+    // If the user was broadcasting, restore the camera and slot.
+    if (mounted && hadCameraSlot) {
+      _logLiveRoom('connection_lost: restoring broadcaster slot');
+      try {
+        final service = _agoraService;
+        if (service != null && _isCallReady) {
+          // Re-claim the slot (idempotent if slot doc still has our userId).
+          final slotService = ref.read(roomSlotServiceProvider);
+          final firestore = _firestore;
+          int maxBroadcasters = 6;
+          if (firestore != null) {
+            try {
+              final raw = (await firestore
+                      .collection('rooms')
+                      .doc(widget.roomId)
+                      .get())
+                  .data()?['maxBroadcasters'];
+              if (raw is num) maxBroadcasters = raw.toInt();
+            } catch (_) {}
+          }
+          final slotId = await slotService.claimSlot(
+            widget.roomId,
+            userId,
+            maxBroadcasters: maxBroadcasters,
+          );
+          if (slotId != null && mounted) {
+            _claimedSlotId = slotId;
+            await service.enableVideo(true, publishMicrophoneTrack: !_isMicMuted);
+            if (mounted) {
+              setState(() {
+                _isVideoEnabled = true;
+                _appliedMediaRole = previousRole ?? 'member';
+                _cameraStatus = 'Camera restored after reconnect.';
+              });
+            }
+          }
+        }
+      } catch (e) {
+        _logLiveRoom('connection_lost: slot restore failed', error: e);
+      }
+    }
+  }
+
   Future<void> _disconnectCall() async {
     final service = _agoraService;
     _agoraService = null;
@@ -951,10 +1056,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
 
     if (!mounted) {
-            setState(() {
-              _localViewEpoch++;
-              _cameraStatus = 'Camera active (recovered).';
-            });
+      return;
     }
 
     setState(() {
@@ -1824,6 +1926,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final firestore = _firestore;
     if (userId == null || firestore == null) return;
 
+    // Release any camera slot this user holds before removing their presence.
+    if (_claimedSlotId != null) {
+      try {
+        final slotService = ref.read(roomSlotServiceProvider);
+        await slotService.releaseSlot(widget.roomId, userId);
+      } catch (_) {}
+      _claimedSlotId = null;
+    }
+
     final docRef = firestore
         .collection('rooms')
         .doc(widget.roomId)
@@ -2367,6 +2478,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             ),
                             child: LinearProgressIndicator(),
                           ),
+                        Flexible(
+                          child: SingleChildScrollView(
+                            child: Column(
+                              children: [
                         if (_isCallReady && _agoraService != null)
                           Padding(
                             padding: const EdgeInsets.symmetric(
@@ -2387,6 +2502,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 const SizedBox(height: 6),
                                 Builder(
                                   builder: (context) {
+                                    // Slot count drives how many camera positions the
+                                    // wall exposes; fall back to roomData value or 6.
+                                    final slotsAsync = ref.watch(
+                                      roomSlotsProvider(widget.roomId),
+                                    );
+                                    final slotCount = slotsAsync.valueOrNull
+                                            ?.length ??
+                                        (() {
+                                          final raw =
+                                              roomData?['maxBroadcasters'];
+                                          return raw is num
+                                              ? raw.toInt()
+                                              : 6;
+                                        })();
+
                                     final remoteTiles = _agoraService!.remoteUids
                                         .map((remoteUid) {
                                           final remoteUserId = _userIdForRtcUid(
@@ -2426,6 +2556,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                           _agoraService!.localSpeaking,
                                       localTile: _buildLocalCamContent(),
                                       remoteTiles: remoteTiles,
+                                      maxMainGridRemoteTiles: slotCount,
                                       remoteTileBuilder: (tile) {
                                         return _buildRemoteCamContent(
                                           remoteUid: tile.uid,
@@ -3309,6 +3440,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               },
                             ),
                           ),
+                              ],
+                            ),
+                          ),
+                        ),
                         if (!isDesktopLayout) ...[
                           Expanded(
                             child: messageStreamAsync.when(

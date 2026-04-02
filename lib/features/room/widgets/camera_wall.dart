@@ -121,6 +121,12 @@ class CameraWall extends ConsumerWidget {
               child: remoteTileBuilder(tile),
             ),
           ),
+          // Vacant slot placeholders so users can see available camera positions.
+          ...List.generate(
+            (mainGridRemoteLimit - mainGridRemoteTiles.length)
+                .clamp(0, mainGridRemoteLimit),
+            (_) => const _VacantSlotTile(),
+          ),
         ];
 
         final tileCount = mainGridTiles.length;
@@ -172,7 +178,7 @@ class CameraWall extends ConsumerWidget {
                           vertical: 4,
                         ),
                         child: Text(
-                          '${mainGridTiles.length + overflowTiles.length} windows',
+                          '${1 + remoteTiles.length} windows',
                           style: theme.textTheme.labelSmall?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),
@@ -422,6 +428,45 @@ class _CameraWallTileFrame extends StatelessWidget {
               child: ColoredBox(
                 color: Colors.black,
                 child: child,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Placeholder tile shown for camera slots that are allocated but not yet
+/// occupied by any broadcaster.
+class _VacantSlotTile extends StatelessWidget {
+  const _VacantSlotTile();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: const Color(0xFF101316),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: theme.colorScheme.outlineVariant.withAlpha(100),
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.videocam_off_outlined,
+              color: theme.colorScheme.onSurface.withAlpha(80),
+              size: 24,
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Open slot',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: theme.colorScheme.onSurface.withAlpha(80),
               ),
             ),
           ],

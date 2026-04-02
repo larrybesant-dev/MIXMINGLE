@@ -12,9 +12,19 @@ import 'package:mixvy/presentation/providers/user_provider.dart';
 import 'package:mixvy/presentation/screens/live_room_screen.dart';
 
 void main() {
+  Future<void> configureViewport(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(1200, 2200);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(() {
+      tester.view.resetPhysicalSize();
+      tester.view.resetDevicePixelRatio();
+    });
+  }
+
   testWidgets('LiveRoomScreen shows login prompt when user is missing', (
     WidgetTester tester,
   ) async {
+    await configureViewport(tester);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [userProvider.overrideWithValue(null)],
@@ -28,6 +38,7 @@ void main() {
   testWidgets('LiveRoomScreen renders joined audience state', (
     WidgetTester tester,
   ) async {
+    await configureViewport(tester);
     final firestore = FakeFirebaseFirestore();
     await firestore.collection('rooms').doc('room-a').set({
       'hostId': 'host-1',
@@ -99,14 +110,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.text('No messages yet.'), findsOneWidget);
-    expect(find.textContaining('1 in room'), findsOneWidget);
+    expect(find.textContaining('1 total joined'), findsOneWidget);
     expect(find.text('Send'), findsOneWidget);
-    expect(find.text('Leave Room'), findsOneWidget);
+    expect(find.byTooltip('Leave Room'), findsOneWidget);
   });
 
   testWidgets('LiveRoomScreen opens the people roster for room members', (
     WidgetTester tester,
   ) async {
+    await configureViewport(tester);
     final firestore = FakeFirebaseFirestore();
     await firestore.collection('rooms').doc('room-a').set({
       'hostId': 'host-1',
@@ -183,6 +195,7 @@ void main() {
   testWidgets('LiveRoomScreen exposes expanded host controls', (
     WidgetTester tester,
   ) async {
+    await configureViewport(tester);
     final firestore = FakeFirebaseFirestore();
     await firestore.collection('rooms').doc('room-a').set({
       'hostId': 'host-1',
@@ -241,7 +254,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.text('Host Controls'), findsOneWidget);
-    expect(find.text('Mic requests'), findsOneWidget);
+    expect(find.text('Mic request queue'), findsOneWidget);
     expect(find.text('Gifts'), findsOneWidget);
     expect(find.text('Manage people'), findsOneWidget);
   });
@@ -249,6 +262,7 @@ void main() {
   testWidgets(
     'LiveRoomScreen hides audience stage request panel for moderators',
     (WidgetTester tester) async {
+      await configureViewport(tester);
       final firestore = FakeFirebaseFirestore();
       await firestore.collection('rooms').doc('room-a').set({
         'hostId': 'host-1',

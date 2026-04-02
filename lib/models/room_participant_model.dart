@@ -5,6 +5,8 @@ class RoomParticipantModel {
   final String role; // e.g. 'host', 'cohost', 'audience', 'stage'
   final bool isMuted;
   final bool isBanned;
+  final bool camOn;
+  final bool micOn;
   final DateTime joinedAt;
   final DateTime lastActiveAt;
 
@@ -13,6 +15,8 @@ class RoomParticipantModel {
     required this.role,
     this.isMuted = false,
     this.isBanned = false,
+    this.camOn = false,
+    this.micOn = false,
     required this.joinedAt,
     required this.lastActiveAt,
   });
@@ -23,6 +27,8 @@ class RoomParticipantModel {
       role: map['role'] ?? 'audience',
       isMuted: map['isMuted'] ?? false,
       isBanned: map['isBanned'] ?? false,
+      camOn: map['camOn'] ?? false,
+      micOn: map['micOn'] ?? false,
       joinedAt: (map['joinedAt'] is Timestamp)
           ? (map['joinedAt'] as Timestamp).toDate()
           : DateTime.tryParse(map['joinedAt']?.toString() ?? '') ?? DateTime.now(),
@@ -38,6 +44,8 @@ class RoomParticipantModel {
       'role': role,
       'isMuted': isMuted,
       'isBanned': isBanned,
+      'camOn': camOn,
+      'micOn': micOn,
       'joinedAt': Timestamp.fromDate(joinedAt),
       'lastActiveAt': Timestamp.fromDate(lastActiveAt),
     };
@@ -48,6 +56,8 @@ class RoomParticipantModel {
     String? role,
     bool? isMuted,
     bool? isBanned,
+    bool? camOn,
+    bool? micOn,
     DateTime? joinedAt,
     DateTime? lastActiveAt,
   }) {
@@ -56,6 +66,8 @@ class RoomParticipantModel {
       role: role ?? this.role,
       isMuted: isMuted ?? this.isMuted,
       isBanned: isBanned ?? this.isBanned,
+      camOn: camOn ?? this.camOn,
+      micOn: micOn ?? this.micOn,
       joinedAt: joinedAt ?? this.joinedAt,
       lastActiveAt: lastActiveAt ?? this.lastActiveAt,
     );
