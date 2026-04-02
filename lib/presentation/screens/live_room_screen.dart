@@ -61,7 +61,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isCallConnecting = false;
   bool _isCallReady = false;
   bool _isMicMuted = false;
-  bool _isVideoEnabled = true;
+  bool _isVideoEnabled = false;
   bool _isMicActionInFlight = false;
   bool _isVideoActionInFlight = false;
   String? _cameraStatus;
@@ -1027,6 +1027,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final service = _agoraService;
     _agoraService = null;
     _isCallReady = false;
+    _isVideoEnabled = false;
     _appliedMediaRole = null;
     _requestedHighQualityRemoteUids = <int>{};
     _requestedLowQualityRemoteUids = <int>{};
