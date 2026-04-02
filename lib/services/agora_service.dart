@@ -571,8 +571,11 @@ class AgoraService {
             'Agora connection state: $state reason: $reason',
             name: 'AgoraService',
           );
-          if (state == ConnectionStateType.connectionStateDisconnected ||
-              state == ConnectionStateType.connectionStateFailed) {
+          // Only surface a lost-connection event for terminal states.
+          // connectionStateReconnecting is a transient state Agora handles
+          // internally; firing onConnectionLost there causes a double-reconnect.
+          if (state == ConnectionStateType.connectionStateDisconnected &&
+              reason != ConnectionChangedReasonType.connectionChangedLeaveChannel) {
             if (onConnectionLost != null) onConnectionLost!();
           }
         },

@@ -396,7 +396,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
     try {
       _logLiveRoom(
-        'connect:start user=$userId room=${widget.roomId} role=broadcaster',
+        'connect:start user=$userId room=${widget.roomId} role=audience(default)',
       );
       if (mounted) {
         setState(() => _cameraStatus = 'Connecting: requesting token...');
@@ -534,7 +534,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           );
 
           connectedService = service;
-          _logLiveRoom('connect:joined role=broadcaster attempt=$attempt');
+          _logLiveRoom('connect:joined role=audience attempt=$attempt');
           break;
         } catch (error, stackTrace) {
           _logLiveRoom(
