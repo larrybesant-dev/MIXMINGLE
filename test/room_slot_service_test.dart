@@ -78,21 +78,20 @@ void main() {
       expect(second, equals(first));
     });
 
-    test('releaseSlot clears the userId and sets camOn=false', () async {
+    test('releaseSlot deletes the slot doc and sets camOn=false', () async {
       final slotId = await service.claimSlot(roomId, 'user-a', maxBroadcasters: 3);
       expect(slotId, isNotNull);
 
       await service.releaseSlot(roomId, 'user-a');
 
-      // The slot userId is cleared (set to null by batch).
+      // Slot document should be deleted so a new user can create it fresh.
       final doc = await firestore
           .collection('rooms')
           .doc(roomId)
           .collection('slots')
           .doc(slotId)
           .get();
-      final occupant = doc.data()?['userId'];
-      expect(occupant, isNot('user-a'));
+      expect(doc.exists, isFalse);
       expect(await participantCamOn('user-a'), isFalse);
     });
 

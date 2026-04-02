@@ -121,7 +121,10 @@ class RoomSlotService {
           .get();
       final batch = _db.batch();
       for (final doc in slotsSnap.docs) {
-        batch.set(doc.reference, {'userId': null});
+        // Delete the slot doc so the next claimant can create a fresh one.
+        // (Writing {userId: null} would fail the security rule that requires
+        // request.resource.data.userId == request.auth.uid on updates.)
+        batch.delete(doc.reference);
       }
       batch.set(
         _participantRef(roomId, userId),

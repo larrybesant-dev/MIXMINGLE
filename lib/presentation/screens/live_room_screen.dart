@@ -579,7 +579,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       setState(() {
         _agoraService = connectedService;
         _isCallReady = true;
-        _appliedMediaRole = 'member';
+        // Do NOT set _appliedMediaRole here. Leave it null so the first
+        // build after connect calls _applyRoleMediaState with the actual
+        // Firestore participant role rather than hardcoding 'member'.
         _isMicMuted = true;
         _isVideoEnabled = false;
         _localViewEpoch++;
