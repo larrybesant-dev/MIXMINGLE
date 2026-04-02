@@ -1045,13 +1045,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
     try {
       await service.mute(_isMicMuted);
-      if (_isVideoEnabled) {
+      // Do NOT call enableVideo again if the camera is already running.
+      // The track is already in broadcaster state; a duplicate call on web
+      // stops and restarts the preview, causing a visible camera-off flicker.
+      if (_isVideoEnabled && _claimedSlotId == null) {
         await service.enableVideo(true, publishMicrophoneTrack: !_isMicMuted);
       }
     } catch (e) {
       if (mounted) {
         _showSnackBar(_mapMediaError(e, canBroadcast: true));
       }
+      // Still update _appliedMediaRole so we don't loop infinitely.
+      if (mounted) setState(() => _appliedMediaRole = role);
       return;
     }
 
@@ -2318,7 +2323,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             myAllowedViewersAsync.valueOrNull ?? const <String>[];
         const String? micRequestStatus = null;
         final firestore = ref.watch(roomFirestoreProvider);
-        if (_isCallReady && _appliedMediaRole != role) {
+        // Skip role-media sync when the user has an active camera slot.
+        // They are already in broadcaster state; re-applying would call
+        // enableVideo() a second time and disrupt the live camera track.
+        if (_isCallReady && _appliedMediaRole != role && _claimedSlotId == null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
             _applyRoleMediaState(role);
           });
