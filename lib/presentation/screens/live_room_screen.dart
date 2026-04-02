@@ -965,11 +965,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final userId = _joinedUserId;
     if (userId == null) return;
 
-    // Snapshot whether the user had a camera slot before disconnecting.
+    // Snapshot media state before _disconnectCall() resets it to defaults.
     final hadCameraSlot = _claimedSlotId != null;
     final previousRole = _appliedMediaRole;
+    final wasMicMuted = _isMicMuted;
 
-    _logLiveRoom('connection_lost: reconnecting hadSlot=$hadCameraSlot');
+    _logLiveRoom('connection_lost: reconnecting hadSlot=$hadCameraSlot micMuted=$wasMicMuted');
     await _disconnectCall();
     if (!mounted) return;
 
@@ -1007,10 +1008,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           );
           if (slotId != null && mounted) {
             _claimedSlotId = slotId;
-            await service.enableVideo(true, publishMicrophoneTrack: !_isMicMuted);
+            await service.enableVideo(true, publishMicrophoneTrack: !wasMicMuted);
+            await service.mute(wasMicMuted);
             if (mounted) {
               setState(() {
                 _isVideoEnabled = true;
+                _isMicMuted = wasMicMuted;
                 _appliedMediaRole = previousRole ?? 'member';
                 _cameraStatus = 'Camera restored after reconnect.';
               });
@@ -1028,7 +1031,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     _agoraService = null;
     _isCallReady = false;
     _isVideoEnabled = false;
+    _isMicMuted = false;
     _appliedMediaRole = null;
+    _isMicActionInFlight = false;
+    _isVideoActionInFlight = false;
     _requestedHighQualityRemoteUids = <int>{};
     _requestedLowQualityRemoteUids = <int>{};
     if (service != null) {
@@ -2513,20 +2519,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 const SizedBox(height: 6),
                                 Builder(
                                   builder: (context) {
-                                    // Slot count drives how many camera positions the
-                                    // wall exposes; fall back to roomData value or 6.
-                                    final slotsAsync = ref.watch(
-                                      roomSlotsProvider(widget.roomId),
-                                    );
-                                    final slotCount = slotsAsync.valueOrNull
-                                            ?.length ??
-                                        (() {
-                                          final raw =
-                                              roomData?['maxBroadcasters'];
-                                          return raw is num
-                                              ? raw.toInt()
-                                              : 6;
-                                        })();
+                                    // maxBroadcasters from the room document drives how
+                                    // many camera positions the wall exposes (default 6).
+                                    // Do NOT use the slot-stream length here — that count
+                                    // reflects currently *occupied* slots (docs), not the cap.
+                                    final _rawMaxBc = roomData?['maxBroadcasters'];
+                                    final slotCount = _rawMaxBc is num ? _rawMaxBc.toInt() : 6;
 
                                     final remoteTiles = _agoraService!.remoteUids
                                         .map((remoteUid) {
