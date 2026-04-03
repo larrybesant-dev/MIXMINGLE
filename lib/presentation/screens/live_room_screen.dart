@@ -2573,8 +2573,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     // many camera positions the wall exposes (default 6).
                                     // Do NOT use the slot-stream length here — that count
                                     // reflects currently *occupied* slots (docs), not the cap.
-                                    final _rawMaxBc = roomData?['maxBroadcasters'];
-                                    final slotCount = _rawMaxBc is num ? _rawMaxBc.toInt() : 6;
+                                    final rawMaxBc = roomData?['maxBroadcasters'];
+                                    final slotCount = rawMaxBc is num ? rawMaxBc.toInt() : 6;
 
                                     final remoteTiles = _agoraService!.remoteUids
                                         .map((remoteUid) {
