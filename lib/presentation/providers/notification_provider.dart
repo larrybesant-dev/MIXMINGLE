@@ -30,3 +30,14 @@ final notificationsStreamProvider = StreamProvider<List<NotificationModel>>((ref
 
   return ref.watch(notificationServiceProvider).notificationsForUser(userId);
 });
+
+/// Count of unread notifications for the current user. Derived from the
+/// notifications stream so it stays live without an extra Firestore query.
+final unreadNotificationCountProvider = Provider<int>((ref) {
+  return ref
+      .watch(notificationsStreamProvider)
+      .whenData(
+        (list) => list.where((n) => !n.isRead).length,
+      )
+      .valueOrNull ?? 0;
+});

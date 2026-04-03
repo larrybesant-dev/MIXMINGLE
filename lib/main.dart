@@ -15,6 +15,7 @@ import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:mixvy/dev/firebase_emulator_bootstrap.dart';
 import 'package:mixvy/services/push_messaging_service.dart';
+import 'package:mixvy/router/app_router.dart' show rootNavigatorKey;
 
 void _bootstrapLog(String message) {
   developer.log(message, name: 'Bootstrap');
@@ -77,12 +78,17 @@ void main() async {
             _bootstrapLog('Registered Firebase background messaging handler');
           }
 
-          _bootstrapLog('Configuring Firebase emulators');
-          await FirebaseEmulatorBootstrap.configure();
-          _bootstrapLog('Firebase emulator bootstrap complete');
+          if (FirebaseEmulatorBootstrap.enabled) {
+            _bootstrapLog('Configuring Firebase emulators');
+            await FirebaseEmulatorBootstrap.configure();
+            _bootstrapLog('Firebase emulator bootstrap complete');
+          } else {
+            _bootstrapLog('Firebase emulators disabled — using production');
+          }
 
           _bootstrapLog('Initializing push messaging service');
           await PushMessagingService.instance.initialize();
+          PushMessagingService.instance.setNavigatorKey(rootNavigatorKey);
           _bootstrapLog('Push messaging service initialized');
 
           // Global async/sync error handling for all platforms.

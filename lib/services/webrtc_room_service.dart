@@ -531,7 +531,7 @@ class WebRtcRoomService implements RtcRoomService {
     // Wait for broadcaster's answer
     peer.answerSub = callRef.snapshots().listen((snap) async {
       if (!snap.exists) return;
-      final callData = snap.data() as Map<String, dynamic>?;
+      final callData = snap.data();
       final answerMap = callData?['answer'] as Map<String, dynamic>?;
       if (answerMap == null) return;
       if (pc.signalingState == RTCSignalingState.RTCSignalingStateHaveLocalOffer) {
@@ -553,7 +553,7 @@ class WebRtcRoomService implements RtcRoomService {
     peer.iceSub = callRef.collection('broadcaster_ice').snapshots().listen((snap) {
       for (final change in snap.docChanges) {
         if (change.type == DocumentChangeType.added) {
-          final d = change.doc.data() as Map<String, dynamic>?;
+          final d = change.doc.data();
           if (d == null) continue;
           pc.addCandidate(RTCIceCandidate(
             d['candidate'] as String?,
@@ -650,7 +650,7 @@ class WebRtcRoomService implements RtcRoomService {
     callRef.collection('viewer_ice').snapshots().listen((snap) {
       for (final change in snap.docChanges) {
         if (change.type == DocumentChangeType.added) {
-          final d = change.doc.data() as Map<String, dynamic>?;
+          final d = change.doc.data();
           if (d == null) continue;
           pc.addCandidate(RTCIceCandidate(
             d['candidate'] as String?,

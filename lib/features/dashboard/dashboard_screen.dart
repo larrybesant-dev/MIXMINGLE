@@ -161,43 +161,82 @@ import '../../core/firestore/firestore_error_utils.dart';
       required int missingCount,
       required String firstAction,
     }) {
-      return Container(
+      final pct = (completion * 100).round();
+      final isAlmostDone = pct >= 70;
+      final Color accent = isAlmostDone ? Colors.green : Colors.deepPurple;
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 400),
         width: double.infinity,
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: [
-              Colors.blue.withValues(alpha: 0.15),
-              Colors.cyan.withValues(alpha: 0.09),
+              accent.withValues(alpha: 0.18),
+              accent.withValues(alpha: 0.06),
             ],
           ),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.blue.withValues(alpha: 0.28)),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: accent.withValues(alpha: 0.35)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Profile ${((completion * 100).round())}% complete',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 4),
-            Text('Next best step: $firstAction'),
-            const SizedBox(height: 8),
-            LinearProgressIndicator(value: completion, minHeight: 7, borderRadius: BorderRadius.circular(999)),
-            const SizedBox(height: 10),
             Row(
               children: [
-                Text('$missingCount items left', style: const TextStyle(fontWeight: FontWeight.w500)),
-                const Spacer(),
-                TextButton.icon(
-                  onPressed: () {
-                    setState(() {
-                      _currentIndex = 2;
-                    });
-                  },
-                  icon: const Icon(Icons.person_outline),
-                  label: const Text('Finish setup'),
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: accent.withValues(alpha: 0.18),
+                  child: Text(
+                    '$pct%',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w800,
+                      color: accent,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    isAlmostDone
+                        ? 'Almost there! $missingCount step${missingCount == 1 ? '' : 's'} left'
+                        : 'Complete your profile ($pct%)',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: accent,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: 'Go to profile',
+                  onPressed: () => setState(() => _currentIndex = 2),
+                  icon: Icon(Icons.arrow_forward_ios, size: 14, color: accent),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                value: completion,
+                minHeight: 8,
+                backgroundColor: accent.withValues(alpha: 0.14),
+                valueColor: AlwaysStoppedAnimation<Color>(accent),
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.tips_and_updates_outlined, size: 14),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    'Next: $firstAction',
+                    style: const TextStyle(fontSize: 12),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),

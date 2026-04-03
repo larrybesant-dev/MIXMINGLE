@@ -1208,33 +1208,63 @@ class _HeroCard extends StatelessWidget {
           ),
           Transform.translate(
             offset: const Offset(0, -24),
-            child: CircleAvatar(
-              radius: 42,
-              backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-              child: (state.avatarUrl ?? '').trim().isNotEmpty
-                  ? ClipOval(
-                      child: Image.network(
-                        state.avatarUrl!.trim(),
-                        width: 84,
-                        height: 84,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, loadingProgress) {
-                          if (loadingProgress == null) return child;
-                          return Center(
-                            child: SizedBox(
-                              width: 42,
-                              height: 42,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
-                              ),
+            child: GestureDetector(
+              onTap: isUploadingPhoto ? null : () => safeRunUpload(onUploadAvatar),
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CircleAvatar(
+                    radius: 42,
+                    backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+                    child: isUploadingPhoto
+                        ? SizedBox(
+                            width: 42,
+                            height: 42,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
                             ),
-                          );
-                        },
-                        errorBuilder: (_, _, _) => const Icon(Icons.person, size: 32),
+                          )
+                        : (state.avatarUrl ?? '').trim().isNotEmpty
+                            ? ClipOval(
+                                child: Image.network(
+                                  state.avatarUrl!.trim(),
+                                  width: 84,
+                                  height: 84,
+                                  fit: BoxFit.cover,
+                                  loadingBuilder: (context, child, loadingProgress) {
+                                    if (loadingProgress == null) return child;
+                                    return Center(
+                                      child: SizedBox(
+                                        width: 42,
+                                        height: 42,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                  errorBuilder: (_, _, _) => const Icon(Icons.person, size: 32),
+                                ),
+                              )
+                            : const Icon(Icons.person, size: 32),
+                  ),
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: CircleAvatar(
+                      radius: 13,
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      child: Icon(
+                        Icons.camera_alt,
+                        size: 14,
+                        color: Theme.of(context).colorScheme.onPrimary,
                       ),
-                    )
-                  : const Icon(Icons.person, size: 32),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Text(

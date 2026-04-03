@@ -6,6 +6,7 @@ import '../../models/notification_model.dart';
 import '../providers/notification_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
 import '../../core/logger.dart';
+import '../../features/feed/widgets/feed_empty_state.dart';
 
 class NotificationsScreen extends ConsumerWidget {
   const NotificationsScreen({super.key});
@@ -78,7 +79,11 @@ class NotificationsScreen extends ConsumerWidget {
               error: (error, _) => Center(child: Text('Could not load notifications: $error')),
               data: (notifications) {
                 if (notifications.isEmpty) {
-                  return const Center(child: Text('No notifications yet.'));
+                  return const FeedEmptyState(
+                    emoji: '🔔',
+                    heading: 'All caught up!',
+                    message: 'You have no notifications yet.\nRoom invites, friend requests and gift alerts will appear here.',
+                  );
                 }
 
                 return ListView.builder(

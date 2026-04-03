@@ -1,20 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class MixVyDrawer extends StatelessWidget {
+import '../presentation/providers/notification_provider.dart';
+
+class MixVyDrawer extends ConsumerWidget {
   final String? userId;
   const MixVyDrawer({super.key, this.userId});
 
-  Widget _navItem(BuildContext context, {required IconData icon, required String title, required String route}) {
+  Widget _navItem(BuildContext context, {required IconData icon, required String title, required String route, int badgeCount = 0}) {
     return ListTile(
-      leading: Icon(icon, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.9)),
+      leading: badgeCount > 0
+          ? Badge(
+              label: Text(badgeCount > 99 ? '99+' : '$badgeCount'),
+              child: Icon(icon, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.9)),
+            )
+          : Icon(icon, color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.9)),
       title: Text(title),
       onTap: () => context.go(route),
     );
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unreadCount = ref.watch(unreadNotificationCountProvider);
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -57,7 +66,7 @@ class MixVyDrawer extends StatelessWidget {
           _navItem(context, icon: Icons.people_alt_rounded, title: 'Friends', route: '/friends'),
           _navItem(context, icon: Icons.person_rounded, title: 'Profile', route: '/profile'),
           _navItem(context, icon: Icons.payments_rounded, title: 'Payments', route: '/payments'),
-          _navItem(context, icon: Icons.notifications_active_rounded, title: 'Notifications', route: '/notifications'),
+          _navItem(context, icon: Icons.notifications_active_rounded, title: 'Notifications', route: '/notifications', badgeCount: unreadCount),
           _navItem(context, icon: Icons.admin_panel_settings_rounded, title: 'Moderation', route: '/moderation'),
           _navItem(context, icon: Icons.settings_rounded, title: 'Settings', route: '/settings'),
         ],

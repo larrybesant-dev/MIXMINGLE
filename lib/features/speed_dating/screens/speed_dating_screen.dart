@@ -14,7 +14,8 @@ class SpeedDatingScreen extends StatefulWidget {
   State<SpeedDatingScreen> createState() => _SpeedDatingScreenState();
 }
 
-class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
+class _SpeedDatingScreenState extends State<SpeedDatingScreen>
+    with SingleTickerProviderStateMixin {
   static const int _sessionLengthSeconds = 90;
 
   final SpeedDatingService _service = SpeedDatingService();
@@ -24,6 +25,14 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
   int _candidateIndex = 0;
   Timer? _timer;
   bool _isSubmitting = false;
+
+  // Session stats
+  int _likesCount = 0;
+  int _passesCount = 0;
+
+  // Swipe drag state
+  double _dragOffset = 0;
+  bool _isDragging = false;
 
   @override
   void initState() {
@@ -58,6 +67,8 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
   void _nextCandidate() {
     setState(() {
       _candidateIndex += 1;
+      _dragOffset = 0;
+      _isDragging = false;
     });
     _startTimer();
   }
@@ -68,7 +79,10 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
     required String currentUserId,
   }) async {
     if (_isSubmitting) return;
-    setState(() => _isSubmitting = true);
+    setState(() {
+      _isSubmitting = true;
+      if (liked) { _likesCount++; } else { _passesCount++; }
+    });
 
     try {
       final result = await _service.submitDecision(
@@ -106,8 +120,18 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
       context: pageContext,
       builder: (dialogContext) {
         return AlertDialog(
-          title: const Text('It\'s a match'),
-          content: Text('You and ${candidate.username} liked each other.'),
+          title: const Text('🎉 It\'s a Match!'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('🔥', style: TextStyle(fontSize: 48)),
+              const SizedBox(height: 12),
+              Text(
+                'You and ${candidate.username} liked each other.',
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
@@ -125,7 +149,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
                 if (!pageContext.mounted) return;
                 pageContext.go('/room/$roomId');
               },
-              child: const Text('Start Live Date'),
+              child: const Text('Start Live Date 🚀'),
             ),
           ],
         );
@@ -232,6 +256,10 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
             children: [
               Expanded(
                 child: OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: theme.colorScheme.error,
+                    side: BorderSide(color: theme.colorScheme.error.withValues(alpha: 0.5)),
+                  ),
                   onPressed: _isSubmitting
                       ? null
                       : () => _handleDecision(candidate: candidate, liked: false, currentUserId: currentUserId),
@@ -242,6 +270,9 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
               const SizedBox(width: 12),
               Expanded(
                 child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.pinkAccent.shade200,
+                  ),
                   onPressed: _isSubmitting
                       ? null
                       : () => _handleDecision(candidate: candidate, liked: true, currentUserId: currentUserId),
@@ -288,10 +319,39 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
 
           final candidates = snapshot.data ?? const [];
           if (candidates.isEmpty) {
-            return const Center(
+            // Session done — show summary
+            return Center(
               child: Padding(
-                padding: EdgeInsets.all(24),
-                child: Text('No one is in the speed-dating queue right now. Check back in a moment.'),
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('🎊', style: TextStyle(fontSize: 64)),
+                    const SizedBox(height: 16),
+                    Text('Session complete!',
+                        style: theme.textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.w800)),
+                    const SizedBox(height: 12),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _StatBadge(label: 'Liked', value: _likesCount, color: Colors.pinkAccent),
+                        const SizedBox(width: 16),
+                        _StatBadge(label: 'Passed', value: _passesCount, color: Colors.grey),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    FilledButton.icon(
+                      onPressed: () => setState(() {
+                        _candidateIndex = 0;
+                        _likesCount = 0;
+                        _passesCount = 0;
+                      }),
+                      icon: const Icon(Icons.refresh),
+                      label: const Text('Check back later'),
+                    ),
+                  ],
+                ),
               ),
             );
           }
@@ -301,69 +361,162 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
           return ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      theme.colorScheme.primary.withValues(alpha: 0.2),
-                      theme.colorScheme.secondary.withValues(alpha: 0.15),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
+              // Header with circular countdown timer
+              Row(
+                children: [
+                  ValueListenableBuilder<int>(
+                    valueListenable: _secondsLeftNotifier,
+                    builder: (context, secondsLeft, _) {
+                      final progress = secondsLeft / _sessionLengthSeconds;
+                      final Color countdownColor = secondsLeft > 30
+                          ? theme.colorScheme.primary
+                          : secondsLeft > 10
+                              ? Colors.orange
+                              : Colors.red;
+                      return Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: 64,
+                            height: 64,
+                            child: CircularProgressIndicator(
+                              value: progress,
+                              strokeWidth: 5,
+                              backgroundColor:
+                                  theme.colorScheme.surfaceContainerHighest,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                countdownColor,
+                              ),
+                            ),
+                          ),
+                          Text(
+                            '$secondsLeft',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18,
+                              color: countdownColor,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: theme.colorScheme.primary.withValues(alpha: 0.28)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Urban Speed Round',
-                      style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Move fast, match real, then jump into a live date.',
-                      style: theme.textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 14),
-                    Row(
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.timer),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: ValueListenableBuilder<int>(
-                            valueListenable: _secondsLeftNotifier,
-                            builder: (context, secondsLeft, _) => Text(
-                              'Time left: ${secondsLeft}s',
-                              style: theme.textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
+                        Text(
+                          'Speed Round',
+                          style: theme.textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        Text(
+                          '${candidates.length} in queue  •  $_likesCount ❤️  $_passesCount ✗',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // Swipeable candidate card
+              GestureDetector(
+                onHorizontalDragUpdate: (details) {
+                  setState(() {
+                    _dragOffset += details.delta.dx;
+                    _isDragging = true;
+                  });
+                },
+                onHorizontalDragEnd: (details) {
+                  const threshold = 100.0;
+                  if (_dragOffset > threshold) {
+                    // Swipe right = like
+                    _handleDecision(
+                      candidate: activeCandidate,
+                      liked: true,
+                      currentUserId: user.uid,
+                    );
+                  } else if (_dragOffset < -threshold) {
+                    // Swipe left = pass
+                    _handleDecision(
+                      candidate: activeCandidate,
+                      liked: false,
+                      currentUserId: user.uid,
+                    );
+                  } else {
+                    setState(() {
+                      _dragOffset = 0;
+                      _isDragging = false;
+                    });
+                  }
+                },
+                child: AnimatedContainer(
+                  duration: _isDragging
+                      ? Duration.zero
+                      : const Duration(milliseconds: 250),
+                  curve: Curves.easeOut,
+                  transform: Matrix4.translationValues(_dragOffset, 0, 0)
+                    ..rotateZ(_dragOffset * 0.002),
+                  child: Stack(
+                    children: [
+                      _buildCandidateCard(activeCandidate, theme, user.uid),
+                      // Swipe overlay hints
+                      if (_dragOffset > 40)
+                        Positioned(
+                          top: 20,
+                          left: 20,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.pinkAccent.withValues(alpha: 0.85),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color: Colors.pinkAccent, width: 2),
+                            ),
+                            child: const Text(
+                              '❤️ LIKE',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 18,
                               ),
                             ),
                           ),
                         ),
-                        Text('Queue: ${candidates.length}'),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: ValueListenableBuilder<int>(
-                        valueListenable: _secondsLeftNotifier,
-                        builder: (context, secondsLeft, _) =>
-                            LinearProgressIndicator(
-                          value: secondsLeft / _sessionLengthSeconds,
-                          minHeight: 8,
-                          backgroundColor: Colors.white.withValues(alpha: 0.15),
+                      if (_dragOffset < -40)
+                        Positioned(
+                          top: 20,
+                          right: 20,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.withValues(alpha: 0.85),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                  color: Colors.grey.shade400, width: 2),
+                            ),
+                            child: const Text(
+                              '✗ PASS',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
-              const SizedBox(height: 20),
-              _buildCandidateCard(activeCandidate, theme, user.uid),
               const SizedBox(height: 20),
               StreamBuilder<List<SpeedDatingMatch>>(
                 stream: _service.matchesStream(user.uid),
@@ -406,3 +559,52 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen> {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Helper widget: session stat badge
+// ---------------------------------------------------------------------------
+class _StatBadge extends StatelessWidget {
+  final String label;
+  final int value;
+  final Color color;
+
+  const _StatBadge({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 90,
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        children: [
+          Text(
+            '$value',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w800,
+              color: color,
+            ),
+          ),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+

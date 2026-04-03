@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/user_model.dart';
 import '../providers/friend_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
+import '../../features/feed/widgets/feed_empty_state.dart';
 
 class FriendListScreen extends ConsumerStatefulWidget {
   const FriendListScreen({super.key});
@@ -68,12 +69,10 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
           incomingRequestsAsync.when(
             data: (requests) {
               if (requests.isEmpty) {
-                return const Card(
-                  child: ListTile(
-                    leading: Icon(Icons.mark_email_read_outlined),
-                    title: Text('No pending requests'),
-                    subtitle: Text('Incoming friend requests will show up here.'),
-                  ),
+                return const FeedEmptyState(
+                  emoji: '📬',
+                  heading: 'No pending requests',
+                  message: 'Incoming friend requests will show up here.',
                 );
               }
 
@@ -133,12 +132,10 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
           friendsAsync.when(
             data: (friends) {
               if (friends.isEmpty) {
-                return const Card(
-                  child: ListTile(
-                    leading: Icon(Icons.people_outline),
-                    title: Text('No friends yet'),
-                    subtitle: Text('Search for people below to send your first friend request.'),
-                  ),
+                return const FeedEmptyState(
+                  emoji: '👥',
+                  heading: 'No friends yet',
+                  message: 'Search for people below to send your first friend request.',
                 );
               }
 
@@ -188,12 +185,10 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
               final pendingOutgoingIds = pendingOutgoingIdsAsync.valueOrNull ?? const <String>{};
 
               if (users.isEmpty) {
-                return const Card(
-                  child: ListTile(
-                    leading: Icon(Icons.travel_explore_outlined),
-                    title: Text('No matches right now'),
-                    subtitle: Text('Try a different name or email search.'),
-                  ),
+                return const FeedEmptyState(
+                  emoji: '🔍',
+                  heading: 'No matches right now',
+                  message: 'Try a different name or email search.',
                 );
               }
 

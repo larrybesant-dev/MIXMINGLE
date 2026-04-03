@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../../../models/message_model.dart';
 
+/// Live-room chat bubble styled like TikTok/Bigo overlay messages.
+/// My-own messages get a tinted purple-ish background; others get a
+/// semi-transparent dark background so they sit cleanly over the camera feed.
 class MessageBubble extends StatelessWidget {
   final MessageModel message;
   final bool isMe;
@@ -23,48 +26,62 @@ class MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final resolvedSenderLabel = senderLabel?.trim().isNotEmpty == true
-      ? senderLabel!.trim()
-      : (isMe ? 'You' : message.senderId);
-    final bubbleColor = isMe ? const Color(0xFF90CAF9) : const Color(0xFFE0E0E0);
+        ? senderLabel!.trim()
+        : (isMe ? 'You' : message.senderId);
+
+    final Color bg = isMe
+        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.72)
+        : Colors.black.withValues(alpha: 0.54);
+
+    final Color textColor = Colors.white;
+    final Color nameColor = isMe
+        ? Colors.white.withValues(alpha: 0.85)
+        : Colors.white.withValues(alpha: 0.70);
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
-        constraints: const BoxConstraints(maxWidth: 360),
+        margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
+        padding: const EdgeInsets.fromLTRB(10, 6, 10, 7),
+        constraints: const BoxConstraints(maxWidth: 280),
         decoration: BoxDecoration(
-          color: bubbleColor,
-          borderRadius: BorderRadius.circular(16),
+          color: bg,
+          borderRadius: BorderRadius.circular(18),
         ),
         child: Column(
           crossAxisAlignment:
               isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              resolvedSenderLabel,
-              style: const TextStyle(
-                color: Colors.black87,
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
+            RichText(
+              text: TextSpan(
+                children: [
+                  TextSpan(
+                    text: '$resolvedSenderLabel  ',
+                    style: TextStyle(
+                      color: nameColor,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                      height: 1.5,
+                    ),
+                  ),
+                  TextSpan(
+                    text: message.content,
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 13,
+                      height: 1.4,
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 4),
             Text(
-              message.content,
-              style: const TextStyle(
-                color: Colors.black87,
-                fontSize: 18,
-                height: 1.2,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _formatClock(message.sentAt.toLocal()),
-              style: const TextStyle(
-                color: Colors.black54,
-                fontSize: 11,
+              _formatClock(message.sentAt),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.55),
+                fontSize: 10,
+                height: 1.4,
               ),
             ),
           ],
@@ -73,3 +90,4 @@ class MessageBubble extends StatelessWidget {
     );
   }
 }
+

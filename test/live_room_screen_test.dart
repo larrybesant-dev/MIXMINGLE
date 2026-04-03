@@ -113,6 +113,8 @@ void main() {
     expect(find.textContaining('1 total joined'), findsOneWidget);
     expect(find.text('Send'), findsOneWidget);
     expect(find.byTooltip('Leave Room'), findsOneWidget);
+    // Drain the _preWarmAgora Future.delayed(2s) timer so the test ends cleanly.
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('LiveRoomScreen opens the people roster for room members', (
@@ -190,6 +192,7 @@ void main() {
     expect(find.text('People in room'), findsOneWidget);
     expect(find.text('host-1'), findsOneWidget);
     expect(find.text('User One'), findsWidgets);
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('LiveRoomScreen exposes expanded host controls', (
@@ -257,6 +260,7 @@ void main() {
     expect(find.text('Mic request queue'), findsOneWidget);
     expect(find.text('Gifts'), findsOneWidget);
     expect(find.text('Manage people'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets(
@@ -331,6 +335,7 @@ void main() {
       expect(find.text('Host Controls'), findsNothing);
       expect(find.text('Request Stage Access'), findsNothing);
       expect(find.byTooltip('People in room'), findsWidgets);
+      await tester.pump(const Duration(seconds: 3));
     },
   );
 
@@ -413,6 +418,7 @@ void main() {
       expect(find.text('Camera Wall'), findsNothing);
       // Basic room chrome validates the screen mounted correctly.
       expect(find.byTooltip('Leave Room'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
     },
   );
 
@@ -488,6 +494,7 @@ void main() {
       // who have camera permission — this guards against the black AgoraVideoView
       // regression fixed in acfb943.
       expect(find.text('Camera Wall'), findsNothing);
+      await tester.pump(const Duration(seconds: 3));
     },
   );
 }

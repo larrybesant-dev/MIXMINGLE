@@ -38,6 +38,24 @@ class RoomService {
 		});
 	}
 
+	/// Rooms scheduled to start in the next 48 hours, ordered soonest first.
+	Stream<List<RoomModel>> watchUpcomingRooms({int limit = 10}) {
+		final now = Timestamp.now();
+		final cutoff = Timestamp.fromDate(
+			DateTime.now().add(const Duration(hours: 48)),
+		);
+		return _roomsCollection
+				.where('isLive', isEqualTo: false)
+				.where('scheduledAt', isGreaterThanOrEqualTo: now)
+				.where('scheduledAt', isLessThanOrEqualTo: cutoff)
+				.orderBy('scheduledAt')
+				.limit(limit)
+				.snapshots()
+				.map((snap) => snap.docs
+						.map((doc) => RoomModel.fromJson(doc.data(), doc.id))
+						.toList(growable: false));
+	}
+
 	Future<List<RoomModel>> getLiveRooms({int limit = 20}) async {
 		if (limit <= 0) {
 			return const <RoomModel>[];

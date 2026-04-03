@@ -6,7 +6,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 
 import '../firebase_options.dart';
 
@@ -39,6 +41,13 @@ class PushMessagingService {
 
   final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   final FirebaseFunctions _functions = FirebaseFunctions.instance;
+
+  /// Set this to the app's root navigator key so FCM taps can deep-link.
+  GlobalKey<NavigatorState>? _navigatorKey;
+
+  void setNavigatorKey(GlobalKey<NavigatorState> key) {
+    _navigatorKey = key;
+  }
 
   StreamSubscription<User?>? _authSubscription;
   StreamSubscription<String>? _tokenRefreshSubscription;
@@ -229,6 +238,8 @@ class PushMessagingService {
       'Foreground push received: ${message.messageId}',
       name: 'PushMessagingService',
     );
+    // Foreground messages are shown as in-app notifications via the
+    // notifications stream; no OS notification banner on foreground.
   }
 
   void _onOpenedMessage(RemoteMessage message) {
@@ -236,6 +247,54 @@ class PushMessagingService {
       'Push opened by user: ${message.messageId}',
       name: 'PushMessagingService',
     );
+    _navigateFromMessage(message);
+  }
+
+  /// Derives a Go Router path from an FCM [message] data payload and navigates
+  /// to it. Payload fields:
+  ///   type        — notification category
+  ///   roomId      — for room_invite / room_started
+  ///   senderId    — for friend_request / friend_accepted
+  ///   matchId     — for speed_dating_match
+  void _navigateFromMessage(RemoteMessage message) {
+    final data = message.data;
+    final type = data['type'] as String? ?? '';
+    final String? route;
+
+    switch (type) {
+      case 'room_invite':
+      case 'room_started':
+        final roomId = data['roomId'] as String? ?? '';
+        route = roomId.isNotEmpty ? '/room/$roomId' : '/discover';
+      case 'friend_request':
+      case 'friend_accepted':
+        final senderId = data['senderId'] as String? ?? '';
+        route = senderId.isNotEmpty ? '/profile/$senderId' : '/friends';
+      case 'speed_dating_match':
+        final roomId = data['roomId'] as String? ?? '';
+        route = roomId.isNotEmpty ? '/room/$roomId' : '/speed-dating';
+      case 'payment':
+        route = '/wallet';
+      case 'notification':
+      default:
+        route = '/notifications';
+    }
+
+    // Route via the root navigator context so navigation works regardless of
+    // which screen is currently showing.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      try {
+        final context = _navigatorKey?.currentContext;
+        if (context != null && route != null) {
+          GoRouter.of(context).go(route);
+        }
+      } catch (e) {
+        developer.log(
+          'FCM deep-link navigation failed: $e',
+          name: 'PushMessagingService',
+        );
+      }
+    });
   }
 
   Future<void> dispose() async {

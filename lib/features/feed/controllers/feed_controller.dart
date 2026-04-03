@@ -12,6 +12,7 @@ class FeedState {
   final bool isLoading;
   final String? error;
   final List<RoomModel> liveRooms;
+  final List<RoomModel> upcomingRooms;
   final Map<String, String> roomReasons;
   final Map<String, String> roomTiers;
   final List<feed_user.User> trendingUsers;
@@ -20,6 +21,7 @@ class FeedState {
     this.isLoading = false,
     this.error,
     this.liveRooms = const [],
+    this.upcomingRooms = const [],
     this.roomReasons = const <String, String>{},
     this.roomTiers = const <String, String>{},
     this.trendingUsers = const [],
@@ -29,6 +31,7 @@ class FeedState {
     bool? isLoading,
     String? error,
     List<RoomModel>? liveRooms,
+    List<RoomModel>? upcomingRooms,
     Map<String, String>? roomReasons,
     Map<String, String>? roomTiers,
     List<feed_user.User>? trendingUsers,
@@ -37,6 +40,7 @@ class FeedState {
       isLoading: isLoading ?? this.isLoading,
       error: error,
       liveRooms: liveRooms ?? this.liveRooms,
+      upcomingRooms: upcomingRooms ?? this.upcomingRooms,
       roomReasons: roomReasons ?? this.roomReasons,
       roomTiers: roomTiers ?? this.roomTiers,
       trendingUsers: trendingUsers ?? this.trendingUsers,
@@ -109,9 +113,19 @@ class FeedController extends Notifier<FeedState> {
           .map((doc) => feed_user.User.fromJson({'id': doc.id, ...doc.data()}))
           .where((user) => !blockedIds.contains(user.id))
           .toList();
+      // Upcoming scheduled rooms (next 48 h)
+      List<RoomModel> upcomingRooms = const [];
+      try {
+        upcomingRooms = await _roomService
+            .watchUpcomingRooms(limit: 8)
+            .first;
+      } catch (_) {
+        // non-critical; index may not exist yet in some environments
+      }
       state = state.copyWith(
         isLoading: false,
         liveRooms: liveRooms,
+        upcomingRooms: upcomingRooms,
         roomReasons: roomReasons,
         roomTiers: roomTiers,
         trendingUsers: trendingUsers,

@@ -21,6 +21,8 @@ class RoomModel {
   final bool isLocked;
   final int? slowModeSeconds;
   final int maxBroadcasters;
+  /// When the room is scheduled to start (null = not scheduled / already live).
+  final Timestamp? scheduledAt;
 
   RoomModel({
     required this.id,
@@ -41,6 +43,7 @@ class RoomModel {
     this.isLocked = false,
     this.slowModeSeconds,
     this.maxBroadcasters = 6,
+    this.scheduledAt,
   });
 
   /// Combined members list (used by UI)
@@ -120,6 +123,7 @@ class RoomModel {
       isLocked: _asBool(json['isLocked']),
       slowModeSeconds: json['slowModeSeconds'] is num ? (json['slowModeSeconds'] as num).toInt() : null,
       maxBroadcasters: json['maxBroadcasters'] is num ? (json['maxBroadcasters'] as num).toInt() : 6,
+      scheduledAt: _asTimestamp(json['scheduledAt']),
     );
   }
 
@@ -142,6 +146,7 @@ class RoomModel {
       'isLocked': isLocked,
       'slowModeSeconds': slowModeSeconds,
       'maxBroadcasters': maxBroadcasters,
+      'scheduledAt': scheduledAt,
     };
   }
 
@@ -164,6 +169,7 @@ class RoomModel {
     bool? isLocked,
     int? slowModeSeconds,
     int? maxBroadcasters,
+    Timestamp? scheduledAt,
   }) {
     return RoomModel(
       id: id ?? this.id,
@@ -184,6 +190,7 @@ class RoomModel {
       isLocked: isLocked ?? this.isLocked,
       slowModeSeconds: slowModeSeconds ?? this.slowModeSeconds,
       maxBroadcasters: maxBroadcasters ?? this.maxBroadcasters,
+      scheduledAt: scheduledAt ?? this.scheduledAt,
     );
   }
 }

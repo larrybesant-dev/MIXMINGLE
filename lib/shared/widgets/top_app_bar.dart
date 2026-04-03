@@ -1,17 +1,34 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-class TopAppBar extends StatelessWidget implements PreferredSizeWidget {
+import '../../presentation/providers/notification_provider.dart';
+
+class TopAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final String title;
   final List<Widget>? actions;
   const TopAppBar({super.key, required this.title, this.actions});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unreadCount = ref.watch(unreadNotificationCountProvider);
     return AppBar(
       title: Text(title),
       centerTitle: true,
-      actions: actions,
+      actions: [
+        if (actions != null) ...actions!,
+        IconButton(
+          tooltip: 'Notifications',
+          onPressed: () => context.go('/notifications'),
+          icon: unreadCount > 0
+              ? Badge(
+                  label: Text(unreadCount > 99 ? '99+' : '$unreadCount'),
+                  child: const Icon(Icons.notifications_outlined),
+                )
+              : const Icon(Icons.notifications_outlined),
+        ),
+      ],
       backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
       elevation: 0,
     );

@@ -112,4 +112,32 @@ class NotificationService {
 			'createdAt': FieldValue.serverTimestamp(),
 		});
 	}
+
+	/// Sends a room-invite in-app notification to each [friendIds] entry.
+	/// [inviterName] is shown in the notification text.
+	/// [roomId] / [roomName] are stored so the FCM deep-link can navigate
+	/// directly to the room when the notification is tapped.
+	Future<void> sendRoomInviteToFriends({
+		required List<String> friendIds,
+		required String inviterId,
+		required String inviterName,
+		required String roomId,
+		required String roomName,
+	}) async {
+		if (friendIds.isEmpty) return;
+		final batch = _firestore.batch();
+		for (final friendId in friendIds) {
+			final ref = _firestore.collection('notifications').doc();
+			batch.set(ref, {
+				'userId': friendId,
+				'actorId': inviterId,
+				'type': 'room_invite',
+				'content': '$inviterName invited you to join "$roomName" — tap to join!',
+				'roomId': roomId,
+				'isRead': false,
+				'createdAt': FieldValue.serverTimestamp(),
+			});
+		}
+		await batch.commit();
+	}
 }

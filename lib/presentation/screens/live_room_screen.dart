@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../config/agora_constants.dart';
 import '../../models/moderation_model.dart';
@@ -21,6 +22,8 @@ import '../../features/room/providers/presence_provider.dart';
 import '../../features/room/widgets/message_bubble.dart';
 import '../../features/room/widgets/camera_wall.dart';
 import '../../features/room/widgets/room_control_sheets.dart';
+import '../../features/room/widgets/floating_gift_overlay.dart';
+import '../../widgets/coin_balance_widget.dart';
 import '../../features/room/providers/mic_access_provider.dart';
 import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/room/providers/host_provider.dart';
@@ -36,6 +39,8 @@ import '../../services/rtc_room_service.dart';
 import '../../services/webrtc_room_service.dart';
 import '../../services/follow_service.dart';
 import '../../services/moderation_service.dart';
+import '../../services/friend_service.dart';
+import '../../services/notification_service.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -86,6 +91,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   final Set<String> _shownGiftEventIds = {};
   final List<_GiftToast> _giftToasts = [];
   Timer? _giftToastTimer;
+  Timer? _typingTimer;
+  final GlobalKey<FloatingGiftOverlayState> _floatingGiftKey =
+      GlobalKey<FloatingGiftOverlayState>();
   ProviderSubscription<AsyncValue<List<RoomGiftEvent>>>?
   _giftEventsSubscription;
   final Map<String, String> _senderDisplayNameById = <String, String>{};
@@ -947,6 +955,113 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     return 'Audio/video operation failed. Please retry.';
   }
 
+  /// Shows a friend picker and sends room-invite in-app notifications to each
+  /// selected friend. Uses batch Firestore writes for efficiency.
+  Future<void> _inviteFriendsToRoom({
+    required String userId,
+    required String username,
+    required String roomName,
+  }) async {
+    if (!mounted) return;
+    final firestore = _firestore;
+    if (firestore == null) return;
+    try {
+      final friends = await FriendService(firestore: firestore).getFriends(userId);
+      if (!mounted) return;
+      if (friends.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You have no friends to invite yet.')),
+        );
+        return;
+      }
+      final Set<String> selected = {};
+      final confirmed = await showModalBottomSheet<bool>(
+        context: context,
+        isScrollControlled: true,
+        builder: (sheetCtx) {
+          return StatefulBuilder(
+            builder: (_, setModalState) {
+              return SafeArea(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Invite friends to this room',
+                              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: selected.isEmpty ? null : () => Navigator.of(sheetCtx).pop(true),
+                            child: const Text('Send'),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxHeight: 360),
+                      child: ListView.builder(
+                        shrinkWrap: true,
+                        itemCount: friends.length,
+                        itemBuilder: (ctx, i) {
+                          final friend = friends[i];
+                          final isSelected = selected.contains(friend.id);
+                          return CheckboxListTile(
+                            value: isSelected,
+                            title: Text(friend.username.trim().isEmpty ? friend.id : friend.username),
+                            secondary: CircleAvatar(
+                              child: Text(
+                                (friend.username.trim().isEmpty ? '?' : friend.username.trim()[0]).toUpperCase(),
+                              ),
+                            ),
+                            onChanged: (val) {
+                              setModalState(() {
+                                if (val == true) {
+                                  selected.add(friend.id);
+                                } else {
+                                  selected.remove(friend.id);
+                                }
+                              });
+                            },
+                          );
+                        },
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                  ],
+                ),
+              );
+            },
+          );
+        },
+      );
+      if (confirmed != true || selected.isEmpty) return;
+      await NotificationService(firestore: firestore).sendRoomInviteToFriends(
+        friendIds: selected.toList(),
+        inviterId: userId,
+        inviterName: username.trim().isEmpty ? 'Someone' : username.trim(),
+        roomId: widget.roomId,
+        roomName: roomName,
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Invited ${selected.length} friend${selected.length == 1 ? '' : 's'}!')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not send invites: $e')),
+        );
+      }
+    }
+  }
+
   void _startPresenceHeartbeat(String userId) {
     _presenceHeartbeatTimer?.cancel();
     final presenceController = ref.read(roomPresenceControllerProvider);
@@ -1132,6 +1247,36 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text(message)));
+  }
+
+  void _onTypingInput() {
+    _typingTimer?.cancel();
+    final firestore = _firestore;
+    final userId = _joinedUserId;
+    if (firestore == null || userId == null || userId.isEmpty) return;
+    firestore
+        .collection('rooms')
+        .doc(widget.roomId)
+        .collection('typing')
+        .doc(userId)
+        .set({'isTyping': true, 'updatedAt': FieldValue.serverTimestamp()});
+    _typingTimer = Timer(const Duration(seconds: 3), _clearTypingStatus);
+  }
+
+  Future<void> _clearTypingStatus() async {
+    _typingTimer?.cancel();
+    _typingTimer = null;
+    final firestore = _firestore;
+    final userId = _joinedUserId;
+    if (firestore == null || userId == null || userId.isEmpty) return;
+    try {
+      await firestore
+          .collection('rooms')
+          .doc(widget.roomId)
+          .collection('typing')
+          .doc(userId)
+          .delete();
+    } catch (_) {}
   }
 
   void _appendEmoji(String emoji) {
@@ -1594,6 +1739,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   }
                 } catch (e) {
                   _showSnackBar('Could not update role: $e');
+                }
+              }),
+            ),
+          if (canHostOnlyManage)
+            RoomActionItem(
+              label: '⭐ Spotlight this person',
+              icon: Icons.star_outline_rounded,
+              onTap: () => runAction(() async {
+                try {
+                  final firestore = _firestore ?? ref.read(roomFirestoreProvider);
+                  await (firestore as FirebaseFirestore)
+                      .collection('rooms')
+                      .doc(widget.roomId)
+                      .update({'spotlightUserId': target.userId});
+                  _showSnackBar('${presentationByUserId[target.userId]?.displayName ?? target.userId} is now spotlighted!');
+                } catch (e) {
+                  _showSnackBar('Could not spotlight user: $e');
                 }
               }),
             ),
@@ -2141,12 +2303,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
   void _addGiftToast(RoomGiftEvent event) {
     final catalog = RoomGiftCatalog.findById(event.giftId);
+    final emoji = catalog?.emoji ?? '🎁';
     final toast = _GiftToast(
       senderId: event.senderId,
       senderName: event.senderName.isNotEmpty
           ? event.senderName
           : event.senderId,
-      giftEmoji: catalog?.emoji ?? '🎁',
+      giftEmoji: emoji,
       giftName: catalog?.displayName ?? event.giftId,
       coinCost: event.coinCost,
     );
@@ -2156,6 +2319,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       _giftToastTimer = Timer(const Duration(seconds: 4), () {
         if (mounted) setState(() => _giftToasts.clear());
       });
+      // Spawn floating particle animation
+      _floatingGiftKey.currentState?.spawnGift(emoji);
     }
   }
 
@@ -2329,7 +2494,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     WidgetsBinding.instance.removeObserver(this);
     _presenceHeartbeatTimer?.cancel();
     _giftToastTimer?.cancel();
+    _typingTimer?.cancel();
     _giftEventsSubscription?.close();
+    unawaited(_clearTypingStatus());
     unawaited(_disconnectCall());
     unawaited(_leaveRoom());
     messageController.dispose();
@@ -2497,10 +2664,46 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               );
             }
             final roomName = _asString(roomData?['name'], fallback: 'Live Room');
+            final spotlightUserId = _asString(roomData?['spotlightUserId']);
+            final spotlightName = spotlightUserId.isNotEmpty
+                ? (_senderDisplayNameById[spotlightUserId] ?? spotlightUserId)
+                : null;
             return Scaffold(
               appBar: AppBar(
                 title: Text(roomName),
                 actions: [
+                  // Coin balance
+                  walletAsync.when(
+                    data: (wallet) => Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: Center(child: CoinBalanceWidget(balance: wallet.coinBalance)),
+                    ),
+                    loading: () => const SizedBox.shrink(),
+                    error: (e, _) => const SizedBox.shrink(),
+                  ),
+                  // Invite friends to room
+                  IconButton(
+                    tooltip: 'Invite friends',
+                    onPressed: () => _inviteFriendsToRoom(
+                      userId: user.id,
+                      username: user.username,
+                      roomName: roomName,
+                    ),
+                    icon: const Icon(Icons.group_add_outlined),
+                  ),
+                  // Share room link
+                  IconButton(
+                    tooltip: 'Share room',
+                    onPressed: () {
+                      SharePlus.instance.share(
+                        ShareParams(
+                          text: 'Join me in "$roomName" on MixVy!\nhttps://mixvy.app/room/${widget.roomId}',
+                          subject: '$roomName – MixVy live room',
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.share_outlined),
+                  ),
                   IconButton(
                     tooltip: 'Leave Room',
                     onPressed: () async {
@@ -2555,6 +2758,49 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     padding: EdgeInsets.only(right: isDesktopLayout ? 420 : 0),
                     child: Column(
                       children: [
+                        // Spotlight banner
+                        if (spotlightName != null)
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 6,
+                              horizontal: 14,
+                            ),
+                            color: const Color(0xFFFFD700).withValues(alpha: 0.85),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Text('⭐',
+                                    style: TextStyle(fontSize: 16)),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    '$spotlightName is in the spotlight!',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                                if (isHost)
+                                  IconButton(
+                                    visualDensity: VisualDensity.compact,
+                                    tooltip: 'Clear spotlight',
+                                    icon: const Icon(Icons.close, size: 16),
+                                    onPressed: () async {
+                                      final firestore = _firestore ??
+                                          ref.read(roomFirestoreProvider);
+                                      await (firestore as FirebaseFirestore)
+                                          .collection('rooms')
+                                          .doc(widget.roomId)
+                                          .update({
+                                        'spotlightUserId': FieldValue.delete(),
+                                      });
+                                    },
+                                  ),
+                              ],
+                            ),
+                          ),
                         if (_callError != null)
                           Padding(
                             padding: const EdgeInsets.symmetric(
@@ -3473,30 +3719,101 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           ),
                         ],
                         if (topGifters.isNotEmpty)
-                          SizedBox(
-                            height: 36,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                              ),
-                              itemCount: topGifters.length,
-                              separatorBuilder: (_, separatorIndex) =>
-                                  const SizedBox(width: 6),
-                              itemBuilder: (ctx, i) {
-                                final gifter = topGifters[i];
-                                return Chip(
-                                  visualDensity: VisualDensity.compact,
-                                  avatar: Text(
-                                    '${i + 1}',
-                                    style: const TextStyle(fontSize: 10),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    const Text('🏆', style: TextStyle(fontSize: 14)),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Top Gifters',
+                                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                SizedBox(
+                                  height: 44,
+                                  child: ListView.separated(
+                                    scrollDirection: Axis.horizontal,
+                                    itemCount: topGifters.length,
+                                    separatorBuilder: (_, idx) =>
+                                        const SizedBox(width: 6),
+                                    itemBuilder: (ctx, i) {
+                                      const medals = ['🥇', '🥈', '🥉'];
+                                      final gifter = topGifters[i];
+                                      final medal = i < 3 ? medals[i] : '${i + 1}';
+                                      final isFirst = i == 0;
+                                      return Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                          vertical: 6,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          gradient: isFirst
+                                              ? const LinearGradient(
+                                                  colors: [
+                                                    Color(0xFFFFD700),
+                                                    Color(0xFFFFA500),
+                                                  ],
+                                                )
+                                              : null,
+                                          color: isFirst
+                                              ? null
+                                              : Theme.of(ctx)
+                                                    .colorScheme
+                                                    .surfaceContainerHighest,
+                                          borderRadius: BorderRadius.circular(22),
+                                          border: isFirst
+                                              ? null
+                                              : Border.all(
+                                                  color: Theme.of(ctx)
+                                                      .colorScheme
+                                                      .outlineVariant,
+                                                ),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Text(medal,
+                                                style: const TextStyle(fontSize: 14)),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              gifter.displayName,
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w700,
+                                                color: isFirst
+                                                    ? Colors.white
+                                                    : Theme.of(ctx)
+                                                          .colorScheme
+                                                          .onSurface,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              '🪙${gifter.totalCoins}',
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                color: isFirst
+                                                    ? Colors.white70
+                                                    : Theme.of(ctx)
+                                                          .colorScheme
+                                                          .onSurfaceVariant,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
                                   ),
-                                  label: Text(
-                                    '${gifter.displayName} - ${gifter.totalCoins} coins',
-                                    style: const TextStyle(fontSize: 11),
-                                  ),
-                                );
-                              },
+                                ),
+                              ],
                             ),
                           ),
                               ],
@@ -3505,7 +3822,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         ),
                         if (!isDesktopLayout) ...[
                           Expanded(
-                            child: messageStreamAsync.when(
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.transparent,
+                                    Colors.black.withValues(alpha: 0.18),
+                                  ],
+                                ),
+                              ),
+                              child: messageStreamAsync.when(
                               data: (messages) {
                                 if (messages.length !=
                                     _lastRenderedMessageCount) {
@@ -3558,6 +3886,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 child: CircularProgressIndicator(),
                               ),
                               error: (e, _) => Center(child: Text('Error: $e')),
+                            ),
                             ),
                           ),
                           participantsAsync.when(
@@ -3615,6 +3944,45 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               ),
                             ),
                           if (_showEmojiTray) _buildEmojiTray(),
+                          if (_firestore != null)
+                          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                            stream: _firestore!
+                                .collection('rooms')
+                                .doc(widget.roomId)
+                                .collection('typing')
+                                .snapshots(),
+                            builder: (context, snapshot) {
+                              final docs = snapshot.data?.docs ?? [];
+                              final currentUid = _joinedUserId ?? '';
+                              final names = docs
+                                  .where((d) =>
+                                      d.id != currentUid &&
+                                      (d.data()['isTyping'] as bool? ?? false))
+                                  .map((d) =>
+                                      _senderDisplayNameById[d.id] ??
+                                      'Someone')
+                                  .toList(growable: false);
+                              if (names.isEmpty) return const SizedBox.shrink();
+                              final label = names.length == 1
+                                  ? '${names[0]} is typing…'
+                                  : '${names.join(', ')} are typing…';
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 4),
+                                child: Text(
+                                  label,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                          fontStyle: FontStyle.italic,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .onSurfaceVariant),
+                                ),
+                              );
+                            },
+                          ),
                           SafeArea(
                             top: false,
                             minimum: const EdgeInsets.only(bottom: 90),
@@ -3670,6 +4038,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                   Expanded(
                                     child: TextField(
                                       controller: messageController,
+                                      onChanged: (_) => _onTypingInput(),
                                       enabled:
                                           !isSending &&
                                           participant?.isMuted != true &&
@@ -3894,6 +4263,45 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                   ),
                                   child: _buildEmojiTray(),
                                 ),
+                              if (_firestore != null)
+                              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                                stream: _firestore!
+                                    .collection('rooms')
+                                    .doc(widget.roomId)
+                                    .collection('typing')
+                                    .snapshots(),
+                                builder: (context, snapshot) {
+                                  final docs = snapshot.data?.docs ?? [];
+                                  final currentUid = _joinedUserId ?? '';
+                                  final names = docs
+                                      .where((d) =>
+                                          d.id != currentUid &&
+                                          (d.data()['isTyping'] as bool? ?? false))
+                                      .map((d) =>
+                                          _senderDisplayNameById[d.id] ??
+                                          'Someone')
+                                      .toList(growable: false);
+                                  if (names.isEmpty) return const SizedBox.shrink();
+                                  final label = names.length == 1
+                                      ? '${names[0]} is typing…'
+                                      : '${names.join(', ')} are typing…';
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 12, vertical: 4),
+                                    child: Text(
+                                      label,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                              fontStyle: FontStyle.italic,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant),
+                                    ),
+                                  );
+                                },
+                              ),
                               SafeArea(
                                 top: false,
                                 minimum: const EdgeInsets.fromLTRB(8, 0, 8, 88),
@@ -3916,6 +4324,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     Expanded(
                                       child: TextField(
                                         controller: messageController,
+                                        onChanged: (_) => _onTypingInput(),
                                         enabled:
                                             !isSending &&
                                             participant?.isMuted != true &&
@@ -4037,6 +4446,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         ),
                       ),
                     ),
+                  // Floating emoji particles (gift animations)
+                  Positioned.fill(
+                    child: FloatingGiftOverlay(key: _floatingGiftKey),
+                  ),
                 ],
               ),
             );

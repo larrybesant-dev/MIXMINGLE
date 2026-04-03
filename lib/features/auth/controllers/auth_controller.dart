@@ -113,7 +113,9 @@ class AuthController extends Notifier<AuthState> {
     }
 
     try {
-      await user.getIdToken();
+      // Force a network refresh on web so a stale emulator token in localStorage
+      // is caught eagerly before the router renders the home screen.
+      await user.getIdToken(kIsWeb);
     } on FirebaseAuthException catch (e, st) {
       _logAuthException(e, st, context: 'cached-session-validation');
       if (_isInvalidSessionError(e.code)) {
