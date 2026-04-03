@@ -220,8 +220,18 @@ class WebRtcRoomService implements RtcRoomService {
             'width': {'ideal': 640},
             'height': {'ideal': 480},
           },
-          'audio': publishMicrophoneTrack,
+          // Always acquire audio alongside video so the mic toggle works
+          // without a separate getUserMedia call. The track starts muted
+          // if the user's mic is currently off.
+          'audio': true,
         });
+
+        // Mute audio immediately if mic is off — track exists but silent
+        if (!publishMicrophoneTrack) {
+          for (final track in stream.getAudioTracks()) {
+            track.enabled = false;
+          }
+        }
 
         _localStream = stream;
         _localRenderer.srcObject = stream;
@@ -235,7 +245,7 @@ class WebRtcRoomService implements RtcRoomService {
         await _processExistingIncomingCalls();
 
         onLocalVideoCaptureChanged?.call();
-        _log('camera enabled — broadcasting');
+        _log('camera enabled — broadcasting (audio track muted=${ !publishMicrophoneTrack})');
       } catch (error) {
         _localVideoCapturing = false;
         _broadcasterMode = false;
@@ -264,9 +274,29 @@ class WebRtcRoomService implements RtcRoomService {
   @override
   Future<void> setBroadcaster(bool enabled) async {
     // Called when user enables mic while camera is still off.
-    if (enabled && !_broadcasterMode && _isJoined) {
-      _broadcasterMode = enabled;
-      await _updatePresence(isBroadcasting: enabled);
+    if (enabled && _isJoined) {
+      if (_localStream == null) {
+        // Mic-only: acquire an audio-only stream so mute/publish work.
+        try {
+          final audioStream = await navigator.mediaDevices.getUserMedia({
+            'video': false,
+            'audio': true,
+          });
+          _localStream = audioStream;
+          _log('setBroadcaster: acquired audio-only stream');
+        } catch (error) {
+          _throwMapped(error, 'access microphone');
+        }
+      }
+      if (!_broadcasterMode) {
+        _broadcasterMode = true;
+        await _updatePresence(isBroadcasting: true);
+        // Answer any pending viewer offers now that we have a stream.
+        await _processExistingIncomingCalls();
+      }
+    } else if (!enabled) {
+      _broadcasterMode = false;
+      await _updatePresence(isBroadcasting: false);
     }
   }
 
@@ -279,8 +309,29 @@ class WebRtcRoomService implements RtcRoomService {
 
   @override
   Future<void> publishLocalAudioStream(bool enabled) async {
-    for (final track in (_localStream?.getAudioTracks() ?? [])) {
-      track.enabled = enabled;
+    final audioTracks = _localStream?.getAudioTracks() ?? [];
+    if (audioTracks.isEmpty && enabled && _localStream != null) {
+      // Stream exists (video-only) but has no audio track — add one.
+      try {
+        final audioStream = await navigator.mediaDevices.getUserMedia({
+          'video': false,
+          'audio': true,
+        });
+        for (final track in audioStream.getAudioTracks()) {
+          await _localStream!.addTrack(track);
+          // Also add to all active broadcaster peer connections.
+          for (final peer in _peers.values) {
+            try { await peer.pc.addTrack(track, _localStream!); } catch (_) {}
+          }
+        }
+        _log('publishLocalAudioStream: injected audio track into existing stream');
+      } catch (error) {
+        _throwMapped(error, 'access microphone');
+      }
+    } else {
+      for (final track in audioTracks) {
+        track.enabled = enabled;
+      }
     }
   }
 
