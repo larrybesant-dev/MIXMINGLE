@@ -1343,6 +1343,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     _isHandlingParticipantRemoval = true;
     await _disconnectCall();
 
+    // Release any camera slot before nulling _joinedUserId, which _leaveRoom
+    // uses to find the slot owner. Forced exits don't call _leaveRoom so we
+    // must clean up the slot here explicitly.
+    final userId = _joinedUserId;
+    if (userId != null && _claimedSlotId != null) {
+      try {
+        final firestore = _firestore;
+        if (firestore != null) {
+          final slotService = ref.read(roomSlotServiceProvider);
+          await slotService.releaseSlot(widget.roomId, userId);
+        }
+      } catch (_) {
+        // Best-effort; slot will expire on its own if cleanup fails.
+      }
+      _claimedSlotId = null;
+    }
+
     if (!mounted) {
       return;
     }
