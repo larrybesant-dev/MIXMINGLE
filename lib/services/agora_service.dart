@@ -963,16 +963,6 @@ class AgoraService {
     _enableVideoInFlight = true;
     try {
       if (enabled) {
-        // Preflight: verify browser camera permission/hardware BEFORE touching
-        // Agora APIs. On non-web this is a no-op stub. Errors thrown here are
-        // caught by the outer catch and mapped via _throwMappedAgoraError so
-        // callers receive a typed AgoraServiceException (not a raw DomException).
-        if (kIsWeb) {
-          await web_media_probe.ensureUserMediaAccess(
-            video: true,
-            audio: false,
-          );
-        }
         if (!_broadcasterMode) {
           developer.log(
             'Setting client role to broadcaster',
@@ -987,14 +977,26 @@ class AgoraService {
         await _engine.enableVideo();
         await _engine.enableLocalVideo(true);
         await _engine.muteLocalVideoStream(false);
-        // startPreview() is the API that actually activates the hardware camera
-        // on web. We do NOT call stopPreview first in the enable path because:
-        // (a) the camera is already off so stopPreview is a no-op, and
-        // (b) calling stopPreview right before startPreview caused a brief
-        //     hardware flash (light on/off) when re-enabling.
+        // startPreview() activates the hardware camera.
+        // On web: call directly (not via _startPreviewSafe) so that errors
+        // propagate to the caller instead of being silently swallowed.
+        // A previous permission probe inside _connectCall already verified
+        // device access; there is no need for a second getUserMedia preflight
+        // here, which would acquire then immediately release the camera track
+        // and cause a "device still releasing" race on many browsers.
         // On native: use the standard stopPreview + startCameraCapture dance.
         if (kIsWeb) {
-          await _startPreviewSafe();
+          if (!_previewRunning) {
+            try {
+              await _engine.startPreview();
+              _previewRunning = true;
+              developer.log('startPreview called (web)', name: 'AgoraService');
+            } catch (error) {
+              // Map raw DomException/Dart errors to typed AgoraServiceException
+              // so the UI can show a meaningful snackbar instead of a black tile.
+              _throwMappedAgoraError(error, operation: 'start camera preview');
+            }
+          }
         } else {
           await _stopPreviewSafe();
           await _startCameraCaptureAfterRoleUpgrade();
