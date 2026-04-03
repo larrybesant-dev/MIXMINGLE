@@ -773,16 +773,37 @@ async function sendRoomGiftHandler(request, deps = {}) {
   const giftEventId = await firestore.runTransaction(async (txn) => {
     const senderRef = firestore.collection("users").doc(senderId);
     const receiverRef = firestore.collection("users").doc(receiverId);
+    const roomRef = firestore.collection("rooms").doc(roomId);
+    const senderParticipantRef = roomRef
+      .collection("participants")
+      .doc(senderId);
     const giftEventRef = firestore
       .collection("rooms")
       .doc(roomId)
       .collection("gift_events")
       .doc();
 
-    const [senderSnap, receiverSnap] = await Promise.all([
-      txn.get(senderRef),
-      txn.get(receiverRef),
-    ]);
+    const [senderSnap, receiverSnap, roomSnap, senderParticipantSnap] =
+      await Promise.all([
+        txn.get(senderRef),
+        txn.get(receiverRef),
+        txn.get(roomRef),
+        txn.get(senderParticipantRef),
+      ]);
+
+    if (!roomSnap.exists || roomSnap.data().isLive === false) {
+      throw new HttpsError(
+        "failed-precondition",
+        "The room is not currently active.",
+      );
+    }
+    if (!senderParticipantSnap.exists ||
+        senderParticipantSnap.data().isBanned === true) {
+      throw new HttpsError(
+        "permission-denied",
+        "You must be an active participant in the room to send gifts.",
+      );
+    }
 
     const senderBalance = Number(
       (senderSnap.data() && senderSnap.data().balance) || 0,

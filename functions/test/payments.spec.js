@@ -12,6 +12,7 @@ const {
   createStripeConnectOnboardingLinkHandler,
   createStripeConnectDashboardLinkHandler,
   generateAgoraTokenHandler,
+  sendRoomGiftHandler,
   requestRefundHandler,
   cleanupDeletedUserData,
   createCheckoutSessionHandler,
@@ -90,17 +91,18 @@ function createFirestoreDouble(initialUsers = {}) {
         const subStore = subcollections.get(subKey);
         return {
           doc(subId) {
+            const resolvedId = subId || `${subName}-${++idCounter}`;
             return {
-              id: subId,
+              id: resolvedId,
               async get() {
-                const d = subStore.get(subId);
+                const d = subStore.get(resolvedId);
                 return {exists: d !== undefined, data: () => d && {...d}};
               },
               async set(data, opts = {}) {
-                const prev = subStore.get(subId) || {};
-                subStore.set(subId, opts.merge ? {...prev, ...data} : {...data});
+                const prev = subStore.get(resolvedId) || {};
+                subStore.set(resolvedId, opts.merge ? {...prev, ...data} : {...data});
               },
-              async delete() { subStore.delete(subId); },
+              async delete() { subStore.delete(resolvedId); },
             };
           },
           limit(n) {
@@ -600,6 +602,87 @@ describe("payment callable handlers", () => {
     } else {
       process.env.PUBLIC_APP_URL = previousPublicAppUrl;
     }
+  });
+
+  // sendRoomGift ------------------------------------------------------------
+
+  it("sendRoomGiftHandler rejects sender who is not a room participant", async () => {
+    const firestore = createFirestoreDouble({
+      "user-1": {balance: 100},
+      "user-2": {balance: 0},
+    });
+    // Room exists and is live, but sender has no participant doc.
+    await firestore.collection("rooms").doc("room-1").set({isLive: true});
+
+    await assert.rejects(
+      () => sendRoomGiftHandler(
+        makeRequest({roomId: "room-1", receiverId: "user-2", giftId: "g1", coinCost: 10}, "user-1"),
+        {firestore},
+      ),
+      (err) => err.code === "permission-denied",
+    );
+  });
+
+  it("sendRoomGiftHandler rejects gift when room is not active", async () => {
+    const firestore = createFirestoreDouble({
+      "user-1": {balance: 100},
+      "user-2": {balance: 0},
+    });
+    // Room doc exists but isLive=false.
+    await firestore.collection("rooms").doc("room-1").set({isLive: false});
+    await firestore.collection("rooms").doc("room-1")
+      .collection("participants").doc("user-1")
+      .set({userId: "user-1", role: "audience", isBanned: false});
+
+    await assert.rejects(
+      () => sendRoomGiftHandler(
+        makeRequest({roomId: "room-1", receiverId: "user-2", giftId: "g1", coinCost: 10}, "user-1"),
+        {firestore},
+      ),
+      (err) => err.code === "failed-precondition",
+    );
+  });
+
+  it("sendRoomGiftHandler transfers coins and creates gift event for valid participant", async () => {
+    const firestore = createFirestoreDouble({
+      "user-1": {balance: 100},
+      "user-2": {balance: 0},
+    });
+    await firestore.collection("rooms").doc("room-1").set({isLive: true});
+    await firestore.collection("rooms").doc("room-1")
+      .collection("participants").doc("user-1")
+      .set({userId: "user-1", role: "audience", isBanned: false});
+
+    const result = await sendRoomGiftHandler(
+      makeRequest({roomId: "room-1", receiverId: "user-2", giftId: "g1", coinCost: 10}, "user-1"),
+      {firestore},
+    );
+
+    assert.ok(typeof result.giftEventId === "string" && result.giftEventId.length > 0);
+    const senderSnap = await firestore.collection("users").doc("user-1").get();
+    assert.equal(senderSnap.data().balance, 90);
+    const receiverSnap = await firestore.collection("users").doc("user-2").get();
+    // Receiver gets coinCost * 0.85 = 8 (floored).
+    assert.equal(receiverSnap.data().balance, 8);
+  });
+
+  it("sendRoomGiftHandler rejects banned participant", async () => {
+    const firestore = createFirestoreDouble({
+      "user-1": {balance: 100},
+      "user-2": {balance: 0},
+    });
+    await firestore.collection("rooms").doc("room-1").set({isLive: true});
+    await firestore.collection("rooms").doc("room-1")
+      .collection("participants").doc("user-1")
+      .set({userId: "user-1", role: "audience", isBanned: true});
+
+    await assert.rejects(
+      () => sendRoomGiftHandler(
+        makeRequest({roomId: "room-1", receiverId: "user-2", giftId: "g1", coinCost: 10}, "user-1"),
+        {firestore},
+      ),
+      (err) => err.code === "permission-denied",
+    );
   });
 
   // generateAgoraToken -------------------------------------------------------
