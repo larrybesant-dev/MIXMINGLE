@@ -72,6 +72,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   int? _currentRtcUid;
   /// Slot id in rooms/{roomId}/slots currently held by this user, if any.
   String? _claimedSlotId;
+  /// Prevents re-triggering camera toggle (double-click / web event replay).
+  DateTime? _videoToggleCooldownUntil;
   Set<String> _excludedUserIds = const <String>{};
   String? _appliedMediaRole;
   bool _isHandlingParticipantRemoval = false;
@@ -746,12 +748,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           setState(() => _appliedMediaRole = 'member');
         }
       } else {
-        // Turning camera off — release the slot first.
+        // Turning camera off — release the slot (fire-and-forget to Firestore).
+        // Do NOT clear _claimedSlotId here; clear it atomically with
+        // _isVideoEnabled in the success setState below to avoid a race window
+        // where _claimedSlotId==null but _isVideoEnabled==true, which would
+        // let the role-media sync re-enable the camera mid-teardown.
         final userId = _joinedUserId;
         if (userId != null && _claimedSlotId != null) {
           final slotService = ref.read(roomSlotServiceProvider);
           unawaited(slotService.releaseSlot(widget.roomId, userId));
-          _claimedSlotId = null;
         }
         _logLiveRoom('toggle_video:step enableVideo(false)');
         await service.publishLocalVideoStream(false);
@@ -782,6 +787,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       if (mounted && identical(service, _agoraService)) {
         setState(() {
           _isVideoEnabled = next;
+          // When turning off, clear the slot atomically with isVideoEnabled so
+          // there is never a frame where claimedSlotId==null but video==true.
+          if (!next) _claimedSlotId = null;
           _cameraStatus = next ? 'Camera active.' : 'Camera off.';
         });
         if (next) {
@@ -813,6 +821,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       }
     } finally {
       if (mounted) {
+        // Set a short cooldown before another toggle is allowed. This prevents
+        // a second click (or a Flutter-web button double-fire on rebuild) from
+        // immediately re-toggling the camera.
+        _videoToggleCooldownUntil =
+            DateTime.now().add(const Duration(milliseconds: 900));
         setState(() => _isVideoActionInFlight = false);
       }
       _logLiveRoom('toggle_video:end');
@@ -2703,7 +2716,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                           : 'Turn camera on',
                                       onPressed:
                                           RoomPermissions.canUseCamera(role) &&
-                                              !_isVideoActionInFlight
+                                              !_isVideoActionInFlight &&
+                                              (_videoToggleCooldownUntil ==
+                                                      null ||
+                                                  DateTime.now().isAfter(
+                                                    _videoToggleCooldownUntil!,
+                                                  ))
                                           ? () {
                                               if (mounted) {
                                                 setState(
