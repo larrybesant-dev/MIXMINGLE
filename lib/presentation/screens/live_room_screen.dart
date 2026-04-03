@@ -775,7 +775,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       }
 
       _logLiveRoom('toggle_video:success next=$next mounted=$mounted');
-      if (mounted) {
+      // Only commit the state change if the AgoraService reference hasn't
+      // been replaced (e.g. by _handleConnectionLost mid-enable). On web,
+      // _awaitLocalVideoCapturing times out silently, so enableVideo() returns
+      // success even after the old service was disposed and a new one created.
+      if (mounted && identical(service, _agoraService)) {
         setState(() {
           _isVideoEnabled = next;
           _cameraStatus = next ? 'Camera active.' : 'Camera off.';
@@ -788,6 +792,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         final msg = next ? 'Camera turned on.' : 'Camera turned off.';
         _logLiveRoom('toggle_video:success_message $msg');
         _showSnackBar(msg);
+      } else if (mounted && !identical(service, _agoraService)) {
+        _logLiveRoom(
+          'toggle_video:stale_success ignored (service replaced during operation)',
+        );
       }
     } catch (e, st) {
       _logLiveRoom(
