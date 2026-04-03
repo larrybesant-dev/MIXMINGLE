@@ -897,7 +897,7 @@ exports.createStripeConnectDashboardLink = onCall(async (request) =>
   createStripeConnectDashboardLinkHandler(request),
 );
 
-async function generateAgoraTokenHandler(request) {
+async function generateAgoraTokenHandler(request, deps = {}) {
   const authUid = requireAuth(request);
   enforceRateLimit("generateAgoraToken", authUid);
   const channelName = parseIdField(
@@ -909,6 +909,29 @@ async function generateAgoraTokenHandler(request) {
   const rtcUid = Number(rtcUidValue);
   if (!Number.isFinite(rtcUid) || rtcUid <= 0) {
     throw new HttpsError("invalid-argument", "rtcUid must be a positive integer.");
+  }
+
+  // Only issue a token to users who have actually joined the room as a
+  // participant.  This prevents unauthenticated spectators who merely know
+  // a room ID from joining the Agora channel directly.
+  const firestore = deps.firestore || db;
+  const participantSnap = await firestore
+    .collection("rooms")
+    .doc(channelName)
+    .collection("participants")
+    .doc(authUid)
+    .get();
+  if (!participantSnap.exists) {
+    throw new HttpsError(
+      "permission-denied",
+      "You must join the room before requesting a media token.",
+    );
+  }
+  if (participantSnap.data().isBanned === true) {
+    throw new HttpsError(
+      "permission-denied",
+      "You are not allowed to join this room.",
+    );
   }
 
   const appId = process.env.AGORA_APP_ID;
@@ -1025,6 +1048,15 @@ async function cleanupDeletedUserData(uid, deps = {}) {
 
   const userRef = firestore.collection("users").doc(uid);
   const connectRef = firestore.collection("stripe_connect_accounts").doc(uid);
+
+  // Delete all FCM / notification tokens before the user doc itself so the
+  // subcollection doesn't become orphaned and leak PII after account deletion.
+  const tokenSnap = await userRef.collection("notification_tokens").limit(200).get();
+  if (!tokenSnap.empty) {
+    const batch = firestore.batch();
+    tokenSnap.docs.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+  }
 
   await Promise.allSettled([
     userRef.delete(),

@@ -11,6 +11,7 @@ const {
   getStripeConnectStatusHandler,
   createStripeConnectOnboardingLinkHandler,
   createStripeConnectDashboardLinkHandler,
+  generateAgoraTokenHandler,
   requestRefundHandler,
   cleanupDeletedUserData,
   createCheckoutSessionHandler,
@@ -33,6 +34,9 @@ function createFirestoreDouble(initialUsers = {}) {
   const logs = new Map();
   const stripeConnectAccounts = new Map();
   const refundRequests = new Map();
+  const rooms = new Map();
+  // Shared subcollection storage: "col/id/sub" → Map<subId, data>
+  const subcollections = new Map();
 
   function storeFor(name) {
     switch (name) {
@@ -46,6 +50,8 @@ function createFirestoreDouble(initialUsers = {}) {
         return stripeConnectAccounts;
       case "refund_requests":
         return refundRequests;
+      case "rooms":
+        return rooms;
       default:
         throw new Error(`Unsupported collection ${name}`);
     }
@@ -76,6 +82,52 @@ function createFirestoreDouble(initialUsers = {}) {
       async delete() {
         store.delete(id);
       },
+      collection(subName) {
+        const subKey = `${name}/${id}/${subName}`;
+        if (!subcollections.has(subKey)) {
+          subcollections.set(subKey, new Map()); // shared across all doc() calls
+        }
+        const subStore = subcollections.get(subKey);
+        return {
+          doc(subId) {
+            return {
+              id: subId,
+              async get() {
+                const d = subStore.get(subId);
+                return {exists: d !== undefined, data: () => d && {...d}};
+              },
+              async set(data, opts = {}) {
+                const prev = subStore.get(subId) || {};
+                subStore.set(subId, opts.merge ? {...prev, ...data} : {...data});
+              },
+              async delete() { subStore.delete(subId); },
+            };
+          },
+          limit(n) {
+            // Return a query-like object; .get() returns first n docs.
+            return {
+              async get() {
+                const docs = [...subStore.entries()].slice(0, n).map(([k, v]) => ({
+                  id: k,
+                  ref: {async delete() { subStore.delete(k); }},
+                  data: () => ({...v}),
+                }));
+                return {empty: docs.length === 0, docs, size: docs.length};
+              },
+            };
+          },
+          // Support chaining: .limit(n).get() by returning the snapshot directly
+          async get() {
+            const docs = [...subStore.entries()].map(([k, v]) => ({
+              id: k,
+              ref: {async delete() { subStore.delete(k); }},
+              data: () => ({...v}),
+            }));
+            return {empty: docs.length === 0, docs, size: docs.length};
+          },
+          __subStore: subStore,
+        };
+      },
     };
   }
 
@@ -105,12 +157,23 @@ function createFirestoreDouble(initialUsers = {}) {
       }
       return result;
     },
+    batch() {
+      const ops = [];
+      return {
+        delete(ref) { ops.push(() => ref.delete()); return this; },
+        set(ref, data, opts) { ops.push(() => ref.set(data, opts)); return this; },
+        update(ref, data) { ops.push(() => ref.update(data)); return this; },
+        async commit() { for (const op of ops) await op(); },
+      };
+    },
     __state: {
       users,
       transactions,
       logs,
       stripeConnectAccounts,
       refundRequests,
+      rooms,
+      subcollections,
     },
   };
 
@@ -465,10 +528,18 @@ describe("payment callable handlers", () => {
       chargesEnabled: true,
     });
 
+    // Seed a notification token to verify it gets cleaned up.
+    const userDocRef = firestore.collection("users").doc("user-1");
+    const tokenSubcol = userDocRef.collection("notification_tokens");
+    await tokenSubcol.doc("tok_abc").set({token: "tok_abc", userId: "user-1"});
+    assert.equal(tokenSubcol.__subStore.has("tok_abc"), true);
+
     await cleanupDeletedUserData("user-1", {firestore});
 
     assert.equal(firestore.__state.users.has("user-1"), false);
     assert.equal(firestore.__state.stripeConnectAccounts.has("user-1"), false);
+    // Notification tokens must be deleted on account deletion (privacy / GDPR).
+    assert.equal(tokenSubcol.__subStore.has("tok_abc"), false);
   });
 
   it("getCheckoutBaseUrl prefers CHECKOUT_BASE_URL and trims trailing slash", () => {
@@ -529,5 +600,82 @@ describe("payment callable handlers", () => {
     } else {
       process.env.PUBLIC_APP_URL = previousPublicAppUrl;
     }
+  });
+
+  // generateAgoraToken -------------------------------------------------------
+
+  it("generateAgoraTokenHandler rejects non-participants", async () => {
+    const firestore = createFirestoreDouble();
+    // No participant doc → should be rejected.
+    const previousAppId = process.env.AGORA_APP_ID;
+    const previousCert = process.env.AGORA_APP_CERTIFICATE;
+    process.env.AGORA_APP_ID = "a".repeat(32);
+    process.env.AGORA_APP_CERTIFICATE = "b".repeat(32);
+
+    await assert.rejects(
+      () => generateAgoraTokenHandler(
+        makeRequest({channelName: "room-1", rtcUid: 42}, "user-1"),
+        {firestore},
+      ),
+      (error) => error.code === "permission-denied",
+    );
+
+    // Restore env vars.
+    if (previousAppId === undefined) delete process.env.AGORA_APP_ID;
+    else process.env.AGORA_APP_ID = previousAppId;
+    if (previousCert === undefined) delete process.env.AGORA_APP_CERTIFICATE;
+    else process.env.AGORA_APP_CERTIFICATE = previousCert;
+  });
+
+  it("generateAgoraTokenHandler rejects banned participants", async () => {
+    const firestore = createFirestoreDouble();
+    // Write a banned participant doc.
+    await firestore.collection("rooms").doc("room-1")
+      .collection("participants").doc("user-1")
+      .set({userId: "user-1", role: "audience", isBanned: true});
+
+    const previousAppId = process.env.AGORA_APP_ID;
+    const previousCert = process.env.AGORA_APP_CERTIFICATE;
+    process.env.AGORA_APP_ID = "a".repeat(32);
+    process.env.AGORA_APP_CERTIFICATE = "b".repeat(32);
+
+    await assert.rejects(
+      () => generateAgoraTokenHandler(
+        makeRequest({channelName: "room-1", rtcUid: 42}, "user-1"),
+        {firestore},
+      ),
+      (error) => error.code === "permission-denied",
+    );
+
+    if (previousAppId === undefined) delete process.env.AGORA_APP_ID;
+    else process.env.AGORA_APP_ID = previousAppId;
+    if (previousCert === undefined) delete process.env.AGORA_APP_CERTIFICATE;
+    else process.env.AGORA_APP_CERTIFICATE = previousCert;
+  });
+
+  it("generateAgoraTokenHandler issues a token for a valid participant", async () => {
+    const firestore = createFirestoreDouble();
+    await firestore.collection("rooms").doc("room-1")
+      .collection("participants").doc("user-1")
+      .set({userId: "user-1", role: "audience", isBanned: false});
+
+    const previousAppId = process.env.AGORA_APP_ID;
+    const previousCert = process.env.AGORA_APP_CERTIFICATE;
+    process.env.AGORA_APP_ID = "a".repeat(32);
+    process.env.AGORA_APP_CERTIFICATE = "b".repeat(32);
+
+    const result = await generateAgoraTokenHandler(
+      makeRequest({channelName: "room-1", rtcUid: 42}, "user-1"),
+      {firestore},
+    );
+
+    assert.equal(typeof result.token, "string");
+    assert.ok(result.token.length > 0);
+    assert.equal(result.issuedForUid, "user-1");
+
+    if (previousAppId === undefined) delete process.env.AGORA_APP_ID;
+    else process.env.AGORA_APP_ID = previousAppId;
+    if (previousCert === undefined) delete process.env.AGORA_APP_CERTIFICATE;
+    else process.env.AGORA_APP_CERTIFICATE = previousCert;
   });
 });
