@@ -1070,6 +1070,15 @@ class AgoraService {
 
   Future<void> dispose() async {
     if (!_initialized) return;
+    // Unblock any caller awaiting _awaitLocalVideoCapturing immediately
+    // instead of making them wait for the full 8-second timeout.
+    final captureWaiter = _localVideoCaptureCompleter;
+    if (captureWaiter != null && !captureWaiter.isCompleted) {
+      captureWaiter.completeError(
+        StateError('AgoraService disposed while awaiting local video capture'),
+      );
+    }
+    _localVideoCaptureCompleter = null;
     await _stopPreviewSafe();
     if (_joinedChannel) {
       await _engine.leaveChannel();
