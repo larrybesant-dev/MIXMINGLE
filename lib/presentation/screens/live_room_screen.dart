@@ -756,6 +756,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         await service.publishLocalVideoStream(false);
         await service.enableVideo(false);
         _logLiveRoom('toggle_video:step enableVideo(false) completed');
+        // enableVideo(false) always downgrades Agora to clientRoleAudience,
+        // which stops mic publishing even if the user's mic was active.
+        // Restore broadcaster + audio if the mic was not muted.
+        // Best-effort: a failure here must NOT abort the cam-off success path.
+        if (!_isMicMuted && mounted) {
+          _logLiveRoom('toggle_video:restoring_mic_after_cam_off');
+          try {
+            await service.setBroadcaster(true);
+            await service.publishLocalAudioStream(true);
+          } catch (e) {
+            _logLiveRoom('toggle_video:mic_restore_failed', error: e);
+            // Mic track could not be restored; mark mic muted to reflect reality.
+            if (mounted) setState(() => _isMicMuted = true);
+          }
+        }
       }
 
       _logLiveRoom('toggle_video:success next=$next mounted=$mounted');
@@ -2662,7 +2677,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         ),
                                   ),
                                 ],
-                                if (_agoraService != null) ...[
+                                if (kDebugMode && _agoraService != null) ...[
                                   const SizedBox(height: 2),
                                   Text(
                                     'debug: phase=$_connectPhase code=${_connectErrorCode ?? "none"} ready=$_isCallReady joined=${_agoraService!.isJoinedChannel} broadcaster=${_agoraService!.isBroadcaster} capturing=${_agoraService!.isLocalVideoCapturing} video=$_isVideoEnabled inFlight=$_isVideoActionInFlight',
@@ -2735,19 +2750,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         ).textTheme.bodySmall,
                                       ),
                                     ],
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'debug: phase=$_connectPhase code=${_connectErrorCode ?? "none"} ready=$_isCallReady connecting=$_isCallConnecting service=${_agoraService != null}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.outline,
-                                            fontSize: 11,
-                                          ),
-                                    ),
+                                    if (kDebugMode) ...[                                    
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'debug: phase=$_connectPhase code=${_connectErrorCode ?? "none"} ready=$_isCallReady connecting=$_isCallConnecting service=${_agoraService != null}',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Theme.of(
+                                                context,
+                                              ).colorScheme.outline,
+                                              fontSize: 11,
+                                            ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
