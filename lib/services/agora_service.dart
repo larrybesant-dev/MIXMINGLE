@@ -1076,23 +1076,19 @@ class AgoraService {
         );
       } else {
         await _stopPreviewSafe();
-        await _engine.disableVideo();
-        developer.log('Disabling video', name: 'AgoraService');
         await _engine.muteLocalVideoStream(true);
         await _engine.enableLocalVideo(false);
         _localVideoCapturing = false;
-        if (_joinedChannel) {
-          // Downgrade to audience when not publishing camera or audio.
-          // This frees the broadcaster slot and prevents Agora from keeping
-          // an inactive publish path open.
-          _broadcasterMode = false;
-          await _engine.setClientRole(
-            role: ClientRoleType.clientRoleAudience,
-          );
+        // Keep _broadcasterMode as-is — camera toggles do NOT change the Agora
+        // role. Firebase slot service governs who may broadcast; Agora stays as
+        // broadcaster so the next enableVideo(true) reuses the existing publish
+        // path (muteLocalVideoStream + enableLocalVideo) instead of triggering
+        // an expensive leaveChannel/joinChannel renegotiation.
+        if (_joinedChannel && _broadcasterMode) {
           await _engine.updateChannelMediaOptions(
             ChannelMediaOptions(
               channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
-              clientRoleType: ClientRoleType.clientRoleAudience,
+              clientRoleType: ClientRoleType.clientRoleBroadcaster,
               autoSubscribeAudio: true,
               autoSubscribeVideo: true,
               publishCameraTrack: false,
@@ -1100,7 +1096,10 @@ class AgoraService {
             ),
           );
         }
-        developer.log('enableVideo(false) - completed', name: 'AgoraService');
+        developer.log(
+          'enableVideo(false) - completed; role stays broadcaster',
+          name: 'AgoraService',
+        );
       }
     } catch (error) {
       developer.log(

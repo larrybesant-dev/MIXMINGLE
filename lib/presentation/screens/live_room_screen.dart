@@ -762,14 +762,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         await service.publishLocalVideoStream(false);
         await service.enableVideo(false);
         _logLiveRoom('toggle_video:step enableVideo(false) completed');
-        // enableVideo(false) always downgrades Agora to clientRoleAudience,
-        // which stops mic publishing even if the user's mic was active.
-        // Restore broadcaster + audio if the mic was not muted.
+        // enableVideo(false) now keeps Agora in broadcaster role; only the
+        // camera track is stopped. Re-publish audio if the mic was not muted.
         // Best-effort: a failure here must NOT abort the cam-off success path.
         if (!_isMicMuted && mounted) {
           _logLiveRoom('toggle_video:restoring_mic_after_cam_off');
           try {
-            await service.setBroadcaster(true);
             await service.publishLocalAudioStream(true);
           } catch (e) {
             _logLiveRoom('toggle_video:mic_restore_failed', error: e);
@@ -2059,7 +2057,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         if (mounted) setState(() => _senderDisplayNameById.addAll(resolved));
       } catch (_) {}
     }
+    if (!mounted) return;
     final selected = Set<String>.from(currentAllowedViewers);
+    // ignore: use_build_context_synchronously
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
