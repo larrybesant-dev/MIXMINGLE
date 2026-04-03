@@ -89,6 +89,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   Set<int> _requestedHighQualityRemoteUids = <int>{};
   Set<int> _requestedLowQualityRemoteUids = <int>{};
   bool _remoteLayoutSyncQueued = false;
+  bool _roleMediaStatePending = false;
   int _localViewEpoch = 0;
   static const List<String> _quickEmojis = <String>[
     '😀',
@@ -2350,8 +2351,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         // Skip role-media sync when the user has an active camera slot.
         // They are already in broadcaster state; re-applying would call
         // enableVideo() a second time and disrupt the live camera track.
-        if (_isCallReady && _appliedMediaRole != role && _claimedSlotId == null) {
+        // Deduplicate: only queue one postFrameCallback at a time to prevent
+        // multiple concurrent _applyRoleMediaState calls from rapid rebuilds.
+        if (_isCallReady && _appliedMediaRole != role && _claimedSlotId == null &&
+            !_roleMediaStatePending) {
+          _roleMediaStatePending = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
+            _roleMediaStatePending = false;
             _applyRoleMediaState(role);
           });
         }
