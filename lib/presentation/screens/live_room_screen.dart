@@ -158,6 +158,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     if (user != null) {
       _firestore = ref.read(roomFirestoreProvider);
       _joinedUserId = user.id;
+      // Pre-seed own display name so local tile shows username immediately.
+      if (user.username.trim().isNotEmpty) {
+        _senderDisplayNameById[user.id] = user.username.trim();
+      }
       _joinRoom(user.id);
       if (kIsWeb) {
         // WebRTC path: no Agora WASM pre-warm needed.
@@ -1199,13 +1203,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   }
 
   Future<void> _hydrateSenderDisplayNames({
-    required List<MessageModel> messages,
+    List<MessageModel>? messages,
+    List<String>? userIds,
     required String currentUserId,
   }) async {
-    final senderIds = messages
-        .map((message) => message.senderId.trim())
-        .where((id) => id.isNotEmpty && id != currentUserId)
-        .toSet();
+    final senderIds = <String>{
+      if (messages != null)
+        ...messages
+            .map((m) => m.senderId.trim())
+            .where((id) => id.isNotEmpty && id != currentUserId),
+      if (userIds != null)
+        ...userIds.map((id) => id.trim()).where((id) => id.isNotEmpty && id != currentUserId),
+    };
     final missingIds = senderIds
         .where(
           (id) =>
@@ -2623,6 +2632,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     final rawMaxBc = roomData?['maxBroadcasters'];
                                     final slotCount = rawMaxBc is num ? rawMaxBc.toInt() : 6;
 
+                                    // Kick off display-name lookups for all
+                                    // on-cam users so tiles show usernames.
+                                    final remoteUserIds = _agoraService!.remoteUids
+                                        .map((uid) => _userIdForRtcUid(uid, participantsInRoom))
+                                        .whereType<String>()
+                                        .toList();
+                                    if (remoteUserIds.isNotEmpty) {
+                                      unawaited(_hydrateSenderDisplayNames(
+                                        userIds: remoteUserIds,
+                                        currentUserId: user.id,
+                                      ));
+                                    }
+
                                     final remoteTiles = _agoraService!.remoteUids
                                         .map((remoteUid) {
                                           final remoteUserId = _userIdForRtcUid(
@@ -2643,10 +2665,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                           final canViewRemote =
                                               remoteUserId != null &&
                                               allowedViewers.contains(user.id);
+                                          // Use cached display name if available,
+                                          // fall back to userId while fetch is in progress.
+                                          final tileLabel = remoteUserId != null
+                                              ? (_senderDisplayNameById[remoteUserId] ?? remoteUserId)
+                                              : 'Guest $remoteUid';
                                           return CameraWallRemoteTileData(
                                             uid: remoteUid,
-                                            label:
-                                                remoteUserId ?? 'Guest $remoteUid',
+                                            label: tileLabel,
                                             canView: canViewRemote,
                                             isSpeaking: _agoraService!
                                                 .isRemoteSpeaking(remoteUid),
@@ -2657,7 +2683,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     return CameraWall(
                                       roomId: widget.roomId,
                                       roomName: roomName,
-                                      localLabel: 'You',
+                                      localLabel: _senderDisplayNameById[user.id] ?? 'You',
                                       localSpeaking:
                                           _agoraService!.localSpeaking,
                                       localTile: _buildLocalCamContent(),
