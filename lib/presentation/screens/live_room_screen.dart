@@ -1957,15 +1957,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         });
       }
 
-      // On web, defer Agora initialization to explicit user action
-      // (camera button) to avoid browser gesture/startup deadlocks.
-      if (!kIsWeb) {
-        await _connectCall(userId);
-      } else if (mounted) {
-        setState(() {
-          _cameraStatus = 'Room joined. Tap Turn on cam to initialize media.';
-        });
-      }
+      // Connect the media service automatically on both platforms.
+      // On web this uses WebRTC which is instant (no WASM download).
+      // On native this initialises the Agora SDK.
+      await _connectCall(userId);
 
       if (!_hasTrackedRoomJoin) {
         _hasTrackedRoomJoin = true;
@@ -2605,7 +2600,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           child: SingleChildScrollView(
                             child: Column(
                               children: [
-                        if (_isCallReady && _agoraService != null)
+                        if (_agoraService != null)
                           Padding(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 12,
@@ -2807,82 +2802,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               ],
                             ),
                           ),
-                        if (!_isCallReady || _agoraService == null)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Camera Stage',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleSmall,
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'Live media is not ready yet. Tap below to initialize camera controls.',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodyMedium,
-                                    ),
-                                    const SizedBox(height: 10),
-                                    FilledButton.icon(
-                                      onPressed:
-                                          _isCallConnecting ||
-                                              _isVideoActionInFlight
-                                          ? null
-                                          : () async {
-                                              if (mounted) {
-                                                setState(() {
-                                                  _cameraStatus =
-                                                      'Initializing live media...';
-                                                });
-                                              }
-                                              await _connectCall(user.id);
-                                            },
-                                      icon: const Icon(Icons.videocam),
-                                      label: Text(
-                                        _isCallConnecting
-                                            ? 'Initializing...'
-                                            : 'Turn on cam',
-                                      ),
-                                    ),
-                                    if (_cameraStatus != null) ...[
-                                      const SizedBox(height: 8),
-                                      Text(
-                                        _cameraStatus!,
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.bodySmall,
-                                      ),
-                                    ],
-                                    if (kDebugMode) ...[                                    
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'debug: phase=$_connectPhase code=${_connectErrorCode ?? "none"} ready=$_isCallReady connecting=$_isCallConnecting service=${_agoraService != null}',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodySmall
-                                            ?.copyWith(
-                                              color: Theme.of(
-                                                context,
-                                              ).colorScheme.outline,
-                                              fontSize: 11,
-                                            ),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
+
                         if (isHost)
                           Padding(
                             padding: const EdgeInsets.all(8.0),
