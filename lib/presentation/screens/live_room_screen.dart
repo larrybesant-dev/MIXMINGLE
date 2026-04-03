@@ -2403,6 +2403,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             final allowGifts = roomPolicyAsync.valueOrNull?.allowGifts ?? true;
             final allowMicRequests =
                 roomPolicyAsync.valueOrNull?.allowMicRequests ?? true;
+            // Room-ended detection: when the host closes the room (isLive=false),
+            // eject every participant so their camera slots are released and the
+            // UI doesn't stay on a dead room. Only fire once the user has already
+            // joined (_hasTrackedRoomJoin) to avoid false-ejecting during initial
+            // Firestore CDC latency before isLive has been written.
+            if (roomSnap.hasData &&
+                roomData != null &&
+                roomData['isLive'] == false &&
+                _hasTrackedRoomJoin &&
+                _joinedUserId == user.id) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _handleForcedRoomExit('This room has ended.');
+              });
+              return const Scaffold(
+                body: Center(child: Text('This room has ended.')),
+              );
+            }
             // Ban enforcement
             if (participant?.isBanned == true) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
