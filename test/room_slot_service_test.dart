@@ -117,6 +117,44 @@ void main() {
       await service.releaseSlot(roomId, '');
     });
 
+    test('releaseSlot for a user who never held a slot sets camOn=false and does not throw', () async {
+      // Simulates _handleForcedRoomExit when the user was a participant but
+      // had never turned their camera on (no slot doc exists).
+      await firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('participants')
+          .doc('user-nocam')
+          .set({'userId': 'user-nocam', 'camOn': true});
+
+      await service.releaseSlot(roomId, 'user-nocam');
+
+      // No slot existed, so nothing to delete — but camOn should be cleared.
+      expect(await participantCamOn('user-nocam'), isFalse);
+    });
+
+    test('releaseSlot is idempotent when slot was already deleted externally', () async {
+      // Simulates a race where a Cloud Function or another client deletes the
+      // slot before _handleForcedRoomExit calls releaseSlot.
+      final slotId = await service.claimSlot(roomId, 'user-a', maxBroadcasters: 3);
+      expect(slotId, isNotNull);
+
+      // Delete the slot externally before releaseSlot is called.
+      await firestore
+          .collection('rooms')
+          .doc(roomId)
+          .collection('slots')
+          .doc(slotId)
+          .delete();
+
+      // Must not throw even though the slot doc is already gone.
+      await expectLater(
+        () => service.releaseSlot(roomId, 'user-a'),
+        returnsNormally,
+      );
+      expect(await participantCamOn('user-a'), isFalse);
+    });
+
     test('concurrent claims respect maxBroadcasters limit', () async {
       // Simulate two sequential claims against a 1-slot room.
       // (fake_cloud_firestore does not execute true concurrent transactions,

@@ -333,4 +333,161 @@ void main() {
       expect(find.byTooltip('People in room'), findsWidgets);
     },
   );
+
+  // ---------------------------------------------------------------------------
+  // Camera wall visibility (fix acfb943 / 37a0680)
+  // The camera wall and its controls (cam/mic toggle buttons) live inside an
+  // `_isCallReady && _agoraService != null` guard. Before Agora connects, they
+  // must not be visible regardless of the participant role.
+  // ---------------------------------------------------------------------------
+
+  testWidgets(
+    'LiveRoomScreen does not show camera/mic toggle buttons before Agora connects',
+    (WidgetTester tester) async {
+      await configureViewport(tester);
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'host-1',
+        'isLocked': false,
+        'slowModeSeconds': 0,
+      });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            roomFirestoreProvider.overrideWithValue(firestore),
+            currentParticipantProvider.overrideWith(
+              (ref, args) => Stream.value(
+                RoomParticipantModel(
+                  userId: 'user-1',
+                  role: 'audience',
+                  joinedAt: DateTime(2026, 1, 1),
+                  lastActiveAt: DateTime(2026, 1, 1),
+                ),
+              ),
+            ),
+            participantsStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([
+                RoomParticipantModel(
+                  userId: 'user-1',
+                  role: 'audience',
+                  joinedAt: DateTime(2026, 1, 1),
+                  lastActiveAt: DateTime(2026, 1, 1),
+                ),
+              ]),
+            ),
+            participantCountProvider.overrideWith(
+              (ref, roomId) => Stream.value(1),
+            ),
+            messageStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([]),
+            ),
+            hostProvider.overrideWith(
+              (ref, roomId) => Stream.value(Host('host-1')),
+            ),
+            coHostsProvider.overrideWith(
+              (ref, roomId) => Stream.value(const <Cohost>[]),
+            ),
+            userProvider.overrideWithValue(
+              UserModel(
+                id: 'user-1',
+                email: 'user1@mixvy.com',
+                username: 'User One',
+                createdAt: DateTime(2026, 1, 1),
+              ),
+            ),
+          ],
+          child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      // Without an active AgoraService, the camera wall section is hidden.
+      // These tooltips only appear inside `_isCallReady && _agoraService != null`.
+      expect(find.byTooltip('Turn camera on'), findsNothing);
+      expect(find.byTooltip('Turn camera off'), findsNothing);
+      expect(find.byTooltip('Mute microphone'), findsNothing);
+      expect(find.byTooltip('Unmute microphone'), findsNothing);
+      expect(find.text('Camera Wall'), findsNothing);
+      // Basic room chrome validates the screen mounted correctly.
+      expect(find.byTooltip('Leave Room'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'LiveRoomScreen renders member-role participant without crash',
+    (WidgetTester tester) async {
+      await configureViewport(tester);
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'host-1',
+        'isLocked': false,
+        'slowModeSeconds': 0,
+      });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            roomFirestoreProvider.overrideWithValue(firestore),
+            currentParticipantProvider.overrideWith(
+              (ref, args) => Stream.value(
+                RoomParticipantModel(
+                  userId: 'user-1',
+                  role: 'member',
+                  joinedAt: DateTime(2026, 1, 1),
+                  lastActiveAt: DateTime(2026, 1, 1),
+                ),
+              ),
+            ),
+            participantsStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([
+                RoomParticipantModel(
+                  userId: 'user-1',
+                  role: 'member',
+                  joinedAt: DateTime(2026, 1, 1),
+                  lastActiveAt: DateTime(2026, 1, 1),
+                ),
+              ]),
+            ),
+            participantCountProvider.overrideWith(
+              (ref, roomId) => Stream.value(1),
+            ),
+            messageStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([]),
+            ),
+            hostProvider.overrideWith(
+              (ref, roomId) => Stream.value(Host('host-1')),
+            ),
+            coHostsProvider.overrideWith(
+              (ref, roomId) => Stream.value(const <Cohost>[]),
+            ),
+            userProvider.overrideWithValue(
+              UserModel(
+                id: 'user-1',
+                email: 'user1@mixvy.com',
+                username: 'User One',
+                createdAt: DateTime(2026, 1, 1),
+              ),
+            ),
+          ],
+          child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      // A member-role user sees the standard audience UI (no host controls,
+      // no stage-access panel) and the room stays open (no login prompt).
+      expect(find.text('Please log in.'), findsNothing);
+      expect(find.text('Host Controls'), findsNothing);
+      expect(find.byTooltip('Leave Room'), findsOneWidget);
+      // Camera wall is NOT visible before Agora connects, even for members
+      // who have camera permission — this guards against the black AgoraVideoView
+      // regression fixed in acfb943.
+      expect(find.text('Camera Wall'), findsNothing);
+    },
+  );
 }
