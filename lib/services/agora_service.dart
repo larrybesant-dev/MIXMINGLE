@@ -282,6 +282,7 @@ class AgoraService {
         lower.contains('requested device not found') ||
         lower.contains('no audio input') ||
         lower.contains('no video input') ||
+        lower.contains('media devices are not available') ||
         lower.contains('devicesnotfound')) {
       throw AgoraServiceException(
         code: 'no-media-devices',
@@ -962,6 +963,16 @@ class AgoraService {
     _enableVideoInFlight = true;
     try {
       if (enabled) {
+        // Preflight: verify browser camera permission/hardware BEFORE touching
+        // Agora APIs. On non-web this is a no-op stub. Errors thrown here are
+        // caught by the outer catch and mapped via _throwMappedAgoraError so
+        // callers receive a typed AgoraServiceException (not a raw DomException).
+        if (kIsWeb) {
+          await web_media_probe.ensureUserMediaAccess(
+            video: true,
+            audio: false,
+          );
+        }
         if (!_broadcasterMode) {
           developer.log(
             'Setting client role to broadcaster',
