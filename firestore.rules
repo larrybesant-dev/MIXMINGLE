@@ -262,6 +262,32 @@ service cloud.firestore {
         allow delete: if signedIn()
           && (resource.data.userId == request.auth.uid || isRoomHost(roomId));
       }
+      // WebRTC signaling — peer presence and P2P call documents.
+      match /webrtc_peers/{userId} {
+        allow read: if signedIn();
+        allow create: if signedIn() && userId == request.auth.uid;
+        allow update: if signedIn() && userId == request.auth.uid;
+        allow delete: if signedIn() && userId == request.auth.uid;
+      }
+
+      match /webrtc_calls/{callId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && request.resource.data.viewerId == request.auth.uid;
+        allow update: if signedIn()
+          && (resource.data.broadcasterId == request.auth.uid
+            || resource.data.viewerId == request.auth.uid);
+        allow delete: if signedIn()
+          && (resource.data.viewerId == request.auth.uid || isRoomHost(roomId));
+
+        match /viewer_ice/{docId} {
+          allow read, write: if signedIn();
+        }
+
+        match /broadcaster_ice/{docId} {
+          allow read, write: if signedIn();
+        }
+      }
     }
 
     match /userCamPermissions/{userId} {

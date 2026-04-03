@@ -8,6 +8,7 @@ import 'package:flutter/material.dart'; // For Widget, VoidCallback
 import 'web_media_probe_stub.dart'
     if (dart.library.html) 'web_media_probe_web.dart'
     as web_media_probe;
+import 'rtc_room_service.dart';
 
 class AgoraServiceException implements Exception {
   const AgoraServiceException({
@@ -24,7 +25,7 @@ class AgoraServiceException implements Exception {
   String toString() => 'AgoraServiceException($code): $message';
 }
 
-class AgoraService {
+class AgoraService implements RtcRoomService {
   static RtcEngine? _sharedEngine;
   static bool _sharedInitialized = false;
   // Serializes concurrent initialize() calls (e.g. pre-warm racing with cam-tap).

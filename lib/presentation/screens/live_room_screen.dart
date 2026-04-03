@@ -32,6 +32,8 @@ import '../../features/room/room_permissions.dart';
 import '../../presentation/providers/wallet_provider.dart';
 import '../../services/analytics_service.dart';
 import '../../services/agora_service.dart';
+import '../../services/rtc_room_service.dart';
+import '../../services/webrtc_room_service.dart';
 import '../../services/follow_service.dart';
 import '../../services/moderation_service.dart';
 
@@ -57,7 +59,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   String? _roomJoinError;
   bool _hasTrackedRoomJoin = false;
   bool _hasTrackedFirstMessage = false;
-  AgoraService? _agoraService;
+  RtcRoomService? _agoraService;
   bool _isCallConnecting = false;
   bool _isCallReady = false;
   bool _isMicMuted = false;
@@ -158,8 +160,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       _joinedUserId = user.id;
       _joinRoom(user.id);
       if (kIsWeb) {
-        // Pre-warm the Agora SDK in the background so the WASM cold-start
-        // completes before the user ever taps "Turn on cam".
+        // WebRTC path: no Agora WASM pre-warm needed.
+        // Camera init is instant (browser native WebRTC).
+      } else {
+        // Pre-warm the Agora SDK in the background (mobile only) so WASM cold-start
+        // completes before the user taps "Turn on cam".
         _preWarmAgora(user.id);
       }
     }
@@ -385,6 +390,30 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     return 'unknown';
   }
 
+  /// Wires up the common callbacks on any [RtcRoomService] implementation.
+  void _attachServiceCallbacks(RtcRoomService service) {
+    service.onRemoteUserJoined = () {
+      if (mounted) setState(() {});
+    };
+    service.onRemoteUserLeft = () {
+      if (mounted) setState(() {});
+    };
+    service.onSpeakerActivityChanged = () {
+      if (mounted) setState(() {});
+    };
+    service.onLocalVideoCaptureChanged = () {
+      if (mounted) setState(() {});
+    };
+    service.onTokenWillExpire = () {
+      _logLiveRoom('token_will_expire: scheduling renewal');
+      _renewAgoraToken();
+    };
+    service.onConnectionLost = () {
+      _logLiveRoom('connection_lost: scheduling reconnect');
+      _handleConnectionLost();
+    };
+  }
+
   Future<void> _connectCall(String userId) async {
     if (_isCallConnecting || _isCallReady) return;
 
@@ -395,182 +424,133 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       _connectPhase = 'starting';
     });
 
-    AgoraService? connectedService;
+    RtcRoomService? connectedService;
 
     try {
       _logLiveRoom(
-        'connect:start user=$userId room=${widget.roomId} role=audience(default)',
+        'connect:start user=$userId room=${widget.roomId}',
       );
-      if (mounted) {
-        setState(() => _cameraStatus = 'Connecting: requesting token...');
-      }
       final rtcUid = _buildRtcUid(userId);
-      final credentials = await _runWithWatchdog<({String token, String appId})>(
-        phase: 'token',
-        timeout: const Duration(seconds: 12),
-        timeoutCode: 'agora-token-missing',
-        timeoutMessage: 'Timed out fetching live media token.',
-        action: () => _fetchAgoraToken(
-          channelName: widget.roomId,
-          rtcUid: rtcUid,
-        ),
-      );
-      _logLiveRoom('connect:token_ok uid=$rtcUid');
 
       if (kIsWeb) {
-        final permissionProbe = AgoraService();
-        try {
-          _logLiveRoom('connect:permission_probe_begin');
-          if (mounted) {
-            setState(() {
-              _cameraStatus = 'Checking browser camera permission...';
-            });
-          }
-          await _runWithWatchdog<void>(
-            phase: 'permission-probe',
-            timeout: const Duration(seconds: 20),
-            timeoutCode: 'permission-denied',
-            timeoutMessage:
-                'Camera permission check timed out. Please verify browser permissions and retry.',
-            action: () =>
-                permissionProbe.ensureDeviceAccess(video: true, audio: false),
-          );
-          _logLiveRoom('connect:permission_probe_ok');
-        } catch (error, stackTrace) {
-          _logLiveRoom(
-            'connect:permission_probe_failed',
-            error: error,
-            stackTrace: stackTrace,
-          );
-          // A timeout here means Chrome was slow to respond — not a genuine
-          // permission denial. Continue anyway; enableVideo() will surface a
-          // clean error if the camera is actually blocked by the user.
-          final isTimeout = error is AgoraServiceException &&
-              error.message.toLowerCase().contains('timed out');
-          if (isTimeout) {
-            _logLiveRoom('connect:permission_probe_timeout_ignored');
-            // fall through and continue with init
-          } else {
-            rethrow;
-          }
+        // ── WebRTC path (web only) ────────────────────────────────────────
+        // Browser-native WebRTC. No WASM to download → initialises instantly.
+        // Firestore is used for signaling (offer/answer/ICE).
+        _logLiveRoom('connect:webrtc_path uid=$rtcUid');
+        if (mounted) {
+          setState(() => _cameraStatus = 'Connecting to live room…');
         }
-      }
+        final service = WebRtcRoomService(
+          firestore: _firestore!,
+          localUserId: userId,
+        );
+        _attachServiceCallbacks(service);
+        await _runWithWatchdog<void>(
+          phase: 'webrtc-init',
+          timeout: const Duration(seconds: 5),
+          timeoutCode: 'webrtc-initialize-failed',
+          timeoutMessage: 'Failed to initialise WebRTC.',
+          action: () => service.initialize(''),
+        );
+        await _runWithWatchdog<void>(
+          phase: 'webrtc-join',
+          timeout: const Duration(seconds: 10),
+          timeoutCode: 'webrtc-join-failed',
+          timeoutMessage: 'Timed out joining live media mesh.',
+          action: () => service.joinRoom(
+            '',
+            widget.roomId,
+            rtcUid,
+            publishCameraTrackOnJoin: false,
+            publishMicrophoneTrackOnJoin: false,
+          ),
+        );
+        connectedService = service;
+        _logLiveRoom('connect:webrtc_joined uid=$rtcUid');
+      } else {
+        // ── Agora path (native mobile) ────────────────────────────────────
+        if (mounted) {
+          setState(() => _cameraStatus = 'Connecting: requesting token...');
+        }
+        final credentials = await _runWithWatchdog<({String token, String appId})>(
+          phase: 'token',
+          timeout: const Duration(seconds: 12),
+          timeoutCode: 'agora-token-missing',
+          timeoutMessage: 'Timed out fetching live media token.',
+          action: () => _fetchAgoraToken(
+            channelName: widget.roomId,
+            rtcUid: rtcUid,
+          ),
+        );
+        _logLiveRoom('connect:token_ok uid=$rtcUid');
 
-      const maxConnectAttempts = 2;
-      for (var attempt = 1; attempt <= maxConnectAttempts; attempt++) {
-        final service = AgoraService();
-        service.onRemoteUserJoined = () {
-          if (mounted) {
-            setState(() {});
-          }
-        };
-        service.onRemoteUserLeft = () {
-          if (mounted) {
-            setState(() {});
-          }
-        };
-        service.onSpeakerActivityChanged = () {
-          if (mounted) {
-            setState(() {});
-          }
-        };
-        service.onLocalVideoCaptureChanged = () {
-          if (mounted) {
-            setState(() {});
-          }
-        };
-        service.onTokenWillExpire = () {
-          _logLiveRoom('token_will_expire: scheduling renewal');
-          _renewAgoraToken();
-        };
-        service.onConnectionLost = () {
-          _logLiveRoom('connection_lost: scheduling reconnect');
-          _handleConnectionLost();
-        };
+        const maxConnectAttempts = 2;
+        for (var attempt = 1; attempt <= maxConnectAttempts; attempt++) {
+          final service = AgoraService();
+          _attachServiceCallbacks(service);
 
-        try {
-          if (kIsWeb) {
-            if (!_preWarmDone && attempt == 1) {
-              // Cold-start: give the JS runtime a moment to settle before
-              // triggering the WASM download. With the Flutter service worker
-              // disabled in flutter_bootstrap.js this should rarely be needed,
-              // but keep a modest delay as a safety buffer.
-              await Future<void>.delayed(const Duration(milliseconds: 800));
-            }
-            // Pre-warmed (WASM already loaded) or retry: no wait needed.
-          }
-
-          if (mounted) {
-            setState(() {
-              _cameraStatus = (_preWarmDone && attempt == 1)
-                  ? 'Connecting to live room…'
-                  : attempt == 1
-                  ? 'Loading live media engine\u2026 (may take up to 60 s on first load)'
-                  : 'Retrying media engine initialization…';
-            });
-          }
-          _logLiveRoom('connect:init_begin attempt=$attempt preWarm=$_preWarmDone');
-          // If pre-warm already initialized the shared engine, initialize() is
-          // a near-instant no-op (hits the _sharedInitialized guard).
-          // On web cold-start without pre-warm, allow 70 s for WASM load.
-          final initTimeout = (_preWarmDone || !kIsWeb || attempt > 1)
-              ? const Duration(seconds: 30)
-              : const Duration(seconds: 70);
-          await _runWithWatchdog<void>(
-            phase: 'init-attempt-$attempt',
-            timeout: initTimeout,
-            timeoutCode: 'agora-initialize-live-media-failed',
-            timeoutMessage: 'Timed out initializing live media engine.',
-            action: () => service.initialize(credentials.appId),
-          );
-
-          _logLiveRoom('connect:agora_initialized attempt=$attempt');
-          if (mounted) {
-            setState(() => _cameraStatus = 'Connecting: joining live room...');
-          }
-          await _runWithWatchdog<void>(
-            phase: 'join-attempt-$attempt',
-            timeout: const Duration(seconds: 25),
-            timeoutCode: 'agora-join-room-failed',
-            timeoutMessage: 'Timed out joining live media channel.',
-            action: () => service.joinRoom(
-              credentials.token,
-              widget.roomId,
-              rtcUid,
-              publishCameraTrackOnJoin: false,
-              publishMicrophoneTrackOnJoin: false,
-            ),
-          );
-
-          connectedService = service;
-          _logLiveRoom('connect:joined role=audience attempt=$attempt');
-          break;
-        } catch (error, stackTrace) {
-          _logLiveRoom(
-            'connect:attempt_failed attempt=$attempt',
-            error: error,
-            stackTrace: stackTrace,
-          );
-          await service.dispose();
-          final errorCode = _extractErrorCode(error);
-          final canRetry =
-              attempt < maxConnectAttempts &&
-              errorCode == 'agora-initialize-live-media-failed';
-          if (canRetry) {
+          try {
             if (mounted) {
               setState(() {
-                _connectPhase = 'retrying-init';
-                _cameraStatus =
-                    'Retrying media engine initialization...';
+                _cameraStatus = attempt == 1
+                    ? 'Connecting: initializing media engine…'
+                    : 'Retrying media engine initialization…';
               });
             }
-            await Future<void>.delayed(const Duration(milliseconds: 450));
-            continue;
-          }
+            _logLiveRoom('connect:agora_init attempt=$attempt');
+            await _runWithWatchdog<void>(
+              phase: 'init-attempt-$attempt',
+              timeout: const Duration(seconds: 30),
+              timeoutCode: 'agora-initialize-live-media-failed',
+              timeoutMessage: 'Timed out initializing live media engine.',
+              action: () => service.initialize(credentials.appId),
+            );
+            _logLiveRoom('connect:agora_initialized attempt=$attempt');
+            if (mounted) {
+              setState(() => _cameraStatus = 'Connecting: joining live room...');
+            }
+            await _runWithWatchdog<void>(
+              phase: 'join-attempt-$attempt',
+              timeout: const Duration(seconds: 25),
+              timeoutCode: 'agora-join-room-failed',
+              timeoutMessage: 'Timed out joining live media channel.',
+              action: () => service.joinRoom(
+                credentials.token,
+                widget.roomId,
+                rtcUid,
+                publishCameraTrackOnJoin: false,
+                publishMicrophoneTrackOnJoin: false,
+              ),
+            );
+            connectedService = service;
+            _logLiveRoom('connect:agora_joined attempt=$attempt');
+            break;
+          } catch (error, stackTrace) {
+            _logLiveRoom(
+              'connect:agora_attempt_failed attempt=$attempt',
+              error: error,
+              stackTrace: stackTrace,
+            );
+            await service.dispose();
+            final errorCode = _extractErrorCode(error);
+            final canRetry =
+                attempt < maxConnectAttempts &&
+                errorCode == 'agora-initialize-live-media-failed';
+            if (canRetry) {
+              if (mounted) {
+                setState(() {
+                  _connectPhase = 'retrying-init';
+                  _cameraStatus = 'Retrying media engine initialization...';
+                });
+              }
+              await Future<void>.delayed(const Duration(milliseconds: 450));
+              continue;
+            }
 
-          rethrow;
-        }
-      }
+            rethrow;
+          }
+        } // end for-loop (Agora retry)
+      } // end else-Agora-path
 
       if (connectedService == null) {
         throw const AgoraServiceException(
@@ -609,9 +589,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       if (mounted) {
         setState(() {
           final errorCode = _extractErrorCode(e);
-          final mappedError = errorCode == 'agora-initialize-live-media-failed'
-              ? "We couldn't access your camera. Check browser permissions and try again."
-              : _mapMediaError(e, canBroadcast: true);
+          final mappedError =
+              errorCode == 'agora-initialize-live-media-failed' ||
+                      errorCode == 'webrtc-initialize-failed' ||
+                      errorCode == 'webrtc-join-failed'
+                  ? "We couldn't connect to the live room. Check your connection and try again."
+                  : _mapMediaError(e, canBroadcast: true);
           final debugSuffix = e is AgoraServiceException
               ? ' [${e.code}] ${e.cause ?? e.message}'
               : ' [$e]';
