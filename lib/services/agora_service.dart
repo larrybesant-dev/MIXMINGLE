@@ -40,6 +40,10 @@ class AgoraService {
   bool _broadcasterMode = false;
   bool _localVideoCapturing = false;
   bool _previewRunning = false;
+  // Stored join credentials used to rejoin as broadcaster on web.
+  String? _lastToken;
+  String? _lastChannelName;
+  int? _lastUid;
   bool _enableVideoInFlight =
       false; // Track if we're actively enabling/disabling video
   Completer<void>? _localVideoCaptureCompleter;
@@ -775,6 +779,10 @@ class AgoraService {
 
     _joinedChannel = true;
     _broadcasterMode = isBroadcastJoin;
+    // Store for potential rejoin on web when enabling camera from audience mode.
+    _lastToken = normalizedToken;
+    _lastChannelName = normalizedChannelName;
+    _lastUid = uid;
   }
 
   /// Join a video channel
@@ -907,6 +915,7 @@ class AgoraService {
     if (trimmed.isEmpty) return;
     try {
       await _engine.renewToken(trimmed);
+      _lastToken = trimmed; // keep stored token in sync
       developer.log('renewToken: token refreshed', name: 'AgoraService');
     } catch (error, stackTrace) {
       developer.log(
@@ -963,6 +972,33 @@ class AgoraService {
     _enableVideoInFlight = true;
     try {
       if (enabled) {
+        // On web, simply calling setClientRole + updateChannelMediaOptions does
+        // not reliably trigger a WebRTC SDP renegotiation to add the publish
+        // track. Rejoin as broadcaster instead so Chrome/Edge negotiate a fresh
+        // publish path. This is only needed the first time we go from audience
+        // → broadcaster; if already in broadcaster mode (e.g. mic is on), the
+        // standard updateChannelMediaOptions path is fine.
+        if (kIsWeb && !_broadcasterMode &&
+            _lastToken != null &&
+            _lastChannelName != null &&
+            _lastUid != null) {
+          developer.log(
+            'enableVideo(true) web: delegating to rejoinAsBroadcaster',
+            name: 'AgoraService',
+          );
+          await rejoinAsBroadcaster(
+            _lastToken!,
+            _lastChannelName!,
+            _lastUid!,
+            publishMicrophoneTrack: publishMicrophoneTrack,
+          );
+          developer.log(
+            'enableVideo($enabled) - completed successfully (via rejoin)',
+            name: 'AgoraService',
+          );
+          return;
+        }
+
         if (!_broadcasterMode) {
           developer.log(
             'Setting client role to broadcaster',
