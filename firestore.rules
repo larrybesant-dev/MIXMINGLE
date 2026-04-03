@@ -113,6 +113,24 @@ service cloud.firestore {
       match /privacy/{documentId} {
         allow read, create, update, delete: if isSelf(userId);
       }
+
+      match /bookmarks/{bookmarkId} {
+        allow read: if isSelf(userId);
+        allow create: if isSelf(userId)
+          && request.resource.data.postId is string;
+        allow delete: if isSelf(userId);
+        allow update: if false;
+      }
+
+      match /followers/{followerId} {
+        allow read: if signedIn();
+        allow create, update, delete: if false;
+      }
+
+      match /following/{followingId} {
+        allow read: if signedIn();
+        allow create, update, delete: if false;
+      }
     }
 
     match /rooms/{roomId} {
@@ -175,6 +193,11 @@ service cloud.firestore {
       match /policies/{documentId} {
         allow read: if signedIn();
         allow create, update, delete: if isRoomHost(roomId);
+      }
+
+      match /gift_events/{giftEventId} {
+        allow read: if signedIn() && isRoomParticipant(roomId);
+        allow create, update, delete: if false;
       }
 
       match /cam_access_requests/{requestId} {
@@ -312,6 +335,14 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.followerUserId == request.auth.uid;
     }
 
+    match /refund_requests/{requestId} {
+      allow read: if signedIn()
+        && (resource.data.requesterId == request.auth.uid
+          || resource.data.senderId == request.auth.uid
+          || resource.data.receiverId == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+
     match /cash_out_requests/{requestId} {
       allow read: if signedIn() && resource.data.userId == request.auth.uid;
       allow create: if signedIn()
@@ -436,6 +467,56 @@ service cloud.firestore {
 
     match /logs/{logId} {
       allow read, write: if false;
+    }
+
+    match /conversations/{conversationId} {
+      allow read: if signedIn()
+        && resource.data.participantIds.hasAny([request.auth.uid]);
+      allow create: if signedIn()
+        && request.resource.data.participantIds.hasAny([request.auth.uid])
+        && request.resource.data.participantIds is list;
+      allow update: if signedIn()
+        && resource.data.participantIds.hasAny([request.auth.uid])
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['lastMessage', 'lastMessageAt', 'updatedAt',
+                      'isArchived', 'unreadCounts']);
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if signedIn()
+          && get(/databases/$(database)/documents/conversations/$(conversationId))
+              .data.participantIds.hasAny([request.auth.uid]);
+        allow create: if signedIn()
+          && request.resource.data.senderId == request.auth.uid
+          && get(/databases/$(database)/documents/conversations/$(conversationId))
+              .data.participantIds.hasAny([request.auth.uid]);
+        allow update, delete: if false;
+      }
+    }
+
+    match /groups/{groupId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+        && request.resource.data.memberIds.hasAny([request.auth.uid]);
+      allow update: if signedIn()
+        && resource.data.memberIds.hasAny([request.auth.uid]);
+      allow delete: if signedIn()
+        && resource.data.creatorId == request.auth.uid;
+
+      match /posts/{postId} {
+        allow read: if signedIn();
+        allow create: if signedIn()
+          && request.resource.data.authorId == request.auth.uid
+          && get(/databases/$(database)/documents/groups/$(groupId))
+              .data.memberIds.hasAny([request.auth.uid]);
+        allow update, delete: if signedIn()
+          && resource.data.authorId == request.auth.uid;
+      }
+    }
+
+    match /hashtags/{hashtag} {
+      allow read: if signedIn();
+      allow create, update, delete: if false;
     }
 
     match /{document=**} {
