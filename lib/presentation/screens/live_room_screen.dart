@@ -813,7 +813,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
   Widget _buildLocalCamContent() {
     final service = _agoraService;
-    return service != null && service.canRenderLocalView
+    // Also gate on _isVideoEnabled: on web canRenderLocalView stays true when
+    // the user keeps mic-only broadcaster mode after turning the camera off,
+    // which would render a black AgoraVideoView instead of the "Camera is off"
+    // placeholder.
+    return service != null && service.canRenderLocalView && _isVideoEnabled
         ? KeyedSubtree(
             key: ValueKey<String>('local-view-$_localViewEpoch'),
             child: service.getLocalView(),
