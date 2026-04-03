@@ -2019,6 +2019,33 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     required List<String> currentAllowedViewers,
     required UserCamPermissionsController controller,
   }) async {
+    // Hydrate display names for all members so the sheet shows usernames.
+    final missingIds = members
+        .map((m) => m.userId)
+        .where((id) => id != currentUserId && !_senderDisplayNameById.containsKey(id))
+        .toList(growable: false);
+    if (missingIds.isNotEmpty) {
+      final FirebaseFirestore firestore =
+          _firestore ?? ref.read(roomFirestoreProvider);
+      final resolved = <String, String>{};
+      try {
+        for (var i = 0; i < missingIds.length; i += 10) {
+          final batch = missingIds.sublist(i, (i + 10).clamp(0, missingIds.length));
+          final snap = await firestore
+              .collection('users')
+              .where(FieldPath.documentId, whereIn: batch)
+              .get();
+          for (final doc in snap.docs) {
+            final username = _asString(doc.data()['username']);
+            resolved[doc.id] = username.isEmpty ? doc.id : username;
+          }
+        }
+        for (final id in missingIds) {
+          resolved.putIfAbsent(id, () => id);
+        }
+        if (mounted) setState(() => _senderDisplayNameById.addAll(resolved));
+      } catch (_) {}
+    }
     final selected = Set<String>.from(currentAllowedViewers);
     await showModalBottomSheet<void>(
       context: context,
@@ -2054,9 +2081,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           itemBuilder: (context, index) {
                             final member = selectableMembers[index];
                             final allowed = selected.contains(member.userId);
+                            final displayName = _senderDisplayNameById[member.userId] ?? member.userId;
                             return SwitchListTile.adaptive(
                               value: allowed,
-                              title: Text(member.userId),
+                              title: Text(displayName),
                               subtitle: Text(
                                 allowed
                                     ? 'Can view my cam'
