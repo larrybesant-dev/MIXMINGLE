@@ -46,6 +46,9 @@ class AgoraService {
   int? _lastUid;
   bool _enableVideoInFlight =
       false; // Track if we're actively enabling/disabling video
+  /// True while rejoinAsBroadcaster is executing so the disconnect event
+  /// fired by the intentional leaveChannel() does not trigger onConnectionLost.
+  bool _isRejoinInProgress = false;
   Completer<void>? _localVideoCaptureCompleter;
 
   // Callbacks for UI updates
@@ -579,8 +582,12 @@ class AgoraService {
           // Only surface a lost-connection event for terminal states.
           // connectionStateReconnecting is a transient state Agora handles
           // internally; firing onConnectionLost there causes a double-reconnect.
+          // _isRejoinInProgress suppresses the spurious disconnect fired by the
+          // intentional leaveChannel() inside rejoinAsBroadcaster — on web the
+          // SDK may not send connectionChangedLeaveChannel as the reason.
           if (state == ConnectionStateType.connectionStateDisconnected &&
-              reason != ConnectionChangedReasonType.connectionChangedLeaveChannel) {
+              reason != ConnectionChangedReasonType.connectionChangedLeaveChannel &&
+              !_isRejoinInProgress) {
             if (onConnectionLost != null) onConnectionLost!();
           }
         },
@@ -845,27 +852,33 @@ class AgoraService {
       'rejoinAsBroadcaster: leaving channel to force publish track renegotiation',
       name: 'AgoraService',
     );
-    // --- leave (full cleanup via existing method) ---
-    try {
-      await leaveChannel();
-    } catch (e) {
-      developer.log(
-        'rejoinAsBroadcaster: leaveChannel error (ignored): $e',
-        name: 'AgoraService',
-      );
-    }
-    // Give web runtimes a short moment to fully release previous tracks.
-    await Future<void>.delayed(const Duration(milliseconds: 250));
 
-    // --- re‑enable video engine before join ---
+    // Suppress onConnectionLost for the duration of this intentional leave+rejoin.
+    // On web the Agora SDK may not send connectionChangedLeaveChannel as the
+    // disconnect reason, which would otherwise trigger _handleConnectionLost and
+    // null out _agoraService mid-operation.
+    _isRejoinInProgress = true;
     try {
-      await _engine.enableVideo();
-    } catch (_) {}
+      // --- leave (full cleanup via existing method) ---
+      try {
+        await leaveChannel();
+      } catch (e) {
+        developer.log(
+          'rejoinAsBroadcaster: leaveChannel error (ignored): $e',
+          name: 'AgoraService',
+        );
+      }
+      // Give web runtimes a short moment to fully release previous tracks.
+      await Future<void>.delayed(const Duration(milliseconds: 250));
 
-    // --- rejoin as broadcaster ---
-    try {
+      // --- re‑enable video engine before join ---
+      try {
+        await _engine.enableVideo();
+      } catch (_) {}
+
+      // --- rejoin as broadcaster ---
       developer.log(
-        'AGORA ROLE: broadcaster (we always join as broadcaster)',
+        'AGORA ROLE: broadcaster (rejoin for WebRTC SDP renegotiation)',
         name: 'AgoraService',
       );
       await _engine.setChannelProfile(
@@ -885,6 +898,13 @@ class AgoraService {
           publishMicrophoneTrack: publishMicrophoneTrack,
         ),
       );
+
+      // Set state flags BEFORE calling _ensurePublishPipelineAfterRoleUpgrade so
+      // that publishLocalVideoStream / publishLocalAudioStream do not return early
+      // on the !_joinedChannel guard, and use clientRoleBroadcaster in options.
+      _joinedChannel = true;
+      _broadcasterMode = true;
+
       await _engine.enableVideo();
       await _ensurePublishPipelineAfterRoleUpgrade(
         publishAudio: publishMicrophoneTrack,
@@ -895,16 +915,19 @@ class AgoraService {
       } finally {
         _enableVideoInFlight = false;
       }
-    } catch (error) {
-      _throwMappedAgoraError(error, operation: 'rejoin as broadcaster');
-    }
 
-    _joinedChannel = true;
-    _broadcasterMode = true;
-    developer.log(
-      'rejoinAsBroadcaster: successfully rejoined as broadcaster',
-      name: 'AgoraService',
-    );
+      developer.log(
+        'rejoinAsBroadcaster: successfully rejoined as broadcaster',
+        name: 'AgoraService',
+      );
+    } catch (error) {
+      // Roll back flags if rejoin failed so callers see a consistent state.
+      _joinedChannel = false;
+      _broadcasterMode = false;
+      _throwMappedAgoraError(error, operation: 'rejoin as broadcaster');
+    } finally {
+      _isRejoinInProgress = false;
+    }
   }
 
   /// Renews the Agora token without leaving the channel.
