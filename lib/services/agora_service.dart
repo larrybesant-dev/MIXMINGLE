@@ -916,6 +916,18 @@ class AgoraService {
         _enableVideoInFlight = false;
       }
 
+      // Mirror the non-rejoin enableVideo path: if the capture event never
+      // fired on web (SDK reliability issue), force the flag true here so
+      // canRenderLocalView is consistent with broadcasterMode.
+      if (kIsWeb && !_localVideoCapturing) {
+        developer.log(
+          'rejoinAsBroadcaster: web camera event not received; assuming capture active.',
+          name: 'AgoraService',
+        );
+        _localVideoCapturing = true;
+        if (onLocalVideoCaptureChanged != null) onLocalVideoCaptureChanged!();
+      }
+
       developer.log(
         'rejoinAsBroadcaster: successfully rejoined as broadcaster',
         name: 'AgoraService',

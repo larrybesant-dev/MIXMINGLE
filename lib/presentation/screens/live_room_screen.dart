@@ -490,8 +490,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
         try {
           if (kIsWeb) {
-            // Give web runtime/auth/render loop a brief settle window before Agora init.
-            await Future<void>.delayed(const Duration(milliseconds: 800));
+            if (!_preWarmDone && attempt == 1) {
+              // Cold-start: give the JS runtime a moment to settle before
+              // triggering the WASM download. With the Flutter service worker
+              // disabled in flutter_bootstrap.js this should rarely be needed,
+              // but keep a modest delay as a safety buffer.
+              await Future<void>.delayed(const Duration(milliseconds: 800));
+            }
+            // Pre-warmed (WASM already loaded) or retry: no wait needed.
           }
 
           if (mounted) {
