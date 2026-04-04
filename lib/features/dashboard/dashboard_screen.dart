@@ -152,6 +152,11 @@ import '../../core/firestore/firestore_error_utils.dart';
             label: const Text('Payments'),
             onPressed: () => context.go('/payments'),
           ),
+          ActionChip(
+            avatar: const Icon(Icons.meeting_room_outlined, size: 18),
+            label: const Text('Room Directory'),
+            onPressed: () => context.go('/rooms'),
+          ),
         ],
       );
     }

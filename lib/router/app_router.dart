@@ -36,6 +36,7 @@ import 'package:mixvy/features/trending/screens/trending_screen.dart';
 import 'package:mixvy/presentation/screens/not_found_screen.dart';
 import '../features/messaging/screens/whisper_popout_screen.dart';
 import '../features/room/screens/cam_popout_screen.dart';
+import '../features/feed/screens/room_browser_screen.dart';
 
 import '../features/auth/register_screen.dart';
 import '../features/profile/profile_screen.dart';
@@ -426,6 +427,13 @@ final routerProvider = Provider<GoRouter>((ref) {
           final userId = state.uri.queryParameters['userId'] ?? '';
           if (userId.isEmpty) return NotFoundScreen(path: state.uri.toString());
           return CamPopoutScreen(targetUserId: userId);
+        },
+      ),
+      GoRoute(
+        path: '/rooms',
+        builder: (context, state) {
+          final category = state.uri.queryParameters['category'];
+          return RoomBrowserScreen(initialCategory: category);
         },
       ),
     ],

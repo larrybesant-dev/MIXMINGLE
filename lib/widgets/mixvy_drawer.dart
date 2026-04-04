@@ -57,6 +57,7 @@ class MixVyDrawer extends ConsumerWidget {
           ),
           _navItem(context, icon: Icons.home_rounded, title: 'Home', route: '/'),
           _navItem(context, icon: Icons.explore_rounded, title: 'Discover', route: '/discover'),
+          _navItem(context, icon: Icons.meeting_room_outlined, title: 'Room Directory', route: '/rooms'),
           _navItem(context, icon: Icons.search_rounded, title: 'Search', route: '/search'),
           _navItem(context, icon: Icons.mail_rounded, title: 'Messages', route: '/messages'),
           _navItem(context, icon: Icons.bookmark_rounded, title: 'Bookmarks', route: '/bookmarks'),

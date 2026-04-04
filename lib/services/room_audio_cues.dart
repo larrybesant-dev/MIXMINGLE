@@ -1,0 +1,113 @@
+import 'dart:async';
+import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
+import 'package:web/web.dart' as web;
+
+/// Plays short synthesised audio tones for room events on the web platform.
+///
+/// All methods are no-ops on non-web platforms or when Web Audio is unavailable.
+/// Each cue is a short oscillator burst so no assets are needed.
+class RoomAudioCues {
+  RoomAudioCues._();
+
+  static final RoomAudioCues instance = RoomAudioCues._();
+
+  web.AudioContext? _ctx;
+
+  web.AudioContext _getCtx() {
+    _ctx ??= web.AudioContext();
+    return _ctx!;
+  }
+
+  /// Plays a short tone using an OscillatorNode.
+  /// [frequency] in Hz, [duration] in milliseconds, [type] is one of
+  /// 'sine', 'square', 'sawtooth', 'triangle'.
+  void _playTone({
+    required double frequency,
+    required int durationMs,
+    String type = 'sine',
+    double gain = 0.18,
+  }) {
+    if (!kIsWeb) return;
+    try {
+      final ctx = _getCtx();
+      final osc = ctx.createOscillator();
+      final gainNode = ctx.createGain();
+
+      osc.type = type;
+      osc.frequency.value = frequency;
+      gainNode.gain.value = gain;
+
+      osc.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      final now = ctx.currentTime;
+      osc.start(now);
+      // Exponential ramp to silence avoids a click artefact.
+      gainNode.gain.exponentialRampToValueAtTime(0.001, now + durationMs / 1000);
+      osc.stop(now + durationMs / 1000 + 0.05);
+    } catch (_) {
+      // AudioContext unavailable — degrade gracefully.
+    }
+  }
+
+  /// Plays a double-tone chord for a richer sound.
+  void _playChord({
+    required List<double> frequencies,
+    required int durationMs,
+    String type = 'sine',
+    double gain = 0.14,
+  }) {
+    for (final f in frequencies) {
+      _playTone(frequency: f, durationMs: durationMs, type: type, gain: gain);
+    }
+  }
+
+  // ── Public cues ──────────────────────────────────────────────────────────
+
+  /// Short rising ding when a user joins the room.
+  void playUserJoined() => _playChord(
+        frequencies: [523.25, 659.25], // C5 + E5
+        durationMs: 220,
+      );
+
+  /// Softer falling tone when a user leaves.
+  void playUserLeft() => _playTone(
+        frequency: 392.0, // G4
+        durationMs: 180,
+        gain: 0.12,
+      );
+
+  /// Upbeat three-note fanfare when a gift is received.
+  void playGiftReceived() {
+    if (!kIsWeb) return;
+    _playTone(frequency: 523.25, durationMs: 120); // C5
+    Future.delayed(const Duration(milliseconds: 130), () {
+      _playTone(frequency: 659.25, durationMs: 120); // E5
+    });
+    Future.delayed(const Duration(milliseconds: 260), () {
+      _playTone(frequency: 783.99, durationMs: 200); // G5
+    });
+  }
+
+  /// Clear bell-like tone when someone raises their hand.
+  void playHandRaised() => _playTone(
+        frequency: 880.0, // A5
+        durationMs: 280,
+        type: 'sine',
+        gain: 0.16,
+      );
+
+  /// Ding when a mic request is approved.
+  void playMicApproved() => _playChord(
+        frequencies: [659.25, 987.77], // E5 + B5
+        durationMs: 300,
+      );
+
+  void dispose() {
+    try {
+      _ctx?.close();
+    } catch (_) {}
+    _ctx = null;
+  }
+}

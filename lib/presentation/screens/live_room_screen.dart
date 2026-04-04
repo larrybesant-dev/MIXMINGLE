@@ -47,6 +47,7 @@ import '../../services/moderation_service.dart';
 import '../../services/friend_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/presence_service.dart';
+import '../../services/room_audio_cues.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -108,12 +109,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   Timer? _reconnectTimer;
   static const int _kMaxBackoffSeconds = 30;
   final Map<String, String> _senderDisplayNameById = <String, String>{};
+  final Map<String, int> _senderVipLevelById = <String, int>{};
   final Set<String> _senderLookupInFlight = <String>{};
   Set<int> _requestedHighQualityRemoteUids = <int>{};
   Set<int> _requestedLowQualityRemoteUids = <int>{};
   bool _remoteLayoutSyncQueued = false;
   bool _roleMediaStatePending = false;
   int _localViewEpoch = 0;
+  int _lastPendingMicRequestCount = 0;
   /// Cached from the room stream — avoids a Firestore .get() on every cam toggle.
   int _maxBroadcasters = 6;
   static const List<String> _quickEmojis = <String>[
@@ -418,9 +421,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   /// Wires up the common callbacks on any [RtcRoomService] implementation.
   void _attachServiceCallbacks(RtcRoomService service) {
     service.onRemoteUserJoined = () {
+      RoomAudioCues.instance.playUserJoined();
       if (mounted) setState(() {});
     };
     service.onRemoteUserLeft = () {
+      RoomAudioCues.instance.playUserLeft();
       if (mounted) setState(() {});
     };
     service.onSpeakerActivityChanged = () {
@@ -1383,6 +1388,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final FirebaseFirestore firestore =
         _firestore ?? ref.read(roomFirestoreProvider);
     final resolved = <String, String>{};
+    final resolvedVip = <String, int>{};
 
     try {
       for (var i = 0; i < missingIds.length; i += 10) {
@@ -1398,12 +1404,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           final data = doc.data();
           final username = _asString(data['username']);
           resolved[doc.id] = username.isEmpty ? doc.id : username;
+          final vip = data['vipLevel'];
+          resolvedVip[doc.id] = vip is int
+              ? vip
+              : (vip is num ? vip.toInt() : 0);
         }
       }
 
       // Prevent repeated lookups for missing docs by falling back to the id.
       for (final id in missingIds) {
         resolved.putIfAbsent(id, () => id);
+        resolvedVip.putIfAbsent(id, () => 0);
       }
 
       if (!mounted) {
@@ -1411,6 +1422,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       }
       setState(() {
         _senderDisplayNameById.addAll(resolved);
+        _senderVipLevelById.addAll(resolvedVip);
       });
     } catch (_) {
       // Best effort only; fall back to sender id in UI if lookup fails.
@@ -2402,6 +2414,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       });
       // Spawn floating particle animation
       _floatingGiftKey.currentState?.spawnGift(emoji);
+      // Audio cue
+      RoomAudioCues.instance.playGiftReceived();
     }
   }
 
@@ -2658,7 +2672,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         final role = participant?.role ?? 'audience';
         final myAllowedViewers =
             myAllowedViewersAsync.valueOrNull ?? const <String>[];
-        const String? micRequestStatus = null;
+        final myMicRequestAsync = ref.watch(
+          myMicAccessRequestProvider((
+            roomId: widget.roomId,
+            requesterId: user.id,
+          )),
+        );
+        final micRequestStatus = myMicRequestAsync.valueOrNull?.status;
         final firestore = ref.watch(roomFirestoreProvider);
         // Skip role-media sync when the user has an active camera slot.
         // They are already in broadcaster state; re-applying would call
@@ -2799,25 +2819,61 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     },
                     icon: const Icon(Icons.logout),
                   ),
-                  IconButton(
-                    tooltip: 'People in room',
-                    onPressed: participantsInRoom.isEmpty
-                        ? null
-                        : () => _openPeopleSheet(
-                            participants: participantsInRoom,
-                            currentParticipant: participant,
-                            currentUserId: user.id,
-                            currentUsername: user.username,
-                            currentAvatarUrl: user.avatarUrl,
-                            hostId: hostId,
-                            isHost: isHost,
-                            isModerator: isModerator,
-                            hostControls: hostControls,
-                            presenceList:
-                                presenceAsync.valueOrNull ?? const [],
+                  Builder(builder: (ctx) {
+                    final pendingCount = isHost
+                        ? (micRequestsAsync.valueOrNull
+                                ?.where((r) => r.status == 'pending')
+                                .length ??
+                            0)
+                        : 0;
+                    return Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        IconButton(
+                          tooltip: 'People in room',
+                          onPressed: participantsInRoom.isEmpty
+                              ? null
+                              : () => _openPeopleSheet(
+                                  participants: participantsInRoom,
+                                  currentParticipant: participant,
+                                  currentUserId: user.id,
+                                  currentUsername: user.username,
+                                  currentAvatarUrl: user.avatarUrl,
+                                  hostId: hostId,
+                                  isHost: isHost,
+                                  isModerator: isModerator,
+                                  hostControls: hostControls,
+                                  presenceList:
+                                      presenceAsync.valueOrNull ?? const [],
+                                ),
+                          icon: const Icon(Icons.people_alt_outlined),
+                        ),
+                        if (pendingCount > 0)
+                          Positioned(
+                            right: 4,
+                            top: 4,
+                            child: Container(
+                              width: 16,
+                              height: 16,
+                              decoration: const BoxDecoration(
+                                color: Colors.orange,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Center(
+                                child: Text(
+                                  '$pendingCount',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ),
-                    icon: const Icon(Icons.people_alt_outlined),
-                  ),
+                      ],
+                    );
+                  }),
                   PopupMenuButton<String>(
                     onSelected: (value) {
                       if (value == 'report_room') {
@@ -3560,6 +3616,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                                       'pending',
                                                 )
                                                 .toList(growable: false);
+                                            // Play audio cue when a new hand raise arrives.
+                                            if (isHost && pendingRequests.length > _lastPendingMicRequestCount) {
+                                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                                RoomAudioCues.instance.playHandRaised();
+                                              });
+                                            }
+                                            _lastPendingMicRequestCount = pendingRequests.length;
                                             if (pendingRequests.isEmpty) {
                                               return const Text(
                                                 'No pending mic requests.',
@@ -4005,6 +4068,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         currentUserId: user.id,
                                         currentUsername: user.username,
                                       ),
+                                      senderVipLevel: _senderVipLevelById[msg.senderId] ?? 0,
                                     );
                                   },
                                 );
@@ -4146,6 +4210,20 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                                 .valueOrNull
                                                 ?.coinBalance ??
                                             0,
+                                      ),
+                                    ),
+                                  // Raise hand button for audience members
+                                  if (!isHost && !isCohost && !isModerator && allowMicRequests)
+                                    _HandRaiseButton(
+                                      status: micRequestStatus,
+                                      onRaise: () => micAccessController.requestAccess(
+                                        roomId: widget.roomId,
+                                        requesterId: user.id,
+                                        hostId: hostId,
+                                      ),
+                                      onCancel: () => micAccessController.expireNow(
+                                        widget.roomId,
+                                        '${user.id}_$hostId',
                                       ),
                                     ),
                                   IconButton(
@@ -4358,6 +4436,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                             currentUserId: user.id,
                                             currentUsername: user.username,
                                           ),
+                                          senderVipLevel: _senderVipLevelById[msg.senderId] ?? 0,
                                         );
                                       },
                                     );
@@ -4608,4 +4687,36 @@ class _GiftToast {
     required this.giftName,
     required this.coinCost,
   });
+}
+
+// ---------------------------------------------------------------------------
+// Raise-hand button
+// ---------------------------------------------------------------------------
+
+/// Compact icon button that lets audience members raise their hand to request
+/// the mic.  Shows a filled orange hand when a request is pending.  Tapping
+/// while pending cancels the request.
+class _HandRaiseButton extends StatelessWidget {
+  const _HandRaiseButton({
+    required this.status,
+    required this.onRaise,
+    required this.onCancel,
+  });
+
+  final String? status;
+  final VoidCallback onRaise;
+  final Future<void> Function() onCancel;
+
+  @override
+  Widget build(BuildContext context) {
+    final isPending = status == 'pending';
+    return IconButton(
+      tooltip: isPending ? 'Cancel hand raise' : 'Raise hand to speak',
+      icon: Icon(
+        isPending ? Icons.front_hand : Icons.front_hand_outlined,
+        color: isPending ? Colors.orange : null,
+      ),
+      onPressed: isPending ? () => onCancel() : onRaise,
+    );
+  }
 }

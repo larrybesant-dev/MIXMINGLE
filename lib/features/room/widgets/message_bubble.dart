@@ -9,18 +9,28 @@ class MessageBubble extends StatelessWidget {
   final MessageModel message;
   final bool isMe;
   final String? senderLabel;
+  /// VIP level for the sender. Level ≥1 shows a bronze/silver/gold name colour.
+  final int senderVipLevel;
 
   const MessageBubble({
     super.key,
     required this.message,
     required this.isMe,
     this.senderLabel,
+    this.senderVipLevel = 0,
   });
 
   String _formatClock(DateTime value) {
     final h = value.hour.toString().padLeft(2, '0');
     final m = value.minute.toString().padLeft(2, '0');
     return '$h:$m';
+  }
+
+  Color _vipColor(int level) {
+    if (level >= 5) return const Color(0xFFFFD700); // gold
+    if (level >= 3) return const Color(0xFFC0C0C0); // silver
+    if (level >= 1) return const Color(0xFFCD7F32); // bronze
+    return Colors.transparent;
   }
 
   @override
@@ -34,9 +44,12 @@ class MessageBubble extends StatelessWidget {
         : Colors.black.withValues(alpha: 0.54);
 
     final Color textColor = Colors.white;
-    final Color nameColor = isMe
-        ? Colors.white.withValues(alpha: 0.85)
-        : Colors.white.withValues(alpha: 0.70);
+    final vipC = _vipColor(senderVipLevel);
+    final Color nameColor = (senderVipLevel > 0 && vipC != Colors.transparent)
+        ? vipC
+        : (isMe
+            ? Colors.white.withValues(alpha: 0.85)
+            : Colors.white.withValues(alpha: 0.70));
 
     return Align(
       alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,

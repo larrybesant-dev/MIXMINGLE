@@ -246,6 +246,15 @@ class _UserProfilePopupSheetState
                 ),
               if (!_isBlocked)
                 _ActionButton(
+                  icon: Icons.videocam_outlined,
+                  label: 'Video call',
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    context.go('/cam?userId=${widget.userId}');
+                  },
+                ),
+              if (!_isBlocked)
+                _ActionButton(
                   icon: Icons.card_giftcard,
                   label: 'Send gift',
                   onTap: () {
