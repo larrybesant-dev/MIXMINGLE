@@ -1941,7 +1941,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     required bool isModerator,
     required HostControls hostControls,
     required Map<String, RoomUserPresentation> presentationByUserId,
+    required List<RoomPresenceModel> presenceList,
   }) async {
+    // Build userId → isOnline map with 90-second heartbeat staleness window.
+    final onlineMap = <String, bool>{
+      for (final p in presenceList)
+        if (p.isOnline &&
+            (p.lastHeartbeatAt == null ||
+                DateTime.now()
+                        .difference(p.lastHeartbeatAt!)
+                        .inSeconds <
+                    90))
+          p.userId: true,
+    };
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -1953,6 +1965,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             presentationByUserId: presentationByUserId,
             currentUserId: currentUserId,
             hostUserId: hostId,
+            onlineStatusByUserId: onlineMap,
             onParticipantTap: (selected) {
               Navigator.of(sheetContext).pop();
               _showParticipantActions(
@@ -2039,6 +2052,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     required bool isHost,
     required bool isModerator,
     required HostControls hostControls,
+    required List<RoomPresenceModel> presenceList,
   }) async {
     final presentationByUserId = await _loadParticipantPresentation(
       participants: participants,
@@ -2059,6 +2073,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       isModerator: isModerator,
       hostControls: hostControls,
       presentationByUserId: presentationByUserId,
+      presenceList: presenceList,
     );
   }
 
@@ -2798,6 +2813,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             isHost: isHost,
                             isModerator: isModerator,
                             hostControls: hostControls,
+                            presenceList:
+                                presenceAsync.valueOrNull ?? const [],
                           ),
                     icon: const Icon(Icons.people_alt_outlined),
                   ),
@@ -2955,7 +2972,36 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       ));
                                     }
 
+                                    // Build a map from userId → isOnline using the presence
+                                    // stream so we can filter out stale webrtc_peers entries
+                                    // (e.g. users who disconnected abruptly without cleanup).
+                                    final presenceMap = <String, bool>{
+                                      for (final p in presenceAsync.valueOrNull ??
+                                          const <RoomPresenceModel>[])
+                                        if (p.isOnline &&
+                                            (p.lastHeartbeatAt == null ||
+                                                DateTime.now()
+                                                        .difference(
+                                                          p.lastHeartbeatAt!,
+                                                        )
+                                                        .inSeconds <
+                                                    90))
+                                          p.userId: true,
+                                    };
+
                                     final remoteTiles = _agoraService!.remoteUids
+                                        .where((remoteUid) {
+                                          // Filter out UIDs whose owner is confirmed offline.
+                                          final remoteUserId = _userIdForRtcUid(
+                                            remoteUid,
+                                            participantsInRoom,
+                                          );
+                                          if (remoteUserId == null) return true; // unknown — show
+                                          // If presence doc exists and user is not online → hide stale tile.
+                                          final knownOnline = presenceMap[remoteUserId];
+                                          if (knownOnline == null) return true; // no doc yet — show
+                                          return knownOnline;
+                                        })
                                         .map((remoteUid) {
                                           final remoteUserId = _userIdForRtcUid(
                                             remoteUid,
@@ -3477,6 +3523,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                                       isModerator: false,
                                                       hostControls:
                                                           hostControls,
+                                                      presenceList:
+                                                          presenceAsync
+                                                              .valueOrNull ??
+                                                          const [],
                                                     ),
                                               icon: const Icon(
                                                 Icons.manage_accounts_outlined,
@@ -3737,6 +3787,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                           isHost: isHost,
                                           isModerator: isModerator,
                                           hostControls: hostControls,
+                                          presenceList:
+                                              presenceAsync.valueOrNull ??
+                                              const [],
                                         ),
                                   icon: const Icon(Icons.people_outline),
                                 ),

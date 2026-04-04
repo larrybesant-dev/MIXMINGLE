@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/room_participant_model.dart';
+import '../providers/presence_provider.dart';
 
 class RoomUserPresentation {
   const RoomUserPresentation({required this.displayName, this.avatarUrl});
@@ -125,6 +126,7 @@ class RoomRosterSheet extends StatelessWidget {
     required this.currentUserId,
     required this.hostUserId,
     required this.onParticipantTap,
+    this.onlineStatusByUserId = const {},
   });
 
   final List<RoomParticipantModel> participants;
@@ -132,6 +134,8 @@ class RoomRosterSheet extends StatelessWidget {
   final String currentUserId;
   final String hostUserId;
   final ValueChanged<RoomParticipantModel> onParticipantTap;
+  /// userId → true if the user is currently online (heartbeat fresh)
+  final Map<String, bool> onlineStatusByUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -195,14 +199,38 @@ class RoomRosterSheet extends StatelessWidget {
 
                   return ListTile(
                     contentPadding: EdgeInsets.zero,
-                    leading: CircleAvatar(
-                      backgroundImage: _avatarImageProvider(
-                        presentation.avatarUrl,
-                      ),
-                      child:
-                          _avatarImageProvider(presentation.avatarUrl) == null
-                          ? Icon(_roleIcon(participant, hostUserId))
-                          : null,
+                    leading: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        CircleAvatar(
+                          backgroundImage: _avatarImageProvider(
+                            presentation.avatarUrl,
+                          ),
+                          child: _avatarImageProvider(presentation.avatarUrl) ==
+                                  null
+                              ? Icon(_roleIcon(participant, hostUserId))
+                              : null,
+                        ),
+                        Positioned(
+                          right: -2,
+                          bottom: -2,
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: (onlineStatusByUserId[participant.userId] ??
+                                      false)
+                                  ? const Color(0xFF4CAF50)
+                                  : Colors.grey.shade400,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: Theme.of(context).colorScheme.surface,
+                                width: 2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     title: Text(presentation.displayName),
                     dense: true,
