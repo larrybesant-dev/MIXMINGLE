@@ -2972,9 +2972,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                                         )
                                                         .valueOrNull ??
                                                     const <String>[];
+                                          // Empty allowedViewers means no restriction (open to all).
+                                          // Only restrict when the list is non-empty (explicit allow-list).
                                           final canViewRemote =
                                               remoteUserId != null &&
-                                              allowedViewers.contains(user.id);
+                                              (allowedViewers.isEmpty ||
+                                                  allowedViewers.contains(
+                                                    user.id,
+                                                  ));
                                           // Use cached display name if available,
                                           // fall back to userId while fetch is in progress.
                                           final tileLabel = remoteUserId != null

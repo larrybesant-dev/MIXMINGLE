@@ -1312,7 +1312,7 @@ class _HeroCard extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: isUploadingPhoto ? null : () => safeRunUpload(onUploadAvatar),
                 icon: const Icon(Icons.photo_camera_back_outlined),
-                label: Text(isUploadingPhoto ? 'Uploading...' : 'Avatar'),
+                label: Text(isUploadingPhoto ? 'Uploading...' : 'Profile Picture'),
               ),
               OutlinedButton.icon(
                 onPressed: isUploadingCover ? null : () => safeRunUpload(onUploadCover),

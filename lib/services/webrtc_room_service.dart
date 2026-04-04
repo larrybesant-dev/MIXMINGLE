@@ -108,7 +108,10 @@ class WebRtcRoomService implements RtcRoomService {
   // RtcRoomService: state getters
   // ──────────────────────────────────────────────────────────────────────────
   @override
-  List<int> get remoteUids => _uidToUserId.keys.toList();
+  List<int> get remoteUids => _uidToUserId.entries
+      .where((e) => e.value != _localUserId)
+      .map((e) => e.key)
+      .toList();
 
   @override
   bool get localSpeaking => _localSpeaking;
@@ -462,7 +465,7 @@ class WebRtcRoomService implements RtcRoomService {
 
       if (change.type == DocumentChangeType.removed) {
         _closePeer(remoteBroadcasterId);
-        return;
+        continue;
       }
 
       final isBroadcasting = data?['isBroadcasting'] as bool? ?? false;
