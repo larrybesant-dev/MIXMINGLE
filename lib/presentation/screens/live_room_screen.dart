@@ -2764,6 +2764,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             final sendMessage = ref.read(sendMessageProvider(widget.roomId));
             final participantsInRoom =
                 participantsAsync.valueOrNull ?? const [];
+            // Hydrate display names for all roster participants whenever the
+            // list changes. _hydrateSenderDisplayNames skips already-cached IDs.
+            if (participantsInRoom.isNotEmpty) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) {
+                  _hydrateSenderDisplayNames(
+                    userIds: participantsInRoom.map((p) => p.userId).toList(),
+                    currentUserId: user.id,
+                  );
+                }
+              });
+            }
             final hasBlockedParticipantInRoom = participantsInRoom.any((
               participantItem,
             ) {
@@ -4349,7 +4361,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           senderAvatarUrlById: _senderAvatarUrlById,
                           senderVipLevelById: _senderVipLevelById,
                           currentUserId: user.id,
-                          allowMicRequests: roomPolicyAsync.valueOrNull?.allowMicRequests ?? false,
+                          allowMicRequests: roomPolicyAsync.valueOrNull?.allowMicRequests ?? true,
                           myMicRequest: myMicRequestAsync.valueOrNull,
                           onRaiseHand: !isHost && !isCohost && !isModerator
                               ? () async {

@@ -188,10 +188,15 @@ class ProfileController extends Notifier<ProfileState> {
   @override
   ProfileState build() {
     final user = _auth.currentUser;
+    // Auto-hydrate from Firestore so username is available app-wide without
+    // requiring the profile screen to be opened first.
+    if (user != null) {
+      Future.microtask(() => fetchProfile(user.uid));
+    }
     return ProfileState(
       userId: user?.uid,
       email: user?.email,
-      username: user?.displayName,
+      username: null,
       avatarUrl: user?.photoURL,
       coverPhotoUrl: null,
       galleryUrls: const [],
@@ -371,7 +376,7 @@ class ProfileController extends Notifier<ProfileState> {
           isLoading: false,
           error: null,
           userId: resolvedUserId,
-          username: currentUser?.displayName,
+          username: null,
           email: currentUser?.email,
           avatarUrl: currentUser?.photoURL,
           coverPhotoUrl: null,
@@ -398,9 +403,7 @@ class ProfileController extends Notifier<ProfileState> {
         isLoading: false,
         error: null,
         userId: user.id.isNotEmpty ? user.id : resolvedUserId,
-        username: user.username.isNotEmpty
-            ? user.username
-            : _auth.currentUser?.displayName,
+        username: user.username.isNotEmpty ? user.username : null,
         email: user.email.isNotEmpty ? user.email : _auth.currentUser?.email,
         avatarUrl: user.avatarUrl,
         coverPhotoUrl: user.coverPhotoUrl,

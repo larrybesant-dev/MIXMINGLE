@@ -34,7 +34,7 @@ class RoomParticipantModel {
           : DateTime.tryParse(map['joinedAt']?.toString() ?? '') ?? DateTime.now(),
       lastActiveAt: (map['lastActiveAt'] is Timestamp)
           ? (map['lastActiveAt'] as Timestamp).toDate()
-          : DateTime.tryParse(map['lastActiveAt']?.toString() ?? '') ?? DateTime.now(),
+          : DateTime.tryParse(map['lastActiveAt']?.toString() ?? '') ?? DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 

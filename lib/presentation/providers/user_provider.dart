@@ -20,7 +20,7 @@ final userProvider = Provider<UserModel?>((ref) {
 		email: firebaseUser?.email ?? '',
 		username: profileState.userId == uid && (profileState.username?.isNotEmpty == true)
 			? profileState.username!
-			: (firebaseUser?.displayName ?? 'MixVy User'),
+			: 'MixVy User',
 		avatarUrl: profileState.userId == uid && (profileState.avatarUrl?.isNotEmpty == true)
 			? profileState.avatarUrl
 			: firebaseUser?.photoURL,

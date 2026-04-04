@@ -141,24 +141,32 @@ class _CategoryGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      padding: const EdgeInsets.all(16),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 1.5,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-      ),
-      itemCount: categories.length,
-      itemBuilder: (ctx, i) {
-        final cat = categories[i];
-        return _CategoryCard(
-          label: cat.label,
-          emoji: cat.emoji,
-          onTap: () => onCategorySelected(cat.value),
-        );
-      },
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      final width = constraints.maxWidth;
+      final crossAxisCount = width > 900
+          ? 4
+          : width > 600
+              ? 3
+              : 2;
+      return GridView.builder(
+        padding: const EdgeInsets.all(16),
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: crossAxisCount,
+          childAspectRatio: 2.2,
+          crossAxisSpacing: 12,
+          mainAxisSpacing: 12,
+        ),
+        itemCount: categories.length,
+        itemBuilder: (ctx, i) {
+          final cat = categories[i];
+          return _CategoryCard(
+            label: cat.label,
+            emoji: cat.emoji,
+            onTap: () => onCategorySelected(cat.value),
+          );
+        },
+      );
+    });
   }
 }
 
@@ -184,14 +192,14 @@ class _CategoryCard extends StatelessWidget {
           color: theme.colorScheme.primaryContainer,
           borderRadius: BorderRadius.circular(16),
         ),
-        child: Column(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(emoji, style: const TextStyle(fontSize: 36)),
-            const SizedBox(height: 8),
+            Text(emoji, style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 10),
             Text(
               label,
-              style: theme.textTheme.titleMedium?.copyWith(
+              style: theme.textTheme.titleSmall?.copyWith(
                 color: theme.colorScheme.onPrimaryContainer,
                 fontWeight: FontWeight.w700,
               ),
