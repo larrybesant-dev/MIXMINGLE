@@ -2387,13 +2387,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     return 'Your camera can publish anytime. Use viewer controls to decide who can see it.';
   }
 
-  String _micAccessHint({
-    required String role,
-    required String? micRequestStatus,
-  }) {
-    return 'Mic controls are unlocked. Speak anytime.';
-  }
-
   void _addGiftToast(RoomGiftEvent event) {
     final catalog = RoomGiftCatalog.findById(event.giftId);
     final emoji = catalog?.emoji ?? '🎁';
@@ -3746,47 +3739,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           ),
                         if (!isHost) ...[
                           if (!isCohost && !isModerator)
-                            Card(
-                              margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Stage & camera access',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleSmall,
-                                    ),
-                                    const SizedBox(height: 6),
-                                    const Text(
-                                      'Any member can publish their camera.',
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      _cameraAccessHint(
-                                        role: role,
-                                        camRequestStatus: null,
-                                      ),
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Text(
-                                      _micAccessHint(
-                                        role: role,
-                                        micRequestStatus: micRequestStatus,
-                                      ),
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
+                            const SizedBox.shrink(),
                           // Presence header and avatar strip
                           Padding(
                             padding: const EdgeInsets.symmetric(
