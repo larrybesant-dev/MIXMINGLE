@@ -1342,4 +1342,5 @@ exports.__testing = {
   registerFcmTokenHandler,
   unregisterFcmTokenHandler,
   sendPushForNotification,
+  sendIncomingCallPushHandler,
 };
