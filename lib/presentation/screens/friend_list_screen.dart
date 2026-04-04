@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../models/user_model.dart';
+import '../../models/presence_model.dart';
 import '../providers/friend_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
 import '../../features/feed/widgets/feed_empty_state.dart';
+import '../../widgets/user_profile_popup.dart';
 
 class FriendListScreen extends ConsumerStatefulWidget {
   const FriendListScreen({super.key});
@@ -37,6 +39,7 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
     final pendingOutgoingIdsAsync = ref.watch(pendingOutgoingFriendRequestIdsProvider);
     final candidateAsync = ref.watch(friendCandidateSearchProvider);
     final friendService = ref.read(friendServiceProvider);
+    final favoritesAsync = ref.watch(favoriteFriendIdsProvider);
 
     if (currentUserId == null) {
       return Scaffold(
@@ -142,26 +145,38 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
               return Column(
                 children: friends
                     .map(
-                      (friend) => _FriendUserTile(
-                        user: friend,
-                        actionLabel: 'Remove',
-                        actionIcon: Icons.person_remove_outlined,
-                        isBusy: _pendingFriendActions.contains(friend.id),
-                        onAction: () async {
-                          setState(() => _pendingFriendActions.add(friend.id));
-                          try {
-                            await friendService.removeFriend(currentUserId, friend.id);
-                            ref.invalidate(currentFriendIdsProvider);
+                      (friend) {
+                        final isFavorite = favoritesAsync.valueOrNull?.contains(friend.id) ?? false;
+                        return _FriendUserTile(
+                          user: friend,
+                          isFavorite: isFavorite,
+                          actionLabel: 'Remove',
+                          actionIcon: Icons.person_remove_outlined,
+                          isBusy: _pendingFriendActions.contains(friend.id),
+                          onToggleFavorite: () async {
+                            await friendService.setFavorite(
+                              currentUserId,
+                              friend.id,
+                              isFavorite: !isFavorite,
+                            );
+                            ref.invalidate(favoriteFriendIdsProvider);
                             ref.invalidate(friendsListProvider);
-                            ref.invalidate(friendCandidateSearchProvider);
-                          } finally {
-                            if (mounted) {
-                              setState(() => _pendingFriendActions.remove(friend.id));
+                          },
+                          onAction: () async {
+                            setState(() => _pendingFriendActions.add(friend.id));
+                            try {
+                              await friendService.removeFriend(currentUserId, friend.id);
+                              ref.invalidate(currentFriendIdsProvider);
+                              ref.invalidate(friendsListProvider);
+                              ref.invalidate(friendCandidateSearchProvider);
+                            } finally {
+                              if (mounted) {
+                                setState(() => _pendingFriendActions.remove(friend.id));
+                              }
                             }
-                          }
-                        },
-                      ),
-                    )
+                          },
+                        );
+                      })
                     .toList(growable: false),
               );
             },
@@ -243,13 +258,15 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
   }
 }
 
-class _FriendUserTile extends StatelessWidget {
+class _FriendUserTile extends ConsumerWidget {
   const _FriendUserTile({
     required this.user,
     required this.actionLabel,
     required this.actionIcon,
     required this.onAction,
     required this.isBusy,
+    this.isFavorite = false,
+    this.onToggleFavorite,
   });
 
   final UserModel user;
@@ -257,17 +274,74 @@ class _FriendUserTile extends StatelessWidget {
   final IconData actionIcon;
   final Future<void> Function()? onAction;
   final bool isBusy;
+  final bool isFavorite;
+  final VoidCallback? onToggleFavorite;
+
+  Color _statusColor(UserStatus status) {
+    switch (status) {
+      case UserStatus.online: return const Color(0xFF22C55E);
+      case UserStatus.away: return const Color(0xFFF59E0B);
+      case UserStatus.dnd: return const Color(0xFFEF4444);
+      case UserStatus.offline: return const Color(0xFF6B7280);
+    }
+  }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final presenceAsync = ref.watch(friendPresenceProvider(user.id));
+    final presence = presenceAsync.valueOrNull;
+    final status = presence?.status ?? UserStatus.offline;
+    final inRoom = presence?.inRoom;
+
     final initials = user.username.trim().isEmpty ? '?' : user.username.trim()[0].toUpperCase();
     final safeName = user.username.trim().isEmpty ? 'MixVy user' : user.username;
+
+    String subtitleText;
+    if (inRoom != null && inRoom.isNotEmpty) {
+      subtitleText = 'In a room';
+    } else if (presence?.isOnline == true) {
+      subtitleText = status == UserStatus.away ? 'Away' : status == UserStatus.dnd ? 'Do not disturb' : 'Online';
+    } else {
+      subtitleText = user.bio?.isNotEmpty == true ? user.bio! : 'Offline';
+    }
+
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
-        leading: CircleAvatar(child: Text(initials)),
-        title: Text(safeName),
-        subtitle: Text(user.bio?.isNotEmpty == true ? user.bio! : 'Community member'),
+        onTap: () => UserProfilePopup.show(context, ref, userId: user.id, preloadedUser: user),
+        leading: Stack(
+          children: [
+            CircleAvatar(child: Text(initials)),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _statusColor(status),
+                  border: Border.all(color: Theme.of(context).colorScheme.surface, width: 1.5),
+                ),
+              ),
+            ),
+          ],
+        ),
+        title: Row(
+          children: [
+            Expanded(child: Text(safeName)),
+            if (onToggleFavorite != null)
+              GestureDetector(
+                onTap: onToggleFavorite,
+                child: Icon(
+                  isFavorite ? Icons.star_rounded : Icons.star_border_rounded,
+                  color: isFavorite ? Colors.amber : null,
+                  size: 20,
+                ),
+              ),
+          ],
+        ),
+        subtitle: Text(subtitleText, maxLines: 1, overflow: TextOverflow.ellipsis),
         trailing: FilledButton.tonalIcon(
           onPressed: isBusy ? null : onAction,
           icon: isBusy

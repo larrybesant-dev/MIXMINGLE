@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/messaging_provider.dart';
+import '../../../services/web_popout_service.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
   final String conversationId;
@@ -80,6 +82,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       appBar: AppBar(
         title: const Text('Chat'),
         elevation: 0,
+        actions: [
+          if (kIsWeb)
+            IconButton(
+              icon: const Icon(Icons.open_in_new),
+              tooltip: 'Pop out',
+              onPressed: () => WebPopoutService().openWhisperWindow(
+                widget.userId,
+                widget.username,
+              ),
+            ),
+        ],
       ),
       body: Column(
         children: [

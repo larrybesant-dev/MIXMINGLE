@@ -185,7 +185,7 @@ class AgoraService implements RtcRoomService {
     // On web, stale preview tracks can exist even when local state says
     // preview is not running, so always attempt stop as best effort.
     try {
-      await _engine.stopPreview().timeout(const Duration(seconds: 2));
+      await _engine.stopPreview().timeout(const Duration(milliseconds: 500));
       developer.log('stopPreview called', name: 'AgoraService');
     } on TimeoutException {
       developer.log(

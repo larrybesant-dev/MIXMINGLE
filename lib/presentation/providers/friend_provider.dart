@@ -3,7 +3,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../../models/friend_request_model.dart';
 import '../../models/user_model.dart';
+import '../../models/presence_model.dart';
 import '../../services/friend_service.dart';
+import '../../services/presence_service.dart';
 import 'user_provider.dart';
 
 final friendFirestoreProvider = Provider<FirebaseFirestore>((ref) {
@@ -99,4 +101,17 @@ final friendCandidateSearchProvider = FutureProvider<List<UserModel>>((ref) asyn
 				currentUserId: userId,
 				excludeUserIds: [...friendIds, ...incomingRequesterIds, ...outgoingPendingIds],
 			);
+});
+
+final favoriteFriendIdsProvider = FutureProvider<Set<String>>((ref) async {
+	final userId = ref.watch(currentFriendUserIdProvider);
+	if (userId == null) return const <String>{};
+	return ref.watch(friendServiceProvider).getFavoriteFriendIds(userId);
+});
+
+/// Per-friend presence stream — used by friend list tiles for the online dot
+/// and "In Room: X" subtitle.
+final friendPresenceProvider =
+    StreamProvider.autoDispose.family<PresenceModel, String>((ref, friendId) {
+	return PresenceService().watchUserPresence(friendId);
 });

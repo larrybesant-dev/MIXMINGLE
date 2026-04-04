@@ -24,6 +24,8 @@ class UserModel {
   final bool adultModeEnabled;
   final bool adultConsentAccepted;
   final String themeId;
+  final int vipLevel;
+  final List<String> badges;
 
   UserModel({
     required this.id,
@@ -46,6 +48,8 @@ class UserModel {
     this.adultModeEnabled = false,
     this.adultConsentAccepted = false,
     this.themeId = 'midnight',
+    this.vipLevel = 0,
+    this.badges = const [],
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -71,6 +75,8 @@ class UserModel {
         adultModeEnabled: _boolOr(json['adultModeEnabled'], fallback: false),
         adultConsentAccepted: _boolOr(json['adultConsentAccepted'], fallback: false),
         themeId: _stringOrEmpty(json['themeId'], fallback: 'midnight'),
+        vipLevel: (json['vipLevel'] as num?)?.toInt() ?? 0,
+        badges: _stringList(json['badges']),
       );
 
   static bool _boolOr(dynamic value, {required bool fallback}) {

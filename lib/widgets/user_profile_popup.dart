@@ -1,0 +1,315 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+
+import '../models/user_model.dart';
+import '../services/friend_service.dart';
+import '../services/moderation_service.dart';
+import '../presentation/providers/user_provider.dart';
+import 'gift_picker_sheet.dart';
+
+/// A bottom-sheet style profile popup usable anywhere in the app
+/// (room participant tap, friend list tile, search results, etc.).
+///
+/// Usage:
+/// ```dart
+/// await UserProfilePopup.show(context, ref, userId: targetUserId);
+/// ```
+class UserProfilePopup {
+  static Future<void> show(
+    BuildContext context,
+    WidgetRef ref, {
+    required String userId,
+    /// Pre-loaded user — skips the Firestore fetch if you already have it.
+    UserModel? preloadedUser,
+  }) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => _UserProfilePopupSheet(
+        userId: userId,
+        preloadedUser: preloadedUser,
+      ),
+    );
+  }
+}
+
+class _UserProfilePopupSheet extends ConsumerStatefulWidget {
+  const _UserProfilePopupSheet({required this.userId, this.preloadedUser});
+
+  final String userId;
+  final UserModel? preloadedUser;
+
+  @override
+  ConsumerState<_UserProfilePopupSheet> createState() =>
+      _UserProfilePopupSheetState();
+}
+
+class _UserProfilePopupSheetState
+    extends ConsumerState<_UserProfilePopupSheet> {
+  UserModel? _profile;
+  bool _loading = true;
+  bool _isFriend = false;
+  bool _isBlocked = false;
+  bool _requestPending = false;
+
+  final _friendService = FriendService();
+  final _moderationService = ModerationService();
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.preloadedUser != null) {
+      _profile = widget.preloadedUser;
+      _loading = false;
+      _loadRelationship();
+    } else {
+      _loadProfile();
+    }
+  }
+
+  Future<void> _loadProfile() async {
+    try {
+      final doc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.userId)
+          .get();
+      if (doc.exists && mounted) {
+        setState(() {
+          _profile = UserModel.fromJson({'id': doc.id, ...?doc.data()});
+          _loading = false;
+        });
+        _loadRelationship();
+      } else if (mounted) {
+        setState(() => _loading = false);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadRelationship() async {
+    final currentUser = ref.read(userProvider);
+    if (currentUser == null || widget.userId == currentUser.id) return;
+    try {
+      final friendIds = await _friendService.getFriendIds(currentUser.id);
+      final blocked = await _moderationService.isBlocked(widget.userId);
+      if (!mounted) return;
+      setState(() {
+        _isFriend = friendIds.contains(widget.userId);
+        _isBlocked = blocked;
+      });
+    } catch (_) {}
+  }
+
+  Color _vipColor(int level) {
+    if (level >= 5) return const Color(0xFFFFD700);
+    if (level >= 3) return const Color(0xFFC0C0C0);
+    if (level >= 1) return const Color(0xFFCD7F32);
+    return Colors.transparent;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUser = ref.watch(userProvider);
+    final isSelf = currentUser?.id == widget.userId;
+    final theme = Theme.of(context);
+
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.55,
+      minChildSize: 0.35,
+      maxChildSize: 0.92,
+      builder: (_, scrollController) {
+        if (_loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final profile = _profile;
+        if (profile == null) {
+          return const Center(child: Text('User not found.'));
+        }
+
+        final initials = profile.username.trim().isEmpty
+            ? '?'
+            : profile.username.trim()[0].toUpperCase();
+
+        return ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+          children: [
+            // Drag handle
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+            // Avatar + name
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 36,
+                  backgroundImage: profile.avatarUrl != null
+                      ? NetworkImage(profile.avatarUrl!)
+                      : null,
+                  child: profile.avatarUrl == null ? Text(initials, style: const TextStyle(fontSize: 28)) : null,
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile.username.trim().isEmpty ? 'MixVy user' : profile.username,
+                        style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      if (profile.vipLevel > 0)
+                        Row(
+                          children: [
+                            Icon(Icons.workspace_premium, size: 16, color: _vipColor(profile.vipLevel)),
+                            const SizedBox(width: 4),
+                            Text('VIP ${profile.vipLevel}', style: TextStyle(color: _vipColor(profile.vipLevel), fontWeight: FontWeight.w600)),
+                          ],
+                        ),
+                      if (profile.location?.isNotEmpty == true)
+                        Row(
+                          children: [
+                            const Icon(Icons.place_outlined, size: 14),
+                            const SizedBox(width: 2),
+                            Text(profile.location!, style: theme.textTheme.bodySmall),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            // Badges
+            if (profile.badges.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 6,
+                children: profile.badges.map((badge) => Chip(
+                  label: Text(badge, style: const TextStyle(fontSize: 12)),
+                  visualDensity: VisualDensity.compact,
+                )).toList(),
+              ),
+            ],
+            // Bio
+            if (profile.bio?.isNotEmpty == true) ...[
+              const SizedBox(height: 12),
+              Text(profile.bio!, style: theme.textTheme.bodyMedium),
+            ],
+            const SizedBox(height: 20),
+            // Actions
+            if (!isSelf) ...[
+              _ActionButton(
+                icon: Icons.person_outline,
+                label: 'View full profile',
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.go('/profile/${widget.userId}');
+                },
+              ),
+              if (!_isBlocked)
+                _ActionButton(
+                  icon: _isFriend ? Icons.check_circle_outline : Icons.person_add_alt_1_outlined,
+                  label: _isFriend ? 'Already friends' : (_requestPending ? 'Request sent' : 'Add friend'),
+                  onTap: (_isFriend || _requestPending)
+                      ? null
+                      : () async {
+                          final me = ref.read(userProvider);
+                          if (me == null) return;
+                          await _friendService.sendFriendRequest(me.id, widget.userId);
+                          if (mounted) setState(() => _requestPending = true);
+                        },
+                ),
+              if (!_isBlocked)
+                _ActionButton(
+                  icon: Icons.message_outlined,
+                  label: 'Send message',
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    context.go('/messages/new?userId=${widget.userId}');
+                  },
+                ),
+              if (!_isBlocked)
+                _ActionButton(
+                  icon: Icons.card_giftcard,
+                  label: 'Send gift',
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    GiftPickerSheet.show(
+                      context,
+                      ref,
+                      recipientId: widget.userId,
+                      recipientName: profile.username.isEmpty ? 'user' : profile.username,
+                    );
+                  },
+                ),
+              _ActionButton(
+                icon: _isBlocked ? Icons.lock_open_outlined : Icons.block_outlined,
+                label: _isBlocked ? 'Unblock user' : 'Block user',
+                destructive: !_isBlocked,
+                onTap: () async {
+                  if (_isBlocked) {
+                    await _moderationService.unblockUser(widget.userId);
+                  } else {
+                    await _moderationService.blockUser(widget.userId);
+                  }
+                  if (mounted) setState(() => _isBlocked = !_isBlocked);
+                },
+              ),
+            ] else ...[
+              _ActionButton(
+                icon: Icons.edit_outlined,
+                label: 'Edit my profile',
+                onTap: () {
+                  Navigator.of(context).pop();
+                  context.go('/edit-profile');
+                },
+              ),
+            ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    this.onTap,
+    this.destructive = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback? onTap;
+  final bool destructive;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = destructive
+        ? Theme.of(context).colorScheme.error
+        : (onTap == null ? Theme.of(context).disabledColor : null);
+    return ListTile(
+      leading: Icon(icon, color: color),
+      title: Text(label, style: TextStyle(color: color)),
+      onTap: onTap,
+      dense: true,
+    );
+  }
+}

@@ -34,6 +34,8 @@ import 'package:mixvy/features/groups/screens/create_group_screen.dart';
 import 'package:mixvy/features/groups/screens/group_details_screen.dart';
 import 'package:mixvy/features/trending/screens/trending_screen.dart';
 import 'package:mixvy/presentation/screens/not_found_screen.dart';
+import '../features/messaging/screens/whisper_popout_screen.dart';
+import '../features/room/screens/cam_popout_screen.dart';
 
 import '../features/auth/register_screen.dart';
 import '../features/profile/profile_screen.dart';
@@ -409,6 +411,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/trending',
         builder: (context, state) => const TrendingScreen(),
+      ),
+      GoRoute(
+        path: '/whisper',
+        builder: (context, state) {
+          final userId = state.uri.queryParameters['userId'] ?? '';
+          if (userId.isEmpty) return NotFoundScreen(path: state.uri.toString());
+          return WhisperPopoutScreen(targetUserId: userId);
+        },
+      ),
+      GoRoute(
+        path: '/cam',
+        builder: (context, state) {
+          final userId = state.uri.queryParameters['userId'] ?? '';
+          if (userId.isEmpty) return NotFoundScreen(path: state.uri.toString());
+          return CamPopoutScreen(targetUserId: userId);
+        },
       ),
     ],
   );

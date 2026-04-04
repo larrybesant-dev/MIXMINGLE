@@ -194,13 +194,24 @@ class FriendService {
       return const [];
     }
 
+    final favoriteIds = await getFavoriteFriendIds(userId);
+
     final friendsQuery = await _firestore
         .collection('users')
         .where(FieldPath.documentId, whereIn: visibleFriendIds)
         .get();
-    return friendsQuery.docs
+    final friends = friendsQuery.docs
         .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
         .toList(growable: false);
+
+    // Favorites appear first, then alphabetically within each group.
+    friends.sort((a, b) {
+      final aFav = favoriteIds.contains(a.id) ? 0 : 1;
+      final bFav = favoriteIds.contains(b.id) ? 0 : 1;
+      if (aFav != bFav) return aFav.compareTo(bFav);
+      return a.username.toLowerCase().compareTo(b.username.toLowerCase());
+    });
+    return friends;
   }
 
   Future<UserModel?> getUserById(String userId) async {
@@ -233,6 +244,31 @@ class FriendService {
     if (!userDoc.exists) return const [];
     final data = userDoc.data() ?? <String, dynamic>{};
     return _asStringList(data['friends']);
+  }
+
+  Future<Set<String>> getFavoriteFriendIds(String userId) async {
+    final userDoc = await _firestore.collection('users').doc(userId).get();
+    if (!userDoc.exists) return const <String>{};
+    final data = userDoc.data() ?? <String, dynamic>{};
+    return _asStringList(data['favoriteFriendIds']).toSet();
+  }
+
+  Future<void> setFavorite(String userId, String friendId, {required bool isFavorite}) async {
+    if (userId.trim().isEmpty || friendId.trim().isEmpty) return;
+    await _firestore.collection('users').doc(userId).set({
+      'favoriteFriendIds': isFavorite
+          ? FieldValue.arrayUnion([friendId])
+          : FieldValue.arrayRemove([friendId]),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+    if (isFavorite) {
+      await _createNotification(
+        friendId,
+        type: 'friend_favorite',
+        content: 'Someone added you as a favorite friend.',
+        actorId: userId,
+      );
+    }
   }
 
   Future<List<String>> getIncomingRequesterIds(String userId) async {

@@ -9,6 +9,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../../../presentation/screens/google_sign_in_helper.dart';
 import '../../../presentation/screens/apple_sign_in_helper.dart';
 import '../../../services/push_messaging_service.dart';
+import '../../../services/presence_service.dart';
+import '../../../models/presence_model.dart';
 
 class AuthState {
   final bool isLoading;
@@ -74,6 +76,10 @@ class AuthController extends Notifier<AuthState> {
     _authStateSubscription?.cancel();
     _authStateSubscription = _auth.authStateChanges().listen((user) {
       state = state.copyWith(uid: user?.uid, isLoading: false, error: null);
+      // Update global presence on auth change.
+      if (user != null) {
+        PresenceService().setStatus(user.uid, UserStatus.online).ignore();
+      }
     });
 
     unawaited(_configureWebPersistence());
@@ -259,6 +265,10 @@ class AuthController extends Notifier<AuthState> {
   }
 
   Future<void> logout() async {
+    final uid = _auth.currentUser?.uid;
+    if (uid != null) {
+      PresenceService().setStatus(uid, UserStatus.offline).ignore();
+    }
     await PushMessagingService.instance.unregisterCurrentToken();
     await _auth.signOut();
     state = state.copyWith(isLoading: false, uid: null, error: null);

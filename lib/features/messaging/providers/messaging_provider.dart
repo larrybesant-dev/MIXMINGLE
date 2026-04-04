@@ -2,12 +2,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/message_model.dart';
 import '../models/conversation_model.dart';
+import '../../../services/moderation_service.dart';
 
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
 });
 
-// Stream of all conversations for current user
+// Stream of all conversations for current user, filtered to exclude blocked users.
 final conversationsStreamProvider =
     StreamProvider.family<List<Conversation>, String>((ref, userId) {
   final firestore = ref.watch(firestoreProvider);
@@ -17,10 +18,22 @@ final conversationsStreamProvider =
       .where('isArchived', isEqualTo: false)
       .orderBy('lastMessageAt', descending: true)
       .snapshots()
-      .map((snapshot) {
-    return snapshot.docs
+      .asyncMap((snapshot) async {
+    final allConversations = snapshot.docs
         .map((doc) => Conversation.fromJson(doc.data(), doc.id))
         .toList();
+    // Remove conversations where the other participant is blocked (either direction).
+    try {
+      final moderationService = ModerationService();
+      final excludedIds = await moderationService.getExcludedUserIds(userId);
+      if (excludedIds.isEmpty) return allConversations;
+      return allConversations.where((conv) {
+        final others = conv.participantIds.where((id) => id != userId);
+        return !others.any((id) => excludedIds.contains(id));
+      }).toList();
+    } catch (_) {
+      return allConversations;
+    }
   });
 });
 
@@ -98,6 +111,10 @@ class MessagingController {
     required String user2Name,
     required String? user2AvatarUrl,
   }) async {
+    // Prevent messaging blocked users.
+    final isBlocked = await ModerationService().hasBlockingRelationship(userId1, userId2);
+    if (isBlocked) throw Exception('Cannot start a conversation with this user.');
+
     // Check if conversation already exists
     final existing = await _firestore
         .collection('conversations')

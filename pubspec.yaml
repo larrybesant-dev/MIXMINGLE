@@ -45,6 +45,8 @@
     patrol: ^4.3.0
     path: ^1.9.1
     flutter_webrtc: ^1.4.1
+    web: any
+    window_manager: ^0.4.3
     # state_notifier has been removed
 
   dev_dependencies:

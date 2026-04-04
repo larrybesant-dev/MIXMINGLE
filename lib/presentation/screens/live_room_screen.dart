@@ -24,6 +24,11 @@ import '../../features/room/widgets/camera_wall.dart';
 import '../../features/room/widgets/room_control_sheets.dart';
 import '../../features/room/widgets/floating_gift_overlay.dart';
 import '../../widgets/coin_balance_widget.dart';
+import '../../widgets/user_profile_popup.dart';
+import '../../widgets/floating_whisper_panel.dart';
+import '../../services/web_popout_service.dart';
+import '../../services/desktop_window_service.dart';
+import '../../features/messaging/providers/messaging_provider.dart';
 import '../../features/room/providers/mic_access_provider.dart';
 import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/room/providers/host_provider.dart';
@@ -41,6 +46,7 @@ import '../../services/follow_service.dart';
 import '../../services/moderation_service.dart';
 import '../../services/friend_service.dart';
 import '../../services/notification_service.dart';
+import '../../services/presence_service.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -103,6 +109,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _remoteLayoutSyncQueued = false;
   bool _roleMediaStatePending = false;
   int _localViewEpoch = 0;
+  /// Cached from the room stream — avoids a Firestore .get() on every cam toggle.
+  int _maxBroadcasters = 6;
   static const List<String> _quickEmojis = <String>[
     '😀',
     '😂',
@@ -709,23 +717,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         final userId = _joinedUserId;
         if (userId != null) {
           final slotService = ref.read(roomSlotServiceProvider);
-          // Read maxBroadcasters from Firestore room doc (default 6).
-          final firestore = _firestore;
-          int maxBroadcasters = 6;
-          if (firestore != null) {
-            try {
-              final roomDoc = await firestore
-                  .collection('rooms')
-                  .doc(widget.roomId)
-                  .get();
-              final raw = roomDoc.data()?['maxBroadcasters'];
-              if (raw is num) maxBroadcasters = raw.toInt();
-            } catch (_) {}
-          }
           final slotId = await slotService.claimSlot(
             widget.roomId,
             userId,
-            maxBroadcasters: maxBroadcasters,
+            maxBroadcasters: _maxBroadcasters,
           );
           if (slotId == null) {
             if (mounted) {
@@ -760,7 +755,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           unawaited(slotService.releaseSlot(widget.roomId, userId));
         }
         _logLiveRoom('toggle_video:step enableVideo(false)');
-        await service.publishLocalVideoStream(false);
         await service.enableVideo(false);
         _logLiveRoom('toggle_video:step enableVideo(false) completed');
         // enableVideo(false) now keeps Agora in broadcaster role; only the
@@ -1136,22 +1130,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         if (service != null && _isCallReady) {
           // Re-claim the slot (idempotent if slot doc still has our userId).
           final slotService = ref.read(roomSlotServiceProvider);
-          final firestore = _firestore;
-          int maxBroadcasters = 6;
-          if (firestore != null) {
-            try {
-              final raw = (await firestore
-                      .collection('rooms')
-                      .doc(widget.roomId)
-                      .get())
-                  .data()?['maxBroadcasters'];
-              if (raw is num) maxBroadcasters = raw.toInt();
-            } catch (_) {}
-          }
           final slotId = await slotService.claimSlot(
             widget.roomId,
             userId,
-            maxBroadcasters: maxBroadcasters,
+            maxBroadcasters: _maxBroadcasters,
           );
           if (slotId != null && mounted) {
             _claimedSlotId = slotId;
@@ -1601,9 +1583,64 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             icon: Icons.person_outline,
             onTap: () {
               Navigator.of(sheetContext).pop();
-              context.go('/profile/${target.userId}');
+              UserProfilePopup.show(context, ref, userId: target.userId);
             },
           ),
+          if (!isSelf && (kIsWeb || defaultTargetPlatform == TargetPlatform.windows || defaultTargetPlatform == TargetPlatform.macOS || defaultTargetPlatform == TargetPlatform.linux))
+            RoomActionItem(
+              label: 'Pop out cam',
+              icon: Icons.open_in_new,
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                if (kIsWeb) {
+                  WebPopoutService().openCamWindow(target.userId);
+                } else {
+                  DesktopWindowService().openCamWindow(target.userId);
+                }
+              },
+            ),
+          if (!isSelf)
+            RoomActionItem(
+              label: 'Whisper',
+              icon: Icons.message_outlined,
+              onTap: () async {
+                Navigator.of(sheetContext).pop();
+                final currentUser = ref.read(userProvider);
+                if (currentUser == null) return;
+                try {
+                  final conversationId = await ref
+                      .read(messagingControllerProvider)
+                      .createDirectConversation(
+                        userId1: currentUser.id,
+                        user1Name: currentUser.username,
+                        user1AvatarUrl: currentUser.avatarUrl,
+                        userId2: target.userId,
+                        user2Name: presentationByUserId[target.userId]?.displayName ?? target.userId,
+                        user2AvatarUrl: presentationByUserId[target.userId]?.avatarUrl,
+                      );
+                  if (!mounted) return;
+                  final peerName = presentationByUserId[target.userId]?.displayName ?? target.userId;
+                  final peerAvatar = presentationByUserId[target.userId]?.avatarUrl;
+                  if (kIsWeb) {
+                    WebPopoutService().openWhisperWindow(target.userId, peerName);
+                  } else if (defaultTargetPlatform == TargetPlatform.windows ||
+                      defaultTargetPlatform == TargetPlatform.macOS ||
+                      defaultTargetPlatform == TargetPlatform.linux) {
+                    await DesktopWindowService().openWhisperWindow(target.userId, peerName);
+                  } else {
+                    FloatingWhisperPanel.show(
+                      context,
+                      ref,
+                      conversationId: conversationId,
+                      peerName: peerName,
+                      peerAvatarUrl: peerAvatar,
+                    );
+                  }
+                } catch (e) {
+                  _showSnackBar('Could not open whisper: $e');
+                }
+              },
+            ),
           if (!isSelf)
             RoomActionItem(
               label: isFollowing ? 'Unfollow user' : 'Follow user',
@@ -2133,6 +2170,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       }
       _startPresenceHeartbeat(userId);
       _roomJoinedAt = DateTime.now();
+      PresenceService().setInRoom(userId, widget.roomId).ignore();
     } catch (_) {
       if (mounted) {
         setState(
@@ -2174,6 +2212,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       await _stopPresenceHeartbeat();
       await docRef.delete();
       await memberDocRef.delete();
+      final leavingUserId = userId;
+      PresenceService().clearRoom(leavingUserId).ignore();
     } catch (_) {
       // Best-effort cleanup when users leave a room.
     }
@@ -2596,6 +2636,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           builder: (context, roomSnap) {
             final roomData = roomSnap.data?.data() as Map<String, dynamic>?;
             slowModeSeconds = roomData?['slowModeSeconds'] ?? 0;
+            final rawMbc = roomData?['maxBroadcasters'];
+            if (rawMbc is num) _maxBroadcasters = rawMbc.toInt();
             final isLocked = roomData?['isLocked'] ?? false;
             final hostId = _asString(
               roomData?['ownerId'],

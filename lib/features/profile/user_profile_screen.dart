@@ -7,6 +7,8 @@ import 'package:mixvy/services/moderation_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../widgets/follow_button.dart';
+import '../../widgets/gift_picker_sheet.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class UserProfileScreen extends StatefulWidget {
   final String userId;
@@ -426,6 +428,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                   ],
                 ),
               if (!isOwnProfile) ...[
+                const SizedBox(height: 10),
+                Consumer(
+                  builder: (consumerCtx, widgetRef, _) => SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () => GiftPickerSheet.show(
+                        consumerCtx,
+                        widgetRef,
+                        recipientId: widget.userId,
+                        recipientName: displayName,
+                      ),
+                      icon: const Icon(Icons.card_giftcard),
+                      label: const Text('Send Gift'),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 10),
                 Row(
                   children: [

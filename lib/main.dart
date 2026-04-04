@@ -16,6 +16,12 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:mixvy/dev/firebase_emulator_bootstrap.dart';
 import 'package:mixvy/services/push_messaging_service.dart';
 import 'package:mixvy/router/app_router.dart' show rootNavigatorKey;
+// Desktop window management (no-op on web/mobile via conditional export)
+import 'package:window_manager/window_manager.dart';
+import 'services/desktop_window_service.dart';
+import 'utils/platform_args.dart';
+import 'features/messaging/screens/whisper_popout_screen.dart';
+import 'features/room/screens/cam_popout_screen.dart';
 
 void _bootstrapLog(String message) {
   developer.log(message, name: 'Bootstrap');
@@ -153,6 +159,50 @@ void main() async {
       }
 
       _bootstrapLog('Calling runApp(MixVyApp)');
+      // Desktop pop-out window handling (Windows/macOS/Linux only)
+      if (!kIsWeb) {
+        try {
+          final args = _getCommandLineArgs();
+          final whisperArg = args.firstWhere(
+            (a) => a.startsWith('--popout-whisper='),
+            orElse: () => '',
+          );
+          final camArg = args.firstWhere(
+            (a) => a.startsWith('--popout-cam='),
+            orElse: () => '',
+          );
+          if (whisperArg.isNotEmpty) {
+            final userId = whisperArg.substring('--popout-whisper='.length);
+            await windowManager.ensureInitialized();
+            await windowManager.setSize(const Size(420, 640));
+            await windowManager.setTitle('Whisper');
+            await windowManager.show();
+            runApp(ProviderScope(
+              child: MaterialApp(
+                home: WhisperPopoutScreen(targetUserId: userId),
+              ),
+            ));
+            return;
+          } else if (camArg.isNotEmpty) {
+            final userId = camArg.substring('--popout-cam='.length);
+            await windowManager.ensureInitialized();
+            await windowManager.setSize(const Size(520, 480));
+            await windowManager.setTitle('Cam');
+            await windowManager.show();
+            runApp(ProviderScope(
+              child: MaterialApp(
+                home: CamPopoutScreen(targetUserId: userId),
+              ),
+            ));
+            return;
+          }
+          // Main window: initialise window_manager with platform defaults
+          await windowManager.ensureInitialized();
+          await windowManager.setMinimumSize(const Size(400, 600));
+        } catch (_) {
+          // window_manager not supported on this platform — continue normally
+        }
+      }
       runApp(const ProviderScope(child: MixVyApp()));
       _bootstrapLog('runApp(MixVyApp) returned');
     },
@@ -174,3 +224,13 @@ void main() async {
     },
   );
 }
+
+/// Returns command-line arguments safely. Returns empty list on web/mobile.
+List<String> _getCommandLineArgs() => getCommandLineArgs();
+
+/// Unused import suppressor — DesktopWindowService is declared but the
+/// pop-out buttons in live_room_screen use it via WebPopoutService (web)
+/// or FloatingWhisperPanel (mobile). On desktop the native Whisper action
+/// uses DesktopWindowService directly from there.
+// ignore: unused_element
+DesktopWindowService? _desktopWindowServiceRef;
