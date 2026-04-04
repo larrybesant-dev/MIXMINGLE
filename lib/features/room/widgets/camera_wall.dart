@@ -121,14 +121,6 @@ class CameraWall extends ConsumerWidget {
               child: remoteTileBuilder(tile),
             ),
           ),
-          // Vacant slot placeholders so users can see available camera positions.
-          // Capped at maxMainGridRemoteTiles (not mainGridRemoteLimit) so desktop
-          // never shows more vacant tiles than there are configured broadcaster slots.
-          ...List.generate(
-            (maxMainGridRemoteTiles - mainGridRemoteTiles.length)
-                .clamp(0, maxMainGridRemoteTiles),
-            (_) => const _VacantSlotTile(),
-          ),
         ];
 
         final tileCount = mainGridTiles.length;
