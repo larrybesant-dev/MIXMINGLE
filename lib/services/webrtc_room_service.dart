@@ -1,11 +1,13 @@
 // ignore_for_file: invalid_use_of_visible_for_testing_member
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:js_interop';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:web/web.dart' as web;
 
 import 'agora_service.dart' show AgoraServiceException;
 import 'rtc_room_service.dart';
@@ -62,6 +64,12 @@ class WebRtcRoomService implements RtcRoomService {
   String? _roomId;
   int? _localUid;
 
+  // Voice-activity detection
+  bool _localSpeaking = false;
+  final Set<int> _remoteSpeakingUids = {};
+  _VadMonitor? _localVad;
+  final Map<String, _VadMonitor> _remoteVads = {};
+
   // ──────────────────────────────────────────────────────────────────────────
   // Local media
   // ──────────────────────────────────────────────────────────────────────────
@@ -103,7 +111,7 @@ class WebRtcRoomService implements RtcRoomService {
   List<int> get remoteUids => _uidToUserId.keys.toList();
 
   @override
-  bool get localSpeaking => false; // TODO: Web AudioContext VAD
+  bool get localSpeaking => _localSpeaking;
 
   @override
   bool get canRenderLocalView =>
@@ -119,7 +127,7 @@ class WebRtcRoomService implements RtcRoomService {
   bool get isLocalVideoCapturing => _localVideoCapturing;
 
   @override
-  bool isRemoteSpeaking(int uid) => false; // TODO: Web AudioContext VAD
+  bool isRemoteSpeaking(int uid) => _remoteSpeakingUids.contains(uid);
 
   // ──────────────────────────────────────────────────────────────────────────
   // RtcRoomService: video views
@@ -237,6 +245,7 @@ class WebRtcRoomService implements RtcRoomService {
         _localRenderer.srcObject = stream;
         _broadcasterMode = true;
         _localVideoCapturing = true;
+        _startLocalVad(stream);
 
         // Announce that we are now broadcasting
         await _updatePresence(isBroadcasting: true);
@@ -283,6 +292,7 @@ class WebRtcRoomService implements RtcRoomService {
             'audio': true,
           });
           _localStream = audioStream;
+          _startLocalVad(audioStream);
           _log('setBroadcaster: acquired audio-only stream');
         } catch (error) {
           _throwMapped(error, 'access microphone');
@@ -296,6 +306,7 @@ class WebRtcRoomService implements RtcRoomService {
       }
     } else if (!enabled) {
       _broadcasterMode = false;
+      _stopLocalVad();
       await _updatePresence(isBroadcasting: false);
     }
   }
@@ -403,6 +414,15 @@ class WebRtcRoomService implements RtcRoomService {
       } catch (_) {}
     }
 
+    _localVad?.dispose();
+    _localVad = null;
+    _localSpeaking = false;
+    for (final vad in _remoteVads.values) {
+      vad.dispose();
+    }
+    _remoteVads.clear();
+    _remoteSpeakingUids.clear();
+
     _isJoined = false;
     _broadcasterMode = false;
     _localVideoCapturing = false;
@@ -482,6 +502,7 @@ class WebRtcRoomService implements RtcRoomService {
       if (event.streams.isNotEmpty) {
         peer.remoteStream = event.streams.first;
         renderer.srcObject = event.streams.first;
+        _startRemoteVad(broadcasterId, broadcasterUid, event.streams.first);
         _log('remote stream received from broadcaster=$broadcasterId');
         onRemoteUserJoined?.call();
       }
@@ -682,6 +703,7 @@ class WebRtcRoomService implements RtcRoomService {
   void _closePeer(String broadcasterId) {
     final peer = _peers.remove(broadcasterId);
     if (peer == null) return;
+    _stopRemoteVad(broadcasterId, peer.broadcasterUid);
     _uidToUserId.remove(peer.broadcasterUid);
     _userIdToUid.remove(broadcasterId);
     peer.dispose();
@@ -690,6 +712,7 @@ class WebRtcRoomService implements RtcRoomService {
   }
 
   Future<void> _stopLocalStream() async {
+    _stopLocalVad();
     if (_localStream != null) {
       for (final track in _localStream!.getTracks()) {
         track.stop();
@@ -707,6 +730,66 @@ class WebRtcRoomService implements RtcRoomService {
   void _log(String message) {
     developer.log(message, name: 'WebRTC');
     if (kDebugMode) debugPrint('[WebRTC] $message');
+  }
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // Private: VAD helpers
+  // ──────────────────────────────────────────────────────────────────────────
+
+  /// Cast a flutter_webrtc [MediaStream] to its underlying [web.MediaStream].
+  /// On web the concrete type is [MediaStreamWeb] from dart_webrtc, which
+  /// exposes a [jsStream] field.
+  static web.MediaStream? _jsStream(MediaStream? stream) {
+    if (stream == null) return null;
+    try {
+      return (stream as dynamic).jsStream as web.MediaStream?;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _startLocalVad(MediaStream stream) {
+    final js = _jsStream(stream);
+    if (js == null) return;
+    _localVad?.dispose();
+    _localVad = _VadMonitor(
+      jsStream: js,
+      onStateChange: (speaking) {
+        if (_localSpeaking != speaking) {
+          _localSpeaking = speaking;
+          onSpeakerActivityChanged?.call();
+        }
+      },
+    );
+  }
+
+  void _stopLocalVad() {
+    _localVad?.dispose();
+    _localVad = null;
+    if (_localSpeaking) {
+      _localSpeaking = false;
+      onSpeakerActivityChanged?.call();
+    }
+  }
+
+  void _startRemoteVad(String userId, int uid, MediaStream stream) {
+    final js = _jsStream(stream);
+    if (js == null) return;
+    _remoteVads[userId]?.dispose();
+    _remoteVads[userId] = _VadMonitor(
+      jsStream: js,
+      onStateChange: (speaking) {
+        final changed = speaking
+            ? _remoteSpeakingUids.add(uid)
+            : _remoteSpeakingUids.remove(uid);
+        if (changed) onSpeakerActivityChanged?.call();
+      },
+    );
+  }
+
+  void _stopRemoteVad(String userId, int uid) {
+    _remoteVads.remove(userId)?.dispose();
+    if (_remoteSpeakingUids.remove(uid)) onSpeakerActivityChanged?.call();
   }
 
   Never _throwMapped(Object error, String operation) {
@@ -777,5 +860,83 @@ class _PeerEntry {
     renderer.srcObject = null;
     try { await renderer.dispose(); } catch (_) {}
     try { await pc.close(); } catch (_) {}
+  }
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Voice-activity detection via Web AudioContext AnalyserNode
+// ──────────────────────────────────────────────────────────────────────────────
+class _VadMonitor {
+  _VadMonitor({
+    required web.MediaStream jsStream,
+    required void Function(bool speaking) onStateChange,
+  }) : _onStateChange = onStateChange {
+    _init(jsStream);
+  }
+
+  final void Function(bool speaking) _onStateChange;
+
+  web.AudioContext? _ctx;
+  web.AnalyserNode? _analyser;
+  Timer? _timer;
+  bool _speaking = false;
+
+  // Byte-energy thresholds (0–255).  Tuned for typical speech vs. silence.
+  static const int _onThreshold = 25;
+  static const int _offThreshold = 10;
+
+  void _init(web.MediaStream jsStream) {
+    try {
+      _ctx = web.AudioContext();
+      final source = _ctx!.createMediaStreamSource(jsStream);
+      final analyser = _ctx!.createAnalyser();
+      analyser.fftSize = 256;
+      analyser.smoothingTimeConstant = 0.8;
+      source.connect(analyser);
+      _analyser = analyser;
+      _timer = Timer.periodic(const Duration(milliseconds: 80), (_) => _poll());
+    } catch (_) {
+      // AudioContext not available; VAD degrades gracefully to always-false.
+    }
+  }
+
+  void _poll() {
+    final analyser = _analyser;
+    if (analyser == null) return;
+
+    final bufLen = analyser.frequencyBinCount;
+    final dataList = Uint8List(bufLen);
+    final jsArr = dataList.toJS;
+    analyser.getByteFrequencyData(jsArr);
+
+    // Compute average byte energy across frequency bins.
+    final bytes = jsArr.toDart;
+    double sum = 0;
+    for (final v in bytes) {
+      sum += v;
+    }
+    final avg = bufLen > 0 ? sum / bufLen : 0.0;
+
+    final bool nowSpeaking;
+    if (!_speaking && avg >= _onThreshold) {
+      nowSpeaking = true;
+    } else if (_speaking && avg < _offThreshold) {
+      nowSpeaking = false;
+    } else {
+      nowSpeaking = _speaking;
+    }
+
+    if (nowSpeaking != _speaking) {
+      _speaking = nowSpeaking;
+      _onStateChange(_speaking);
+    }
+  }
+
+  void dispose() {
+    _timer?.cancel();
+    _timer = null;
+    try { _ctx?.close(); } catch (_) {}
+    _ctx = null;
+    _analyser = null;
   }
 }

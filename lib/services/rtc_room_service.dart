@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 
 /// Abstract interface shared by [AgoraService] (native/web Agora SDK) and
 /// [WebRtcRoomService] (browser-native WebRTC with Firestore signaling).

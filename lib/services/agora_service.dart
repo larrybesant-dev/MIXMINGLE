@@ -53,31 +53,45 @@ class AgoraService implements RtcRoomService {
   Completer<void>? _localVideoCaptureCompleter;
 
   // Callbacks for UI updates
+  @override
   VoidCallback? onRemoteUserJoined;
+  @override
   VoidCallback? onRemoteUserLeft;
+  @override
   VoidCallback? onSpeakerActivityChanged;
+  @override
   VoidCallback? onLocalVideoCaptureChanged;
   /// Called when the token will expire — caller should fetch a fresh token
   /// and pass it to [renewToken].
+  @override
   VoidCallback? onTokenWillExpire;
   /// Called when the SDK connection is lost so the screen can trigger a
   /// reconnect flow.
+  @override
   VoidCallback? onConnectionLost;
 
+  @override
   List<int> get remoteUids => List.unmodifiable(_remoteUids);
+  @override
   bool get localSpeaking => _localSpeaking;
+  @override
   bool get canRenderLocalView =>
       _initialized &&
       _joinedChannel &&
       _broadcasterMode &&
       (_localVideoCapturing || kIsWeb);
+  @override
   bool get isBroadcaster => _broadcasterMode;
+  @override
   bool get isJoinedChannel => _joinedChannel;
+  @override
   bool get isLocalVideoCapturing => _localVideoCapturing;
 
+  @override
   bool isRemoteSpeaking(int uid) => _speakingUids.contains(uid);
 
   /// Get the local video view widget
+  @override
   Widget getLocalView() {
     if (!canRenderLocalView) {
       return const ColoredBox(
@@ -94,6 +108,7 @@ class AgoraService implements RtcRoomService {
   }
 
   /// Get the remote video view widget for a given uid and channel
+  @override
   Widget getRemoteView(int uid, String channelId) {
     return AgoraVideoView(
       controller: VideoViewController.remote(
@@ -107,6 +122,7 @@ class AgoraService implements RtcRoomService {
   late RtcEngine _engine;
   bool _initialized = false;
 
+  @override
   Future<void> publishLocalVideoStream(bool enabled) async {
     if (!_initialized || !_joinedChannel) {
       return;
@@ -125,6 +141,7 @@ class AgoraService implements RtcRoomService {
     );
   }
 
+  @override
   Future<void> publishLocalAudioStream(bool enabled) async {
     if (!_initialized || !_joinedChannel) {
       return;
@@ -216,6 +233,7 @@ class AgoraService implements RtcRoomService {
     await _startPreviewSafe();
   }
 
+  @override
   Future<void> setRemoteVideoSubscription(
     int uid, {
     required bool subscribe,
@@ -253,6 +271,7 @@ class AgoraService implements RtcRoomService {
     }
   }
 
+  @override
   Future<void> ensureDeviceAccess({
     required bool video,
     required bool audio,
@@ -437,6 +456,7 @@ class AgoraService implements RtcRoomService {
   }
 
   /// Initialize Agora engine with your App ID
+  @override
   Future<void> initialize(String appId) async {
     final normalizedAppId = appId.trim();
     if (normalizedAppId.isEmpty) {
@@ -711,6 +731,7 @@ class AgoraService implements RtcRoomService {
   }
 
   /// Join a video channel
+  @override
   Future<void> joinRoom(
     String token,
     String channelName,
@@ -810,6 +831,7 @@ class AgoraService implements RtcRoomService {
     );
   }
 
+  @override
   Future<void> setBroadcaster(bool enabled) async {
     if (!_initialized) {
       developer.log(
@@ -945,6 +967,7 @@ class AgoraService implements RtcRoomService {
 
   /// Renews the Agora token without leaving the channel.
   /// Call this from the [onTokenWillExpire] callback.
+  @override
   Future<void> renewToken(String newToken) async {
     if (!_initialized || !_joinedChannel) return;
     final trimmed = newToken.trim();
@@ -981,6 +1004,7 @@ class AgoraService implements RtcRoomService {
   }
 
   /// Mute/unmute local audio
+  @override
   Future<void> mute(bool muted) async {
     if (!_initialized) return;
     try {
@@ -996,6 +1020,7 @@ class AgoraService implements RtcRoomService {
   /// published when enabling video. Pass `false` when the user's mic is
   /// currently muted so that enabling the camera does not silently re-enable
   /// audio. Defaults to `true` for backward-compatible behaviour.
+  @override
   Future<void> enableVideo(bool enabled, {bool publishMicrophoneTrack = true}) async {
     if (!_initialized) {
       developer.log(
@@ -1152,6 +1177,7 @@ class AgoraService implements RtcRoomService {
     }
   }
 
+  @override
   Future<void> dispose() async {
     if (!_initialized) return;
     // Unblock any caller awaiting _awaitLocalVideoCapturing immediately
