@@ -94,6 +94,11 @@ class WebRtcRoomService implements RtcRoomService {
   // Track which call docs we have already *answered* to avoid double-processing
   final Set<String> _answeredCalls = {};
 
+  // Broadcaster-side answer PCs keyed by callId — MUST be retained so Dart's
+  // GC does not collect the RTCPeerConnection while ICE is still gathering.
+  final Map<String, RTCPeerConnection> _answerPcs = {};
+  final Map<String, StreamSubscription> _answerIceSubs = {};
+
   // ──────────────────────────────────────────────────────────────────────────
   // RtcRoomService callbacks
   // ──────────────────────────────────────────────────────────────────────────
@@ -394,6 +399,16 @@ class WebRtcRoomService implements RtcRoomService {
     _presenceSub = null;
     _incomingCallsSub = null;
 
+    // Close all broadcaster-side answer PCs.
+    for (final sub in _answerIceSubs.values) {
+      await sub.cancel();
+    }
+    _answerIceSubs.clear();
+    for (final pc in _answerPcs.values) {
+      try { await pc.close(); } catch (_) {}
+    }
+    _answerPcs.clear();
+
     await _stopLocalStream();
 
     for (final peer in _peers.values) {
@@ -502,10 +517,26 @@ class WebRtcRoomService implements RtcRoomService {
     _peers[broadcasterId] = peer;
 
     pc.onTrack = (RTCTrackEvent event) {
+      MediaStream? stream;
       if (event.streams.isNotEmpty) {
-        peer.remoteStream = event.streams.first;
-        renderer.srcObject = event.streams.first;
-        _startRemoteVad(broadcasterId, broadcasterUid, event.streams.first);
+        stream = event.streams.first;
+      } else if (event.track != null) {
+        // Some browsers deliver tracks without an associated stream.
+        // Build a synthetic one from the track so the renderer has a source.
+        createLocalMediaStream('remote_$broadcasterId').then((newStream) async {
+          await newStream.addTrack(event.track!);
+          peer.remoteStream = newStream;
+          renderer.srcObject = newStream;
+          _startRemoteVad(broadcasterId, broadcasterUid, newStream);
+          _log('remote stream (synthetic) received from broadcaster=$broadcasterId');
+          onRemoteUserJoined?.call();
+        }).catchError((_) {});
+        return;
+      }
+      if (stream != null) {
+        peer.remoteStream = stream;
+        renderer.srcObject = stream;
+        _startRemoteVad(broadcasterId, broadcasterUid, stream);
         _log('remote stream received from broadcaster=$broadcasterId');
         onRemoteUserJoined?.call();
       }
@@ -642,6 +673,8 @@ class WebRtcRoomService implements RtcRoomService {
 
     final callRef = _callsCol.doc(callId);
     final pc = await createPeerConnection(_iceConfig);
+    // Store immediately — prevents GC from collecting this PC while ICE gathers.
+    _answerPcs[callId] = pc;
 
     // Send our local tracks to this viewer
     for (final track in localStream.getTracks()) {
@@ -670,8 +703,8 @@ class WebRtcRoomService implements RtcRoomService {
       'answer': {'type': answer.type, 'sdp': answer.sdp},
     });
 
-    // Read viewer's ICE candidates
-    callRef.collection('viewer_ice').snapshots().listen((snap) {
+    // Read viewer's ICE candidates — store subscription to keep it alive.
+    _answerIceSubs[callId] = callRef.collection('viewer_ice').snapshots().listen((snap) {
       for (final change in snap.docChanges) {
         if (change.type == DocumentChangeType.added) {
           final d = change.doc.data();
@@ -684,6 +717,17 @@ class WebRtcRoomService implements RtcRoomService {
         }
       }
     });
+
+    // Clean up this answer PC when the connection ultimately closes.
+    pc.onConnectionState = (RTCPeerConnectionState state) {
+      if (state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected ||
+          state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
+          state == RTCPeerConnectionState.RTCPeerConnectionStateClosed) {
+        _answerIceSubs.remove(callId)?.cancel();
+        _answerPcs.remove(callId)?.close();
+        _log('answer PC closed for callId=$callId ($state)');
+      }
+    };
 
     _log('answer written for callId=$callId');
   }
