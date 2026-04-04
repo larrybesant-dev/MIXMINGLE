@@ -18,6 +18,8 @@ import 'package:mixvy/presentation/screens/legal_terms_screen.dart';
 import 'package:mixvy/presentation/screens/legal_privacy_screen.dart';
 import 'package:mixvy/presentation/screens/app_info_screen.dart';
 import 'package:mixvy/presentation/screens/moderation_dashboard_screen.dart';
+import 'package:mixvy/features/beta/beta_feedback_screen.dart';
+import 'package:mixvy/features/beta/beta_tester_provider.dart';
 import 'package:mixvy/features/speed_dating/screens/speed_dating_screen.dart';
 import 'package:mixvy/core/services/app_settings_service.dart';
 import 'package:mixvy/features/messaging/screens/messages_screen.dart';
@@ -309,6 +311,14 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/moderation',
             builder: (context, state) => const ModerationDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/beta-feedback',
+            builder: (context, state) {
+              final isBeta = ref.read(isBetaTesterProvider).valueOrNull ?? false;
+              if (!isBeta) return NotFoundScreen(path: state.uri.toString());
+              return const BetaFeedbackScreen();
+            },
           ),
           GoRoute(
             path: '/search',

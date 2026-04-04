@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/app_settings_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
+import '../../features/beta/beta_tester_provider.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -142,6 +143,26 @@ class SettingsScreen extends ConsumerWidget {
                 onTap: () => context.go('/about'),
               ),
             ),
+            // Beta tester section — only visible when betaTester == true
+            Builder(builder: (context) {
+              final isBeta = ref.watch(isBetaTesterProvider).valueOrNull ?? false;
+              if (!isBeta) return const SizedBox.shrink();
+              return Column(
+                children: [
+                  const SizedBox(height: 12),
+                  Card(
+                    color: Theme.of(context).colorScheme.tertiaryContainer,
+                    child: ListTile(
+                      leading: const Icon(Icons.science_outlined),
+                      title: const Text('Beta Feedback'),
+                      subtitle: const Text('You are a beta tester. Submit your checklist here.'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () => context.go('/beta-feedback'),
+                    ),
+                  ),
+                ],
+              );
+            }),
           ],
         ),
       ),

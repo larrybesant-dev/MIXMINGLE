@@ -1312,6 +1312,105 @@ exports.stripeWebhook = onRequestV1(async (req, res) => {
   res.json({received: true});
 });
 
+// ---------------------------------------------------------------------------
+// Beta feedback
+// ---------------------------------------------------------------------------
+
+/**
+ * submitBetaFeedback – callable function that writes a beta tester's checklist
+ * result to Firestore.
+ *
+ * Expected payload:
+ *   { sections: [{ title: string, items: [{ label: string, status: 'pass'|'fail'|'partial', note: string }] }] }
+ *
+ * Writes to:  beta_feedback/{uid}/submissions/{autoId}
+ */
+async function submitBetaFeedbackHandler(request) {
+  const { auth, data } = request;
+  if (!auth) throw new HttpsError("unauthenticated", "Sign in first.");
+
+  const uid = auth.uid;
+  const sections = data?.sections;
+  if (!Array.isArray(sections) || sections.length === 0) {
+    throw new HttpsError("invalid-argument", "sections must be a non-empty array.");
+  }
+
+  // Validate + sanitise each section
+  const sanitised = sections.map((section) => {
+    if (typeof section.title !== "string") throw new HttpsError("invalid-argument", "section.title must be a string.");
+    const items = Array.isArray(section.items) ? section.items.map((item) => {
+      const validStatuses = ["pass", "fail", "partial", "untested"];
+      const status = validStatuses.includes(item.status) ? item.status : "untested";
+      return {
+        label: String(item.label ?? "").slice(0, 200),
+        status,
+        note: String(item.note ?? "").slice(0, 1000),
+      };
+    }) : [];
+    return { title: String(section.title).slice(0, 100), items };
+  });
+
+  await db.collection("beta_feedback").doc(uid).collection("submissions").add({
+    uid,
+    sections: sanitised,
+    submittedAt: admin.firestore.FieldValue.serverTimestamp(),
+    appVersion: data?.appVersion ?? null,
+    platform: data?.platform ?? null,
+  });
+}
+
+exports.submitBetaFeedback = onCall(async (request) => {
+  return submitBetaFeedbackHandler(request);
+});
+
+/**
+ * promoteToBetaTester – admin-only callable that stamps betaTester:true on a
+ * specific user doc (or all users when uid is omitted).
+ *
+ * Payload: { uid?: string }
+ * Requires the caller to have  admin:true  on their Firestore user doc.
+ */
+exports.promoteToBetaTester = onCall(async (request) => {
+  const { auth, data } = request;
+  if (!auth) throw new HttpsError("unauthenticated", "Sign in first.");
+
+  // Verify caller is admin
+  const callerDoc = await db.collection("users").doc(auth.uid).get();
+  if (callerDoc.data()?.admin !== true) {
+    throw new HttpsError("permission-denied", "Admin access required.");
+  }
+
+  const targetUid = data?.uid;
+  if (targetUid) {
+    // Promote a single user
+    await db.collection("users").doc(String(targetUid)).set(
+      { betaTester: true },
+      { merge: true },
+    );
+    return { promoted: 1 };
+  }
+
+  // Promote ALL users in batches of 500
+  let promoted = 0;
+  let lastDoc = null;
+  do {
+    let query = db.collection("users").limit(500);
+    if (lastDoc) query = query.startAfter(lastDoc);
+    const snap = await query.get();
+    if (snap.empty) break;
+
+    const batch = db.batch();
+    snap.docs.forEach((doc) => {
+      batch.set(doc.ref, { betaTester: true }, { merge: true });
+    });
+    await batch.commit();
+    promoted += snap.size;
+    lastDoc = snap.docs[snap.docs.length - 1];
+  } while (lastDoc);
+
+  return { promoted };
+});
+
 exports.__testing = {
   createPaymentIntentHandler,
   recordStripePaymentSuccessHandler,
