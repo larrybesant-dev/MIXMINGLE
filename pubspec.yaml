@@ -1,5 +1,5 @@
   name: mixvy
-  description: "A new Flutter project."
+  description: "MixVy — Meet. Connect. Vibe. Live audio/video rooms."
   publish_to: 'none'
   version: 1.0.0+1
 
@@ -62,14 +62,30 @@
 
     mocktail: ^1.0.0
     fake_cloud_firestore: ^4.1.0+1
+    flutter_launcher_icons: ^0.14.1
 
 
   flutter:
     assets:
       - assets/images/
+      - assets/images/branding/
       - assets/icons/
       - assets/fonts/
       - assets/env/app_env
       - assets/.env
     uses-material-design: true
+
+  flutter_launcher_icons:
+    android: true
+    ios: true
+    image_path: "assets/images/branding/mixvy_logo.png"
+    web:
+      generate: true
+      image_path: "assets/images/branding/mixvy_logo.png"
+      background_color: "#0D0D1A"
+      theme_color: "#B040FF"
+    windows:
+      generate: true
+      image_path: "assets/images/branding/mixvy_logo.png"
+      icon_size: 48
 

@@ -176,7 +176,11 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Icon(Icons.nightlife, size: 54, color: theme.colorScheme.primary),
+                    Image.asset(
+                      'assets/images/branding/mixvy_logo.png',
+                      height: 90,
+                      semanticLabel: 'MixVy logo',
+                    ),
                     const SizedBox(height: 12),
                     Text(
                       'Welcome back to MixVy',

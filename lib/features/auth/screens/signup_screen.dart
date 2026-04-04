@@ -28,6 +28,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           key: _formKey,
           child: Column(
             children: [
+              Image.asset(
+                'assets/images/branding/mixvy_logo.png',
+                height: 72,
+                semanticLabel: 'MixVy logo',
+              ),
+              const SizedBox(height: 20),
               TextFormField(
                 controller: _email,
                 decoration: const InputDecoration(label: Text("Email")),

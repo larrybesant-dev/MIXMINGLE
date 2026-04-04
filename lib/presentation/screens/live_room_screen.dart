@@ -30,7 +30,6 @@ import '../../services/web_popout_service.dart';
 import '../../services/desktop_window_service.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
 import '../../features/room/providers/mic_access_provider.dart';
-import '../../models/mic_access_request_model.dart';
 import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/room/providers/host_provider.dart';
 import '../../features/room/providers/room_policy_provider.dart';
@@ -2919,12 +2918,175 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   ),
                 ],
               ),
+              bottomNavigationBar: Container(
+                color: Colors.black87,
+                child: SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        // ── Mic ─────────────────────────────────────────
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                _isMicMuted
+                                    ? Icons.mic_off_rounded
+                                    : Icons.mic_rounded,
+                                color: _isMicMuted
+                                    ? Colors.grey
+                                    : Colors.white,
+                              ),
+                              onPressed:
+                                  RoomPermissions.canUseMic(role) &&
+                                          !_isMicActionInFlight &&
+                                          _isCallReady
+                                      ? _toggleMic
+                                      : null,
+                            ),
+                            Text(
+                              _isMicMuted ? 'Muted' : 'Mic',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                        // ── Camera ──────────────────────────────────────
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                _isVideoEnabled
+                                    ? Icons.videocam_rounded
+                                    : Icons.videocam_off_rounded,
+                                color: _isVideoEnabled
+                                    ? Colors.white
+                                    : Colors.grey,
+                              ),
+                              onPressed: RoomPermissions.canUseCamera(role) &&
+                                      !_isVideoActionInFlight &&
+                                      _isCallReady &&
+                                      (_videoToggleCooldownUntil == null ||
+                                          DateTime.now().isAfter(
+                                              _videoToggleCooldownUntil!))
+                                  ? () {
+                                      if (mounted) {
+                                        setState(() => _cameraStatus =
+                                            'Camera initializing…');
+                                      }
+                                      _toggleVideo();
+                                    }
+                                  : null,
+                            ),
+                            Text(
+                              _isVideoEnabled ? 'Cam On' : 'Camera',
+                              style: const TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                        // ── Live status badge ───────────────────────────
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _isCallConnecting
+                                    ? Colors.orange
+                                    : _isCallReady
+                                        ? Colors.red
+                                        : Colors.grey.shade700,
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  if (_isCallConnecting) ...[
+                                    const SizedBox(
+                                      width: 10,
+                                      height: 10,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 1.5,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 6),
+                                  ],
+                                  Text(
+                                    _isCallConnecting
+                                        ? 'Connecting…'
+                                        : _isCallReady
+                                            ? '● LIVE'
+                                            : '○ Offline',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'Status',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                        // ── Leave room ──────────────────────────────────
+                        Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(
+                                Icons.exit_to_app_rounded,
+                                color: Colors.redAccent,
+                              ),
+                              onPressed: () async {
+                                await _disconnectCall();
+                                await _leaveRoom();
+                                if (context.mounted) context.pop();
+                              },
+                            ),
+                            const Text(
+                              'Leave',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 11,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
               body: Stack(
                 children: [
-                  Padding(
-                    padding: EdgeInsets.only(right: isDesktopLayout ? 620 : 0),
-                    child: Column(
-                      children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Expanded(
+                        flex: 3,
+                        child: Column(
+                          children: [
                         // Spotlight banner
                         if (spotlightName != null)
                           Container(
@@ -3021,14 +3183,44 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             ),
                             child: Column(
                               children: [
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    'Camera Wall',
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleSmall,
-                                  ),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        'Camera Wall',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.titleSmall,
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 3,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: _isCallConnecting
+                                            ? Colors.orange
+                                            : _isCallReady
+                                                ? Colors.red
+                                                : Colors.grey.shade700,
+                                        borderRadius:
+                                            BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        _isCallConnecting
+                                            ? '● Connecting'
+                                            : _isCallReady
+                                                ? '● LIVE'
+                                                : '○ Offline',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
                                 ),
                                 const SizedBox(height: 6),
                                 Builder(
@@ -3995,35 +4187,172 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             ),
                           ),
                         ),
-                        if (!isDesktopLayout) ...[
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.transparent,
-                                    Colors.black.withValues(alpha: 0.18),
-                                  ],
+                      ],
+                    ),
+                  ),
+                  // ── RIGHT: always-visible chat panel ─────────────────────────
+                  SizedBox(
+                    width: isDesktopLayout ? 420 : 300,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface,
+                        border: Border(
+                          left: BorderSide(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
+                      ),
+                      child: Column(
+                        children: [
+                          // Chat header
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+                            child: Row(
+                              children: [
+                                Text(
+                                  'Room Chat',
+                                  style: Theme.of(context).textTheme.titleMedium,
                                 ),
+                                const Spacer(),
+                                presenceAsync.when(
+                                  data: (presence) {
+                                    final onlineCount = presence
+                                        .where(
+                                          (e) =>
+                                              e.isOnline &&
+                                              (e.lastHeartbeatAt == null ||
+                                                  DateTime.now()
+                                                          .difference(
+                                                            e.lastHeartbeatAt!,
+                                                          )
+                                                          .inSeconds <
+                                                      90),
+                                        )
+                                        .length;
+                                    return Chip(
+                                      avatar: const Icon(
+                                        Icons.circle,
+                                        color: Colors.green,
+                                        size: 10,
+                                      ),
+                                      label: Text('$onlineCount online'),
+                                      padding: EdgeInsets.zero,
+                                      labelPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 4,
+                                          ),
+                                    );
+                                  },
+                                  loading: () => const SizedBox.shrink(),
+                                  error: (_, _) => const SizedBox.shrink(),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Divider(height: 1),
+                          // Gift + hand raise row for non-hosts
+                          if (!isHost &&
+                              hostId.isNotEmpty &&
+                              hostId != user.id)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
                               ),
-                              child: messageStreamAsync.when(
+                              child: Row(
+                                children: [
+                                  if (allowGifts)
+                                    TextButton.icon(
+                                      icon: const Icon(
+                                        Icons.card_giftcard,
+                                        size: 16,
+                                      ),
+                                      label: const Text('Gift'),
+                                      onPressed: () => _showGiftSheet(
+                                        hostId: hostId,
+                                        hostName: 'Host',
+                                        senderName: user.username,
+                                        coinBalance:
+                                            walletAsync
+                                                .valueOrNull
+                                                ?.coinBalance ??
+                                            0,
+                                      ),
+                                    ),
+                                  if (!isCohost &&
+                                      !isModerator &&
+                                      allowMicRequests)
+                                    _HandRaiseButton(
+                                      status: micRequestStatus,
+                                      onRaise: () =>
+                                          micAccessController.requestAccess(
+                                            roomId: widget.roomId,
+                                            requesterId: user.id,
+                                            hostId: hostId,
+                                          ),
+                                      onCancel: () =>
+                                          micAccessController.expireNow(
+                                            widget.roomId,
+                                            '${user.id}_$hostId',
+                                          ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          // Blocked relationship warning
+                          participantsAsync.when(
+                            data: (participants) {
+                              final hasBlocked = participants.any((p) {
+                                final pid = p.userId.trim();
+                                return pid.isNotEmpty &&
+                                    pid != user.id &&
+                                    _excludedUserIds.contains(pid);
+                              });
+                              if (!hasBlocked) return const SizedBox.shrink();
+                              return Container(
+                                width: double.infinity,
+                                margin: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.errorContainer,
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(
+                                  'Blocked relationship in room. Leave to continue safely.',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onErrorContainer,
+                                      ),
+                                ),
+                              );
+                            },
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, _) => const SizedBox.shrink(),
+                          ),
+                          // Messages list
+                          Expanded(
+                            child: messageStreamAsync.when(
                               data: (messages) {
                                 if (messages.length !=
                                     _lastRenderedMessageCount) {
                                   _lastRenderedMessageCount = messages.length;
-                                  WidgetsBinding.instance.addPostFrameCallback((
-                                    _,
-                                  ) {
-                                    if (scrollController.hasClients) {
-                                      scrollController.jumpTo(
-                                        scrollController
-                                            .position
-                                            .maxScrollExtent,
-                                      );
-                                    }
-                                  });
+                                  WidgetsBinding.instance.addPostFrameCallback(
+                                    (_) {
+                                      if (scrollController.hasClients) {
+                                        scrollController.jumpTo(
+                                          scrollController
+                                              .position
+                                              .maxScrollExtent,
+                                        );
+                                      }
+                                    },
+                                  );
                                 }
                                 if (messages.isEmpty) {
                                   return const Center(
@@ -4053,8 +4382,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         currentUserId: user.id,
                                         currentUsername: user.username,
                                       ),
-                                      senderVipLevel: _senderVipLevelById[msg.senderId] ?? 0,
-                                      senderAvatarUrl: _senderAvatarUrlById[msg.senderId],
+                                      senderVipLevel:
+                                          _senderVipLevelById[msg.senderId] ??
+                                          0,
+                                      senderAvatarUrl:
+                                          _senderAvatarUrlById[msg.senderId],
                                     );
                                   },
                                 );
@@ -4062,56 +4394,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               loading: () => const Center(
                                 child: CircularProgressIndicator(),
                               ),
-                              error: (e, _) => Center(child: Text('Error: $e')),
+                              error: (e, _) => Center(
+                                child: Text('Error: $e'),
+                              ),
                             ),
-                            ),
-                          ),
-                          participantsAsync.when(
-                            data: (participants) {
-                              final hasBlockedParticipant = participants.any((
-                                p,
-                              ) {
-                                final participantId = p.userId.trim();
-                                if (participantId.isEmpty ||
-                                    participantId == user.id) {
-                                  return false;
-                                }
-                                return _excludedUserIds.contains(participantId);
-                              });
-
-                              if (!hasBlockedParticipant) {
-                                return const SizedBox.shrink();
-                              }
-
-                              return Container(
-                                width: double.infinity,
-                                margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.errorContainer,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  'Blocked relationship detected in this room. Leave to continue safely.',
-                                  style: Theme.of(context).textTheme.bodySmall
-                                      ?.copyWith(
-                                        color: Theme.of(
-                                          context,
-                                        ).colorScheme.onErrorContainer,
-                                      ),
-                                ),
-                              );
-                            },
-                            loading: () => const SizedBox.shrink(),
-                            error: (_, _) => const SizedBox.shrink(),
                           ),
                           if (cooldownMessage.isNotEmpty)
                             Padding(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 8.0,
-                              ),
+                              padding: const EdgeInsets.only(bottom: 6),
                               child: Text(
                                 cooldownMessage,
                                 style: const TextStyle(
@@ -4120,512 +4410,186 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 ),
                               ),
                             ),
-                          if (_showEmojiTray) _buildEmojiTray(),
+                          if (_showEmojiTray)
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 0, 8, 4),
+                              child: _buildEmojiTray(),
+                            ),
                           if (_firestore != null)
-                          StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                            stream: _firestore!
-                                .collection('rooms')
-                                .doc(widget.roomId)
-                                .collection('typing')
-                                .snapshots(),
-                            builder: (context, snapshot) {
-                              final docs = snapshot.data?.docs ?? [];
-                              final currentUid = _joinedUserId ?? '';
-                              final names = docs
-                                  .where((d) =>
-                                      d.id != currentUid &&
-                                      (d.data()['isTyping'] as bool? ?? false))
-                                  .map((d) =>
-                                      _senderDisplayNameById[d.id] ??
-                                      'Someone')
-                                  .toList(growable: false);
-                              if (names.isEmpty) return const SizedBox.shrink();
-                              final label = names.length == 1
-                                  ? '${names[0]} is typing…'
-                                  : '${names.join(', ')} are typing…';
-                              return Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 16, vertical: 4),
-                                child: Text(
-                                  label,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
+                            StreamBuilder<
+                              QuerySnapshot<Map<String, dynamic>>
+                            >(
+                              stream: _firestore!
+                                  .collection('rooms')
+                                  .doc(widget.roomId)
+                                  .collection('typing')
+                                  .snapshots(),
+                              builder: (context, snapshot) {
+                                final docs = snapshot.data?.docs ?? [];
+                                final currentUid = _joinedUserId ?? '';
+                                final names = docs
+                                    .where(
+                                      (d) =>
+                                          d.id != currentUid &&
+                                          (d.data()['isTyping'] as bool? ??
+                                              false),
+                                    )
+                                    .map(
+                                      (d) =>
+                                          _senderDisplayNameById[d.id] ??
+                                          'Someone',
+                                    )
+                                    .toList(growable: false);
+                                if (names.isEmpty) {
+                                  return const SizedBox.shrink();
+                                }
+                                final label = names.length == 1
+                                    ? '${names[0]} is typing…'
+                                    : '${names.join(', ')} are typing…';
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 4,
+                                  ),
+                                  child: Text(
+                                    label,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
                                           fontStyle: FontStyle.italic,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .onSurfaceVariant),
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                );
+                              },
+                            ),
+                          // Input row
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
+                            child: Row(
+                              children: [
+                                IconButton(
+                                  tooltip: 'Emojis',
+                                  icon: Icon(
+                                    _showEmojiTray
+                                        ? Icons.emoji_emotions
+                                        : Icons.emoji_emotions_outlined,
+                                  ),
+                                  onPressed: () {
+                                    FocusScope.of(context).unfocus();
+                                    setState(
+                                      () =>
+                                          _showEmojiTray = !_showEmojiTray,
+                                    );
+                                  },
                                 ),
-                              );
-                            },
-                          ),
-                          SafeArea(
-                            top: false,
-                            minimum: const EdgeInsets.only(bottom: 90),
-                            child: Container(
-                              margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).colorScheme.surface,
-                                border: Border.all(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.outlineVariant,
+                                Expanded(
+                                  child: TextField(
+                                    controller: messageController,
+                                    onChanged: (_) => _onTypingInput(),
+                                    enabled: !isSending &&
+                                        participant?.isMuted != true &&
+                                        participant?.isBanned != true &&
+                                        !hasBlockedParticipantInRoom,
+                                    decoration: InputDecoration(
+                                      hintText: participant?.isMuted == true
+                                          ? 'You are muted'
+                                          : participant?.isBanned == true
+                                          ? 'You are banned'
+                                          : hasBlockedParticipantInRoom
+                                          ? 'Blocked relationship in room'
+                                          : !allowChat
+                                          ? 'Chat disabled by host'
+                                          : 'Type a message…',
+                                    ),
+                                  ),
                                 ),
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Row(
-                                children: [
-                                  if (allowGifts &&
-                                      !isHost &&
-                                      hostId.isNotEmpty &&
-                                      hostId != user.id)
-                                    IconButton(
-                                      tooltip: 'Send a gift',
-                                      icon: const Icon(Icons.card_giftcard),
-                                      onPressed: () => _showGiftSheet(
-                                        hostId: hostId,
-                                        hostName: 'Host',
-                                        senderName: user.username,
-                                        coinBalance:
-                                            walletAsync
-                                                .valueOrNull
-                                                ?.coinBalance ??
-                                            0,
-                                      ),
-                                    ),
-                                  // Raise hand button for audience members
-                                  if (!isHost && !isCohost && !isModerator && allowMicRequests)
-                                    _HandRaiseButton(
-                                      status: micRequestStatus,
-                                      onRaise: () => micAccessController.requestAccess(
-                                        roomId: widget.roomId,
-                                        requesterId: user.id,
-                                        hostId: hostId,
-                                      ),
-                                      onCancel: () => micAccessController.expireNow(
-                                        widget.roomId,
-                                        '${user.id}_$hostId',
-                                      ),
-                                    ),
-                                  IconButton(
-                                    tooltip: 'Emojis',
-                                    icon: Icon(
-                                      _showEmojiTray
-                                          ? Icons.emoji_emotions
-                                          : Icons.emoji_emotions_outlined,
-                                    ),
-                                    onPressed: () {
-                                      FocusScope.of(context).unfocus();
-                                      setState(() {
-                                        _showEmojiTray = !_showEmojiTray;
-                                      });
-                                    },
-                                  ),
-                                  Expanded(
-                                    child: TextField(
-                                      controller: messageController,
-                                      onChanged: (_) => _onTypingInput(),
-                                      enabled:
-                                          !isSending &&
-                                          participant?.isMuted != true &&
-                                          participant?.isBanned != true &&
-                                          !hasBlockedParticipantInRoom,
-                                      decoration: InputDecoration(
-                                        hintText: participant?.isMuted == true
-                                            ? 'You are muted'
-                                            : participant?.isBanned == true
-                                            ? 'You are banned'
-                                            : hasBlockedParticipantInRoom
-                                            ? 'Blocked relationship in room'
-                                            : !allowChat
-                                            ? 'Chat disabled by host'
-                                            : 'Type your message...',
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  SizedBox(
-                                    width: 50,
-                                    child: ElevatedButton(
-                                      onPressed:
-                                          isSending ||
-                                              participant?.isMuted == true ||
-                                              participant?.isBanned == true ||
-                                              !allowChat ||
-                                              hasBlockedParticipantInRoom
-                                          ? null
-                                          : () async {
-                                              if (messageController.text
-                                                  .trim()
-                                                  .isEmpty) {
-                                                return;
-                                              }
-                                              if (slowModeSeconds > 0 &&
-                                                  lastMessageTime != null) {
-                                                final secondsSinceLastMessage =
-                                                    DateTime.now()
-                                                        .difference(
-                                                          lastMessageTime!,
-                                                        )
-                                                        .inSeconds;
-                                                if (secondsSinceLastMessage <
-                                                    slowModeSeconds) {
-                                                  setState(() {
-                                                    cooldownMessage =
-                                                        'Slow mode is on. Wait ${slowModeSeconds - secondsSinceLastMessage}s.';
-                                                  });
-                                                  return;
-                                                }
-                                              }
-
-                                              setState(() => isSending = true);
-                                              try {
-                                                await sendMessage(
-                                                  messageController.text.trim(),
-                                                );
-                                                lastMessageTime =
-                                                    DateTime.now();
-                                                cooldownMessage = '';
-                                                messageController.clear();
-                                                _showEmojiTray = false;
-
-                                                if (!_hasTrackedFirstMessage) {
-                                                  _hasTrackedFirstMessage =
-                                                      true;
-                                                  await AnalyticsService()
-                                                      .logEvent(
-                                                        'first_message_sent',
-                                                        params: {
-                                                          'room_id':
-                                                              widget.roomId,
-                                                          'user_id': user.id,
-                                                        },
-                                                      );
-                                                }
-                                              } catch (e) {
-                                                if (context.mounted) {
-                                                  ScaffoldMessenger.of(
-                                                    context,
-                                                  ).showSnackBar(
-                                                    SnackBar(
-                                                      content: Text(
-                                                        e.toString(),
-                                                      ),
-                                                    ),
-                                                  );
-                                                }
-                                              } finally {
-                                                if (context.mounted) {
-                                                  setState(
-                                                    () => isSending = false,
-                                                  );
-                                                }
-                                              }
-                                            },
-                                      child: isSending
-                                          ? const SizedBox(
-                                              width: 16,
-                                              height: 16,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                              ),
-                                            )
-                                          : const Text('Send'),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                                const SizedBox(width: 6),
+                                FilledButton(
+                                  onPressed: isSending ||
+                                          participant?.isMuted == true ||
+                                          participant?.isBanned == true ||
+                                          !allowChat ||
+                                          hasBlockedParticipantInRoom
+                                      ? null
+                                      : () async {
+                                          if (messageController.text
+                                              .trim()
+                                              .isEmpty) {
+                                            return;
+                                          }
+                                          if (slowModeSeconds > 0 &&
+                                              lastMessageTime != null) {
+                                            final secs = DateTime.now()
+                                                .difference(lastMessageTime!)
+                                                .inSeconds;
+                                            if (secs < slowModeSeconds) {
+                                              setState(() {
+                                                cooldownMessage =
+                                                    'Slow mode on. Wait ${slowModeSeconds - secs}s.';
+                                              });
+                                              return;
+                                            }
+                                          }
+                                          setState(() => isSending = true);
+                                          try {
+                                            await sendMessage(
+                                              messageController.text.trim(),
+                                            );
+                                            lastMessageTime = DateTime.now();
+                                            cooldownMessage = '';
+                                            messageController.clear();
+                                            _showEmojiTray = false;
+                                            if (!_hasTrackedFirstMessage) {
+                                              _hasTrackedFirstMessage = true;
+                                              await AnalyticsService().logEvent(
+                                                'first_message_sent',
+                                                params: {
+                                                  'room_id': widget.roomId,
+                                                  'user_id': user.id,
+                                                },
+                                              );
+                                            }
+                                          } catch (e) {
+                                            if (context.mounted) {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(e.toString()),
+                                                ),
+                                              );
+                                            }
+                                          } finally {
+                                            if (context.mounted) {
+                                              setState(
+                                                () => isSending = false,
+                                              );
+                                            }
+                                          }
+                                        },
+                                  child: isSending
+                                      ? const SizedBox(
+                                          width: 16,
+                                          height: 16,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Text('Send'),
+                                ),
+                              ],
                             ),
                           ),
                         ],
-                      ],
+                      ),
                     ),
                   ),
-                  // ── User roster sidebar ─────────────────────────────────
-                  if (isDesktopLayout)
-                    Positioned(
-                      top: 0,
-                      right: 420,
-                      bottom: 0,
-                      child: SizedBox(
-                        width: 200,
-                        child: _RosterSidebar(
-                          participants: participantsInRoom,
-                          micRequests: micRequestsAsync.valueOrNull ?? const [],
-                          senderDisplayNameById: _senderDisplayNameById,
-                          senderAvatarUrlById: _senderAvatarUrlById,
-                          senderVipLevelById: _senderVipLevelById,
-                          currentUserId: user.id,
-                          allowMicRequests: roomPolicyAsync.valueOrNull?.allowMicRequests ?? true,
-                          myMicRequest: myMicRequestAsync.valueOrNull,
-                          onRaiseHand: !isHost && !isCohost && !isModerator
-                              ? () async {
-                                  await micAccessController.requestAccess(
-                                    roomId: widget.roomId,
-                                    requesterId: user.id,
-                                    hostId: hostId,
-                                  );
-                                }
-                              : null,
-                        ),
-                      ),
-                    ),
-                  // ── Chat panel ──────────────────────────────────────────
-                  if (isDesktopLayout)
-                    Positioned(
-                      top: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: SizedBox(
-                        width: 420,
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.surface,
-                            border: Border(
-                              left: BorderSide(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.outlineVariant,
-                              ),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(
-                                  12,
-                                  12,
-                                  12,
-                                  6,
-                                ),
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      'Room Chat',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.titleMedium,
-                                    ),
-                                    const Spacer(),
-                                    Text(
-                                      '${participantsInRoom.length} joined',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const Divider(height: 1),
-                              Expanded(
-                                child: messageStreamAsync.when(
-                                  data: (messages) {
-                                    if (messages.isEmpty) {
-                                      return const Center(
-                                        child: Text('No messages yet.'),
-                                      );
-                                    }
-                                    return ListView.builder(
-                                      padding: const EdgeInsets.all(8),
-                                      itemCount: messages.length,
-                                      itemBuilder: (context, i) {
-                                        if (i == 0) {
-                                          WidgetsBinding.instance
-                                              .addPostFrameCallback((_) {
-                                                _hydrateSenderDisplayNames(
-                                                  messages: messages,
-                                                  currentUserId: user.id,
-                                                );
-                                              });
-                                        }
-                                        final msg = messages[i];
-                                        return MessageBubble(
-                                          message: msg,
-                                          isMe: msg.senderId == user.id,
-                                          senderLabel: _senderLabelFor(
-                                            senderId: msg.senderId,
-                                            currentUserId: user.id,
-                                            currentUsername: user.username,
-                                          ),
-                                          senderVipLevel: _senderVipLevelById[msg.senderId] ?? 0,
-                                          senderAvatarUrl: _senderAvatarUrlById[msg.senderId],
-                                        );
-                                      },
-                                    );
-                                  },
-                                  loading: () => const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                  error: (e, _) =>
-                                      Center(child: Text('Error: $e')),
-                                ),
-                              ),
-                              if (cooldownMessage.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(bottom: 6),
-                                  child: Text(
-                                    cooldownMessage,
-                                    style: const TextStyle(
-                                      color: Colors.red,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              if (_showEmojiTray)
-                                Padding(
-                                  padding: const EdgeInsets.fromLTRB(
-                                    8,
-                                    0,
-                                    8,
-                                    4,
-                                  ),
-                                  child: _buildEmojiTray(),
-                                ),
-                              if (_firestore != null)
-                              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-                                stream: _firestore!
-                                    .collection('rooms')
-                                    .doc(widget.roomId)
-                                    .collection('typing')
-                                    .snapshots(),
-                                builder: (context, snapshot) {
-                                  final docs = snapshot.data?.docs ?? [];
-                                  final currentUid = _joinedUserId ?? '';
-                                  final names = docs
-                                      .where((d) =>
-                                          d.id != currentUid &&
-                                          (d.data()['isTyping'] as bool? ?? false))
-                                      .map((d) =>
-                                          _senderDisplayNameById[d.id] ??
-                                          'Someone')
-                                      .toList(growable: false);
-                                  if (names.isEmpty) return const SizedBox.shrink();
-                                  final label = names.length == 1
-                                      ? '${names[0]} is typing…'
-                                      : '${names.join(', ')} are typing…';
-                                  return Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 12, vertical: 4),
-                                    child: Text(
-                                      label,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                              fontStyle: FontStyle.italic,
-                                              color: Theme.of(context)
-                                                  .colorScheme
-                                                  .onSurfaceVariant),
-                                    ),
-                                  );
-                                },
-                              ),
-                              SafeArea(
-                                top: false,
-                                minimum: const EdgeInsets.fromLTRB(8, 0, 8, 88),
-                                child: Row(
-                                  children: [
-                                    IconButton(
-                                      tooltip: 'Emojis',
-                                      icon: Icon(
-                                        _showEmojiTray
-                                            ? Icons.emoji_emotions
-                                            : Icons.emoji_emotions_outlined,
-                                      ),
-                                      onPressed: () {
-                                        FocusScope.of(context).unfocus();
-                                        setState(() {
-                                          _showEmojiTray = !_showEmojiTray;
-                                        });
-                                      },
-                                    ),
-                                    Expanded(
-                                      child: TextField(
-                                        controller: messageController,
-                                        onChanged: (_) => _onTypingInput(),
-                                        enabled:
-                                            !isSending &&
-                                            participant?.isMuted != true &&
-                                            participant?.isBanned != true &&
-                                            !hasBlockedParticipantInRoom,
-                                        decoration: InputDecoration(
-                                          hintText: participant?.isMuted == true
-                                              ? 'You are muted'
-                                              : participant?.isBanned == true
-                                              ? 'You are banned'
-                                              : hasBlockedParticipantInRoom
-                                              ? 'Blocked relationship in room'
-                                              : !allowChat
-                                              ? 'Chat disabled by host'
-                                              : 'Type your message...',
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    FilledButton(
-                                      onPressed:
-                                          isSending ||
-                                              participant?.isMuted == true ||
-                                              participant?.isBanned == true ||
-                                              !allowChat ||
-                                              hasBlockedParticipantInRoom
-                                          ? null
-                                          : () async {
-                                              if (messageController.text
-                                                  .trim()
-                                                  .isEmpty) {
-                                                return;
-                                              }
-                                              if (slowModeSeconds > 0 &&
-                                                  lastMessageTime != null) {
-                                                final secondsSinceLastMessage =
-                                                    DateTime.now()
-                                                        .difference(
-                                                          lastMessageTime!,
-                                                        )
-                                                        .inSeconds;
-                                                if (secondsSinceLastMessage <
-                                                    slowModeSeconds) {
-                                                  setState(() {
-                                                    cooldownMessage =
-                                                        'Slow mode is on. Wait ${slowModeSeconds - secondsSinceLastMessage}s.';
-                                                  });
-                                                  return;
-                                                }
-                                              }
-                                              setState(() => isSending = true);
-                                              try {
-                                                await sendMessage(
-                                                  messageController.text.trim(),
-                                                );
-                                                lastMessageTime =
-                                                    DateTime.now();
-                                                cooldownMessage = '';
-                                                messageController.clear();
-                                                _showEmojiTray = false;
-                                              } finally {
-                                                if (context.mounted) {
-                                                  setState(
-                                                    () => isSending = false,
-                                                  );
-                                                }
-                                              }
-                                            },
-                                      child: const Text('Send'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
+                    ],
+                  ),
                   if (_giftToasts.isNotEmpty)
                     Positioned(
                       top: 8,
@@ -4685,247 +4649,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     );
   }
 }
-
-// ---------------------------------------------------------------------------
-// Roster sidebar (desktop only) — shows On Cam / Chatting / Mic Queue
-// ---------------------------------------------------------------------------
-
-class _RosterSidebar extends StatelessWidget {
-  const _RosterSidebar({
-    required this.participants,
-    required this.micRequests,
-    required this.senderDisplayNameById,
-    required this.senderAvatarUrlById,
-    required this.senderVipLevelById,
-    required this.currentUserId,
-    required this.allowMicRequests,
-    this.myMicRequest,
-    this.onRaiseHand,
-  });
-
-  final List<RoomParticipantModel> participants;
-  final List<MicAccessRequestModel> micRequests;
-  final Map<String, String> senderDisplayNameById;
-  final Map<String, String?> senderAvatarUrlById;
-  final Map<String, int> senderVipLevelById;
-  final String currentUserId;
-  final bool allowMicRequests;
-  final MicAccessRequestModel? myMicRequest;
-  final VoidCallback? onRaiseHand;
-
-  Color _vipColor(int level) {
-    if (level >= 5) return const Color(0xFFFFD700);
-    if (level >= 3) return const Color(0xFFC0C0C0);
-    if (level >= 1) return const Color(0xFFCD7F32);
-    return Colors.transparent;
-  }
-
-  Widget _userTile(
-    BuildContext context,
-    RoomParticipantModel p, {
-    Widget? trailing,
-  }) {
-    final name = senderDisplayNameById[p.userId] ?? p.userId;
-    final avatar = senderAvatarUrlById[p.userId];
-    final vip = senderVipLevelById[p.userId] ?? 0;
-    final vipC = _vipColor(vip);
-    final nameColor = (vip > 0 && vipC != Colors.transparent)
-        ? vipC
-        : Theme.of(context).colorScheme.onSurface;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor: Colors.grey.shade800,
-            backgroundImage:
-                (avatar != null && avatar.isNotEmpty) ? NetworkImage(avatar) : null,
-            child: (avatar == null || avatar.isEmpty)
-                ? Text(
-                    name.isNotEmpty ? name[0].toUpperCase() : '?',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              name,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: nameColor,
-                    fontWeight:
-                        vip > 0 ? FontWeight.w600 : FontWeight.normal,
-                  ),
-            ),
-          ),
-          if (p.micOn)
-            const Icon(Icons.mic, size: 12, color: Colors.greenAccent),
-          if (trailing != null) trailing,
-        ],
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final onCam = participants.where((p) => p.camOn && !p.isBanned).toList();
-    final onMic = participants
-        .where((p) => p.micOn && !p.camOn && !p.isBanned)
-        .toList();
-    final chatters = participants
-        .where((p) => !p.camOn && !p.micOn && !p.isBanned)
-        .toList();
-    final pendingRequests =
-        micRequests.where((r) => r.status == 'pending').toList();
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          left: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-          right: BorderSide(
-            color: Theme.of(context).colorScheme.outlineVariant,
-          ),
-        ),
-      ),
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          // ── On Cam ──────────────────────────────────────────────────────
-          if (onCam.isNotEmpty) ...[
-            _SectionHeader(
-              icon: Icons.videocam,
-              label: 'On Cam',
-              count: onCam.length,
-            ),
-            for (final p in onCam) _userTile(context, p),
-          ],
-          // ── On Mic ──────────────────────────────────────────────────────
-          if (onMic.isNotEmpty) ...[
-            _SectionHeader(
-              icon: Icons.mic,
-              label: 'Talking',
-              count: onMic.length,
-            ),
-            for (final p in onMic) _userTile(context, p),
-          ],
-          // ── Mic Queue ───────────────────────────────────────────────────
-          if (allowMicRequests) ...[
-            _SectionHeader(
-              icon: Icons.front_hand_outlined,
-              label: 'Mic Queue',
-              count: pendingRequests.length,
-              trailing: onRaiseHand != null
-                  ? GestureDetector(
-                      onTap: myMicRequest?.status == 'pending'
-                          ? null
-                          : onRaiseHand,
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Text(
-                          myMicRequest?.status == 'pending'
-                              ? 'In Queue'
-                              : 'Raise Hand',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: myMicRequest?.status == 'pending'
-                                ? Colors.orange
-                                : Theme.of(context).colorScheme.primary,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    )
-                  : null,
-            ),
-            for (final r in pendingRequests)
-              Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                child: Row(
-                  children: [
-                    const Icon(Icons.front_hand, size: 14, color: Colors.orange),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        senderDisplayNameById[r.requesterId] ?? r.requesterId,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-          ],
-          // ── In Room ─────────────────────────────────────────────────────
-          if (chatters.isNotEmpty) ...[
-            _SectionHeader(
-              icon: Icons.people_outline,
-              label: 'In Room',
-              count: chatters.length,
-            ),
-            for (final p in chatters) _userTile(context, p),
-          ],
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({
-    required this.icon,
-    required this.label,
-    required this.count,
-    this.trailing,
-  });
-
-  final IconData icon;
-  final String label;
-  final int count;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 10, 8, 2),
-      child: Row(
-        children: [
-          Icon(icon, size: 13, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                ),
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '($count)',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: Theme.of(context).colorScheme.onSurfaceVariant,
-                ),
-          ),
-          if (trailing != null) ...[const Spacer(), trailing!],
-        ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Gift toast data class
 // ---------------------------------------------------------------------------
 
