@@ -30,6 +30,7 @@ import '../../services/web_popout_service.dart';
 import '../../services/desktop_window_service.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
 import '../../features/room/providers/mic_access_provider.dart';
+import '../../models/mic_access_request_model.dart';
 import '../../features/room/providers/host_controls_provider.dart';
 import '../../features/room/providers/host_provider.dart';
 import '../../features/room/providers/room_policy_provider.dart';
@@ -110,6 +111,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   static const int _kMaxBackoffSeconds = 30;
   final Map<String, String> _senderDisplayNameById = <String, String>{};
   final Map<String, int> _senderVipLevelById = <String, int>{};
+  final Map<String, String?> _senderAvatarUrlById = <String, String?>{};
   final Set<String> _senderLookupInFlight = <String>{};
   Set<int> _requestedHighQualityRemoteUids = <int>{};
   Set<int> _requestedLowQualityRemoteUids = <int>{};
@@ -186,6 +188,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       if (user.username.trim().isNotEmpty) {
         _senderDisplayNameById[user.id] = user.username.trim();
       }
+      _senderAvatarUrlById[user.id] =
+          (user.avatarUrl?.isNotEmpty == true) ? user.avatarUrl : null;
       _joinRoom(user.id);
       if (kIsWeb) {
         // WebRTC path: no Agora WASM pre-warm needed.
@@ -1389,6 +1393,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         _firestore ?? ref.read(roomFirestoreProvider);
     final resolved = <String, String>{};
     final resolvedVip = <String, int>{};
+    final resolvedAvatar = <String, String?>{};
 
     try {
       for (var i = 0; i < missingIds.length; i += 10) {
@@ -1408,6 +1413,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           resolvedVip[doc.id] = vip is int
               ? vip
               : (vip is num ? vip.toInt() : 0);
+          final avatar = data['avatarUrl'];
+          resolvedAvatar[doc.id] =
+              (avatar is String && avatar.isNotEmpty) ? avatar : null;
         }
       }
 
@@ -1415,6 +1423,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       for (final id in missingIds) {
         resolved.putIfAbsent(id, () => id);
         resolvedVip.putIfAbsent(id, () => 0);
+        resolvedAvatar.putIfAbsent(id, () => null);
       }
 
       if (!mounted) {
@@ -1423,6 +1432,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       setState(() {
         _senderDisplayNameById.addAll(resolved);
         _senderVipLevelById.addAll(resolvedVip);
+        _senderAvatarUrlById.addAll(resolvedAvatar);
       });
     } catch (_) {
       // Best effort only; fall back to sender id in UI if lookup fails.
@@ -2890,7 +2900,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               body: Stack(
                 children: [
                   Padding(
-                    padding: EdgeInsets.only(right: isDesktopLayout ? 420 : 0),
+                    padding: EdgeInsets.only(right: isDesktopLayout ? 620 : 0),
                     child: Column(
                       children: [
                         // Spotlight banner
@@ -4022,6 +4032,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         currentUsername: user.username,
                                       ),
                                       senderVipLevel: _senderVipLevelById[msg.senderId] ?? 0,
+                                      senderAvatarUrl: _senderAvatarUrlById[msg.senderId],
                                     );
                                   },
                                 );
@@ -4313,6 +4324,36 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       ],
                     ),
                   ),
+                  // ── User roster sidebar ─────────────────────────────────
+                  if (isDesktopLayout)
+                    Positioned(
+                      top: 0,
+                      right: 420,
+                      bottom: 0,
+                      child: SizedBox(
+                        width: 200,
+                        child: _RosterSidebar(
+                          participants: participantsInRoom,
+                          micRequests: micRequestsAsync.valueOrNull ?? const [],
+                          senderDisplayNameById: _senderDisplayNameById,
+                          senderAvatarUrlById: _senderAvatarUrlById,
+                          senderVipLevelById: _senderVipLevelById,
+                          currentUserId: user.id,
+                          allowMicRequests: roomPolicyAsync.valueOrNull?.allowMicRequests ?? false,
+                          myMicRequest: myMicRequestAsync.valueOrNull,
+                          onRaiseHand: !isHost && !isCohost && !isModerator
+                              ? () async {
+                                  await micAccessController.requestAccess(
+                                    roomId: widget.roomId,
+                                    requesterId: user.id,
+                                    hostId: hostId,
+                                  );
+                                }
+                              : null,
+                        ),
+                      ),
+                    ),
+                  // ── Chat panel ──────────────────────────────────────────
                   if (isDesktopLayout)
                     Positioned(
                       top: 0,
@@ -4390,6 +4431,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                             currentUsername: user.username,
                                           ),
                                           senderVipLevel: _senderVipLevelById[msg.senderId] ?? 0,
+                                          senderAvatarUrl: _senderAvatarUrlById[msg.senderId],
                                         );
                                       },
                                     );
@@ -4618,6 +4660,245 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Roster sidebar (desktop only) — shows On Cam / Chatting / Mic Queue
+// ---------------------------------------------------------------------------
+
+class _RosterSidebar extends StatelessWidget {
+  const _RosterSidebar({
+    required this.participants,
+    required this.micRequests,
+    required this.senderDisplayNameById,
+    required this.senderAvatarUrlById,
+    required this.senderVipLevelById,
+    required this.currentUserId,
+    required this.allowMicRequests,
+    this.myMicRequest,
+    this.onRaiseHand,
+  });
+
+  final List<RoomParticipantModel> participants;
+  final List<MicAccessRequestModel> micRequests;
+  final Map<String, String> senderDisplayNameById;
+  final Map<String, String?> senderAvatarUrlById;
+  final Map<String, int> senderVipLevelById;
+  final String currentUserId;
+  final bool allowMicRequests;
+  final MicAccessRequestModel? myMicRequest;
+  final VoidCallback? onRaiseHand;
+
+  Color _vipColor(int level) {
+    if (level >= 5) return const Color(0xFFFFD700);
+    if (level >= 3) return const Color(0xFFC0C0C0);
+    if (level >= 1) return const Color(0xFFCD7F32);
+    return Colors.transparent;
+  }
+
+  Widget _userTile(
+    BuildContext context,
+    RoomParticipantModel p, {
+    Widget? trailing,
+  }) {
+    final name = senderDisplayNameById[p.userId] ?? p.userId;
+    final avatar = senderAvatarUrlById[p.userId];
+    final vip = senderVipLevelById[p.userId] ?? 0;
+    final vipC = _vipColor(vip);
+    final nameColor = (vip > 0 && vipC != Colors.transparent)
+        ? vipC
+        : Theme.of(context).colorScheme.onSurface;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 14,
+            backgroundColor: Colors.grey.shade800,
+            backgroundImage:
+                (avatar != null && avatar.isNotEmpty) ? NetworkImage(avatar) : null,
+            child: (avatar == null || avatar.isEmpty)
+                ? Text(
+                    name.isNotEmpty ? name[0].toUpperCase() : '?',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              name,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: nameColor,
+                    fontWeight:
+                        vip > 0 ? FontWeight.w600 : FontWeight.normal,
+                  ),
+            ),
+          ),
+          if (p.micOn)
+            const Icon(Icons.mic, size: 12, color: Colors.greenAccent),
+          if (trailing != null) trailing,
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final onCam = participants.where((p) => p.camOn && !p.isBanned).toList();
+    final onMic = participants
+        .where((p) => p.micOn && !p.camOn && !p.isBanned)
+        .toList();
+    final chatters = participants
+        .where((p) => !p.camOn && !p.micOn && !p.isBanned)
+        .toList();
+    final pendingRequests =
+        micRequests.where((r) => r.status == 'pending').toList();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface,
+        border: Border(
+          left: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+          right: BorderSide(
+            color: Theme.of(context).colorScheme.outlineVariant,
+          ),
+        ),
+      ),
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          // ── On Cam ──────────────────────────────────────────────────────
+          if (onCam.isNotEmpty) ...[
+            _SectionHeader(
+              icon: Icons.videocam,
+              label: 'On Cam',
+              count: onCam.length,
+            ),
+            for (final p in onCam) _userTile(context, p),
+          ],
+          // ── On Mic ──────────────────────────────────────────────────────
+          if (onMic.isNotEmpty) ...[
+            _SectionHeader(
+              icon: Icons.mic,
+              label: 'Talking',
+              count: onMic.length,
+            ),
+            for (final p in onMic) _userTile(context, p),
+          ],
+          // ── Mic Queue ───────────────────────────────────────────────────
+          if (allowMicRequests) ...[
+            _SectionHeader(
+              icon: Icons.front_hand_outlined,
+              label: 'Mic Queue',
+              count: pendingRequests.length,
+              trailing: onRaiseHand != null
+                  ? GestureDetector(
+                      onTap: myMicRequest?.status == 'pending'
+                          ? null
+                          : onRaiseHand,
+                      child: Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Text(
+                          myMicRequest?.status == 'pending'
+                              ? 'In Queue'
+                              : 'Raise Hand',
+                          style: TextStyle(
+                            fontSize: 10,
+                            color: myMicRequest?.status == 'pending'
+                                ? Colors.orange
+                                : Theme.of(context).colorScheme.primary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+            for (final r in pendingRequests)
+              Padding(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                child: Row(
+                  children: [
+                    const Icon(Icons.front_hand, size: 14, color: Colors.orange),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        senderDisplayNameById[r.requesterId] ?? r.requesterId,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+          ],
+          // ── In Room ─────────────────────────────────────────────────────
+          if (chatters.isNotEmpty) ...[
+            _SectionHeader(
+              icon: Icons.people_outline,
+              label: 'In Room',
+              count: chatters.length,
+            ),
+            for (final p in chatters) _userTile(context, p),
+          ],
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({
+    required this.icon,
+    required this.label,
+    required this.count,
+    this.trailing,
+  });
+
+  final IconData icon;
+  final String label;
+  final int count;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 10, 8, 2),
+      child: Row(
+        children: [
+          Icon(icon, size: 13, color: Theme.of(context).colorScheme.primary),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
+                ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '($count)',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+          ),
+          if (trailing != null) ...[const Spacer(), trailing!],
+        ],
+      ),
     );
   }
 }

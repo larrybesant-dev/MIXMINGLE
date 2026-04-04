@@ -2,15 +2,17 @@ import 'package:flutter/material.dart';
 
 import '../../../models/message_model.dart';
 
-/// Live-room chat bubble styled like TikTok/Bigo overlay messages.
-/// My-own messages get a tinted purple-ish background; others get a
-/// semi-transparent dark background so they sit cleanly over the camera feed.
+/// Live-room chat row styled like Paltalk – avatar on the left, then a column
+/// containing a header row (username + timestamp) and the message body below.
+/// All messages are left-aligned and full-width regardless of sender.
 class MessageBubble extends StatelessWidget {
   final MessageModel message;
   final bool isMe;
   final String? senderLabel;
   /// VIP level for the sender. Level ≥1 shows a bronze/silver/gold name colour.
   final int senderVipLevel;
+  /// Optional avatar URL for the sender's profile picture.
+  final String? senderAvatarUrl;
 
   const MessageBubble({
     super.key,
@@ -18,6 +20,7 @@ class MessageBubble extends StatelessWidget {
     required this.isMe,
     this.senderLabel,
     this.senderVipLevel = 0,
+    this.senderAvatarUrl,
   });
 
   String _formatClock(DateTime value) {
@@ -39,66 +42,91 @@ class MessageBubble extends StatelessWidget {
         ? senderLabel!.trim()
         : (isMe ? 'You' : message.senderId);
 
-    final Color bg = isMe
-        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.72)
-        : Colors.black.withValues(alpha: 0.54);
-
-    final Color textColor = Colors.white;
     final vipC = _vipColor(senderVipLevel);
     final Color nameColor = (senderVipLevel > 0 && vipC != Colors.transparent)
         ? vipC
         : (isMe
-            ? Colors.white.withValues(alpha: 0.85)
-            : Colors.white.withValues(alpha: 0.70));
+            ? const Color(0xFF9B8FFF) // soft purple for own messages
+            : Colors.white.withValues(alpha: 0.90));
 
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 2, horizontal: 8),
-        padding: const EdgeInsets.fromLTRB(10, 6, 10, 7),
-        constraints: const BoxConstraints(maxWidth: 280),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          crossAxisAlignment:
-              isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            RichText(
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: '$resolvedSenderLabel  ',
-                    style: TextStyle(
-                      color: nameColor,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 12,
-                      height: 1.5,
-                    ),
-                  ),
-                  TextSpan(
-                    text: message.content,
-                    style: TextStyle(
-                      color: textColor,
+    // Subtle left-border tint for own messages, none for others.
+    final Color? rowTint = isMe
+        ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.10)
+        : null;
+
+    return Container(
+      color: rowTint,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Avatar
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: Colors.grey.shade800,
+            backgroundImage: (senderAvatarUrl != null &&
+                    senderAvatarUrl!.isNotEmpty)
+                ? NetworkImage(senderAvatarUrl!)
+                : null,
+            child: (senderAvatarUrl == null || senderAvatarUrl!.isEmpty)
+                ? Text(
+                    resolvedSenderLabel.isNotEmpty
+                        ? resolvedSenderLabel[0].toUpperCase()
+                        : '?',
+                    style: const TextStyle(
+                      color: Colors.white,
                       fontSize: 13,
-                      height: 1.4,
+                      fontWeight: FontWeight.bold,
                     ),
+                  )
+                : null,
+          ),
+          const SizedBox(width: 8),
+          // Content column
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Header: username + timestamp
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        resolvedSenderLabel,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: nameColor,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 12,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      _formatClock(message.sentAt),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.45),
+                        fontSize: 10,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+                // Message body
+                Text(
+                  message.content,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.92),
+                    fontSize: 13,
+                    height: 1.4,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            Text(
-              _formatClock(message.sentAt),
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.55),
-                fontSize: 10,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

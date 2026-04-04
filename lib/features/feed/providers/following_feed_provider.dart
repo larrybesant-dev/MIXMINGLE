@@ -23,12 +23,14 @@ final followingFeedProvider =
   final firestore = ref.watch(firestoreProvider);
 
   return firestore
-      .collection('users')
-      .doc(userId)
-      .collection('following')
+      .collection('follows')
+      .where('followerUserId', isEqualTo: userId)
       .snapshots()
       .asyncExpand((followingSnapshot) async* {
-    final followingIds = followingSnapshot.docs.map((doc) => doc.id).toList();
+    final followingIds = followingSnapshot.docs
+        .map((doc) => doc.data()['followedUserId'] as String?)
+        .whereType<String>()
+        .toList();
 
     if (followingIds.isEmpty) {
       yield [];
