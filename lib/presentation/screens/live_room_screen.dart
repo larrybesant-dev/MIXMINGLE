@@ -4250,11 +4250,26 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             ),
                           ),
                           const Divider(height: 1),
-                          // Gift + hand raise row for non-hosts
-                          if (!isHost &&
-                              hostId.isNotEmpty &&
-                              hostId != user.id)
-                            Padding(
+                          // Gift + hand raise row for non-hosts.
+                          // Resolve hostId from Firestore doc first; fall back
+                          // to the participants list so the row shows even when
+                          // ownerId isn't written to the room doc yet.
+                          Builder(builder: (context) {
+                            final resolvedHostId = hostId.isNotEmpty
+                                ? hostId
+                                : participantsInRoom
+                                      .where((p) => p.role == 'host')
+                                      .map((p) => p.userId)
+                                      .firstWhere(
+                                        (id) => id.isNotEmpty,
+                                        orElse: () => '',
+                                      );
+                            if (isHost ||
+                                resolvedHostId.isEmpty ||
+                                resolvedHostId == user.id) {
+                              return const SizedBox.shrink();
+                            }
+                            return Padding(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 8,
                                 vertical: 4,
@@ -4269,7 +4284,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       ),
                                       label: const Text('Gift'),
                                       onPressed: () => _showGiftSheet(
-                                        hostId: hostId,
+                                        hostId: resolvedHostId,
                                         hostName: 'Host',
                                         senderName: user.username,
                                         coinBalance:
@@ -4284,21 +4299,38 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       allowMicRequests)
                                     _HandRaiseButton(
                                       status: micRequestStatus,
-                                      onRaise: () =>
-                                          micAccessController.requestAccess(
-                                            roomId: widget.roomId,
-                                            requesterId: user.id,
-                                            hostId: hostId,
-                                          ),
+                                      onRaise: () async {
+                                        try {
+                                          await micAccessController
+                                              .requestAccess(
+                                                roomId: widget.roomId,
+                                                requesterId: user.id,
+                                                hostId: resolvedHostId,
+                                              );
+                                        } catch (e) {
+                                          if (context.mounted) {
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'Could not raise hand: $e',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        }
+                                      },
                                       onCancel: () =>
                                           micAccessController.expireNow(
                                             widget.roomId,
-                                            '${user.id}_$hostId',
+                                            '${user.id}_$resolvedHostId',
                                           ),
                                     ),
                                 ],
                               ),
-                            ),
+                            );
+                          }),
                           // Blocked relationship warning
                           participantsAsync.when(
                             data: (participants) {
@@ -4342,15 +4374,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 if (messages.length !=
                                     _lastRenderedMessageCount) {
                                   _lastRenderedMessageCount = messages.length;
+                                  // Double postFrameCallback: first frame lets
+                                  // ListView render the new item, second frame
+                                  // ensures maxScrollExtent is fully updated.
                                   WidgetsBinding.instance.addPostFrameCallback(
                                     (_) {
-                                      if (scrollController.hasClients) {
-                                        scrollController.jumpTo(
-                                          scrollController
-                                              .position
-                                              .maxScrollExtent,
-                                        );
-                                      }
+                                      WidgetsBinding.instance
+                                          .addPostFrameCallback((_) {
+                                        if (scrollController.hasClients &&
+                                            scrollController
+                                                .position
+                                                .hasContentDimensions) {
+                                          scrollController.jumpTo(
+                                            scrollController
+                                                .position
+                                                .maxScrollExtent,
+                                          );
+                                        }
+                                      });
                                     },
                                   );
                                 }
@@ -4683,7 +4724,7 @@ class _HandRaiseButton extends StatelessWidget {
   });
 
   final String? status;
-  final VoidCallback onRaise;
+  final Future<void> Function() onRaise;
   final Future<void> Function() onCancel;
 
   @override
