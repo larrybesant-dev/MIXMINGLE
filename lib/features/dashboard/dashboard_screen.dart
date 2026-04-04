@@ -1,119 +1,86 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../shared/widgets/top_app_bar.dart';
-import '../../shared/widgets/bottom_nav_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../feed/providers/feed_providers.dart';
-import '../feed/screens/discovery_feed_screen.dart';
 import '../feed/models/post_model.dart';
 import '../profile/profile_completion.dart';
 import '../profile/profile_controller.dart';
-import '../profile/profile_screen.dart';
-import '../../widgets/mixvy_drawer.dart';
 
 import '../../models/room_model.dart';
 import '../feed/models/event_model.dart';
 import '../../core/firestore/firestore_error_utils.dart';
 
+class DashboardScreen extends ConsumerWidget {
+  const DashboardScreen({super.key});
 
-  class DashboardScreen extends StatefulWidget {
-    const DashboardScreen({super.key});
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final postsAsync = ref.watch(postsStreamProvider);
+    final roomsAsync = ref.watch(roomsStreamProvider);
+    final eventsAsync = ref.watch(eventsStreamProvider);
+    final profileState = ref.watch(profileControllerProvider);
+    final setupItems = ProfileCompletion.guidedSetupItems(profileState);
+    final profileCompletion = ProfileCompletion.completeness(profileState);
 
-    @override
-    State<DashboardScreen> createState() => _DashboardScreenState();
-  }
-
-  class _DashboardScreenState extends State<DashboardScreen> {
-    int _currentIndex = 0;
-
-    @override
-    Widget build(BuildContext context) {
-      const titles = ['MixVy', 'Discover', 'Profile'];
-
-      return Scaffold(
-        appBar: TopAppBar(title: titles[_currentIndex]),
-        drawer: const MixVyDrawer(),
-        body: IndexedStack(
-          index: _currentIndex,
+    return Scaffold(
+      appBar: const TopAppBar(title: 'MixVy'),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Home Feed Tab
-            Consumer(
-              builder: (context, ref, _) {
-                final postsAsync = ref.watch(postsStreamProvider);
-                final roomsAsync = ref.watch(roomsStreamProvider);
-                final eventsAsync = ref.watch(eventsStreamProvider);
-                final profileState = ref.watch(profileControllerProvider);
-                final setupItems = ProfileCompletion.guidedSetupItems(profileState);
-                final profileCompletion = ProfileCompletion.completeness(profileState);
-                return SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (setupItems.isNotEmpty)
-                        _profileNudgeCard(
-                          completion: profileCompletion,
-                          missingCount: setupItems.length,
-                          firstAction: setupItems.first,
-                        ),
-                      if (setupItems.isNotEmpty) const SizedBox(height: 12),
-                      _quickActions(context),
-                      const SizedBox(height: 20),
-                      const Text('Live Posts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      postsAsync.when(
-                        data: (posts) => posts.isEmpty
-                            ? const Text('No posts yet.')
-                            : Column(children: posts.map((p) => _postCard(p)).toList()),
-                        loading: () => const Center(child: CircularProgressIndicator()),
-                        error: (e, _) => firestoreErrorCard(
-                          section: 'posts',
-                          error: e,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text('Active Rooms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      roomsAsync.when(
-                        data: (rooms) => rooms.isEmpty
-                            ? const Text('No active rooms.')
-                            : Column(children: rooms.map((r) => _roomCard(r)).toList()),
-                        loading: () => const Center(child: CircularProgressIndicator()),
-                        error: (e, _) => firestoreErrorCard(
-                          section: 'active rooms',
-                          error: e,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text('Upcoming Events', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                      eventsAsync.when(
-                        data: (events) => events.isEmpty
-                            ? const Text('No upcoming events.')
-                            : Column(children: events.map((e) => _eventCard(e)).toList()),
-                        loading: () => const Center(child: CircularProgressIndicator()),
-                        error: (e, _) => firestoreErrorCard(
-                          section: 'events',
-                          error: e,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+            if (setupItems.isNotEmpty)
+              _profileNudgeCard(
+                context: context,
+                completion: profileCompletion,
+                missingCount: setupItems.length,
+                firstAction: setupItems.first,
+              ),
+            if (setupItems.isNotEmpty) const SizedBox(height: 12),
+            _quickActions(context),
+            const SizedBox(height: 20),
+            const Text('Live Posts', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            postsAsync.when(
+              data: (posts) => posts.isEmpty
+                  ? const Text('No posts yet.')
+                  : Column(children: posts.map((p) => _postCard(p)).toList()),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => firestoreErrorCard(
+                section: 'posts',
+                error: e,
+              ),
             ),
-            const DiscoveryFeedContent(),
-            const ProfileFormView(),
+            const SizedBox(height: 24),
+            const Text('Active Rooms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            roomsAsync.when(
+              data: (rooms) => rooms.isEmpty
+                  ? const Text('No active rooms.')
+                  : Column(children: rooms.map((r) => _roomCard(context, r)).toList()),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => firestoreErrorCard(
+                section: 'active rooms',
+                error: e,
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text('Upcoming Events', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            eventsAsync.when(
+              data: (events) => events.isEmpty
+                  ? const Text('No upcoming events.')
+                  : Column(children: events.map((e) => _eventCard(e)).toList()),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => firestoreErrorCard(
+                section: 'events',
+                error: e,
+              ),
+            ),
           ],
         ),
-        bottomNavigationBar: BottomNavBar(
-          currentIndex: _currentIndex,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-        ),
-      );
-    }
+      ),
+    );
+  }
 
     // Card widget for posts
     Widget _postCard(PostModel p) => Card(
@@ -131,11 +98,7 @@ import '../../core/firestore/firestore_error_utils.dart';
           ActionChip(
             avatar: const Icon(Icons.search, size: 18),
             label: const Text('Discover People'),
-            onPressed: () {
-              setState(() {
-                _currentIndex = 1;
-              });
-            },
+            onPressed: () => context.go('/discover'),
           ),
           ActionChip(
             avatar: const Icon(Icons.flash_on, size: 18),
@@ -162,10 +125,11 @@ import '../../core/firestore/firestore_error_utils.dart';
     }
 
     Widget _profileNudgeCard({
-      required double completion,
-      required int missingCount,
-      required String firstAction,
-    }) {
+    required BuildContext context,
+    required double completion,
+    required int missingCount,
+    required String firstAction,
+  }) {
       final pct = (completion * 100).round();
       final isAlmostDone = pct >= 70;
       final Color accent = isAlmostDone ? Colors.green : Colors.deepPurple;
@@ -216,7 +180,7 @@ import '../../core/firestore/firestore_error_utils.dart';
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   tooltip: 'Go to profile',
-                  onPressed: () => setState(() => _currentIndex = 2),
+                  onPressed: () => context.go('/profile'),
                   icon: Icon(Icons.arrow_forward_ios, size: 14, color: accent),
                 ),
               ],
@@ -312,7 +276,7 @@ import '../../core/firestore/firestore_error_utils.dart';
     }
 
     // Card widget for rooms
-    Widget _roomCard(RoomModel r) => Card(
+  Widget _roomCard(BuildContext context, RoomModel r) => Card(
           child: ListTile(
             title: Text(r.name.isNotEmpty ? r.name : 'Room'),
             subtitle: const Text('Live room'),

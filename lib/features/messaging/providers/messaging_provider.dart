@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/message_model.dart';
 import '../models/conversation_model.dart';
 import '../../../services/moderation_service.dart';
+import '../../../presentation/providers/user_provider.dart';
 
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instance;
@@ -294,3 +295,17 @@ class MessagingController {
         .update({'isArchived': true});
   }
 }
+
+/// Count of conversations that have at least one unread message for the current
+/// user. Derived from the live conversations stream — stays real-time.
+final unreadMessageCountProvider = Provider<int>((ref) {
+  final user = ref.watch(userProvider);
+  if (user == null) return 0;
+  return ref
+      .watch(conversationsStreamProvider(user.id))
+      .whenData(
+        (convs) => convs.where((c) => c.hasUnreadMessages(user.id)).length,
+      )
+      .valueOrNull ??
+      0;
+});

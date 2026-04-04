@@ -38,13 +38,11 @@ import '../features/messaging/screens/whisper_popout_screen.dart';
 import '../features/room/screens/cam_popout_screen.dart';
 import '../features/feed/screens/room_browser_screen.dart';
 
+import '../shared/widgets/app_shell.dart';
+import 'package:mixvy/features/auth/screens/login_screen.dart';
 import '../features/auth/register_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/payments/payments_screen.dart';
-
-// Supabase logic removed.
-
-import 'package:mixvy/features/auth/screens/login_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 
 class _CacheEntry<T> {
@@ -200,67 +198,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
     },
     routes: [
+      // ── Auth / legal / onboarding — no shell ───────────────────────────
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
-      ),
-      GoRoute(path: '/', builder: (context, state) => const DashboardScreen()),
-      GoRoute(
-        path: '/discover',
-        builder: (context, state) => const DiscoveryFeedScreen(),
       ),
       GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
       GoRoute(
         path: '/register',
         builder: (context, state) => const RegisterScreen(),
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
-      ),
-      GoRoute(
-        path: '/profile/:userId',
-        builder: (context, state) {
-          final userId = _pathParamOrNull(state, 'userId');
-          if (userId == null) {
-            return NotFoundScreen(path: state.uri.toString());
-          }
-          return UserProfileScreen(userId: userId);
-        },
-      ),
-      GoRoute(
-        path: '/payments',
-        builder: (context, state) => const PaymentsScreen(),
-      ),
-      GoRoute(
-        path: '/speed-dating',
-        builder: (context, state) => const SpeedDatingScreen(),
-      ),
-      GoRoute(
-        path: '/friends',
-        builder: (context, state) => const FriendListScreen(),
-      ),
-      GoRoute(
-        path: '/room/:roomId',
-        builder: (context, state) {
-          final roomId = _pathParamOrNull(state, 'roomId');
-          if (roomId == null) {
-            return NotFoundScreen(path: state.uri.toString());
-          }
-          return LiveRoomScreen(roomId: roomId);
-        },
-      ),
-      GoRoute(
-        path: '/notifications',
-        builder: (context, state) => const NotificationsScreen(),
-      ),
-      GoRoute(
-        path: '/settings',
-        builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
-        path: '/account',
-        builder: (context, state) => const AccountCenterScreen(),
       ),
       GoRoute(
         path: '/legal/terms',
@@ -271,150 +217,25 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LegalPrivacyScreen(),
       ),
       GoRoute(
-        path: '/about',
-        builder: (context, state) => const AppInfoScreen(),
-      ),
-      GoRoute(
         path: '/404',
         builder: (context, state) =>
             NotFoundScreen(path: state.uri.toString()),
       ),
+      // ── Full-screen overlays — bypass shell ────────────────────────────
       GoRoute(
-        path: '/moderation',
-        builder: (context, state) => const ModerationDashboardScreen(),
-      ),
-      // Messaging routes
-      GoRoute(
-        path: '/messages',
+        path: '/room/:roomId',
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
-          final user = ref.read(userProvider);
-          return MessagesScreen(
-            userId: user?.id ?? 'unknown',
-            username: user?.username ?? 'User',
-          );
-        },
-      ),
-      GoRoute(
-        path: '/messages/new',
-        builder: (context, state) {
-          final user = ref.read(userProvider);
-          return NewMessageScreen(
-            userId: user?.id ?? 'unknown',
-            username: user?.username ?? 'User',
-            avatarUrl: user?.avatarUrl,
-          );
-        },
-      ),
-      GoRoute(
-        path: '/messages/:conversationId',
-        builder: (context, state) {
-          final conversationId = _pathParamOrNull(state, 'conversationId');
-          if (conversationId == null) {
+          final roomId = _pathParamOrNull(state, 'roomId');
+          if (roomId == null) {
             return NotFoundScreen(path: state.uri.toString());
           }
-          final user = ref.read(userProvider);
-          return ChatScreen(
-            conversationId: conversationId,
-            userId: user?.id ?? 'unknown',
-            username: user?.username ?? 'User',
-            avatarUrl: user?.avatarUrl,
-          );
+          return LiveRoomScreen(roomId: roomId);
         },
-      ),
-      // Search route
-      GoRoute(
-        path: '/search',
-        builder: (context, state) => const SearchScreen(),
-      ),
-      // Bookmarks route
-      GoRoute(
-        path: '/bookmarks',
-        builder: (context, state) {
-          final user = ref.read(userProvider);
-          return BookmarksScreen(userId: user?.id ?? 'unknown');
-        },
-      ),
-      // Followers/Following routes
-      GoRoute(
-        path: '/followers/:userId',
-        builder: (context, state) {
-          final userId = _pathParamOrNull(state, 'userId');
-          if (userId == null) {
-            return NotFoundScreen(path: state.uri.toString());
-          }
-          return FollowersScreen(userId: userId);
-        },
-      ),
-      GoRoute(
-        path: '/following/:userId',
-        builder: (context, state) {
-          final userId = _pathParamOrNull(state, 'userId');
-          if (userId == null) {
-            return NotFoundScreen(path: state.uri.toString());
-          }
-          return FollowingScreen(userId: userId);
-        },
-      ),
-      // Post creation route
-      GoRoute(
-        path: '/create-post',
-        builder: (context, state) {
-          final user = ref.read(userProvider);
-          return CreatePostScreen(
-            userId: user?.id ?? 'unknown',
-            username: user?.username ?? 'User',
-            avatarUrl: user?.avatarUrl,
-          );
-        },
-      ),
-      // Story creation route
-      GoRoute(
-        path: '/create-story',
-        builder: (context, state) {
-          final user = ref.read(userProvider);
-          return CreateStoryScreen(
-            userId: user?.id ?? 'unknown',
-            username: user?.username ?? 'User',
-            avatarUrl: user?.avatarUrl,
-          );
-        },
-      ),
-      // Groups routes
-      GoRoute(
-        path: '/groups',
-        builder: (context, state) {
-          final user = ref.read(userProvider);
-          return GroupsScreen(userId: user?.id ?? 'unknown');
-        },
-      ),
-      GoRoute(
-        path: '/create-group',
-        builder: (context, state) {
-          final user = ref.read(userProvider);
-          return CreateGroupScreen(userId: user?.id ?? 'unknown');
-        },
-      ),
-      GoRoute(
-        path: '/group/:groupId',
-        builder: (context, state) {
-          final groupId = _pathParamOrNull(state, 'groupId');
-          if (groupId == null) {
-            return NotFoundScreen(path: state.uri.toString());
-          }
-          final user = ref.read(userProvider);
-          return GroupDetailsScreen(
-            groupId: groupId,
-            userId: user?.id ?? 'unknown',
-          );
-        },
-      ),
-      // Trending route
-      GoRoute(
-        path: '/trending',
-        builder: (context, state) => const TrendingScreen(),
       ),
       GoRoute(
         path: '/whisper',
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
           final userId = state.uri.queryParameters['userId'] ?? '';
           if (userId.isEmpty) return NotFoundScreen(path: state.uri.toString());
@@ -423,18 +244,203 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/cam',
+        parentNavigatorKey: rootNavigatorKey,
         builder: (context, state) {
           final userId = state.uri.queryParameters['userId'] ?? '';
           if (userId.isEmpty) return NotFoundScreen(path: state.uri.toString());
           return CamPopoutScreen(targetUserId: userId);
         },
       ),
-      GoRoute(
-        path: '/rooms',
-        builder: (context, state) {
-          final category = state.uri.queryParameters['category'];
-          return RoomBrowserScreen(initialCategory: category);
-        },
+      // ── Shell — persistent bottom nav + drawer on every page ───────────
+      ShellRoute(
+        navigatorKey: _shellNavigatorKey,
+        builder: (context, state, child) => AppShell(child: child),
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const DashboardScreen(),
+          ),
+          GoRoute(
+            path: '/discover',
+            builder: (context, state) => const DiscoveryFeedScreen(),
+          ),
+          GoRoute(
+            path: '/profile',
+            builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: '/profile/:userId',
+            builder: (context, state) {
+              final userId = _pathParamOrNull(state, 'userId');
+              if (userId == null) {
+                return NotFoundScreen(path: state.uri.toString());
+              }
+              return UserProfileScreen(userId: userId);
+            },
+          ),
+          GoRoute(
+            path: '/payments',
+            builder: (context, state) => const PaymentsScreen(),
+          ),
+          GoRoute(
+            path: '/speed-dating',
+            builder: (context, state) => const SpeedDatingScreen(),
+          ),
+          GoRoute(
+            path: '/friends',
+            builder: (context, state) => const FriendListScreen(),
+          ),
+          GoRoute(
+            path: '/notifications',
+            builder: (context, state) => const NotificationsScreen(),
+          ),
+          GoRoute(
+            path: '/settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            path: '/account',
+            builder: (context, state) => const AccountCenterScreen(),
+          ),
+          GoRoute(
+            path: '/about',
+            builder: (context, state) => const AppInfoScreen(),
+          ),
+          GoRoute(
+            path: '/moderation',
+            builder: (context, state) => const ModerationDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/search',
+            builder: (context, state) => const SearchScreen(),
+          ),
+          GoRoute(
+            path: '/bookmarks',
+            builder: (context, state) {
+              final user = ref.read(userProvider);
+              return BookmarksScreen(userId: user?.id ?? 'unknown');
+            },
+          ),
+          GoRoute(
+            path: '/messages',
+            builder: (context, state) {
+              final user = ref.read(userProvider);
+              return MessagesScreen(
+                userId: user?.id ?? 'unknown',
+                username: user?.username ?? 'User',
+              );
+            },
+          ),
+          GoRoute(
+            path: '/messages/new',
+            builder: (context, state) {
+              final user = ref.read(userProvider);
+              return NewMessageScreen(
+                userId: user?.id ?? 'unknown',
+                username: user?.username ?? 'User',
+                avatarUrl: user?.avatarUrl,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/messages/:conversationId',
+            builder: (context, state) {
+              final conversationId =
+                  _pathParamOrNull(state, 'conversationId');
+              if (conversationId == null) {
+                return NotFoundScreen(path: state.uri.toString());
+              }
+              final user = ref.read(userProvider);
+              return ChatScreen(
+                conversationId: conversationId,
+                userId: user?.id ?? 'unknown',
+                username: user?.username ?? 'User',
+                avatarUrl: user?.avatarUrl,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/followers/:userId',
+            builder: (context, state) {
+              final userId = _pathParamOrNull(state, 'userId');
+              if (userId == null) {
+                return NotFoundScreen(path: state.uri.toString());
+              }
+              return FollowersScreen(userId: userId);
+            },
+          ),
+          GoRoute(
+            path: '/following/:userId',
+            builder: (context, state) {
+              final userId = _pathParamOrNull(state, 'userId');
+              if (userId == null) {
+                return NotFoundScreen(path: state.uri.toString());
+              }
+              return FollowingScreen(userId: userId);
+            },
+          ),
+          GoRoute(
+            path: '/create-post',
+            builder: (context, state) {
+              final user = ref.read(userProvider);
+              return CreatePostScreen(
+                userId: user?.id ?? 'unknown',
+                username: user?.username ?? 'User',
+                avatarUrl: user?.avatarUrl,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/create-story',
+            builder: (context, state) {
+              final user = ref.read(userProvider);
+              return CreateStoryScreen(
+                userId: user?.id ?? 'unknown',
+                username: user?.username ?? 'User',
+                avatarUrl: user?.avatarUrl,
+              );
+            },
+          ),
+          GoRoute(
+            path: '/groups',
+            builder: (context, state) {
+              final user = ref.read(userProvider);
+              return GroupsScreen(userId: user?.id ?? 'unknown');
+            },
+          ),
+          GoRoute(
+            path: '/create-group',
+            builder: (context, state) {
+              final user = ref.read(userProvider);
+              return CreateGroupScreen(userId: user?.id ?? 'unknown');
+            },
+          ),
+          GoRoute(
+            path: '/group/:groupId',
+            builder: (context, state) {
+              final groupId = _pathParamOrNull(state, 'groupId');
+              if (groupId == null) {
+                return NotFoundScreen(path: state.uri.toString());
+              }
+              final user = ref.read(userProvider);
+              return GroupDetailsScreen(
+                groupId: groupId,
+                userId: user?.id ?? 'unknown',
+              );
+            },
+          ),
+          GoRoute(
+            path: '/trending',
+            builder: (context, state) => const TrendingScreen(),
+          ),
+          GoRoute(
+            path: '/rooms',
+            builder: (context, state) {
+              final category = state.uri.queryParameters['category'];
+              return RoomBrowserScreen(initialCategory: category);
+            },
+          ),
+        ],
       ),
     ],
   );
@@ -442,4 +448,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 final GlobalKey<NavigatorState> rootNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'mixvy-root-navigator');
+
+final _shellNavigatorKey =
+    GlobalKey<NavigatorState>(debugLabel: 'mixvy-shell-navigator');
 
