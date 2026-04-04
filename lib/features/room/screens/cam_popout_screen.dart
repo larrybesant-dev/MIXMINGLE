@@ -69,6 +69,8 @@ class _CamPopoutScreenState extends ConsumerState<CamPopoutScreen> {
         'maxBroadcasters': 2,
         'isDirectCall': true,
         'calleeId': widget.targetUserId,
+        'callDeclined': false,
+        'ownerName': callerName,
       });
 
       // Notify the target user.

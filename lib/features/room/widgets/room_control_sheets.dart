@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/room_participant_model.dart';
-import '../providers/presence_provider.dart';
 
 class RoomUserPresentation {
   const RoomUserPresentation({required this.displayName, this.avatarUrl});

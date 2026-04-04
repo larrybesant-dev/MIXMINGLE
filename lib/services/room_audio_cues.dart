@@ -1,6 +1,6 @@
 import 'dart:async';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:web/web.dart' as web;
 
 /// Plays short synthesised audio tones for room events on the web platform.
@@ -51,6 +51,28 @@ class RoomAudioCues {
     }
   }
 
+  /// Mobile (non-web) fallback: use haptic feedback patterns to signal events.
+  void _hapticLight() {
+    if (kIsWeb) return;
+    HapticFeedback.lightImpact();
+  }
+
+  void _hapticMedium() {
+    if (kIsWeb) return;
+    HapticFeedback.mediumImpact();
+  }
+
+  void _hapticHeavy() {
+    if (kIsWeb) return;
+    HapticFeedback.heavyImpact();
+  }
+
+  void _hapticDouble() {
+    if (kIsWeb) return;
+    HapticFeedback.lightImpact();
+    Future.delayed(const Duration(milliseconds: 120), HapticFeedback.lightImpact);
+  }
+
   /// Plays a double-tone chord for a richer sound.
   void _playChord({
     required List<double> frequencies,
@@ -66,43 +88,55 @@ class RoomAudioCues {
   // ── Public cues ──────────────────────────────────────────────────────────
 
   /// Short rising ding when a user joins the room.
-  void playUserJoined() => _playChord(
-        frequencies: [523.25, 659.25], // C5 + E5
-        durationMs: 220,
-      );
+  void playUserJoined() {
+    if (kIsWeb) {
+      _playChord(frequencies: [523.25, 659.25], durationMs: 220);
+    } else {
+      _hapticLight();
+    }
+  }
 
   /// Softer falling tone when a user leaves.
-  void playUserLeft() => _playTone(
-        frequency: 392.0, // G4
-        durationMs: 180,
-        gain: 0.12,
-      );
+  void playUserLeft() {
+    if (kIsWeb) {
+      _playTone(frequency: 392.0, durationMs: 180, gain: 0.12);
+    } else {
+      _hapticLight();
+    }
+  }
 
   /// Upbeat three-note fanfare when a gift is received.
   void playGiftReceived() {
-    if (!kIsWeb) return;
-    _playTone(frequency: 523.25, durationMs: 120); // C5
-    Future.delayed(const Duration(milliseconds: 130), () {
-      _playTone(frequency: 659.25, durationMs: 120); // E5
-    });
-    Future.delayed(const Duration(milliseconds: 260), () {
-      _playTone(frequency: 783.99, durationMs: 200); // G5
-    });
+    if (kIsWeb) {
+      _playTone(frequency: 523.25, durationMs: 120); // C5
+      Future.delayed(const Duration(milliseconds: 130), () {
+        _playTone(frequency: 659.25, durationMs: 120); // E5
+      });
+      Future.delayed(const Duration(milliseconds: 260), () {
+        _playTone(frequency: 783.99, durationMs: 200); // G5
+      });
+    } else {
+      _hapticMedium();
+    }
   }
 
   /// Clear bell-like tone when someone raises their hand.
-  void playHandRaised() => _playTone(
-        frequency: 880.0, // A5
-        durationMs: 280,
-        type: 'sine',
-        gain: 0.16,
-      );
+  void playHandRaised() {
+    if (kIsWeb) {
+      _playTone(frequency: 880.0, durationMs: 280, type: 'sine', gain: 0.16);
+    } else {
+      _hapticDouble();
+    }
+  }
 
   /// Ding when a mic request is approved.
-  void playMicApproved() => _playChord(
-        frequencies: [659.25, 987.77], // E5 + B5
-        durationMs: 300,
-      );
+  void playMicApproved() {
+    if (kIsWeb) {
+      _playChord(frequencies: [659.25, 987.77], durationMs: 300);
+    } else {
+      _hapticHeavy();
+    }
+  }
 
   void dispose() {
     try {

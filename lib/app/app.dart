@@ -7,6 +7,7 @@ import '../presentation/providers/app_settings_provider.dart';
 import '../theme/app_theme.dart';
 import '../core/theme.dart';
 import '../shared/widgets/beta_feedback_overlay.dart';
+import '../shared/widgets/incoming_call_overlay.dart';
 
 class MixVyApp extends ConsumerWidget {
   const MixVyApp({super.key});
@@ -23,8 +24,10 @@ class MixVyApp extends ConsumerWidget {
       darkTheme: midnightCreativeTheme,
       themeMode: settings.themeMode,
       builder: (context, child) {
-        return BetaFeedbackOverlay(
-          child: child ?? const SizedBox.shrink(),
+        return IncomingCallOverlay(
+          child: BetaFeedbackOverlay(
+            child: child ?? const SizedBox.shrink(),
+          ),
         );
       },
       locale: appLocale,

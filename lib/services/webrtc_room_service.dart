@@ -520,11 +520,11 @@ class WebRtcRoomService implements RtcRoomService {
       MediaStream? stream;
       if (event.streams.isNotEmpty) {
         stream = event.streams.first;
-      } else if (event.track != null) {
+      } else {
         // Some browsers deliver tracks without an associated stream.
         // Build a synthetic one from the track so the renderer has a source.
         createLocalMediaStream('remote_$broadcasterId').then((newStream) async {
-          await newStream.addTrack(event.track!);
+          await newStream.addTrack(event.track);
           peer.remoteStream = newStream;
           renderer.srcObject = newStream;
           _startRemoteVad(broadcasterId, broadcasterUid, newStream);
@@ -533,13 +533,11 @@ class WebRtcRoomService implements RtcRoomService {
         }).catchError((_) {});
         return;
       }
-      if (stream != null) {
-        peer.remoteStream = stream;
-        renderer.srcObject = stream;
-        _startRemoteVad(broadcasterId, broadcasterUid, stream);
-        _log('remote stream received from broadcaster=$broadcasterId');
-        onRemoteUserJoined?.call();
-      }
+      peer.remoteStream = stream;
+      renderer.srcObject = stream;
+      _startRemoteVad(broadcasterId, broadcasterUid, stream);
+      _log('remote stream received from broadcaster=$broadcasterId');
+      onRemoteUserJoined?.call();
     };
 
     pc.onConnectionState = (RTCPeerConnectionState state) {

@@ -262,6 +262,9 @@ class PushMessagingService {
     final String? route;
 
     switch (type) {
+      case 'incoming_call':
+        final roomId = data['roomId'] as String? ?? '';
+        route = roomId.isNotEmpty ? '/room/$roomId' : '/discover';
       case 'room_invite':
       case 'room_started':
         final roomId = data['roomId'] as String? ?? '';

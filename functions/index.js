@@ -740,6 +740,90 @@ exports.sendPushForNotification = onDocumentCreated(
   async (event) => sendPushForNotification(event),
 );
 
+// ── Incoming video call push notification ────────────────────────────────────
+// Fires when a new room document is created with isDirectCall == true.
+// Sends an FCM push to the callee so they see the call even when the app is
+// in the background or closed.
+async function sendIncomingCallPushHandler(event, deps = {}) {
+  if (!event.data) return;
+  const roomData = event.data.data() || {};
+  if (!roomData.isDirectCall) return;
+
+  const calleeId = typeof roomData.calleeId === "string" ? roomData.calleeId.trim() : "";
+  const callerId = typeof roomData.ownerId === "string" ? roomData.ownerId.trim() : "";
+  const roomId = event.params && event.params.roomId;
+  if (!calleeId || !callerId || !roomId) return;
+
+  const firestore = deps.firestore || db;
+  const messaging = deps.messaging || admin.messaging();
+
+  // Fetch caller's display name.
+  const callerSnap = await firestore.collection("users").doc(callerId).get();
+  const callerName = callerSnap.exists
+    ? (callerSnap.data().displayName || callerSnap.data().username || "Someone")
+    : "Someone";
+
+  // Fetch callee's FCM tokens.
+  const tokenSnapshot = await firestore
+    .collection("users")
+    .doc(calleeId)
+    .collection("notification_tokens")
+    .limit(200)
+    .get();
+
+  const tokens = tokenSnapshot.docs
+    .map((doc) => (doc.data().token || "").trim())
+    .filter((t) => t.length > 0);
+
+  if (tokens.length === 0) return;
+
+  const payload = {
+    notification: {
+      title: "Incoming video call",
+      body: `${callerName} is calling you on MixVy`,
+    },
+    data: {
+      type: "incoming_call",
+      roomId,
+      callerId,
+    },
+    tokens,
+  };
+
+  const result = await messaging.sendEachForMulticast(payload);
+  const invalidTokens = [];
+  result.responses.forEach((response, index) => {
+    if (!response.success) {
+      const code = response.error && response.error.code;
+      if (
+        code === "messaging/registration-token-not-registered" ||
+        code === "messaging/invalid-argument"
+      ) {
+        invalidTokens.push(tokens[index]);
+      }
+    }
+  });
+
+  if (invalidTokens.length > 0) {
+    const batch = firestore.batch();
+    invalidTokens.forEach((token) => {
+      batch.delete(
+        firestore
+          .collection("users")
+          .doc(calleeId)
+          .collection("notification_tokens")
+          .doc(token),
+      );
+    });
+    await batch.commit();
+  }
+}
+
+exports.sendIncomingCallPush = onDocumentCreated(
+  "rooms/{roomId}",
+  async (event) => sendIncomingCallPushHandler(event),
+);
+
 exports.requestCoinTransfer = onCall(async (request) =>
   requestCoinTransferHandler(request),
 );

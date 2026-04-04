@@ -36,14 +36,25 @@ class _RoomBrowserScreenState extends ConsumerState<RoomBrowserScreen> {
 
   String? _selectedCategory;
   bool _showGrid = false; // false = category directory, true = room list
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
 
   @override
   void initState() {
     super.initState();
+    _searchController.addListener(() {
+      setState(() => _searchQuery = _searchController.text.trim().toLowerCase());
+    });
     if (widget.initialCategory != null) {
       _selectedCategory = widget.initialCategory;
       _showGrid = true;
     }
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -60,17 +71,53 @@ class _RoomBrowserScreenState extends ConsumerState<RoomBrowserScreen> {
                 onPressed: () => setState(() {
                   _showGrid = false;
                   _selectedCategory = null;
+                  _searchController.clear();
                 }),
               )
             : null,
+        bottom: _showGrid
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(56),
+                child: Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  child: TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: 'Search rooms…',
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: _searchQuery.isNotEmpty
+                          ? IconButton(
+                              icon: const Icon(Icons.clear),
+                              onPressed: () => _searchController.clear(),
+                            )
+                          : null,
+                      isDense: true,
+                      filled: true,
+                      fillColor:
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                ),
+              )
+            : null,
       ),
-      body: _showGrid ? _RoomListView(category: _selectedCategory) : _CategoryGrid(
-        categories: _categories,
-        onCategorySelected: (cat) => setState(() {
-          _selectedCategory = cat;
-          _showGrid = true;
-        }),
-      ),
+      body: _showGrid
+          ? _RoomListView(
+              category: _selectedCategory,
+              searchQuery: _searchQuery,
+            )
+          : _CategoryGrid(
+              categories: _categories,
+              onCategorySelected: (cat) => setState(() {
+                _selectedCategory = cat;
+                _showGrid = true;
+              }),
+            ),
     );
   }
 
@@ -172,21 +219,30 @@ final _roomsByCategoryProvider = StreamProvider.autoDispose
 
   return query.snapshots().map(
         (snap) => snap.docs
-            .map((doc) => RoomModel.fromJson({'id': doc.id, ...doc.data()}))
+            .map((doc) => RoomModel.fromJson(doc.data(), doc.id))
             .toList(),
       );
 });
 
 class _RoomListView extends ConsumerWidget {
-  const _RoomListView({required this.category});
+  const _RoomListView({required this.category, required this.searchQuery});
 
   final String? category;
+  final String searchQuery;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final roomsAsync = ref.watch(_roomsByCategoryProvider(category));
     return roomsAsync.when(
-      data: (rooms) {
+      data: (allRooms) {
+        final rooms = searchQuery.isEmpty
+            ? allRooms
+            : allRooms
+                .where((r) =>
+                    r.name.toLowerCase().contains(searchQuery) ||
+                    (r.description?.toLowerCase().contains(searchQuery) ??
+                        false))
+                .toList();
         if (rooms.isEmpty) {
           return Center(
             child: Column(
