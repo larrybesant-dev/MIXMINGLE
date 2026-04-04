@@ -1076,6 +1076,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     presenceController.setOnline(roomId: widget.roomId, userId: userId);
     _presenceHeartbeatTimer = Timer.periodic(const Duration(seconds: 20), (_) {
       presenceController.heartbeat(roomId: widget.roomId, userId: userId);
+      // Keep the participant doc's lastActiveAt fresh so stale docs (from
+      // users who closed their browser without calling _leaveRoom) can be
+      // filtered out by the 90-second staleness window in providers.
+      _firestore
+          ?.collection('rooms')
+          .doc(widget.roomId)
+          .collection('participants')
+          .doc(userId)
+          .update({'lastActiveAt': FieldValue.serverTimestamp()})
+          .ignore();
     });
   }
 
