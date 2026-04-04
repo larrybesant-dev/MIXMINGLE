@@ -14,7 +14,16 @@ class SpeedDatingService {
   static const Uuid _uuid = Uuid();
 
   Stream<List<SpeedDateCandidate>> candidatesStream({required String currentUserId}) {
-    return _firestore.collection('users').limit(100).snapshots().asyncMap((snapshot) async {
+    // Query only users who have a non-empty username — avoids a full-collection
+    // scan and filters out incomplete accounts server-side. Limit to 40 so the
+    // Dart-side block filter still leaves a useful candidate set.
+    return _firestore
+        .collection('users')
+        .where('username', isGreaterThan: '')
+        .orderBy('username')
+        .limit(40)
+        .snapshots()
+        .asyncMap((snapshot) async {
       final blockedIds = await _moderationService.getExcludedUserIds(currentUserId);
       return snapshot.docs
           .where((doc) => doc.id != currentUserId)

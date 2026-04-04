@@ -57,6 +57,92 @@ final messagesStreamProvider =
   });
 });
 
+// ── Paginated message history ──────────────────────────────────────────────
+// Loads older messages on demand (load-more). The live stream above covers the
+// most recent 50; this provider fetches pages of 30 preceding those.
+
+const _kMessagePageSize = 30;
+
+class _PaginatedMessagesState {
+  const _PaginatedMessagesState({
+    this.olderMessages = const [],
+    this.isLoading = false,
+    this.hasMore = true,
+    this.oldestDoc,
+  });
+
+  final List<Message> olderMessages;
+  final bool isLoading;
+  final bool hasMore;
+  final DocumentSnapshot? oldestDoc;
+
+  _PaginatedMessagesState copyWith({
+    List<Message>? olderMessages,
+    bool? isLoading,
+    bool? hasMore,
+    DocumentSnapshot? oldestDoc,
+    bool clearOldest = false,
+  }) {
+    return _PaginatedMessagesState(
+      olderMessages: olderMessages ?? this.olderMessages,
+      isLoading: isLoading ?? this.isLoading,
+      hasMore: hasMore ?? this.hasMore,
+      oldestDoc: clearOldest ? null : (oldestDoc ?? this.oldestDoc),
+    );
+  }
+}
+
+class _PaginatedMessagesNotifier
+    extends StateNotifier<_PaginatedMessagesState> {
+  _PaginatedMessagesNotifier(this._firestore, this._conversationId)
+      : super(const _PaginatedMessagesState());
+
+  final FirebaseFirestore _firestore;
+  final String _conversationId;
+
+  Future<void> loadMore(DocumentSnapshot? liveAnchor) async {
+    if (state.isLoading || !state.hasMore) return;
+    state = state.copyWith(isLoading: true);
+
+    try {
+      // Start after the earliest doc we already have, or the live-stream anchor.
+      final cursor = state.oldestDoc ?? liveAnchor;
+      var query = _firestore
+          .collection('conversations')
+          .doc(_conversationId)
+          .collection('messages')
+          .orderBy('createdAt', descending: true)
+          .limit(_kMessagePageSize);
+
+      if (cursor != null) query = query.startAfterDocument(cursor);
+
+      final snapshot = await query.get();
+      final fetched = snapshot.docs
+          .map((doc) => Message.fromJson(doc.data(), doc.id))
+          .toList()
+          .reversed
+          .toList();
+
+      state = state.copyWith(
+        olderMessages: [...fetched, ...state.olderMessages],
+        isLoading: false,
+        hasMore: snapshot.docs.length == _kMessagePageSize,
+        oldestDoc: snapshot.docs.isNotEmpty ? snapshot.docs.last : state.oldestDoc,
+      );
+    } catch (_) {
+      state = state.copyWith(isLoading: false);
+    }
+  }
+}
+
+final paginatedMessagesProvider = StateNotifierProvider.autoDispose
+    .family<_PaginatedMessagesNotifier, _PaginatedMessagesState, String>(
+  (ref, conversationId) => _PaginatedMessagesNotifier(
+    ref.watch(firestoreProvider),
+    conversationId,
+  ),
+);
+
 // Controller for sending messages
 final messagingControllerProvider =
     Provider<MessagingController>((ref) {

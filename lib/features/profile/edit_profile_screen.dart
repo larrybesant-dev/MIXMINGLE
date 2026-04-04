@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -91,25 +92,22 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 backgroundColor: Theme.of(context).colorScheme.surface,
                 child: hasValidProfilePicture
                     ? ClipOval(
-                        child: Image.network(
-                          profilePictureUrl,
+                        child: CachedNetworkImage(
+                          imageUrl: profilePictureUrl,
                           width: 80,
                           height: 80,
                           fit: BoxFit.cover,
-                          loadingBuilder: (context, child, loadingProgress) {
-                            if (loadingProgress == null) return child;
-                            return Center(
-                              child: SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
-                                ),
+                          placeholder: (context, url) => Center(
+                            child: SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
                               ),
-                            );
-                          },
-                          errorBuilder: (context, error, stackTrace) {
+                            ),
+                          ),
+                          errorWidget: (context, url, error) {
                             return Icon(Icons.person, size: 40, color: Theme.of(context).colorScheme.primary);
                           },
                         ),

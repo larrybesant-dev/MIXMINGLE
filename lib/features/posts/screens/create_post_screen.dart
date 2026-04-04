@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -228,7 +229,7 @@ class _CreatePostScreenState extends ConsumerState<CreatePostScreen> {
               children: [
                 CircleAvatar(
                   backgroundImage: widget.avatarUrl != null
-                      ? NetworkImage(widget.avatarUrl!)
+                      ? CachedNetworkImageProvider(widget.avatarUrl!)
                       : null,
                   child: widget.avatarUrl == null
                       ? Text(widget.username[0].toUpperCase())

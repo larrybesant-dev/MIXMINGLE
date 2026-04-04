@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer' as developer;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/foundation.dart';
@@ -1144,10 +1145,10 @@ class _HeroCard extends StatelessWidget {
                   child: Container(
                     color: Theme.of(context).colorScheme.surfaceContainerHighest,
                     child: (state.coverPhotoUrl ?? '').trim().isNotEmpty
-                        ? Image.network(
-                            state.coverPhotoUrl!.trim(),
+                        ? CachedNetworkImage(
+                            imageUrl: state.coverPhotoUrl!.trim(),
                             fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => const Icon(Icons.landscape_rounded, size: 40),
+                            errorWidget: (_, _, _) => const Icon(Icons.landscape_rounded, size: 40),
                           )
                         : const Icon(Icons.landscape_rounded, size: 40),
                   ),
@@ -1227,25 +1228,22 @@ class _HeroCard extends StatelessWidget {
                           )
                         : (state.avatarUrl ?? '').trim().isNotEmpty
                             ? ClipOval(
-                                child: Image.network(
-                                  state.avatarUrl!.trim(),
+                                child: CachedNetworkImage(
+                                  imageUrl: state.avatarUrl!.trim(),
                                   width: 84,
                                   height: 84,
                                   fit: BoxFit.cover,
-                                  loadingBuilder: (context, child, loadingProgress) {
-                                    if (loadingProgress == null) return child;
-                                    return Center(
-                                      child: SizedBox(
-                                        width: 42,
-                                        height: 42,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
-                                        ),
+                                  placeholder: (context, url) => Center(
+                                    child: SizedBox(
+                                      width: 42,
+                                      height: 42,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
                                       ),
-                                    );
-                                  },
-                                  errorBuilder: (_, _, _) => const Icon(Icons.person, size: 32),
+                                    ),
+                                  ),
+                                  errorWidget: (_, _, _) => const Icon(Icons.person, size: 32),
                                 ),
                               )
                             : const Icon(Icons.person, size: 32),
@@ -1347,10 +1345,10 @@ class _HeroCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                     child: AspectRatio(
                       aspectRatio: 1,
-                      child: Image.network(
-                        url,
+                      child: CachedNetworkImage(
+                        imageUrl: url,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, _, _) => Container(
+                        errorWidget: (_, _, _) => Container(
                           color: Theme.of(context).colorScheme.surfaceContainerHighest,
                           alignment: Alignment.center,
                           child: const Icon(Icons.broken_image_outlined, size: 18),

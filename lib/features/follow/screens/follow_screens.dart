@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -27,7 +28,7 @@ class FollowersScreen extends ConsumerWidget {
               return ListTile(
                 leading: CircleAvatar(
                   backgroundImage: follower.avatarUrl != null
-                      ? NetworkImage(follower.avatarUrl!)
+                      ? CachedNetworkImageProvider(follower.avatarUrl!)
                       : null,
                   child: follower.avatarUrl == null
                       ? Text(follower.username[0].toUpperCase())
@@ -82,7 +83,7 @@ class FollowingScreen extends ConsumerWidget {
               return ListTile(
                 leading: CircleAvatar(
                   backgroundImage: user.avatarUrl != null
-                      ? NetworkImage(user.avatarUrl!)
+                      ? CachedNetworkImageProvider(user.avatarUrl!)
                       : null,
                   child: user.avatarUrl == null
                       ? Text(user.username[0].toUpperCase())

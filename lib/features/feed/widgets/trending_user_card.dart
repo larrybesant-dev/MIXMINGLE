@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import '../../../models/user.dart';
 
@@ -20,25 +21,22 @@ class TrendingUserCard extends StatelessWidget {
             child: profilePictureUrl.isEmpty
                 ? const Icon(Icons.person)
                 : ClipOval(
-                    child: Image.network(
-                      profilePictureUrl,
+                    child: CachedNetworkImage(
+                      imageUrl: profilePictureUrl,
                       width: 72,
                       height: 72,
                       fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: SizedBox(
-                            width: 36,
-                            height: 36,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
-                            ),
+                      placeholder: (context, url) => Center(
+                        child: SizedBox(
+                          width: 36,
+                          height: 36,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
                           ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.person),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => const Icon(Icons.person),
                     ),
                   ),
           ),

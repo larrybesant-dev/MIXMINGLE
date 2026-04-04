@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -64,7 +65,7 @@ class MessagesScreen extends ConsumerWidget {
                 onTap: () => context.push('/messages/${conversation.id}'),
                 leading: CircleAvatar(
                   child: conversation.groupAvatarUrl != null
-                      ? Image.network(conversation.groupAvatarUrl!)
+                      ? CachedNetworkImage(imageUrl: conversation.groupAvatarUrl!)
                       : Text(displayName[0].toUpperCase()),
                 ),
                 title: Text(

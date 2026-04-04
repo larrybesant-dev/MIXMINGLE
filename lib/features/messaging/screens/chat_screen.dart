@@ -31,6 +31,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     super.initState();
     _messageController = TextEditingController();
     _scrollController = ScrollController();
+    _scrollController.addListener(_onScroll);
 
     // Mark conversation as read
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -39,6 +40,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             userId: widget.userId,
           );
     });
+  }
+
+  void _onScroll() {
+    // Load more when the user scrolls close to the top of the list.
+    if (_scrollController.hasClients &&
+        _scrollController.offset <=
+            _scrollController.position.minScrollExtent + 120) {
+      ref
+          .read(paginatedMessagesProvider(widget.conversationId).notifier)
+          .loadMore(null);
+    }
   }
 
   @override
@@ -77,6 +89,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     final messagesAsync = ref.watch(messagesStreamProvider(widget.conversationId));
+    final paginatedState = ref.watch(paginatedMessagesProvider(widget.conversationId));
 
     return Scaffold(
       appBar: AppBar(
@@ -98,7 +111,13 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         children: [
           Expanded(
             child: messagesAsync.when(
-              data: (messages) {
+              data: (liveMessages) {
+                // Merge: older pages on top, live stream at the bottom.
+                final allMessages = [
+                  ...paginatedState.olderMessages,
+                  ...liveMessages,
+                ];
+
                 WidgetsBinding.instance.addPostFrameCallback((_) {
                   if (_scrollController.hasClients) {
                     _scrollController.jumpTo(
@@ -107,7 +126,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                   }
                 });
 
-                if (messages.isEmpty) {
+                if (allMessages.isEmpty) {
                   return const Center(
                     child: Text('No messages yet. Start the conversation!'),
                   );
@@ -116,9 +135,34 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                 return ListView.builder(
                   controller: _scrollController,
                   padding: const EdgeInsets.all(16),
-                  itemCount: messages.length,
+                  itemCount: allMessages.length +
+                      (paginatedState.hasMore ? 1 : 0), // +1 for load-more row
                   itemBuilder: (context, index) {
-                    final message = messages[index];
+                    // Load-more row at the very top.
+                    if (index == 0 && paginatedState.hasMore) {
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: paginatedState.isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : TextButton(
+                                  onPressed: () => ref
+                                      .read(paginatedMessagesProvider(
+                                              widget.conversationId)
+                                          .notifier)
+                                      .loadMore(null),
+                                  child: const Text('Load older messages'),
+                                ),
+                        ),
+                      );
+                    }
+
+                    final message =
+                        allMessages[index - (paginatedState.hasMore ? 1 : 0)];
                     final isOwn = message.senderId == widget.userId;
 
                     if (message.isDeleted) {

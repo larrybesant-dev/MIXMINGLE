@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -332,12 +333,12 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         borderRadius: BorderRadius.circular(22),
                         child: Opacity(
                           opacity: 0.22,
-                          child: Image.network(
-                            coverImageUrl,
+                          child: CachedNetworkImage(
+                            imageUrl: coverImageUrl,
                             height: 240,
                             width: double.infinity,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const SizedBox(height: 240),
+                            errorWidget: (context, url, error) => const SizedBox(height: 240),
                           ),
                         ),
                       ),
@@ -350,25 +351,22 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                             backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                             child: (avatarUrl != null && avatarUrl.isNotEmpty)
                                 ? ClipOval(
-                                    child: Image.network(
-                                      avatarUrl,
+                                    child: CachedNetworkImage(
+                                      imageUrl: avatarUrl,
                                       width: 88,
                                       height: 88,
                                       fit: BoxFit.cover,
-                                      loadingBuilder: (context, child, loadingProgress) {
-                                        if (loadingProgress == null) return child;
-                                        return Center(
-                                          child: SizedBox(
-                                            width: 44,
-                                            height: 44,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
-                                            ),
+                                      placeholder: (context, url) => Center(
+                                        child: SizedBox(
+                                          width: 44,
+                                          height: 44,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation(Theme.of(context).colorScheme.primary),
                                           ),
-                                        );
-                                      },
-                                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 34),
+                                        ),
+                                      ),
+                                      errorWidget: (context, url, error) => const Icon(Icons.person, size: 34),
                                     ),
                                   )
                                 : const Icon(Icons.person, size: 34),
@@ -560,10 +558,10 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
                         child: Container(
                           width: 110,
                           color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                          child: Image.network(
-                            url,
+                          child: CachedNetworkImage(
+                            imageUrl: url,
                             fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+                            errorWidget: (context, url, error) => const Icon(Icons.broken_image),
                           ),
                         ),
                       );

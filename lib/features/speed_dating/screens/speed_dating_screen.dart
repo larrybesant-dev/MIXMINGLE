@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -182,25 +183,22 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
             backgroundColor: theme.colorScheme.primary.withValues(alpha: 0.12),
             child: hasAvatar
                 ? ClipOval(
-                    child: Image.network(
-                      candidate.avatarUrl!.trim(),
+                    child: CachedNetworkImage(
+                      imageUrl: candidate.avatarUrl!.trim(),
                       width: 92,
                       height: 92,
                       fit: BoxFit.cover,
-                      loadingBuilder: (context, child, loadingProgress) {
-                        if (loadingProgress == null) return child;
-                        return Center(
-                          child: SizedBox(
-                            width: 46,
-                            height: 46,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
-                            ),
+                      placeholder: (context, url) => Center(
+                        child: SizedBox(
+                          width: 46,
+                          height: 46,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
                           ),
-                        );
-                      },
-                      errorBuilder: (context, error, stackTrace) => const Icon(Icons.person, size: 42),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => const Icon(Icons.person, size: 42),
                     ),
                   )
                 : const Icon(Icons.person, size: 42),

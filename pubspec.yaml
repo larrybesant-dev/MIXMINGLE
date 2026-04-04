@@ -47,6 +47,7 @@
     flutter_webrtc: ^1.4.1
     web: any
     window_manager: ^0.4.3
+    cached_network_image: ^3.4.1
     # state_notifier has been removed
 
   dev_dependencies:

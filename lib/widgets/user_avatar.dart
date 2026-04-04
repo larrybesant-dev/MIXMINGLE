@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 class UserAvatar extends StatelessWidget {
@@ -21,27 +22,23 @@ class UserAvatar extends StatelessWidget {
         ),
         child: _hasImage
             ? ClipOval(
-                child: Image.network(
-                  profilePictureUrl.trim(),
+                child: CachedNetworkImage(
+                  imageUrl: profilePictureUrl.trim(),
                   width: radius * 2 - 4,
                   height: radius * 2 - 4,
                   fit: BoxFit.cover,
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Center(
-                      child: SizedBox(
-                        width: radius,
-                        height: radius,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
-                        ),
+                  placeholder: (context, url) => Center(
+                    child: SizedBox(
+                      width: radius,
+                      height: radius,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation(theme.colorScheme.primary),
                       ),
-                    );
-                  },
-                  errorBuilder: (context, error, stackTrace) {
-                    return Icon(Icons.person, color: theme.colorScheme.primary, size: radius);
-                  },
+                    ),
+                  ),
+                  errorWidget: (context, url, error) =>
+                      Icon(Icons.person, color: theme.colorScheme.primary, size: radius),
                 ),
               )
             : Icon(Icons.person, color: theme.colorScheme.primary, size: radius),

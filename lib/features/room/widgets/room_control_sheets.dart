@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../../models/room_participant_model.dart';
@@ -259,7 +260,7 @@ ImageProvider<Object>? _avatarImageProvider(String? avatarUrl) {
   if (value == null || value.isEmpty) {
     return null;
   }
-  return NetworkImage(value);
+  return CachedNetworkImageProvider(value);
 }
 
 class _RoleChip extends StatelessWidget {

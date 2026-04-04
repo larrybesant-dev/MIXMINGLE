@@ -102,6 +102,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       GlobalKey<FloatingGiftOverlayState>();
   ProviderSubscription<AsyncValue<List<RoomGiftEvent>>>?
   _giftEventsSubscription;
+
+  // Reconnect back-off state
+  int _reconnectAttempts = 0;
+  Timer? _reconnectTimer;
+  static const int _kMaxBackoffSeconds = 30;
   final Map<String, String> _senderDisplayNameById = <String, String>{};
   final Set<String> _senderLookupInFlight = <String>{};
   Set<int> _requestedHighQualityRemoteUids = <int>{};
@@ -1106,6 +1111,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final userId = _joinedUserId;
     if (userId == null) return;
 
+    // Exponential back-off: 1 s, 2 s, 4 s … capped at _kMaxBackoffSeconds.
+    _reconnectAttempts++;
+    final delaySecs = (_reconnectAttempts <= 1)
+        ? 1
+        : (1 << (_reconnectAttempts - 1)).clamp(1, _kMaxBackoffSeconds);
+    _logLiveRoom(
+        'connection_lost: reconnect attempt=$_reconnectAttempts delay=${delaySecs}s');
+
     // Snapshot media state before _disconnectCall() resets it to defaults.
     final hadCameraSlot = _claimedSlotId != null;
     final previousRole = _appliedMediaRole;
@@ -1117,45 +1130,58 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
 
     setState(() {
       _callError = null;
-      _cameraStatus = 'Reconnecting…';
+      _cameraStatus = delaySecs > 1
+          ? 'Reconnecting in ${delaySecs}s…'
+          : 'Reconnecting…';
     });
-    await _connectCall(userId);
 
-    // After reconnect the channel join resets media state to audience/cam-off.
-    // If the user was broadcasting, restore the camera and slot.
-    if (mounted && hadCameraSlot) {
-      _logLiveRoom('connection_lost: restoring broadcaster slot');
-      try {
-        final service = _agoraService;
-        if (service != null && _isCallReady) {
-          // Re-claim the slot (idempotent if slot doc still has our userId).
-          final slotService = ref.read(roomSlotServiceProvider);
-          final slotId = await slotService.claimSlot(
-            widget.roomId,
-            userId,
-            maxBroadcasters: _maxBroadcasters,
-          );
-          if (slotId != null && mounted) {
-            _claimedSlotId = slotId;
-            await service.enableVideo(true, publishMicrophoneTrack: !wasMicMuted);
-            await service.mute(wasMicMuted);
-            if (mounted) {
-              setState(() {
-                _isVideoEnabled = true;
-                _isMicMuted = wasMicMuted;
-                _appliedMediaRole = previousRole ?? 'member';
-                _cameraStatus = 'Camera restored after reconnect.';
-              });
+    _reconnectTimer?.cancel();
+    _reconnectTimer = Timer(Duration(seconds: delaySecs), () async {
+      if (!mounted) return;
+      await _connectCall(userId);
+
+      // After reconnect the channel join resets media state to audience/cam-off.
+      // If the user was broadcasting, restore the camera and slot.
+      if (mounted && hadCameraSlot) {
+        _logLiveRoom('connection_lost: restoring broadcaster slot');
+        try {
+          final service = _agoraService;
+          if (service != null && _isCallReady) {
+            // Re-claim the slot (idempotent if slot doc still has our userId).
+            final slotService = ref.read(roomSlotServiceProvider);
+            final slotId = await slotService.claimSlot(
+              widget.roomId,
+              userId,
+              maxBroadcasters: _maxBroadcasters,
+            );
+            if (slotId != null && mounted) {
+              _claimedSlotId = slotId;
+              await service.enableVideo(true, publishMicrophoneTrack: !wasMicMuted);
+              await service.mute(wasMicMuted);
+              if (mounted) {
+                setState(() {
+                  _isVideoEnabled = true;
+                  _isMicMuted = wasMicMuted;
+                  _appliedMediaRole = previousRole ?? 'member';
+                  _cameraStatus = 'Camera restored after reconnect.';
+                });
+                // Successful reconnect — reset backoff counter.
+                _reconnectAttempts = 0;
+              }
             }
           }
+        } catch (e) {
+          _logLiveRoom('connection_lost: slot restore failed', error: e);
         }
-      } catch (e) {
-        _logLiveRoom('connection_lost: slot restore failed', error: e);
+      } else if (mounted && _isCallReady) {
+        _reconnectAttempts = 0;
       }
-    }
+    });
   }
 
   Future<void> _disconnectCall() async {
+    _reconnectTimer?.cancel();
+    _reconnectTimer = null;
     final service = _agoraService;
     _agoraService = null;
     _isCallReady = false;
@@ -2535,6 +2561,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     _presenceHeartbeatTimer?.cancel();
     _giftToastTimer?.cancel();
     _typingTimer?.cancel();
+    _reconnectTimer?.cancel();
     _giftEventsSubscription?.close();
     unawaited(_clearTypingStatus());
     unawaited(_disconnectCall());

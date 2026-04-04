@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:mixvy/models/room_model.dart';
 
@@ -40,12 +41,12 @@ class LiveRoomCard extends StatelessWidget {
             if (room.thumbnailUrl != null && room.thumbnailUrl!.isNotEmpty)
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
-                child: Image.network(
-                  room.thumbnailUrl!,
+                child: CachedNetworkImage(
+                  imageUrl: room.thumbnailUrl!,
                   height: 80,
                   width: double.infinity,
                   fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => Container(
+                  errorWidget: (context, url, error) => Container(
                     height: 80,
                     width: double.infinity,
                     color: Theme.of(context).colorScheme.primary.withAlpha((255 * 0.1).toInt()),
