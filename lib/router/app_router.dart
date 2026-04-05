@@ -30,6 +30,7 @@ import 'package:mixvy/features/bookmarks/screens/bookmarks_screen.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
 import 'package:mixvy/features/follow/screens/follow_screens.dart';
 import 'package:mixvy/features/posts/screens/create_post_screen.dart';
+import 'package:mixvy/features/posts/screens/post_comments_screen.dart';
 import 'package:mixvy/features/stories/screens/create_story_screen.dart';
 import 'package:mixvy/features/groups/screens/groups_screen.dart';
 import 'package:mixvy/features/groups/screens/create_group_screen.dart';
@@ -448,6 +449,13 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) {
               final category = state.uri.queryParameters['category'];
               return RoomBrowserScreen(initialCategory: category);
+            },
+          ),
+          GoRoute(
+            path: '/post/:postId/comments',
+            builder: (context, state) {
+              final postId = state.pathParameters['postId']!;
+              return PostCommentsScreen(postId: postId);
             },
           ),
         ],

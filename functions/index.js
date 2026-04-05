@@ -1416,6 +1416,38 @@ exports.promoteToBetaTester = onCall(async (request) => {
 // SPEED DATING
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Sends an FCM push notification to a single user (best-effort; errors ignored).
+ */
+async function _sendPushToUser(userId, { title, body, data = {} }) {
+  const tokenSnap = await db
+    .collection("users")
+    .doc(userId)
+    .collection("notification_tokens")
+    .limit(100)
+    .get();
+
+  const tokens = tokenSnap.docs
+    .map((d) => (d.data().token || "").trim())
+    .filter((t) => t.length > 0);
+
+  if (tokens.length === 0) return;
+
+  const payload = {
+    notification: { title, body },
+    data: Object.fromEntries(
+      Object.entries(data).map(([k, v]) => [k, String(v)]),
+    ),
+    tokens,
+  };
+
+  try {
+    await admin.messaging().sendEachForMulticast(payload);
+  } catch (_) {
+    // Best-effort — do not fail the calling function
+  }
+}
+
 const SPEED_DATING_SESSION_SECONDS = 90;
 
 /**
@@ -1476,6 +1508,17 @@ exports.joinSpeedDatingQueue = onCall(async (request) => {
     tx.update(queueRef, { matched: true, sessionId: sessionRef.id });
     tx.update(partnerDoc.ref, { matched: true, sessionId: sessionRef.id });
   });
+
+  // Notify both participants (best-effort, outside the transaction)
+  const pushPayload = {
+    title: "MixVy Speed Date 💘",
+    body: "You've been matched! Your speed date is starting now.",
+    data: { type: "speed_dating_match", sessionId: sessionRef.id },
+  };
+  await Promise.allSettled([
+    _sendPushToUser(uid, pushPayload),
+    _sendPushToUser(partnerId, pushPayload),
+  ]);
 
   return { matched: true, sessionId: sessionRef.id, partnerId };
 });

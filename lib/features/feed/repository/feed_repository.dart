@@ -43,4 +43,19 @@ class FeedRepository {
           );
         });
   }
+
+  Future<void> toggleLike(String postId, String userId, bool currentlyLiked) async {
+    final ref = _db.collection('posts').doc(postId);
+    if (currentlyLiked) {
+      await ref.update({
+        'likes': FieldValue.arrayRemove([userId]),
+        'likeCount': FieldValue.increment(-1),
+      });
+    } else {
+      await ref.update({
+        'likes': FieldValue.arrayUnion([userId]),
+        'likeCount': FieldValue.increment(1),
+      });
+    }
+  }
 }

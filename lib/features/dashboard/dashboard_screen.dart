@@ -5,8 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../feed/providers/feed_providers.dart';
 import '../feed/models/post_model.dart';
+import '../feed/widgets/post_card.dart';
 import '../profile/profile_completion.dart';
 import '../profile/profile_controller.dart';
+import '../../presentation/providers/user_provider.dart';
 
 import '../../models/room_model.dart';
 import '../feed/models/event_model.dart';
@@ -23,6 +25,7 @@ class DashboardScreen extends ConsumerWidget {
     final profileState = ref.watch(profileControllerProvider);
     final setupItems = ProfileCompletion.guidedSetupItems(profileState);
     final profileCompletion = ProfileCompletion.completeness(profileState);
+    final currentUser = ref.watch(userProvider);
 
     return Scaffold(
       appBar: const TopAppBar(title: 'MixVy'),
@@ -45,7 +48,13 @@ class DashboardScreen extends ConsumerWidget {
             postsAsync.when(
               data: (posts) => posts.isEmpty
                   ? const Text('No posts yet.')
-                  : Column(children: posts.map((p) => _postCard(p)).toList()),
+                  : Column(
+                      children: posts
+                          .map((p) => PostCard(
+                                post: p,
+                                currentUserId: currentUser?.id ?? '',
+                              ))
+                          .toList()),
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => firestoreErrorCard(
                 section: 'posts',
@@ -82,13 +91,6 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
-    // Card widget for posts
-    Widget _postCard(PostModel p) => Card(
-          child: ListTile(
-            title: Text(p.text),
-            subtitle: Text('Posted • ${p.createdAt}'),
-          ),
-        );
 
     Widget _quickActions(BuildContext context) {
       return Wrap(
