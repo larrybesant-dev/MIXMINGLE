@@ -2926,7 +2926,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 ? (_senderDisplayNameById[spotlightUserId] ?? spotlightUserId)
                 : null;
             return Scaffold(
+              extendBodyBehindAppBar: true,
+              extendBody: true,
+              backgroundColor: Colors.black,
               appBar: AppBar(
+                backgroundColor: Colors.black.withValues(alpha: 0.45),
+                foregroundColor: Colors.white,
+                elevation: 0,
                 title: Text(roomName),
                 actions: [
                   // Coin balance
@@ -3057,7 +3063,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 ],
               ),
               bottomNavigationBar: Container(
-                color: Colors.black87,
+                color: Colors.black.withValues(alpha: 0.75),
                 child: SafeArea(
                   top: false,
                   child: Padding(
@@ -3218,13 +3224,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               ),
               body: Stack(
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Expanded(
-                        flex: 3,
-                        child: Column(
-                          children: [
+                  Positioned.fill(
+                    child: Column(
+                      children: [
                         // Spotlight banner
                         if (spotlightName != null)
                           Container(
@@ -4328,16 +4330,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       ],
                     ),
                   ),
-                  // ── RIGHT: always-visible chat panel ─────────────────────────
-                  SizedBox(
-                    width: isDesktopLayout ? 420 : 300,
+                  // ── RIGHT: floating glass chat panel ──────────────────────
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    bottom: 0,
+                    width: 260,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        border: Border(
-                          left: BorderSide(
-                            color: Theme.of(context).colorScheme.outlineVariant,
-                          ),
+                        color: Colors.black.withValues(alpha: 0.65),
+                        borderRadius: const BorderRadius.only(
+                          topLeft: Radius.circular(16),
+                          bottomLeft: Radius.circular(16),
                         ),
                       ),
                       child: Column(
@@ -4766,8 +4770,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         ],
                       ),
                     ),
-                  ),
-                    ],
                   ),
                   if (_giftToasts.isNotEmpty)
                     Positioned(
