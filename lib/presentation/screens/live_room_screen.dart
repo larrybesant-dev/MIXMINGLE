@@ -1069,6 +1069,135 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
   }
 
+  /// Shows a bottom sheet listing which of the current user's friends are
+  /// currently online (have a live presence doc), with a quick "Go to room"
+  /// button when the friend is already in a room.
+  Future<void> _showOnlineFriendsSheet({
+    required String currentUserId,
+    required String roomId,
+  }) async {
+    if (!mounted) return;
+    final firestore = _firestore;
+    if (firestore == null) return;
+
+    final friends = await FriendService(firestore: firestore)
+        .getFriends(currentUserId);
+    if (!mounted) return;
+
+    if (friends.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('You have no friends yet.')),
+      );
+      return;
+    }
+
+    // Fetch presence docs for all friends in one batch.
+    final presenceDocs = await Future.wait(
+      friends.map((f) =>
+          firestore.collection('presence').doc(f.id).get()),
+    );
+
+    final online = <({String id, String username, String? avatarUrl, String? currentRoomId})>[];
+    for (var i = 0; i < friends.length; i++) {
+      final data = presenceDocs[i].data();
+      if (data == null) continue;
+      final isOnline = data['online'] as bool? ?? false;
+      if (!isOnline) continue;
+      online.add((
+        id: friends[i].id,
+        username: friends[i].username,
+        avatarUrl: friends[i].avatarUrl,
+        currentRoomId: data['roomId'] as String?,
+      ));
+    }
+
+    if (!mounted) return;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetCtx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Online friends',
+                      style:
+                          TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  Text(
+                    '${online.length} online',
+                    style: const TextStyle(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            const Divider(height: 1),
+            if (online.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Text(
+                  'None of your friends are online right now.',
+                  textAlign: TextAlign.center,
+                ),
+              )
+            else
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 360),
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: online.length,
+                  itemBuilder: (ctx, i) {
+                    final f = online[i];
+                    final inThisRoom = f.currentRoomId == roomId;
+                    final inOtherRoom = f.currentRoomId != null &&
+                        f.currentRoomId != roomId;
+                    return ListTile(
+                      leading: CircleAvatar(
+                        backgroundImage: f.avatarUrl != null
+                            ? NetworkImage(f.avatarUrl!)
+                            : null,
+                        child: f.avatarUrl == null
+                            ? Text(
+                                f.username.isNotEmpty
+                                    ? f.username[0].toUpperCase()
+                                    : '?',
+                              )
+                            : null,
+                      ),
+                      title: Text(f.username),
+                      subtitle: inThisRoom
+                          ? const Text('In this room',
+                              style: TextStyle(color: Colors.green))
+                          : inOtherRoom
+                              ? const Text('In another room')
+                              : const Text('Online'),
+                      trailing: inOtherRoom
+                          ? TextButton(
+                              onPressed: () {
+                                Navigator.of(sheetCtx).pop();
+                                context.push('/room/${f.currentRoomId}');
+                              },
+                              child: const Text('Go'),
+                            )
+                          : null,
+                    );
+                  },
+                ),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _startPresenceHeartbeat(String userId) {
     _presenceHeartbeatTimer?.cancel();
     final presenceController = ref.read(roomPresenceControllerProvider);
@@ -2818,6 +2947,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       roomName: roomName,
                     ),
                     icon: const Icon(Icons.group_add_outlined),
+                  ),
+                  // Online friends overlay
+                  IconButton(
+                    tooltip: 'Online friends',
+                    onPressed: () => _showOnlineFriendsSheet(
+                      currentUserId: user.id,
+                      roomId: widget.roomId,
+                    ),
+                    icon: const Icon(Icons.people_outline),
                   ),
                   // Share room link
                   IconButton(

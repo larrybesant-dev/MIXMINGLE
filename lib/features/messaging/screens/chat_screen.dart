@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -25,6 +27,8 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   late TextEditingController _messageController;
   late ScrollController _scrollController;
+  Timer? _typingTimer;
+  bool _isTyping = false;
 
   @override
   void initState() {
@@ -32,6 +36,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     _messageController = TextEditingController();
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
+    _messageController.addListener(_onTextChanged);
 
     // Mark conversation as read
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -40,6 +45,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             userId: widget.userId,
           );
     });
+  }
+
+  void _onTextChanged() {
+    if (_messageController.text.isEmpty) {
+      _clearTyping();
+      return;
+    }
+    if (!_isTyping) {
+      _isTyping = true;
+      ref.read(messagingControllerProvider).updateTypingStatus(
+            conversationId: widget.conversationId,
+            userId: widget.userId,
+            isTyping: true,
+          );
+    }
+    _typingTimer?.cancel();
+    _typingTimer = Timer(const Duration(seconds: 4), _clearTyping);
+  }
+
+  void _clearTyping() {
+    _typingTimer?.cancel();
+    if (_isTyping) {
+      _isTyping = false;
+      ref.read(messagingControllerProvider).updateTypingStatus(
+            conversationId: widget.conversationId,
+            userId: widget.userId,
+            isTyping: false,
+          );
+    }
   }
 
   void _onScroll() {
@@ -55,6 +89,9 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
   @override
   void dispose() {
+    _clearTyping();
+    _typingTimer?.cancel();
+    _messageController.removeListener(_onTextChanged);
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -64,6 +101,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final content = _messageController.text.trim();
     if (content.isEmpty) return;
 
+    _clearTyping();
     _messageController.clear();
 
     await ref.read(messagingControllerProvider).sendMessage(
@@ -242,6 +280,11 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
               ),
             ),
           ),
+          _TypingIndicatorRow(
+            conversationId: widget.conversationId,
+            currentUserId: widget.userId,
+            otherUsername: widget.username,
+          ),
           Padding(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -300,5 +343,99 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     } else {
       return '${dateTime.month}/${dateTime.day}';
     }
+  }
+}
+
+/// Shows "[Name] is typing…" for other participants when their typing heartbeat
+/// is fresh (< 8 s). Uses [typingUsersProvider] which filters stale entries.
+class _TypingIndicatorRow extends ConsumerWidget {
+  const _TypingIndicatorRow({
+    required this.conversationId,
+    required this.currentUserId,
+    required this.otherUsername,
+  });
+
+  final String conversationId;
+  final String currentUserId;
+  final String otherUsername;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final typingAsync = ref.watch(typingUsersProvider(conversationId));
+    return typingAsync.when(
+      data: (ids) {
+        final othersTyping = ids.any((id) => id != currentUserId);
+        if (!othersTyping) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(left: 20, bottom: 2),
+          child: Row(
+            children: [
+              _BouncingDots(),
+              const SizedBox(width: 6),
+              Text(
+                '$otherUsername is typing…',
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Colors.grey),
+              ),
+            ],
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+    );
+  }
+}
+
+class _BouncingDots extends StatefulWidget {
+  @override
+  State<_BouncingDots> createState() => _BouncingDotsState();
+}
+
+class _BouncingDotsState extends State<_BouncingDots>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (context, _) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: List.generate(3, (i) {
+            final offset = ((_ctrl.value * 3) - i).clamp(0.0, 1.0);
+            final dy = -3.0 * (offset < 0.5 ? offset : 1.0 - offset) * 2;
+            return Transform.translate(
+              offset: Offset(0, dy),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                child: CircleAvatar(
+                  radius: 3,
+                  backgroundColor: Colors.grey,
+                ),
+              ),
+            );
+          }),
+        );
+      },
+    );
   }
 }

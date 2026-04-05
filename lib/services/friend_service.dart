@@ -380,4 +380,52 @@ class FriendService {
       'createdAt': FieldValue.serverTimestamp(),
     });
   }
+
+  /// Returns up to [limit] user profiles that are friends-of-friends but are
+  /// not already friends with [userId] and not blocked/muted.
+  /// Scores candidates by how many mutual friends they share.
+  Future<List<UserModel>> getFriendSuggestions(
+    String userId, {
+    int limit = 20,
+  }) async {
+    if (userId.trim().isEmpty) return const [];
+
+    final myFriendIds = (await getFriendIds(userId)).toSet();
+    if (myFriendIds.isEmpty) return const [];
+
+    final excludedIds = await _moderationService.getExcludedUserIds(userId);
+    final excluded = {...excludedIds, userId, ...myFriendIds};
+
+    // Build a mutual-friend count map for candidates.
+    final mutualCount = <String, int>{};
+    for (final friendId in myFriendIds) {
+      final theirFriendIds = await getFriendIds(friendId);
+      for (final candidate in theirFriendIds) {
+        if (excluded.contains(candidate)) continue;
+        mutualCount[candidate] = (mutualCount[candidate] ?? 0) + 1;
+      }
+    }
+    if (mutualCount.isEmpty) return const [];
+
+    // Sort by mutual friend count descending, take top [limit].
+    final sorted = mutualCount.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    final topIds = sorted.take(limit).map((e) => e.key).toList();
+
+    if (topIds.isEmpty) return const [];
+
+    // Batch-fetch profiles (whereIn supports up to 30 per call).
+    final results = <UserModel>[];
+    for (var i = 0; i < topIds.length; i += 30) {
+      final batch = topIds.sublist(i, i + 30 < topIds.length ? i + 30 : topIds.length);
+      final snap = await _firestore
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: batch)
+          .get();
+      results.addAll(
+        snap.docs.map((d) => UserModel.fromJson({'id': d.id, ...d.data()})),
+      );
+    }
+    return results;
+  }
 }

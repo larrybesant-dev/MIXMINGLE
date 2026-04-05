@@ -6,7 +6,7 @@ module.exports = [
     files: ["**/*.js"],
     languageOptions: {
       globals: globals.node,
-      ecmaVersion: 2018,
+      ecmaVersion: 2020,
     },
     rules: {
       "no-restricted-globals": ["error", "name", "length"],
@@ -22,7 +22,7 @@ module.exports = [
         describe: true,
         it: true,
       },
-      ecmaVersion: 2018,
+      ecmaVersion: 2020,
     },
     rules: {},
   },

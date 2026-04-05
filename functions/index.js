@@ -1,5 +1,6 @@
 const {onRequest, onCall, HttpsError} = require("firebase-functions/v2/https");
 const {onDocumentCreated} = require("firebase-functions/v2/firestore");
+const {onSchedule} = require("firebase-functions/v2/scheduler");
 const {onRequest: onRequestV1} = require("firebase-functions/v1/https");
 const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
@@ -1410,6 +1411,126 @@ exports.promoteToBetaTester = onCall(async (request) => {
 
   return { promoted };
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SPEED DATING
+// ─────────────────────────────────────────────────────────────────────────────
+
+const SPEED_DATING_SESSION_SECONDS = 90;
+
+/**
+ * joinSpeedDatingQueue – callable that places the authenticated user in the
+ * speed_dating_queue collection and, if a waiting partner is found, creates
+ * a matched session room in speed_dating_sessions.
+ *
+ * Returns: { matched: boolean, sessionId?: string, partnerId?: string }
+ */
+exports.joinSpeedDatingQueue = onCall(async (request) => {
+  const { auth } = request;
+  if (!auth) throw new HttpsError("unauthenticated", "Sign in first.");
+  const uid = auth.uid;
+
+  // Write/refresh the queue entry
+  const queueRef = db.collection("speed_dating_queue").doc(uid);
+  await queueRef.set({
+    uid,
+    joinedAt: admin.firestore.FieldValue.serverTimestamp(),
+    matched: false,
+  });
+
+  // Look for another waiting user (not self, not already matched)
+  const waiting = await db
+    .collection("speed_dating_queue")
+    .where("matched", "==", false)
+    .where("uid", "!=", uid)
+    .limit(1)
+    .get();
+
+  if (waiting.empty) {
+    return { matched: false };
+  }
+
+  const partnerDoc = waiting.docs[0];
+  const partnerId = partnerDoc.id;
+
+  // Create a session atomically
+  const sessionRef = db.collection("speed_dating_sessions").doc();
+  const expiresAt = admin.firestore.Timestamp.fromMillis(
+    Date.now() + SPEED_DATING_SESSION_SECONDS * 1000,
+  );
+
+  await db.runTransaction(async (tx) => {
+    // Re-read partner queue entry inside the transaction
+    const freshPartner = await tx.get(partnerDoc.ref);
+    if (!freshPartner.exists || freshPartner.data().matched) {
+      // Partner was already matched by a concurrent call — abort
+      throw new HttpsError("aborted", "Partner already matched. Try again.");
+    }
+
+    tx.set(sessionRef, {
+      participantIds: [uid, partnerId],
+      createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      expiresAt,
+      active: true,
+    });
+    tx.update(queueRef, { matched: true, sessionId: sessionRef.id });
+    tx.update(partnerDoc.ref, { matched: true, sessionId: sessionRef.id });
+  });
+
+  return { matched: true, sessionId: sessionRef.id, partnerId };
+});
+
+/**
+ * leaveSpeedDatingQueue – callable that removes the caller from the queue.
+ */
+exports.leaveSpeedDatingQueue = onCall(async (request) => {
+  const { auth } = request;
+  if (!auth) throw new HttpsError("unauthenticated", "Sign in first.");
+  await db.collection("speed_dating_queue").doc(auth.uid).delete();
+  return { ok: true };
+});
+
+/**
+ * cleanupExpiredSpeedDatingSessions – scheduled function that runs every
+ * 5 minutes, marks expired sessions inactive, and removes matched queue
+ * entries older than 10 minutes.
+ */
+exports.cleanupExpiredSpeedDatingSessions = onSchedule(
+  "every 5 minutes",
+  async () => {
+    const now = admin.firestore.Timestamp.now();
+
+    // Deactivate expired sessions
+    const expiredSessions = await db
+      .collection("speed_dating_sessions")
+      .where("active", "==", true)
+      .where("expiresAt", "<=", now)
+      .limit(200)
+      .get();
+
+    const sessionBatch = db.batch();
+    expiredSessions.docs.forEach((doc) => {
+      sessionBatch.update(doc.ref, { active: false });
+    });
+    if (!expiredSessions.empty) await sessionBatch.commit();
+
+    // Remove stale queue entries (matched or joined > 10 min ago)
+    const staleCutoff = admin.firestore.Timestamp.fromMillis(
+      Date.now() - 10 * 60 * 1000,
+    );
+    const staleQueue = await db
+      .collection("speed_dating_queue")
+      .where("joinedAt", "<=", staleCutoff)
+      .limit(200)
+      .get();
+
+    const queueBatch = db.batch();
+    staleQueue.docs.forEach((doc) => {
+      queueBatch.delete(doc.ref);
+    });
+    if (!staleQueue.empty) await queueBatch.commit();
+  },
+);
 
 exports.__testing = {
   createPaymentIntentHandler,

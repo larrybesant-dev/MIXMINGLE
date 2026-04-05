@@ -80,3 +80,16 @@ class SpeedDateDecisionResult {
 
   const SpeedDateDecisionResult({required this.isMatch, this.matchId});
 }
+
+/// Result returned from the server-side matchmaking queue.
+class SpeedDatingQueueResult {
+  final bool matched;
+  final String? sessionId;
+  final String? partnerId;
+
+  const SpeedDatingQueueResult({
+    required this.matched,
+    this.sessionId,
+    this.partnerId,
+  });
+}

@@ -294,7 +294,49 @@ class MessagingController {
         .doc(conversationId)
         .update({'isArchived': true});
   }
+
+  /// Updates the typing heartbeat for [userId] in [conversationId].
+  /// Call with [isTyping: true] on text change and [isTyping: false] on send/blur.
+  Future<void> updateTypingStatus({
+    required String conversationId,
+    required String userId,
+    required bool isTyping,
+  }) async {
+    final ref = _firestore.collection('conversations').doc(conversationId);
+    if (isTyping) {
+      await ref.update({'typingStatus.$userId': FieldValue.serverTimestamp()});
+    } else {
+      await ref.update({'typingStatus.$userId': FieldValue.delete()});
+    }
+  }
 }
+
+// ── Typing status ─────────────────────────────────────────────────────────
+
+/// Emits the set of user IDs that are currently typing in [conversationId].
+final typingUsersProvider =
+    StreamProvider.family<Set<String>, String>((ref, conversationId) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore
+      .collection('conversations')
+      .doc(conversationId)
+      .snapshots()
+      .map((doc) {
+    final raw = doc.data()?['typingStatus'] as Map<String, dynamic>?;
+    if (raw == null) return <String>{};
+    final now = DateTime.now();
+    return raw.entries
+        .where((e) {
+          final ts = e.value;
+          if (ts is Timestamp) {
+            return now.difference(ts.toDate()).inSeconds < 8;
+          }
+          return false;
+        })
+        .map((e) => e.key)
+        .toSet();
+  });
+});
 
 /// Count of conversations that have at least one unread message for the current
 /// user. Derived from the live conversations stream — stays real-time.

@@ -200,10 +200,58 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
               final pendingOutgoingIds = pendingOutgoingIdsAsync.valueOrNull ?? const <String>{};
 
               if (users.isEmpty) {
-                return const FeedEmptyState(
-                  emoji: '🔍',
-                  heading: 'No matches right now',
-                  message: 'Try a different name or email search.',
+                // Show friends-of-friends when there's no active search.
+                final suggestionsAsync = ref.watch(friendSuggestionsProvider);
+                return suggestionsAsync.when(
+                  data: (suggestions) {
+                    if (suggestions.isEmpty) {
+                      return const FeedEmptyState(
+                        emoji: '🔍',
+                        heading: 'No matches right now',
+                        message: 'Try a different name or email search.',
+                      );
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            'Suggested — friends of your friends',
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                          ),
+                        ),
+                        ...suggestions.map(
+                          (user) => _FriendUserTile(
+                            user: user,
+                            actionLabel: pendingOutgoingIds.contains(user.id) ? 'Requested' : 'Add',
+                            actionIcon: pendingOutgoingIds.contains(user.id)
+                                ? Icons.schedule
+                                : Icons.person_add_alt_1,
+                            isBusy: _pendingFriendActions.contains(user.id),
+                            onAction: pendingOutgoingIds.contains(user.id)
+                                ? null
+                                : () async {
+                                    final messenger = ScaffoldMessenger.of(context);
+                                    setState(() => _pendingFriendActions.add(user.id));
+                                    try {
+                                      await friendService.sendFriendRequest(currentUserId, user.id);
+                                      ref.invalidate(friendSuggestionsProvider);
+                                      if (!mounted) return;
+                                      messenger.showSnackBar(
+                                        SnackBar(content: Text('Friend request sent to ${user.username}.')),
+                                      );
+                                    } finally {
+                                      if (mounted) setState(() => _pendingFriendActions.remove(user.id));
+                                    }
+                                  },
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                  loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())),
+                  error: (_, __) => const SizedBox.shrink(),
                 );
               }
 

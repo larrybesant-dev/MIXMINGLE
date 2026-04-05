@@ -1,16 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../services/moderation_service.dart';
 import '../models/speed_dating_models.dart';
 
 class SpeedDatingService {
-  SpeedDatingService({FirebaseFirestore? firestore, ModerationService? moderationService})
-      : _firestore = firestore ?? FirebaseFirestore.instance,
-        _moderationService = moderationService ?? ModerationService(firestore: firestore ?? FirebaseFirestore.instance);
+  SpeedDatingService({
+    FirebaseFirestore? firestore,
+    ModerationService? moderationService,
+    FirebaseFunctions? functions,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _moderationService = moderationService ??
+            ModerationService(
+                firestore: firestore ?? FirebaseFirestore.instance),
+        _functions = functions ?? FirebaseFunctions.instance;
 
   final FirebaseFirestore _firestore;
   final ModerationService _moderationService;
+  final FirebaseFunctions _functions;
   static const Uuid _uuid = Uuid();
 
   Stream<List<SpeedDateCandidate>> candidatesStream({required String currentUserId}) {
@@ -130,4 +138,53 @@ class SpeedDatingService {
   }
 
   String randomSessionId() => _uuid.v4();
+
+  // ── Queue-based matchmaking (server-side) ────────────────────────────────
+
+  /// Enters the server-side matchmaking queue via Cloud Function.
+  /// Returns a [SpeedDatingQueueResult] indicating whether a partner was
+  /// immediately found and the resulting session details.
+  Future<SpeedDatingQueueResult> joinQueue() async {
+    final result = await _functions
+        .httpsCallable('joinSpeedDatingQueue')
+        .call<Map<String, dynamic>>();
+    final data = Map<String, dynamic>.from(result.data as Map);
+    return SpeedDatingQueueResult(
+      matched: data['matched'] as bool? ?? false,
+      sessionId: data['sessionId'] as String?,
+      partnerId: data['partnerId'] as String?,
+    );
+  }
+
+  /// Removes the current user from the matchmaking queue.
+  Future<void> leaveQueue() async {
+    await _functions.httpsCallable('leaveSpeedDatingQueue').call();
+  }
+
+  /// Watches the live queue entry for the current user so the UI can react
+  /// when the server matches them to a partner.
+  Stream<SpeedDatingQueueResult?> watchQueueEntry(String userId) {
+    return _firestore
+        .collection('speed_dating_queue')
+        .doc(userId)
+        .snapshots()
+        .map((doc) {
+      if (!doc.exists) return null;
+      final data = doc.data()!;
+      return SpeedDatingQueueResult(
+        matched: data['matched'] as bool? ?? false,
+        sessionId: data['sessionId'] as String?,
+        partnerId: null,
+      );
+    });
+  }
+
+  /// Watches a specific speed dating session doc (active + expiresAt).
+  Stream<Map<String, dynamic>?> watchSession(String sessionId) {
+    return _firestore
+        .collection('speed_dating_sessions')
+        .doc(sessionId)
+        .snapshots()
+        .map((doc) => doc.exists ? doc.data() : null);
+  }
 }

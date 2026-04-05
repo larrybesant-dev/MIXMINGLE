@@ -115,3 +115,11 @@ final friendPresenceProvider =
     StreamProvider.autoDispose.family<PresenceModel, String>((ref, friendId) {
 	return PresenceService().watchUserPresence(friendId);
 });
+
+/// Friends-of-friends who are not yet friends with the current user.
+/// Sorted by mutual friend count descending.
+final friendSuggestionsProvider = FutureProvider<List<UserModel>>((ref) async {
+  final userId = ref.watch(currentFriendUserIdProvider);
+  if (userId == null) return const [];
+  return ref.watch(friendServiceProvider).getFriendSuggestions(userId, limit: 15);
+});
