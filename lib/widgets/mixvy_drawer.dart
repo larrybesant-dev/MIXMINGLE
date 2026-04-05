@@ -66,6 +66,7 @@ class MixVyDrawer extends ConsumerWidget {
           _navItem(context, icon: Icons.local_fire_department_rounded, title: 'Live Speed Dating', route: '/speed-dating'),
           _navItem(context, icon: Icons.people_alt_rounded, title: 'Friends', route: '/friends'),
           _navItem(context, icon: Icons.person_rounded, title: 'Profile', route: '/profile'),
+          _navItem(context, icon: Icons.verified_user_rounded, title: 'Get Verified', route: '/verification'),
           _navItem(context, icon: Icons.payments_rounded, title: 'Payments', route: '/payments'),
           _navItem(context, icon: Icons.notifications_active_rounded, title: 'Notifications', route: '/notifications', badgeCount: unreadCount),
           _navItem(context, icon: Icons.admin_panel_settings_rounded, title: 'Moderation', route: '/moderation'),

@@ -35,6 +35,12 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
   double _dragOffset = 0;
   bool _isDragging = false;
 
+  // ── Queue-based matchmaking state ─────────────────────────────────────────
+  bool _queueMode = false;
+  bool _queueJoining = false;
+  String? _queueSessionId;
+  StreamSubscription<SpeedDatingQueueResult?>? _queueSub;
+
   @override
   void initState() {
     super.initState();
@@ -45,7 +51,76 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
   void dispose() {
     _timer?.cancel();
     _secondsLeftNotifier.dispose();
+    _queueSub?.cancel();
     super.dispose();
+  }
+
+  // ── Queue Match helpers ───────────────────────────────────────────────────
+
+  Future<void> _enterQueueMode(String uid) async {
+    if (_queueJoining) return;
+    setState(() {
+      _queueMode = true;
+      _queueJoining = true;
+      _queueSessionId = null;
+    });
+
+    try {
+      final result = await _service.joinQueue();
+      if (!mounted) return;
+
+      if (result.matched && result.sessionId != null) {
+        // Immediate match — watch session for roomId
+        _watchSession(result.sessionId!, uid);
+        return;
+      }
+
+      // Not yet matched — watch queue entry for server-side pairing
+      _queueSub?.cancel();
+      _queueSub = _service.watchQueueEntry(uid).listen((entry) {
+        if (!mounted) return;
+        if (entry != null && entry.matched && entry.sessionId != null) {
+          _queueSub?.cancel();
+          _watchSession(entry.sessionId!, uid);
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not join queue: $e')),
+      );
+      setState(() {
+        _queueMode = false;
+        _queueJoining = false;
+      });
+    } finally {
+      if (mounted) setState(() => _queueJoining = false);
+    }
+  }
+
+  void _watchSession(String sessionId, String uid) {
+    setState(() => _queueSessionId = sessionId);
+    _service.watchSession(sessionId).listen((data) {
+      if (!mounted || data == null) return;
+      final roomId = data['roomId'] as String?;
+      if (roomId != null) {
+        context.go('/room/$roomId');
+      }
+    });
+  }
+
+  void _leaveQueueMode() async {
+    _queueSub?.cancel();
+    try {
+      await _service.leaveQueue();
+    } catch (_) {}
+    if (mounted) {
+      setState(() {
+        _queueMode = false;
+        _queueJoining = false;
+        _queueSessionId = null;
+      });
+    }
   }
 
   void _startTimer() {
@@ -303,8 +378,25 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Live Speed Dating')),
-      body: StreamBuilder<List<SpeedDateCandidate>>(
+      appBar: AppBar(
+        title: const Text('Live Speed Dating'),
+        actions: [
+          if (!_queueMode)
+            TextButton.icon(
+              onPressed: () => _enterQueueMode(user.uid),
+              icon: const Icon(Icons.queue, size: 18),
+              label: const Text('Find Match'),
+            ),
+          if (_queueMode)
+            TextButton.icon(
+              onPressed: _leaveQueueMode,
+              icon: const Icon(Icons.cancel_outlined, size: 18),
+              label: const Text('Leave Queue'),
+              style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+            ),
+        ],
+      ),
+      body: _queueMode ? _buildQueueBody(user, theme) : StreamBuilder<List<SpeedDateCandidate>>(
         stream: _service.candidatesStream(currentUserId: user.uid),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
@@ -553,6 +645,57 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildQueueBody(User user, ThemeData theme) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (_queueJoining) ...[
+              const CircularProgressIndicator(),
+              const SizedBox(height: 20),
+              Text('Joining match queue…', style: theme.textTheme.titleMedium),
+            ] else if (_queueSessionId != null) ...[
+              const Text('💘', style: TextStyle(fontSize: 64)),
+              const SizedBox(height: 16),
+              Text(
+                'Match found!',
+                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 8),
+              const Text('Connecting you to a live date room…'),
+              const SizedBox(height: 20),
+              const CircularProgressIndicator(),
+            ] else ...[
+              const Text('🔍', style: TextStyle(fontSize: 64)),
+              const SizedBox(height: 16),
+              Text(
+                'Searching for a match…',
+                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'You\'re in the queue. We\'ll notify you when someone matches with you.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 8),
+              const LinearProgressIndicator(),
+              const SizedBox(height: 24),
+              OutlinedButton.icon(
+                onPressed: _leaveQueueMode,
+                icon: const Icon(Icons.cancel_outlined),
+                label: const Text('Leave Queue'),
+                style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

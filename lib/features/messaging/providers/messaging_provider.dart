@@ -22,6 +22,8 @@ final conversationsStreamProvider =
       .asyncMap((snapshot) async {
     final allConversations = snapshot.docs
         .map((doc) => Conversation.fromJson(doc.data(), doc.id))
+        // Exclude pending (message requests) from the main list.
+        .where((c) => c.status != 'pending')
         .toList();
     // Remove conversations where the other participant is blocked (either direction).
     try {
@@ -36,6 +38,32 @@ final conversationsStreamProvider =
       return allConversations;
     }
   });
+});
+
+// Stream of pending message requests for the current user.
+final requestsStreamProvider =
+    StreamProvider.family<List<Conversation>, String>((ref, userId) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore
+      .collection('conversations')
+      .where('participantIds', arrayContains: userId)
+      .where('status', isEqualTo: 'pending')
+      .orderBy('createdAt', descending: true)
+      .snapshots()
+      .map((snapshot) => snapshot.docs
+          .map((doc) => Conversation.fromJson(doc.data(), doc.id))
+          .toList());
+});
+
+// Stream of a single conversation document (used for read receipt tracking)
+final conversationDocProvider =
+    StreamProvider.family<Conversation?, String>((ref, conversationId) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore
+      .collection('conversations')
+      .doc(conversationId)
+      .snapshots()
+      .map((snap) => snap.exists ? Conversation.fromJson(snap.data()!, snap.id) : null);
 });
 
 // Stream of messages in a conversation
@@ -231,6 +259,7 @@ class MessagingController {
         userId2: Timestamp.fromDate(now),
       },
       'isArchived': false,
+      'status': 'active',
     });
 
     return docRef.id;
@@ -257,6 +286,7 @@ class MessagingController {
       'createdAt': Timestamp.fromDate(now),
       'lastReadAt': lastReadAt,
       'isArchived': false,
+      'status': 'active',
     });
 
     return docRef.id;
@@ -295,6 +325,36 @@ class MessagingController {
         .update({'isArchived': true});
   }
 
+  Future<void> acceptMessageRequest({
+    required String conversationId,
+  }) async {
+    await _firestore
+        .collection('conversations')
+        .doc(conversationId)
+        .update({'status': 'active'});
+  }
+
+  Future<void> toggleReaction({
+    required String conversationId,
+    required String messageId,
+    required String currentUserId,
+    required String emoji,
+  }) async {
+    final docRef = _firestore
+        .collection('conversations')
+        .doc(conversationId)
+        .collection('messages')
+        .doc(messageId)
+        .collection('reactions')
+        .doc(currentUserId);
+    final existing = await docRef.get();
+    if (existing.exists && existing.data()?['emoji'] == emoji) {
+      await docRef.delete();
+    } else {
+      await docRef.set({'emoji': emoji, 'createdAt': FieldValue.serverTimestamp()});
+    }
+  }
+
   /// Updates the typing heartbeat for [userId] in [conversationId].
   /// Call with [isTyping: true] on text change and [isTyping: false] on send/blur.
   Future<void> updateTypingStatus({
@@ -312,6 +372,27 @@ class MessagingController {
 }
 
 // ── Typing status ─────────────────────────────────────────────────────────
+
+/// Reactions on a message keyed by userId → emoji string.
+final messageReactionsProvider = StreamProvider.family<Map<String, String>,
+    ({String conversationId, String messageId})>((ref, params) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore
+      .collection('conversations')
+      .doc(params.conversationId)
+      .collection('messages')
+      .doc(params.messageId)
+      .collection('reactions')
+      .snapshots()
+      .map((snap) {
+    final result = <String, String>{};
+    for (final doc in snap.docs) {
+      final emoji = doc.data()['emoji'] as String?;
+      if (emoji != null) result[doc.id] = emoji;
+    }
+    return result;
+  });
+});
 
 /// Emits the set of user IDs that are currently typing in [conversationId].
 final typingUsersProvider =

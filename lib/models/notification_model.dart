@@ -43,6 +43,7 @@ class NotificationModel {
   final String type;
   final String content;
   final String? roomId;
+  final String? actorId;
   final bool isRead;
   final DateTime createdAt;
 
@@ -52,6 +53,7 @@ class NotificationModel {
     required this.type,
     required this.content,
     this.roomId,
+    this.actorId,
     required this.isRead,
     required this.createdAt,
   });
@@ -65,6 +67,7 @@ class NotificationModel {
       type: _asString(json['type'], fallback: 'general'),
       content: content.isEmpty ? _asString(json['body']) : content,
       roomId: _asNullableString(json['roomId']),
+      actorId: _asNullableString(json['actorId']),
       isRead: _asBool(json['isRead']),
       createdAt: createdAt is Timestamp
           ? createdAt.toDate()

@@ -126,6 +126,16 @@ class SettingsScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             Card(
               child: ListTile(
+                leading: const Icon(Icons.verified_user_outlined),
+                title: const Text('Account Verification'),
+                subtitle: const Text('Request a verified badge for your profile.'),
+                trailing: const Icon(Icons.chevron_right),
+                onTap: () => context.go('/verification'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: ListTile(
                 leading: const Icon(Icons.manage_accounts_outlined),
                 title: const Text('Account Center'),
                 subtitle: const Text('Email verification, password reset, and account deletion.'),

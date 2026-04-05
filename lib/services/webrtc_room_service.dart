@@ -44,15 +44,25 @@ import 'rtc_room_service.dart';
 ///   /viewer_ice/{docId}   { candidate, sdpMid, sdpMLineIndex }
 ///   /broadcaster_ice/{docId}  { … }
 /// ```
+/// Maximum number of simultaneous inbound P2P peer connections.
+/// A full WebRTC mesh is O(N²); beyond this ceiling the viewer simply
+/// won't receive streams from additional broadcasters rather than
+/// opening unbounded connections and stalling the browser.
+/// Raise this once an SFU (mediasoup / Livekit) replaces the mesh.
+const int _kMaxMeshPeers = 6;
+
 class WebRtcRoomService implements RtcRoomService {
   WebRtcRoomService({
     required FirebaseFirestore firestore,
     required String localUserId,
+    int maxMeshPeers = _kMaxMeshPeers,
   })  : _firestore = firestore,
-        _localUserId = localUserId;
+        _localUserId = localUserId,
+        _maxMeshPeers = maxMeshPeers;
 
   final FirebaseFirestore _firestore;
   final String _localUserId;
+  final int _maxMeshPeers;
 
   // ──────────────────────────────────────────────────────────────────────────
   // State
@@ -486,6 +496,13 @@ class WebRtcRoomService implements RtcRoomService {
       final isBroadcasting = data?['isBroadcasting'] as bool? ?? false;
       if (isBroadcasting) {
         if (!_peers.containsKey(remoteBroadcasterId)) {
+          if (_peers.length >= _maxMeshPeers) {
+            _log(
+              'mesh cap reached ($_maxMeshPeers peers) — skipping '
+              'connection to broadcaster=$remoteBroadcasterId',
+            );
+            continue;
+          }
           _uidToUserId[remoteUid] = remoteBroadcasterId;
           _userIdToUid[remoteBroadcasterId] = remoteUid;
           _createViewerConnection(remoteBroadcasterId, remoteUid);

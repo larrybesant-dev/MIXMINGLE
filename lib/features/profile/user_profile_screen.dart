@@ -9,21 +9,25 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../widgets/follow_button.dart';
 import '../../widgets/gift_picker_sheet.dart';
+import '../../features/feed/models/post_model.dart';
+import '../../features/feed/widgets/post_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class UserProfileScreen extends StatefulWidget {
+class UserProfileScreen extends ConsumerStatefulWidget {
   final String userId;
 
   const UserProfileScreen({super.key, required this.userId});
 
   @override
-  State<UserProfileScreen> createState() => _UserProfileScreenState();
+  ConsumerState<UserProfileScreen> createState() => _UserProfileScreenState();
 }
 
-class _UserProfileScreenState extends State<UserProfileScreen> {
+class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
+    with SingleTickerProviderStateMixin {
   final ModerationService _moderationService = ModerationService();
   final FollowService _followService = FollowService();
   late Future<Map<String, dynamic>> _profileFuture;
+  late TabController _tabController;
 
   String? _stringOrNull(dynamic value) {
     if (value == null) return null;
@@ -74,6 +78,13 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   void initState() {
     super.initState();
     _profileFuture = _loadProfile();
+    _tabController = TabController(length: 2, vsync: this);
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
   }
 
   @override
@@ -249,10 +260,23 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
-      body: FutureBuilder<Map<String, dynamic>>(
-        future: _profileFuture,
-        builder: (context, snapshot) {
+      appBar: AppBar(
+        title: const Text('Profile'),
+        bottom: TabBar(
+          controller: _tabController,
+          tabs: const [
+            Tab(text: 'About'),
+            Tab(text: 'Posts'),
+          ],
+        ),
+      ),
+      body: TabBarView(
+        controller: _tabController,
+        children: [
+          // ── About tab ──────────────────────────────────────────────────
+          FutureBuilder<Map<String, dynamic>>(
+            future: _profileFuture,
+            builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -586,6 +610,56 @@ class _UserProfileScreenState extends State<UserProfileScreen> {
           );
         },
       ),
+          // ── Posts tab ──────────────────────────────────────────────────
+          _UserPostsTab(userId: widget.userId),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Posts tab — streams the profile user's posts from Firestore
+// ---------------------------------------------------------------------------
+class _UserPostsTab extends ConsumerWidget {
+  final String userId;
+  const _UserPostsTab({required this.userId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final viewerId = FirebaseAuth.instance.currentUser?.uid ?? '';
+
+    return StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+      stream: FirebaseFirestore.instance
+          .collection('posts')
+          .where('authorId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .limit(30)
+          .snapshots(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+        final docs = snapshot.data?.docs ?? [];
+        if (docs.isEmpty) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(32),
+              child: Text('No posts yet.', textAlign: TextAlign.center),
+            ),
+          );
+        }
+        final posts = docs.map((d) => PostModel.fromDoc(d.id, d.data())).toList();
+        return ListView.separated(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: posts.length,
+          separatorBuilder: (_, _) => const Divider(height: 1),
+          itemBuilder: (ctx, i) => PostCard(post: posts[i], currentUserId: viewerId),
+        );
+      },
     );
   }
 }

@@ -41,7 +41,7 @@ import '../../presentation/providers/wallet_provider.dart';
 import '../../services/analytics_service.dart';
 import '../../services/agora_service.dart';
 import '../../services/rtc_room_service.dart';
-import '../../services/webrtc_room_service.dart';
+import '../../services/webrtc_room_service_shim.dart';
 import '../../services/follow_service.dart';
 import '../../services/moderation_service.dart';
 import '../../services/friend_service.dart';

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/groups_provider.dart';
+import '../../feed/models/post_model.dart';
+import '../../feed/widgets/post_card.dart';
 
 class GroupDetailsScreen extends ConsumerWidget {
   final String groupId;
@@ -84,61 +86,18 @@ class GroupDetailsScreen extends ConsumerWidget {
                       itemCount: posts.length,
                       itemBuilder: (context, index) {
                         final post = posts[index];
-                        return Padding(
-                          padding: const EdgeInsets.all(8),
-                          child: Card(
-                            child: Padding(
-                              padding: const EdgeInsets.all(12),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      CircleAvatar(
-                                        child: Text(
-                                          (post.authorName)[0].toUpperCase(),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              post.authorName,
-                                              style: const TextStyle(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Text(
-                                              _formatTime(post.createdAt),
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(post.content),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.favorite_border,
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text('${post.likeCount} likes'),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
+                        return PostCard(
+                          post: PostModel(
+                            id: post.id,
+                            userId: post.authorId,
+                            text: post.content,
+                            authorName: post.authorName,
+                            authorAvatarUrl: post.authorAvatarUrl,
+                            likeCount: post.likeCount,
+                            likedBy: post.likedBy,
+                            createdAt: post.createdAt,
                           ),
+                          currentUserId: userId,
                         );
                       },
                     );
@@ -157,18 +116,5 @@ class GroupDetailsScreen extends ConsumerWidget {
     );
   }
 
-  String _formatTime(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return dateTime.toString().substring(0, 10);
-    }
-  }
 }
+

@@ -87,6 +87,7 @@ class Conversation {
   final DateTime createdAt;
   final Map<String, DateTime> lastReadAt; // {userId: lastReadTime}
   final bool isArchived;
+  final String status; // 'active' | 'pending'
 
   const Conversation({
     required this.id,
@@ -102,6 +103,7 @@ class Conversation {
     required this.createdAt,
     this.lastReadAt = const {},
     this.isArchived = false,
+    this.status = 'active',
   });
 
   factory Conversation.fromJson(Map<String, dynamic> json, String docId) {
@@ -121,6 +123,7 @@ class Conversation {
       createdAt: _parseDateTime(json['createdAt']),
       lastReadAt: _parseLastReadAt(json['lastReadAt']),
       isArchived: _asBool(json['isArchived']),
+      status: _asString(json['status'], fallback: 'active'),
     );
   }
 
@@ -154,6 +157,7 @@ class Conversation {
         (key, value) => MapEntry(key, Timestamp.fromDate(value)),
       ),
       'isArchived': isArchived,
+      'status': status,
     };
   }
 

@@ -1,8 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/search_provider.dart';
+import '../../feed/models/post_model.dart';
+import '../../feed/widgets/post_card.dart';
+import '../../follow/providers/follow_provider.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -163,6 +167,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ],
                 ),
                 subtitle: Text('${user.followerCount} followers'),
+                trailing: _FollowButton(targetUserId: user.id),
                 onTap: () => context.push('/profile/${user.id}'),
               );
             },
@@ -183,23 +188,18 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             separatorBuilder: (_, _) => const Divider(height: 1),
             itemBuilder: (context, index) {
               final post = posts[index];
-              return ListTile(
-                leading: CircleAvatar(
-                  backgroundImage: post.authorAvatarUrl != null
-                      ? CachedNetworkImageProvider(post.authorAvatarUrl!)
-                      : null,
-                  child: post.authorAvatarUrl == null
-                      ? Text(post.authorName[0].toUpperCase())
-                      : null,
+              final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+              return PostCard(
+                post: PostModel(
+                  id: post.id,
+                  userId: post.authorId,
+                  text: post.content,
+                  authorName: post.authorName,
+                  authorAvatarUrl: post.authorAvatarUrl,
+                  likeCount: post.likeCount,
+                  createdAt: post.createdAt,
                 ),
-                title: Text(post.authorName),
-                subtitle: Text(
-                  post.content,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: Text('${post.likeCount} likes'),
-                onTap: () => context.push('/profile/${post.authorId}'),
+                currentUserId: uid,
               );
             },
           );
@@ -235,5 +235,59 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         error: (error, _) => Center(child: Text('Error: $error')),
       );
     }
+  }
+}
+
+class _FollowButton extends ConsumerStatefulWidget {
+  final String targetUserId;
+  const _FollowButton({required this.targetUserId});
+
+  @override
+  ConsumerState<_FollowButton> createState() => _FollowButtonState();
+}
+
+class _FollowButtonState extends ConsumerState<_FollowButton> {
+  bool? _optimisticFollowing;
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (currentUid.isEmpty || currentUid == widget.targetUserId) {
+      return const SizedBox.shrink();
+    }
+
+    final isFollowingAsync = ref.watch(
+      isFollowingProvider((currentUserId: currentUid, targetUserId: widget.targetUserId)),
+    );
+
+    final isFollowing = _optimisticFollowing ?? isFollowingAsync.valueOrNull ?? false;
+
+    return TextButton(
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        minimumSize: const Size(72, 32),
+      ),
+      onPressed: () async {
+        setState(() => _optimisticFollowing = !isFollowing);
+        final controller = ref.read(followControllerProvider);
+        try {
+          if (isFollowing) {
+            await controller.unfollowUser(
+              currentUserId: currentUid,
+              targetUserId: widget.targetUserId,
+            );
+          } else {
+            await controller.followUser(
+              currentUserId: currentUid,
+              targetUserId: widget.targetUserId,
+              targetUsername: '',
+            );
+          }
+        } catch (_) {
+          if (mounted) setState(() => _optimisticFollowing = isFollowing);
+        }
+      },
+      child: Text(isFollowing ? 'Following' : 'Follow'),
+    );
   }
 }

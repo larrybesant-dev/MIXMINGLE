@@ -32,6 +32,7 @@ import 'package:mixvy/features/follow/screens/follow_screens.dart';
 import 'package:mixvy/features/posts/screens/create_post_screen.dart';
 import 'package:mixvy/features/posts/screens/post_comments_screen.dart';
 import 'package:mixvy/features/stories/screens/create_story_screen.dart';
+import 'package:mixvy/features/stories/screens/story_viewer_screen.dart';
 import 'package:mixvy/features/groups/screens/groups_screen.dart';
 import 'package:mixvy/features/groups/screens/create_group_screen.dart';
 import 'package:mixvy/features/groups/screens/group_details_screen.dart';
@@ -40,6 +41,7 @@ import 'package:mixvy/presentation/screens/not_found_screen.dart';
 import '../features/messaging/screens/whisper_popout_screen.dart';
 import '../features/room/screens/cam_popout_screen.dart';
 import '../features/feed/screens/room_browser_screen.dart';
+import '../features/verification/screens/verification_screen.dart';
 
 import '../shared/widgets/app_shell.dart';
 import 'package:mixvy/features/auth/screens/login_screen.dart';
@@ -302,6 +304,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (context, state) => const SettingsScreen(),
           ),
           GoRoute(
+            path: '/verification',
+            builder: (context, state) => const VerificationScreen(),
+          ),
+          GoRoute(
             path: '/account',
             builder: (context, state) => const AccountCenterScreen(),
           ),
@@ -410,6 +416,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                 username: user?.username ?? 'User',
                 avatarUrl: user?.avatarUrl,
               );
+            },
+          ),
+          GoRoute(
+            path: '/stories/:userId',
+            builder: (context, state) {
+              final userId = state.pathParameters['userId']!;
+              return StoryViewerScreen(userId: userId);
             },
           ),
           GoRoute(

@@ -19,6 +19,19 @@ final postsStreamProvider = StreamProvider<List<PostModel>>((ref) {
   return ref.read(feedRepositoryProvider).postsStream();
 });
 
+final userPostsStreamProvider =
+    StreamProvider.family<List<PostModel>, String>((ref, userId) {
+  final firestore = ref.watch(firestoreProvider);
+  return firestore
+      .collection('posts')
+      .where('authorId', isEqualTo: userId)
+      .orderBy('createdAt', descending: true)
+      .limit(30)
+      .snapshots()
+      .map((snap) =>
+          snap.docs.map((d) => PostModel.fromDoc(d.id, d.data())).toList());
+});
+
 final roomsStreamProvider = StreamProvider<List<RoomModel>>((ref) {
   return ref.read(roomServiceProvider).watchLiveRooms(limit: 50);
 });

@@ -1,27 +1,44 @@
 import 'dart:async';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../controllers/feed_controller.dart';
-// import '../../../models/room_model.dart'; // Unused import
-// import '../../../models/user.dart'; // Unused import
+import '../models/post_model.dart';
+import '../providers/following_feed_provider.dart';
+import '../widgets/post_card.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/live_room_card.dart';
 import '../widgets/trending_user_card.dart';
 import '../widgets/feed_empty_state.dart';
 import '../widgets/feed_loading_shimmer.dart';
+import '../../stories/widgets/stories_row.dart';
 
 class DiscoveryFeedScreen extends ConsumerWidget {
   const DiscoveryFeedScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Discovery Feed'),
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Discovery Feed'),
+          backgroundColor: Theme.of(context).colorScheme.surface,
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Discover'),
+              Tab(text: 'Following'),
+            ],
+          ),
+        ),
+        body: const TabBarView(
+          children: [
+            DiscoveryFeedContent(),
+            _FollowingFeedTab(),
+          ],
+        ),
         backgroundColor: Theme.of(context).colorScheme.surface,
       ),
-      body: const DiscoveryFeedContent(),
-      backgroundColor: Theme.of(context).colorScheme.surface,
     );
   }
 }
@@ -122,6 +139,9 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
+              // Stories row — always visible at top
+              const StoriesRow(),
+              const SizedBox(height: 8),
               Card(
                 child: Padding(
                   padding: const EdgeInsets.all(12),
@@ -284,6 +304,56 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
     );
   }
   
+}
+
+class _FollowingFeedTab extends ConsumerWidget {
+  const _FollowingFeedTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      return const Center(child: Text('Sign in to see your following feed.'));
+    }
+
+    final feedAsync = ref.watch(followingFeedProvider(uid));
+
+    return feedAsync.when(
+      loading: () => const FeedLoadingShimmer(),
+      error: (e, _) => Center(child: Text('Error: $e')),
+      data: (maps) {
+        if (maps.isEmpty) {
+          return ListView(
+            padding: const EdgeInsets.all(24),
+            children: [
+              const FeedEmptyState(message: 'No posts yet from people you follow.'),
+              const SizedBox(height: 12),
+              Center(
+                child: FilledButton.icon(
+                  onPressed: () => context.go('/search'),
+                  icon: const Icon(Icons.person_search),
+                  label: const Text('Find people to follow'),
+                ),
+              ),
+            ],
+          );
+        }
+        final posts = maps.map((m) {
+          final id = m['id'] as String? ?? '';
+          return PostModel.fromDoc(id, m);
+        }).toList();
+        return ListView.separated(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          itemCount: posts.length,
+          separatorBuilder: (_, _) => const Divider(height: 1),
+          itemBuilder: (context, i) => PostCard(
+            post: posts[i],
+            currentUserId: uid,
+          ),
+        );
+      },
+    );
+  }
 }
 
 class _RoomCountdown extends StatefulWidget {

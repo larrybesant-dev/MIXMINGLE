@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../feed/models/post_model.dart';
-import '../../feed/providers/feed_providers.dart';
 import '../../feed/widgets/post_card.dart';
 
 // ── Providers ────────────────────────────────────────────────────────────────
@@ -159,7 +158,7 @@ class _PostCommentsScreenState extends ConsumerState<PostCommentsScreen> {
                     currentUserId: currentUser?.uid ?? '',
                   ),
             loading: () => const LinearProgressIndicator(),
-            error: (_, __) => const SizedBox.shrink(),
+            error: (_, _) => const SizedBox.shrink(),
           ),
           const Divider(height: 1),
           // Comment list

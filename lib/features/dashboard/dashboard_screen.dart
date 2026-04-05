@@ -4,11 +4,11 @@ import '../../shared/widgets/top_app_bar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../feed/providers/feed_providers.dart';
-import '../feed/models/post_model.dart';
 import '../feed/widgets/post_card.dart';
 import '../profile/profile_completion.dart';
 import '../profile/profile_controller.dart';
 import '../../presentation/providers/user_provider.dart';
+import '../stories/widgets/stories_row.dart';
 
 import '../../models/room_model.dart';
 import '../feed/models/event_model.dart';
@@ -29,11 +29,18 @@ class DashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: const TopAppBar(title: 'MixVy'),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () => _showCreateMenu(context),
+        tooltip: 'Create',
+        child: const Icon(Icons.add),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            const StoriesRow(),
+            const SizedBox(height: 12),
             if (setupItems.isNotEmpty)
               _profileNudgeCard(
                 context: context,
@@ -91,6 +98,40 @@ class DashboardScreen extends ConsumerWidget {
     );
   }
 
+
+  void _showCreateMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => Wrap(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.article_outlined),
+            title: const Text('New Post'),
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/create-post');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.auto_stories_outlined),
+            title: const Text('New Story'),
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/create-story');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.meeting_room_outlined),
+            title: const Text('Browse Rooms'),
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/rooms');
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
     Widget _quickActions(BuildContext context) {
       return Wrap(

@@ -251,7 +251,7 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
                     );
                   },
                   loading: () => const Center(child: Padding(padding: EdgeInsets.all(16), child: CircularProgressIndicator())),
-                  error: (_, __) => const SizedBox.shrink(),
+                  error: (_, _) => const SizedBox.shrink(),
                 );
               }
 

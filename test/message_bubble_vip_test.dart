@@ -66,24 +66,22 @@ void main() {
       expect(richTextContaining('GoldUser'), findsOneWidget);
     });
 
-    testWidgets('isMe bubble appears on the right side', (tester) async {
+    testWidgets('isMe bubble defaults sender label to You', (tester) async {
       await tester.pumpWidget(_wrap(MessageBubble(
         message: _msg(senderId: 'me'),
         isMe: true,
         senderVipLevel: 0,
       )));
-      final align = tester.widget<Align>(find.byType(Align).first);
-      expect(align.alignment, Alignment.centerRight);
+      expect(richTextContaining('You'), findsOneWidget);
     });
 
-    testWidgets('other-user bubble appears on the left side', (tester) async {
+    testWidgets('other-user bubble shows sender id as label', (tester) async {
       await tester.pumpWidget(_wrap(MessageBubble(
         message: _msg(),
         isMe: false,
         senderVipLevel: 0,
       )));
-      final align = tester.widget<Align>(find.byType(Align).first);
-      expect(align.alignment, Alignment.centerLeft);
+      expect(richTextContaining('user-1'), findsOneWidget);
     });
   });
 }

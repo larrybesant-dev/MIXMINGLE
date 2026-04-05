@@ -1575,6 +1575,33 @@ exports.cleanupExpiredSpeedDatingSessions = onSchedule(
   },
 );
 
+/**
+ * cleanupExpiredStories – daily scheduled function that hard-deletes story
+ * documents in users/{userId}/stories where expiresAt has passed.
+ * Stories are 24-hour ephemeral content, so we purge them server-side to
+ * keep Firestore tidy and billing low.
+ */
+exports.cleanupExpiredStories = onSchedule("every 24 hours", async () => {
+  const now = admin.firestore.Timestamp.now();
+
+  // collectionGroup query across all users' stories sub-collections
+  const expired = await db
+    .collectionGroup("stories")
+    .where("expiresAt", "<=", now)
+    .where("isDeleted", "==", false)
+    .limit(500)
+    .get();
+
+  if (expired.empty) return;
+
+  // Batch deletes (max 500 per commit)
+  const batch = db.batch();
+  expired.docs.forEach((doc) => batch.delete(doc.ref));
+  await batch.commit();
+
+  logger.info(`cleanupExpiredStories: deleted ${expired.size} expired stories`);
+});
+
 exports.__testing = {
   createPaymentIntentHandler,
   recordStripePaymentSuccessHandler,

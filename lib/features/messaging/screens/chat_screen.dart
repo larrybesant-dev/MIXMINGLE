@@ -202,6 +202,17 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                     final message =
                         allMessages[index - (paginatedState.hasMore ? 1 : 0)];
                     final isOwn = message.senderId == widget.userId;
+                    final convAsync = ref.watch(conversationDocProvider(widget.conversationId));
+                    final conversation = convAsync.valueOrNull;
+                    // Determine if the other participant has read past this message
+                    bool isReadByOther = false;
+                    if (isOwn && conversation != null) {
+                      final otherIds = conversation.participantIds.where((id) => id != widget.userId);
+                      isReadByOther = otherIds.any((id) {
+                        final readAt = conversation.lastReadAt[id];
+                        return readAt != null && !readAt.isBefore(message.createdAt);
+                      });
+                    }
 
                     if (message.isDeleted) {
                       return Padding(
@@ -224,48 +235,73 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
                         crossAxisAlignment:
                             isOwn ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                         children: [
-                          Container(
-                            constraints: BoxConstraints(
-                              maxWidth: MediaQuery.of(context).size.width * 0.75,
+                          GestureDetector(
+                            onLongPress: () => _showReactionPicker(
+                              context,
+                              ref,
+                              message.id,
                             ),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color: isOwn
-                                  ? Theme.of(context).colorScheme.primary
-                                  : Theme.of(context).colorScheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                if (!isOwn)
+                            child: Container(
+                              constraints: BoxConstraints(
+                                maxWidth: MediaQuery.of(context).size.width * 0.75,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isOwn
+                                    ? Theme.of(context).colorScheme.primary
+                                    : Theme.of(context).colorScheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  if (!isOwn)
+                                    Text(
+                                      message.senderName,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  if (!isOwn) const SizedBox(height: 4),
                                   Text(
-                                    message.senderName,
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
+                                    message.content,
+                                    style: TextStyle(
+                                      color: isOwn ? Colors.white : Colors.black,
                                     ),
                                   ),
-                                if (!isOwn) const SizedBox(height: 4),
-                                Text(
-                                  message.content,
-                                  style: TextStyle(
-                                    color: isOwn ? Colors.white : Colors.black,
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
+                          ),
+                          _ReactionRow(
+                            conversationId: widget.conversationId,
+                            messageId: message.id,
+                            currentUserId: widget.userId,
                           ),
                           Padding(
                             padding: const EdgeInsets.only(top: 4, left: 8, right: 8),
-                            child: Text(
-                              _formatTime(message.createdAt),
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: Colors.grey,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _formatTime(message.createdAt),
+                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                        color: Colors.grey,
+                                      ),
+                                ),
+                                if (isOwn) ...[
+                                  const SizedBox(width: 4),
+                                  Icon(
+                                    isReadByOther ? Icons.done_all : Icons.done,
+                                    size: 14,
+                                    color: isReadByOther ? Colors.blue : Colors.grey,
                                   ),
+                                ],
+                              ],
                             ),
                           ),
                         ],
@@ -344,6 +380,35 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
       return '${dateTime.month}/${dateTime.day}';
     }
   }
+
+  void _showReactionPicker(BuildContext context, WidgetRef ref, String messageId) {
+    const emojis = ['❤️', '😂', '😮', '😢', '👍', '👎'];
+    showModalBottomSheet<void>(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: emojis.map((emoji) {
+              return GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                  ref.read(messagingControllerProvider).toggleReaction(
+                        conversationId: widget.conversationId,
+                        messageId: messageId,
+                        currentUserId: widget.userId,
+                        emoji: emoji,
+                      );
+                },
+                child: Text(emoji, style: const TextStyle(fontSize: 32)),
+              );
+            }).toList(growable: false),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Shows "[Name] is typing…" for other participants when their typing heartbeat
@@ -384,7 +449,7 @@ class _TypingIndicatorRow extends ConsumerWidget {
         );
       },
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }
@@ -436,6 +501,75 @@ class _BouncingDotsState extends State<_BouncingDots>
           }),
         );
       },
+    );
+  }
+}
+
+/// Displays emoji reactions for a single message. Tapping your own reaction
+/// toggles it off; tapping another reaction adds yours.
+class _ReactionRow extends ConsumerWidget {
+  const _ReactionRow({
+    required this.conversationId,
+    required this.messageId,
+    required this.currentUserId,
+  });
+
+  final String conversationId;
+  final String messageId;
+  final String currentUserId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reactionsAsync = ref.watch(
+      messageReactionsProvider((
+        conversationId: conversationId,
+        messageId: messageId,
+      )),
+    );
+    return reactionsAsync.when(
+      data: (reactions) {
+        if (reactions.isEmpty) return const SizedBox.shrink();
+        // Aggregate: emoji → count
+        final counts = <String, int>{};
+        for (final emoji in reactions.values) {
+          counts[emoji] = (counts[emoji] ?? 0) + 1;
+        }
+        return Padding(
+          padding: const EdgeInsets.only(top: 2, left: 4, right: 4),
+          child: Wrap(
+            spacing: 4,
+            children: counts.entries.map((e) {
+              final myReaction = reactions[currentUserId] == e.key;
+              return GestureDetector(
+                onTap: () => ref.read(messagingControllerProvider).toggleReaction(
+                      conversationId: conversationId,
+                      messageId: messageId,
+                      currentUserId: currentUserId,
+                      emoji: e.key,
+                    ),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: myReaction
+                        ? Theme.of(context).colorScheme.primaryContainer
+                        : Theme.of(context).colorScheme.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(999),
+                    border: myReaction
+                        ? Border.all(
+                            color: Theme.of(context).colorScheme.primary,
+                            width: 1,
+                          )
+                        : null,
+                  ),
+                  child: Text('${e.key} ${e.value}', style: const TextStyle(fontSize: 12)),
+                ),
+              );
+            }).toList(growable: false),
+          ),
+        );
+      },
+      loading: () => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
     );
   }
 }

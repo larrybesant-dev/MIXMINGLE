@@ -25,9 +25,73 @@ class NotificationsScreen extends ConsumerWidget {
       }
     }
 
-    final roomId = notification.roomId?.trim();
-    if (notification.type == 'live_room_invite' && roomId != null && roomId.isNotEmpty && context.mounted) {
-      context.go('/room/$roomId');
+    if (!context.mounted) return;
+
+    final actorId = notification.actorId?.trim() ?? '';
+    final roomId = notification.roomId?.trim() ?? '';
+
+    switch (notification.type) {
+      case 'live_room_invite':
+        if (roomId.isNotEmpty) context.go('/room/$roomId');
+      case 'follow':
+      case 'friend_accept':
+      case 'friend_favorite':
+        if (actorId.isNotEmpty) context.go('/profile/$actorId');
+      case 'friend_request':
+        context.go('/friends');
+      case 'speed_dating_match':
+        context.go('/speed-dating');
+      default:
+        if (actorId.isNotEmpty) context.go('/profile/$actorId');
+    }
+  }
+
+  IconData _iconForType(String type) {
+    switch (type) {
+      case 'follow':
+        return Icons.person_add_rounded;
+      case 'friend_request':
+        return Icons.people_rounded;
+      case 'friend_accept':
+        return Icons.handshake_rounded;
+      case 'friend_favorite':
+        return Icons.star_rounded;
+      case 'live_room_invite':
+        return Icons.meeting_room_rounded;
+      case 'speed_dating_match':
+        return Icons.favorite_rounded;
+      case 'gift':
+        return Icons.card_giftcard_rounded;
+      case 'like':
+        return Icons.thumb_up_rounded;
+      case 'comment':
+        return Icons.comment_rounded;
+      default:
+        return Icons.notifications_rounded;
+    }
+  }
+
+  Color _colorForType(String type, BuildContext context) {
+    switch (type) {
+      case 'follow':
+        return Colors.blue;
+      case 'friend_request':
+      case 'friend_favorite':
+        return Theme.of(context).colorScheme.secondary;
+      case 'friend_accept':
+        return Colors.green;
+      case 'live_room_invite':
+        return Colors.teal;
+      case 'speed_dating_match':
+        return Colors.pink;
+      case 'gift':
+        return Colors.orange;
+      case 'like':
+        return Colors.redAccent;
+      case 'comment':
+        return Colors.indigo;
+      default:
+        return Theme.of(context).colorScheme.primary;
     }
   }
 
@@ -94,9 +158,17 @@ class NotificationsScreen extends ConsumerWidget {
                       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: ListTile(
                         onTap: () => _handleNotificationTap(context, userId, notification, service),
-                        leading: Icon(
-                          notification.isRead ? Icons.notifications_none : Icons.notifications_active,
-                          color: notification.isRead ? Colors.grey : Theme.of(context).colorScheme.primary,
+                        leading: CircleAvatar(
+                          backgroundColor: notification.isRead
+                              ? Colors.grey.shade200
+                              : _colorForType(notification.type, context).withValues(alpha: 0.15),
+                          child: Icon(
+                            _iconForType(notification.type),
+                            color: notification.isRead
+                                ? Colors.grey
+                                : _colorForType(notification.type, context),
+                            size: 22,
+                          ),
                         ),
                         title: Text(notification.type.replaceAll('_', ' ')),
                         subtitle: Text(notification.content),

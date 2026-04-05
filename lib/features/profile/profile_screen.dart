@@ -20,6 +20,9 @@ import 'package:url_launcher/url_launcher.dart';
 import '../auth/controllers/auth_controller.dart';
 import 'profile_completion.dart';
 import 'profile_controller.dart';
+import '../follow/providers/follow_provider.dart';
+import '../feed/providers/feed_providers.dart';
+import '../feed/widgets/post_card.dart';
 
 class ProfileScreen extends ConsumerWidget {
   final String? userId;
@@ -765,6 +768,45 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
                   isUploadingVideo: _isUploadingVideo,
                 ),
                 const SizedBox(height: 18),
+                if (state.userId != null) ...[
+                  _SectionCard(
+                    title: 'My Posts',
+                    subtitle: 'Everything you have shared.',
+                    child: Consumer(
+                      builder: (context, ref, _) {
+                        final postsAsync =
+                            ref.watch(userPostsStreamProvider(state.userId!));
+                        return postsAsync.when(
+                          loading: () => const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                          error: (_, _) => const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: Text('Could not load posts.'),
+                          ),
+                          data: (posts) => posts.isEmpty
+                              ? const Padding(
+                                  padding: EdgeInsets.symmetric(vertical: 12),
+                                  child: Text(
+                                    'No posts yet. Share something!',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                )
+                              : Column(
+                                  children: posts
+                                      .map((p) => PostCard(
+                                            post: p,
+                                            currentUserId: state.userId!,
+                                          ))
+                                      .toList(growable: false),
+                                ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 18),
+                ],
                 _SectionCard(
                   title: 'Guided setup',
                   subtitle: guidedItems.isEmpty
@@ -1296,12 +1338,36 @@ class _HeroCard extends StatelessWidget {
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(child: _StatTile(label: 'Followers', value: '${state.followers.length}')),
-              const SizedBox(width: 8),
-              Expanded(child: _StatTile(label: 'Photos', value: '${state.galleryUrls.length}')),
-            ],
+          Consumer(
+            builder: (context, ref, _) {
+              final counts = state.userId != null
+                  ? ref.watch(followCountProvider(state.userId!)).valueOrNull
+                  : null;
+              return Row(
+                children: [
+                  Expanded(
+                    child: _StatTile(
+                      label: 'Followers',
+                      value: '${counts?.followers ?? state.followers.length}',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _StatTile(
+                      label: 'Following',
+                      value: '${counts?.following ?? 0}',
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _StatTile(
+                      label: 'Photos',
+                      value: '${state.galleryUrls.length}',
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 12),
           Wrap(

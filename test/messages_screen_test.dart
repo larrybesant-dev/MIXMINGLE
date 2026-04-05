@@ -1,0 +1,106 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:mixvy/features/messaging/providers/messaging_provider.dart';
+import 'package:mixvy/features/messaging/screens/messages_screen.dart';
+
+Widget _buildApp({
+  required FirebaseFirestore firestore,
+  String userId = 'user-1',
+  String username = 'TestUser',
+}) {
+  final router = GoRouter(
+    initialLocation: '/messages',
+    routes: [
+      GoRoute(
+        path: '/messages',
+        builder: (_, _) => MessagesScreen(userId: userId, username: username),
+      ),
+      GoRoute(
+        path: '/messages/new',
+        builder: (_, _) => const Scaffold(body: Text('New Message')),
+      ),
+      GoRoute(
+        path: '/messages/:conversationId',
+        builder: (_, _) => const Scaffold(body: Text('Chat')),
+      ),
+    ],
+  );
+
+  return ProviderScope(
+    overrides: [
+      firestoreProvider.overrideWithValue(firestore),
+    ],
+    child: MaterialApp.router(routerConfig: router),
+  );
+}
+
+void main() {
+  group('MessagesScreen', () {
+    testWidgets('renders Messages AppBar with Chats and Requests tabs',
+        (tester) async {
+      final firestore = FakeFirebaseFirestore();
+      await tester.pumpWidget(_buildApp(firestore: firestore));
+      await tester.pump();
+
+      expect(find.text('Messages'), findsOneWidget);
+      expect(find.text('Chats'), findsOneWidget);
+      expect(find.text('Requests'), findsOneWidget);
+    });
+
+    testWidgets('shows empty Chats state when no conversations exist',
+        (tester) async {
+      final firestore = FakeFirebaseFirestore();
+      await tester.pumpWidget(_buildApp(firestore: firestore));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('No conversations yet'), findsOneWidget);
+    });
+
+    testWidgets('shows conversations when they exist', (tester) async {
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('conversations').doc('conv-1').set({
+        'participantIds': ['user-1', 'user-2'],
+        'lastMessagePreview': 'Hey there!',
+        'lastMessageAt': Timestamp.fromDate(DateTime.now()),
+        'isArchived': false,
+        'status': 'active',
+        'participantNames': {'user-2': 'Alice'},
+        'type': 'direct',
+        'createdAt': Timestamp.fromDate(DateTime.now()),
+      });
+
+      await tester.pumpWidget(_buildApp(firestore: firestore));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.text('Hey there!'), findsOneWidget);
+    });
+
+    testWidgets('add message button is shown in AppBar actions', (tester) async {
+      final firestore = FakeFirebaseFirestore();
+      await tester.pumpWidget(_buildApp(firestore: firestore));
+      await tester.pump();
+
+      expect(find.byIcon(Icons.add_circle_outline), findsOneWidget);
+    });
+
+    testWidgets('Requests tab shows empty state when no pending requests',
+        (tester) async {
+      final firestore = FakeFirebaseFirestore();
+      await tester.pumpWidget(_buildApp(firestore: firestore));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.tap(find.text('Requests'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      expect(find.text('No message requests'), findsOneWidget);
+    });
+  });
+}

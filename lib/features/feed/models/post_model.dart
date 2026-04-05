@@ -28,8 +28,8 @@ class PostModel {
   factory PostModel.fromDoc(String id, Map<String, dynamic> data) {
     return PostModel(
       id: id,
-      userId: data['userId'] ?? '',
-      text: data['text'] ?? '',
+      userId: data['authorId'] as String? ?? data['userId'] as String? ?? '',
+      text: data['content'] as String? ?? data['text'] as String? ?? '',
       createdAt: _parseDateTime(data['createdAt']),
       authorName: data['authorName'] as String?,
       authorAvatarUrl: data['authorAvatarUrl'] as String?,

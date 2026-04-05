@@ -38,17 +38,18 @@ void main() {
     });
 
     test('participantCountProvider returns number of participants', () async {
+      final now = Timestamp.fromDate(DateTime.now());
       await firestore.collection('rooms').doc('room-a').collection('participants').doc('user-1').set({
         'userId': 'user-1',
         'role': 'host',
-        'joinedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
-        'lastActiveAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+        'joinedAt': now,
+        'lastActiveAt': now,
       });
       await firestore.collection('rooms').doc('room-a').collection('participants').doc('user-2').set({
         'userId': 'user-2',
         'role': 'audience',
-        'joinedAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
-        'lastActiveAt': Timestamp.fromDate(DateTime(2026, 1, 1)),
+        'joinedAt': now,
+        'lastActiveAt': now,
       });
 
       final count = await container.read(participantCountProvider('room-a').future);

@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../providers/trending_provider.dart';
+import '../../feed/models/post_model.dart';
+import '../../feed/widgets/post_card.dart';
 
 class TrendingScreen extends ConsumerStatefulWidget {
   const TrendingScreen({super.key});
@@ -51,63 +53,19 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
           itemCount: posts.length,
           itemBuilder: (context, index) {
             final post = posts[index];
-            return Card(
-              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 0),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        CircleAvatar(
-                          child: Text(
-                            (post.authorName)[0].toUpperCase(),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                post.authorName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                _formatTime(post.createdAt),
-                                style: Theme.of(context).textTheme.bodySmall,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(post.content),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.favorite_border,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 4),
-                        Text('${post.likeCount}'),
-                        const SizedBox(width: 16),
-                        Icon(
-                          Icons.chat_bubble_outline,
-                          size: 16,
-                        ),
-                        const SizedBox(width: 4),
-                        Text('${post.commentCount}'),
-                      ],
-                    ),
-                  ],
-                ),
+            final uid = FirebaseAuth.instance.currentUser?.uid ?? '';
+            return PostCard(
+              post: PostModel(
+                id: post.id,
+                userId: post.authorId,
+                text: post.content,
+                authorName: post.authorName,
+                authorAvatarUrl: post.authorAvatarUrl,
+                likeCount: post.likeCount,
+                commentCount: post.commentCount,
+                createdAt: post.createdAt,
               ),
+              currentUserId: uid,
             );
           },
         );
@@ -180,10 +138,20 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
                       itemCount: posts.length,
                       itemBuilder: (context, index) {
                         final post = posts[index];
-                        return ListTile(
-                          title: Text(post.content),
-                          subtitle: Text('${post.likeCount} likes'),
-                          onTap: () => context.pop(),
+                        final uid =
+                            FirebaseAuth.instance.currentUser?.uid ?? '';
+                        return PostCard(
+                          post: PostModel(
+                            id: post.id,
+                            userId: post.authorId,
+                            text: post.content,
+                            authorName: post.authorName,
+                            authorAvatarUrl: post.authorAvatarUrl,
+                            likeCount: post.likeCount,
+                            commentCount: post.commentCount,
+                            createdAt: post.createdAt,
+                          ),
+                          currentUserId: uid,
                         );
                       },
                     );
@@ -201,18 +169,5 @@ class _TrendingScreenState extends ConsumerState<TrendingScreen> {
     );
   }
 
-  String _formatTime(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
-
-    if (difference.inMinutes < 60) {
-      return '${difference.inMinutes}m ago';
-    } else if (difference.inHours < 24) {
-      return '${difference.inHours}h ago';
-    } else if (difference.inDays < 7) {
-      return '${difference.inDays}d ago';
-    } else {
-      return dateTime.toString().substring(0, 10);
-    }
-  }
 }
+
