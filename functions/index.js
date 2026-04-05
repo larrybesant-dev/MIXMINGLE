@@ -6,10 +6,25 @@ const functionsV1 = require("firebase-functions/v1");
 const admin = require("firebase-admin");
 const Stripe = require("stripe");
 const {RtcTokenBuilder, RtcRole} = require("agora-access-token");
+const {
+  STRIPE_SECRET,
+  STRIPE_WEBHOOK_SECRET,
+  AGORA_APP_ID,
+  AGORA_APP_CERTIFICATE,
+} = require("./params");
 
 admin.initializeApp();
 
-const stripe = new Stripe(process.env.STRIPE_SECRET || "sk_test_dummy");
+let _stripe;
+function getStripe() {
+  if (!_stripe) {
+    const key = process.env.STRIPE_SECRET;
+    if (!key) throw new HttpsError("internal", "Stripe is not configured.");
+    _stripe = new Stripe(key);
+  }
+  return _stripe;
+}
+
 const db = admin.firestore();
 
 const RATE_LIMITS = {
@@ -153,7 +168,7 @@ function mapStripeConnectAccount(account) {
 
 async function ensureStripeConnectAccount(uid, deps = {}) {
   const firestore = deps.firestore || db;
-  const stripeClient = deps.stripeClient || stripe;
+  const stripeClient = deps.stripeClient || getStripe();
   const accountRef = firestore.collection("stripe_connect_accounts").doc(uid);
   const accountSnap = await accountRef.get();
 
@@ -193,7 +208,7 @@ async function ensureStripeConnectAccount(uid, deps = {}) {
 }
 
 async function createCheckoutSessionHandler(req, res, deps = {}) {
-  const stripeClient = deps.stripeClient || stripe;
+  const stripeClient = deps.stripeClient || getStripe();
 
   try {
     const checkoutBaseUrl = getCheckoutBaseUrl();
@@ -224,7 +239,7 @@ async function createCheckoutSessionHandler(req, res, deps = {}) {
 
 async function createCheckoutSessionCallableHandler(request, deps = {}) {
   const uid = requireAuth(request);
-  const stripeClient = deps.stripeClient || stripe;
+  const stripeClient = deps.stripeClient || getStripe();
 
   const checkoutBaseUrl = getCheckoutBaseUrl();
   const session = await stripeClient.checkout.sessions.create({
@@ -323,7 +338,7 @@ async function createPaymentIntentHandler(request, deps = {}) {
   const idempotencyKey = parseOptionalIdempotencyKey(
     request.data && request.data.idempotencyKey,
   );
-  const stripeClient = deps.stripeClient || stripe;
+  const stripeClient = deps.stripeClient || getStripe();
 
   const normalizedCurrency = typeof currency === "string" ? currency.toLowerCase() : "usd";
   const paymentIntentRequest = {
@@ -353,7 +368,7 @@ async function createPaymentIntentHandler(request, deps = {}) {
   };
 }
 
-exports.createPaymentIntent = onCall(async (request) =>
+exports.createPaymentIntent = onCall({secrets: [STRIPE_SECRET]}, async (request) =>
   createPaymentIntentHandler(request),
 );
 
@@ -440,7 +455,7 @@ async function recordStripePaymentSuccessHandler(request, deps = {}) {
     request.data && request.data.idempotencyKey,
   );
   const firestore = deps.firestore || db;
-  const stripeClient = deps.stripeClient || stripe;
+  const stripeClient = deps.stripeClient || getStripe();
 
   const transactionRef = idempotencyKey
     ? firestore.collection("transactions").doc(
@@ -479,7 +494,7 @@ async function recordStripePaymentSuccessHandler(request, deps = {}) {
   return {transactionId: transactionRef.id, deduplicated: false};
 }
 
-exports.recordStripePaymentSuccess = onCall(async (request) =>
+exports.recordStripePaymentSuccess = onCall({secrets: [STRIPE_SECRET]}, async (request) =>
   recordStripePaymentSuccessHandler(request),
 );
 
@@ -1004,7 +1019,7 @@ async function getStripeConnectStatusHandler(request, deps = {}) {
   const uid = requireAuth(request);
   enforceRateLimit("getStripeConnectStatus", uid);
   const firestore = deps.firestore || db;
-  const stripeClient = deps.stripeClient || stripe;
+  const stripeClient = deps.stripeClient || getStripe();
   const accountRef = firestore.collection("stripe_connect_accounts").doc(uid);
   const accountSnap = await accountRef.get();
 
@@ -1033,14 +1048,14 @@ async function getStripeConnectStatusHandler(request, deps = {}) {
   };
 }
 
-exports.getStripeConnectStatus = onCall(async (request) =>
+exports.getStripeConnectStatus = onCall({secrets: [STRIPE_SECRET]}, async (request) =>
   getStripeConnectStatusHandler(request),
 );
 
 async function createStripeConnectOnboardingLinkHandler(request, deps = {}) {
   const uid = requireAuth(request);
   enforceRateLimit("createStripeConnectOnboardingLink", uid);
-  const stripeClient = deps.stripeClient || stripe;
+  const stripeClient = deps.stripeClient || getStripe();
   const publicAppUrl = deps.publicAppUrl || getCheckoutBaseUrl();
 
   const mapped = await ensureStripeConnectAccount(uid, deps);
@@ -1058,14 +1073,14 @@ async function createStripeConnectOnboardingLinkHandler(request, deps = {}) {
   };
 }
 
-exports.createStripeConnectOnboardingLink = onCall(async (request) =>
+exports.createStripeConnectOnboardingLink = onCall({secrets: [STRIPE_SECRET]}, async (request) =>
   createStripeConnectOnboardingLinkHandler(request),
 );
 
 async function createStripeConnectDashboardLinkHandler(request, deps = {}) {
   const uid = requireAuth(request);
   enforceRateLimit("createStripeConnectDashboardLink", uid);
-  const stripeClient = deps.stripeClient || stripe;
+  const stripeClient = deps.stripeClient || getStripe();
   const status = await ensureStripeConnectAccount(uid, deps);
 
   const loginLink = await stripeClient.accounts.createLoginLink(status.accountId);
@@ -1074,7 +1089,7 @@ async function createStripeConnectDashboardLinkHandler(request, deps = {}) {
   };
 }
 
-exports.createStripeConnectDashboardLink = onCall(async (request) =>
+exports.createStripeConnectDashboardLink = onCall({secrets: [STRIPE_SECRET]}, async (request) =>
   createStripeConnectDashboardLinkHandler(request),
 );
 
@@ -1145,7 +1160,7 @@ async function generateAgoraTokenHandler(request, deps = {}) {
   };
 }
 
-exports.generateAgoraToken = onCall(async (request) => generateAgoraTokenHandler(request));
+exports.generateAgoraToken = onCall({secrets: [AGORA_APP_ID, AGORA_APP_CERTIFICATE]}, async (request) => generateAgoraTokenHandler(request));
 
 async function requestRefundHandler(request, deps = {}) {
   const requesterId = requireAuth(request);
@@ -1268,20 +1283,20 @@ exports.classifyNewReport = onDocumentCreated("reports/{reportId}", async (event
 });
 
 // Create Stripe Checkout Session
-exports.createCheckoutSession = onRequest(async (req, res) =>
+exports.createCheckoutSession = onRequest({secrets: [STRIPE_SECRET]}, async (req, res) =>
   createCheckoutSessionHandler(req, res),
 );
 
-exports.createCheckoutSessionCallable = onCall(async (request) =>
+exports.createCheckoutSessionCallable = onCall({secrets: [STRIPE_SECRET]}, async (request) =>
   createCheckoutSessionCallableHandler(request),
 );
 
 // Stripe Webhook
-exports.stripeWebhook = onRequestV1(async (req, res) => {
+exports.stripeWebhook = functionsV1.runWith({secrets: ["STRIPE_WEBHOOK_SECRET"]}).https.onRequest(async (req, res) => {
   const sig = req.headers["stripe-signature"];
   let event;
   try {
-    event = stripe.webhooks.constructEvent(
+    event = getStripe().webhooks.constructEvent(
       req.rawBody,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET,
