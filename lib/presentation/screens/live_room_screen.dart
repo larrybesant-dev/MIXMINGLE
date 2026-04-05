@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:developer' as developer;
+import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -3062,259 +3063,380 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   ),
                 ],
               ),
-              bottomNavigationBar: Container(
-                color: Colors.black.withValues(alpha: 0.75),
-                child: SafeArea(
-                  top: false,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        // ── Mic ─────────────────────────────────────────
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                _isMicMuted
-                                    ? Icons.mic_off_rounded
-                                    : Icons.mic_rounded,
-                                color: _isMicMuted
-                                    ? Colors.grey
-                                    : Colors.white,
-                              ),
-                              onPressed:
-                                  RoomPermissions.canUseMic(role) &&
-                                          !_isMicActionInFlight &&
-                                          _isCallReady
-                                      ? _toggleMic
-                                      : null,
-                            ),
-                            Text(
-                              _isMicMuted ? 'Muted' : 'Mic',
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                        // ── Camera ──────────────────────────────────────
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: Icon(
-                                _isVideoEnabled
-                                    ? Icons.videocam_rounded
-                                    : Icons.videocam_off_rounded,
-                                color: _isVideoEnabled
-                                    ? Colors.white
-                                    : Colors.grey,
-                              ),
-                              onPressed: RoomPermissions.canUseCamera(role) &&
-                                      !_isVideoActionInFlight &&
-                                      _isCallReady &&
-                                      (_videoToggleCooldownUntil == null ||
-                                          DateTime.now().isAfter(
-                                              _videoToggleCooldownUntil!))
-                                  ? () {
-                                      if (mounted) {
-                                        setState(() => _cameraStatus =
-                                            'Camera initializing…');
-                                      }
-                                      _toggleVideo();
-                                    }
-                                  : null,
-                            ),
-                            Text(
-                              _isVideoEnabled ? 'Cam On' : 'Camera',
-                              style: const TextStyle(
-                                color: Colors.white70,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                        // ── Live status badge ───────────────────────────
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 5,
-                              ),
-                              decoration: BoxDecoration(
-                                color: _isCallConnecting
-                                    ? Colors.orange
-                                    : _isCallReady
-                                        ? Colors.red
-                                        : Colors.grey.shade700,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Row(
+              body: Stack(
+                children: [
+                  // ── FULLSCREEN VIDEO BACKGROUND ──────────────────────────
+                  Positioned.fill(
+                    child: _agoraService != null
+                        ? Builder(
+                            builder: (context) {
+                              final rawMaxBc = roomData?['maxBroadcasters'];
+                              final slotCount =
+                                  rawMaxBc is num ? rawMaxBc.toInt() : 6;
+                              final remoteUserIds = _agoraService!.remoteUids
+                                  .map((uid) => _userIdForRtcUid(
+                                        uid,
+                                        participantsInRoom,
+                                      ))
+                                  .whereType<String>()
+                                  .toList();
+                              if (remoteUserIds.isNotEmpty) {
+                                unawaited(_hydrateSenderDisplayNames(
+                                  userIds: remoteUserIds,
+                                  currentUserId: user.id,
+                                ));
+                              }
+                              final presenceMap = <String, bool>{
+                                for (final p in presenceAsync.valueOrNull ??
+                                    const <RoomPresenceModel>[])
+                                  if (p.isOnline &&
+                                      (p.lastHeartbeatAt == null ||
+                                          DateTime.now()
+                                                  .difference(
+                                                      p.lastHeartbeatAt!)
+                                                  .inSeconds <
+                                              90))
+                                    p.userId: true,
+                              };
+                              final remoteTiles = _agoraService!.remoteUids
+                                  .where((remoteUid) {
+                                    final remoteUserId = _userIdForRtcUid(
+                                        remoteUid, participantsInRoom);
+                                    if (remoteUserId == null) return true;
+                                    final knownOnline =
+                                        presenceMap[remoteUserId];
+                                    if (knownOnline == null) return true;
+                                    return knownOnline;
+                                  })
+                                  .map((remoteUid) {
+                                    final remoteUserId = _userIdForRtcUid(
+                                        remoteUid, participantsInRoom);
+                                    final allowedViewers = remoteUserId == null
+                                        ? const <String>[]
+                                        : ref
+                                                .watch(
+                                                    userCamAllowedViewersProvider(
+                                                        remoteUserId))
+                                                .valueOrNull ??
+                                            const <String>[];
+                                    final canViewRemote =
+                                        remoteUserId != null &&
+                                            (allowedViewers.isEmpty ||
+                                                allowedViewers
+                                                    .contains(user.id));
+                                    final tileLabel = remoteUserId != null
+                                        ? (_senderDisplayNameById[
+                                                remoteUserId] ??
+                                            remoteUserId)
+                                        : 'Guest $remoteUid';
+                                    return CameraWallRemoteTileData(
+                                      uid: remoteUid,
+                                      label: tileLabel,
+                                      canView: canViewRemote,
+                                      isSpeaking: _agoraService!
+                                          .isRemoteSpeaking(remoteUid),
+                                    );
+                                  })
+                                  .toList(growable: false);
+                              return CameraWall(
+                                roomId: widget.roomId,
+                                roomName: roomName,
+                                localLabel:
+                                    _senderDisplayNameById[user.id] ?? 'You',
+                                localSpeaking: _agoraService!.localSpeaking,
+                                localTile: _buildLocalCamContent(),
+                                remoteTiles: remoteTiles,
+                                maxMainGridRemoteTiles: slotCount,
+                                remoteTileBuilder: (tile) =>
+                                    _buildRemoteCamContent(
+                                  remoteUid: tile.uid,
+                                  canViewRemote: tile.canView,
+                                ),
+                                onSubscriptionPlanChanged:
+                                    (highQualityUids, lowQualityUids) {
+                                  _scheduleRemoteVideoLayoutSync(
+                                    highQualityUids: highQualityUids,
+                                    lowQualityUids: lowQualityUids,
+                                  );
+                                },
+                              );
+                            },
+                          )
+                        : const ColoredBox(
+                            color: Colors.black,
+                            child: Center(
+                              child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  if (_isCallConnecting) ...[
-                                    const SizedBox(
-                                      width: 10,
-                                      height: 10,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 1.5,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                  ],
+                                  Text('🔴',
+                                      style: TextStyle(fontSize: 48)),
+                                  SizedBox(height: 12),
                                   Text(
-                                    _isCallConnecting
-                                        ? 'Connecting…'
-                                        : _isCallReady
-                                            ? '● LIVE'
-                                            : '○ Offline',
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
+                                    "You're live 🔴\nInvite people or start the vibe",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      color: Colors.white70,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                            const SizedBox(height: 2),
-                            const Text(
-                              'Status',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 11,
-                              ),
-                            ),
-                          ],
-                        ),
-                        // ── Leave room ──────────────────────────────────
-                        Column(
+                          ),
+                  ),
+                  // ── SPOTLIGHT BANNER ─────────────────────────────────────
+                  if (spotlightName != null)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            vertical: 6, horizontal: 14),
+                        color:
+                            const Color(0xFFFFD700).withValues(alpha: 0.85),
+                        child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.exit_to_app_rounded,
-                                color: Colors.redAccent,
+                            const Text('⭐',
+                                style: TextStyle(fontSize: 16)),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                '$spotlightName is in the spotlight!',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.black87,
+                                ),
                               ),
-                              onPressed: () async {
-                                await _disconnectCall();
-                                await _leaveRoom();
-                                if (context.mounted) context.pop();
-                              },
                             ),
-                            const Text(
-                              'Leave',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 11,
+                            if (isHost)
+                              IconButton(
+                                visualDensity: VisualDensity.compact,
+                                tooltip: 'Clear spotlight',
+                                icon: const Icon(Icons.close, size: 16),
+                                onPressed: () async {
+                                  final fs = _firestore ??
+                                      ref.read(roomFirestoreProvider);
+                                  await (fs as FirebaseFirestore)
+                                      .collection('rooms')
+                                      .doc(widget.roomId)
+                                      .update({
+                                    'spotlightUserId': FieldValue.delete(),
+                                  });
+                                },
                               ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  // ── CALL ERROR BANNER ─────────────────────────────────────
+                  if (_callError != null)
+                    Positioned(
+                      top: spotlightName != null ? 38 : 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        color: Colors.red.withValues(alpha: 0.85),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              _callError!,
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.w600),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: 6),
+                            OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                  foregroundColor: Colors.white),
+                              onPressed: _isCallConnecting
+                                  ? null
+                                  : () async {
+                                      await _disconnectCall();
+                                      if (!mounted) return;
+                                      await _connectCall(user.id);
+                                    },
+                              icon: const Icon(Icons.refresh),
+                              label: const Text('Retry live media'),
                             ),
                           ],
                         ),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ),
-              body: Stack(
-                children: [
-                  Positioned.fill(
-                    child: Column(
-                      children: [
-                        // Spotlight banner
-                        if (spotlightName != null)
-                          Container(
-                            width: double.infinity,
+                  // ── CONNECTING PROGRESS ───────────────────────────────────
+                  if (_isCallConnecting)
+                    const Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      child: LinearProgressIndicator(),
+                    ),
+                  // ── AVATAR STRIP + ONLINE COUNT (top-right) ──────────────
+                  Positioned(
+                    top: 56,
+                    right: 12,
+                    child: presenceAsync.when(
+                      data: (presence) {
+                        final activeCutoff = DateTime.now()
+                            .subtract(const Duration(seconds: 50));
+                        final onlineCount = presence
+                            .where((e) =>
+                                e.isOnline &&
+                                (e.lastHeartbeatAt == null ||
+                                    e.lastHeartbeatAt!.isAfter(activeCutoff)))
+                            .length;
+                        if (onlineCount == 0) return const SizedBox.shrink();
+                        return GestureDetector(
+                          onTap: participantsInRoom.isEmpty
+                              ? null
+                              : () => _openPeopleSheet(
+                                    participants: participantsInRoom,
+                                    currentParticipant: participant,
+                                    currentUserId: user.id,
+                                    currentUsername: user.username,
+                                    currentAvatarUrl: user.avatarUrl,
+                                    hostId: hostId,
+                                    isHost: isHost,
+                                    isModerator: isModerator,
+                                    hostControls: hostControls,
+                                    presenceList:
+                                        presenceAsync.valueOrNull ?? const [],
+                                  ),
+                          child: Container(
                             padding: const EdgeInsets.symmetric(
-                              vertical: 6,
-                              horizontal: 14,
+                                horizontal: 10, vertical: 5),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white24),
                             ),
-                            color: const Color(0xFFFFD700).withValues(alpha: 0.85),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Text('⭐',
-                                    style: TextStyle(fontSize: 16)),
-                                const SizedBox(width: 6),
-                                Expanded(
-                                  child: Text(
-                                    '$spotlightName is in the spotlight!',
-                                    style: const TextStyle(
+                                const Icon(Icons.circle,
+                                    color: Colors.green, size: 9),
+                                const SizedBox(width: 5),
+                                Text(
+                                  '$onlineCount online',
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                      loading: () => const SizedBox.shrink(),
+                      error: (_, _) => const SizedBox.shrink(),
+                    ),
+                  ),
+                  // ── TOP GIFTERS STRIP (bottom-left, above bottom bar) ─────
+                  if (topGifters.isNotEmpty)
+                    Positioned(
+                      bottom: 92,
+                      left: 8,
+                      right: 340,
+                      child: SizedBox(
+                        height: 40,
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: topGifters.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 6),
+                          itemBuilder: (ctx, i) {
+                            const medals = ['🥇', '🥈', '🥉'];
+                            final gifter = topGifters[i];
+                            final medal = i < 3 ? medals[i] : '${i + 1}';
+                            final isFirst = i == 0;
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                gradient: isFirst
+                                    ? const LinearGradient(colors: [
+                                        Color(0xFFFFD700),
+                                        Color(0xFFFFA500)
+                                      ])
+                                    : null,
+                                color: isFirst ? null : Colors.black54,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(medal,
+                                      style:
+                                          const TextStyle(fontSize: 12)),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    gifter.displayName,
+                                    style: TextStyle(
+                                      fontSize: 11,
                                       fontWeight: FontWeight.w700,
-                                      color: Colors.black87,
+                                      color: isFirst
+                                          ? Colors.white
+                                          : Colors.white70,
                                     ),
                                   ),
-                                ),
-                                if (isHost)
-                                  IconButton(
-                                    visualDensity: VisualDensity.compact,
-                                    tooltip: 'Clear spotlight',
-                                    icon: const Icon(Icons.close, size: 16),
-                                    onPressed: () async {
-                                      final firestore = _firestore ??
-                                          ref.read(roomFirestoreProvider);
-                                      await (firestore as FirebaseFirestore)
-                                          .collection('rooms')
-                                          .doc(widget.roomId)
-                                          .update({
-                                        'spotlightUserId': FieldValue.delete(),
-                                      });
-                                    },
+                                  const SizedBox(width: 3),
+                                  Text(
+                                    '🪙${gifter.totalCoins}',
+                                    style: const TextStyle(
+                                        fontSize: 10,
+                                        color: Colors.white54),
                                   ),
-                              ],
-                            ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  // ── HOST CONTROLS BUTTON (hosts only) ────────────────────
+                  if (isHost)
+                    Positioned(
+                      bottom: 92,
+                      left: 12,
+                      child: GestureDetector(
+                        onTap: () => showModalBottomSheet<void>(
+                          context: context,
+                          isScrollControlled: true,
+                          backgroundColor: Colors.transparent,
+                          builder: (_) => _HostControlsContent(
+                            roomId: widget.roomId,
                           ),
-                        if (_callError != null)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  _callError!,
-                                  style: const TextStyle(
-                                    color: Colors.red,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 8),
-                                OutlinedButton.icon(
-                                  onPressed: _isCallConnecting
-                                      ? null
-                                      : () async {
-                                          await _disconnectCall();
-                                          if (!mounted) {
-                                            return;
-                                          }
-                                          await _connectCall(user.id);
-                                        },
-                                  icon: const Icon(Icons.refresh),
-                                  label: const Text('Retry live media'),
-                                ),
-                              ],
-                            ),
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.7),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.white24),
                           ),
-                        if (_isCallConnecting)
-                          const Padding(
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            child: LinearProgressIndicator(),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.settings_rounded,
+                                  color: Colors.white, size: 16),
+                              SizedBox(width: 4),
+                              Text('Controls',
+                                  style: TextStyle(
+                                      color: Colors.white, fontSize: 12)),
+                            ],
                           ),
-                        Flexible(
-                          child: SingleChildScrollView(
-                            child: Column(
-                              children: [
+                        ),
+                      ),
+                    ),
+                  // ── RIGHT: floating glass chat panel ──────────────────────
                         if (_agoraService != null)
                           Padding(
                             padding: const EdgeInsets.symmetric(

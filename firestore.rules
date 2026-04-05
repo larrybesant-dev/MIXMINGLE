@@ -39,6 +39,7 @@ service cloud.firestore {
         'camViewPolicy',
         'adultModeEnabled',
         'adultConsentAccepted',
+        'isPrivate',
         'updatedAt'
       ]);
     }
@@ -89,7 +90,13 @@ service cloud.firestore {
     }
 
     match /users/{userId} {
-      allow read: if signedIn();
+      // Private profiles are only readable by the owner or their followers.
+      allow read: if signedIn()
+        && (
+          isSelf(userId)
+          || !resource.data.get('isPrivate', false)
+          || request.auth.uid in resource.data.get('followers', [])
+        );
       allow create: if isSelf(userId);
       allow update: if (isSelf(userId) && isAllowedUserProfileUpdate())
         || (signedIn() && isFriendLinkUpdate());

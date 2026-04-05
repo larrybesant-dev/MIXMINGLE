@@ -12,6 +12,8 @@ import '../widgets/trending_user_card.dart';
 import '../widgets/feed_empty_state.dart';
 import '../widgets/feed_loading_shimmer.dart';
 import '../../stories/widgets/stories_row.dart';
+import '../../ads/ad_manager.dart';
+import '../../../features/profile/profile_controller.dart';
 
 class DiscoveryFeedScreen extends ConsumerWidget {
   const DiscoveryFeedScreen({super.key});
@@ -227,6 +229,50 @@ class _DiscoveryFeedContentState extends ConsumerState<DiscoveryFeedContent> {
                 }),
                 const SizedBox(height: 32),
               ],
+              // ── Promo banner — shown only for free-tier users ──────────
+              Builder(builder: (ctx) {
+                final profileMembership = ref
+                    .watch(profileControllerProvider
+                        .select((s) => s.membershipLevel ?? 'Free'));
+                if (!AdManager.shouldShowAds(profileMembership)) {
+                  return const SizedBox.shrink();
+                }
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16),
+                  child: Card(
+                    color: Theme.of(ctx).colorScheme.secondaryContainer,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.campaign_outlined, size: 28),
+                          const SizedBox(width: 12),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Upgrade to MixVy Premium',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                Text(
+                                  'Remove ads and unlock exclusive features.',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton(
+                            onPressed: () => ctx.go('/payments'),
+                            child: const Text('Upgrade'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }),
               if (feedState.trendingUsers.isNotEmpty) ...[
                 Text(
                   'Trending Users',

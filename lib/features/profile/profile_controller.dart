@@ -290,6 +290,7 @@ class ProfileController extends Notifier<ProfileState> {
           'camViewPolicy': profile.camViewPolicy.name,
           'adultModeEnabled': profile.adultModeEnabled,
           'adultConsentAccepted': profile.adultConsentAccepted,
+          'isPrivate': profile.privacy.isPrivate,
         },
         privacy: profile.privacy,
         adultProfile: AdultProfileModel(
