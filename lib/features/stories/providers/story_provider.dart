@@ -153,6 +153,7 @@ final myStoriesProvider = StreamProvider.family<List<Story>, String>((ref, userI
       .doc(userId)
       .collection('stories')
       .where('expiresAt', isGreaterThan: Timestamp.fromDate(DateTime.now()))
+      .orderBy('expiresAt')
       .orderBy('createdAt', descending: true)
       .snapshots()
       .map((snapshot) {
