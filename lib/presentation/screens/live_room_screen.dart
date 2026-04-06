@@ -852,20 +852,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             child: service.getLocalView(),
           )
         : ColoredBox(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            color: const Color(0xFF1C2028),
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.videocam_off, size: 40),
+                    const Icon(Icons.videocam_off, size: 40, color: Color(0xFFA9ABB3)),
                     const SizedBox(height: 8),
                     Text(
                       _isVideoEnabled
                           ? 'Camera feed is preparing.'
                           : 'Camera is off.',
                       textAlign: TextAlign.center,
+                      style: const TextStyle(color: Color(0xFFA9ABB3), fontSize: 13),
                     ),
                   ],
                 ),
@@ -882,19 +883,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     return canViewRemote && service != null
         ? service.getRemoteView(remoteUid, widget.roomId)
         : ColoredBox(
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
+            color: const Color(0xFF1C2028),
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.all(8),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.lock_outline, size: 24),
+                    const Icon(Icons.lock_outline, size: 24, color: Color(0xFFA9ABB3)),
                     const SizedBox(height: 6),
                     Text(
                       canViewRemote ? 'Loading video...' : 'Cam access locked',
                       textAlign: TextAlign.center,
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: const TextStyle(color: Color(0xFFA9ABB3), fontSize: 11),
                     ),
                   ],
                 ),

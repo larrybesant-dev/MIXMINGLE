@@ -30,6 +30,8 @@ class CameraWall extends ConsumerWidget {
     required this.roomName,
     this.maxMainGridRemoteTiles = 8,
     this.overflowPageSize = 6,
+    this.onDetachLocal,
+    this.onDetachRemote,
   });
 
   final String roomId;
@@ -43,6 +45,10 @@ class CameraWall extends ConsumerWidget {
   final String roomName;
   final int maxMainGridRemoteTiles;
   final int overflowPageSize;
+  /// Called when the user clicks "detach" on the local cam tile.
+  final VoidCallback? onDetachLocal;
+  /// Called when the user clicks "detach" on a remote cam tile.
+  final void Function(CameraWallRemoteTileData tile)? onDetachRemote;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -111,6 +117,7 @@ class CameraWall extends ConsumerWidget {
             label: localLabel,
             speaking: localSpeaking,
             compact: false,
+            onDetach: onDetachLocal,
             child: localTile,
           ),
           ...mainGridRemoteTiles.map(
@@ -118,6 +125,9 @@ class CameraWall extends ConsumerWidget {
               label: tile.label,
               speaking: tile.isSpeaking,
               compact: false,
+              onDetach: onDetachRemote == null
+                  ? null
+                  : () => onDetachRemote!(tile),
               child: remoteTileBuilder(tile),
             ),
           ),
@@ -130,23 +140,14 @@ class CameraWall extends ConsumerWidget {
         final mainGridHeight = isDesktop
             ? (tileCount <= 4 ? 300.0 : tileCount <= 8 ? 420.0 : 560.0)
             : (tileCount <= 1 ? 180.0 : tileCount <= 4 ? 280.0 : 360.0);
-        final theme = Theme.of(context);
-        final panelColor = theme.colorScheme.surfaceContainerHighest;
-        final dockColor = theme.colorScheme.surfaceContainer;
+        const npSurfaceLow   = Color(0xFF10131A);
+        const npSurfaceHigh  = Color(0xFF1C2028);
+        const npPrimary      = Color(0xFFBA9EFF);
+        const npOnVariant    = Color(0xFFA9ABB3);
+        const npGhost        = Color(0x1A73757D);
 
-        return DecoratedBox(
-          decoration: BoxDecoration(
-            color: panelColor,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: theme.colorScheme.outlineVariant),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x14000000),
-                blurRadius: 18,
-                offset: Offset(0, 8),
-              ),
-            ],
-          ),
+        return ColoredBox(
+          color: npSurfaceLow,
           child: Padding(
             padding: const EdgeInsets.all(10),
             child: Column(
@@ -156,15 +157,41 @@ class CameraWall extends ConsumerWidget {
                   children: [
                     Text(
                       roomName,
-                      style: theme.textTheme.titleSmall?.copyWith(
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(width: 10),
                     DecoratedBox(
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer,
+                        color: const Color(0x33BA9EFF),
                         borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: npGhost),
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        child: Text(
+                          'LIVE',
+                          style: TextStyle(
+                            color: npPrimary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: npSurfaceHigh,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: npGhost),
                       ),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(
@@ -173,7 +200,9 @@ class CameraWall extends ConsumerWidget {
                         ),
                         child: Text(
                           '${1 + remoteTiles.length} windows',
-                          style: theme.textTheme.labelSmall?.copyWith(
+                          style: const TextStyle(
+                            color: npOnVariant,
+                            fontSize: 10,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -183,7 +212,7 @@ class CameraWall extends ConsumerWidget {
                     if (overflowPageCount > 1)
                       Text(
                         'Page ${overflowPage + 1} of $overflowPageCount',
-                        style: theme.textTheme.bodySmall,
+                        style: const TextStyle(color: Color(0xFFA9ABB3), fontSize: 12),
                       ),
                     if (overflowTiles.isNotEmpty) ...[
                       const SizedBox(width: 6),
@@ -251,10 +280,10 @@ class CameraWall extends ConsumerWidget {
                           width: 208,
                           child: DecoratedBox(
                             decoration: BoxDecoration(
-                              color: dockColor,
+                              color: const Color(0xFF161A21),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: theme.colorScheme.outlineVariant,
+                                color: const Color(0x1A73757D),
                               ),
                             ),
                             child: Padding(
@@ -262,9 +291,11 @@ class CameraWall extends ConsumerWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
+                                  const Text(
                                     'Extra Windows',
-                                    style: theme.textTheme.labelLarge?.copyWith(
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 13,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
@@ -289,6 +320,9 @@ class CameraWall extends ConsumerWidget {
                                           label: tile.label,
                                           speaking: tile.isSpeaking,
                                           compact: true,
+                                          onDetach: onDetachRemote == null
+                                              ? null
+                                              : () => onDetachRemote!(tile),
                                           child: remoteTileBuilder(tile),
                                         );
                                       },
@@ -335,6 +369,9 @@ class CameraWall extends ConsumerWidget {
                               label: tile.label,
                               speaking: tile.isSpeaking,
                               compact: true,
+                              onDetach: onDetachRemote == null
+                                  ? null
+                                  : () => onDetachRemote!(tile),
                               child: remoteTileBuilder(tile),
                             ),
                           );
@@ -344,7 +381,10 @@ class CameraWall extends ConsumerWidget {
                   else if (remoteTiles.isEmpty)
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('Waiting for other participants to join video...'),
+                      child: Text(
+                        'Waiting for others to join video...',
+                        style: TextStyle(color: Color(0xFFA9ABB3), fontSize: 13),
+                      ),
                     ),
                 ],
               ],
@@ -356,75 +396,113 @@ class CameraWall extends ConsumerWidget {
   }
 }
 
-class _CameraWallTileFrame extends StatelessWidget {
+class _CameraWallTileFrame extends StatefulWidget {
   const _CameraWallTileFrame({
     required this.label,
     required this.speaking,
     required this.compact,
     required this.child,
+    this.onDetach,
   });
 
   final String label;
   final bool speaking;
   final bool compact;
   final Widget child;
+  /// If non-null, a pop-out button is shown in the tile header.
+  final VoidCallback? onDetach;
+
+  @override
+  State<_CameraWallTileFrame> createState() => _CameraWallTileFrameState();
+}
+
+class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
+
+  bool _hovered = false;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final radius = compact ? 8.0 : 10.0;
-    final borderColor = speaking
-        ? const Color(0xFF41C56B)
-        : theme.colorScheme.outlineVariant;
+    const npSurfaceContainer = Color(0xFF161A21);
+    const npSurfaceHigh      = Color(0xFF1C2028);
+    const npSecondary        = Color(0xFF00E3FD); // cyan speaking
+    const npOnVariant        = Color(0xFFA9ABB3);
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: const Color(0xFF101316),
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: borderColor, width: speaking ? 2 : 1),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: Column(
-          children: [
-            Container(
-              height: compact ? 20 : 24,
-              color: const Color(0xFF232A31),
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                children: [
-                  Container(
-                    width: 6,
-                    height: 6,
-                    decoration: BoxDecoration(
-                      color: speaking
-                          ? const Color(0xFF41C56B)
-                          : const Color(0xFF7E8791),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      label,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
+    final radius = widget.compact ? 8.0 : 10.0;
+    final borderColor = widget.speaking ? npSecondary : const Color(0x1A73757D);
+    final glowShadow = widget.speaking
+        ? [BoxShadow(color: npSecondary.withAlpha(60), blurRadius: 8, spreadRadius: 1)]
+        : const <BoxShadow>[];
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: npSurfaceContainer,
+          borderRadius: BorderRadius.circular(radius),
+          border: Border.all(color: borderColor, width: widget.speaking ? 2 : 1),
+          boxShadow: glowShadow,
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(radius),
+          child: Column(
+            children: [
+              Container(
+                height: widget.compact ? 20 : 24,
+                color: npSurfaceHigh,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: widget.speaking ? npSecondary : npOnVariant,
+                        shape: BoxShape.circle,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        widget.label,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    // Pop-out button: visible on hover (desktop) or always on mobile
+                    if (widget.onDetach != null &&
+                        (_hovered || widget.compact))
+                      Tooltip(
+                        message: 'Detach window',
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(4),
+                          onTap: widget.onDetach,
+                          child: const Padding(
+                            padding: EdgeInsets.all(2),
+                            child: Icon(
+                              Icons.open_in_new,
+                              size: 12,
+                              color: npOnVariant,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: ColoredBox(
-                color: Colors.black,
-                child: child,
+              Expanded(
+                child: ColoredBox(
+                  color: const Color(0xFF0B0E14),
+                  child: widget.child,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
