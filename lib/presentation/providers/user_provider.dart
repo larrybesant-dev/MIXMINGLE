@@ -15,15 +15,27 @@ final userProvider = Provider<UserModel?>((ref) {
 		return null;
 	}
 
+	// Prefer loaded profile data; fall back to Firebase display name, then a
+	// generic placeholder. The userId guard is relaxed: if the profile has a
+	// non-empty username we use it regardless — the controller may finish
+	// loading before it writes back userId to state.
+	final profileUsername = profileState.username?.trim();
+	final resolvedUsername = (profileUsername?.isNotEmpty == true)
+		? profileUsername!
+		: (firebaseUser?.displayName?.trim().isNotEmpty == true
+			? firebaseUser!.displayName!
+			: null);
+
+	final profileAvatar = (profileState.userId == uid || profileState.userId == null)
+			&& (profileState.avatarUrl?.isNotEmpty == true)
+		? profileState.avatarUrl
+		: firebaseUser?.photoURL;
+
 	return UserModel(
 		id: uid,
 		email: firebaseUser?.email ?? '',
-		username: profileState.userId == uid && (profileState.username?.isNotEmpty == true)
-			? profileState.username!
-			: 'MixVy User',
-		avatarUrl: profileState.userId == uid && (profileState.avatarUrl?.isNotEmpty == true)
-			? profileState.avatarUrl
-			: firebaseUser?.photoURL,
+		username: resolvedUsername ?? 'MixVy User',
+		avatarUrl: profileAvatar,
 		createdAt: DateTime.now(),
 	);
 });
