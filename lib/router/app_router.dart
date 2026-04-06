@@ -42,6 +42,7 @@ import '../features/messaging/screens/whisper_popout_screen.dart';
 import '../features/room/screens/cam_popout_screen.dart';
 import '../features/feed/screens/room_browser_screen.dart';
 import '../features/verification/screens/verification_screen.dart';
+import '../features/room/screens/create_room_screen.dart';
 
 import '../shared/widgets/app_shell.dart';
 import 'package:mixvy/features/auth/screens/login_screen.dart';
@@ -465,6 +466,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
           GoRoute(
+            path: '/create-room',
+            builder: (context, state) => const CreateRoomScreen(),
+          ),
+          GoRoute(
             path: '/post/:postId/comments',
             builder: (context, state) {
               final postId = state.pathParameters['postId']!;
@@ -482,4 +487,5 @@ final GlobalKey<NavigatorState> rootNavigatorKey =
 
 final _shellNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'mixvy-shell-navigator');
+
 

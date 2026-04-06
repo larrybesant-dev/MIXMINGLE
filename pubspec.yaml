@@ -48,6 +48,7 @@
     web: any
     window_manager: ^0.4.3
     cached_network_image: ^3.4.1
+    google_fonts: ^6.2.1
     # state_notifier has been removed
 
   dev_dependencies:

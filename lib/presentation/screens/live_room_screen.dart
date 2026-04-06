@@ -1176,7 +1176,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       title: Text(f.username),
                       subtitle: inThisRoom
                           ? const Text('In this room',
-                              style: TextStyle(color: Colors.green))
+                              style: TextStyle(color: Color(0xFF00E3FD)))
                           : inOtherRoom
                               ? const Text('In another room')
                               : const Text('Online'),
@@ -2921,9 +2921,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             return Scaffold(
               extendBodyBehindAppBar: true,
               extendBody: true,
-              backgroundColor: Colors.black,
+              backgroundColor: const Color(0xFF0B0E14),
               appBar: AppBar(
-                backgroundColor: Colors.black.withValues(alpha: 0.45),
+                backgroundColor: const Color(0xB40B0E14),
                 foregroundColor: Colors.white,
                 elevation: 0,
                 title: Text(roomName),
@@ -3017,7 +3017,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               width: 16,
                               height: 16,
                               decoration: const BoxDecoration(
-                                color: Colors.orange,
+                                color: Color(0xFFBA9EFF),
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
@@ -3155,7 +3155,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             },
                           )
                         : const ColoredBox(
-                            color: Colors.black,
+                            color: Color(0xFF0B0E14),
                             child: Center(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -3230,7 +3230,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       left: 0,
                       right: 0,
                       child: Container(
-                        color: Colors.red.withValues(alpha: 0.85),
+                        color: const Color(0xD9FF6E84),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
                         child: Column(
@@ -3304,15 +3304,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.6),
+                              color: const Color(0x9910131A),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white24),
+                              border: Border.all(color: const Color(0x30BA9EFF)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.circle,
-                                    color: Colors.green, size: 9),
+                                    color: Color(0xFF00E3FD), size: 9),
                                 const SizedBox(width: 5),
                                 Text(
                                   '$onlineCount online',
@@ -3410,9 +3410,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.7),
+                            color: const Color(0xB310131A),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.white24),
+                            border: Border.all(color: const Color(0x30BA9EFF)),
                           ),
                           child: const Row(
                             mainAxisSize: MainAxisSize.min,
@@ -3444,9 +3444,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         children: [
                           Container(
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.7),
+                              color: const Color(0xB310131A),
                               borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: Colors.white24),
+                              border: Border.all(color: const Color(0x30BA9EFF)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -3458,7 +3458,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                   icon: Icon(
                                     _isMicMuted ? Icons.mic_off : Icons.mic,
                                     color:
-                                        _isMicMuted ? Colors.red : Colors.white,
+                                        _isMicMuted ? const Color(0xFFFF6E84) : Colors.white,
                                   ),
                                   onPressed: (!_isCallReady || _agoraService == null || _isMicActionInFlight)
                                       ? null
@@ -3496,7 +3496,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                             : Icons.videocam_off,
                                         color: _isVideoEnabled
                                             ? Colors.white
-                                            : Colors.red,
+                                            : const Color(0xFFFF6E84),
                                       ),
                                       onPressed: (!_isCallReady || _agoraService == null || _isVideoActionInFlight)
                                           ? null
@@ -3530,7 +3530,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     width: 260,
                     child: Container(
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.65),
+                        color: const Color(0xA610131A),
                         borderRadius: const BorderRadius.only(
                           topLeft: Radius.circular(16),
                           bottomLeft: Radius.circular(16),
@@ -3577,7 +3577,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             const Icon(Icons.circle,
-                                                color: Colors.green,
+                                                color: Color(0xFF00E3FD),
                                                 size: 8),
                                             const SizedBox(width: 3),
                                             Text(
@@ -3605,7 +3605,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               ],
                             ),
                           ),
-                          const Divider(height: 1, color: Colors.white24),
+                          const Divider(height: 1, color: Color(0x30BA9EFF)),
                           // Gift + hand raise row for non-hosts.
                           // Resolve hostId from Firestore doc first; fall back
                           // to the participants list so the row shows even when
@@ -3802,7 +3802,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               child: Text(
                                 cooldownMessage,
                                 style: const TextStyle(
-                                  color: Colors.red,
+                                  color: Color(0xFFFF6E84),
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -4000,7 +4000,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 vertical: 8,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.75),
+                                color: const Color(0xBF10131A),
                                 borderRadius: BorderRadius.circular(24),
                               ),
                               child: Row(
@@ -4039,7 +4039,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         );
       },
       loading: () => Scaffold(
-          backgroundColor: Colors.black,
+          backgroundColor: const Color(0xFF0B0E14),
           body: Stack(
             children: [
               const Center(child: CircularProgressIndicator()),
@@ -4055,9 +4055,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     children: [
                       Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.7),
+                          color: const Color(0xB310131A),
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: Colors.white24),
+                          border: Border.all(color: const Color(0x30BA9EFF)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -4066,7 +4066,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               tooltip: _isMicMuted ? 'Unmute microphone' : 'Mute microphone',
                               icon: Icon(
                                 _isMicMuted ? Icons.mic_off : Icons.mic,
-                                color: _isMicMuted ? Colors.red : Colors.white,
+                                color: _isMicMuted ? const Color(0xFFFF6E84) : Colors.white,
                               ),
                               onPressed: (!_isCallReady || _agoraService == null || _isMicActionInFlight)
                                   ? null
@@ -4076,7 +4076,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               tooltip: _isVideoEnabled ? 'Turn camera off' : 'Turn camera on',
                               icon: Icon(
                                 _isVideoEnabled ? Icons.videocam : Icons.videocam_off,
-                                color: _isVideoEnabled ? Colors.white : Colors.red,
+                                color: _isVideoEnabled ? Colors.white : const Color(0xFFFF6E84),
                               ),
                               onPressed: (!_isCallReady || _agoraService == null || _isVideoActionInFlight)
                                   ? null
@@ -4139,7 +4139,7 @@ class _HandRaiseButton extends StatelessWidget {
       tooltip: isPending ? 'Cancel hand raise' : 'Raise hand to speak',
       icon: Icon(
         isPending ? Icons.front_hand : Icons.front_hand_outlined,
-        color: isPending ? Colors.orange : null,
+        color: isPending ? const Color(0xFFBA9EFF) : null,
       ),
       onPressed: isPending ? () => onCancel() : onRaise,
     );

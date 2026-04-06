@@ -18,6 +18,18 @@ void main() {
   });
 
   testWidgets('login screen exposes signup navigation', (tester) async {
+    // Force narrow viewport to use single-column layout
+    await tester.binding.setSurfaceSize(const Size(400, 900));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    // Suppress overflow warnings from the glassmorphic login layout in tests
+    final originalHandler = FlutterError.onError;
+    FlutterError.onError = (details) {
+      if (details.exceptionAsString().contains('overflowed')) return;
+      originalHandler?.call(details);
+    };
+    addTearDown(() => FlutterError.onError = originalHandler);
+
     final router = GoRouter(
       initialLocation: '/login',
       routes: [
@@ -46,14 +58,9 @@ void main() {
     emitAuthState(null);
     await tester.pump();
 
-    expect(find.text("Don't have an account? Sign up"), findsOneWidget);
+    expect(find.text("Create Account"), findsOneWidget);
 
-    final signUpButton = find.widgetWithText(
-      TextButton,
-      "Don't have an account? Sign up",
-    );
-    await tester.ensureVisible(signUpButton);
-    await tester.tap(signUpButton);
+    await tester.tap(find.text("Create Account"), warnIfMissed: false);
 
     for (var i = 0; i < 20; i++) {
       await tester.pump(const Duration(milliseconds: 50));

@@ -1,95 +1,110 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../core/theme.dart';
 
 class AppTheme {
   static ThemeData light = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
-    scaffoldBackgroundColor: const Color(0xFF0C121E),
+    scaffoldBackgroundColor: NeonPulse.surface,
     colorScheme: const ColorScheme.dark(
-      primary: Color(0xFFFF7A18),
-      secondary: Color(0xFF1FCF9A),
-      tertiary: Color(0xFFFF4E72),
-      surface: Color(0xFF141C2B),
-      onPrimary: Colors.white,
-      onSecondary: Colors.white,
-      onSurface: Colors.white,
-      error: Color(0xFFFF6A6A),
-      onError: Colors.white,
+      primary: NeonPulse.primary,
+      secondary: NeonPulse.secondary,
+      surface: NeonPulse.surface,
+      error: NeonPulse.error,
+      onPrimary: NeonPulse.surface,
+      onSecondary: NeonPulse.surface,
+      onSurface: NeonPulse.onSurface,
+      onError: NeonPulse.surface,
+      surfaceContainerLow: NeonPulse.surfaceLow,
+      surfaceContainer: NeonPulse.surfaceContainer,
+      surfaceContainerHigh: NeonPulse.surfaceHigh,
+      surfaceContainerHighest: NeonPulse.surfaceHighest,
+      outline: NeonPulse.outlineVariant,
     ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: Color(0xFF0C121E),
-      elevation: 0,
-      surfaceTintColor: Colors.transparent,
-      foregroundColor: Colors.white,
-      centerTitle: true,
-      titleTextStyle: TextStyle(
-        color: Colors.white,
-        fontSize: 20,
-        fontWeight: FontWeight.w700,
+    textTheme: GoogleFonts.interTextTheme(
+      const TextTheme(
+        displayLarge:   TextStyle(fontWeight: FontWeight.w800, fontSize: 32, letterSpacing: -1,   color: NeonPulse.onSurface),
+        headlineLarge:  TextStyle(fontWeight: FontWeight.w700, fontSize: 26, color: NeonPulse.onSurface),
+        headlineMedium: TextStyle(fontWeight: FontWeight.w700, fontSize: 22, color: NeonPulse.onSurface),
+        headlineSmall:  TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: NeonPulse.onSurface),
+        titleLarge:  TextStyle(fontWeight: FontWeight.w600, fontSize: 20, color: NeonPulse.onSurface),
+        titleMedium: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: NeonPulse.onSurface),
+        titleSmall:  TextStyle(fontWeight: FontWeight.w500, fontSize: 14, color: NeonPulse.onSurface),
+        bodyLarge:   TextStyle(fontSize: 16, color: NeonPulse.onSurface),
+        bodyMedium:  TextStyle(fontSize: 14, color: NeonPulse.onSurfaceVariant),
+        bodySmall:   TextStyle(fontSize: 12, color: NeonPulse.onSurfaceVariant),
+        labelLarge:  TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: NeonPulse.onSurface),
       ),
     ),
-    cardTheme: CardThemeData(
-      color: const Color(0xFF141C2B),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: NeonPulse.surface,
       elevation: 0,
+      scrolledUnderElevation: 0,
+      surfaceTintColor: Colors.transparent,
+      foregroundColor: NeonPulse.onSurface,
+      centerTitle: true,
+    ),
+    cardTheme: CardThemeData(
+      elevation: 0,
+      color: NeonPulse.surfaceHigh,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(18),
-        side: const BorderSide(color: Color(0x33FFFFFF)),
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0x1A73757D)),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: const Color(0xFF101A2A),
+      fillColor: NeonPulse.surfaceHighest,
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0x55FFFFFF)),
+        borderRadius: BorderRadius.circular(999),
+        borderSide: BorderSide.none,
       ),
       enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0x55FFFFFF)),
+        borderRadius: BorderRadius.circular(999),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: const BorderSide(color: Color(0xFFFF7A18), width: 1.6),
+        borderRadius: BorderRadius.circular(999),
+        borderSide: const BorderSide(color: NeonPulse.primary, width: 1.5),
       ),
-      labelStyle: const TextStyle(fontSize: 14, color: Colors.white70),
-      hintStyle: const TextStyle(color: Colors.white54),
+      hintStyle: const TextStyle(color: NeonPulse.onSurfaceVariant, fontSize: 14),
+      labelStyle: const TextStyle(color: NeonPulse.onSurfaceVariant, fontSize: 14),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFFFF7A18),
-        foregroundColor: Colors.white,
+        backgroundColor: NeonPulse.primary,
+        foregroundColor: NeonPulse.surface,
         minimumSize: const Size(double.infinity, 52),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
         textStyle: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+        elevation: 0,
       ),
     ),
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white,
-        side: const BorderSide(color: Color(0x66FFFFFF)),
-        minimumSize: const Size(double.infinity, 50),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(14),
-        ),
+        foregroundColor: NeonPulse.onSurface,
+        side: const BorderSide(color: Color(0x1A73757D)),
+        minimumSize: const Size(double.infinity, 52),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(999)),
       ),
     ),
     textButtonTheme: TextButtonThemeData(
       style: TextButton.styleFrom(
-        foregroundColor: const Color(0xFF93B4FF),
+        foregroundColor: NeonPulse.primary,
       ),
     ),
+    iconTheme: const IconThemeData(color: NeonPulse.onSurfaceVariant),
     dividerTheme: const DividerThemeData(
-      color: Color(0x33FFFFFF),
+      color: Color(0x1A73757D),
       thickness: 1,
     ),
-    textTheme: const TextTheme(
-      headlineLarge: TextStyle(fontWeight: FontWeight.w800, fontSize: 34, color: Colors.white),
-      headlineSmall: TextStyle(fontWeight: FontWeight.w700, fontSize: 34, color: Colors.white),
-      titleMedium: TextStyle(fontWeight: FontWeight.w700, fontSize: 18, color: Colors.white),
-      bodyMedium: TextStyle(fontSize: 16, color: Colors.white70),
-      bodySmall: TextStyle(fontSize: 13, color: Colors.white60),
+    snackBarTheme: SnackBarThemeData(
+      backgroundColor: NeonPulse.surfaceHigh,
+      contentTextStyle: GoogleFonts.inter(color: NeonPulse.onSurface, fontSize: 14),
+      behavior: SnackBarBehavior.floating,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
   );
 }
