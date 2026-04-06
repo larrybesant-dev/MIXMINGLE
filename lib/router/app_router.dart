@@ -166,7 +166,6 @@ Future<String?> evaluateAppRedirect({
   if (loggedIn) {
     final profileComplete = await isProfileComplete(uid);
     if (!profileComplete && !isProfile) return '/profile';
-    if (profileComplete && isProfile && !firstRun) return '/';
   }
   if (loggedIn && isLoggingIn) return '/';
   return null;
