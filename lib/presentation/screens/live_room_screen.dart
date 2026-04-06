@@ -3418,6 +3418,51 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         ),
                       ),
                     ),
+                  // ── BROADCASTER MIC / CAMERA CONTROLS ────────────────────
+                  if (_isCallReady && _agoraService != null && (isHost || isCohost))
+                    Positioned(
+                      bottom: 40,
+                      left: 12,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: _isMicMuted
+                                  ? 'Unmute microphone'
+                                  : 'Mute microphone',
+                              icon: Icon(
+                                _isMicMuted ? Icons.mic_off : Icons.mic,
+                                color:
+                                    _isMicMuted ? Colors.red : Colors.white,
+                              ),
+                              onPressed:
+                                  _isMicActionInFlight ? null : _toggleMic,
+                            ),
+                            IconButton(
+                              tooltip: _isVideoEnabled
+                                  ? 'Turn camera off'
+                                  : 'Turn camera on',
+                              icon: Icon(
+                                _isVideoEnabled
+                                    ? Icons.videocam
+                                    : Icons.videocam_off,
+                                color:
+                                    _isVideoEnabled ? Colors.white : Colors.red,
+                              ),
+                              onPressed: _isVideoActionInFlight
+                                  ? null
+                                  : _toggleVideo,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   // ── RIGHT: floating glass chat panel ──────────────────────
                   Positioned(
                     right: 0,
