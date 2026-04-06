@@ -79,7 +79,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isVideoActionInFlight = false;
   String? _cameraStatus;
   String _connectPhase = 'idle';
-  String? _connectErrorCode;
   bool _showEmojiTray = false;
   String? _callError;
   int? _currentRtcUid;
@@ -451,7 +450,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     setState(() {
       _isCallConnecting = true;
       _callError = null;
-      _connectErrorCode = null;
       _connectPhase = 'starting';
     });
 
@@ -629,7 +627,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           final debugSuffix = e is AgoraServiceException
               ? ' [${e.code}] ${e.cause ?? e.message}'
               : ' [$e]';
-          _connectErrorCode = errorCode;
           _connectPhase = 'failed';
           _callError = '$mappedError$debugSuffix';
           _cameraStatus =
@@ -680,6 +677,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     _logLiveRoom(
       'toggle_video:precheck service=${service != null} callReady=$_isCallReady inFlight=$_isVideoActionInFlight',
     );
+
+    // Prevent immediate double-fire (e.g. Flutter web button replay on rebuild).
+    if (_videoToggleCooldownUntil != null &&
+        DateTime.now().isBefore(_videoToggleCooldownUntil!)) {
+      _logLiveRoom('toggle_video:blocked cooldown');
+      return;
+    }
 
     if (service == null || !_isCallReady || _isVideoActionInFlight) {
       if (service == null) {
@@ -2526,13 +2530,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     );
   }
 
-  String _cameraAccessHint({
-    required String role,
-    required String? camRequestStatus,
-  }) {
-    return 'Your camera can publish anytime. Use viewer controls to decide who can see it.';
-  }
-
   void _addGiftToast(RoomGiftEvent event) {
     final catalog = RoomGiftCatalog.findById(event.giftId);
     final emoji = catalog?.emoji ?? '🎁';
@@ -3423,44 +3420,87 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     Positioned(
                       bottom: 40,
                       left: 12,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.7),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: Colors.white24),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              tooltip: _isMicMuted
-                                  ? 'Unmute microphone'
-                                  : 'Mute microphone',
-                              icon: Icon(
-                                _isMicMuted ? Icons.mic_off : Icons.mic,
-                                color:
-                                    _isMicMuted ? Colors.red : Colors.white,
-                              ),
-                              onPressed:
-                                  _isMicActionInFlight ? null : _toggleMic,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.7),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(color: Colors.white24),
                             ),
-                            IconButton(
-                              tooltip: _isVideoEnabled
-                                  ? 'Turn camera off'
-                                  : 'Turn camera on',
-                              icon: Icon(
-                                _isVideoEnabled
-                                    ? Icons.videocam
-                                    : Icons.videocam_off,
-                                color:
-                                    _isVideoEnabled ? Colors.white : Colors.red,
-                              ),
-                              onPressed: _isVideoActionInFlight
-                                  ? null
-                                  : _toggleVideo,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  tooltip: _isMicMuted
+                                      ? 'Unmute microphone'
+                                      : 'Mute microphone',
+                                  icon: Icon(
+                                    _isMicMuted ? Icons.mic_off : Icons.mic,
+                                    color:
+                                        _isMicMuted ? Colors.red : Colors.white,
+                                  ),
+                                  onPressed:
+                                      _isMicActionInFlight ? null : _toggleMic,
+                                ),
+                                Tooltip(
+                                  message: _isVideoEnabled
+                                      ? 'Turn camera off (long-press to manage viewers)'
+                                      : 'Turn camera on (long-press to manage viewers)',
+                                  child: GestureDetector(
+                                    onLongPress: () {
+                                      final camController = ref.read(
+                                        userCamPermissionsControllerProvider,
+                                      );
+                                      final allowedViewers = ref
+                                          .read(userCamAllowedViewersProvider(
+                                            user.id,
+                                          ))
+                                          .valueOrNull ??
+                                          const <String>[];
+                                      _openManageCamViewersSheet(
+                                        members: participantsInRoom,
+                                        currentUserId: user.id,
+                                        currentAllowedViewers: allowedViewers,
+                                        controller: camController,
+                                      );
+                                    },
+                                    child: IconButton(
+                                      tooltip: _isVideoEnabled
+                                          ? 'Turn camera off'
+                                          : 'Turn camera on',
+                                      icon: Icon(
+                                        _isVideoEnabled
+                                            ? Icons.videocam
+                                            : Icons.videocam_off,
+                                        color: _isVideoEnabled
+                                            ? Colors.white
+                                            : Colors.red,
+                                      ),
+                                      onPressed: _isVideoActionInFlight
+                                          ? null
+                                          : _toggleVideo,
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
+                          ),
+                          if (_cameraStatus != null)
+                            Padding(
+                              padding:
+                                  const EdgeInsets.only(left: 8, top: 4),
+                              child: Text(
+                                _cameraStatus!,
+                                style: const TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   // ── RIGHT: floating glass chat panel ──────────────────────
