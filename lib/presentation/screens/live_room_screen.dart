@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:developer' as developer;
-import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -13,7 +12,6 @@ import 'package:share_plus/share_plus.dart';
 import '../../config/agora_constants.dart';
 import '../../models/moderation_model.dart';
 import '../../models/message_model.dart';
-import '../../models/room_policy_model.dart';
 import '../../models/room_participant_model.dart';
 import '../providers/user_provider.dart';
 import '../../features/room/providers/room_firestore_provider.dart';
@@ -32,7 +30,7 @@ import '../../services/desktop_window_service.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
 import '../../features/room/providers/mic_access_provider.dart';
 import '../../features/room/providers/host_controls_provider.dart';
-import '../../features/room/providers/host_provider.dart';
+import '../../features/feed/providers/host_controls_providers.dart';
 import '../../features/room/providers/room_policy_provider.dart';
 import '../../features/room/providers/room_gift_provider.dart';
 import '../../features/room/providers/user_cam_permissions_provider.dart';
@@ -118,7 +116,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _remoteLayoutSyncQueued = false;
   bool _roleMediaStatePending = false;
   int _localViewEpoch = 0;
-  int _lastPendingMicRequestCount = 0;
   /// Cached from the room stream — avoids a Firestore .get() on every cam toggle.
   int _maxBroadcasters = 6;
   static const List<String> _quickEmojis = <String>[
@@ -2784,25 +2781,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       participantsStreamProvider(widget.roomId),
     );
     final messageStreamAsync = ref.watch(messageStreamProvider(widget.roomId));
-    final participantCountAsync = ref.watch(
-      participantCountProvider(widget.roomId),
-    );
     final presenceAsync = ref.watch(roomPresenceStreamProvider(widget.roomId));
-    final hostAsync = ref.watch(hostProvider(widget.roomId));
-    final coHostsAsync = ref.watch(coHostsProvider(widget.roomId));
     final roomPolicyAsync = ref.watch(roomPolicyProvider(widget.roomId));
-    final myAllowedViewersAsync = ref.watch(
-      userCamAllowedViewersProvider(user.id),
-    );
     final micRequestsAsync = ref.watch(
       roomMicAccessRequestsProvider(widget.roomId),
     );
     final hostControls = ref.read(hostControlsProvider);
     final micAccessController = ref.read(micAccessControllerProvider);
-    final userCamPermissionsController = ref.read(
-      userCamPermissionsControllerProvider,
-    );
-    final roomPolicyController = ref.read(roomPolicyControllerProvider);
     final walletAsync = ref.watch(walletDetailsProvider);
     final topGifters = ref.watch(topGiftersProvider(widget.roomId));
 
@@ -2812,8 +2797,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         final isCohost = ref.watch(isCohostProvider(participant));
         final isModerator = participant?.role == 'moderator';
         final role = participant?.role ?? 'audience';
-        final myAllowedViewers =
-            myAllowedViewersAsync.valueOrNull ?? const <String>[];
         final myMicRequestAsync = ref.watch(
           myMicAccessRequestProvider((
             roomId: widget.roomId,
@@ -2915,7 +2898,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               return _excludedUserIds.contains(participantId);
             });
             final allowChat = roomPolicyAsync.valueOrNull?.allowChat ?? true;
-            final isDesktopLayout = MediaQuery.sizeOf(context).width >= 1180;
             if (isLocked && !isHost && !isCohost && !isModerator) {
               return const Scaffold(
                 body: Center(child: Text('Room is locked.')),
@@ -3349,7 +3331,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: topGifters.length,
-                          separatorBuilder: (_, __) =>
+                          separatorBuilder: (_, _) =>
                               const SizedBox(width: 6),
                           itemBuilder: (ctx, i) {
                             const medals = ['🥇', '🥈', '🥉'];
@@ -3436,1022 +3418,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         ),
                       ),
                     ),
-                  // ── RIGHT: floating glass chat panel ──────────────────────
-                        if (_agoraService != null)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        'Camera Wall',
-                                        style: Theme.of(
-                                          context,
-                                        ).textTheme.titleSmall,
-                                      ),
-                                    ),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 3,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: _isCallConnecting
-                                            ? Colors.orange
-                                            : _isCallReady
-                                                ? Colors.red
-                                                : Colors.grey.shade700,
-                                        borderRadius:
-                                            BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        _isCallConnecting
-                                            ? '● Connecting'
-                                            : _isCallReady
-                                                ? '● LIVE'
-                                                : '○ Offline',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 6),
-                                Builder(
-                                  builder: (context) {
-                                    // maxBroadcasters from the room document drives how
-                                    // many camera positions the wall exposes (default 6).
-                                    // Do NOT use the slot-stream length here — that count
-                                    // reflects currently *occupied* slots (docs), not the cap.
-                                    final rawMaxBc = roomData?['maxBroadcasters'];
-                                    final slotCount = rawMaxBc is num ? rawMaxBc.toInt() : 6;
-
-                                    // Kick off display-name lookups for all
-                                    // on-cam users so tiles show usernames.
-                                    final remoteUserIds = _agoraService!.remoteUids
-                                        .map((uid) => _userIdForRtcUid(uid, participantsInRoom))
-                                        .whereType<String>()
-                                        .toList();
-                                    if (remoteUserIds.isNotEmpty) {
-                                      unawaited(_hydrateSenderDisplayNames(
-                                        userIds: remoteUserIds,
-                                        currentUserId: user.id,
-                                      ));
-                                    }
-
-                                    // Build a map from userId → isOnline using the presence
-                                    // stream so we can filter out stale webrtc_peers entries
-                                    // (e.g. users who disconnected abruptly without cleanup).
-                                    final presenceMap = <String, bool>{
-                                      for (final p in presenceAsync.valueOrNull ??
-                                          const <RoomPresenceModel>[])
-                                        if (p.isOnline &&
-                                            (p.lastHeartbeatAt == null ||
-                                                DateTime.now()
-                                                        .difference(
-                                                          p.lastHeartbeatAt!,
-                                                        )
-                                                        .inSeconds <
-                                                    90))
-                                          p.userId: true,
-                                    };
-
-                                    final remoteTiles = _agoraService!.remoteUids
-                                        .where((remoteUid) {
-                                          // Filter out UIDs whose owner is confirmed offline.
-                                          final remoteUserId = _userIdForRtcUid(
-                                            remoteUid,
-                                            participantsInRoom,
-                                          );
-                                          if (remoteUserId == null) return true; // unknown — show
-                                          // If presence doc exists and user is not online → hide stale tile.
-                                          final knownOnline = presenceMap[remoteUserId];
-                                          if (knownOnline == null) return true; // no doc yet — show
-                                          return knownOnline;
-                                        })
-                                        .map((remoteUid) {
-                                          final remoteUserId = _userIdForRtcUid(
-                                            remoteUid,
-                                            participantsInRoom,
-                                          );
-                                          final allowedViewers =
-                                              remoteUserId == null
-                                              ? const <String>[]
-                                              : ref
-                                                        .watch(
-                                                          userCamAllowedViewersProvider(
-                                                            remoteUserId,
-                                                          ),
-                                                        )
-                                                        .valueOrNull ??
-                                                    const <String>[];
-                                          // Empty allowedViewers means no restriction (open to all).
-                                          // Only restrict when the list is non-empty (explicit allow-list).
-                                          final canViewRemote =
-                                              remoteUserId != null &&
-                                              (allowedViewers.isEmpty ||
-                                                  allowedViewers.contains(
-                                                    user.id,
-                                                  ));
-                                          // Use cached display name if available,
-                                          // fall back to userId while fetch is in progress.
-                                          final tileLabel = remoteUserId != null
-                                              ? (_senderDisplayNameById[remoteUserId] ?? remoteUserId)
-                                              : 'Guest $remoteUid';
-                                          return CameraWallRemoteTileData(
-                                            uid: remoteUid,
-                                            label: tileLabel,
-                                            canView: canViewRemote,
-                                            isSpeaking: _agoraService!
-                                                .isRemoteSpeaking(remoteUid),
-                                          );
-                                        })
-                                        .toList(growable: false);
-
-                                    return CameraWall(
-                                      roomId: widget.roomId,
-                                      roomName: roomName,
-                                      localLabel: _senderDisplayNameById[user.id] ?? 'You',
-                                      localSpeaking:
-                                          _agoraService!.localSpeaking,
-                                      localTile: _buildLocalCamContent(),
-                                      remoteTiles: remoteTiles,
-                                      maxMainGridRemoteTiles: slotCount,
-                                      remoteTileBuilder: (tile) {
-                                        return _buildRemoteCamContent(
-                                          remoteUid: tile.uid,
-                                          canViewRemote: tile.canView,
-                                        );
-                                      },
-                                      onSubscriptionPlanChanged: (
-                                        highQualityUids,
-                                        lowQualityUids,
-                                      ) {
-                                        _scheduleRemoteVideoLayoutSync(
-                                          highQualityUids: highQualityUids,
-                                          lowQualityUids: lowQualityUids,
-                                        );
-                                      },
-                                    );
-                                  },
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    IconButton.filledTonal(
-                                      tooltip: _isMicMuted
-                                          ? 'Unmute microphone'
-                                          : 'Mute microphone',
-                                      onPressed:
-                                          RoomPermissions.canUseMic(role) &&
-                                              !_isMicActionInFlight
-                                          ? _toggleMic
-                                          : null,
-                                      icon: Icon(
-                                        _isMicMuted ? Icons.mic_off : Icons.mic,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    IconButton.filledTonal(
-                                      tooltip: _isVideoEnabled
-                                          ? 'Turn camera off'
-                                          : 'Turn camera on',
-                                      onPressed:
-                                          RoomPermissions.canUseCamera(role) &&
-                                              !_isVideoActionInFlight &&
-                                              (_videoToggleCooldownUntil ==
-                                                      null ||
-                                                  DateTime.now().isAfter(
-                                                    _videoToggleCooldownUntil!,
-                                                  ))
-                                          ? () {
-                                              if (mounted) {
-                                                setState(
-                                                  () => _cameraStatus =
-                                                      'Camera button pressed. Initializing...',
-                                                );
-                                              }
-                                              _toggleVideo();
-                                            }
-                                          : null,
-                                      icon: Icon(
-                                        _isVideoEnabled
-                                            ? Icons.videocam
-                                            : Icons.videocam_off,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                OutlinedButton.icon(
-                                  onPressed: () => _openManageCamViewersSheet(
-                                    members: participantsInRoom,
-                                    currentUserId: user.id,
-                                    currentAllowedViewers: myAllowedViewers,
-                                    controller: userCamPermissionsController,
-                                  ),
-                                  icon: const Icon(Icons.lock_open_outlined),
-                                  label: const Text(
-                                    'Manage who can view my cam',
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  _cameraAccessHint(
-                                    role: role,
-                                    camRequestStatus: null,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                                if (_cameraStatus != null) ...[
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _cameraStatus!,
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.secondary,
-                                        ),
-                                  ),
-                                ],
-                                if (kDebugMode && _agoraService != null) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'debug: phase=$_connectPhase code=${_connectErrorCode ?? "none"} ready=$_isCallReady joined=${_agoraService!.isJoinedChannel} broadcaster=${_agoraService!.isBroadcaster} capturing=${_agoraService!.isLocalVideoCapturing} video=$_isVideoEnabled inFlight=$_isVideoActionInFlight',
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context).textTheme.bodySmall
-                                        ?.copyWith(
-                                          color: Theme.of(
-                                            context,
-                                          ).colorScheme.outline,
-                                          fontSize: 11,
-                                        ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-
-                        if (isHost)
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(12),
-                                child: ConstrainedBox(
-                                  constraints: const BoxConstraints(
-                                    maxHeight: 280,
-                                  ),
-                                  child: SingleChildScrollView(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Host Controls',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.titleMedium,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Wrap(
-                                          spacing: 12,
-                                          runSpacing: 12,
-                                          children: [
-                                            SizedBox(
-                                              width: 190,
-                                              child:
-                                                  DropdownButtonFormField<int>(
-                                                    initialValue:
-                                                        slowModeSeconds,
-                                                    decoration:
-                                                        const InputDecoration(
-                                                          labelText:
-                                                              'Slow mode',
-                                                        ),
-                                                    items: const [
-                                                      DropdownMenuItem(
-                                                        value: 0,
-                                                        child: Text('Off'),
-                                                      ),
-                                                      DropdownMenuItem(
-                                                        value: 5,
-                                                        child: Text(
-                                                          '5 seconds',
-                                                        ),
-                                                      ),
-                                                      DropdownMenuItem(
-                                                        value: 10,
-                                                        child: Text(
-                                                          '10 seconds',
-                                                        ),
-                                                      ),
-                                                      DropdownMenuItem(
-                                                        value: 30,
-                                                        child: Text(
-                                                          '30 seconds',
-                                                        ),
-                                                      ),
-                                                    ],
-                                                    onChanged: (val) {
-                                                      if (val != null) {
-                                                        hostControls
-                                                            .toggleSlowMode(
-                                                              widget.roomId,
-                                                              val,
-                                                            );
-                                                      }
-                                                    },
-                                                  ),
-                                            ),
-                                            SizedBox(
-                                              width: 220,
-                                              child: SwitchListTile.adaptive(
-                                                contentPadding: EdgeInsets.zero,
-                                                title: const Text('Lock room'),
-                                                subtitle: Text(
-                                                  isLocked
-                                                      ? 'New listeners blocked'
-                                                      : 'Room is open',
-                                                ),
-                                                value: isLocked,
-                                                onChanged: (_) =>
-                                                    hostControls.toggleLockRoom(
-                                                      widget.roomId,
-                                                    ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              width: 220,
-                                              child: SwitchListTile.adaptive(
-                                                contentPadding: EdgeInsets.zero,
-                                                title: const Text('Chat'),
-                                                subtitle: Text(
-                                                  allowChat
-                                                      ? 'Members can message'
-                                                      : 'Chat paused',
-                                                ),
-                                                value: allowChat,
-                                                onChanged: (_) => hostControls
-                                                    .toggleAllowChat(
-                                                      widget.roomId,
-                                                    ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              width: 220,
-                                              child: SwitchListTile.adaptive(
-                                                contentPadding: EdgeInsets.zero,
-                                                title: const Text(
-                                                  'Mic requests',
-                                                ),
-                                                subtitle: Text(
-                                                  allowMicRequests
-                                                      ? 'Users can request stage access'
-                                                      : 'Requests paused',
-                                                ),
-                                                value: allowMicRequests,
-                                                onChanged: (_) => hostControls
-                                                    .toggleAllowMicRequests(
-                                                      widget.roomId,
-                                                    ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              width: 220,
-                                              child: SwitchListTile.adaptive(
-                                                contentPadding: EdgeInsets.zero,
-                                                title: const Text('Gifts'),
-                                                subtitle: Text(
-                                                  allowGifts
-                                                      ? 'Gift interactions enabled'
-                                                      : 'Gifts paused',
-                                                ),
-                                                value: allowGifts,
-                                                onChanged: (_) => hostControls
-                                                    .toggleAllowGifts(
-                                                      widget.roomId,
-                                                    ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              width: 220,
-                                              child:
-                                                  DropdownButtonFormField<int>(
-                                                    initialValue:
-                                                        roomPolicyAsync
-                                                            .valueOrNull
-                                                            ?.micLimit ??
-                                                        6,
-                                                    decoration:
-                                                        const InputDecoration(
-                                                          labelText:
-                                                              'Mic seats',
-                                                        ),
-                                                    items: const [
-                                                      DropdownMenuItem(
-                                                        value: 2,
-                                                        child: Text('2 seats'),
-                                                      ),
-                                                      DropdownMenuItem(
-                                                        value: 4,
-                                                        child: Text('4 seats'),
-                                                      ),
-                                                      DropdownMenuItem(
-                                                        value: 6,
-                                                        child: Text('6 seats'),
-                                                      ),
-                                                      DropdownMenuItem(
-                                                        value: 8,
-                                                        child: Text('8 seats'),
-                                                      ),
-                                                    ],
-                                                    onChanged: (value) {
-                                                      if (value == null) return;
-                                                      roomPolicyController
-                                                          .setMicLimit(
-                                                            widget.roomId,
-                                                            value,
-                                                          );
-                                                    },
-                                                  ),
-                                            ),
-                                            SizedBox(
-                                              width: 220,
-                                              child:
-                                                  DropdownButtonFormField<int>(
-                                                    initialValue:
-                                                        roomPolicyAsync
-                                                            .valueOrNull
-                                                            ?.camLimit ??
-                                                        6,
-                                                    decoration:
-                                                        const InputDecoration(
-                                                          labelText:
-                                                              'Camera seats',
-                                                        ),
-                                                    items: const [
-                                                      DropdownMenuItem(
-                                                        value: 2,
-                                                        child: Text('2 seats'),
-                                                      ),
-                                                      DropdownMenuItem(
-                                                        value: 4,
-                                                        child: Text('4 seats'),
-                                                      ),
-                                                      DropdownMenuItem(
-                                                        value: 6,
-                                                        child: Text('6 seats'),
-                                                      ),
-                                                      DropdownMenuItem(
-                                                        value: 8,
-                                                        child: Text('8 seats'),
-                                                      ),
-                                                    ],
-                                                    onChanged: (value) {
-                                                      if (value == null) return;
-                                                      roomPolicyController
-                                                          .setCamLimit(
-                                                            widget.roomId,
-                                                            value,
-                                                          );
-                                                    },
-                                                  ),
-                                            ),
-                                            SizedBox(
-                                              width: 240,
-                                              child: DropdownButtonFormField<String>(
-                                                initialValue:
-                                                    roomPolicyAsync
-                                                        .valueOrNull
-                                                        ?.defaultCamViewPolicy
-                                                        .name ??
-                                                    CamViewPolicy
-                                                        .approvedOnly
-                                                        .name,
-                                                decoration:
-                                                    const InputDecoration(
-                                                      labelText:
-                                                          'Default cam policy',
-                                                    ),
-                                                items: CamViewPolicy.values
-                                                    .map(
-                                                      (policy) =>
-                                                          DropdownMenuItem(
-                                                            value: policy.name,
-                                                            child: Text(
-                                                              policy.name,
-                                                            ),
-                                                          ),
-                                                    )
-                                                    .toList(growable: false),
-                                                onChanged: (value) {
-                                                  if (value == null) return;
-                                                  final policy = CamViewPolicy
-                                                      .values
-                                                      .firstWhere(
-                                                        (item) =>
-                                                            item.name == value,
-                                                        orElse: () =>
-                                                            CamViewPolicy
-                                                                .approvedOnly,
-                                                      );
-                                                  roomPolicyController
-                                                      .setDefaultCamViewPolicy(
-                                                        widget.roomId,
-                                                        policy,
-                                                      );
-                                                },
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              width: 220,
-                                              child:
-                                                  DropdownButtonFormField<
-                                                    String
-                                                  >(
-                                                    initialValue:
-                                                        roomPolicyAsync
-                                                            .valueOrNull
-                                                            ?.visibility
-                                                            .name ??
-                                                        MixVyRoomVisibility
-                                                            .public
-                                                            .name,
-                                                    decoration:
-                                                        const InputDecoration(
-                                                          labelText:
-                                                              'Room visibility',
-                                                        ),
-                                                    items: MixVyRoomVisibility
-                                                        .values
-                                                        .map(
-                                                          (
-                                                            visibility,
-                                                          ) => DropdownMenuItem(
-                                                            value:
-                                                                visibility.name,
-                                                            child: Text(
-                                                              visibility.name,
-                                                            ),
-                                                          ),
-                                                        )
-                                                        .toList(
-                                                          growable: false,
-                                                        ),
-                                                    onChanged: (value) {
-                                                      if (value == null) return;
-                                                      final visibility =
-                                                          MixVyRoomVisibility
-                                                              .values
-                                                              .firstWhere(
-                                                                (item) =>
-                                                                    item.name ==
-                                                                    value,
-                                                                orElse: () =>
-                                                                    MixVyRoomVisibility
-                                                                        .public,
-                                                              );
-                                                      roomPolicyController
-                                                          .setVisibility(
-                                                            widget.roomId,
-                                                            visibility,
-                                                          );
-                                                    },
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Wrap(
-                                          spacing: 8,
-                                          runSpacing: 8,
-                                          children: [
-                                            OutlinedButton.icon(
-                                              onPressed:
-                                                  participantsInRoom.isEmpty
-                                                  ? null
-                                                  : () => _openPeopleSheet(
-                                                      participants:
-                                                          participantsInRoom,
-                                                      currentParticipant:
-                                                          participant,
-                                                      currentUserId: user.id,
-                                                      currentUsername:
-                                                          user.username,
-                                                      currentAvatarUrl:
-                                                          user.avatarUrl,
-                                                      hostId: hostId,
-                                                      isHost: true,
-                                                      isModerator: false,
-                                                      hostControls:
-                                                          hostControls,
-                                                      presenceList:
-                                                          presenceAsync
-                                                              .valueOrNull ??
-                                                          const [],
-                                                    ),
-                                              icon: const Icon(
-                                                Icons.manage_accounts_outlined,
-                                              ),
-                                              label: const Text(
-                                                'Manage people',
-                                              ),
-                                            ),
-                                            if (participantsInRoom.isNotEmpty)
-                                              Chip(
-                                                label: Text(
-                                                  '${participantsInRoom.length} participants',
-                                                ),
-                                              ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'Mic request queue',
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.titleSmall,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        micRequestsAsync.when(
-                                          data: (requests) {
-                                            final pendingRequests = requests
-                                                .where(
-                                                  (request) =>
-                                                      request.status ==
-                                                      'pending',
-                                                )
-                                                .toList(growable: false);
-                                            // Play audio cue when a new hand raise arrives.
-                                            if (isHost && pendingRequests.length > _lastPendingMicRequestCount) {
-                                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                                RoomAudioCues.instance.playHandRaised();
-                                              });
-                                            }
-                                            _lastPendingMicRequestCount = pendingRequests.length;
-                                            if (pendingRequests.isEmpty) {
-                                              return const Text(
-                                                'No pending mic requests.',
-                                              );
-                                            }
-
-                                            return Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: pendingRequests
-                                                  .map((request) {
-                                                    return Card(
-                                                      child: ListTile(
-                                                        title: Text(
-                                                          'Mic request from ${request.requesterId}',
-                                                        ),
-                                                        subtitle: Text(
-                                                          'Approve for stage audio access • Priority ${request.priority}',
-                                                        ),
-                                                        trailing: Wrap(
-                                                          spacing: 8,
-                                                          children: [
-                                                            IconButton(
-                                                              onPressed: () =>
-                                                                  micAccessController
-                                                                      .bumpPriority(
-                                                                        widget
-                                                                            .roomId,
-                                                                        request
-                                                                            .id,
-                                                                      ),
-                                                              icon: const Icon(
-                                                                Icons
-                                                                    .arrow_upward,
-                                                              ),
-                                                              tooltip:
-                                                                  'Bump priority',
-                                                            ),
-                                                            IconButton(
-                                                              onPressed: () =>
-                                                                  micAccessController
-                                                                      .lowerPriority(
-                                                                        widget
-                                                                            .roomId,
-                                                                        request
-                                                                            .id,
-                                                                      ),
-                                                              icon: const Icon(
-                                                                Icons
-                                                                    .arrow_downward,
-                                                              ),
-                                                              tooltip:
-                                                                  'Lower priority',
-                                                            ),
-                                                            IconButton(
-                                                              onPressed: () =>
-                                                                  micAccessController
-                                                                      .approveRequest(
-                                                                        widget
-                                                                            .roomId,
-                                                                        request,
-                                                                      ),
-                                                              icon: const Icon(
-                                                                Icons
-                                                                    .check_circle_outline,
-                                                              ),
-                                                              tooltip:
-                                                                  'Approve',
-                                                            ),
-                                                            IconButton(
-                                                              onPressed: () =>
-                                                                  micAccessController
-                                                                      .denyRequest(
-                                                                        widget
-                                                                            .roomId,
-                                                                        request
-                                                                            .id,
-                                                                      ),
-                                                              icon: const Icon(
-                                                                Icons
-                                                                    .cancel_outlined,
-                                                              ),
-                                                              tooltip: 'Deny',
-                                                            ),
-                                                            IconButton(
-                                                              onPressed: () =>
-                                                                  micAccessController
-                                                                      .expireNow(
-                                                                        widget
-                                                                            .roomId,
-                                                                        request
-                                                                            .id,
-                                                                      ),
-                                                              icon: const Icon(
-                                                                Icons
-                                                                    .timer_off_outlined,
-                                                              ),
-                                                              tooltip:
-                                                                  'Expire now',
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    );
-                                                  })
-                                                  .toList(growable: false),
-                                            );
-                                          },
-                                          loading: () =>
-                                              const LinearProgressIndicator(),
-                                          error: (e, _) => Text(
-                                            'Could not load mic requests: $e',
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        if (!isHost) ...[
-                          if (!isCohost && !isModerator)
-                            const SizedBox.shrink(),
-                          // Presence header and avatar strip
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
-                              vertical: 8.0,
-                            ),
-                            child: Row(
-                              children: [
-                                participantCountAsync.when(
-                                  data: (participantCount) => Text(
-                                    '$participantCount total joined',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium
-                                        ?.copyWith(fontWeight: FontWeight.bold),
-                                  ),
-                                  loading: () => const SizedBox(
-                                    width: 60,
-                                    child: LinearProgressIndicator(),
-                                  ),
-                                  error: (e, _) => const Text('—'),
-                                ),
-                                const Spacer(),
-                                presenceAsync.when(
-                                  data: (presence) {
-                                    final activeCutoff = DateTime.now()
-                                        .subtract(const Duration(seconds: 50));
-                                    final onlineCount = presence
-                                        .where(
-                                          (entry) =>
-                                              entry.isOnline &&
-                                              (entry.lastHeartbeatAt == null ||
-                                                  entry.lastHeartbeatAt!
-                                                      .isAfter(activeCutoff)),
-                                        )
-                                        .length;
-                                    return Chip(
-                                      avatar: const Icon(
-                                        Icons.circle,
-                                        color: Colors.green,
-                                        size: 10,
-                                      ),
-                                      label: Text('$onlineCount online'),
-                                    );
-                                  },
-                                  loading: () => const SizedBox.shrink(),
-                                  error: (_, _) => const SizedBox.shrink(),
-                                ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  tooltip: 'People in room',
-                                  onPressed: participantsInRoom.isEmpty
-                                      ? null
-                                      : () => _openPeopleSheet(
-                                          participants: participantsInRoom,
-                                          currentParticipant: participant,
-                                          currentUserId: user.id,
-                                          currentUsername: user.username,
-                                          currentAvatarUrl: user.avatarUrl,
-                                          hostId: hostId,
-                                          isHost: isHost,
-                                          isModerator: isModerator,
-                                          hostControls: hostControls,
-                                          presenceList:
-                                              presenceAsync.valueOrNull ??
-                                              const [],
-                                        ),
-                                  icon: const Icon(Icons.people_outline),
-                                ),
-                                hostAsync.when(
-                                  data: (host) => host != null
-                                      ? CircleAvatar(
-                                          radius: 16,
-                                          backgroundColor: Colors.amber,
-                                          child: Text(
-                                            'H',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                        )
-                                      : const SizedBox.shrink(),
-                                  loading: () => const CircleAvatar(
-                                    radius: 16,
-                                    backgroundColor: Colors.grey,
-                                  ),
-                                  error: (e, _) => const SizedBox.shrink(),
-                                ),
-                                const SizedBox(width: 8),
-                                coHostsAsync.when(
-                                  data: (cohosts) => Row(
-                                    children: cohosts
-                                        .map(
-                                          (cohost) => Padding(
-                                            padding: const EdgeInsets.only(
-                                              left: 2.0,
-                                            ),
-                                            child: CircleAvatar(
-                                              radius: 14,
-                                              backgroundColor: Colors.blue,
-                                              child: Text(
-                                                'C',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        )
-                                        .toList(),
-                                  ),
-                                  loading: () => const SizedBox(
-                                    width: 32,
-                                    child: LinearProgressIndicator(),
-                                  ),
-                                  error: (e, _) => const SizedBox.shrink(),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                        if (topGifters.isNotEmpty)
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    const Text('🏆', style: TextStyle(fontSize: 14)),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'Top Gifters',
-                                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 4),
-                                SizedBox(
-                                  height: 44,
-                                  child: ListView.separated(
-                                    scrollDirection: Axis.horizontal,
-                                    itemCount: topGifters.length,
-                                    separatorBuilder: (_, idx) =>
-                                        const SizedBox(width: 6),
-                                    itemBuilder: (ctx, i) {
-                                      const medals = ['🥇', '🥈', '🥉'];
-                                      final gifter = topGifters[i];
-                                      final medal = i < 3 ? medals[i] : '${i + 1}';
-                                      final isFirst = i == 0;
-                                      return Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 10,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          gradient: isFirst
-                                              ? const LinearGradient(
-                                                  colors: [
-                                                    Color(0xFFFFD700),
-                                                    Color(0xFFFFA500),
-                                                  ],
-                                                )
-                                              : null,
-                                          color: isFirst
-                                              ? null
-                                              : Theme.of(ctx)
-                                                    .colorScheme
-                                                    .surfaceContainerHighest,
-                                          borderRadius: BorderRadius.circular(22),
-                                          border: isFirst
-                                              ? null
-                                              : Border.all(
-                                                  color: Theme.of(ctx)
-                                                      .colorScheme
-                                                      .outlineVariant,
-                                                ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(medal,
-                                                style: const TextStyle(fontSize: 14)),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              gifter.displayName,
-                                              style: TextStyle(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                                color: isFirst
-                                                    ? Colors.white
-                                                    : Theme.of(ctx)
-                                                          .colorScheme
-                                                          .onSurface,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '🪙${gifter.totalCoins}',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                color: isFirst
-                                                    ? Colors.white70
-                                                    : Theme.of(ctx)
-                                                          .colorScheme
-                                                          .onSurfaceVariant,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                   // ── RIGHT: floating glass chat panel ──────────────────────
                   Positioned(
                     right: 0,
@@ -5002,3 +3968,292 @@ class _HandRaiseButton extends StatelessWidget {
     );
   }
 }
+
+// ---------------------------------------------------------------------------
+// Host Controls bottom-sheet content — shown when host taps the Controls
+// button in the TikTok-style overlay.
+// ---------------------------------------------------------------------------
+
+class _HostControlsContent extends ConsumerStatefulWidget {
+  const _HostControlsContent({required this.roomId});
+  final String roomId;
+
+  @override
+  ConsumerState<_HostControlsContent> createState() =>
+      _HostControlsContentState();
+}
+
+class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
+  int _lastPendingMicRequestCount = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    final hostControls = ref.read(hostControlsProvider);
+    final micAccessController = ref.read(micAccessControllerProvider);
+    final roomPolicyController = ref.read(roomPolicyControllerProvider);
+    final roomPolicyAsync = ref.watch(roomPolicyProvider(widget.roomId));
+    final micRequestsAsync =
+        ref.watch(roomMicAccessRequestsProvider(widget.roomId));
+    final isLocked =
+        ref.watch(roomStreamProvider(widget.roomId)).valueOrNull?.isLocked ??
+        false;
+    final allowChat = roomPolicyAsync.valueOrNull?.allowChat ?? true;
+    final allowGifts = roomPolicyAsync.valueOrNull?.allowGifts ?? true;
+    final allowMicRequests =
+        roomPolicyAsync.valueOrNull?.allowMicRequests ?? true;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.75,
+      minChildSize: 0.4,
+      maxChildSize: 0.95,
+      expand: false,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius:
+                const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SingleChildScrollView(
+            controller: scrollController,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.outlineVariant,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                Text(
+                  'Host Controls',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    StreamBuilder<DocumentSnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('rooms')
+                          .doc(widget.roomId)
+                          .snapshots(),
+                      builder: (context, snap) {
+                        final data =
+                            snap.data?.data() as Map<String, dynamic>?;
+                        final slow =
+                            (data?['slowModeSeconds'] as num?)?.toInt() ?? 0;
+                        return SizedBox(
+                          width: 190,
+                          child: DropdownButtonFormField<int>(
+                            initialValue: slow,
+                            decoration: const InputDecoration(
+                                labelText: 'Slow mode'),
+                            items: const [
+                              DropdownMenuItem(value: 0, child: Text('Off')),
+                              DropdownMenuItem(
+                                  value: 5, child: Text('5 seconds')),
+                              DropdownMenuItem(
+                                  value: 10, child: Text('10 seconds')),
+                              DropdownMenuItem(
+                                  value: 30, child: Text('30 seconds')),
+                            ],
+                            onChanged: (val) {
+                              if (val != null) {
+                                hostControls.toggleSlowMode(
+                                    widget.roomId, val);
+                              }
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                    SizedBox(
+                      width: 220,
+                      child: SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Lock room'),
+                        subtitle: Text(isLocked
+                            ? 'New listeners blocked'
+                            : 'Room is open'),
+                        value: isLocked,
+                        onChanged: (_) =>
+                            hostControls.toggleLockRoom(widget.roomId),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 220,
+                      child: SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Chat'),
+                        subtitle: Text(allowChat
+                            ? 'Members can message'
+                            : 'Chat paused'),
+                        value: allowChat,
+                        onChanged: (_) =>
+                            hostControls.toggleAllowChat(widget.roomId),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 220,
+                      child: SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Mic requests'),
+                        subtitle: Text(allowMicRequests
+                            ? 'Users can request stage access'
+                            : 'Requests paused'),
+                        value: allowMicRequests,
+                        onChanged: (_) =>
+                            hostControls.toggleAllowMicRequests(widget.roomId),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 220,
+                      child: SwitchListTile.adaptive(
+                        contentPadding: EdgeInsets.zero,
+                        title: const Text('Gifts'),
+                        subtitle: Text(allowGifts
+                            ? 'Gift interactions enabled'
+                            : 'Gifts paused'),
+                        value: allowGifts,
+                        onChanged: (_) =>
+                            hostControls.toggleAllowGifts(widget.roomId),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 220,
+                      child: DropdownButtonFormField<int>(
+                        initialValue: roomPolicyAsync.valueOrNull?.micLimit ?? 6,
+                        decoration:
+                            const InputDecoration(labelText: 'Mic seats'),
+                        items: const [
+                          DropdownMenuItem(value: 2, child: Text('2 seats')),
+                          DropdownMenuItem(value: 4, child: Text('4 seats')),
+                          DropdownMenuItem(value: 6, child: Text('6 seats')),
+                          DropdownMenuItem(value: 8, child: Text('8 seats')),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          roomPolicyController.setMicLimit(
+                              widget.roomId, value);
+                        },
+                      ),
+                    ),
+                    SizedBox(
+                      width: 220,
+                      child: DropdownButtonFormField<int>(
+                        initialValue: roomPolicyAsync.valueOrNull?.camLimit ?? 6,
+                        decoration:
+                            const InputDecoration(labelText: 'Camera seats'),
+                        items: const [
+                          DropdownMenuItem(value: 2, child: Text('2 seats')),
+                          DropdownMenuItem(value: 4, child: Text('4 seats')),
+                          DropdownMenuItem(value: 6, child: Text('6 seats')),
+                          DropdownMenuItem(value: 8, child: Text('8 seats')),
+                        ],
+                        onChanged: (value) {
+                          if (value == null) return;
+                          roomPolicyController.setCamLimit(
+                              widget.roomId, value);
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Mic request queue',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 8),
+                micRequestsAsync.when(
+                  data: (requests) {
+                    final pending = requests
+                        .where((r) => r.status == 'pending')
+                        .toList(growable: false);
+                    if (pending.length > _lastPendingMicRequestCount) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        RoomAudioCues.instance.playHandRaised();
+                      });
+                    }
+                    _lastPendingMicRequestCount = pending.length;
+                    if (pending.isEmpty) {
+                      return const Text('No pending mic requests.');
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: pending.map((request) {
+                        return Card(
+                          child: ListTile(
+                            title: Text(
+                                'Mic request from ${request.requesterId}'),
+                            subtitle: Text(
+                                'Approve for stage access • Priority ${request.priority}'),
+                            trailing: Wrap(
+                              spacing: 4,
+                              children: [
+                                IconButton(
+                                  onPressed: () =>
+                                      micAccessController.bumpPriority(
+                                          widget.roomId, request.id),
+                                  icon: const Icon(Icons.arrow_upward),
+                                  tooltip: 'Bump priority',
+                                ),
+                                IconButton(
+                                  onPressed: () =>
+                                      micAccessController.lowerPriority(
+                                          widget.roomId, request.id),
+                                  icon: const Icon(Icons.arrow_downward),
+                                  tooltip: 'Lower priority',
+                                ),
+                                IconButton(
+                                  onPressed: () =>
+                                      micAccessController.approveRequest(
+                                          widget.roomId, request),
+                                  icon: const Icon(
+                                      Icons.check_circle_outline),
+                                  tooltip: 'Approve',
+                                ),
+                                IconButton(
+                                  onPressed: () =>
+                                      micAccessController.denyRequest(
+                                          widget.roomId, request.id),
+                                  icon: const Icon(Icons.cancel_outlined),
+                                  tooltip: 'Deny',
+                                ),
+                                IconButton(
+                                  onPressed: () =>
+                                      micAccessController.expireNow(
+                                          widget.roomId, request.id),
+                                  icon: const Icon(
+                                      Icons.timer_off_outlined),
+                                  tooltip: 'Expire now',
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }).toList(growable: false),
+                    );
+                  },
+                  loading: () => const LinearProgressIndicator(),
+                  error: (e, _) =>
+                      Text('Could not load mic requests: $e'),
+                ),
+                const SizedBox(height: 24),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
