@@ -256,11 +256,16 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 200));
 
+    // Host controls are now behind the 'Controls' floating button (TikTok layout).
+    await tester.tap(find.text('Controls'));
+    await tester.pump(); // trigger tap
+    await tester.pump(const Duration(milliseconds: 300)); // let bottom sheet open
+
     expect(find.text('Host Controls'), findsOneWidget);
     expect(find.text('Mic request queue'), findsOneWidget);
     expect(find.text('Gifts'), findsOneWidget);
     expect(find.text('Manage people'), findsOneWidget);
-    await tester.pump(const Duration(seconds: 3));
+    await tester.pump(const Duration(seconds: 3)); // drain prewarm timer
   });
 
   testWidgets(

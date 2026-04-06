@@ -3437,49 +3437,71 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           // Chat header
                           Padding(
                             padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-                            child: Row(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  'Room Chat',
-                                  style: Theme.of(context).textTheme.titleMedium,
-                                ),
-                                const Spacer(),
-                                presenceAsync.when(
-                                  data: (presence) {
-                                    final onlineCount = presence
-                                        .where(
-                                          (e) =>
-                                              e.isOnline &&
-                                              (e.lastHeartbeatAt == null ||
-                                                  DateTime.now()
-                                                          .difference(
-                                                            e.lastHeartbeatAt!,
-                                                          )
-                                                          .inSeconds <
-                                                      90),
-                                        )
-                                        .length;
-                                    return Chip(
-                                      avatar: const Icon(
-                                        Icons.circle,
-                                        color: Colors.green,
-                                        size: 10,
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        'Room Chat',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(color: Colors.white),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      label: Text('$onlineCount online'),
-                                      padding: EdgeInsets.zero,
-                                      labelPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 4,
-                                          ),
-                                    );
-                                  },
-                                  loading: () => const SizedBox.shrink(),
-                                  error: (_, _) => const SizedBox.shrink(),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    presenceAsync.when(
+                                      data: (presence) {
+                                        final onlineCount = presence
+                                            .where(
+                                              (e) =>
+                                                  e.isOnline &&
+                                                  (e.lastHeartbeatAt ==
+                                                          null ||
+                                                      DateTime.now()
+                                                              .difference(
+                                                                e.lastHeartbeatAt!,
+                                                              )
+                                                              .inSeconds <
+                                                          90),
+                                            )
+                                            .length;
+                                        return Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            const Icon(Icons.circle,
+                                                color: Colors.green,
+                                                size: 8),
+                                            const SizedBox(width: 3),
+                                            Text(
+                                              '$onlineCount online',
+                                              style: const TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 11,
+                                              ),
+                                            ),
+                                          ],
+                                        );
+                                      },
+                                      loading: () => const SizedBox.shrink(),
+                                      error: (_, _) => const SizedBox.shrink(),
+                                    ),
+                                  ],
+                                ),
+                                Text(
+                                  '${participantsInRoom.length} total joined',
+                                  style: const TextStyle(
+                                    color: Colors.white54,
+                                    fontSize: 11,
+                                  ),
                                 ),
                               ],
                             ),
                           ),
-                          const Divider(height: 1),
+                          const Divider(height: 1, color: Colors.white24),
                           // Gift + hand raise row for non-hosts.
                           // Resolve hostId from Firestore doc first; fall back
                           // to the participants list so the row shows even when
@@ -4041,7 +4063,8 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                   runSpacing: 12,
                   children: [
                     StreamBuilder<DocumentSnapshot>(
-                      stream: FirebaseFirestore.instance
+                      stream: ref
+                          .read(roomFirestoreProvider)
                           .collection('rooms')
                           .doc(widget.roomId)
                           .snapshots(),
@@ -4166,6 +4189,16 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Manage people',
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 4),
+                const Text(
+                  'Use the People in room button in the room to manage participants.',
+                  style: TextStyle(fontSize: 12),
                 ),
                 const SizedBox(height: 16),
                 Text(
