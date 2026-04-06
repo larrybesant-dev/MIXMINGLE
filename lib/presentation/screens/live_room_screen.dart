@@ -2791,6 +2791,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final walletAsync = ref.watch(walletDetailsProvider);
     final topGifters = ref.watch(topGiftersProvider(widget.roomId));
 
+    // Authoritative host check from the room doc — resolves before the
+    // participant stream so broadcaster controls are NEVER gated on whether
+    // the participant doc has been written yet.
+    final roomDocData = ref.watch(roomDocStreamProvider(widget.roomId)).valueOrNull;
+    final roomHostId = _asString(
+      roomDocData?['ownerId'],
+      fallback: _asString(roomDocData?['hostId']),
+    );
+    final isRoomHostByDoc = roomHostId.isNotEmpty && user.id == roomHostId;
+
     return currentParticipantAsync.when(
       data: (participant) {
         final isHost = ref.watch(isHostProvider(participant));
@@ -3383,7 +3393,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       ),
                     ),
                   // ── HOST CONTROLS BUTTON (hosts only) ────────────────────
-                  if (isHost)
+                  if (isHost || isRoomHostByDoc)
                     Positioned(
                       bottom: 92,
                       left: 12,
@@ -3422,8 +3432,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   // Show for any broadcaster: role-based check (isHost/isCohost)
                   // plus a direct hostId match so the room creator always gets
                   // their controls even when the Firestore participant doc has
-                  // stale/missing role data.
-                  if (isHost || isCohost || (hostId.isNotEmpty && user.id == hostId))
+                  // stale/missing role data. isRoomHostByDoc is resolved from
+                  // roomDocStreamProvider — independent of the participant stream.
+                  if (isHost || isCohost || isRoomHostByDoc || (hostId.isNotEmpty && user.id == hostId))
                     Positioned(
                       bottom: 40,
                       left: 12,
@@ -4027,8 +4038,59 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           },
         );
       },
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => Scaffold(
+          backgroundColor: Colors.black,
+          body: Stack(
+            children: [
+              const Center(child: CircularProgressIndicator()),
+              // Show broadcaster controls for the host even while the
+              // participant Firestore stream is still initialising.
+              if (isRoomHostByDoc || _agoraService != null)
+                Positioned(
+                  bottom: 40,
+                  left: 12,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.7),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(color: Colors.white24),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              tooltip: _isMicMuted ? 'Unmute microphone' : 'Mute microphone',
+                              icon: Icon(
+                                _isMicMuted ? Icons.mic_off : Icons.mic,
+                                color: _isMicMuted ? Colors.red : Colors.white,
+                              ),
+                              onPressed: (!_isCallReady || _agoraService == null || _isMicActionInFlight)
+                                  ? null
+                                  : _toggleMic,
+                            ),
+                            IconButton(
+                              tooltip: _isVideoEnabled ? 'Turn camera off' : 'Turn camera on',
+                              icon: Icon(
+                                _isVideoEnabled ? Icons.videocam : Icons.videocam_off,
+                                color: _isVideoEnabled ? Colors.white : Colors.red,
+                              ),
+                              onPressed: (!_isCallReady || _agoraService == null || _isVideoActionInFlight)
+                                  ? null
+                                  : _toggleVideo,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+            ],
+          ),
+        ),
       error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
     );
   }

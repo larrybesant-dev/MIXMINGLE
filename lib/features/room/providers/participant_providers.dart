@@ -3,6 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../models/room_participant_model.dart';
 import 'room_firestore_provider.dart';
 
+/// Streams the raw room document map. Used outside of `currentParticipantAsync`
+/// so the host check resolves even before the participant document is written.
+final roomDocStreamProvider =
+    StreamProvider.autoDispose.family<Map<String, dynamic>?, String>((ref, roomId) {
+  final firestore = ref.watch(roomFirestoreProvider);
+  return firestore
+      .collection('rooms')
+      .doc(roomId)
+      .snapshots()
+      .map((snap) => snap.data());
+});
+
 class CurrentParticipantParams {
 	final String roomId;
 	final String userId;
