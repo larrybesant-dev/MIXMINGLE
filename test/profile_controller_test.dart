@@ -3,6 +3,7 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/profile/profile_controller.dart';
+import 'package:mixvy/models/profile_privacy_model.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockFirebaseAuth extends Mock implements FirebaseAuth {}
@@ -93,6 +94,66 @@ void main() {
       expect(state.userId, 'user123');
       expect(state.username, 'testuser');
       expect(state.error, isNull);
+    });
+
+    test('updateProfile persists isPrivate=true to Firestore', () async {
+      final container = ProviderContainer(
+        overrides: [
+          profileControllerProvider.overrideWith(
+            () => ProfileController(firestore: firestore, auth: auth),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller = container.read(profileControllerProvider.notifier);
+      await controller.updateProfile(
+        const ProfileState(
+          username: 'testuser',
+          email: 'test@mixvy.com',
+          avatarUrl: '',
+          coinBalance: 0,
+          membershipLevel: 'Free',
+          followers: [],
+          privacy: ProfilePrivacyModel(isPrivate: true),
+        ),
+      );
+
+      final snapshot = await firestore.collection('users').doc('user123').get();
+      expect(snapshot.data()!['isPrivate'], isTrue);
+
+      final state = container.read(profileControllerProvider);
+      expect(state.privacy.isPrivate, isTrue);
+      expect(state.error, isNull);
+    });
+
+    test('updateProfile persists isPrivate=false to Firestore', () async {
+      final container = ProviderContainer(
+        overrides: [
+          profileControllerProvider.overrideWith(
+            () => ProfileController(firestore: firestore, auth: auth),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final controller = container.read(profileControllerProvider.notifier);
+      await controller.updateProfile(
+        const ProfileState(
+          username: 'testuser',
+          email: 'test@mixvy.com',
+          avatarUrl: '',
+          coinBalance: 0,
+          membershipLevel: 'Free',
+          followers: [],
+        ),
+      );
+
+      final snapshot = await firestore.collection('users').doc('user123').get();
+      expect(snapshot.data()!['isPrivate'], isFalse);
+
+      final state = container.read(profileControllerProvider);
+      expect(state.privacy.isPrivate, isFalse);
     });
   });
 }
