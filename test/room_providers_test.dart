@@ -7,6 +7,7 @@ import 'package:mixvy/features/room/providers/message_providers.dart';
 import 'package:mixvy/features/room/providers/participant_providers.dart';
 import 'package:mixvy/features/room/providers/room_firestore_provider.dart';
 import 'package:mixvy/features/room/providers/cam_access_provider.dart';
+import 'package:mixvy/models/room_participant_model.dart';
 import 'package:mixvy/models/room_policy_model.dart';
 import 'package:mixvy/models/user_model.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
@@ -260,6 +261,76 @@ void main() {
       final participantSnapshot = await firestore.collection('rooms').doc('room-a').collection('participants').doc('user-2').get();
       expect(requestSnapshot.data()?['status'], 'approved');
       expect(participantSnapshot.data()?['role'], 'cohost');
+    });
+  });
+
+  group('isHostProvider', () {
+    final _now = DateTime.now();
+
+    RoomParticipantModel _participant(String role) => RoomParticipantModel(
+          userId: 'u',
+          role: role,
+          joinedAt: _now,
+          lastActiveAt: _now,
+        );
+
+    test('returns true for role "host"', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(container.read(isHostProvider(_participant('host'))), isTrue);
+    });
+
+    test('returns true for legacy role "owner"', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(container.read(isHostProvider(_participant('owner'))), isTrue);
+    });
+
+    test('returns false for role "cohost"', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(container.read(isHostProvider(_participant('cohost'))), isFalse);
+    });
+
+    test('returns false for role "audience"', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(container.read(isHostProvider(_participant('audience'))), isFalse);
+    });
+
+    test('returns false for null participant', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(container.read(isHostProvider(null)), isFalse);
+    });
+  });
+
+  group('isCohostProvider', () {
+    final _now = DateTime.now();
+
+    RoomParticipantModel _participant(String role) => RoomParticipantModel(
+          userId: 'u',
+          role: role,
+          joinedAt: _now,
+          lastActiveAt: _now,
+        );
+
+    test('returns true for role "cohost"', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(container.read(isCohostProvider(_participant('cohost'))), isTrue);
+    });
+
+    test('returns false for role "host"', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(container.read(isCohostProvider(_participant('host'))), isFalse);
+    });
+
+    test('returns false for null participant', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+      expect(container.read(isCohostProvider(null)), isFalse);
     });
   });
 }

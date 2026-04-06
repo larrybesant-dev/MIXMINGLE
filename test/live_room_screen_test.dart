@@ -502,4 +502,80 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
     },
   );
+
+  testWidgets(
+    'LiveRoomScreen does not show camera/mic toggle buttons before Agora connects for owner role',
+    (WidgetTester tester) async {
+      // Regression test: participants with legacy role='owner' should receive
+      // the same broadcaster controls as role='host' once Agora connects.
+      // Before Agora connects (_isCallReady=false) the bar is hidden regardless.
+      await configureViewport(tester);
+      final firestore = FakeFirebaseFirestore();
+      await firestore.collection('rooms').doc('room-a').set({
+        'hostId': 'user-1',
+        'isLocked': false,
+        'slowModeSeconds': 0,
+      });
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            roomFirestoreProvider.overrideWithValue(firestore),
+            currentParticipantProvider.overrideWith(
+              (ref, args) => Stream.value(
+                RoomParticipantModel(
+                  userId: 'user-1',
+                  role: 'owner',
+                  joinedAt: DateTime(2026, 1, 1),
+                  lastActiveAt: DateTime(2026, 1, 1),
+                ),
+              ),
+            ),
+            participantsStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([
+                RoomParticipantModel(
+                  userId: 'user-1',
+                  role: 'owner',
+                  joinedAt: DateTime(2026, 1, 1),
+                  lastActiveAt: DateTime(2026, 1, 1),
+                ),
+              ]),
+            ),
+            participantCountProvider.overrideWith(
+              (ref, roomId) => Stream.value(1),
+            ),
+            messageStreamProvider.overrideWith(
+              (ref, roomId) => Stream.value([]),
+            ),
+            hostProvider.overrideWith(
+              (ref, roomId) => Stream.value(Host('user-1')),
+            ),
+            coHostsProvider.overrideWith(
+              (ref, roomId) => Stream.value(const <Cohost>[]),
+            ),
+            userProvider.overrideWithValue(
+              UserModel(
+                id: 'user-1',
+                email: 'user1@mixvy.com',
+                username: 'User One',
+                createdAt: DateTime(2026, 1, 1),
+              ),
+            ),
+          ],
+          child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
+        ),
+      );
+
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      // Before Agora connects the broadcaster bar is always hidden.
+      expect(find.byTooltip('Mute microphone'), findsNothing);
+      expect(find.byTooltip('Unmute microphone'), findsNothing);
+      expect(find.byTooltip('Turn camera off'), findsNothing);
+      // Room chrome confirms the screen mounted without crashing.
+      expect(find.byTooltip('Leave Room'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
+    },
+  );
 }
