@@ -13,8 +13,6 @@ _$MessageModelImpl _$$MessageModelImplFromJson(Map<String, dynamic> json) =>
       roomId: json['roomId'] as String,
       content: json['content'] as String,
       sentAt: DateTime.parse(json['sentAt'] as String),
-      type: json['type'] as String? ?? 'normal',
-      richText: json['richText'] as String? ?? '',
     );
 
 Map<String, dynamic> _$$MessageModelImplToJson(_$MessageModelImpl instance) =>
@@ -24,6 +22,4 @@ Map<String, dynamic> _$$MessageModelImplToJson(_$MessageModelImpl instance) =>
       'roomId': instance.roomId,
       'content': instance.content,
       'sentAt': instance.sentAt.toIso8601String(),
-      'type': instance.type,
-      'richText': instance.richText,
     };

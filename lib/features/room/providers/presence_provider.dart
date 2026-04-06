@@ -9,12 +9,18 @@ class RoomPresenceModel {
     required this.isOnline,
     required this.lastHeartbeatAt,
     required this.lastSeenAt,
+    this.customStatus,
+    this.userStatus,
   });
 
   final String userId;
   final bool isOnline;
   final DateTime? lastHeartbeatAt;
   final DateTime? lastSeenAt;
+  /// Optional free-text status/away message set by the user.
+  final String? customStatus;
+  /// Enum status: 'online' | 'away' | 'dnd' | 'offline'
+  final String? userStatus;
 
   factory RoomPresenceModel.fromMap(String userId, Map<String, dynamic> data) {
     DateTime? toDate(dynamic value) {
@@ -48,10 +54,11 @@ class RoomPresenceModel {
       isOnline: toBool(data['isOnline']),
       lastHeartbeatAt: toDate(data['lastHeartbeatAt']),
       lastSeenAt: toDate(data['lastSeenAt']),
+      customStatus: data['customStatus'] as String?,
+      userStatus: data['userStatus'] as String?,
     );
   }
 }
-
 class RoomPresenceController {
   RoomPresenceController(this._db);
 
@@ -92,6 +99,19 @@ class RoomPresenceController {
       'userId': userId,
       'isOnline': false,
       'lastSeenAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
+
+  Future<void> setCustomStatus({
+    required String roomId,
+    required String userId,
+    required String? status,
+    String userStatus = 'online',
+  }) {
+    return _presenceRef(roomId, userId).set({
+      'customStatus': status,
+      'userStatus': userStatus,
+      'lastHeartbeatAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 }

@@ -77,8 +77,8 @@ final messageStreamProvider = StreamProvider.autoDispose.family<List<MessageMode
 							id: doc.id,
 							senderId: _asString(data['senderId']),
 							roomId: _asString(data['roomId'], fallback: roomId),
-							content: _asString(data['content']),
-							sentAt: sentAt is Timestamp
+							content: _asString(data['content']),						type: _asString(data['type'], fallback: 'normal'),
+						richText: _asString(data['richText']),							sentAt: sentAt is Timestamp
 									? sentAt.toDate()
 									: DateTime.tryParse(sentAt?.toString() ?? '') ?? DateTime.now(),
 						);

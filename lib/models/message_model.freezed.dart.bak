@@ -27,12 +27,6 @@ mixin _$MessageModel {
   String get content => throw _privateConstructorUsedError;
   DateTime get sentAt => throw _privateConstructorUsedError;
 
-  /// 'normal' | 'system' | 'announcement'
-  String get type => throw _privateConstructorUsedError;
-
-  /// Optional rich-text markup spans (JSON-encoded list of RichSpan).
-  String get richText => throw _privateConstructorUsedError;
-
   /// Serializes this MessageModel to a JSON map.
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
@@ -56,8 +50,6 @@ abstract class $MessageModelCopyWith<$Res> {
     String roomId,
     String content,
     DateTime sentAt,
-    String type,
-    String richText,
   });
 }
 
@@ -81,8 +73,6 @@ class _$MessageModelCopyWithImpl<$Res, $Val extends MessageModel>
     Object? roomId = null,
     Object? content = null,
     Object? sentAt = null,
-    Object? type = null,
-    Object? richText = null,
   }) {
     return _then(
       _value.copyWith(
@@ -106,14 +96,6 @@ class _$MessageModelCopyWithImpl<$Res, $Val extends MessageModel>
                 ? _value.sentAt
                 : sentAt // ignore: cast_nullable_to_non_nullable
                       as DateTime,
-            type: null == type
-                ? _value.type
-                : type // ignore: cast_nullable_to_non_nullable
-                      as String,
-            richText: null == richText
-                ? _value.richText
-                : richText // ignore: cast_nullable_to_non_nullable
-                      as String,
           )
           as $Val,
     );
@@ -135,8 +117,6 @@ abstract class _$$MessageModelImplCopyWith<$Res>
     String roomId,
     String content,
     DateTime sentAt,
-    String type,
-    String richText,
   });
 }
 
@@ -159,8 +139,6 @@ class __$$MessageModelImplCopyWithImpl<$Res>
     Object? roomId = null,
     Object? content = null,
     Object? sentAt = null,
-    Object? type = null,
-    Object? richText = null,
   }) {
     return _then(
       _$MessageModelImpl(
@@ -184,14 +162,6 @@ class __$$MessageModelImplCopyWithImpl<$Res>
             ? _value.sentAt
             : sentAt // ignore: cast_nullable_to_non_nullable
                   as DateTime,
-        type: null == type
-            ? _value.type
-            : type // ignore: cast_nullable_to_non_nullable
-                  as String,
-        richText: null == richText
-            ? _value.richText
-            : richText // ignore: cast_nullable_to_non_nullable
-                  as String,
       ),
     );
   }
@@ -206,8 +176,6 @@ class _$MessageModelImpl implements _MessageModel {
     required this.roomId,
     required this.content,
     required this.sentAt,
-    this.type = 'normal',
-    this.richText = '',
   });
 
   factory _$MessageModelImpl.fromJson(Map<String, dynamic> json) =>
@@ -224,19 +192,9 @@ class _$MessageModelImpl implements _MessageModel {
   @override
   final DateTime sentAt;
 
-  /// 'normal' | 'system' | 'announcement'
-  @override
-  @JsonKey()
-  final String type;
-
-  /// Optional rich-text markup spans.
-  @override
-  @JsonKey()
-  final String richText;
-
   @override
   String toString() {
-    return 'MessageModel(id: $id, senderId: $senderId, roomId: $roomId, content: $content, sentAt: $sentAt, type: $type, richText: $richText)';
+    return 'MessageModel(id: $id, senderId: $senderId, roomId: $roomId, content: $content, sentAt: $sentAt)';
   }
 
   @override
@@ -249,15 +207,13 @@ class _$MessageModelImpl implements _MessageModel {
                 other.senderId == senderId) &&
             (identical(other.roomId, roomId) || other.roomId == roomId) &&
             (identical(other.content, content) || other.content == content) &&
-            (identical(other.sentAt, sentAt) || other.sentAt == sentAt) &&
-            (identical(other.type, type) || other.type == type) &&
-            (identical(other.richText, richText) || other.richText == richText));
+            (identical(other.sentAt, sentAt) || other.sentAt == sentAt));
   }
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
   int get hashCode =>
-      Object.hash(runtimeType, id, senderId, roomId, content, sentAt, type, richText);
+      Object.hash(runtimeType, id, senderId, roomId, content, sentAt);
 
   /// Create a copy of MessageModel
   /// with the given fields replaced by the non-null parameter values.
@@ -280,8 +236,6 @@ abstract class _MessageModel implements MessageModel {
     required final String roomId,
     required final String content,
     required final DateTime sentAt,
-    final String type,
-    final String richText,
   }) = _$MessageModelImpl;
 
   factory _MessageModel.fromJson(Map<String, dynamic> json) =
@@ -297,14 +251,6 @@ abstract class _MessageModel implements MessageModel {
   String get content;
   @override
   DateTime get sentAt;
-
-  /// 'normal' | 'system' | 'announcement'
-  @override
-  String get type;
-
-  /// Optional rich-text markup spans.
-  @override
-  String get richText;
 
   /// Create a copy of MessageModel
   /// with the given fields replaced by the non-null parameter values.

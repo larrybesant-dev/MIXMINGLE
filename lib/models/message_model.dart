@@ -10,6 +10,10 @@ class MessageModel with _$MessageModel {
     required String roomId,
     required String content,
     required DateTime sentAt,
+    /// 'normal' | 'system' | 'announcement'
+    @Default('normal') String type,
+    /// Optional rich-text markup spans (JSON-encoded list of RichSpan).
+    @Default('') String richText,
   }) = _MessageModel;
 
   factory MessageModel.fromJson(Map<String, dynamic> json) => _$MessageModelFromJson(json);

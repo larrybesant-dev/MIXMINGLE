@@ -25,6 +25,14 @@ import '../../features/room/widgets/floating_gift_overlay.dart';
 import '../../widgets/coin_balance_widget.dart';
 import '../../widgets/user_profile_popup.dart';
 import '../../widgets/floating_whisper_panel.dart';
+import '../../features/room/widgets/dockable_panel.dart';
+import '../../features/room/widgets/user_list_panel.dart';
+import '../../features/room/widgets/mic_queue_panel.dart';
+import '../../features/room/widgets/buzz_overlay.dart';
+import '../../features/room/providers/buzz_provider.dart';
+import '../../features/room/widgets/cam_preview_sheet.dart';
+import '../../features/room/widgets/rich_text_toolbar.dart';
+import '../../features/room/widgets/floating_cam_window.dart';
 import '../../services/web_popout_service.dart';
 import '../../services/desktop_window_service.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
@@ -99,6 +107,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   Timer? _typingTimer;
   final GlobalKey<FloatingGiftOverlayState> _floatingGiftKey =
       GlobalKey<FloatingGiftOverlayState>();
+  final GlobalKey<BuzzOverlayState> _buzzKey = GlobalKey<BuzzOverlayState>();
+  final Set<String> _shownBuzzIds = {};
   ProviderSubscription<AsyncValue<List<RoomGiftEvent>>>?
   _giftEventsSubscription;
 
@@ -214,6 +224,31 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         });
       },
     );
+
+    // Listen for incoming buzzes and trigger the overlay.
+    if (user != null) {
+      ref.listenManual<AsyncValue<List<BuzzEvent>>>(
+        incomingBuzzStreamProvider((roomId: widget.roomId, currentUserId: user.id)),
+        (_, next) {
+          next.whenData((buzzes) {
+            final joinedAt = _roomJoinedAt;
+            for (final buzz in buzzes) {
+              if (_shownBuzzIds.contains(buzz.id)) continue;
+              if (joinedAt != null && buzz.sentAt.isBefore(joinedAt)) {
+                _shownBuzzIds.add(buzz.id);
+                continue;
+              }
+              _shownBuzzIds.add(buzz.id);
+              final senderName = _senderDisplayNameById[buzz.fromUserId] ?? buzz.fromUserId;
+              RoomAudioCues.instance.playBuzz();
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _buzzKey.currentState?.triggerBuzz('$senderName buzzed you! ⚡');
+              });
+            }
+          });
+        },
+      );
+    }
   }
 
   /// Silently fetch a token + initialize the Agora engine in the background
@@ -804,6 +839,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           Future<void>.delayed(const Duration(milliseconds: 450), () {
             if (mounted) setState(() {});
           });
+          final myName = _senderDisplayNameById[_joinedUserId ?? ''] ?? (_joinedUserId ?? '');
+          if (myName.isNotEmpty) _sendSystemEvent('$myName turned on their camera 📷');
+        } else {
+          final myName = _senderDisplayNameById[_joinedUserId ?? ''] ?? (_joinedUserId ?? '');
+          if (myName.isNotEmpty) _sendSystemEvent('$myName turned off their camera');
         }
         final msg = next ? 'Camera turned on.' : 'Camera turned off.';
         _logLiveRoom('toggle_video:success_message $msg');
@@ -2240,6 +2280,71 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     );
   }
 
+  void _showSetStatusDialog(BuildContext ctx, {required String roomId, required String userId}) {
+    final ctrl = TextEditingController();
+    showDialog<void>(
+      context: ctx,
+      builder: (dialogCtx) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF1C2028),
+          title: const Text('Set Status', style: TextStyle(color: Colors.white, fontSize: 16)),
+          content: TextField(
+            controller: ctrl,
+            maxLength: 80,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              hintText: 'e.g. "Away" or "BRB in 5 min"',
+              hintStyle: TextStyle(color: Color(0xFF5A5D65)),
+              enabledBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFF3A3E47)),
+              ),
+              focusedBorder: UnderlineInputBorder(
+                borderSide: BorderSide(color: Color(0xFFBA9EFF)),
+              ),
+              counterStyle: TextStyle(color: Color(0xFF5A5D65)),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFFA9ABB3))),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(dialogCtx).pop();
+                ref.read(roomPresenceControllerProvider).setCustomStatus(
+                  roomId: roomId,
+                  userId: userId,
+                  status: ctrl.text.trim().isEmpty ? null : ctrl.text.trim(),
+                );
+              },
+              child: const Text('Save', style: TextStyle(color: Color(0xFFBA9EFF))),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  /// Posts a system event message (join/leave/cam-on/off) to the room chat.
+  void _sendSystemEvent(String content) {
+    final firestore = _firestore;
+    if (firestore == null) return;
+    firestore
+        .collection('rooms')
+        .doc(widget.roomId)
+        .collection('messages')
+        .add({
+      'senderId': 'system',
+      'roomId': widget.roomId,
+      'content': content,
+      'type': 'system',
+      'richText': '',
+      'sentAt': FieldValue.serverTimestamp(),
+      'clientSentAt': DateTime.now().toIso8601String(),
+    }).ignore();
+  }
+
   Future<void> _joinRoom(String userId) async {
     final firestore = _firestore;
     if (firestore == null || _isJoiningRoom) return;
@@ -2378,6 +2483,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       _startPresenceHeartbeat(userId);
       _roomJoinedAt = DateTime.now();
       PresenceService().setInRoom(userId, widget.roomId).ignore();
+      final myName = _senderDisplayNameById[userId] ?? userId;
+      _sendSystemEvent('$myName joined the room');
     } catch (_) {
       if (mounted) {
         setState(
@@ -2416,6 +2523,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         .collection('members')
         .doc(userId);
     try {
+      final myName = _senderDisplayNameById[userId] ?? userId;
+      _sendSystemEvent('$myName left the room');
       await _stopPresenceHeartbeat();
       await docRef.delete();
       await memberDocRef.delete();
@@ -3152,6 +3261,40 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     lowQualityUids: lowQualityUids,
                                   );
                                 },
+                                onDetachLocal: () {
+                                  ref
+                                      .read(floatingCamWindowsProvider
+                                          .notifier)
+                                      .add(FloatingCamWindowData(
+                                        id: '${user.id}_local',
+                                        label:
+                                            _senderDisplayNameById[user.id] ??
+                                                'My Camera',
+                                        content: _buildLocalCamContent(),
+                                        offset: const Offset(40, 80),
+                                        width: 300,
+                                        height: 220,
+                                      ));
+                                },
+                                onDetachRemote: (tile) {
+                                  ref
+                                      .read(floatingCamWindowsProvider
+                                          .notifier)
+                                      .add(FloatingCamWindowData(
+                                        id: '${tile.uid}_remote',
+                                        label: tile.label,
+                                        content: _buildRemoteCamContent(
+                                          remoteUid: tile.uid,
+                                          canViewRemote: tile.canView,
+                                        ),
+                                        offset: Offset(
+                                          40 + (tile.uid % 200).toDouble(),
+                                          80 + (tile.uid % 150).toDouble(),
+                                        ),
+                                        width: 300,
+                                        height: 220,
+                                      ));
+                                },
                               );
                             },
                           )
@@ -3336,7 +3479,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     Positioned(
                       bottom: 92,
                       left: 8,
-                      right: 340,
+                      right: 492,
                       child: SizedBox(
                         height: 40,
                         child: ListView.separated(
@@ -3501,7 +3644,20 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       ),
                                       onPressed: (!_isCallReady || _agoraService == null || _isVideoActionInFlight)
                                           ? null
-                                          : _toggleVideo,
+                                          : () async {
+                                              // When turning ON, show preview first.
+                                              if (!_isVideoEnabled) {
+                                                final localPreview = _buildLocalCamContent();
+                                                if (!context.mounted) return;
+                                                final confirmed = await CamPreviewSheet.show(
+                                                  context,
+                                                  previewWidget: localPreview,
+                                                  isVideoEnabled: _isVideoEnabled,
+                                                );
+                                                if (confirmed != true) return;
+                                              }
+                                              await _toggleVideo();
+                                            },
                                     ),
                                   ),
                                 ),
@@ -3523,22 +3679,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         ],
                       ),
                     ),
-                  // ── RIGHT: floating glass chat panel ──────────────────────
+                  // ── RIGHT: Chat + Users panels (Paltalk-style docked) ─────
                   Positioned(
                     right: 0,
                     top: 0,
                     bottom: 0,
-                    width: 260,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: const Color(0xA610131A),
-                        borderRadius: const BorderRadius.only(
-                          topLeft: Radius.circular(16),
-                          bottomLeft: Radius.circular(16),
-                        ),
-                      ),
-                      child: Column(
-                        children: [
+                    width: 480,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: DockablePanel(
+                            title: 'Room Chat',
+                            icon: Icons.chat_bubble_outline,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
                           // Chat header
                           Padding(
                             padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
@@ -3684,6 +3841,26 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                             '${user.id}_$resolvedHostId',
                                           ),
                                     ),
+                                  // Set Status / Away message button
+                                  Tooltip(
+                                    message: 'Set status / away message',
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(6),
+                                      onTap: () => _showSetStatusDialog(
+                                        context,
+                                        roomId: widget.roomId,
+                                        userId: user.id,
+                                      ),
+                                      child: const Padding(
+                                        padding: EdgeInsets.all(6),
+                                        child: Icon(
+                                          Icons.emoji_emotions_outlined,
+                                          color: Color(0xFFA9ABB3),
+                                          size: 20,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
                             );
@@ -3724,12 +3901,34 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             loading: () => const SizedBox.shrink(),
                             error: (_, _) => const SizedBox.shrink(),
                           ),
+                          // Mic queue (hand-raise queue, visible when non-empty)
+                          MicQueuePanel(
+                            roomId: widget.roomId,
+                            currentUserId: user.id,
+                            isHost: isHost || isCohost || isModerator,
+                            displayNameById: _senderDisplayNameById,
+                            onApprove: (request) {
+                              ref.read(micAccessControllerProvider)
+                                  .approveRequest(widget.roomId, request).ignore();
+                            },
+                            onDeny: (request) {
+                              ref.read(micAccessControllerProvider)
+                                  .denyRequest(widget.roomId, request.id).ignore();
+                            },
+                          ),
                           // Messages list
                           Expanded(
                             child: messageStreamAsync.when(
                               data: (messages) {
                                 if (messages.length !=
                                     _lastRenderedMessageCount) {
+                                  // Play a soft ping for new incoming messages (not own).
+                                  if (messages.length > _lastRenderedMessageCount) {
+                                    final newest = messages.last;
+                                    if (newest.senderId != _joinedUserId && newest.type == 'normal') {
+                                      RoomAudioCues.instance.playNewMessage();
+                                    }
+                                  }
                                   _lastRenderedMessageCount = messages.length;
                                   // Double postFrameCallback: first frame lets
                                   // ListView render the new item, second frame
@@ -3864,6 +4063,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 );
                               },
                             ),
+                          // Rich text toolbar
+                          RichTextToolbar(
+                            controller: messageController,
+                            onChanged: () => setState(() {}),
+                          ),
                           // Input row
                           Padding(
                             padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
@@ -3986,6 +4190,44 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       ),
                     ),
                   ),
+                        const SizedBox(height: 3),
+                        // ── USERS PANEL (Paltalk-style always-visible) ────────
+                        Expanded(
+                          flex: 2,
+                          child: DockablePanel(
+                            title:
+                                'Users (${participantsInRoom.length})',
+                            icon: Icons.people_outline,
+                            child: UserListPanel(
+                              participants: participantsInRoom,
+                              currentUserId: user.id,
+                              presenceList: presenceAsync.valueOrNull ??
+                                  const [],
+                              displayNameById: Map.unmodifiable(
+                                  _senderDisplayNameById),
+                              avatarUrlById: Map.unmodifiable(
+                                  _senderAvatarUrlById),
+                              onWhisper: (p) {
+                                final chatId =
+                                    ([user.id, p.userId]..sort())
+                                        .join('_');
+                                FloatingWhisperPanel.show(
+                                  context,
+                                  ref,
+                                  conversationId: chatId,
+                                  peerName:
+                                      _senderDisplayNameById[p.userId] ??
+                                          p.userId,
+                                  peerAvatarUrl:
+                                      _senderAvatarUrlById[p.userId],
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                   if (_giftToasts.isNotEmpty)
                     Positioned(
                       top: 8,
@@ -4029,9 +4271,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         ),
                       ),
                     ),
+                  // Floating cam windows layer (detached tiles)
+                  FloatingCamWindowLayer(
+                    onReattach: (id) {
+                      ref
+                          .read(floatingCamWindowsProvider.notifier)
+                          .remove(id);
+                    },
+                  ),
                   // Floating emoji particles (gift animations)
                   Positioned.fill(
                     child: FloatingGiftOverlay(key: _floatingGiftKey),
+                  ),
+                  // Buzz overlay (full-screen flash on receipt)
+                  Positioned.fill(
+                    child: BuzzOverlay(key: _buzzKey, child: const SizedBox.expand()),
                   ),
                 ],
               ),

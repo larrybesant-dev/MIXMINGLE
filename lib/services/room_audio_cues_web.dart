@@ -138,6 +138,38 @@ class RoomAudioCues {
     }
   }
 
+  /// Soft ping for incoming chat messages.
+  void playNewMessage() {
+    if (kIsWeb) {
+      _playTone(frequency: 660.0, durationMs: 100, gain: 0.10);
+    } else {
+      _hapticLight();
+    }
+  }
+
+  /// Distinctive two-tone ping for incoming private messages.
+  void playPrivateMessage() {
+    if (kIsWeb) {
+      _playTone(frequency: 880.0, durationMs: 80, gain: 0.16);
+      Future.delayed(const Duration(milliseconds: 100), () {
+        _playTone(frequency: 1100.0, durationMs: 120, gain: 0.16);
+      });
+    } else {
+      _hapticDouble();
+    }
+  }
+
+  /// Buzz/nudge: a low-frequency vibrato burst.
+  void playBuzz() {
+    if (kIsWeb) {
+      _playTone(frequency: 120.0, durationMs: 300, type: 'sawtooth', gain: 0.22);
+    } else {
+      HapticFeedback.heavyImpact();
+      Future.delayed(const Duration(milliseconds: 120), HapticFeedback.heavyImpact);
+      Future.delayed(const Duration(milliseconds: 240), HapticFeedback.heavyImpact);
+    }
+  }
+
   void dispose() {
     try {
       _ctx?.close();

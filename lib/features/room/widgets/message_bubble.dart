@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 
 import '../../../models/message_model.dart';
+import 'rich_text_toolbar.dart';
 
 /// Live-room chat row styled like Paltalk – avatar on the left, then a column
 /// containing a header row (username + timestamp) and the message body below.
 /// All messages are left-aligned and full-width regardless of sender.
+///
+/// System messages (type == 'system') render as a centered italic separator row.
+/// Announcement messages (type == 'announcement') render as a highlighted banner.
 class MessageBubble extends StatelessWidget {
   final MessageModel message;
   final bool isMe;
@@ -38,6 +42,58 @@ class MessageBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // --- System event row (join/leave/cam-on/off) ---
+    if (message.type == 'system') {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+        child: Row(
+          children: [
+            Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.10), height: 1)),
+            const SizedBox(width: 8),
+            Text(
+              message.content,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.45),
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(child: Divider(color: Colors.white.withValues(alpha: 0.10), height: 1)),
+          ],
+        ),
+      );
+    }
+
+    // --- Announcement banner ---
+    if (message.type == 'announcement') {
+      return Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        decoration: BoxDecoration(
+          color: const Color(0x22BA9EFF),
+          border: Border.all(color: const Color(0x55BA9EFF)),
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.campaign_outlined, color: Color(0xFFBA9EFF), size: 16),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                message.content,
+                style: const TextStyle(
+                  color: Color(0xFFECEDF6),
+                  fontSize: 13,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     final resolvedSenderLabel = senderLabel?.trim().isNotEmpty == true
         ? senderLabel!.trim()
         : (isMe ? 'You' : message.senderId);
@@ -114,21 +170,33 @@ class MessageBubble extends StatelessWidget {
                     ),
                   ],
                 ),
-                // Message body
-                Text(
-                  message.content,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.92),
-                    fontSize: 13,
-                    height: 1.4,
-                  ),
-                ),
+                // Message body — parse markup when tags present
+                _buildMessageBody(message.content),
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildMessageBody(String content) {
+    const baseStyle = TextStyle(
+      color: Color(0xEBFFFFFF),
+      fontSize: 13,
+      height: 1.4,
+    );
+    // Quick check: markup tags present?
+    if (content.contains('[b]') ||
+        content.contains('[i]') ||
+        content.contains('[u]') ||
+        content.contains('[s]') ||
+        content.contains('[color=')) {
+      return RichText(
+        text: RichTextParser.parse(content, baseStyle: baseStyle),
+      );
+    }
+    return Text(content, style: baseStyle);
   }
 }
 

@@ -9,12 +9,15 @@ class CameraWallRemoteTileData {
     required this.label,
     required this.canView,
     required this.isSpeaking,
+    this.viewerCount,
   });
 
   final int uid;
   final String label;
   final bool canView;
   final bool isSpeaking;
+  /// Optional viewer count shown as a badge on the tile (null = hidden).
+  final int? viewerCount;
 }
 
 class CameraWall extends ConsumerWidget {
@@ -125,6 +128,7 @@ class CameraWall extends ConsumerWidget {
               label: tile.label,
               speaking: tile.isSpeaking,
               compact: false,
+              viewerCount: tile.viewerCount,
               onDetach: onDetachRemote == null
                   ? null
                   : () => onDetachRemote!(tile),
@@ -403,6 +407,7 @@ class _CameraWallTileFrame extends StatefulWidget {
     required this.compact,
     required this.child,
     this.onDetach,
+    this.viewerCount,
   });
 
   final String label;
@@ -411,6 +416,8 @@ class _CameraWallTileFrame extends StatefulWidget {
   final Widget child;
   /// If non-null, a pop-out button is shown in the tile header.
   final VoidCallback? onDetach;
+  /// If non-null and > 0, a viewer count badge is shown on the tile.
+  final int? viewerCount;
 
   @override
   State<_CameraWallTileFrame> createState() => _CameraWallTileFrameState();
@@ -496,9 +503,42 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
                 ),
               ),
               Expanded(
-                child: ColoredBox(
-                  color: const Color(0xFF0B0E14),
-                  child: widget.child,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    ColoredBox(
+                      color: const Color(0xFF0B0E14),
+                      child: widget.child,
+                    ),
+                    // Viewer count badge (bottom-right corner)
+                    if (widget.viewerCount != null && widget.viewerCount! > 0)
+                      Positioned(
+                        right: 6,
+                        bottom: 6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withAlpha(160),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.visibility, color: Color(0xFF00E3FD), size: 10),
+                              const SizedBox(width: 3),
+                              Text(
+                                '${widget.viewerCount}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ],
