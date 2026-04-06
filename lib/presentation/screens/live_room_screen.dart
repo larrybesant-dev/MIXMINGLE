@@ -2334,7 +2334,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           _exitRoom();
           return;
         }
-        await docRef.update({'lastActiveAt': now});
+        // Migrate legacy 'owner' role to 'host' so the broadcaster
+        // controls always render for the room creator.
+        final correctedRole = ownerId == userId ? 'host' : (data['role'] as String? ?? 'audience');
+        await docRef.update({'lastActiveAt': now, 'role': correctedRole});
         await memberDocRef.set({
           'userId': userId,
           'role': ownerId == userId ? 'owner' : 'member',

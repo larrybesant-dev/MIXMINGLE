@@ -96,7 +96,8 @@ final participantCountProvider = StreamProvider.autoDispose.family<int, String>(
 });
 
 final isHostProvider = Provider.autoDispose.family<bool, RoomParticipantModel?>((ref, participant) {
-	return participant?.role == 'host';
+	final role = participant?.role;
+	return role == 'host' || role == 'owner';
 });
 
 final isCohostProvider = Provider.autoDispose.family<bool, RoomParticipantModel?>((ref, participant) {
