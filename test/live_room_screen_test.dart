@@ -345,10 +345,10 @@ void main() {
   );
 
   // ---------------------------------------------------------------------------
-  // Camera wall visibility (fix acfb943 / 37a0680)
-  // The camera wall and its controls (cam/mic toggle buttons) live inside an
-  // `_isCallReady && _agoraService != null` guard. Before Agora connects, they
-  // must not be visible regardless of the participant role.
+  // Broadcaster controls visibility
+  // Controls are always visible for the room host (identified by hostId or
+  // isHost/isCohost role). Audience-role non-host users never see controls.
+  // Buttons are disabled (onPressed=null) until Agora/WebRTC connects.
   // ---------------------------------------------------------------------------
 
   testWidgets(
@@ -414,8 +414,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 
-      // Without an active AgoraService, the camera wall section is hidden.
-      // These tooltips only appear inside `_isCallReady && _agoraService != null`.
+      // Audience-role user (not the host) never sees broadcaster controls.
       expect(find.byTooltip('Turn camera on'), findsNothing);
       expect(find.byTooltip('Turn camera off'), findsNothing);
       expect(find.byTooltip('Mute microphone'), findsNothing);
@@ -504,11 +503,12 @@ void main() {
   );
 
   testWidgets(
-    'LiveRoomScreen does not show camera/mic toggle buttons before Agora connects for owner role',
+    'LiveRoomScreen shows broadcaster controls for owner-role participant (hostId match)',
     (WidgetTester tester) async {
-      // Regression test: participants with legacy role='owner' should receive
-      // the same broadcaster controls as role='host' once Agora connects.
-      // Before Agora connects (_isCallReady=false) the bar is hidden regardless.
+      // Regression test: the broadcaster control bar must be visible for the
+      // room creator even when the Firestore participant doc has the legacy
+      // role='owner' value. Controls are visible immediately (buttons disabled
+      // until Agora/WebRTC connects, as _isCallReady=false here).
       await configureViewport(tester);
       final firestore = FakeFirebaseFirestore();
       await firestore.collection('rooms').doc('room-a').set({
@@ -569,10 +569,11 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 200));
 
-      // Before Agora connects the broadcaster bar is always hidden.
-      expect(find.byTooltip('Mute microphone'), findsNothing);
-      expect(find.byTooltip('Unmute microphone'), findsNothing);
-      expect(find.byTooltip('Turn camera off'), findsNothing);
+      // The broadcaster bar IS visible because user.id == hostId (room doc).
+      // Initial state: mic not muted (_isMicMuted=false before connect) →
+      // tooltip='Mute microphone'; camera off → tooltip='Turn camera on'.
+      expect(find.byTooltip('Mute microphone'), findsOneWidget);
+      expect(find.byTooltip('Turn camera on'), findsOneWidget);
       // Room chrome confirms the screen mounted without crashing.
       expect(find.byTooltip('Leave Room'), findsOneWidget);
       await tester.pump(const Duration(seconds: 3));

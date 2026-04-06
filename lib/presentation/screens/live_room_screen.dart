@@ -3419,7 +3419,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       ),
                     ),
                   // ── BROADCASTER MIC / CAMERA CONTROLS ────────────────────
-                  if (_isCallReady && _agoraService != null && (isHost || isCohost))
+                  // Show for any broadcaster: role-based check (isHost/isCohost)
+                  // plus a direct hostId match so the room creator always gets
+                  // their controls even when the Firestore participant doc has
+                  // stale/missing role data.
+                  if (isHost || isCohost || (hostId.isNotEmpty && user.id == hostId))
                     Positioned(
                       bottom: 40,
                       left: 12,
@@ -3445,8 +3449,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     color:
                                         _isMicMuted ? Colors.red : Colors.white,
                                   ),
-                                  onPressed:
-                                      _isMicActionInFlight ? null : _toggleMic,
+                                  onPressed: (!_isCallReady || _agoraService == null || _isMicActionInFlight)
+                                      ? null
+                                      : _toggleMic,
                                 ),
                                 Tooltip(
                                   message: _isVideoEnabled
@@ -3482,7 +3487,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                             ? Colors.white
                                             : Colors.red,
                                       ),
-                                      onPressed: _isVideoActionInFlight
+                                      onPressed: (!_isCallReady || _agoraService == null || _isVideoActionInFlight)
                                           ? null
                                           : _toggleVideo,
                                     ),
