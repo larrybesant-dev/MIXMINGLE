@@ -12,35 +12,28 @@ class BetaFeedbackOverlay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Wrap in Navigator to provide Overlay for the FloatingActionButton's Tooltip
     return Stack(
       children: [
         child,
         Positioned(
           right: 16,
           bottom: 24,
-          child: Navigator(
-            onGenerateRoute: (settings) => MaterialPageRoute(
-              builder: (_) => FloatingActionButton.small(
-                heroTag: 'beta-feedback-fab',
-                tooltip: 'Report Issue',
-                child: const Icon(Icons.bug_report_outlined),
-                onPressed: () {
-                  final navigatorContext = rootNavigatorKey.currentContext;
-                  if (navigatorContext == null) {
-                    return;
-                  }
+          child: FloatingActionButton.small(
+            heroTag: 'beta-feedback-fab',
+            tooltip: 'Report Issue',
+            child: const Icon(Icons.bug_report_outlined),
+            onPressed: () {
+              final navigatorContext = rootNavigatorKey.currentContext;
+              if (navigatorContext == null) return;
 
-                  showModalBottomSheet<void>(
-                    context: navigatorContext,
-                    useRootNavigator: true,
-                    isScrollControlled: true,
-                    showDragHandle: true,
-                    builder: (_) => const _BetaFeedbackSheet(),
-                  );
-                },
-              ),
-            ),
+              showModalBottomSheet<void>(
+                context: navigatorContext,
+                useRootNavigator: true,
+                isScrollControlled: true,
+                showDragHandle: true,
+                builder: (_) => const _BetaFeedbackSheet(),
+              );
+            },
           ),
         ),
       ],

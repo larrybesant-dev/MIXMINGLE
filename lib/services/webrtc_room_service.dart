@@ -56,13 +56,16 @@ class WebRtcRoomService implements RtcRoomService {
     required FirebaseFirestore firestore,
     required String localUserId,
     int maxMeshPeers = _kMaxMeshPeers,
+    List<Map<String, dynamic>>? iceServers,
   })  : _firestore = firestore,
         _localUserId = localUserId,
-        _maxMeshPeers = maxMeshPeers;
+        _maxMeshPeers = maxMeshPeers,
+        _iceServers = iceServers;
 
   final FirebaseFirestore _firestore;
   final String _localUserId;
   final int _maxMeshPeers;
+  final List<Map<String, dynamic>>? _iceServers;
 
   // ──────────────────────────────────────────────────────────────────────────
   // State
@@ -328,32 +331,65 @@ class WebRtcRoomService implements RtcRoomService {
           }
         }
 
+        // Stop the old stream's tracks before replacing. When the user was
+        // in mic-only broadcaster mode, _localStream was an audio-only stream
+        // whose tracks were added to existing answer PCs. Stopping them here
+        // prevents dangling audio tracks consuming device bandwidth.
+        if (_localStream != null) {
+          for (final track in _localStream!.getTracks()) {
+            track.stop();
+          }
+        }
+
+        final wasAlreadyBroadcasting = _broadcasterMode;
         _localStream = stream;
         _localRenderer.srcObject = stream;
         _broadcasterMode = true;
         _localVideoCapturing = true;
         _startLocalVad(stream);
 
-        // Announce that we are now broadcasting
-        await _updatePresence(isBroadcasting: true);
-
-        // Process any offers from viewers that arrived before we went live
-        await _processExistingIncomingCalls();
+        if (wasAlreadyBroadcasting) {
+          // Was mic-only broadcaster. The existing answer PCs hold the old
+          // audio-only stream's tracks, so they cannot carry the new video
+          // track. Close them — viewers auto-retry (2 s delay) and reconnect
+          // using the new combined stream, restoring both audio and video.
+          _closeAllAnswerPcs();
+          // Also process any offers already waiting in Firestore.
+          await _processExistingIncomingCalls();
+        } else {
+          // First time becoming a broadcaster — announce and answer offers.
+          await _updatePresence(isBroadcasting: true);
+          await _processExistingIncomingCalls();
+        }
 
         onLocalVideoCaptureChanged?.call();
-        _log('camera enabled — broadcasting (audio track muted=${ !publishMicrophoneTrack})');
+        _log('camera enabled — broadcasting (wasAlreadyBroadcasting=$wasAlreadyBroadcasting, audio muted=${!publishMicrophoneTrack})');
       } catch (error) {
         _localVideoCapturing = false;
         _broadcasterMode = false;
         _throwMapped(error, 'enable camera');
       }
     } else {
-      await _stopLocalStream();
+      // Stop only video tracks. If the mic is still active (audio track
+      // is enabled), keep the local stream and broadcaster mode alive so
+      // Harley's P2P connection is not torn down mid-audio.
+      for (final track in (_localStream?.getVideoTracks() ?? [])) {
+        track.stop();
+      }
       _localVideoCapturing = false;
-      _broadcasterMode = false;
-      await _updatePresence(isBroadcasting: false);
+
+      final activeAudio =
+          (_localStream?.getAudioTracks() ?? []).any((t) => t.enabled);
+      if (!activeAudio) {
+        // No audio publishing — fully clean up and mark offline.
+        await _stopLocalStream();
+        _broadcasterMode = false;
+        await _updatePresence(isBroadcasting: false);
+      }
+      // If activeAudio: _broadcasterMode stays true, isBroadcasting stays
+      // true, and Harley's existing connection continues to receive audio.
       onLocalVideoCaptureChanged?.call();
-      _log('camera disabled');
+      _log('camera disabled; still broadcasting audio=$activeAudio');
     }
   }
 
@@ -408,23 +444,45 @@ class WebRtcRoomService implements RtcRoomService {
   @override
   Future<void> publishLocalAudioStream(bool enabled) async {
     final audioTracks = _localStream?.getAudioTracks() ?? [];
-    if (audioTracks.isEmpty && enabled && _localStream != null) {
-      // Stream exists (video-only) but has no audio track — add one.
-      try {
-        final audioStream = await navigator.mediaDevices.getUserMedia({
-          'video': false,
-          'audio': true,
-        });
-        for (final track in audioStream.getAudioTracks()) {
-          await _localStream!.addTrack(track);
-          // Also add to all active broadcaster peer connections.
-          for (final peer in _peers.values) {
-            try { await peer.pc.addTrack(track, _localStream!); } catch (_) {}
+    if (audioTracks.isEmpty && enabled) {
+      if (_localStream != null) {
+        // Stream exists (video-only) but has no audio track — add one.
+        try {
+          final audioStream = await navigator.mediaDevices.getUserMedia({
+            'video': false,
+            'audio': true,
+          });
+          for (final track in audioStream.getAudioTracks()) {
+            await _localStream!.addTrack(track);
+            // Also add to all active broadcaster peer connections.
+            for (final peer in _peers.values) {
+              try { await peer.pc.addTrack(track, _localStream!); } catch (_) {}
+            }
           }
+          _log('publishLocalAudioStream: injected audio track into existing stream');
+        } catch (error) {
+          _throwMapped(error, 'access microphone');
         }
-        _log('publishLocalAudioStream: injected audio track into existing stream');
-      } catch (error) {
-        _throwMapped(error, 'access microphone');
+      } else {
+        // No stream at all — acquire audio-only. This covers the edge case
+        // where enableVideo(false) finished a full _stopLocalStream() before
+        // the screen called publishLocalAudioStream(true) to restore the mic.
+        try {
+          final audioStream = await navigator.mediaDevices.getUserMedia({
+            'video': false,
+            'audio': true,
+          });
+          _localStream = audioStream;
+          _startLocalVad(audioStream);
+          if (!_broadcasterMode) {
+            _broadcasterMode = true;
+            await _updatePresence(isBroadcasting: true);
+            await _processExistingIncomingCalls();
+          }
+          _log('publishLocalAudioStream: acquired new audio-only stream');
+        } catch (error) {
+          _throwMapped(error, 'access microphone');
+        }
       }
     } else {
       for (final track in audioTracks) {
@@ -730,7 +788,9 @@ class WebRtcRoomService implements RtcRoomService {
       // (modified). When a viewer re-joins, their new offer overwrites the old
       // Firestore doc, which arrives here as `modified`.
       if (change.type != DocumentChangeType.added &&
-          change.type != DocumentChangeType.modified) continue;
+          change.type != DocumentChangeType.modified) {
+        continue;
+      }
       final callId = change.doc.id;
       final data = change.doc.data() as Map<String, dynamic>?;
       if (data?['offer'] == null) continue;
@@ -738,7 +798,9 @@ class WebRtcRoomService implements RtcRoomService {
       // For added events, skip if we already answered. For modified events
       // (viewer reconnected with a fresh offer), always re-process.
       if (change.type == DocumentChangeType.added &&
-          _answeredCalls.contains(callId)) continue;
+          _answeredCalls.contains(callId)) {
+        continue;
+      }
       _answeredCalls.add(callId);
       _answerViewerOffer(callId, data!);
     }
@@ -778,6 +840,16 @@ class WebRtcRoomService implements RtcRoomService {
 
     final viewerId = callData['viewerId'] as String?;
     _log('answering viewer offer callId=$callId viewer=$viewerId');
+
+    // Close any stale answer PC/ICE sub for this callId before overwriting.
+    // Without this, the stale PC's onConnectionState(disconnected) eventually
+    // fires and calls _answerPcs.remove(callId)?.close() — which would close
+    // the NEW PC, silently killing audio+video for the entire session.
+    await _answerIceSubs.remove(callId)?.cancel();
+    final stalePc = _answerPcs.remove(callId);
+    if (stalePc != null) {
+      try { await stalePc.close(); } catch (_) {}
+    }
 
     final callRef = _callsCol.doc(callId);
     final pc = await createPeerConnection(_iceConfig);
@@ -827,12 +899,17 @@ class WebRtcRoomService implements RtcRoomService {
     });
 
     // Clean up this answer PC when the connection ultimately closes.
+    // Guard: only remove/cancel entries that belong to THIS pc instance.
+    // An older stale PC for the same callId must NOT remove the newer PC's
+    // entries (which would happen if the guard were callId-only).
     pc.onConnectionState = (RTCPeerConnectionState state) {
       if (state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected ||
           state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
           state == RTCPeerConnectionState.RTCPeerConnectionStateClosed) {
-        _answerIceSubs.remove(callId)?.cancel();
-        _answerPcs.remove(callId)?.close();
+        if (identical(_answerPcs[callId], pc)) {
+          _answerIceSubs.remove(callId)?.cancel();
+          _answerPcs.remove(callId);
+        }
         _log('answer PC closed for callId=$callId ($state)');
       }
     };
@@ -844,16 +921,31 @@ class WebRtcRoomService implements RtcRoomService {
   // Private: helpers
   // ──────────────────────────────────────────────────────────────────────────
 
-  static const Map<String, dynamic> _iceConfig = {
-    'iceServers': [
-      {
-        'urls': [
-          'stun:stun.l.google.com:19302',
-          'stun:stun1.l.google.com:19302',
-        ],
-      },
-    ],
-  };
+  static const List<Map<String, dynamic>> _defaultIceServers = [
+    {
+      'urls': [
+        'stun:stun.l.google.com:19302',
+        'stun:stun1.l.google.com:19302',
+      ],
+    },
+  ];
+
+  Map<String, dynamic> get _iceConfig =>
+      {'iceServers': _iceServers ?? _defaultIceServers};
+
+  /// Closes all broadcaster-side answer PCs and clears their call IDs from
+  /// [_answeredCalls] so that when viewers auto-reconnect their new offers are
+  /// re-answered with the current [_localStream].
+  void _closeAllAnswerPcs() {
+    final staleCallIds = List<String>.from(_answerPcs.keys);
+    for (final callId in staleCallIds) {
+      _answerIceSubs.remove(callId)?.cancel();
+      final pc = _answerPcs.remove(callId);
+      _answeredCalls.remove(callId); // allow re-answer on viewer reconnect
+      try { pc?.close(); } catch (_) {}
+    }
+    _log('closed ${staleCallIds.length} stale answer PC(s) for stream handoff');
+  }
 
   void _closePeer(String broadcasterId) {
     final peer = _peers.remove(broadcasterId);
@@ -1043,6 +1135,10 @@ class _VadMonitor {
   void _init(web.MediaStream jsStream) {
     try {
       _ctx = web.AudioContext();
+      // Chrome auto-suspends AudioContexts created outside a user-gesture
+      // callback (e.g. inside pc.onTrack). Resume immediately so the analyser
+      // actually processes audio instead of returning all-zero frequency data.
+      _ctx!.resume();
       final source = _ctx!.createMediaStreamSource(jsStream);
       final analyser = _ctx!.createAnalyser();
       analyser.fftSize = 256;
@@ -1058,6 +1154,12 @@ class _VadMonitor {
   void _poll() {
     final analyser = _analyser;
     if (analyser == null) return;
+
+    // Re-resume if Chrome re-suspended the context (e.g. tab backgrounded).
+    if (_ctx?.state == 'suspended') {
+      _ctx!.resume();
+      return; // Skip this tick; next tick will have fresh data.
+    }
 
     final bufLen = analyser.frequencyBinCount;
     final dataList = Uint8List(bufLen);

@@ -2,3 +2,11 @@ AGORA_APP_ID=ec1b578586d24976a89d787d9ee4d5c7
 STRIPE_PUBLISHABLE_KEY=pk_live_51RQGn3ETMThPcwCj5ElJrm0Ue359e5oMYvIZFQCxSZUdg3b2EHBdMKZOKog4SoE87T5WtYMthzQMQZEITYeWsiu100aXHmRMYt
 FIREBASE_API_KEY_WEB=AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4
 FIREBASE_API_KEY_WINDOWS=AIzaSyB8KXjs0EqnJQdbaKVkX9nwsj07RK2ffM4
+# TURN server — required for reliable P2P when users are on different ISPs / NAT types.
+# Free public relay for development (Open Relay by Metered.ca):
+TURN_URL=turn:openrelay.metered.ca:80
+TURN_USERNAME=openrelayproject
+TURN_CREDENTIAL=openrelayproject
+# For production, replace with dedicated TURN credentials from Metered, Twilio NTS,
+# Xirsys, or your own coturn server. Dedicated servers give better
+# reliability, privacy, and no shared-bandwidth risk.

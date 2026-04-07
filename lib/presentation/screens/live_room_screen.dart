@@ -3,6 +3,7 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -305,6 +306,34 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     return userId.hashCode.abs() % 2147483647;
   }
 
+  /// Builds the ICE server list for WebRTC.
+  /// Falls back to Google STUN only; uses TURN servers when TURN_URL is set
+  /// in the app env file so that P2P works across symmetric NAT.
+  static List<Map<String, dynamic>> _buildIceServers() {
+    final servers = <Map<String, dynamic>>[
+      {
+        'urls': [
+          'stun:stun.l.google.com:19302',
+          'stun:stun1.l.google.com:19302',
+        ],
+      },
+    ];
+    try {
+      final turnUrl = dotenv.env['TURN_URL'] ?? '';
+      final turnUser = dotenv.env['TURN_USERNAME'] ?? '';
+      final turnCred = dotenv.env['TURN_CREDENTIAL'] ?? '';
+      if (turnUrl.isNotEmpty) {
+        final entry = <String, dynamic>{'urls': [turnUrl]};
+        if (turnUser.isNotEmpty) entry['username'] = turnUser;
+        if (turnCred.isNotEmpty) entry['credential'] = turnCred;
+        servers.add(entry);
+      }
+    } catch (_) {
+      // dotenv not loaded (e.g. in tests) — STUN only is fine.
+    }
+    return servers;
+  }
+
   String? _userIdForRtcUid(int rtcUid, List<RoomParticipantModel> members) {
     // WebRTC service has an explicit uid→userId map; use it directly to avoid
     // the hash-based lookup failing when participants haven't loaded yet.
@@ -536,6 +565,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         final service = WebRtcRoomService(
           firestore: _firestore!,
           localUserId: userId,
+          iceServers: _buildIceServers(),
         );
         _attachServiceCallbacks(service);
         await _runWithWatchdog<void>(

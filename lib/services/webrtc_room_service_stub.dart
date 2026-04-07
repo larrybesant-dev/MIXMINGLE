@@ -13,6 +13,7 @@ class WebRtcRoomService implements RtcRoomService {
     required FirebaseFirestore firestore,
     required String localUserId,
     int maxMeshPeers = 6,
+    List<Map<String, dynamic>>? iceServers,
   });
 
   static Never _unsupported() =>
