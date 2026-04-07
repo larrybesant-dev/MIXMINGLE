@@ -143,15 +143,15 @@ class CameraWall extends ConsumerWidget {
             : (tileCount <= 2 ? 1 : tileCount <= 4 ? 2 : 3);
         // Cap the grid height so the cam box stays compact on desktop.
         final availableHeight = constraints.maxHeight.isFinite
-            ? (constraints.maxHeight - 58.0).clamp(160.0, 1200.0)
+            ? (constraints.maxHeight - 58.0).clamp(120.0, 1200.0)
             : null;
         final mainGridHeight = isDesktop
             ? (tileCount <= 2
-                ? (availableHeight != null ? availableHeight.clamp(160.0, 320.0) : 320.0)
+                ? (availableHeight != null ? availableHeight.clamp(120.0, 220.0) : 220.0)
                 : tileCount <= 4
-                    ? (availableHeight != null ? availableHeight.clamp(160.0, 440.0) : 440.0)
-                    : (availableHeight ?? (tileCount <= 8 ? 520.0 : 660.0)))
-            : (tileCount <= 1 ? 180.0 : tileCount <= 4 ? 280.0 : 360.0);
+                    ? (availableHeight != null ? availableHeight.clamp(120.0, 340.0) : 340.0)
+                    : (availableHeight ?? (tileCount <= 8 ? 460.0 : 580.0)))
+            : (tileCount <= 1 ? 160.0 : tileCount <= 4 ? 240.0 : 320.0);
         const npSurfaceLow   = Color(0xFF10131A);
         const npSurfaceHigh  = Color(0xFF1C2028);
         const npPrimary      = Color(0xFFBA9EFF);
