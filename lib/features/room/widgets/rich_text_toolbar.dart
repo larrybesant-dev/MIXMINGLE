@@ -166,8 +166,13 @@ class _RichTextToolbarState extends State<RichTextToolbar> {
       sel = _savedSelection ?? const TextSelection.collapsed(offset: 0);
     }
     // Clamp to text length in case the text changed while selection was stale.
-    final start = sel.start.clamp(0, text.length);
-    final end = sel.end.clamp(start, text.length);
+    int start = sel.start.clamp(0, text.length);
+    int end = sel.end.clamp(start, text.length);
+    // If nothing is selected and there is text, wrap ALL of the text.
+    if (start == end && text.isNotEmpty) {
+      start = 0;
+      end = text.length;
+    }
     final selected = text.substring(start, end);
     final newText = text.replaceRange(start, end, '$open$selected$close');
     controller.value = controller.value.copyWith(

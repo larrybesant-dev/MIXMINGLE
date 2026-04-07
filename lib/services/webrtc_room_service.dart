@@ -161,7 +161,11 @@ class WebRtcRoomService implements RtcRoomService {
         child: Center(child: Icon(Icons.videocam_off, size: 36)),
       );
     }
-    return RTCVideoView(_localRenderer, mirror: true);
+    return RTCVideoView(
+      _localRenderer,
+      mirror: true,
+      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
+    );
   }
 
   @override
@@ -233,7 +237,10 @@ class WebRtcRoomService implements RtcRoomService {
         ),
       );
     }
-    return RTCVideoView(peer.renderer);
+    return RTCVideoView(
+      peer.renderer,
+      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
+    );
   }
 
   // ──────────────────────────────────────────────────────────────────────────

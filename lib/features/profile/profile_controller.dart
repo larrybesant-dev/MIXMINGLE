@@ -41,6 +41,12 @@ class ProfileState {
   final List<String> adultPreferences;
   final List<String> adultBoundaries;
   final List<AdultRelationshipIntent> adultLookingFor;
+  // Profile personalisation
+  final String? profileAccentColor;
+  final String? profileBgGradientStart;
+  final String? profileBgGradientEnd;
+  final String? profileMusicUrl;
+  final String? profileMusicTitle;
 
   static const Object _unset = Object();
 
@@ -76,6 +82,11 @@ class ProfileState {
     this.adultPreferences = const [],
     this.adultBoundaries = const [],
     this.adultLookingFor = const [],
+    this.profileAccentColor,
+    this.profileBgGradientStart,
+    this.profileBgGradientEnd,
+    this.profileMusicUrl,
+    this.profileMusicTitle,
   });
 
   ProfileState copyWith({
@@ -110,6 +121,11 @@ class ProfileState {
     List<String>? adultPreferences,
     List<String>? adultBoundaries,
     List<AdultRelationshipIntent>? adultLookingFor,
+    Object? profileAccentColor = _unset,
+    Object? profileBgGradientStart = _unset,
+    Object? profileBgGradientEnd = _unset,
+    Object? profileMusicUrl = _unset,
+    Object? profileMusicTitle = _unset,
   }) {
     return ProfileState(
       isLoading: isLoading ?? this.isLoading,
@@ -163,6 +179,21 @@ class ProfileState {
       adultPreferences: adultPreferences ?? this.adultPreferences,
       adultBoundaries: adultBoundaries ?? this.adultBoundaries,
       adultLookingFor: adultLookingFor ?? this.adultLookingFor,
+      profileAccentColor: identical(profileAccentColor, _unset)
+          ? this.profileAccentColor
+          : profileAccentColor as String?,
+      profileBgGradientStart: identical(profileBgGradientStart, _unset)
+          ? this.profileBgGradientStart
+          : profileBgGradientStart as String?,
+      profileBgGradientEnd: identical(profileBgGradientEnd, _unset)
+          ? this.profileBgGradientEnd
+          : profileBgGradientEnd as String?,
+      profileMusicUrl: identical(profileMusicUrl, _unset)
+          ? this.profileMusicUrl
+          : profileMusicUrl as String?,
+      profileMusicTitle: identical(profileMusicTitle, _unset)
+          ? this.profileMusicTitle
+          : profileMusicTitle as String?,
     );
   }
 }
@@ -291,6 +322,11 @@ class ProfileController extends Notifier<ProfileState> {
           'adultModeEnabled': profile.adultModeEnabled,
           'adultConsentAccepted': profile.adultConsentAccepted,
           'isPrivate': profile.privacy.isPrivate,
+          'profileAccentColor': profile.profileAccentColor,
+          'profileBgGradientStart': profile.profileBgGradientStart,
+          'profileBgGradientEnd': profile.profileBgGradientEnd,
+          'profileMusicUrl': profile.profileMusicUrl,
+          'profileMusicTitle': profile.profileMusicTitle,
         },
         privacy: profile.privacy,
         adultProfile: AdultProfileModel(
@@ -344,6 +380,11 @@ class ProfileController extends Notifier<ProfileState> {
         adultPreferences: profile.adultPreferences,
         adultBoundaries: profile.adultBoundaries,
         adultLookingFor: profile.adultLookingFor,
+        profileAccentColor: profile.profileAccentColor,
+        profileBgGradientStart: profile.profileBgGradientStart,
+        profileBgGradientEnd: profile.profileBgGradientEnd,
+        profileMusicUrl: profile.profileMusicUrl,
+        profileMusicTitle: profile.profileMusicTitle,
       );
     } catch (e, stackTrace) {
       developer.log(
@@ -435,6 +476,11 @@ class ProfileController extends Notifier<ProfileState> {
         adultPreferences: bundle.adultProfile.preferences,
         adultBoundaries: bundle.adultProfile.boundaries,
         adultLookingFor: bundle.adultProfile.lookingFor,
+        profileAccentColor: user.profileAccentColor,
+        profileBgGradientStart: user.profileBgGradientStart,
+        profileBgGradientEnd: user.profileBgGradientEnd,
+        profileMusicUrl: user.profileMusicUrl,
+        profileMusicTitle: user.profileMusicTitle,
       );
     } catch (e) {
       state = state.copyWith(isLoading: false, error: e.toString());

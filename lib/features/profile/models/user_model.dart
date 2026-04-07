@@ -26,6 +26,12 @@ class UserModel {
   final bool adultModeEnabled;
   final bool adultConsentAccepted;
   final String themeId;
+  // Profile personalisation
+  final String? profileAccentColor;
+  final String? profileBgGradientStart;
+  final String? profileBgGradientEnd;
+  final String? profileMusicUrl;
+  final String? profileMusicTitle;
 
   UserModel({
     required this.id,
@@ -53,6 +59,11 @@ class UserModel {
     this.adultModeEnabled = false,
     this.adultConsentAccepted = false,
     this.themeId = 'midnight',
+    this.profileAccentColor,
+    this.profileBgGradientStart,
+    this.profileBgGradientEnd,
+    this.profileMusicUrl,
+    this.profileMusicTitle,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -83,6 +94,11 @@ class UserModel {
         adultModeEnabled: _boolOr(json['adultModeEnabled'], fallback: false),
         adultConsentAccepted: _boolOr(json['adultConsentAccepted'], fallback: false),
         themeId: _stringOrEmpty(json['themeId'], fallback: 'midnight'),
+        profileAccentColor: _stringOrNull(json['profileAccentColor']),
+        profileBgGradientStart: _stringOrNull(json['profileBgGradientStart']),
+        profileBgGradientEnd: _stringOrNull(json['profileBgGradientEnd']),
+        profileMusicUrl: _stringOrNull(json['profileMusicUrl']),
+        profileMusicTitle: _stringOrNull(json['profileMusicTitle']),
       );
 
   static String? _stringOrNull(dynamic value) {
@@ -155,6 +171,11 @@ class UserModel {
         'adultModeEnabled': adultModeEnabled,
         'adultConsentAccepted': adultConsentAccepted,
         'themeId': themeId,
+        'profileAccentColor': profileAccentColor,
+        'profileBgGradientStart': profileBgGradientStart,
+        'profileBgGradientEnd': profileBgGradientEnd,
+        'profileMusicUrl': profileMusicUrl,
+        'profileMusicTitle': profileMusicTitle,
       };
 
   factory UserModel.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) =>

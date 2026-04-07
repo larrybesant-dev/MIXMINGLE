@@ -26,6 +26,12 @@ class UserModel {
   final String themeId;
   final int vipLevel;
   final List<String> badges;
+  // Profile personalisation
+  final String? profileAccentColor;
+  final String? profileBgGradientStart;
+  final String? profileBgGradientEnd;
+  final String? profileMusicUrl;
+  final String? profileMusicTitle;
 
   UserModel({
     required this.id,
@@ -50,6 +56,11 @@ class UserModel {
     this.themeId = 'midnight',
     this.vipLevel = 0,
     this.badges = const [],
+    this.profileAccentColor,
+    this.profileBgGradientStart,
+    this.profileBgGradientEnd,
+    this.profileMusicUrl,
+    this.profileMusicTitle,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) => UserModel(
@@ -77,6 +88,11 @@ class UserModel {
         themeId: _stringOrEmpty(json['themeId'], fallback: 'midnight'),
         vipLevel: (json['vipLevel'] as num?)?.toInt() ?? 0,
         badges: _stringList(json['badges']),
+        profileAccentColor: _stringOrNull(json['profileAccentColor']),
+        profileBgGradientStart: _stringOrNull(json['profileBgGradientStart']),
+        profileBgGradientEnd: _stringOrNull(json['profileBgGradientEnd']),
+        profileMusicUrl: _stringOrNull(json['profileMusicUrl']),
+        profileMusicTitle: _stringOrNull(json['profileMusicTitle']),
       );
 
   static bool _boolOr(dynamic value, {required bool fallback}) {

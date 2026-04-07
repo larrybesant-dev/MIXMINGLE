@@ -1545,12 +1545,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
 
     try {
-      // When promoted to stage or cohost: switch to Agora broadcaster mode
-      // and publish audio so the mic is live without needing to tap the mic
-      // button. Both roles allow simultaneous multi-mic broadcasting.
-      if ((role == 'stage' || role == 'cohost') && !service.isBroadcaster) {
-        await service.ensureDeviceAccess(video: false, audio: true);
-        await service.setBroadcaster(true);
+      // When promoted to stage or cohost: ensure we are in broadcaster mode
+      // and publish audio. Skip ensureDeviceAccess when the camera is already
+      // on — the stream already holds an audio track and re-acquiring the mic
+      // via a separate getUserMedia call would disrupt the existing track.
+      if (role == 'stage' || role == 'cohost') {
+        if (!service.isBroadcaster) {
+          // No stream yet — need device access before going broadcaster.
+          await service.ensureDeviceAccess(video: false, audio: true);
+          await service.setBroadcaster(true);
+        }
         await service.publishLocalAudioStream(true);
         if (mounted) {
           setState(() => _isMicMuted = false);
@@ -4462,7 +4466,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     .any((p) => p.role == 'stage' && p.userId != user.id),
                             isLocalVideoEnabled: _isVideoEnabled,
                             localSpeaking:
-                                _agoraService?.localSpeaking ?? false,
+                                (_agoraService?.localSpeaking ?? false) ||
+                                (!_isMicMuted &&
+                                  participantsInRoom.any((p) =>
+                                      p.userId == user.id && p.role == 'stage')),
                             remoteUids:
                                 _agoraService?.remoteUids ?? const [],
                             isSpeakingFn: (uid) =>
