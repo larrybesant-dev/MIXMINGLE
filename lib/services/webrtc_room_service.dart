@@ -99,6 +99,11 @@ class WebRtcRoomService implements RtcRoomService {
   final Map<int, String> _uidToUserId = {};
   final Map<String, int> _userIdToUid = {};
 
+  // Last-seen streamRefreshAt per broadcaster.  When Firestore delivers a new
+  // timestamp we immediately close the stale viewer PC and reconnect so Curve
+  // sees Harley's camera within ~1 s instead of waiting for ICE timeout.
+  final Map<String, dynamic> _lastStreamRefreshAt = {};
+
   // ──────────────────────────────────────────────────────────────────────────
   // Firestore listeners
   // ──────────────────────────────────────────────────────────────────────────
@@ -152,6 +157,18 @@ class WebRtcRoomService implements RtcRoomService {
 
   @override
   String? userIdForUid(int uid) => _uidToUserId[uid];
+
+  /// Current local mic energy in [0.0, 1.0] (0 when muted or no stream).
+  @override
+  double get localAudioLevel => _localVad?.level ?? 0.0;
+
+  /// Current remote speaker energy for [uid] in [0.0, 1.0].
+  @override
+  double remoteAudioLevelForUid(int uid) {
+    final userId = _uidToUserId[uid];
+    if (userId == null) return 0.0;
+    return _remoteVads[userId]?.level ?? 0.0;
+  }
 
   // ──────────────────────────────────────────────────────────────────────────
   // RtcRoomService: video views
@@ -351,9 +368,10 @@ class WebRtcRoomService implements RtcRoomService {
         if (wasAlreadyBroadcasting) {
           // Was mic-only broadcaster. The existing answer PCs hold the old
           // audio-only stream's tracks, so they cannot carry the new video
-          // track. Close them — viewers auto-retry (2 s delay) and reconnect
-          // using the new combined stream, restoring both audio and video.
+          // track. Close them and signal viewers to reconnect immediately via
+          // a Firestore streamRefreshAt timestamp (avoids 10-30 s ICE timeout).
           _closeAllAnswerPcs();
+          await _updatePresence(isBroadcasting: true, streamRefresh: true);
           // Also process any offers already waiting in Firestore.
           await _processExistingIncomingCalls();
         } else {
@@ -595,10 +613,17 @@ class WebRtcRoomService implements RtcRoomService {
   CollectionReference<Map<String, dynamic>> get _callsCol =>
       _firestore.collection('rooms').doc(_roomId).collection('webrtc_calls');
 
-  Future<void> _updatePresence({required bool isBroadcasting}) async {
+  Future<void> _updatePresence({
+    required bool isBroadcasting,
+    bool streamRefresh = false,
+  }) async {
     if (_roomId == null) return;
     try {
-      await _peersCol.doc(_localUserId).update({'isBroadcasting': isBroadcasting});
+      final data = <String, dynamic>{'isBroadcasting': isBroadcasting};
+      if (streamRefresh) {
+        data['streamRefreshAt'] = FieldValue.serverTimestamp();
+      }
+      await _peersCol.doc(_localUserId).update(data);
     } catch (_) {}
   }
 
@@ -622,6 +647,18 @@ class WebRtcRoomService implements RtcRoomService {
 
       final isBroadcasting = data?['isBroadcasting'] as bool? ?? false;
       if (isBroadcasting) {
+        // Detect a stream-refresh signal written by the broadcaster when they
+        // switch streams (e.g. mic-only → mic+video).  A changed timestamp means
+        // the broadcaster's MediaStream was replaced.  Immediately close the
+        // stale peer and reconnect — no need to wait for ICE timeout (10-30 s).
+        final streamRefreshAt = data?['streamRefreshAt'];
+        final lastRefresh = _lastStreamRefreshAt[remoteBroadcasterId];
+        final streamRefreshed =
+            streamRefreshAt != null && streamRefreshAt != lastRefresh;
+        if (streamRefreshed) {
+          _lastStreamRefreshAt[remoteBroadcasterId] = streamRefreshAt;
+        }
+
         if (!_peers.containsKey(remoteBroadcasterId)) {
           if (_peers.length >= _maxMeshPeers) {
             _log(
@@ -635,6 +672,14 @@ class WebRtcRoomService implements RtcRoomService {
           _createViewerConnection(remoteBroadcasterId, remoteUid);
           // Notify the screen immediately so the tile appears (as a placeholder)
           // before the WebRTC stream arrives.
+          onRemoteUserJoined?.call();
+        } else if (streamRefreshed) {
+          // Broadcaster already known but switched streams — force reconnect.
+          _log('stream refresh detected for broadcaster=$remoteBroadcasterId — reconnecting immediately');
+          _closePeer(remoteBroadcasterId);
+          _uidToUserId[remoteUid] = remoteBroadcasterId;
+          _userIdToUid[remoteBroadcasterId] = remoteUid;
+          _createViewerConnection(remoteBroadcasterId, remoteUid);
           onRemoteUserJoined?.call();
         }
       } else {
@@ -674,6 +719,7 @@ class WebRtcRoomService implements RtcRoomService {
           await newStream.addTrack(event.track);
           peer.remoteStream = newStream;
           renderer.srcObject = newStream;
+          _unlockRendererAudio(renderer);
           _startRemoteVad(broadcasterId, broadcasterUid, newStream);
           _log('remote stream (synthetic) received from broadcaster=$broadcasterId');
           onRemoteUserJoined?.call();
@@ -682,13 +728,23 @@ class WebRtcRoomService implements RtcRoomService {
       }
       peer.remoteStream = stream;
       renderer.srcObject = stream;
+      // Unlock Chrome autoplay: after the first track arrives the page already
+      // has a user-gesture context (the user clicked Join), so explicitly calling
+      // play() avoids the browser muting audio on the underlying <video> element.
+      _unlockRendererAudio(renderer);
       _startRemoteVad(broadcasterId, broadcasterUid, stream);
-      _log('remote stream received from broadcaster=$broadcasterId');
+      _log('remote stream received from broadcaster=$broadcasterId '
+          'tracks=${stream.getTracks().length} '
+          'audio=${stream.getAudioTracks().length} '
+          'video=${stream.getVideoTracks().length}');
       onRemoteUserJoined?.call();
     };
 
     pc.onConnectionState = (RTCPeerConnectionState state) {
       _log('connection to $broadcasterId state=$state');
+      peer.connectionState = state;
+      // Notify screen so tiles can reflect connecting/connected/failed state.
+      onRemoteUserJoined?.call();
       if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
           state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
         _closePeer(broadcasterId);
@@ -979,6 +1035,26 @@ class WebRtcRoomService implements RtcRoomService {
     if (kDebugMode) debugPrint('[WebRTC] $message');
   }
 
+  /// Explicitly unmutes and plays the underlying HTML <video> element for
+  /// [renderer] so Chrome's autoplay policy does not silently block audio.
+  ///
+  /// flutter_webrtc's dart_webrtc back-end exposes [RTCVideoRenderer.element]
+  /// which is the raw [web.HTMLVideoElement].  We use dynamic access so that
+  /// compilation still succeeds if the internal API changes between versions.
+  static void _unlockRendererAudio(RTCVideoRenderer renderer) {
+    try {
+      final dynamic elem = (renderer as dynamic).element;
+      if (elem == null) return;
+      elem.muted = false;
+      // play() returns a Promise; ignore the result — it fails harmlessly if
+      // the element is already playing or if the stream has no audio track yet.
+      (elem.play() as Object?)
+          ?.toString(); // discards the Promise without throwing
+    } catch (_) {
+      // Dynamic cast failure or API mismatch — degrade silently.
+    }
+  }
+
   // ──────────────────────────────────────────────────────────────────────────
   // Private: VAD helpers
   // ──────────────────────────────────────────────────────────────────────────
@@ -999,8 +1075,17 @@ class WebRtcRoomService implements RtcRoomService {
     final js = _jsStream(stream);
     if (js == null) return;
     _localVad?.dispose();
+    // Clone the JS stream so the VAD AudioContext always receives raw microphone
+    // audio even when track.enabled = false (WebRTC mute).  The clone has its
+    // own enabled state (initially true) and is never mutated by mute().
+    web.MediaStream vadStream;
+    try {
+      vadStream = js.clone();
+    } catch (_) {
+      vadStream = js; // fallback: use original if clone() not available
+    }
     _localVad = _VadMonitor(
-      jsStream: js,
+      jsStream: vadStream,
       onStateChange: (speaking) {
         if (_localSpeaking != speaking) {
           _localSpeaking = speaking;
@@ -1092,6 +1177,8 @@ class _PeerEntry {
   final RTCPeerConnection pc;
   final RTCVideoRenderer renderer;
   MediaStream? remoteStream;
+  RTCPeerConnectionState connectionState =
+      RTCPeerConnectionState.RTCPeerConnectionStateNew;
   bool get rendererReady => true; // renderer.initialize() is called in create
 
   StreamSubscription? answerSub;
@@ -1127,6 +1214,10 @@ class _VadMonitor {
   web.AnalyserNode? _analyser;
   Timer? _timer;
   bool _speaking = false;
+  double _currentLevel = 0.0;
+
+  /// Normalised audio energy in [0.0, 1.0] updated every ~80 ms.
+  double get level => _currentLevel;
 
   // Byte-energy thresholds (0–255).  Tuned for typical speech vs. silence.
   static const int _onThreshold = 25;
@@ -1173,6 +1264,8 @@ class _VadMonitor {
       sum += v;
     }
     final avg = bufLen > 0 ? sum / bufLen : 0.0;
+    // Normalise: practical speech energies sit in 0–60 range; cap at 1.0.
+    _currentLevel = (avg / 60.0).clamp(0.0, 1.0);
 
     final bool nowSpeaking;
     if (!_speaking && avg >= _onThreshold) {
@@ -1192,6 +1285,7 @@ class _VadMonitor {
   void dispose() {
     _timer?.cancel();
     _timer = null;
+    _currentLevel = 0.0;
     try { _ctx?.close(); } catch (_) {}
     _ctx = null;
     _analyser = null;

@@ -30,6 +30,12 @@ abstract class RtcRoomService {
 
   bool isRemoteSpeaking(int uid);
 
+  /// Normalised local mic energy in [0.0, 1.0].  Returns 0 when muted.
+  double get localAudioLevel => 0.0;
+
+  /// Normalised remote speaker energy for [uid] in [0.0, 1.0].
+  double remoteAudioLevelForUid(int uid) => 0.0;
+
   /// Returns the Firestore userId for a remote [uid] if the service has an
   /// explicit mapping (WebRTC), or null if the caller must fall back to the
   /// hash-based lookup (Agora).

@@ -37,6 +37,8 @@ class AgoraService implements RtcRoomService {
   final Map<int, VideoStreamType> _remoteStreamTypes =
       <int, VideoStreamType>{};
   bool _localSpeaking = false;
+  double _localAudioLevel = 0.0;
+  final Map<int, double> _remoteAudioLevels = <int, double>{};
   bool _joinedChannel = false;
   bool _broadcasterMode = false;
   bool _localVideoCapturing = false;
@@ -74,6 +76,10 @@ class AgoraService implements RtcRoomService {
   List<int> get remoteUids => List.unmodifiable(_remoteUids);
   @override
   bool get localSpeaking => _localSpeaking;
+  @override
+  double get localAudioLevel => _localAudioLevel;
+  @override
+  double remoteAudioLevelForUid(int uid) => _remoteAudioLevels[uid] ?? 0.0;
   @override
   bool get canRenderLocalView =>
       _initialized &&
@@ -559,18 +565,25 @@ class AgoraService implements RtcRoomService {
             (connection, speakers, speakerNumber, totalVolume) {
               final nextSpeakingUids = <int>{};
               var nextLocalSpeaking = false;
+              var nextLocalLevel = 0.0;
+              final nextRemoteLevels = <int, double>{};
               for (final speaker in speakers) {
                 final uid = speaker.uid ?? 0;
                 final volume = speaker.volume ?? 0;
-                if (volume <= 10) {
-                  continue;
-                }
+                final level = (volume / 255.0).clamp(0.0, 1.0);
                 if (uid == 0) {
-                  nextLocalSpeaking = true;
+                  nextLocalLevel = level;
+                  if (volume > 10) nextLocalSpeaking = true;
                 } else {
-                  nextSpeakingUids.add(uid);
+                  nextRemoteLevels[uid] = level;
+                  if (volume > 10) nextSpeakingUids.add(uid);
                 }
               }
+
+              _localAudioLevel = nextLocalLevel;
+              _remoteAudioLevels
+                ..clear()
+                ..addAll(nextRemoteLevels);
 
               final changed =
                   nextLocalSpeaking != _localSpeaking ||

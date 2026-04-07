@@ -101,6 +101,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isHandlingParticipantRemoval = false;
   bool _preWarmDone = false;
   Timer? _presenceHeartbeatTimer;
+  Timer? _micLevelTimer;
   DateTime? _roomJoinedAt;
   int _lastRenderedMessageCount = 0;
   final Set<String> _shownGiftEventIds = {};
@@ -754,6 +755,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           _isMicMuted = next;
         });
       }
+      // Start or stop the timer that refreshes the mic level bar.
+      if (!next) {
+        _startMicLevelPolling();
+      } else {
+        _stopMicLevelPolling();
+      }
     } catch (e) {
       _showSnackBar(_mapMediaError(e, canBroadcast: true));
     } finally {
@@ -761,6 +768,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         setState(() => _isMicActionInFlight = false);
       }
     }
+  }
+
+  void _startMicLevelPolling() {
+    _micLevelTimer?.cancel();
+    _micLevelTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      if (mounted && !_isMicMuted) setState(() {});
+    });
+  }
+
+  void _stopMicLevelPolling() {
+    _micLevelTimer?.cancel();
+    _micLevelTimer = null;
   }
 
   Future<void> _toggleVideo() async {
@@ -1549,6 +1568,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   Future<void> _disconnectCall() async {
     _reconnectTimer?.cancel();
     _reconnectTimer = null;
+    _stopMicLevelPolling();
     final service = _agoraService;
     _agoraService = null;
     _isCallReady = false;
@@ -3048,6 +3068,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     _giftToastTimer?.cancel();
     _typingTimer?.cancel();
     _reconnectTimer?.cancel();
+    _micLevelTimer?.cancel();
     _giftEventsSubscription?.close();
     unawaited(_clearTypingStatus());
     unawaited(_disconnectCall());
@@ -3861,6 +3882,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       ? null
                                       : _toggleMic,
                                 ),
+                                // Live mic level bar — visible when unmuted
+                                if (!_isMicMuted && _agoraService != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 4),
+                                    child: _MicLevelBar(
+                                      level: _agoraService!.localAudioLevel,
+                                    ),
+                                  ),
                                 Tooltip(
                                   message: _isVideoEnabled
                                       ? 'Turn camera off (long-press to manage viewers)'
@@ -5385,6 +5414,49 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
         );
       },
     );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Mic level bar — five animated bars showing live audio energy
+// ─────────────────────────────────────────────────────────────────────────────
+class _MicLevelBar extends StatelessWidget {
+  const _MicLevelBar({required this.level});
+
+  /// Normalised audio energy in [0.0, 1.0].
+  final double level;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 32,
+      height: 20,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: List.generate(5, (i) {
+          // Each bar lights up progressively: bar 0 at 10 %, bar 4 at 90 %.
+          final threshold = (i + 1) / 5.5;
+          final active = level >= threshold;
+          final maxH = 6.0 + i * 3.0;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 60),
+            width: 4,
+            height: active ? maxH : 3.0,
+            decoration: BoxDecoration(
+              color: active ? _barColor(i) : const Color(0x40FFFFFF),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  static Color _barColor(int index) {
+    if (index <= 2) return const Color(0xFF4CF07A); // green
+    if (index == 3) return const Color(0xFFFFD04C); // yellow/amber
+    return const Color(0xFFFF6E84);                 // red (loud)
   }
 }
 
