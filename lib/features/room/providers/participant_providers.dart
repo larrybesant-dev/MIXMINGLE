@@ -115,3 +115,17 @@ final isHostProvider = Provider.autoDispose.family<bool, RoomParticipantModel?>(
 final isCohostProvider = Provider.autoDispose.family<bool, RoomParticipantModel?>((ref, participant) {
 	return participant?.role == 'cohost';
 });
+
+/// Streams participants who are currently active on the mic:
+/// host, cohost, and stage roles, filtered to fresh (non-stale) entries.
+final onMicParticipantsProvider =
+    StreamProvider.autoDispose.family<List<RoomParticipantModel>, String>((ref, roomId) {
+  return ref
+      .watch(participantsStreamProvider(roomId).stream)
+      .map((participants) => participants
+          .where((p) =>
+              p.role == 'host' ||
+              p.role == 'cohost' ||
+              p.role == 'stage')
+          .toList(growable: false));
+});

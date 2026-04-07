@@ -189,6 +189,14 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys()
                 .hasOnly(['userId', 'role', 'lastActiveAt'])
             && request.resource.data.role == 'stage'
+          )
+          // Allow a participant to release the mic (self-demote back to member).
+          || (
+            participantId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['userId', 'role', 'lastActiveAt'])
+            && request.resource.data.role == 'member'
+            && resource.data.role == 'stage'
           );
         allow delete: if isRoomHost(roomId) || participantId == request.auth.uid;
       }

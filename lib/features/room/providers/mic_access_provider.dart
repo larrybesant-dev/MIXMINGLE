@@ -189,6 +189,26 @@ class MicAccessController {
     );
   }
 
+  /// Releases the mic: demotes [userId] from stage back to member.
+  Future<void> releaseMic({
+    required String roomId,
+    required String userId,
+  }) async {
+    await _db
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(userId)
+        .set(
+      {
+        'userId': userId,
+        'role': 'member',
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+  }
+
   Future<void> approveRequest(String roomId, MicAccessRequestModel request) async {
     final batch = _db.batch();
     batch.update(_requestCollection(roomId).doc(request.id), {

@@ -27,6 +27,7 @@ import '../../widgets/user_profile_popup.dart';
 import '../../widgets/floating_whisper_panel.dart';
 import '../../features/room/widgets/dockable_panel.dart';
 import '../../features/room/widgets/mic_queue_panel.dart';
+import '../../features/room/widgets/on_mic_panel.dart';
 import '../../features/room/widgets/buzz_overlay.dart';
 import '../../features/room/providers/buzz_provider.dart';
 import '../../features/room/widgets/cam_preview_sheet.dart';
@@ -1544,13 +1545,26 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
 
     try {
-      // When promoted to stage, switch to broadcaster mode and publish audio
-      // so the user's mic is actually heard without needing to tap _toggleMic.
-      if (role == 'stage' && !service.isBroadcaster) {
+      // When promoted to stage or cohost: switch to Agora broadcaster mode
+      // and publish audio so the mic is live without needing to tap the mic
+      // button. Both roles allow simultaneous multi-mic broadcasting.
+      if ((role == 'stage' || role == 'cohost') && !service.isBroadcaster) {
         await service.ensureDeviceAccess(video: false, audio: true);
         await service.setBroadcaster(true);
         await service.publishLocalAudioStream(true);
-        if (mounted) setState(() => _isMicMuted = false);
+        if (mounted) {
+          setState(() => _isMicMuted = false);
+          if (role == 'cohost') {
+            _showSnackBar('You are now a co-host — your mic is live!');
+          }
+        }
+      }
+      // When demoted back to audience: stop publishing and downgrade Agora
+      // client role so this user no longer occupies a broadcaster slot.
+      // Skip if the user has an active camera slot (already broadcaster).
+      if (role == 'audience' && service.isBroadcaster && _claimedSlotId == null) {
+        await service.setBroadcaster(false);
+        if (mounted) setState(() => _isMicMuted = true);
       }
       await service.mute(_isMicMuted);
       // Do NOT call enableVideo again if the camera is already running.
@@ -4116,6 +4130,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             loading: () => const SizedBox.shrink(),
                             error: (_, _) => const SizedBox.shrink(),
                           ),
+                          // On-mic panel: shows host, co-hosts, and stage users
+                          OnMicPanel(
+                            roomId: widget.roomId,
+                            currentUserId: user.id,
+                            displayNameById: _senderDisplayNameById,
+                          ),
                           // Mic queue (hand-raise queue, visible when non-empty)
                           MicQueuePanel(
                             roomId: widget.roomId,
@@ -4427,13 +4447,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     ?.where((r) => r.status == 'pending')
                                     .length ??
                                 0,
+                            currentUserRole: participantsInRoom
+                                    .firstWhere(
+                                      (p) => p.userId == user.id,
+                                      orElse: () => RoomParticipantModel(
+                                        userId: user.id,
+                                        role: 'member',
+                                        joinedAt: DateTime.now(),
+                                        lastActiveAt: DateTime.now(),
+                                      ),
+                                    )
+                                    .role,
                             isMicFree: !participantsInRoom
-                                    .any((p) => p.role == 'stage') &&
-                                (micRequestsAsync.valueOrNull
-                                            ?.where((r) =>
-                                                r.status == 'pending')
-                                            .isEmpty ??
-                                        true),
+                                    .any((p) => p.role == 'stage' && p.userId != user.id),
                             isLocalVideoEnabled: _isVideoEnabled,
                             localSpeaking:
                                 _agoraService?.localSpeaking ?? false,
@@ -4444,15 +4470,26 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 false,
                             uidToUserId: (uid) =>
                                 _userIdForRtcUid(uid, participantsInRoom),
+                            onReleaseMic: () async {
+                              try {
+                                await micAccessController.releaseMic(
+                                  roomId: widget.roomId,
+                                  userId: user.id,
+                                );
+                                final svc = _agoraService;
+                                if (svc != null && _isCallReady && !_isMicMuted) {
+                                  await svc.mute(true);
+                                  if (mounted) setState(() => _isMicMuted = true);
+                                }
+                                if (mounted) _showSnackBar('Mic released.');
+                              } catch (e) {
+                                if (mounted) _showSnackBar('Could not release mic: $e');
+                              }
+                            },
                             onJoinQueue: allowMicRequests
                                 ? () async {
                                     final micFree = !participantsInRoom
-                                            .any((p) => p.role == 'stage') &&
-                                        (micRequestsAsync.valueOrNull
-                                                    ?.where((r) =>
-                                                        r.status == 'pending')
-                                                    .isEmpty ??
-                                                true);
+                                            .any((p) => p.role == 'stage' && p.userId != user.id);
                                     try {
                                       if (micFree) {
                                         await micAccessController
@@ -4658,7 +4695,9 @@ class _RoomRosterSidebar extends StatelessWidget {
     required this.isSpeakingFn,
     required this.uidToUserId,
     required this.isMicFree,
+    required this.currentUserRole,
     this.onJoinQueue,
+    this.onReleaseMic,
     this.onWhisper,
   });
 
@@ -4675,7 +4714,9 @@ class _RoomRosterSidebar extends StatelessWidget {
   final bool Function(int uid) isSpeakingFn;
   final String? Function(int uid) uidToUserId;
   final bool isMicFree;
+  final String currentUserRole;
   final VoidCallback? onJoinQueue;
+  final VoidCallback? onReleaseMic;
   final void Function(RoomParticipantModel participant)? onWhisper;
 
   static const _kBg = Color(0xFF161A21);
@@ -4761,9 +4802,11 @@ class _RoomRosterSidebar extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: isMicFree
-                      ? const Color(0xFF1DB954)  // green = mic is free
-                      : const Color(0xFF1756C8), // blue = join queue
+                  backgroundColor: currentUserRole == 'stage'
+                      ? const Color(0xFFE53935)  // red = you are on mic
+                      : isMicFree
+                          ? const Color(0xFF1DB954)  // green = mic is free
+                          : const Color(0xFF1756C8), // blue = join queue
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 5),
                   textStyle: const TextStyle(
@@ -4771,8 +4814,14 @@ class _RoomRosterSidebar extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5)),
                 ),
-                onPressed: onJoinQueue,
-                child: Text(isMicFree ? 'Grab Mic' : 'Join Queue to Talk'),
+                onPressed: currentUserRole == 'stage' ? onReleaseMic : onJoinQueue,
+                child: Text(
+                  currentUserRole == 'stage'
+                      ? 'Release Mic'
+                      : isMicFree
+                          ? 'Grab Mic'
+                          : 'Join Queue to Talk',
+                ),
               ),
             ),
           ),
