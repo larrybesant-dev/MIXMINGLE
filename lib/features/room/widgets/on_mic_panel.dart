@@ -31,7 +31,7 @@ class OnMicPanel extends ConsumerWidget {
 
     return onMicAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (err, st) => const SizedBox.shrink(),
       data: (participants) {
         // Hide the panel when there's no one beyond the default host-only state.
         if (participants.isEmpty) return const SizedBox.shrink();

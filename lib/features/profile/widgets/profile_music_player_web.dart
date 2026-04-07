@@ -65,13 +65,13 @@ class _ProfileMusicPlayerState extends State<ProfileMusicPlayer> {
 
     audio.onLoadedMetadata.listen((_) {
       if (!mounted) return;
-      setState(() => _duration = _fmt(audio.duration?.toInt() ?? 0));
+      setState(() => _duration = _fmt(audio.duration.toInt()));
     });
 
     audio.onTimeUpdate.listen((_) {
       if (!mounted) return;
-      final dur = audio.duration ?? 0;
-      final cur = audio.currentTime?.toDouble() ?? 0;
+      final dur = audio.duration;
+      final cur = audio.currentTime.toDouble();
       setState(() {
         _progress = dur > 0 ? (cur / dur).clamp(0.0, 1.0) : 0.0;
         _elapsed = _fmt(cur.toInt());
@@ -137,7 +137,7 @@ class _ProfileMusicPlayerState extends State<ProfileMusicPlayer> {
   void _seek(double value) {
     final audio = _audio;
     if (audio == null) return;
-    final dur = audio.duration ?? 0;
+    final dur = audio.duration;
     audio.currentTime = (value * dur);
   }
 

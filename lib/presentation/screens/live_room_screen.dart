@@ -3163,6 +3163,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             requesterId: user.id,
           )),
         );
+        // ignore: unused_local_variable -- kept for potential future use
         final micRequestStatus = myMicRequestAsync.valueOrNull?.status;
         final firestore = ref.watch(roomFirestoreProvider);
         // Skip role-media sync when the user has an active camera slot.
@@ -4650,7 +4651,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       user2Name: _senderDisplayNameById[p.userId] ?? p.userId,
                                       user2AvatarUrl: _senderAvatarUrlById[p.userId],
                                     );
-                                if (!mounted) return;
+                                if (!context.mounted) return;
                                 FloatingWhisperPanel.show(
                                   context,
                                   ref,
@@ -5146,6 +5147,7 @@ class _GiftToast {
 /// Compact icon button that lets audience members raise their hand to request
 /// the mic.  Shows a filled orange hand when a request is pending.  Tapping
 /// while pending cancels the request.
+// ignore: unused_element
 class _HandRaiseButton extends StatelessWidget {
   const _HandRaiseButton({
     required this.status,

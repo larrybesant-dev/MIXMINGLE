@@ -198,7 +198,7 @@ class _DeviceDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return DropdownButtonFormField<String>(
-      value: selectedId,
+      initialValue: selectedId,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, size: 18, color: scheme.primary),

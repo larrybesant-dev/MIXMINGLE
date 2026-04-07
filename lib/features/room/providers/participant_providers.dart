@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/room_participant_model.dart';
@@ -120,12 +122,18 @@ final isCohostProvider = Provider.autoDispose.family<bool, RoomParticipantModel?
 /// host, cohost, and stage roles, filtered to fresh (non-stale) entries.
 final onMicParticipantsProvider =
     StreamProvider.autoDispose.family<List<RoomParticipantModel>, String>((ref, roomId) {
-  return ref
-      .watch(participantsStreamProvider(roomId).stream)
-      .map((participants) => participants
+  final controller = StreamController<List<RoomParticipantModel>>();
+  ref.listen<AsyncValue<List<RoomParticipantModel>>>(participantsStreamProvider(roomId),
+      (_, next) {
+    next.whenData((participants) {
+      controller.add(participants
           .where((p) =>
               p.role == 'host' ||
               p.role == 'cohost' ||
               p.role == 'stage')
           .toList(growable: false));
+    });
+  }, fireImmediately: true);
+  ref.onDispose(controller.close);
+  return controller.stream;
 });

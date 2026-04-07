@@ -738,7 +738,7 @@ class _SoundWaveEqState extends State<_SoundWaveEq>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _ctrl,
-      builder: (_, __) {
+      builder: (_, child) {
         return Row(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.end,

@@ -17,9 +17,12 @@ Future<List<MediaDeviceInfo>> enumerateMediaDevices() async {
   if (devices == null) return const [];
   try {
     // Request permission first so labels are populated.
-    final stream = await devices
-        .getUserMedia({'audio': true, 'video': true})
-        .catchError((_) => null);
+    html.MediaStream? stream;
+    try {
+      stream = await devices.getUserMedia({'audio': true, 'video': true});
+    } catch (_) {
+      // Permission denied or not available — proceed anyway; labels may be empty.
+    }
     if (stream != null) {
       for (final track in stream.getTracks()) {
         track.stop();
