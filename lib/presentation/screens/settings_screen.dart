@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../providers/app_settings_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
 import '../../features/beta/beta_tester_provider.dart';
+import '../../features/profile/widgets/device_settings_panel.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -59,6 +60,20 @@ class SettingsScreen extends ConsumerWidget {
                         controller.setLocaleCode(value);
                       },
                     ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Camera & Microphone', style: Theme.of(context).textTheme.titleMedium),
+                    const SizedBox(height: 12),
+                    const DeviceSettingsPanel(),
                   ],
                 ),
               ),

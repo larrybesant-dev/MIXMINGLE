@@ -69,16 +69,16 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 150));
 
-    expect(find.text('Pending requests'), findsOneWidget);
+    expect(find.text('REQUESTS'), findsOneWidget);
     expect(find.text('Guest Person'), findsOneWidget);
     expect(find.text('Accept'), findsOneWidget);
     expect(find.text('Decline'), findsOneWidget);
-    expect(find.text('Your friends'), findsOneWidget);
+    expect(find.text('FRIENDS'), findsOneWidget);
     expect(find.text('User Two'), findsOneWidget);
-    expect(find.text('People you may know'), findsOneWidget);
+    expect(find.text('PEOPLE YOU MAY KNOW'), findsOneWidget);
     expect(find.text('Available Person'), findsOneWidget);
-    expect(find.text('Add'), findsOneWidget);
-    expect(find.text('Requested'), findsNothing);
-    expect(find.text('Remove'), findsOneWidget);
+    // Add friend icon is shown for candidates; Requested icon for pending outgoing
+    expect(find.byTooltip('Add friend'), findsWidgets);
+    expect(find.byTooltip('Remove friend'), findsOneWidget);
   });
 }

@@ -20,6 +20,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../auth/controllers/auth_controller.dart';
 import 'profile_completion.dart';
 import 'profile_controller.dart';
+import 'widgets/device_settings_panel.dart';
 import '../follow/providers/follow_provider.dart';
 import '../feed/providers/feed_providers.dart';
 import '../feed/widgets/post_card.dart';
@@ -78,6 +79,12 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
   String? _selectedRelationshipStatus;
   String _selectedThemeId = 'midnight';
   CamViewPolicy _selectedCamViewPolicy = CamViewPolicy.approvedOnly;
+  // Profile personalisation
+  String? _profileAccentColor;
+  String? _profileBgGradientStart;
+  String? _profileBgGradientEnd;
+  final _profileMusicUrlController = TextEditingController();
+  final _profileMusicTitleController = TextEditingController();
   bool _showAge = false;
   bool _showGender = false;
   bool _showLocation = false;
@@ -112,7 +119,6 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
     'Complicated',
     'Prefer not to say',
   ];
-  static const List<String> _themeOptions = ['midnight', 'sunset', 'emerald'];
   static const List<String> _interestSuggestions = [
     'nightlife',
     'deep talks',
@@ -144,6 +150,8 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
     _adultKinksController.dispose();
     _adultPreferencesController.dispose();
     _adultBoundariesController.dispose();
+    _profileMusicUrlController.dispose();
+    _profileMusicTitleController.dispose();
     super.dispose();
   }
 
@@ -622,6 +630,16 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
     _selectedRelationshipStatus = state.relationshipStatus;
     _selectedThemeId = state.themeId;
     _selectedCamViewPolicy = state.camViewPolicy;
+    // Personalisation
+    _profileAccentColor = state.profileAccentColor;
+    _profileBgGradientStart = state.profileBgGradientStart;
+    _profileBgGradientEnd = state.profileBgGradientEnd;
+    if (_profileMusicUrlController.text != (state.profileMusicUrl ?? '')) {
+      _profileMusicUrlController.text = state.profileMusicUrl ?? '';
+    }
+    if (_profileMusicTitleController.text != (state.profileMusicTitle ?? '')) {
+      _profileMusicTitleController.text = state.profileMusicTitle ?? '';
+    }
     _showAge = state.privacy.showAge;
     _showGender = state.privacy.showGender;
     _showLocation = state.privacy.showLocation;
@@ -669,6 +687,15 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
         musicTastePrompt: _musicTasteController.text.trim(),
         themeId: _selectedThemeId,
         camViewPolicy: _selectedCamViewPolicy,
+        profileAccentColor: _profileAccentColor,
+        profileBgGradientStart: _profileBgGradientStart,
+        profileBgGradientEnd: _profileBgGradientEnd,
+        profileMusicUrl: _profileMusicUrlController.text.trim().isEmpty
+            ? null
+            : _profileMusicUrlController.text.trim(),
+        profileMusicTitle: _profileMusicTitleController.text.trim().isEmpty
+            ? null
+            : _profileMusicTitleController.text.trim(),
         privacy: ProfilePrivacyModel(
           showAge: _showAge,
           showGender: _showGender,
@@ -945,24 +972,223 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
                   ),
                 ),
                 const SizedBox(height: 18),
+                // ── Appearance ───────────────────────────────────────────
                 _SectionCard(
-                  title: 'Profile vibe',
-                  subtitle: 'Set the look and the conversation hooks for your page.',
+                  title: 'Appearance',
+                  subtitle: 'Pick a profile theme, custom gradient, and accent colour.',
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      DropdownButtonFormField<String>(
-                        initialValue: _selectedThemeId,
-                        decoration: const InputDecoration(labelText: 'Theme'),
-                        items: _themeOptions
-                            .map((value) => DropdownMenuItem<String>(value: value, child: Text(value)))
-                            .toList(growable: false),
-                        onChanged: (value) {
-                          if (value != null) {
-                            setState(() => _selectedThemeId = value);
+                      Text('Theme', style: Theme.of(context).textTheme.labelLarge),
+                      const SizedBox(height: 8),
+                      // Visual theme swatches
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: _ProfileTheme.all.map((t) {
+                          final selected = _selectedThemeId == t.id;
+                          return GestureDetector(
+                            onTap: () => setState(() => _selectedThemeId = t.id),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 180),
+                                  width: 56,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      colors: [t.gradientStart, t.gradientEnd],
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                    ),
+                                    borderRadius: BorderRadius.circular(10),
+                                    border: selected
+                                        ? Border.all(
+                                            color: Theme.of(context).colorScheme.primary,
+                                            width: 2.5,
+                                          )
+                                        : Border.all(
+                                            color: Colors.white.withValues(alpha: 0.12),
+                                          ),
+                                    boxShadow: selected
+                                        ? [
+                                            BoxShadow(
+                                              color: t.gradientStart.withValues(alpha: 0.4),
+                                              blurRadius: 8,
+                                            )
+                                          ]
+                                        : [],
+                                  ),
+                                  child: selected
+                                      ? const Center(
+                                          child: Icon(Icons.check_rounded,
+                                              color: Colors.white, size: 18),
+                                        )
+                                      : null,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  t.label,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: selected
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context).colorScheme.onSurfaceVariant,
+                                    fontWeight: selected
+                                        ? FontWeight.w700
+                                        : FontWeight.w400,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 18),
+                      // Accent / font colour
+                      Text('Accent colour', style: Theme.of(context).textTheme.labelLarge),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Used for text highlights on your profile.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
+                      const SizedBox(height: 8),
+                      _ColorSwatchRow(
+                        selectedHex: _profileAccentColor,
+                        onSelected: (hex) =>
+                            setState(() => _profileAccentColor = hex),
+                      ),
+                      const SizedBox(height: 18),
+                      // Custom background gradient
+                      Text('Custom background gradient', style: Theme.of(context).textTheme.labelLarge),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Overrides the theme gradient on your profile card.',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Theme.of(context).colorScheme.onSurfaceVariant),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Start', style: Theme.of(context).textTheme.bodySmall),
+                                const SizedBox(height: 4),
+                                _ColorSwatchRow(
+                                  selectedHex: _profileBgGradientStart,
+                                  onSelected: (hex) => setState(
+                                      () => _profileBgGradientStart = hex),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('End', style: Theme.of(context).textTheme.bodySmall),
+                                const SizedBox(height: 4),
+                                _ColorSwatchRow(
+                                  selectedHex: _profileBgGradientEnd,
+                                  onSelected: (hex) => setState(
+                                      () => _profileBgGradientEnd = hex),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (_profileBgGradientStart != null &&
+                          _profileBgGradientEnd != null) ...[
+                        const SizedBox(height: 12),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Container(
+                            height: 36,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                colors: [
+                                  _hexToColor(_profileBgGradientStart!),
+                                  _hexToColor(_profileBgGradientEnd!),
+                                ],
+                              ),
+                            ),
+                            child: const Center(
+                              child: Text(
+                                'Preview',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        TextButton.icon(
+                          onPressed: () => setState(() {
+                            _profileBgGradientStart = null;
+                            _profileBgGradientEnd = null;
+                          }),
+                          icon: const Icon(Icons.clear, size: 14),
+                          label: const Text('Clear custom gradient'),
+                          style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                // ── Profile Music ──────────────────────────────────────── 
+                const SizedBox(height: 18),
+                _SectionCard(
+                  title: 'Profile music',
+                  subtitle: 'Add a track that plays when people visit your profile — MySpace style.',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextFormField(
+                        controller: _profileMusicUrlController,
+                        keyboardType: TextInputType.url,
+                        decoration: const InputDecoration(
+                          labelText: 'Audio URL (HTTPS, .mp3 / .ogg / .wav)',
+                          hintText: 'https://example.com/your-track.mp3',
+                          prefixIcon: Icon(Icons.link_rounded, size: 18),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return null;
+                          final uri = Uri.tryParse(v.trim());
+                          if (uri == null || uri.scheme != 'https') {
+                            return 'Must be an HTTPS URL.';
                           }
+                          return null;
                         },
                       ),
                       const SizedBox(height: 12),
+                      TextFormField(
+                        controller: _profileMusicTitleController,
+                        decoration: const InputDecoration(
+                          labelText: 'Track title (shown on your profile)',
+                          hintText: 'e.g. Drake — Rich Flex',
+                          prefixIcon: Icon(Icons.music_note_outlined, size: 18),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // ── Profile vibe ──────────────────────────────────────────
+                const SizedBox(height: 18),
+                _SectionCard(
+                  title: 'Profile vibe',
+                  subtitle: 'Conversation hooks shown on your public page.',
+                  child: Column(
+                    children: [
                       TextFormField(
                         controller: _interestsController,
                         decoration: const InputDecoration(labelText: 'Interests', hintText: 'Comma-separated interests'),
@@ -992,6 +1218,13 @@ class _ProfileFormViewState extends ConsumerState<ProfileFormView> {
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(height: 18),
+                // ── Device settings ───────────────────────────────────────
+                _SectionCard(
+                  title: 'Devices',
+                  subtitle: 'Choose which camera and microphone to use in live rooms.',
+                  child: const DeviceSettingsPanel(),
                 ),
                 const SizedBox(height: 18),
                 _SectionCard(
@@ -1565,5 +1798,167 @@ class _StatTile extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Profile theme definitions
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ProfileTheme {
+  const _ProfileTheme({
+    required this.id,
+    required this.label,
+    required this.gradientStart,
+    required this.gradientEnd,
+  });
+
+  final String id;
+  final String label;
+  final Color gradientStart;
+  final Color gradientEnd;
+
+  static const all = <_ProfileTheme>[
+    _ProfileTheme(
+        id: 'midnight',
+        label: 'Midnight',
+        gradientStart: Color(0xFF1A1A2E),
+        gradientEnd: Color(0xFF16213E)),
+    _ProfileTheme(
+        id: 'sunset',
+        label: 'Sunset',
+        gradientStart: Color(0xFFFF6B6B),
+        gradientEnd: Color(0xFFFFE66D)),
+    _ProfileTheme(
+        id: 'emerald',
+        label: 'Emerald',
+        gradientStart: Color(0xFF134E5E),
+        gradientEnd: Color(0xFF71B280)),
+    _ProfileTheme(
+        id: 'neon',
+        label: 'Neon',
+        gradientStart: Color(0xFF0F0C29),
+        gradientEnd: Color(0xFF302B63)),
+    _ProfileTheme(
+        id: 'rose',
+        label: 'Rose',
+        gradientStart: Color(0xFF833AB4),
+        gradientEnd: Color(0xFFFD1D1D)),
+    _ProfileTheme(
+        id: 'ocean',
+        label: 'Ocean',
+        gradientStart: Color(0xFF1A6B8A),
+        gradientEnd: Color(0xFF00C6FF)),
+    _ProfileTheme(
+        id: 'gold',
+        label: 'Gold',
+        gradientStart: Color(0xFF7B4F00),
+        gradientEnd: Color(0xFFFFD700)),
+    _ProfileTheme(
+        id: 'noir',
+        label: 'Noir',
+        gradientStart: Color(0xFF0D0D0D),
+        gradientEnd: Color(0xFF2C2C2C)),
+  ];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Colour swatch row (preset colour picker)
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _ColorSwatchRow extends StatelessWidget {
+  const _ColorSwatchRow({
+    required this.selectedHex,
+    required this.onSelected,
+  });
+
+  final String? selectedHex;
+  final ValueChanged<String?> onSelected;
+
+  static const _swatches = <String>[
+    '#BA9EFF', // lavender
+    '#00E3FD', // cyan
+    '#5B8AF5', // blue
+    '#FF6E84', // rose
+    '#FFA040', // orange
+    '#FFD700', // gold
+    '#4CAF50', // green
+    '#FF4081', // pink
+    '#E040FB', // purple
+    '#FFFFFF', // white
+    '#A9ABB3', // silver
+    '#FF1744', // red
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        // "None" option
+        GestureDetector(
+          onTap: () => onSelected(null),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.transparent,
+              border: Border.all(
+                color: selectedHex == null
+                    ? Theme.of(context).colorScheme.primary
+                    : Colors.white.withValues(alpha: 0.3),
+                width: selectedHex == null ? 2.5 : 1,
+              ),
+            ),
+            child: selectedHex == null
+                ? const Center(
+                    child: Icon(Icons.close, size: 14, color: Colors.white54))
+                : null,
+          ),
+        ),
+        ..._swatches.map((hex) {
+          final isSelected = selectedHex == hex;
+          final color = _hexToColor(hex);
+          return GestureDetector(
+            onTap: () => onSelected(hex),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 30,
+              height: 30,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color,
+                border: Border.all(
+                  color: isSelected
+                      ? Colors.white
+                      : Colors.white.withValues(alpha: 0.15),
+                  width: isSelected ? 2.5 : 1,
+                ),
+                boxShadow: isSelected
+                    ? [BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 6)]
+                    : [],
+              ),
+              child: isSelected
+                  ? const Center(
+                      child: Icon(Icons.check, size: 14, color: Colors.white))
+                  : null,
+            ),
+          );
+        }),
+      ],
+    );
+  }
+}
+
+/// Parses a hex colour string (with or without leading #) into a [Color].
+Color _hexToColor(String hex) {
+  final clean = hex.replaceFirst('#', '');
+  try {
+    return Color(int.parse(clean.length == 6 ? 'FF$clean' : clean, radix: 16));
+  } catch (_) {
+    return Colors.grey;
   }
 }

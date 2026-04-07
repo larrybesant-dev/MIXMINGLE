@@ -74,6 +74,10 @@
       - assets/fonts/
       - assets/env/app_env
       - assets/.env
+    fonts:
+      - family: NotoColorEmoji
+        fonts:
+          - asset: assets/fonts/NotoColorEmoji-Regular.ttf
     uses-material-design: true
 
   flutter_launcher_icons:

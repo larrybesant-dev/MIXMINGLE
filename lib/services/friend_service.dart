@@ -337,6 +337,45 @@ class FriendService {
         .toList(growable: false);
   }
 
+  /// Live stream of the friends list — re-emits whenever the user's friends
+  /// array changes in Firestore.
+  Stream<List<UserModel>> watchFriends(String userId) {
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .snapshots()
+        .asyncMap((snap) async {
+      if (!snap.exists) return const <UserModel>[];
+      final data = snap.data() ?? <String, dynamic>{};
+      final friendIds = _asStringList(data['friends']);
+      if (friendIds.isEmpty) return const <UserModel>[];
+
+      final excludedIds = await _moderationService.getExcludedUserIds(userId);
+      final visibleIds = friendIds
+          .where((id) => !excludedIds.contains(id))
+          .toList(growable: false);
+      if (visibleIds.isEmpty) return const <UserModel>[];
+
+      final favoriteIds = await getFavoriteFriendIds(userId);
+
+      final snap2 = await _firestore
+          .collection('users')
+          .where(FieldPath.documentId, whereIn: visibleIds)
+          .get();
+      final friends = snap2.docs
+          .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
+          .toList();
+
+      friends.sort((a, b) {
+        final aFav = favoriteIds.contains(a.id) ? 0 : 1;
+        final bFav = favoriteIds.contains(b.id) ? 0 : 1;
+        if (aFav != bFav) return aFav.compareTo(bFav);
+        return a.username.toLowerCase().compareTo(b.username.toLowerCase());
+      });
+      return friends;
+    });
+  }
+
   Stream<List<FriendRequestModel>> incomingRequests(String userId) {
     return _firestore
         .collection('friend_requests')

@@ -1,5 +1,5 @@
 const {onRequest, onCall, HttpsError} = require("firebase-functions/v2/https");
-const {onDocumentCreated} = require("firebase-functions/v2/firestore");
+const {onDocumentCreated, onDocumentWritten} = require("firebase-functions/v2/firestore");
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 const {onRequest: onRequestV1} = require("firebase-functions/v1/https");
 const functionsV1 = require("firebase-functions/v1");
@@ -1616,6 +1616,70 @@ exports.cleanupExpiredStories = onSchedule("every 24 hours", async () => {
 
   logger.info(`cleanupExpiredStories: deleted ${expired.size} expired stories`);
 });
+
+// ── Friend-online notification ────────────────────────────────────────────────
+// Triggers whenever a presence document is written.  When ``isOnline`` flips
+// from falsy → true we notify the user's friends (capped at 50, throttled to
+// once per 30 minutes per user to avoid notification spam).
+exports.notifyFriendsUserOnline = onDocumentWritten(
+  "presence/{userId}",
+  async (event) => {
+    const userId = event.params && event.params.userId;
+    if (!userId) return;
+
+    const before = event.data && event.data.before && event.data.before.exists
+      ? (event.data.before.data() || {})
+      : null;
+    const after = event.data && event.data.after && event.data.after.exists
+      ? (event.data.after.data() || {})
+      : null;
+
+    if (!after) return; // document deleted
+
+    const wasOnline = before ? !!before.isOnline : false;
+    const isNowOnline = !!after.isOnline;
+
+    // Only fire when user *comes* online.
+    if (wasOnline || !isNowOnline) return;
+
+    // Throttle: skip if we already notified friends within the last 30 minutes.
+    const THROTTLE_MS = 30 * 60 * 1000;
+    const lastNotified = after.lastOnlineNotifiedAt
+      ? (after.lastOnlineNotifiedAt.toMillis ? after.lastOnlineNotifiedAt.toMillis() : 0)
+      : 0;
+    if (Date.now() - lastNotified < THROTTLE_MS) return;
+
+    // Stamp throttle timestamp before doing expensive reads so concurrent
+    // invocations see it immediately.
+    await event.data.after.ref.set(
+      { lastOnlineNotifiedAt: admin.firestore.FieldValue.serverTimestamp() },
+      { merge: true },
+    );
+
+    const userSnap = await db.collection("users").doc(userId).get();
+    if (!userSnap.exists) return;
+
+    const userData = userSnap.data() || {};
+    const username = (userData.username || userData.displayName || "Someone").trim() || "Someone";
+    const friendIds = Array.isArray(userData.friends) ? userData.friends.slice(0, 50) : [];
+    if (friendIds.length === 0) return;
+
+    const batch = db.batch();
+    friendIds.forEach((friendId) => {
+      if (typeof friendId !== "string" || !friendId.trim()) return;
+      const notifRef = db.collection("notifications").doc();
+      batch.set(notifRef, {
+        userId: friendId.trim(),
+        actorId: userId,
+        type: "friend_online",
+        content: `${username} is now online.`,
+        isRead: false,
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+      });
+    });
+    await batch.commit();
+  },
+);
 
 exports.__testing = {
   createPaymentIntentHandler,

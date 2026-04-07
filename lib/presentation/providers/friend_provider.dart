@@ -31,13 +31,10 @@ final currentFriendIdsProvider = FutureProvider<List<String>>((ref) async {
 	return ref.watch(friendServiceProvider).getFriendIds(userId);
 });
 
-final friendsListProvider = FutureProvider<List<UserModel>>((ref) async {
+final friendsListProvider = StreamProvider<List<UserModel>>((ref) {
 	final userId = ref.watch(currentFriendUserIdProvider);
-	if (userId == null) {
-		return const [];
-	}
-
-	return ref.watch(friendServiceProvider).getFriends(userId);
+	if (userId == null) return const Stream.empty();
+	return ref.watch(friendServiceProvider).watchFriends(userId);
 });
 
 class IncomingFriendRequestEntry {
@@ -114,6 +111,14 @@ final favoriteFriendIdsProvider = FutureProvider<Set<String>>((ref) async {
 final friendPresenceProvider =
     StreamProvider.autoDispose.family<PresenceModel, String>((ref, friendId) {
 	return PresenceService().watchUserPresence(friendId);
+});
+
+/// Current user's own presence — used to know if the user is in a room so they
+/// can invite friends directly from the friends list.
+final currentUserPresenceProvider = StreamProvider.autoDispose<PresenceModel?>((ref) {
+  final userId = ref.watch(currentFriendUserIdProvider);
+  if (userId == null) return const Stream.empty();
+  return PresenceService().watchUserPresence(userId).map((p) => p);
 });
 
 /// Friends-of-friends who are not yet friends with the current user.

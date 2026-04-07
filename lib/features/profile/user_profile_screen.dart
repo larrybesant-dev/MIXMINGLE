@@ -11,6 +11,8 @@ import '../../widgets/follow_button.dart';
 import '../../widgets/gift_picker_sheet.dart';
 import '../../features/feed/models/post_model.dart';
 import '../../features/feed/widgets/post_card.dart';
+import 'widgets/profile_music_player_stub.dart'
+    if (dart.library.html) 'widgets/profile_music_player_web.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class UserProfileScreen extends ConsumerStatefulWidget {
@@ -28,6 +30,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   final FollowService _followService = FollowService();
   late Future<Map<String, dynamic>> _profileFuture;
   late TabController _tabController;
+
+  Color? _hexColorOrNull(String hex) {
+    final clean = hex.replaceFirst('#', '');
+    try {
+      return Color(int.parse(clean.length == 6 ? 'FF$clean' : clean, radix: 16));
+    } catch (_) {
+      return null;
+    }
+  }
 
   String? _stringOrNull(dynamic value) {
     if (value == null) return null;
@@ -316,6 +327,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
           final relationshipStatus = _stringOrNull(data['relationshipStatus']);
           final camViewPolicy = _stringOrNull(data['camViewPolicy']);
           final themeId = _stringOrNull(data['themeId']);
+          // Profile personalisation
+          final profileAccentColor = _stringOrNull(data['profileAccentColor']);
+          final profileBgGradientStart = _stringOrNull(data['profileBgGradientStart']);
+          final profileBgGradientEnd = _stringOrNull(data['profileBgGradientEnd']);
+          final profileMusicUrl = _stringOrNull(data['profileMusicUrl']);
+          final profileMusicTitle = _stringOrNull(data['profileMusicTitle']) ?? '';
+          final accentColor = profileAccentColor != null
+              ? _hexColorOrNull(profileAccentColor)
+              : null;
           final coverImageUrl = (coverPhotoUrl ?? '').isNotEmpty
               ? coverPhotoUrl!.trim()
               : (galleryUrls.isNotEmpty ? galleryUrls.first.trim() : (avatarUrl ?? '').trim());
@@ -342,10 +362,17 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(22),
                   gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.primary.withValues(alpha: 0.85),
-                      Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
-                    ],
+                    colors: (profileBgGradientStart != null && profileBgGradientEnd != null)
+                        ? [
+                            _hexColorOrNull(profileBgGradientStart) ??
+                                Theme.of(context).colorScheme.primary.withValues(alpha: 0.85),
+                            _hexColorOrNull(profileBgGradientEnd) ??
+                                Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
+                          ]
+                        : [
+                            Theme.of(context).colorScheme.primary.withValues(alpha: 0.85),
+                            Theme.of(context).colorScheme.secondary.withValues(alpha: 0.8),
+                          ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -400,7 +427,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                             displayName,
                             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                   fontWeight: FontWeight.w800,
-                                  color: Colors.white,
+                                  color: accentColor ?? Colors.white,
                                 ),
                           ),
                           const SizedBox(height: 6),
@@ -514,6 +541,15 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 Text('About Me', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 8),
                 Text(aboutMe, style: Theme.of(context).textTheme.bodyMedium),
+                const SizedBox(height: 18),
+              ],
+              if ((profileMusicUrl ?? '').isNotEmpty) ...[
+                Text('Profile Music', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 8),
+                ProfileMusicPlayer(
+                  musicUrl: profileMusicUrl!,
+                  musicTitle: profileMusicTitle,
+                ),
                 const SizedBox(height: 18),
               ],
               if ((vibePrompt ?? '').isNotEmpty || (firstDatePrompt ?? '').isNotEmpty || (musicTastePrompt ?? '').isNotEmpty) ...[
