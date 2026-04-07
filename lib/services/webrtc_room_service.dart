@@ -562,6 +562,17 @@ class WebRtcRoomService implements RtcRoomService {
       if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed ||
           state == RTCPeerConnectionState.RTCPeerConnectionStateDisconnected) {
         _closePeer(broadcasterId);
+        // Retry: re-create viewer connection if broadcaster is still active.
+        if (_isJoined && _roomId != null) {
+          Future.delayed(const Duration(seconds: 2), () {
+            if (_isJoined && !_peers.containsKey(broadcasterId)) {
+              _log('retrying viewer connection → broadcaster=$broadcasterId');
+              _uidToUserId[broadcasterUid] = broadcasterId;
+              _userIdToUid[broadcasterId] = broadcasterUid;
+              _createViewerConnection(broadcasterId, broadcasterUid);
+            }
+          });
+        }
       }
     };
 
@@ -643,12 +654,19 @@ class WebRtcRoomService implements RtcRoomService {
 
   void _onIncomingCalls(QuerySnapshot snapshot) {
     for (final change in snapshot.docChanges) {
-      if (change.type != DocumentChangeType.added) continue;
+      // Process new offers (added) AND refreshed offers from reconnecting viewers
+      // (modified). When a viewer re-joins, their new offer overwrites the old
+      // Firestore doc, which arrives here as `modified`.
+      if (change.type != DocumentChangeType.added &&
+          change.type != DocumentChangeType.modified) continue;
       final callId = change.doc.id;
-      if (_answeredCalls.contains(callId)) continue;
       final data = change.doc.data() as Map<String, dynamic>?;
       if (data?['offer'] == null) continue;
       if (data?['answer'] != null) continue; // already answered
+      // For added events, skip if we already answered. For modified events
+      // (viewer reconnected with a fresh offer), always re-process.
+      if (change.type == DocumentChangeType.added &&
+          _answeredCalls.contains(callId)) continue;
       _answeredCalls.add(callId);
       _answerViewerOffer(callId, data!);
     }
@@ -679,7 +697,10 @@ class WebRtcRoomService implements RtcRoomService {
   ) async {
     final localStream = _localStream;
     if (localStream == null) {
-      _log('ignoring offer callId=$callId — no local stream yet');
+      // Remove from _answeredCalls so _processExistingIncomingCalls can retry
+      // when our camera stream becomes ready.
+      _answeredCalls.remove(callId);
+      _log('ignoring offer callId=$callId — no local stream yet (will retry)');
       return;
     }
 

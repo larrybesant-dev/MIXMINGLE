@@ -3169,12 +3169,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 fit: StackFit.expand,
                 children: [
                   // ── FULLSCREEN VIDEO BACKGROUND ──────────────────────────
-                  // Leave 480px on the right for the docked Chat + Users panels.
+                  // Camera panel — fixed 360px wide on the left.
                   Positioned(
                     left: 0,
                     top: 0,
                     bottom: 0,
-                    right: 480,
+                    width: 360,
                     child: _agoraService != null
                         ? Builder(
                             builder: (context) {
@@ -3422,7 +3422,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   // ── AVATAR STRIP + ONLINE COUNT (top-right of camera area) ──
                   Positioned(
                     top: 56,
-                    right: 492,
+                    left: 336,
                     child: presenceAsync.when(
                       data: (presence) {
                         final activeCutoff = DateTime.now()
@@ -3485,7 +3485,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     Positioned(
                       bottom: 92,
                       left: 8,
-                      right: 492,
+                      width: 344,
                       child: SizedBox(
                         height: 40,
                         child: ListView.separated(
