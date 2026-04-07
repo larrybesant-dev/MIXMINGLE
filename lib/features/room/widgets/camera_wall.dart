@@ -10,6 +10,7 @@ class CameraWallRemoteTileData {
     required this.label,
     required this.canView,
     required this.isSpeaking,
+    this.hasMic = false,
     this.viewerCount,
     this.avatarUrl,
   });
@@ -20,6 +21,8 @@ class CameraWallRemoteTileData {
   final String label;
   final bool canView;
   final bool isSpeaking;
+  /// True when this participant is the current mic holder (role == 'stage').
+  final bool hasMic;
   /// Optional viewer count shown as a badge on the tile (null = hidden).
   final int? viewerCount;
   /// Profile photo URL shown in the cam area when camera is off or access is locked.
@@ -32,6 +35,8 @@ class CameraWall extends ConsumerWidget {
     required this.roomId,
     required this.localLabel,
     required this.localSpeaking,
+    this.showLocalTile = true,
+    this.localHasMic = false,
     required this.localTile,
     required this.remoteTiles,
     required this.remoteTileBuilder,
@@ -47,6 +52,10 @@ class CameraWall extends ConsumerWidget {
   final String roomId;
   final String localLabel;
   final bool localSpeaking;
+  /// Whether the local user's camera is on. If false, the local tile is hidden.
+  final bool showLocalTile;
+  /// True when the local user is the current mic holder (role == 'stage').
+  final bool localHasMic;
   final Widget localTile;
   final List<CameraWallRemoteTileData> remoteTiles;
   final Widget Function(CameraWallRemoteTileData tile) remoteTileBuilder;
@@ -134,10 +143,11 @@ class CameraWall extends ConsumerWidget {
         final localIsTalking = localSpeaking;
 
         final mainGridTiles = <Widget>[
-          if (!localIsTalking)
+          if (showLocalTile && !localIsTalking)
             _CameraWallTileFrame(
               label: localLabel,
               speaking: false,
+              hasMic: localHasMic,
               compact: false,
               onDetach: onDetachLocal,
               child: localTile,
@@ -146,6 +156,7 @@ class CameraWall extends ConsumerWidget {
             (tile) => _CameraWallTileFrame(
               label: tile.label,
               speaking: false,
+              hasMic: tile.hasMic,
               compact: false,
               viewerCount: tile.viewerCount,
               onDetach: onDetachRemote == null
@@ -312,13 +323,14 @@ class CameraWall extends ConsumerWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (localIsTalking)
+                        if (showLocalTile && localIsTalking)
                           Flexible(
                             child: Padding(
                               padding: const EdgeInsets.only(right: 8),
                               child: _CameraWallTileFrame(
                                 label: localLabel,
                                 speaking: true,
+                                hasMic: localHasMic,
                                 compact: false,
                                 onDetach: onDetachLocal,
                                 child: localTile,
@@ -332,6 +344,7 @@ class CameraWall extends ConsumerWidget {
                               child: _CameraWallTileFrame(
                                 label: tile.label,
                                 speaking: true,
+                                hasMic: tile.hasMic,
                                 compact: false,
                                 viewerCount: tile.viewerCount,
                                 onDetach: onDetachRemote == null
@@ -414,6 +427,7 @@ class CameraWall extends ConsumerWidget {
                                         return _CameraWallTileFrame(
                                           label: tile.label,
                                           speaking: tile.isSpeaking,
+                                          hasMic: tile.hasMic,
                                           compact: true,
                                           onDetach: onDetachRemote == null
                                               ? null
@@ -463,6 +477,7 @@ class CameraWall extends ConsumerWidget {
                             child: _CameraWallTileFrame(
                               label: tile.label,
                               speaking: tile.isSpeaking,
+                              hasMic: tile.hasMic,
                               compact: true,
                               onDetach: onDetachRemote == null
                                   ? null
@@ -495,6 +510,7 @@ class _CameraWallTileFrame extends StatefulWidget {
   const _CameraWallTileFrame({
     required this.label,
     required this.speaking,
+    this.hasMic = false,
     required this.compact,
     required this.child,
     this.onDetach,
@@ -503,6 +519,9 @@ class _CameraWallTileFrame extends StatefulWidget {
 
   final String label;
   final bool speaking;
+  /// True when this participant is the current mic holder. EQ bars are only
+  /// shown for the mic holder, not for everyone who is speaking.
+  final bool hasMic;
   final bool compact;
   final Widget child;
   /// If non-null, a pop-out button is shown in the tile header.
@@ -601,19 +620,18 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
                       color: const Color(0xFF0B0E14),
                       child: widget.child,
                     ),
-                    // EQ sound-wave bars on the left when speaking
-                    if (widget.speaking)
+                    // EQ sound-wave bars only on the mic holder
+                    if (widget.hasMic)
                       Positioned(
                         left: 5,
                         bottom: 8,
-                        child: _SoundWaveEq(active: widget.speaking),
+                        child: _SoundWaveEq(active: widget.hasMic),
                       ),
-                    // EQ sound-wave bars on the right when speaking
-                    if (widget.speaking)
+                    if (widget.hasMic)
                       Positioned(
                         right: 5,
                         bottom: 8,
-                        child: _SoundWaveEq(active: widget.speaking),
+                        child: _SoundWaveEq(active: widget.hasMic),
                       ),
                     // Viewer count badge (bottom-right corner, shifted left when speaking)
                     if (widget.viewerCount != null && widget.viewerCount! > 0)

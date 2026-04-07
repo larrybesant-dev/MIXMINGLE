@@ -85,8 +85,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isCallReady = false;
   bool _isMicMuted = false;
   bool _isVideoEnabled = false;
+  double _rightPanelWidth = 480.0;
   bool _isMicActionInFlight = false;
   bool _isVideoActionInFlight = false;
+  bool _isSharingPcAudio = false;
   String? _cameraStatus;
   String _connectPhase = 'idle';
   bool _showEmojiTray = false;
@@ -689,6 +691,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       }
       // Store uid for later token renewal without channel rejoin.
       _currentRtcUid = rtcUid;
+      // Auto-sync UI when system-audio sharing stops externally (Chrome bar X).
+      // Cast needed: onSystemAudioStopped is only on WebRtcRoomService.
+      if (connectedService is WebRtcRoomService) {
+        connectedService.onSystemAudioStopped = () {
+          if (mounted) setState(() => _isSharingPcAudio = false);
+        };
+      }
       setState(() {
         _agoraService = connectedService;
         _isCallReady = true;
@@ -1570,6 +1579,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     _reconnectTimer = null;
     _stopMicLevelPolling();
     final service = _agoraService;
+    if (service is WebRtcRoomService) service.onSystemAudioStopped = null;
     _agoraService = null;
     _isCallReady = false;
     _isVideoEnabled = false;
@@ -1577,6 +1587,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     _appliedMediaRole = null;
     _isMicActionInFlight = false;
     _isVideoActionInFlight = false;
+    _isSharingPcAudio = false;
     _requestedHighQualityRemoteUids = <int>{};
     _requestedLowQualityRemoteUids = <int>{};
     if (service != null) {
@@ -3253,6 +3264,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               );
             }
             final roomName = _asString(roomData?['name'], fallback: 'Live Room');
+            final roomDescription = _asString(roomData?['description']);
             final spotlightUserId = _asString(roomData?['spotlightUserId']);
             final spotlightName = spotlightUserId.isNotEmpty
                 ? (_senderDisplayNameById[spotlightUserId] ?? spotlightUserId)
@@ -3266,6 +3278,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 foregroundColor: Colors.white,
                 elevation: 0,
                 title: Text(roomName),
+                bottom: roomDescription.isEmpty
+                    ? null
+                    : PreferredSize(
+                        preferredSize: const Size.fromHeight(24),
+                        child: _TickerBanner(text: roomDescription),
+                      ),
                 actions: [
                   // Coin balance
                   walletAsync.when(
@@ -3425,7 +3443,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     left: 0,
                     top: 0,
                     bottom: 0,
-                    right: 480,
+                    right: _rightPanelWidth,
                     child: _agoraService != null
                         ? Builder(
                             builder: (context) {
@@ -3495,6 +3513,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       canView: canViewRemote,
                                       isSpeaking: _agoraService!
                                           .isRemoteSpeaking(remoteUid),
+                                      hasMic: remoteUserId != null &&
+                                          participantsInRoom.any((p) =>
+                                              p.userId == remoteUserId &&
+                                              p.role == 'stage'),
                                       avatarUrl: remoteUserId != null
                                           ? _senderAvatarUrlById[remoteUserId]
                                           : null,
@@ -3506,7 +3528,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 roomName: roomName,
                                 localLabel:
                                     _senderDisplayNameById[user.id] ?? 'You',
-                                localSpeaking: _agoraService!.localSpeaking,
+                                showLocalTile: _isVideoEnabled,
+                                localHasMic: participantsInRoom.any((p) =>
+                                    p.userId == user.id &&
+                                    p.role == 'stage'),
+                                // Suppress speaking indicator when mic is muted so the
+                                // local tile stays in the main grid (not the small
+                                // "Talking Now" strip).  The VAD clone still monitors raw
+                                // audio for the mic level bar even while muted.
+                                localSpeaking: _agoraService!.localSpeaking && !_isMicMuted,
                                 localTile: _buildLocalCamContent(
                                   avatarUrl: _senderAvatarUrlById[user.id],
                                 ),
@@ -3595,6 +3625,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               ),
                             ),
                           ),
+                  ),
+                  // ── PANEL RESIZE HANDLE ───────────────────────────────────
+                  Positioned(
+                    top: 0,
+                    bottom: 0,
+                    right: _rightPanelWidth - 2,
+                    width: 4,
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.resizeColumn,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onHorizontalDragUpdate: (d) => setState(() {
+                          _rightPanelWidth = (_rightPanelWidth - d.delta.dx)
+                              .clamp(280.0, 700.0);
+                        }),
+                        child: Container(color: const Color(0x20BA9EFF)),
+                      ),
+                    ),
                   ),
                   // ── SPOTLIGHT BANNER ─────────────────────────────────────
                   if (spotlightName != null)
@@ -3945,6 +3993,39 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     ),
                                   ),
                                 ),
+                                // ── Share PC audio button ─────────────────
+                                Tooltip(
+                                  message: _isSharingPcAudio
+                                      ? 'Stop sharing PC audio'
+                                      : 'Share PC audio (music/system sound)',
+                                  child: IconButton(
+                                    icon: Icon(
+                                      _isSharingPcAudio
+                                          ? Icons.music_note
+                                          : Icons.music_off,
+                                      color: _isSharingPcAudio
+                                          ? const Color(0xFF00E3FD)
+                                          : const Color(0xFFA9ABB3),
+                                    ),
+                                    onPressed: (!_isCallReady || _agoraService == null)
+                                        ? null
+                                        : () async {
+                                            final service = _agoraService;
+                                            if (service == null) return;
+                                            try {
+                                              await service.shareSystemAudio(!_isSharingPcAudio);
+                                              if (mounted) {
+                                                setState(() => _isSharingPcAudio = service.isSharingSystemAudio);
+                                              }
+                                              _showSnackBar(_isSharingPcAudio
+                                                  ? 'PC audio is now being shared with the room.'
+                                                  : 'PC audio sharing stopped.');
+                                            } catch (e) {
+                                              _showSnackBar(_mapMediaError(e, canBroadcast: true));
+                                            }
+                                          },
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -3968,7 +4049,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     right: 0,
                     top: 0,
                     bottom: 0,
-                    width: 480,
+                    width: _rightPanelWidth,
                     child: DecoratedBox(
                       decoration: const BoxDecoration(
                         color: Color(0xFF16181F),
@@ -4099,39 +4180,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                                 ?.coinBalance ??
                                             0,
                                       ),
-                                    ),
-                                  if (!isCohost &&
-                                      !isModerator &&
-                                      allowMicRequests)
-                                    _HandRaiseButton(
-                                      status: micRequestStatus,
-                                      onRaise: () async {
-                                        try {
-                                          await micAccessController
-                                              .requestAccess(
-                                                roomId: widget.roomId,
-                                                requesterId: user.id,
-                                                hostId: resolvedHostId,
-                                              );
-                                        } catch (e) {
-                                          if (context.mounted) {
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Could not raise hand: $e',
-                                                ),
-                                              ),
-                                            );
-                                          }
-                                        }
-                                      },
-                                      onCancel: () =>
-                                          micAccessController.expireNow(
-                                            widget.roomId,
-                                            '${user.id}_$resolvedHostId',
-                                          ),
                                     ),
                                   // Set Status / Away message button
                                   Tooltip(
@@ -4496,6 +4544,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         SizedBox(
                           width: 200,
                           child: _RoomRosterSidebar(
+                            topPadding: roomDescription.isEmpty
+                                ? kToolbarHeight
+                                : kToolbarHeight + 24,
                             participants: participantsInRoom,
                             displayNameById: Map.unmodifiable(
                                 _senderDisplayNameById),
@@ -4765,6 +4816,7 @@ class _RoomRosterSidebar extends StatelessWidget {
     this.onJoinQueue,
     this.onReleaseMic,
     this.onWhisper,
+    this.topPadding = kToolbarHeight,
   });
 
   final List<RoomParticipantModel> participants;
@@ -4784,6 +4836,7 @@ class _RoomRosterSidebar extends StatelessWidget {
   final VoidCallback? onJoinQueue;
   final VoidCallback? onReleaseMic;
   final void Function(RoomParticipantModel participant)? onWhisper;
+  final double topPadding;
 
   static const _kBg = Color(0xFF161A21);
   static const _kDivider = Color(0xFF2A2D38);
@@ -4832,7 +4885,7 @@ class _RoomRosterSidebar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Space for the floating AppBar above
-          const SizedBox(height: kToolbarHeight),
+          SizedBox(height: topPadding),
           // ── Talking Now ──────────────────────────────────────
           _RosterHeader(
             label: 'Talking Now',
@@ -5457,6 +5510,85 @@ class _MicLevelBar extends StatelessWidget {
     if (index <= 2) return const Color(0xFF4CF07A); // green
     if (index == 3) return const Color(0xFFFFD04C); // yellow/amber
     return const Color(0xFFFF6E84);                 // red (loud)
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Scrolling ticker banner (Paltalk-style room description marquee)
+// ---------------------------------------------------------------------------
+
+/// Scrolls [text] continuously from right to left in a 24px strip.
+/// Implements [PreferredSizeWidget] so it can be used as [AppBar.bottom].
+class _TickerBanner extends StatefulWidget implements PreferredSizeWidget {
+  const _TickerBanner({required this.text});
+
+  final String text;
+
+  @override
+  Size get preferredSize => const Size.fromHeight(24);
+
+  @override
+  State<_TickerBanner> createState() => _TickerBannerState();
+}
+
+class _TickerBannerState extends State<_TickerBanner>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    // Roughly 0.2s per character, clamped between 12 and 60 seconds.
+    final secs = (widget.text.length * 0.2).clamp(12.0, 60.0).round();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: Duration(seconds: secs),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 24,
+      color: const Color(0xFF14172B),
+      alignment: Alignment.centerLeft,
+      child: LayoutBuilder(
+        builder: (ctx, constraints) {
+          final containerWidth = constraints.maxWidth;
+          // Approximate text width: ~7 px per char at font-size 11.
+          final textWidth = widget.text.length * 7.0;
+          final totalTravel = containerWidth + textWidth;
+          return AnimatedBuilder(
+            animation: _ctrl,
+            builder: (_, child) {
+              final offset = containerWidth - _ctrl.value * totalTravel;
+              return ClipRect(
+                child: Transform.translate(
+                  offset: Offset(offset, 0),
+                  child: child,
+                ),
+              );
+            },
+            child: Text(
+              widget.text,
+              style: const TextStyle(
+                color: Color(0xFFA9ABB3),
+                fontSize: 11,
+              ),
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.visible,
+            ),
+          );
+        },
+      ),
+    );
   }
 }
 

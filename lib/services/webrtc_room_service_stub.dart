@@ -32,6 +32,8 @@ class WebRtcRoomService implements RtcRoomService {
   @override bool get isBroadcaster => _unsupported();
   @override bool get isJoinedChannel => _unsupported();
   @override bool get isLocalVideoCapturing => _unsupported();
+  @override bool get isSharingSystemAudio => false;
+  @override Future<void> shareSystemAudio(bool enabled) async {}
 
   @override bool isRemoteSpeaking(int uid) => _unsupported();
   @override String? userIdForUid(int uid) => _unsupported();

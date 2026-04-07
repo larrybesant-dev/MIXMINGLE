@@ -28,6 +28,9 @@ abstract class RtcRoomService {
   bool get isJoinedChannel;
   bool get isLocalVideoCapturing;
 
+  /// True when the broadcaster is sharing PC/system audio via getDisplayMedia.
+  bool get isSharingSystemAudio => false;
+
   bool isRemoteSpeaking(int uid);
 
   /// Normalised local mic energy in [0.0, 1.0].  Returns 0 when muted.
@@ -79,6 +82,10 @@ abstract class RtcRoomService {
   });
 
   Future<void> renewToken(String newToken);
+
+  /// Share PC/system audio (Chrome: pick a tab/screen + "Share system audio").
+  /// Default no-op for Agora; only implemented on web via [WebRtcRoomService].
+  Future<void> shareSystemAudio(bool enabled) async {}
 
   Future<void> dispose();
 

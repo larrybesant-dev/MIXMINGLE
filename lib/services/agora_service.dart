@@ -93,6 +93,12 @@ class AgoraService implements RtcRoomService {
   @override
   bool get isLocalVideoCapturing => _localVideoCapturing;
 
+  // System-audio sharing is web-only (WebRtcRoomService); Agora is no-op.
+  @override
+  bool get isSharingSystemAudio => false;
+  @override
+  Future<void> shareSystemAudio(bool enabled) async {}
+
   @override
   bool isRemoteSpeaking(int uid) => _speakingUids.contains(uid);
 

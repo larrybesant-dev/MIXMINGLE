@@ -83,6 +83,14 @@ class WebRtcRoomService implements RtcRoomService {
   _VadMonitor? _localVad;
   final Map<String, _VadMonitor> _remoteVads = {};
 
+  // System audio (PC audio / loopback) sharing via getDisplayMedia
+  MediaStream? _systemAudioStream;
+  bool _isSharingSystemAudio = false;
+
+  /// Called when system-audio sharing stops automatically (e.g. the Chrome
+  /// share bar is dismissed).  Set from the UI to sync local state.
+  VoidCallback? onSystemAudioStopped;
+
   // ──────────────────────────────────────────────────────────────────────────
   // Local media
   // ──────────────────────────────────────────────────────────────────────────
@@ -151,6 +159,9 @@ class WebRtcRoomService implements RtcRoomService {
 
   @override
   bool get isLocalVideoCapturing => _localVideoCapturing;
+
+  @override
+  bool get isSharingSystemAudio => _isSharingSystemAudio;
 
   @override
   bool isRemoteSpeaking(int uid) => _remoteSpeakingUids.contains(uid);
@@ -529,6 +540,113 @@ class WebRtcRoomService implements RtcRoomService {
     // No-op: WebRTC peer connections do not use expiring tokens.
   }
 
+  /// Shares PC / system audio with the room via [getDisplayMedia].
+  ///
+  /// When [enabled] is true, Chrome/Edge shows a screen-share picker.  The
+  /// user should select a tab or "Entire screen" and **check "Share system
+  /// audio"** (or "Share tab audio") in the dialog.  The captured audio
+  /// track replaces the microphone track in all active broadcaster PCs so
+  /// other participants hear whatever is playing on the host's computer.
+  ///
+  /// When [enabled] is false the system audio track is stopped and the mic
+  /// track is restored (if a local mic stream exists).
+  @override
+  Future<void> shareSystemAudio(bool enabled) async {
+    if (enabled == _isSharingSystemAudio) return;
+
+    if (enabled) {
+      try {
+        // getDisplayMedia — user picks tab/screen + "Share system audio".
+        // video: false requests audio-only (Chrome still may include video;
+        // we discard any video tracks below).
+        final displayStream = await navigator.mediaDevices.getDisplayMedia({
+          'audio': true,
+          'video': false,
+        });
+
+        // Stop any video tracks Chrome included despite video:false.
+        for (final t in displayStream.getVideoTracks()) {
+          t.stop();
+        }
+
+        final sysAudioTracks = displayStream.getAudioTracks();
+        if (sysAudioTracks.isEmpty) {
+          // User did not grant audio sharing — abort gracefully.
+          for (final t in displayStream.getTracks()) {
+            t.stop();
+          }
+          throw AgoraServiceException(
+            code: 'no-system-audio',
+            message: 'No system audio was shared. Check "Share system audio" in the picker.',
+          );
+        }
+
+        // Stop previous system audio if any.
+        _systemAudioStream?.getTracks().forEach((t) => t.stop());
+        _systemAudioStream = displayStream;
+        _isSharingSystemAudio = true;
+        _log('system audio sharing started — ${sysAudioTracks.length} track(s)');
+
+        // When the user dismisses the share bar (or closes the tab being
+        // shared), the track fires an "ended" event.  Auto-stop sharing.
+        for (final track in sysAudioTracks) {
+          track.onEnded = () {
+            if (_isSharingSystemAudio) {
+              _log('system audio track ended externally — stopping share');
+              shareSystemAudio(false);
+              onSystemAudioStopped?.call();
+            }
+          };
+        }
+
+        // Replace the audio sender in every active answer PC.
+        final sysTrack = sysAudioTracks.first;
+        for (final pc in _answerPcs.values) {
+          final senders = await pc.getSenders();
+          for (final sender in senders) {
+            if (sender.track?.kind == 'audio') {
+              try { await sender.replaceTrack(sysTrack); } catch (_) {}
+            }
+          }
+        }
+
+        // If we are not yet a broadcaster (no mic active), become one so
+        // viewers can hear the system audio.
+        if (!_broadcasterMode) {
+          _localStream = displayStream;
+          _broadcasterMode = true;
+          await _updatePresence(isBroadcasting: true);
+          await _processExistingIncomingCalls();
+        }
+      } catch (error) {
+        _isSharingSystemAudio = false;
+        _systemAudioStream = null;
+        if (error is AgoraServiceException) rethrow;
+        _throwMapped(error, 'share system audio');
+      }
+    } else {
+      // --- Stop system audio sharing ---
+      _systemAudioStream?.getTracks().forEach((t) => t.stop());
+      _systemAudioStream = null;
+      _isSharingSystemAudio = false;
+      _log('system audio sharing stopped');
+
+      // Restore mic audio track in all active senders.
+      final micTracks = _localStream?.getAudioTracks() ?? [];
+      if (micTracks.isNotEmpty) {
+        final micTrack = micTracks.first;
+        for (final pc in _answerPcs.values) {
+          final senders = await pc.getSenders();
+          for (final sender in senders) {
+            if (sender.track?.kind == 'audio') {
+              try { await sender.replaceTrack(micTrack); } catch (_) {}
+            }
+          }
+        }
+      }
+    }
+  }
+
   @override
   Future<void> ensureDeviceAccess({
     required bool video,
@@ -565,6 +683,10 @@ class WebRtcRoomService implements RtcRoomService {
     _answerPcs.clear();
 
     await _stopLocalStream();
+
+    _systemAudioStream?.getTracks().forEach((t) => t.stop());
+    _systemAudioStream = null;
+    _isSharingSystemAudio = false;
 
     for (final peer in _peers.values) {
       await peer.dispose();
@@ -741,6 +863,11 @@ class WebRtcRoomService implements RtcRoomService {
     };
 
     pc.onConnectionState = (RTCPeerConnectionState state) {
+      // Guard: only act if THIS peer object is still the active one for
+      // broadcasterId.  Without this, a stale PC's disconnect callback fires
+      // AFTER a new viewer PC has been created and removes the new PC from
+      // _peers — the same bug we fixed for answer PCs with identical().
+      if (!identical(_peers[broadcasterId], peer)) return;
       _log('connection to $broadcasterId state=$state');
       peer.connectionState = state;
       // Notify screen so tiles can reflect connecting/connected/failed state.
