@@ -195,7 +195,7 @@ class WebRtcRoomService implements RtcRoomService {
     return RTCVideoView(
       _localRenderer,
       mirror: true,
-      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
+      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
     );
   }
 
@@ -270,7 +270,7 @@ class WebRtcRoomService implements RtcRoomService {
     }
     return RTCVideoView(
       peer.renderer,
-      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
+      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
     );
   }
 
@@ -557,11 +557,11 @@ class WebRtcRoomService implements RtcRoomService {
     if (enabled) {
       try {
         // getDisplayMedia — user picks tab/screen + "Share system audio".
-        // video: false requests audio-only (Chrome still may include video;
-        // we discard any video tracks below).
+        // Chrome requires video to be truthy; passing video:false causes a
+        // TypeError. We request video too and discard it immediately after.
         final displayStream = await navigator.mediaDevices.getDisplayMedia({
           'audio': true,
-          'video': false,
+          'video': true,
         });
 
         // Stop any video tracks Chrome included despite video:false.
@@ -1253,10 +1253,15 @@ class WebRtcRoomService implements RtcRoomService {
 
   Never _throwMapped(Object error, String operation) {
     final raw = error.toString().toLowerCase();
-    if (raw.contains('notallowederror') || raw.contains('permission denied')) {
+    if (raw.contains('notallowederror') || raw.contains('permission denied') ||
+        raw.contains('invalid state') && operation.contains('system audio')) {
       throw AgoraServiceException(
-        code: 'permission-denied',
-        message: 'Camera/microphone permission was denied. Allow access and retry.',
+        code: operation.contains('system audio')
+            ? 'system-audio-cancelled'
+            : 'permission-denied',
+        message: operation.contains('system audio')
+            ? 'Screen share was cancelled or permission was denied.'
+            : 'Camera/microphone permission was denied. Allow access and retry.',
         cause: error,
       );
     }

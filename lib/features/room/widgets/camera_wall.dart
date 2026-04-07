@@ -171,17 +171,14 @@ class CameraWall extends ConsumerWidget {
         final crossAxisCount = isDesktop
             ? (tileCount <= 1 ? 1 : tileCount <= 4 ? 2 : tileCount <= 9 ? 3 : 4)
             : (tileCount <= 2 ? 1 : tileCount <= 4 ? 2 : 3);
-        // Cap the grid height so the cam box stays compact on desktop.
-        final availableHeight = constraints.maxHeight.isFinite
-            ? (constraints.maxHeight - 58.0).clamp(120.0, 1200.0)
-            : null;
-        final mainGridHeight = isDesktop
-            ? (tileCount <= 2
-                ? (availableHeight != null ? availableHeight.clamp(120.0, 220.0) : 220.0)
-                : tileCount <= 4
-                    ? (availableHeight != null ? availableHeight.clamp(120.0, 340.0) : 340.0)
-                    : (availableHeight ?? (tileCount <= 8 ? 460.0 : 580.0)))
-            : (tileCount <= 1 ? 160.0 : tileCount <= 4 ? 240.0 : 320.0);
+        const double spacing = 8;
+        final int rows = ((tileCount == 0 ? 1 : tileCount) / crossAxisCount).ceil();
+        // tileHeight is computed from available width inside the Row, so we
+        // use a LayoutBuilder. For the initial calc here we derive a fallback;
+        // the real sizing is done inside LayoutBuilder below.
+        const double headerH = 24;
+        const double maxTileH = 280; // cap so a single cam doesn't dominate
+        const double mobileH = 160;
         const npSurfaceLow   = Color(0xFF10131A);
         const npSurfaceHigh  = Color(0xFF1C2028);
         const npPrimary      = Color(0xFFBA9EFF);
@@ -361,9 +358,19 @@ class CameraWall extends ConsumerWidget {
                   const SizedBox(height: 10),
                 ],
                 if (isDesktop)
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
+                  LayoutBuilder(
+                    builder: (context, lbConstraints) {
+                      // Overflow sidebar takes 208 + 10px; ignore if not present.
+                      final sideW = overflowTiles.isNotEmpty ? 218.0 : 0.0;
+                      final gridW = (lbConstraints.maxWidth - sideW).clamp(80.0, double.infinity);
+                      // Each tile width = gridW / crossAxisCount minus spacing.
+                      final tileW = (gridW - spacing * (crossAxisCount - 1)) / crossAxisCount;
+                      // 16:9 video area + header bar.
+                      final tileHeight = (tileW / (16 / 9) + headerH).clamp(120.0, maxTileH);
+                      final mainGridHeight = rows * (tileHeight + spacing) - spacing;
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
                       Expanded(
                         child: SizedBox(
                           height: mainGridHeight,
@@ -373,9 +380,9 @@ class CameraWall extends ConsumerWidget {
                             gridDelegate:
                                 SliverGridDelegateWithFixedCrossAxisCount(
                                   crossAxisCount: crossAxisCount,
-                                  mainAxisSpacing: 8,
-                                  crossAxisSpacing: 8,
-                                  childAspectRatio: 16 / 9,
+                                  mainAxisSpacing: spacing,
+                                  crossAxisSpacing: spacing,
+                                  mainAxisExtent: tileHeight,
                                 ),
                             itemCount: mainGridTiles.length,
                             itemBuilder: (context, index) => mainGridTiles[index],
@@ -444,10 +451,12 @@ class CameraWall extends ConsumerWidget {
                         ),
                       ],
                     ],
+                  );
+                    },
                   )
                 else ...[
                   SizedBox(
-                    height: mainGridHeight,
+                    height: rows * (mobileH + spacing) - spacing,
                     child: GridView.builder(
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),

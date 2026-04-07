@@ -1152,6 +1152,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   String _mapMediaError(Object error, {required bool canBroadcast}) {
     if (error is AgoraServiceException) {
       switch (error.code) {
+        case 'no-system-audio':
+          return 'No system audio was captured. In the share picker, check "Share system audio" before clicking Share.';
+        case 'system-audio-cancelled':
+          return 'Screen share was cancelled. Tap the button again and choose a tab or window to share.';
         case 'permission-denied':
           return canBroadcast
               ? 'Camera/microphone access was denied. Allow permissions in browser site settings, then rejoin the room.'
