@@ -168,6 +168,27 @@ class MicAccessController {
     }
   }
 
+  /// Immediately grants mic access to [userId] without a host-approval step.
+  /// Used when the mic is free (no active stage speaker, no pending requests).
+  Future<void> grabMicDirectly({
+    required String roomId,
+    required String userId,
+  }) async {
+    await _db
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants')
+        .doc(userId)
+        .set(
+      {
+        'userId': userId,
+        'role': 'stage',
+        'lastActiveAt': FieldValue.serverTimestamp(),
+      },
+      SetOptions(merge: true),
+    );
+  }
+
   Future<void> approveRequest(String roomId, MicAccessRequestModel request) async {
     final batch = _db.batch();
     batch.update(_requestCollection(roomId).doc(request.id), {

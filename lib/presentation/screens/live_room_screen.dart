@@ -3199,49 +3199,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     loading: () => const SizedBox.shrink(),
                     error: (e, _) => const SizedBox.shrink(),
                   ),
-                  // Invite friends to room
-                  IconButton(
-                    tooltip: 'Invite friends',
-                    onPressed: () => _inviteFriendsToRoom(
-                      userId: user.id,
-                      username: user.username,
-                      roomName: roomName,
-                    ),
-                    icon: const Icon(Icons.group_add_outlined),
-                  ),
-                  // Online friends overlay
-                  IconButton(
-                    tooltip: 'Online friends',
-                    onPressed: () => _showOnlineFriendsSheet(
-                      currentUserId: user.id,
-                      roomId: widget.roomId,
-                    ),
-                    icon: const Icon(Icons.people_outline),
-                  ),
-                  // Share room link
-                  IconButton(
-                    tooltip: 'Share room',
-                    onPressed: () {
-                      SharePlus.instance.share(
-                        ShareParams(
-                          text: 'Join me in "$roomName" on MixVy!\nhttps://mixvy.app/room/${widget.roomId}',
-                          subject: '$roomName – MixVy live room',
-                        ),
-                      );
-                    },
-                    icon: const Icon(Icons.share_outlined),
-                  ),
-                  IconButton(
-                    tooltip: 'Leave Room',
-                    onPressed: () async {
-                      await _disconnectCall();
-                      await _leaveRoom();
-                      if (context.mounted) {
-                        context.pop();
-                      }
-                    },
-                    icon: const Icon(Icons.logout),
-                  ),
+                  // People in room (with pending mic badge)
                   Builder(builder: (ctx) {
                     final pendingCount = isHost
                         ? (micRequestsAsync.valueOrNull
@@ -3297,21 +3255,85 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       ],
                     );
                   }),
+                  // Leave room
+                  IconButton(
+                    tooltip: 'Leave Room',
+                    onPressed: () async {
+                      await _disconnectCall();
+                      await _leaveRoom();
+                      if (context.mounted) {
+                        context.pop();
+                      }
+                    },
+                    icon: const Icon(Icons.logout),
+                  ),
+                  // Overflow: Invite, Online Friends, Share, Report
                   PopupMenuButton<String>(
                     onSelected: (value) {
-                      if (value == 'report_room') {
-                        _reportTarget(
-                          targetId: widget.roomId,
-                          targetType: ReportTargetType.room,
-                          title: 'Report room',
-                          fallbackReason: 'Live room review requested',
-                        );
+                      switch (value) {
+                        case 'invite':
+                          _inviteFriendsToRoom(
+                            userId: user.id,
+                            username: user.username,
+                            roomName: roomName,
+                          );
+                        case 'online_friends':
+                          _showOnlineFriendsSheet(
+                            currentUserId: user.id,
+                            roomId: widget.roomId,
+                          );
+                        case 'share':
+                          SharePlus.instance.share(
+                            ShareParams(
+                              text: 'Join me in "$roomName" on MixVy!\nhttps://mixvy.app/room/${widget.roomId}',
+                              subject: '$roomName – MixVy live room',
+                            ),
+                          );
+                        case 'report_room':
+                          _reportTarget(
+                            targetId: widget.roomId,
+                            targetType: ReportTargetType.room,
+                            title: 'Report room',
+                            fallbackReason: 'Live room review requested',
+                          );
                       }
                     },
                     itemBuilder: (context) => const [
                       PopupMenuItem<String>(
+                        value: 'invite',
+                        child: ListTile(
+                          leading: Icon(Icons.group_add_outlined),
+                          title: Text('Invite friends'),
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'online_friends',
+                        child: ListTile(
+                          leading: Icon(Icons.people_outline),
+                          title: Text('Online friends'),
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'share',
+                        child: ListTile(
+                          leading: Icon(Icons.share_outlined),
+                          title: Text('Share room'),
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                        ),
+                      ),
+                      PopupMenuItem<String>(
                         value: 'report_room',
-                        child: Text('Report room'),
+                        child: ListTile(
+                          leading: Icon(Icons.flag_outlined),
+                          title: Text('Report room'),
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                        ),
                       ),
                     ],
                   ),
@@ -4397,6 +4419,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     ?.where((r) => r.status == 'pending')
                                     .length ??
                                 0,
+                            isMicFree: !participantsInRoom
+                                    .any((p) => p.role == 'stage') &&
+                                (micRequestsAsync.valueOrNull
+                                            ?.where((r) =>
+                                                r.status == 'pending')
+                                            .isEmpty ??
+                                        true),
                             isLocalVideoEnabled: _isVideoEnabled,
                             localSpeaking:
                                 _agoraService?.localSpeaking ?? false,
@@ -4409,18 +4438,38 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 _userIdForRtcUid(uid, participantsInRoom),
                             onJoinQueue: allowMicRequests
                                 ? () async {
+                                    final micFree = !participantsInRoom
+                                            .any((p) => p.role == 'stage') &&
+                                        (micRequestsAsync.valueOrNull
+                                                    ?.where((r) =>
+                                                        r.status == 'pending')
+                                                    .isEmpty ??
+                                                true);
                                     try {
-                                      await micAccessController.requestAccess(
-                                        roomId: widget.roomId,
-                                        requesterId: user.id,
-                                        hostId: hostId,
-                                      );
-                                      if (mounted) {
-                                        _showSnackBar('Mic request sent!');
+                                      if (micFree) {
+                                        await micAccessController
+                                            .grabMicDirectly(
+                                          roomId: widget.roomId,
+                                          userId: user.id,
+                                        );
+                                        if (mounted) {
+                                          _showSnackBar('You have the mic!');
+                                        }
+                                      } else {
+                                        await micAccessController
+                                            .requestAccess(
+                                          roomId: widget.roomId,
+                                          requesterId: user.id,
+                                          hostId: hostId,
+                                        );
+                                        if (mounted) {
+                                          _showSnackBar('Mic request sent!');
+                                        }
                                       }
                                     } catch (e) {
                                       if (mounted) {
-                                        _showSnackBar('Could not join queue: $e');
+                                        _showSnackBar(
+                                            'Could not join queue: $e');
                                       }
                                     }
                                   }
@@ -4600,6 +4649,7 @@ class _RoomRosterSidebar extends StatelessWidget {
     required this.remoteUids,
     required this.isSpeakingFn,
     required this.uidToUserId,
+    required this.isMicFree,
     this.onJoinQueue,
     this.onWhisper,
   });
@@ -4616,6 +4666,7 @@ class _RoomRosterSidebar extends StatelessWidget {
   final List<int> remoteUids;
   final bool Function(int uid) isSpeakingFn;
   final String? Function(int uid) uidToUserId;
+  final bool isMicFree;
   final VoidCallback? onJoinQueue;
   final void Function(RoomParticipantModel participant)? onWhisper;
 
@@ -4700,7 +4751,9 @@ class _RoomRosterSidebar extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF1756C8),
+                  backgroundColor: isMicFree
+                      ? const Color(0xFF1DB954)  // green = mic is free
+                      : const Color(0xFF1756C8), // blue = join queue
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 5),
                   textStyle: const TextStyle(
@@ -4709,7 +4762,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                       borderRadius: BorderRadius.circular(5)),
                 ),
                 onPressed: onJoinQueue,
-                child: const Text('Join Queue to Talk'),
+                child: Text(isMicFree ? 'Grab Mic' : 'Join Queue to Talk'),
               ),
             ),
           ),

@@ -179,6 +179,16 @@ service cloud.firestore {
             participantId == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys()
                 .hasOnly(['lastActiveAt', 'camOn', 'micOn'])
+          )
+          // Allow a participant to grab the mic directly (self-promote to
+          // stage) when the host has not restricted it.  Only the fields
+          // 'userId', 'role', and 'lastActiveAt' may change, and the new
+          // role must be exactly 'stage'.
+          || (
+            participantId == request.auth.uid
+            && request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['userId', 'role', 'lastActiveAt'])
+            && request.resource.data.role == 'stage'
           );
         allow delete: if isRoomHost(roomId) || participantId == request.auth.uid;
       }
