@@ -3166,6 +3166,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 ],
               ),
               body: Stack(
+                fit: StackFit.expand,
                 children: [
                   // ── FULLSCREEN VIDEO BACKGROUND ──────────────────────────
                   // Leave 480px on the right for the docked Chat + Users panels.
@@ -3578,13 +3579,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       ),
                     ),
                   // ── BROADCASTER MIC / CAMERA CONTROLS ────────────────────
-                  // Show for any broadcaster: role-based check (isHost/isCohost)
-                  // plus a direct hostId match so the room creator always gets
-                  // their controls even when the Firestore participant doc has
-                  // stale/missing role data. isRoomHostByDoc is resolved from
-                  // roomDocStreamProvider — independent of the participant stream.
-                  if (isHost || isCohost || isRoomHostByDoc || (hostId.isNotEmpty && user.id == hostId))
-                    Positioned(
+                  // Room policy allows all participants to go live freely
+                  // (no host approval required). Show mic/cam for every joined
+                  // participant. The onPressed callbacks stay null until the
+                  // RTC service is connected (_isCallReady), so buttons show
+                  // immediately but are disabled until the call is ready.
+                  Positioned(
                       bottom: 40,
                       left: 12,
                       child: Column(
@@ -4315,10 +4315,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           body: Stack(
             children: [
               const Center(child: CircularProgressIndicator()),
-              // Show broadcaster controls for the host even while the
-              // participant Firestore stream is still initialising.
-              if (isRoomHostByDoc || _agoraService != null)
-                Positioned(
+              // Show mic/cam controls while participant stream is loading so
+              // users don't lose their buttons during reconnect/init lag.
+              Positioned(
                   bottom: 40,
                   left: 12,
                   child: Column(

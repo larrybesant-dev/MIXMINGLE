@@ -57,7 +57,7 @@ class CameraWall extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 920;
+        final isDesktop = constraints.maxWidth >= 600;
         final mainGridRemoteLimit = isDesktop
             ? maxMainGridRemoteTiles + 4
             : maxMainGridRemoteTiles;
@@ -139,10 +139,14 @@ class CameraWall extends ConsumerWidget {
 
         final tileCount = mainGridTiles.length;
         final crossAxisCount = isDesktop
-            ? (tileCount <= 4 ? 2 : tileCount <= 9 ? 3 : 4)
+            ? (tileCount <= 1 ? 1 : tileCount <= 4 ? 2 : tileCount <= 9 ? 3 : 4)
             : (tileCount <= 2 ? 1 : tileCount <= 4 ? 2 : 3);
+        // Fill the available panel height on desktop (Positioned gives tight constraints).
+        final availableHeight = constraints.maxHeight.isFinite
+            ? (constraints.maxHeight - 58.0).clamp(160.0, 1200.0)
+            : null;
         final mainGridHeight = isDesktop
-            ? (tileCount <= 4 ? 300.0 : tileCount <= 8 ? 420.0 : 560.0)
+            ? (availableHeight ?? (tileCount <= 4 ? 400.0 : tileCount <= 8 ? 520.0 : 660.0))
             : (tileCount <= 1 ? 180.0 : tileCount <= 4 ? 280.0 : 360.0);
         const npSurfaceLow   = Color(0xFF10131A);
         const npSurfaceHigh  = Color(0xFF1C2028);
@@ -305,7 +309,7 @@ class CameraWall extends ConsumerWidget {
                                   ),
                                   const SizedBox(height: 8),
                                   SizedBox(
-                                    height: mainGridHeight - 24,
+                                    height: (mainGridHeight - 24).clamp(100.0, 1200.0),
                                     child: GridView.builder(
                                       shrinkWrap: true,
                                       physics:

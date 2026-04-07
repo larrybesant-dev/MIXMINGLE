@@ -439,7 +439,8 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
           ),
           child: Form(
             key: _formKey,
-            child: Column(
+            child: SingleChildScrollView(
+              child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -588,6 +589,7 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
                 ),
               ],
             ),
+            ), // SingleChildScrollView
           ),
         ),
       ),

@@ -80,6 +80,8 @@ class FloatingCamWindowLayer extends ConsumerWidget {
     if (windows.isEmpty) return const SizedBox.shrink();
 
     return Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.none,
       children: [
         for (final window in windows)
           FloatingDockablePanel(

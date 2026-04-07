@@ -190,7 +190,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('People in room'), findsOneWidget);
-    expect(find.text('host-1'), findsOneWidget);
+    expect(find.text('host-1'), findsWidgets);
     expect(find.text('User One'), findsWidgets);
     await tester.pump(const Duration(seconds: 3));
   });

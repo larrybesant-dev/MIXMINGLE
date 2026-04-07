@@ -265,37 +265,37 @@ void main() {
   });
 
   group('isHostProvider', () {
-    final _now = DateTime.now();
+    final now = DateTime.now();
 
-    RoomParticipantModel _participant(String role) => RoomParticipantModel(
+    RoomParticipantModel makeParticipant(String role) => RoomParticipantModel(
           userId: 'u',
           role: role,
-          joinedAt: _now,
-          lastActiveAt: _now,
+          joinedAt: now,
+          lastActiveAt: now,
         );
 
     test('returns true for role "host"', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      expect(container.read(isHostProvider(_participant('host'))), isTrue);
+      expect(container.read(isHostProvider(makeParticipant('host'))), isTrue);
     });
 
     test('returns true for legacy role "owner"', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      expect(container.read(isHostProvider(_participant('owner'))), isTrue);
+      expect(container.read(isHostProvider(makeParticipant('owner'))), isTrue);
     });
 
     test('returns false for role "cohost"', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      expect(container.read(isHostProvider(_participant('cohost'))), isFalse);
+      expect(container.read(isHostProvider(makeParticipant('cohost'))), isFalse);
     });
 
     test('returns false for role "audience"', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      expect(container.read(isHostProvider(_participant('audience'))), isFalse);
+      expect(container.read(isHostProvider(makeParticipant('audience'))), isFalse);
     });
 
     test('returns false for null participant', () {
@@ -306,25 +306,25 @@ void main() {
   });
 
   group('isCohostProvider', () {
-    final _now = DateTime.now();
+    final now = DateTime.now();
 
-    RoomParticipantModel _participant(String role) => RoomParticipantModel(
+    RoomParticipantModel makeParticipant(String role) => RoomParticipantModel(
           userId: 'u',
           role: role,
-          joinedAt: _now,
-          lastActiveAt: _now,
+          joinedAt: now,
+          lastActiveAt: now,
         );
 
     test('returns true for role "cohost"', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      expect(container.read(isCohostProvider(_participant('cohost'))), isTrue);
+      expect(container.read(isCohostProvider(makeParticipant('cohost'))), isTrue);
     });
 
     test('returns false for role "host"', () {
       final container = ProviderContainer();
       addTearDown(container.dispose);
-      expect(container.read(isCohostProvider(_participant('host'))), isFalse);
+      expect(container.read(isCohostProvider(makeParticipant('host'))), isFalse);
     });
 
     test('returns false for null participant', () {
