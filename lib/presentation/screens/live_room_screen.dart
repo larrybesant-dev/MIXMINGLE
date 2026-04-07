@@ -4716,6 +4716,8 @@ class _RoomRosterSidebar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Space for the floating AppBar above
+          const SizedBox(height: kToolbarHeight),
           // ── Talking Now ──────────────────────────────────────
           _RosterHeader(
             label: 'Talking Now',
