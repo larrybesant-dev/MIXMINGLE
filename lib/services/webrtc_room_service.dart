@@ -195,7 +195,7 @@ class WebRtcRoomService implements RtcRoomService {
     return RTCVideoView(
       _localRenderer,
       mirror: true,
-      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
     );
   }
 
@@ -270,7 +270,7 @@ class WebRtcRoomService implements RtcRoomService {
     }
     return RTCVideoView(
       peer.renderer,
-      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitCover,
+      objectFit: RTCVideoViewObjectFit.RTCVideoViewObjectFitContain,
     );
   }
 

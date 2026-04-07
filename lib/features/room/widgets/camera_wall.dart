@@ -363,32 +363,42 @@ class CameraWall extends ConsumerWidget {
                       // Overflow sidebar takes 208 + 10px; ignore if not present.
                       final sideW = overflowTiles.isNotEmpty ? 218.0 : 0.0;
                       final gridW = (lbConstraints.maxWidth - sideW).clamp(80.0, double.infinity);
-                      // Each tile width = gridW / crossAxisCount minus spacing.
-                      final tileW = (gridW - spacing * (crossAxisCount - 1)) / crossAxisCount;
-                      // 16:9 video area + header bar.
-                      final tileHeight = (tileW / (16 / 9) + headerH).clamp(120.0, maxTileH);
+                      // For a single tile, cap its width so it doesn't span the
+                      // full ~800 px panel — makes the tile a reasonable size and
+                      // leaves no wasted space beside it.
+                      final effectiveTileW = tileCount <= 1
+                          ? (gridW / crossAxisCount).clamp(80.0, 480.0)
+                          : (gridW - spacing * (crossAxisCount - 1)) / crossAxisCount;
+                      // Use 4:3 ratio for tile height — matches typical webcam output so
+                      // RTCVideoViewObjectFitContain fills the frame with minimal black bars.
+                      final tileHeight = (effectiveTileW * (3 / 4) + headerH).clamp(120.0, maxTileH);
                       final mainGridHeight = rows * (tileHeight + spacing) - spacing;
+                      // For a single centered tile, wrap the grid in a centered box.
+                      Widget grid = SizedBox(
+                        height: mainGridHeight,
+                        child: GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: crossAxisCount,
+                            mainAxisSpacing: spacing,
+                            crossAxisSpacing: spacing,
+                            mainAxisExtent: tileHeight,
+                          ),
+                          itemCount: mainGridTiles.length,
+                          itemBuilder: (context, index) => mainGridTiles[index],
+                        ),
+                      );
+                      if (tileCount <= 1) {
+                        grid = Align(
+                          alignment: Alignment.centerLeft,
+                          child: SizedBox(width: effectiveTileW, child: grid),
+                        );
+                      }
                       return Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: mainGridHeight,
-                          child: GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: crossAxisCount,
-                                  mainAxisSpacing: spacing,
-                                  crossAxisSpacing: spacing,
-                                  mainAxisExtent: tileHeight,
-                                ),
-                            itemCount: mainGridTiles.length,
-                            itemBuilder: (context, index) => mainGridTiles[index],
-                          ),
-                        ),
-                      ),
+                      Expanded(child: grid),
                       if (overflowTiles.isNotEmpty) ...[
                         const SizedBox(width: 10),
                         SizedBox(

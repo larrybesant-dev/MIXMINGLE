@@ -281,7 +281,7 @@ class _FloatingMessageBubble extends StatelessWidget {
             ),
             TextSpan(
               text: message.content,
-              style: const TextStyle(fontSize: 12),
+              style: const TextStyle(fontSize: 12, color: Color(0xFFECEDF6)),
             ),
           ],
         ),

@@ -106,6 +106,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   Timer? _micLevelTimer;
   DateTime? _roomJoinedAt;
   int _lastRenderedMessageCount = 0;
+  final Set<String> _recentChatters = {};
+  final Map<String, Timer> _recentChatterTimers = {};
   final Set<String> _shownGiftEventIds = {};
   final List<_GiftToast> _giftToasts = [];
   Timer? _giftToastTimer;
@@ -3084,6 +3086,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     _typingTimer?.cancel();
     _reconnectTimer?.cancel();
     _micLevelTimer?.cancel();
+    for (final t in _recentChatterTimers.values) {
+      t.cancel();
+    }
+    _recentChatterTimers.clear();
     _giftEventsSubscription?.close();
     unawaited(_clearTypingStatus());
     unawaited(_disconnectCall());
@@ -4279,6 +4285,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     if (newest.senderId != _joinedUserId && newest.type == 'normal') {
                                       RoomAudioCues.instance.playNewMessage();
                                     }
+                                    if (newest.type == 'normal') {
+                                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                                        _markRecentChatter(newest.senderId);
+                                      });
+                                    }
                                   }
                                   _lastRenderedMessageCount = messages.length;
                                   // Double postFrameCallback: first frame lets
@@ -4585,6 +4596,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 (!_isMicMuted &&
                                   participantsInRoom.any((p) =>
                                       p.userId == user.id && p.role == 'stage')),
+                            recentChatters: Set.unmodifiable(_recentChatters),
                             remoteUids:
                                 _agoraService?.remoteUids ?? const [],
                             isSpeakingFn: (uid) =>
