@@ -17,6 +17,17 @@ class UserCamPermissionsController {
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
+
+  /// Atomically appends [viewerId] to [userId]'s allowedViewers list.
+  Future<void> addAllowedViewer({
+    required String userId,
+    required String viewerId,
+  }) async {
+    await _db.collection('userCamPermissions').doc(userId).set({
+      'allowedViewers': FieldValue.arrayUnion([viewerId]),
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
+  }
 }
 
 final userCamPermissionsControllerProvider =

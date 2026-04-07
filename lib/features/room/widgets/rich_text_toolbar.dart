@@ -149,42 +149,44 @@ class RichTextToolbar extends StatelessWidget {
     return Container(
       height: 32,
       color: npSurfaceHigh,
-      child: Row(
-        children: [
-          _ToolBtn(
-            label: 'B',
-            bold: true,
-            tooltip: 'Bold [b]...[/b]',
-            onTap: () => _wrapSelection('[b]', '[/b]'),
-          ),
-          _ToolBtn(
-            label: 'I',
-            italic: true,
-            tooltip: 'Italic [i]...[/i]',
-            onTap: () => _wrapSelection('[i]', '[/i]'),
-          ),
-          _ToolBtn(
-            label: 'U',
-            underline: true,
-            tooltip: 'Underline [u]...[/u]',
-            onTap: () => _wrapSelection('[u]', '[/u]'),
-          ),
-          const SizedBox(width: 4),
-          // Quick colour swatches
-          for (final hex in _presetColors)
-            _ColorSwatch(
-              hex: hex,
-              onTap: () => _insertColor(hex),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _ToolBtn(
+              label: 'B',
+              bold: true,
+              tooltip: 'Bold [b]...[/b]',
+              onTap: () => _wrapSelection('[b]', '[/b]'),
             ),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Text(
-              'Rich text',
-              style: const TextStyle(color: npOnVariant, fontSize: 9),
+            _ToolBtn(
+              label: 'I',
+              italic: true,
+              tooltip: 'Italic [i]...[/i]',
+              onTap: () => _wrapSelection('[i]', '[/i]'),
             ),
-          ),
-        ],
+            _ToolBtn(
+              label: 'U',
+              underline: true,
+              tooltip: 'Underline [u]...[/u]',
+              onTap: () => _wrapSelection('[u]', '[/u]'),
+            ),
+            const SizedBox(width: 4),
+            // Quick colour swatches
+            for (final hex in _presetColors)
+              _ColorSwatch(
+                hex: hex,
+                onTap: () => _insertColor(hex),
+              ),
+            Padding(
+              padding: const EdgeInsets.only(left: 8, right: 8),
+              child: Text(
+                'Rich text',
+                style: TextStyle(color: npOnVariant, fontSize: 9),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

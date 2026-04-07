@@ -168,8 +168,21 @@ class WebRtcRoomService implements RtcRoomService {
       return const ColoredBox(color: Colors.black12);
     }
     final peer = _peers[userId];
-    if (peer == null || !peer.rendererReady || peer.remoteStream == null) {
+    if (peer == null || peer.remoteStream == null) {
       return const ColoredBox(color: Colors.black12);
+    }
+    // If the remote stream has no enabled video tracks the broadcaster has
+    // camera off (mic-only). Show a placeholder instead of a black RTCVideoView.
+    final hasVideo = peer.remoteStream!
+        .getVideoTracks()
+        .any((t) => t.enabled);
+    if (!hasVideo) {
+      return const ColoredBox(
+        color: Color(0xFF1C2028),
+        child: Center(
+          child: Icon(Icons.videocam_off, size: 28, color: Color(0xFFA9ABB3)),
+        ),
+      );
     }
     return RTCVideoView(peer.renderer);
   }
@@ -506,6 +519,9 @@ class WebRtcRoomService implements RtcRoomService {
           _uidToUserId[remoteUid] = remoteBroadcasterId;
           _userIdToUid[remoteBroadcasterId] = remoteUid;
           _createViewerConnection(remoteBroadcasterId, remoteUid);
+          // Notify the screen immediately so the tile appears (as a placeholder)
+          // before the WebRTC stream arrives.
+          onRemoteUserJoined?.call();
         }
       } else {
         _closePeer(remoteBroadcasterId);

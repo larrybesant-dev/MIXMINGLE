@@ -6,6 +6,7 @@ import '../providers/camera_wall_provider.dart';
 class CameraWallRemoteTileData {
   const CameraWallRemoteTileData({
     required this.uid,
+    this.userId,
     required this.label,
     required this.canView,
     required this.isSpeaking,
@@ -13,6 +14,8 @@ class CameraWallRemoteTileData {
   });
 
   final int uid;
+  /// Firestore user ID for this remote participant (null if mapping unknown).
+  final String? userId;
   final String label;
   final bool canView;
   final bool isSpeaking;

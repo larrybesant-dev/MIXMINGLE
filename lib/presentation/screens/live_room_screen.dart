@@ -26,7 +26,6 @@ import '../../widgets/coin_balance_widget.dart';
 import '../../widgets/user_profile_popup.dart';
 import '../../widgets/floating_whisper_panel.dart';
 import '../../features/room/widgets/dockable_panel.dart';
-import '../../features/room/widgets/user_list_panel.dart';
 import '../../features/room/widgets/mic_queue_panel.dart';
 import '../../features/room/widgets/buzz_overlay.dart';
 import '../../features/room/providers/buzz_provider.dart';
@@ -42,6 +41,7 @@ import '../../features/feed/providers/host_controls_providers.dart';
 import '../../features/room/providers/room_policy_provider.dart';
 import '../../features/room/providers/room_gift_provider.dart';
 import '../../features/room/providers/user_cam_permissions_provider.dart';
+import '../../features/room/providers/cam_view_request_provider.dart';
 import '../../features/room/providers/room_slot_provider.dart';
 import '../../features/room/room_permissions.dart';
 import '../../presentation/providers/wallet_provider.dart';
@@ -109,6 +109,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       GlobalKey<FloatingGiftOverlayState>();
   final GlobalKey<BuzzOverlayState> _buzzKey = GlobalKey<BuzzOverlayState>();
   final Set<String> _shownBuzzIds = {};
+  final Set<String> _shownCamViewRequestIds = {};
   ProviderSubscription<AsyncValue<List<RoomGiftEvent>>>?
   _giftEventsSubscription;
 
@@ -243,6 +244,26 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               RoomAudioCues.instance.playBuzz();
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _buzzKey.currentState?.triggerBuzz('$senderName buzzed you! ⚡');
+              });
+            }
+          });
+        },
+      );
+    }
+
+    // Listen for incoming cam-view requests directed at the current user.
+    if (user != null) {
+      ref.listenManual<AsyncValue<List<CamViewRequest>>>(
+        pendingCamViewRequestsProvider(
+            (roomId: widget.roomId, targetId: user.id)),
+        (_, next) {
+          next.whenData((requests) {
+            for (final request in requests) {
+              if (_shownCamViewRequestIds.contains(request.id)) continue;
+              _shownCamViewRequestIds.add(request.id);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (!mounted) return;
+                _handleIncomingCamViewRequest(request);
               });
             }
           });
@@ -918,6 +939,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   Widget _buildRemoteCamContent({
     required int remoteUid,
     required bool canViewRemote,
+    VoidCallback? onRequestAccess,
   }) {
     final service = _agoraService;
     return canViewRemote && service != null
@@ -937,11 +959,111 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Color(0xFFA9ABB3), fontSize: 11),
                     ),
+                    if (onRequestAccess != null) ...[
+                      const SizedBox(height: 4),
+                      TextButton(
+                        onPressed: onRequestAccess,
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          minimumSize: Size.zero,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        ),
+                        child: const Text(
+                          'Request Access',
+                          style: TextStyle(
+                              fontSize: 10, color: Color(0xFF00E3FD)),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
             ),
           );
+  }
+
+  /// Shows a confirmation dialog then sends a cam-view request to [targetUserId].
+  Future<void> _sendCamViewRequest(String targetUserId) async {
+    final myUserId = _joinedUserId;
+    if (myUserId == null || !mounted) return;
+    final targetName =
+        _senderDisplayNameById[targetUserId] ?? targetUserId;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Request cam access'),
+        content: Text('Ask $targetName to let you view their camera?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Send Request'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    try {
+      await ref.read(camViewRequestControllerProvider).sendRequest(
+            roomId: widget.roomId,
+            requesterId: myUserId,
+            targetId: targetUserId,
+          );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Request sent')),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not send request')),
+        );
+      }
+    }
+  }
+
+  /// Shows an Allow/Deny dialog when another user requests to view the current
+  /// user's camera.
+  Future<void> _handleIncomingCamViewRequest(CamViewRequest request) async {
+    if (!mounted) return;
+    final requesterName =
+        _senderDisplayNameById[request.requesterId] ?? request.requesterId;
+    final approved = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Cam view request'),
+        content: Text('$requesterName wants to view your camera.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Deny'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Allow'),
+          ),
+        ],
+      ),
+    );
+    if (!mounted) return;
+    final myUserId = _joinedUserId;
+    if (myUserId == null) return;
+    if (approved == true) {
+      await ref
+          .read(userCamPermissionsControllerProvider)
+          .addAllowedViewer(userId: myUserId, viewerId: request.requesterId);
+    }
+    await ref.read(camViewRequestControllerProvider).respondToRequest(
+          roomId: widget.roomId,
+          requestId: request.id,
+          approved: approved == true,
+        );
   }
 
   String _mapMediaError(Object error, {required bool canBroadcast}) {
@@ -3169,12 +3291,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 fit: StackFit.expand,
                 children: [
                   // ── FULLSCREEN VIDEO BACKGROUND ──────────────────────────
-                  // Camera panel — fixed 360px wide on the left.
+                  // Camera panel — fills the screen left of the right panel.
                   Positioned(
                     left: 0,
                     top: 0,
                     bottom: 0,
-                    width: 360,
+                    right: 480,
                     child: _agoraService != null
                         ? Builder(
                             builder: (context) {
@@ -3239,6 +3361,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         : 'Guest $remoteUid';
                                     return CameraWallRemoteTileData(
                                       uid: remoteUid,
+                                      userId: remoteUserId,
                                       label: tileLabel,
                                       canView: canViewRemote,
                                       isSpeaking: _agoraService!
@@ -3259,6 +3382,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     _buildRemoteCamContent(
                                   remoteUid: tile.uid,
                                   canViewRemote: tile.canView,
+                                  onRequestAccess:
+                                      (!tile.canView &&
+                                              tile.userId != null &&
+                                              tile.userId != _joinedUserId)
+                                          ? () => _sendCamViewRequest(
+                                              tile.userId!)
+                                          : null,
                                 ),
                                 onSubscriptionPlanChanged:
                                     (highQualityUids, lowQualityUids) {
@@ -3697,11 +3827,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           left: BorderSide(color: Color(0xFF2E2F3A), width: 1),
                         ),
                       ),
-                      child: Column(
+                      child: Row(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
-                          flex: 3,
                           child: DockablePanel(
                             title: 'Room Chat',
                             icon: Icons.chat_bubble_outline,
@@ -4204,41 +4333,50 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       ),
                     ),
                   ),
-                        const SizedBox(height: 3),
-                        // ── USERS PANEL (Paltalk-style always-visible) ────────
-                        Expanded(
-                          flex: 2,
-                          child: DockablePanel(
-                            title:
-                                'Users (${participantsInRoom.length})',
-                            icon: Icons.people_outline,
-                            backgroundColor: const Color(0xFF16181F),
-                            headerColor: const Color(0xFF23253A),
-                            child: UserListPanel(
-                              participants: participantsInRoom,
-                              currentUserId: user.id,
-                              presenceList: presenceAsync.valueOrNull ??
-                                  const [],
-                              displayNameById: Map.unmodifiable(
-                                  _senderDisplayNameById),
-                              avatarUrlById: Map.unmodifiable(
-                                  _senderAvatarUrlById),
-                              onWhisper: (p) {
-                                final chatId =
-                                    ([user.id, p.userId]..sort())
-                                        .join('_');
-                                FloatingWhisperPanel.show(
-                                  context,
-                                  ref,
-                                  conversationId: chatId,
-                                  peerName:
-                                      _senderDisplayNameById[p.userId] ??
-                                          p.userId,
-                                  peerAvatarUrl:
-                                      _senderAvatarUrlById[p.userId],
-                                );
-                              },
-                            ),
+                        const VerticalDivider(
+                          width: 1,
+                          thickness: 1,
+                          color: Color(0xFF2E2F3A),
+                        ),
+                        SizedBox(
+                          width: 200,
+                          child: _RoomRosterSidebar(
+                            participants: participantsInRoom,
+                            displayNameById: Map.unmodifiable(
+                                _senderDisplayNameById),
+                            vipLevelById: Map.unmodifiable(
+                                _senderVipLevelById),
+                            currentUserId: user.id,
+                            presenceList:
+                                presenceAsync.valueOrNull ?? const [],
+                            pendingMicCount: micRequestsAsync.valueOrNull
+                                    ?.where((r) => r.status == 'pending')
+                                    .length ??
+                                0,
+                            isLocalVideoEnabled: _isVideoEnabled,
+                            localSpeaking:
+                                _agoraService?.localSpeaking ?? false,
+                            remoteUids:
+                                _agoraService?.remoteUids ?? const [],
+                            isSpeakingFn: (uid) =>
+                                _agoraService?.isRemoteSpeaking(uid) ??
+                                false,
+                            uidToUserId: (uid) =>
+                                _userIdForRtcUid(uid, participantsInRoom),
+                            onWhisper: (p) {
+                              final chatId =
+                                  ([user.id, p.userId]..sort()).join('_');
+                              FloatingWhisperPanel.show(
+                                context,
+                                ref,
+                                conversationId: chatId,
+                                peerName:
+                                    _senderDisplayNameById[p.userId] ??
+                                        p.userId,
+                                peerAvatarUrl:
+                                    _senderAvatarUrlById[p.userId],
+                              );
+                            },
                           ),
                         ),
                       ],
@@ -4366,6 +4504,287 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     );
   }
 }
+// ---------------------------------------------------------------------------
+// Paltalk-style Roster Sidebar
+// Shows: Talking Now / Mic Queue / On Cam / Chatting sections
+// ---------------------------------------------------------------------------
+
+class _RoomRosterSidebar extends StatelessWidget {
+  const _RoomRosterSidebar({
+    required this.participants,
+    required this.displayNameById,
+    required this.vipLevelById,
+    required this.currentUserId,
+    required this.presenceList,
+    required this.pendingMicCount,
+    required this.isLocalVideoEnabled,
+    required this.localSpeaking,
+    required this.remoteUids,
+    required this.isSpeakingFn,
+    required this.uidToUserId,
+    this.onWhisper,
+  });
+
+  final List<RoomParticipantModel> participants;
+  final Map<String, String> displayNameById;
+  final Map<String, int> vipLevelById;
+  final String currentUserId;
+  final List<RoomPresenceModel> presenceList;
+  final int pendingMicCount;
+  final bool isLocalVideoEnabled;
+  final bool localSpeaking;
+  final List<int> remoteUids;
+  final bool Function(int uid) isSpeakingFn;
+  final String? Function(int uid) uidToUserId;
+  final void Function(RoomParticipantModel participant)? onWhisper;
+
+  static const _kBg = Color(0xFF161A21);
+  static const _kDivider = Color(0xFF2A2D38);
+  static const _kSubtle = Color(0xFF5A5E6B);
+
+  Color _nameColor(int level) {
+    if (level >= 20) return const Color(0xFFFFD700);
+    if (level >= 10) return const Color(0xFF00E3FD);
+    if (level >= 5) return const Color(0xFF4CAF50);
+    return Colors.white.withValues(alpha: 0.85);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // ── Compute speaking user IDs ──────────────────────────────
+    final speakingUserIds = <String>{};
+    if (localSpeaking) speakingUserIds.add(currentUserId);
+    for (final uid in remoteUids) {
+      if (isSpeakingFn(uid)) {
+        final userId = uidToUserId(uid);
+        if (userId != null) speakingUserIds.add(userId);
+      }
+    }
+
+    // ── On-cam participants ───────────────────────────────────
+    final onCamParticipants = participants
+        .where((p) =>
+            p.camOn ||
+            (p.userId == currentUserId && isLocalVideoEnabled))
+        .toList(growable: false);
+
+    // ── Sort: host → cohost → mod → audience ─────────────────
+    final sorted = [...participants]..sort((a, b) {
+        int rank(String r) => switch (r) {
+              'host' || 'owner' => 0,
+              'cohost' => 1,
+              'moderator' => 2,
+              _ => 3,
+            };
+        return rank(a.role).compareTo(rank(b.role));
+      });
+
+    return ColoredBox(
+      color: _kBg,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // ── Talking Now ──────────────────────────────────────
+          _RosterHeader(
+            label: 'Talking Now',
+            icon: Icons.mic,
+            iconColor: const Color(0xFF00E3FD),
+          ),
+          if (speakingUserIds.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Text('—',
+                  style: TextStyle(color: _kSubtle, fontSize: 12)),
+            )
+          else
+            ...speakingUserIds.take(3).map(
+                  (uid) => _RosterRow(
+                    displayName: displayNameById[uid] ?? uid,
+                    vipLevel: vipLevelById[uid] ?? 0,
+                    nameColor: _nameColor(vipLevelById[uid] ?? 0),
+                    trailingIcon: Icons.mic,
+                    trailingColor: const Color(0xFF00E3FD),
+                  ),
+                ),
+          const Divider(height: 1, thickness: 1, color: _kDivider),
+          // ── Mic Queue ────────────────────────────────────────
+          _RosterHeader(
+            label: 'Mic Queue  $pendingMicCount',
+            icon: Icons.queue_music,
+            iconColor: const Color(0xFFBA9EFF),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1756C8),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 5),
+                  textStyle: const TextStyle(
+                      fontSize: 11, fontWeight: FontWeight.w600),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5)),
+                ),
+                // Mic queue joining is handled via the hand-raise button
+                // in the chat panel; this button is informational only.
+                onPressed: null,
+                child: const Text('Join Queue to Talk'),
+              ),
+            ),
+          ),
+          const Divider(height: 1, thickness: 1, color: _kDivider),
+          // ── On Cam ───────────────────────────────────────────
+          _RosterHeader(
+            label: 'On Cam  ${onCamParticipants.length}',
+            icon: Icons.videocam,
+            iconColor: const Color(0xFF4CAF50),
+          ),
+          if (onCamParticipants.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Text('No cameras yet',
+                  style: TextStyle(color: _kSubtle, fontSize: 11)),
+            )
+          else
+            ...onCamParticipants.take(8).map(
+                  (p) => _RosterRow(
+                    displayName: displayNameById[p.userId] ?? p.userId,
+                    vipLevel: vipLevelById[p.userId] ?? 0,
+                    nameColor: _nameColor(vipLevelById[p.userId] ?? 0),
+                    trailingIcon: Icons.videocam,
+                    trailingColor: Colors.white38,
+                  ),
+                ),
+          const Divider(height: 1, thickness: 1, color: _kDivider),
+          // ── Chatting ─────────────────────────────────────────
+          _RosterHeader(
+            label: 'Chatting  ${sorted.length}',
+            icon: Icons.chat_bubble_outline,
+            iconColor: const Color(0xFFA9ABB3),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: EdgeInsets.zero,
+              itemCount: sorted.length,
+              itemBuilder: (_, i) {
+                final p = sorted[i];
+                final vip = vipLevelById[p.userId] ?? 0;
+                return GestureDetector(
+                  onTap: onWhisper == null || p.userId == currentUserId
+                      ? null
+                      : () => onWhisper!(p),
+                  child: _RosterRow(
+                    displayName: displayNameById[p.userId] ?? p.userId,
+                    vipLevel: vip,
+                    nameColor: _nameColor(vip),
+                    trailingIcon: p.role == 'host' || p.role == 'owner'
+                        ? Icons.star
+                        : p.role == 'cohost'
+                            ? Icons.star_half
+                            : null,
+                    trailingColor: const Color(0xFFFFD700),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RosterHeader extends StatelessWidget {
+  const _RosterHeader({
+    required this.label,
+    required this.icon,
+    this.iconColor = Colors.white54,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: const Color(0xFF1C2028),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      child: Row(
+        children: [
+          Icon(icon, size: 12, color: iconColor),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              label,
+              style: const TextStyle(
+                color: Color(0xFFA9ABB3),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.2,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RosterRow extends StatelessWidget {
+  const _RosterRow({
+    required this.displayName,
+    required this.vipLevel,
+    required this.nameColor,
+    this.trailingIcon,
+    this.trailingColor = Colors.white38,
+  });
+
+  final String displayName;
+  final int vipLevel;
+  final Color nameColor;
+  final IconData? trailingIcon;
+  final Color trailingColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              displayName,
+              style: TextStyle(
+                color: nameColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (vipLevel > 0) ...[
+            const SizedBox(width: 3),
+            Text(
+              '💎$vipLevel',
+              style: const TextStyle(
+                  fontSize: 9, color: Color(0xFF7777BB)),
+            ),
+          ],
+          if (trailingIcon != null) ...[
+            const SizedBox(width: 3),
+            Icon(trailingIcon, size: 11, color: trailingColor),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Gift toast data class
 // ---------------------------------------------------------------------------
 
