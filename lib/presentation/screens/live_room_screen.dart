@@ -3168,7 +3168,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               body: Stack(
                 children: [
                   // ── FULLSCREEN VIDEO BACKGROUND ──────────────────────────
-                  Positioned.fill(
+                  // Leave 480px on the right for the docked Chat + Users panels.
+                  Positioned(
+                    left: 0,
+                    top: 0,
+                    bottom: 0,
+                    right: 480,
                     child: _agoraService != null
                         ? Builder(
                             builder: (context) {
@@ -3413,10 +3418,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       right: 0,
                       child: LinearProgressIndicator(),
                     ),
-                  // ── AVATAR STRIP + ONLINE COUNT (top-right) ──────────────
+                  // ── AVATAR STRIP + ONLINE COUNT (top-right of camera area) ──
                   Positioned(
                     top: 56,
-                    right: 12,
+                    right: 492,
                     child: presenceAsync.when(
                       data: (presence) {
                         final activeCutoff = DateTime.now()
@@ -3685,7 +3690,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     top: 0,
                     bottom: 0,
                     width: 480,
-                    child: Column(
+                    child: DecoratedBox(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF16181F),
+                        border: Border(
+                          left: BorderSide(color: Color(0xFF2E2F3A), width: 1),
+                        ),
+                      ),
+                      child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         Expanded(
@@ -3693,6 +3705,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           child: DockablePanel(
                             title: 'Room Chat',
                             icon: Icons.chat_bubble_outline,
+                            backgroundColor: const Color(0xFF16181F),
+                            headerColor: const Color(0xFF23253A),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
@@ -4198,6 +4212,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             title:
                                 'Users (${participantsInRoom.length})',
                             icon: Icons.people_outline,
+                            backgroundColor: const Color(0xFF16181F),
+                            headerColor: const Color(0xFF23253A),
                             child: UserListPanel(
                               participants: participantsInRoom,
                               currentUserId: user.id,
@@ -4226,6 +4242,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           ),
                         ),
                       ],
+                    ),
                     ),
                   ),
                   if (_giftToasts.isNotEmpty)

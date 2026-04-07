@@ -64,7 +64,6 @@ class _DockablePanelState extends State<DockablePanel> {
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
         children: [
           // ── Title bar ──────────────────────────────────────────────────
           GestureDetector(

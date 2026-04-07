@@ -9,7 +9,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:mixvy/firebase_options.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter_web_plugins/url_strategy.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -27,6 +27,14 @@ void _bootstrapLog(String message) {
   developer.log(message, name: 'Bootstrap');
   debugPrint('[BOOT] $message');
 }
+
+/// Crashlytics is only supported on Android, iOS, and macOS.
+/// Windows and Linux desktop builds must be excluded.
+bool get _crashlyticsSupported =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS);
 
 void main() async {
   runZonedGuarded(
@@ -107,7 +115,7 @@ void main() async {
               stackTrace: details.stack,
             );
 
-            if (!kIsWeb) {
+            if (_crashlyticsSupported) {
               FirebaseCrashlytics.instance.recordFlutterError(details);
             }
           };
@@ -121,7 +129,7 @@ void main() async {
               stackTrace: stack,
             );
 
-            if (!kIsWeb) {
+            if (_crashlyticsSupported) {
               FirebaseCrashlytics.instance.recordError(
                 error,
                 stack,
@@ -134,8 +142,8 @@ void main() async {
           };
           _bootstrapLog('PlatformDispatcher error handler installed');
 
-          // Crashlytics collection (not supported on web)
-          if (!kIsWeb) {
+          // Crashlytics collection (only on Android/iOS/macOS)
+          if (_crashlyticsSupported) {
             FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
             _bootstrapLog('Crashlytics collection enabled');
           }
@@ -214,7 +222,7 @@ void main() async {
         stackTrace: stackTrace,
       );
 
-      if (!kIsWeb) {
+      if (_crashlyticsSupported) {
         FirebaseCrashlytics.instance.recordError(
           error,
           stackTrace,

@@ -53,12 +53,19 @@ class Logger {
     }
   }
 
+  static bool get _crashlyticsSupported =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS ||
+          defaultTargetPlatform == TargetPlatform.macOS);
+
   static void _recordToCrashlytics(
     String message, {
     Object? error,
     StackTrace? stackTrace,
     bool fatal = false,
   }) {
+    if (!_crashlyticsSupported) return;
     try {
       final crashlytics = FirebaseCrashlytics.instance;
       crashlytics.log(message);
