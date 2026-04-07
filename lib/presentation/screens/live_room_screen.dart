@@ -1544,6 +1544,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
 
     try {
+      // When promoted to stage, switch to broadcaster mode and publish audio
+      // so the user's mic is actually heard without needing to tap _toggleMic.
+      if (role == 'stage' && !service.isBroadcaster) {
+        await service.ensureDeviceAccess(video: false, audio: true);
+        await service.setBroadcaster(true);
+        await service.publishLocalAudioStream(true);
+        if (mounted) setState(() => _isMicMuted = false);
+      }
       await service.mute(_isMicMuted);
       // Do NOT call enableVideo again if the camera is already running.
       // The track is already in broadcaster state; a duplicate call on web

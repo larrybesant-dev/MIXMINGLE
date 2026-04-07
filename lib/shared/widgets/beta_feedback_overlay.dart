@@ -18,7 +18,7 @@ class BetaFeedbackOverlay extends StatelessWidget {
         child,
         Positioned(
           right: 16,
-          top: 84,
+          bottom: 24,
           child: Navigator(
             onGenerateRoute: (settings) => MaterialPageRoute(
               builder: (_) => FloatingActionButton.small(
