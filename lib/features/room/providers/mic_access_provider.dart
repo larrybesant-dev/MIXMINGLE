@@ -87,7 +87,12 @@ class MicAccessController {
     required String hostId,
     int? priority,
   }) async {
-    await _expireStalePendingRequests(roomId);
+    try {
+      await _expireStalePendingRequests(roomId);
+    } catch (_) {
+      // Non-staff users cannot update others' stale requests.
+      // Cloud Functions handle bulk expiry; silently ignore here.
+    }
 
     final requestId = _requestDocId(requesterId, hostId);
     final requestRef = _requestCollection(roomId).doc(requestId);

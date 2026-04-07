@@ -908,86 +908,103 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     }
   }
 
-  Widget _buildLocalCamContent() {
+  Widget _buildLocalCamContent({String? avatarUrl}) {
     final service = _agoraService;
     // Also gate on _isVideoEnabled: on web canRenderLocalView stays true when
     // the user keeps mic-only broadcaster mode after turning the camera off,
     // which would render a black AgoraVideoView instead of the "Camera is off"
     // placeholder.
-    return service != null && service.canRenderLocalView && _isVideoEnabled
-        ? KeyedSubtree(
-            key: ValueKey<String>('local-view-$_localViewEpoch'),
-            child: service.getLocalView(),
-          )
-        : ColoredBox(
-            color: const Color(0xFF1C2028),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.videocam_off, size: 40, color: Color(0xFFA9ABB3)),
-                    const SizedBox(height: 8),
-                    Text(
-                      _isVideoEnabled
-                          ? 'Camera feed is preparing.'
-                          : 'Camera is off.',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Color(0xFFA9ABB3), fontSize: 13),
-                    ),
-                  ],
-                ),
+    if (service != null && service.canRenderLocalView && _isVideoEnabled) {
+      return KeyedSubtree(
+        key: ValueKey<String>('local-view-$_localViewEpoch'),
+        child: service.getLocalView(),
+      );
+    }
+    return ColoredBox(
+      color: const Color(0xFF1C2028),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (avatarUrl != null && avatarUrl.isNotEmpty)
+                CircleAvatar(
+                  radius: 32,
+                  backgroundImage: NetworkImage(avatarUrl),
+                  backgroundColor: const Color(0xFF2A2D35),
+                )
+              else
+                const Icon(Icons.videocam_off, size: 40, color: Color(0xFFA9ABB3)),
+              const SizedBox(height: 8),
+              Text(
+                _isVideoEnabled
+                    ? 'Camera feed is preparing.'
+                    : 'Camera is off.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Color(0xFFA9ABB3), fontSize: 13),
               ),
-            ),
-          );
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildRemoteCamContent({
     required int remoteUid,
     required bool canViewRemote,
+    String? avatarUrl,
     VoidCallback? onRequestAccess,
   }) {
     final service = _agoraService;
-    return canViewRemote && service != null
-        ? service.getRemoteView(remoteUid, widget.roomId)
-        : ColoredBox(
-            color: const Color(0xFF1C2028),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.all(8),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.lock_outline, size: 24, color: Color(0xFFA9ABB3)),
-                    const SizedBox(height: 6),
-                    Text(
-                      canViewRemote ? 'Loading video...' : 'Cam access locked',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: Color(0xFFA9ABB3), fontSize: 11),
-                    ),
-                    if (onRequestAccess != null) ...[
-                      const SizedBox(height: 4),
-                      TextButton(
-                        onPressed: onRequestAccess,
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                        ),
-                        child: const Text(
-                          'Request Access',
-                          style: TextStyle(
-                              fontSize: 10, color: Color(0xFF00E3FD)),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
+    if (canViewRemote && service != null) {
+      return service.getRemoteView(remoteUid, widget.roomId);
+    }
+    return ColoredBox(
+      color: const Color(0xFF1C2028),
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (avatarUrl != null && avatarUrl.isNotEmpty)
+                CircleAvatar(
+                  radius: 26,
+                  backgroundImage: NetworkImage(avatarUrl),
+                  backgroundColor: const Color(0xFF2A2D35),
+                )
+              else
+                const Icon(Icons.lock_outline, size: 24, color: Color(0xFFA9ABB3)),
+              const SizedBox(height: 6),
+              Text(
+                canViewRemote ? 'Loading video...' : 'Cam access locked',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Color(0xFFA9ABB3), fontSize: 11),
               ),
-            ),
-          );
+              if (onRequestAccess != null) ...[
+                const SizedBox(height: 4),
+                TextButton(
+                  onPressed: onRequestAccess,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 2),
+                    minimumSize: Size.zero,
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
+                  child: const Text(
+                    'Request Access',
+                    style: TextStyle(
+                        fontSize: 10, color: Color(0xFF00E3FD)),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   /// Shows a confirmation dialog then sends a cam-view request to [targetUserId].
@@ -3379,6 +3396,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       canView: canViewRemote,
                                       isSpeaking: _agoraService!
                                           .isRemoteSpeaking(remoteUid),
+                                      avatarUrl: remoteUserId != null
+                                          ? _senderAvatarUrlById[remoteUserId]
+                                          : null,
                                     );
                                   })
                                   .toList(growable: false);
@@ -3388,13 +3408,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 localLabel:
                                     _senderDisplayNameById[user.id] ?? 'You',
                                 localSpeaking: _agoraService!.localSpeaking,
-                                localTile: _buildLocalCamContent(),
+                                localTile: _buildLocalCamContent(
+                                  avatarUrl: _senderAvatarUrlById[user.id],
+                                ),
+                                localAvatarUrl: _senderAvatarUrlById[user.id],
                                 remoteTiles: remoteTiles,
                                 maxMainGridRemoteTiles: slotCount,
                                 remoteTileBuilder: (tile) =>
                                     _buildRemoteCamContent(
                                   remoteUid: tile.uid,
                                   canViewRemote: tile.canView,
+                                  avatarUrl: tile.avatarUrl,
                                   onRequestAccess:
                                       (!tile.canView &&
                                               tile.userId != null &&
@@ -3419,7 +3443,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         label:
                                             _senderDisplayNameById[user.id] ??
                                                 'My Camera',
-                                        content: _buildLocalCamContent(),
+                                        content: _buildLocalCamContent(
+                                          avatarUrl: _senderAvatarUrlById[user.id],
+                                        ),
                                         offset: const Offset(40, 80),
                                         width: 300,
                                         height: 220,
@@ -3435,6 +3461,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         content: _buildRemoteCamContent(
                                           remoteUid: tile.uid,
                                           canViewRemote: tile.canView,
+                                          avatarUrl: tile.avatarUrl,
                                         ),
                                         offset: Offset(
                                           40 + (tile.uid % 200).toDouble(),
@@ -3795,7 +3822,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                           : () async {
                                               // When turning ON, show preview first.
                                               if (!_isVideoEnabled) {
-                                                final localPreview = _buildLocalCamContent();
+                                                final localPreview = _buildLocalCamContent(
+                                                avatarUrl: _senderAvatarUrlById[_joinedUserId ?? ''],
+                                              );
                                                 if (!context.mounted) return;
                                                 final confirmed = await CamPreviewSheet.show(
                                                   context,

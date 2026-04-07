@@ -11,6 +11,7 @@ class CameraWallRemoteTileData {
     required this.canView,
     required this.isSpeaking,
     this.viewerCount,
+    this.avatarUrl,
   });
 
   final int uid;
@@ -21,6 +22,8 @@ class CameraWallRemoteTileData {
   final bool isSpeaking;
   /// Optional viewer count shown as a badge on the tile (null = hidden).
   final int? viewerCount;
+  /// Profile photo URL shown in the cam area when camera is off or access is locked.
+  final String? avatarUrl;
 }
 
 class CameraWall extends ConsumerWidget {
@@ -38,6 +41,7 @@ class CameraWall extends ConsumerWidget {
     this.overflowPageSize = 6,
     this.onDetachLocal,
     this.onDetachRemote,
+    this.localAvatarUrl,
   });
 
   final String roomId;
@@ -55,6 +59,8 @@ class CameraWall extends ConsumerWidget {
   final VoidCallback? onDetachLocal;
   /// Called when the user clicks "detach" on a remote cam tile.
   final void Function(CameraWallRemoteTileData tile)? onDetachRemote;
+  /// Profile photo URL for the local user (shown when camera is off).
+  final String? localAvatarUrl;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -118,18 +124,28 @@ class CameraWall extends ConsumerWidget {
           onSubscriptionPlanChanged(highQualityUids, lowQualityUids);
         });
 
+        // --- Talking Now: separate the active speaker from the grid ---
+        final talkingRemotes = mainGridRemoteTiles
+            .where((t) => t.isSpeaking)
+            .toList(growable: false);
+        final quietRemotes = mainGridRemoteTiles
+            .where((t) => !t.isSpeaking)
+            .toList(growable: false);
+        final localIsTalking = localSpeaking;
+
         final mainGridTiles = <Widget>[
-          _CameraWallTileFrame(
-            label: localLabel,
-            speaking: localSpeaking,
-            compact: false,
-            onDetach: onDetachLocal,
-            child: localTile,
-          ),
-          ...mainGridRemoteTiles.map(
+          if (!localIsTalking)
+            _CameraWallTileFrame(
+              label: localLabel,
+              speaking: false,
+              compact: false,
+              onDetach: onDetachLocal,
+              child: localTile,
+            ),
+          ...quietRemotes.map(
             (tile) => _CameraWallTileFrame(
               label: tile.label,
-              speaking: tile.isSpeaking,
+              speaking: false,
               compact: false,
               viewerCount: tile.viewerCount,
               onDetach: onDetachRemote == null
@@ -267,6 +283,70 @@ class CameraWall extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
+                // ── Talking Now section ──────────────────────────────────
+                if (localIsTalking || talkingRemotes.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFFF4444),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        'Talking Now',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: isDesktop ? 180 : 150,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (localIsTalking)
+                          Flexible(
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: _CameraWallTileFrame(
+                                label: localLabel,
+                                speaking: true,
+                                compact: false,
+                                onDetach: onDetachLocal,
+                                child: localTile,
+                              ),
+                            ),
+                          ),
+                        ...talkingRemotes.map(
+                          (tile) => Flexible(
+                            child: Padding(
+                              padding: const EdgeInsets.only(right: 8),
+                              child: _CameraWallTileFrame(
+                                label: tile.label,
+                                speaking: true,
+                                compact: false,
+                                viewerCount: tile.viewerCount,
+                                onDetach: onDetachRemote == null
+                                    ? null
+                                    : () => onDetachRemote!(tile),
+                                child: remoteTileBuilder(tile),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
                 if (isDesktop)
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -521,10 +601,24 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
                       color: const Color(0xFF0B0E14),
                       child: widget.child,
                     ),
-                    // Viewer count badge (bottom-right corner)
+                    // EQ sound-wave bars on the left when speaking
+                    if (widget.speaking)
+                      Positioned(
+                        left: 5,
+                        bottom: 8,
+                        child: _SoundWaveEq(active: widget.speaking),
+                      ),
+                    // EQ sound-wave bars on the right when speaking
+                    if (widget.speaking)
+                      Positioned(
+                        right: 5,
+                        bottom: 8,
+                        child: _SoundWaveEq(active: widget.speaking),
+                      ),
+                    // Viewer count badge (bottom-right corner, shifted left when speaking)
                     if (widget.viewerCount != null && widget.viewerCount! > 0)
                       Positioned(
-                        right: 6,
+                        right: widget.speaking ? 36 : 6,
                         bottom: 6,
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
@@ -556,6 +650,96 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Animated equalizer bars shown beside the cam while a participant is speaking.
+class _SoundWaveEq extends StatefulWidget {
+  const _SoundWaveEq({required this.active});
+  final bool active;
+
+  @override
+  State<_SoundWaveEq> createState() => _SoundWaveEqState();
+}
+
+class _SoundWaveEqState extends State<_SoundWaveEq>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  // Each bar has a different amplitude and phase within the animation cycle.
+  static const _barMaxH = [10.0, 22.0, 15.0, 28.0];
+  static const _intervals = [
+    [0.00, 0.55],
+    [0.15, 0.70],
+    [0.30, 0.85],
+    [0.45, 1.00],
+  ];
+
+  late final List<Animation<double>> _barAnims;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _barAnims = List.generate(4, (i) {
+      return Tween<double>(begin: 3.0, end: _barMaxH[i]).animate(
+        CurvedAnimation(
+          parent: _ctrl,
+          curve: Interval(
+            _intervals[i][0],
+            _intervals[i][1],
+            curve: Curves.easeInOut,
+          ),
+        ),
+      );
+    });
+    if (widget.active) _ctrl.repeat(reverse: true);
+  }
+
+  @override
+  void didUpdateWidget(_SoundWaveEq old) {
+    super.didUpdateWidget(old);
+    if (widget.active && !old.active) {
+      _ctrl.repeat(reverse: true);
+    } else if (!widget.active && old.active) {
+      _ctrl.animateTo(0.0, duration: const Duration(milliseconds: 300));
+    }
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _ctrl,
+      builder: (_, __) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: List.generate(4, (i) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 1.5),
+              child: Container(
+                width: 3,
+                height: _barAnims[i].value,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF00E3FD)
+                      .withAlpha(widget.active ? 220 : 80),
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            );
+          }),
+        );
+      },
     );
   }
 }
