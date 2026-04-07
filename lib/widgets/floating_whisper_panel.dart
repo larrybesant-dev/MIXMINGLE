@@ -123,16 +123,19 @@ class _FloatingWhisperPanelWidgetState
               },
               child: Container(
                 height: 44,
-                color: Theme.of(context).colorScheme.primaryContainer,
+                color: const Color(0xFF23263A),
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Row(
                   children: [
-                    const Icon(Icons.drag_indicator, size: 18),
+                    const Icon(Icons.drag_indicator, size: 18, color: Colors.white70),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         widget.peerName,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -214,7 +217,28 @@ class _MessageList extends ConsumerWidget {
     final messagesAsync = ref.watch(messagesStreamProvider(conversationId));
     return messagesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, st) => const Center(child: Text('Could not load messages.')),
+      error: (e, st) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.error_outline, color: Colors.redAccent, size: 28),
+              const SizedBox(height: 8),
+              const Text(
+                'Could not load messages.',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () => ref.invalidate(messagesStreamProvider(conversationId)),
+                child: const Text('Retry', style: TextStyle(color: Color(0xFFBA9EFF))),
+              ),
+            ],
+          ),
+        ),
+      ),
       data: (messages) {
         if (messages.isEmpty) {
           return const Center(

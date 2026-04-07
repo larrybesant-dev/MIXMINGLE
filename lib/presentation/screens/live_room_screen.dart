@@ -120,6 +120,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   final Map<String, String> _senderDisplayNameById = <String, String>{};
   final Map<String, int> _senderVipLevelById = <String, int>{};
   final Map<String, String?> _senderAvatarUrlById = <String, String?>{};
+  final Map<String, String?> _senderGenderById = <String, String?>{};
   final Set<String> _senderLookupInFlight = <String>{};
   Set<int> _requestedHighQualityRemoteUids = <int>{};
   Set<int> _requestedLowQualityRemoteUids = <int>{};
@@ -1703,6 +1704,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final resolved = <String, String>{};
     final resolvedVip = <String, int>{};
     final resolvedAvatar = <String, String?>{};
+    final resolvedGender = <String, String?>{};
 
     try {
       for (var i = 0; i < missingIds.length; i += 10) {
@@ -1725,6 +1727,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           final avatar = data['avatarUrl'];
           resolvedAvatar[doc.id] =
               (avatar is String && avatar.isNotEmpty) ? avatar : null;
+          final gender = data['gender'];
+          resolvedGender[doc.id] =
+              (gender is String && gender.isNotEmpty) ? gender : null;
         }
       }
 
@@ -1733,6 +1738,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         resolved.putIfAbsent(id, () => id);
         resolvedVip.putIfAbsent(id, () => 0);
         resolvedAvatar.putIfAbsent(id, () => null);
+        resolvedGender.putIfAbsent(id, () => null);
       }
 
       if (!mounted) {
@@ -1742,6 +1748,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         _senderDisplayNameById.addAll(resolved);
         _senderVipLevelById.addAll(resolvedVip);
         _senderAvatarUrlById.addAll(resolvedAvatar);
+        _senderGenderById.addAll(resolvedGender);
       });
     } catch (_) {
       // Best effort only; fall back to sender id in UI if lookup fails.
@@ -4352,6 +4359,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 _senderDisplayNameById),
                             vipLevelById: Map.unmodifiable(
                                 _senderVipLevelById),
+                            genderById: Map.unmodifiable(
+                                _senderGenderById),
                             currentUserId: user.id,
                             presenceList:
                                 presenceAsync.valueOrNull ?? const [],
@@ -4369,19 +4378,52 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 false,
                             uidToUserId: (uid) =>
                                 _userIdForRtcUid(uid, participantsInRoom),
-                            onWhisper: (p) {
-                              final chatId =
-                                  ([user.id, p.userId]..sort()).join('_');
-                              FloatingWhisperPanel.show(
-                                context,
-                                ref,
-                                conversationId: chatId,
-                                peerName:
-                                    _senderDisplayNameById[p.userId] ??
-                                        p.userId,
-                                peerAvatarUrl:
-                                    _senderAvatarUrlById[p.userId],
-                              );
+                            onJoinQueue: allowMicRequests
+                                ? () async {
+                                    try {
+                                      await micAccessController.requestAccess(
+                                        roomId: widget.roomId,
+                                        requesterId: user.id,
+                                        hostId: hostId,
+                                      );
+                                      if (mounted) {
+                                        _showSnackBar('Mic request sent!');
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        _showSnackBar('Could not join queue: $e');
+                                      }
+                                    }
+                                  }
+                                : null,
+                            onWhisper: (p) async {
+                              final currentUser = ref.read(userProvider);
+                              if (currentUser == null) return;
+                              try {
+                                final conversationId = await ref
+                                    .read(messagingControllerProvider)
+                                    .createDirectConversation(
+                                      userId1: currentUser.id,
+                                      user1Name: currentUser.username,
+                                      user1AvatarUrl: currentUser.avatarUrl,
+                                      userId2: p.userId,
+                                      user2Name: _senderDisplayNameById[p.userId] ?? p.userId,
+                                      user2AvatarUrl: _senderAvatarUrlById[p.userId],
+                                    );
+                                if (!mounted) return;
+                                FloatingWhisperPanel.show(
+                                  context,
+                                  ref,
+                                  conversationId: conversationId,
+                                  peerName:
+                                      _senderDisplayNameById[p.userId] ??
+                                          p.userId,
+                                  peerAvatarUrl:
+                                      _senderAvatarUrlById[p.userId],
+                                );
+                              } catch (e) {
+                                _showSnackBar('Could not open whisper: $e');
+                              }
                             },
                           ),
                         ),
@@ -4520,6 +4562,7 @@ class _RoomRosterSidebar extends StatelessWidget {
     required this.participants,
     required this.displayNameById,
     required this.vipLevelById,
+    required this.genderById,
     required this.currentUserId,
     required this.presenceList,
     required this.pendingMicCount,
@@ -4528,12 +4571,14 @@ class _RoomRosterSidebar extends StatelessWidget {
     required this.remoteUids,
     required this.isSpeakingFn,
     required this.uidToUserId,
+    this.onJoinQueue,
     this.onWhisper,
   });
 
   final List<RoomParticipantModel> participants;
   final Map<String, String> displayNameById;
   final Map<String, int> vipLevelById;
+  final Map<String, String?> genderById;
   final String currentUserId;
   final List<RoomPresenceModel> presenceList;
   final int pendingMicCount;
@@ -4542,6 +4587,7 @@ class _RoomRosterSidebar extends StatelessWidget {
   final List<int> remoteUids;
   final bool Function(int uid) isSpeakingFn;
   final String? Function(int uid) uidToUserId;
+  final VoidCallback? onJoinQueue;
   final void Function(RoomParticipantModel participant)? onWhisper;
 
   static const _kBg = Color(0xFF161A21);
@@ -4633,9 +4679,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5)),
                 ),
-                // Mic queue joining is handled via the hand-raise button
-                // in the chat panel; this button is informational only.
-                onPressed: null,
+                onPressed: onJoinQueue,
                 child: const Text('Join Queue to Talk'),
               ),
             ),
@@ -4659,6 +4703,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                     displayName: displayNameById[p.userId] ?? p.userId,
                     vipLevel: vipLevelById[p.userId] ?? 0,
                     nameColor: _nameColor(vipLevelById[p.userId] ?? 0),
+                    gender: genderById[p.userId],
                     trailingIcon: Icons.videocam,
                     trailingColor: Colors.white38,
                   ),
@@ -4685,6 +4730,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                     displayName: displayNameById[p.userId] ?? p.userId,
                     vipLevel: vip,
                     nameColor: _nameColor(vip),
+                    gender: genderById[p.userId],
                     trailingIcon: p.role == 'host' || p.role == 'owner'
                         ? Icons.star
                         : p.role == 'cohost'
@@ -4745,6 +4791,7 @@ class _RosterRow extends StatelessWidget {
     required this.displayName,
     required this.vipLevel,
     required this.nameColor,
+    this.gender,
     this.trailingIcon,
     this.trailingColor = Colors.white38,
   });
@@ -4752,15 +4799,37 @@ class _RosterRow extends StatelessWidget {
   final String displayName;
   final int vipLevel;
   final Color nameColor;
+  final String? gender;
   final IconData? trailingIcon;
   final Color trailingColor;
 
+  IconData? _genderIcon(String? g) {
+    if (g == null) return null;
+    final lower = g.toLowerCase();
+    if (lower == 'male') return Icons.male;
+    if (lower == 'female') return Icons.female;
+    return Icons.transgender;
+  }
+
+  Color _genderColor(String? g) {
+    if (g == null) return Colors.white38;
+    final lower = g.toLowerCase();
+    if (lower == 'male') return const Color(0xFF64B5F6);
+    if (lower == 'female') return const Color(0xFFF48FB1);
+    return const Color(0xFFCE93D8);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final gIcon = _genderIcon(gender);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       child: Row(
         children: [
+          if (gIcon != null) ...[
+            Icon(gIcon, size: 11, color: _genderColor(gender)),
+            const SizedBox(width: 3),
+          ],
           Expanded(
             child: Text(
               displayName,

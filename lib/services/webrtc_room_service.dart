@@ -168,11 +168,57 @@ class WebRtcRoomService implements RtcRoomService {
   Widget getRemoteView(int uid, String channelId) {
     final userId = _uidToUserId[uid];
     if (userId == null) {
-      return const ColoredBox(color: Colors.black12);
+      // UID not yet mapped — connection initialising.
+      return const ColoredBox(
+        color: Color(0xFF1C2028),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFFA9ABB3),
+                ),
+              ),
+              SizedBox(height: 6),
+              Text(
+                'Connecting cam…',
+                style: TextStyle(color: Color(0xFFA9ABB3), fontSize: 10),
+              ),
+            ],
+          ),
+        ),
+      );
     }
     final peer = _peers[userId];
     if (peer == null || peer.remoteStream == null) {
-      return const ColoredBox(color: Colors.black12);
+      // Peer entry exists (or UID is known) but the P2P stream hasn't arrived yet.
+      return const ColoredBox(
+        color: Color(0xFF1C2028),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFFA9ABB3),
+                ),
+              ),
+              SizedBox(height: 6),
+              Text(
+                'Connecting cam…',
+                style: TextStyle(color: Color(0xFFA9ABB3), fontSize: 10),
+              ),
+            ],
+          ),
+        ),
+      );
     }
     // If the remote stream has no enabled video tracks the broadcaster has
     // camera off (mic-only). Show a placeholder instead of a black RTCVideoView.

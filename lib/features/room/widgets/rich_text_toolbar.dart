@@ -109,7 +109,7 @@ class RichTextParser {
 
 /// A text formatter toolbar widget for the chat input.
 /// Wraps selected text in bold/italic/colour markup.
-class RichTextToolbar extends StatelessWidget {
+class RichTextToolbar extends StatefulWidget {
   const RichTextToolbar({
     super.key,
     required this.controller,
@@ -119,22 +119,67 @@ class RichTextToolbar extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback? onChanged;
 
-  void _wrapSelection(String open, String close) {
-    final text = controller.text;
-    final sel = controller.selection;
-    if (!sel.isValid) return;
+  @override
+  State<RichTextToolbar> createState() => _RichTextToolbarState();
+}
 
-    final start = sel.start;
-    final end = sel.end;
-    final selected = sel.isCollapsed ? '' : text.substring(start, end);
+class _RichTextToolbarState extends State<RichTextToolbar> {
+  // Saved selection so we can apply markup even after the TextField loses focus
+  // (common on web: clicking a toolbar button defocuses the TextField first).
+  TextSelection? _savedSelection;
+
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onControllerChange);
+  }
+
+  @override
+  void didUpdateWidget(RichTextToolbar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_onControllerChange);
+      widget.controller.addListener(_onControllerChange);
+    }
+  }
+
+  @override
+  void dispose() {
+    widget.controller.removeListener(_onControllerChange);
+    super.dispose();
+  }
+
+  void _onControllerChange() {
+    final sel = widget.controller.selection;
+    // Save any valid, non-collapsed selection (i.e. actual text highlighted).
+    if (sel.isValid && !sel.isCollapsed) {
+      _savedSelection = sel;
+    }
+  }
+
+  void _wrapSelection(String open, String close) {
+    final controller = widget.controller;
+    final text = controller.text;
+    // Use the current selection if valid; fall back to the last saved one.
+    TextSelection sel = controller.selection;
+    if (!sel.isValid || sel.start < 0) {
+      sel = _savedSelection ?? const TextSelection.collapsed(offset: 0);
+    }
+    // Clamp to text length in case the text changed while selection was stale.
+    final start = sel.start.clamp(0, text.length);
+    final end = sel.end.clamp(start, text.length);
+    final selected = text.substring(start, end);
     final newText = text.replaceRange(start, end, '$open$selected$close');
     controller.value = controller.value.copyWith(
       text: newText,
       selection: TextSelection.collapsed(
-        offset: sel.isCollapsed ? start + open.length : start + open.length + selected.length + close.length,
+        offset: selected.isEmpty
+            ? start + open.length
+            : start + open.length + selected.length + close.length,
       ),
     );
-    onChanged?.call();
+    _savedSelection = null;
+    widget.onChanged?.call();
   }
 
   void _insertColor(String colorHex) {
