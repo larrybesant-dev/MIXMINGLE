@@ -25,6 +25,7 @@ class WebRtcRoomService implements RtcRoomService {
   @override VoidCallback? onLocalVideoCaptureChanged;
   @override VoidCallback? onTokenWillExpire;
   @override VoidCallback? onConnectionLost;
+  VoidCallback? onSystemAudioStopped;
 
   @override List<int> get remoteUids => _unsupported();
   @override bool get localSpeaking => _unsupported();
