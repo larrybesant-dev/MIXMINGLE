@@ -18,7 +18,7 @@ class RoomPanelLayout extends ConsumerStatefulWidget {
     required this.chatPanel,
     required this.usersPanel,
     required this.overlays,
-    this.initialCamWidth = 540.0,
+    this.initialCamWidth = 420.0,
     this.initialUsersWidth = 200.0,
     this.minCamWidth = 200.0,
     this.minUsersWidth = 160.0,

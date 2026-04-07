@@ -15,16 +15,15 @@ final userProvider = Provider<UserModel?>((ref) {
 		return null;
 	}
 
-	// Prefer loaded profile data; fall back to Firebase display name, then a
-	// generic placeholder. The userId guard is relaxed: if the profile has a
-	// non-empty username we use it regardless — the controller may finish
+	// Prefer loaded profile data; fall back to a generic placeholder.
+	// Never use firebaseUser.displayName — that can expose a real name
+	// from Google Sign-In. The userId guard is relaxed: if the profile has
+	// a non-empty username we use it regardless — the controller may finish
 	// loading before it writes back userId to state.
 	final profileUsername = profileState.username?.trim();
 	final resolvedUsername = (profileUsername?.isNotEmpty == true)
 		? profileUsername!
-		: (firebaseUser?.displayName?.trim().isNotEmpty == true
-			? firebaseUser!.displayName!
-			: null);
+		: null;
 
 	final profileAvatar = (profileState.userId == uid || profileState.userId == null)
 			&& (profileState.avatarUrl?.isNotEmpty == true)
