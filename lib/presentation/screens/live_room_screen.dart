@@ -1686,6 +1686,16 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
+  void _markRecentChatter(String senderId) {
+    if (!mounted) return;
+    _recentChatterTimers[senderId]?.cancel();
+    setState(() => _recentChatters.add(senderId));
+    _recentChatterTimers[senderId] = Timer(const Duration(seconds: 4), () {
+      if (mounted) setState(() => _recentChatters.remove(senderId));
+      _recentChatterTimers.remove(senderId);
+    });
+  }
+
   void _onTypingInput() {
     _typingTimer?.cancel();
     final firestore = _firestore;
@@ -4834,6 +4844,7 @@ class _RoomRosterSidebar extends StatelessWidget {
     this.onReleaseMic,
     this.onWhisper,
     this.topPadding = kToolbarHeight,
+    this.recentChatters = const {},
   });
 
   final List<RoomParticipantModel> participants;
@@ -4854,6 +4865,7 @@ class _RoomRosterSidebar extends StatelessWidget {
   final VoidCallback? onReleaseMic;
   final void Function(RoomParticipantModel participant)? onWhisper;
   final double topPadding;
+  final Set<String> recentChatters;
 
   static const _kBg = Color(0xFF161A21);
   static const _kDivider = Color(0xFF2A2D38);
