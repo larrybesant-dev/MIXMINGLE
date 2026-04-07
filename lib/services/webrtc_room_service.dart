@@ -147,6 +147,9 @@ class WebRtcRoomService implements RtcRoomService {
   @override
   bool isRemoteSpeaking(int uid) => _remoteSpeakingUids.contains(uid);
 
+  @override
+  String? userIdForUid(int uid) => _uidToUserId[uid];
+
   // ──────────────────────────────────────────────────────────────────────────
   // RtcRoomService: video views
   // ──────────────────────────────────────────────────────────────────────────

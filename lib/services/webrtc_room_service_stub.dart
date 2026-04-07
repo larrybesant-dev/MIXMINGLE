@@ -33,6 +33,7 @@ class WebRtcRoomService implements RtcRoomService {
   @override bool get isLocalVideoCapturing => _unsupported();
 
   @override bool isRemoteSpeaking(int uid) => _unsupported();
+  @override String? userIdForUid(int uid) => _unsupported();
 
   @override Widget getLocalView() => _unsupported();
   @override Widget getRemoteView(int uid, String channelId) => _unsupported();

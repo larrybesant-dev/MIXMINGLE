@@ -30,6 +30,11 @@ abstract class RtcRoomService {
 
   bool isRemoteSpeaking(int uid);
 
+  /// Returns the Firestore userId for a remote [uid] if the service has an
+  /// explicit mapping (WebRTC), or null if the caller must fall back to the
+  /// hash-based lookup (Agora).
+  String? userIdForUid(int uid) => null;
+
   // ──────────────────────────────────────────────────────────────────────────
   // Video views
   // ──────────────────────────────────────────────────────────────────────────

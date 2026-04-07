@@ -90,6 +90,9 @@ class AgoraService implements RtcRoomService {
   @override
   bool isRemoteSpeaking(int uid) => _speakingUids.contains(uid);
 
+  @override
+  String? userIdForUid(int uid) => null; // Agora: caller falls back to hash lookup
+
   /// Get the local video view widget
   @override
   Widget getLocalView() {

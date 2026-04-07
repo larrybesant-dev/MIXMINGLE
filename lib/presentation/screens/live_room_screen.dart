@@ -304,6 +304,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   }
 
   String? _userIdForRtcUid(int rtcUid, List<RoomParticipantModel> members) {
+    // WebRTC service has an explicit uid→userId map; use it directly to avoid
+    // the hash-based lookup failing when participants haven't loaded yet.
+    final fromService = _agoraService?.userIdForUid(rtcUid);
+    if (fromService != null) return fromService;
+    // Agora fallback: match by reconstructing the uid from each participant's
+    // userId hash.
     for (final member in members) {
       if (_buildRtcUid(member.userId) == rtcUid) {
         return member.userId;
