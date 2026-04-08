@@ -114,10 +114,14 @@ class RichTextToolbar extends StatefulWidget {
     super.key,
     required this.controller,
     this.onChanged,
+    this.pendingColorHex,
+    this.onPendingColorChanged,
   });
 
   final TextEditingController controller;
   final VoidCallback? onChanged;
+  final String? pendingColorHex;
+  final ValueChanged<String?>? onPendingColorChanged;
 
   @override
   State<RichTextToolbar> createState() => _RichTextToolbarState();
@@ -188,7 +192,19 @@ class _RichTextToolbarState extends State<RichTextToolbar> {
   }
 
   void _insertColor(String colorHex) {
-    _wrapSelection('[color=$colorHex]', '[/color]');
+    final controller = widget.controller;
+    var sel = controller.selection;
+    if (!sel.isValid || sel.start < 0) {
+      sel = _savedSelection ?? const TextSelection.collapsed(offset: 0);
+    }
+    if (!sel.isCollapsed) {
+      _wrapSelection('[color=$colorHex]', '[/color]');
+      widget.onPendingColorChanged?.call(null);
+      return;
+    }
+    final nextPending = widget.pendingColorHex == colorHex ? null : colorHex;
+    widget.onPendingColorChanged?.call(nextPending);
+    widget.onChanged?.call();
   }
 
   @override
@@ -226,12 +242,15 @@ class _RichTextToolbarState extends State<RichTextToolbar> {
             for (final hex in _presetColors)
               _ColorSwatch(
                 hex: hex,
+                selected: widget.pendingColorHex == hex,
                 onTap: () => _insertColor(hex),
               ),
             Padding(
               padding: const EdgeInsets.only(left: 8, right: 8),
               child: Text(
-                'Rich text',
+                widget.pendingColorHex == null
+                    ? 'Rich text'
+                    : 'Next text #${widget.pendingColorHex}',
                 style: TextStyle(color: npOnVariant, fontSize: 9),
               ),
             ),
@@ -292,9 +311,10 @@ class _ToolBtn extends StatelessWidget {
 }
 
 class _ColorSwatch extends StatelessWidget {
-  const _ColorSwatch({required this.hex, required this.onTap});
+  const _ColorSwatch({required this.hex, required this.onTap, this.selected = false});
   final String hex;
   final VoidCallback onTap;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -310,7 +330,10 @@ class _ColorSwatch extends StatelessWidget {
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
-            border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
+            border: Border.all(
+              color: selected ? Colors.white : Colors.white.withValues(alpha: 0.25),
+              width: selected ? 2 : 1,
+            ),
           ),
         ),
       ),

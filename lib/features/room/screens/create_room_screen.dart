@@ -38,6 +38,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
   _RoomMode _mode = _RoomMode.audio;
   _Privacy _privacy = _Privacy.public;
   String? _selectedCategory;
+  final Set<String> _selectedTags = <String>{};
   String? _thumbnailUrl;
   bool _isCreating = false;
   bool _isUploadingThumbnail = false;
@@ -47,6 +48,11 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
   static const List<String> _categories = [
     'Music', 'Gaming', 'Dating', 'Tech Talk',
     'Wellness', 'Art & Design', 'Education', 'Chill',
+  ];
+
+  static const List<String> _vibeTags = [
+    'Chill', 'Late Night', 'Flirty', 'Deep Talk',
+    'Music', 'Games', 'Wellness', 'Networking',
   ];
 
   @override
@@ -83,11 +89,16 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
     setState(() => _isCreating = true);
     try {
       final roomService = ref.read(roomServiceProvider);
+      final normalizedTags = _selectedTags
+          .where((tag) => tag != _selectedCategory)
+          .map((tag) => tag.toLowerCase())
+          .toList(growable: false);
       if (_scheduleMode) {
         await roomService.createRoom(
           hostId: uid,
           name: _titleController.text.trim(),
           category: _selectedCategory?.toLowerCase(),
+          tags: normalizedTags,
           thumbnailUrl: _thumbnailUrl,
           isLive: false,
           scheduledAt: _scheduledAt,
@@ -106,6 +117,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
           hostId: uid,
           name: _titleController.text.trim(),
           category: _selectedCategory?.toLowerCase(),
+          tags: normalizedTags,
           thumbnailUrl: _thumbnailUrl,
           isLive: true,
         );
@@ -217,6 +229,15 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                           _sectionLabel('Category'),
                           const SizedBox(height: 10),
                           _buildCategoryChips(),
+                          const SizedBox(height: 20),
+                          _sectionLabel('Extra Vibes'),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Pick a few extra vibes so people know the mood.',
+                            style: GoogleFonts.inter(fontSize: 12, color: _onVariant),
+                          ),
+                          const SizedBox(height: 10),
+                          _buildVibeTags(),
                           const SizedBox(height: 28),
                           _sectionLabel('When to Start'),
                           const SizedBox(height: 10),
@@ -533,8 +554,12 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
       children: _categories.map((cat) {
         final selected = _selectedCategory == cat;
         return GestureDetector(
-          onTap: () => setState(
-              () => _selectedCategory = selected ? null : cat),
+          onTap: () => setState(() {
+            _selectedCategory = selected ? null : cat;
+            if (!selected) {
+              _selectedTags.add(cat);
+            }
+          }),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             padding:
@@ -560,6 +585,39 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
           ),
         );
       }).toList(),
+    );
+  }
+
+  Widget _buildVibeTags() {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: _vibeTags.map((tag) {
+        final selected = _selectedTags.contains(tag);
+        return FilterChip(
+          label: Text(tag),
+          selected: selected,
+          onSelected: (value) {
+            setState(() {
+              if (value) {
+                _selectedTags.add(tag);
+              } else {
+                _selectedTags.remove(tag);
+              }
+            });
+          },
+          selectedColor: _primary.withAlpha(220),
+          backgroundColor: _surfaceHighest,
+          checkmarkColor: _surface,
+          labelStyle: TextStyle(
+            color: selected ? _surface : _onSurface,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+          ),
+          side: BorderSide(
+            color: selected ? Colors.transparent : _ghost,
+          ),
+        );
+      }).toList(growable: false),
     );
   }
 

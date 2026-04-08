@@ -1,6 +1,24 @@
 import 'profile_controller.dart';
 
 class ProfileCompletion {
+  static List<String> homeNudgeItems(ProfileState state) {
+    final items = <String>[];
+    if ((state.username ?? '').trim().length < 2) items.add('Set display name');
+    if ((state.avatarUrl ?? '').trim().isEmpty) items.add('Upload avatar');
+    if ((state.bio ?? '').trim().isEmpty) items.add('Write a short bio');
+    if (state.interests.isEmpty) items.add('Add interests');
+    return items;
+  }
+
+  static double homeNudgeCompleteness(ProfileState state) {
+    var score = 0;
+    if ((state.username ?? '').trim().length >= 2) score++;
+    if ((state.avatarUrl ?? '').trim().isNotEmpty) score++;
+    if ((state.bio ?? '').trim().isNotEmpty) score++;
+    if (state.interests.isNotEmpty) score++;
+    return score / 4;
+  }
+
   static List<String> requiredSetupItems(ProfileState state) {
     final items = <String>[];
     if ((state.username ?? '').trim().length < 2) {

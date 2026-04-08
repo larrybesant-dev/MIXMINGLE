@@ -75,7 +75,7 @@ class _LeaderCard extends StatelessWidget {
                 : NeonPulse.onSurfaceVariant;
 
     return GestureDetector(
-      onTap: () => context.push('/user/${user.id}'),
+      onTap: () => context.push('/profile/${user.id}'),
       child: Container(
         width: 76,
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),

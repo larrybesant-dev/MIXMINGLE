@@ -20,23 +20,23 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1300),
+      duration: const Duration(milliseconds: 1500),
     );
 
     _opacity = CurvedAnimation(
       parent: _controller,
-      curve: const Interval(0.0, 0.65, curve: Curves.easeIn),
+      curve: const Interval(0.0, 0.55, curve: Curves.easeIn),
     );
 
-    _scale = Tween<double>(begin: 0.82, end: 1.0).animate(
+    _scale = Tween<double>(begin: 0.78, end: 1.24).animate(
       CurvedAnimation(
         parent: _controller,
-        curve: const Interval(0.0, 0.75, curve: Curves.easeOutCubic),
+        curve: const Interval(0.0, 0.92, curve: Curves.easeOutQuart),
       ),
     );
 
     _controller.forward().whenComplete(() {
-      Future.delayed(const Duration(milliseconds: 300), () {
+      Future.delayed(const Duration(milliseconds: 120), () {
         if (mounted) context.go('/');
       });
     });

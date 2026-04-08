@@ -15,6 +15,7 @@ import '../../widgets/gift_picker_sheet.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
 import '../../features/feed/models/post_model.dart';
 import '../../features/feed/widgets/post_card.dart';
+import '../../presentation/providers/friend_provider.dart';
 import '../../presentation/providers/user_provider.dart';
 import 'widgets/profile_music_player_stub.dart'
     if (dart.library.html) 'widgets/profile_music_player_web.dart';
@@ -36,6 +37,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   final FriendService _friendService = FriendService();
   late Future<Map<String, dynamic>> _profileFuture;
   late TabController _tabController;
+  bool _sendingFriendRequest = false;
 
   Color? _hexColorOrNull(String hex) {
     final clean = hex.replaceFirst('#', '');
@@ -167,8 +169,11 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     if (currentUser == null || currentUser.uid == widget.userId) {
       return;
     }
+    setState(() => _sendingFriendRequest = true);
     try {
       await _friendService.sendFriendRequest(currentUser.uid, widget.userId);
+      ref.invalidate(pendingOutgoingFriendRequestIdsProvider);
+      ref.invalidate(currentFriendIdsProvider);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Friend request sent.')),
@@ -178,6 +183,10 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Could not send friend request: $e')),
       );
+    } finally {
+      if (mounted) {
+        setState(() => _sendingFriendRequest = false);
+      }
     }
   }
 
@@ -325,6 +334,14 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
 
   @override
   Widget build(BuildContext context) {
+    final friendIds =
+      ref.watch(currentFriendIdsProvider).valueOrNull ?? const <String>[];
+    final pendingIds = ref
+        .watch(pendingOutgoingFriendRequestIdsProvider)
+        .valueOrNull ??
+      const <String>{};
+    final isFriend = friendIds.contains(widget.userId);
+    final isRequestPending = pendingIds.contains(widget.userId);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
@@ -517,9 +534,26 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                   children: [
                     Expanded(
                       child: OutlinedButton.icon(
-                        onPressed: _sendFriendRequest,
-                        icon: const Icon(Icons.person_add_alt_1_outlined),
-                        label: const Text('Add Friend'),
+                        onPressed:
+                            (isFriend || isRequestPending || _sendingFriendRequest)
+                                ? null
+                                : _sendFriendRequest,
+                        icon: Icon(
+                          isFriend
+                              ? Icons.check_circle_outline
+                              : isRequestPending
+                                  ? Icons.schedule_rounded
+                                  : Icons.person_add_alt_1_outlined,
+                        ),
+                        label: Text(
+                          isFriend
+                              ? 'Already Friends'
+                              : isRequestPending
+                                  ? 'Request Sent'
+                                  : (_sendingFriendRequest
+                                      ? 'Sending...'
+                                      : 'Add Friend'),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 10),

@@ -27,9 +27,14 @@ class MixVyApp extends ConsumerWidget {
       darkTheme: afterDarkActive ? afterDarkTheme : midnightCreativeTheme,
       themeMode: afterDarkActive ? ThemeMode.dark : settings.themeMode,
       builder: (context, child) {
-        return IncomingCallOverlay(
-          child: BetaFeedbackOverlay(
-            child: child ?? const SizedBox.shrink(),
+        return DefaultTextStyle.merge(
+          style: const TextStyle(
+            fontFamilyFallback: ['NotoColorEmoji'],
+          ),
+          child: IncomingCallOverlay(
+            child: BetaFeedbackOverlay(
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         );
       },

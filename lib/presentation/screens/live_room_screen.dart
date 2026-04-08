@@ -117,6 +117,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   String _connectPhase = 'idle';
   bool _showEmojiTray = false;
   bool _showRichToolbar = false;
+  String? _pendingRichColorHex;
   String? _callError;
   int? _currentRtcUid;
   /// Slot id in rooms/{roomId}/slots currently held by this user, if any.
@@ -128,6 +129,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isHandlingParticipantRemoval = false;
   bool _preWarmDone = false;
   Timer? _presenceHeartbeatTimer;
+
+  String _buildOutgoingChatMessage(String rawText) {
+    final trimmed = rawText.trim();
+    if (trimmed.isEmpty) {
+      return trimmed;
+    }
+    if (_pendingRichColorHex == null || trimmed.contains('[color=')) {
+      return trimmed;
+    }
+    return '[color=$_pendingRichColorHex]$trimmed[/color]';
+  }
   Timer? _micLevelTimer;
   DateTime? _roomJoinedAt;
   int _lastRenderedMessageCount = 0;
@@ -4853,6 +4865,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           if (_showRichToolbar)
                             RichTextToolbar(
                               controller: messageController,
+                              pendingColorHex: _pendingRichColorHex,
+                              onPendingColorChanged: (value) =>
+                                  setState(() => _pendingRichColorHex = value),
                               onChanged: () => setState(() {}),
                             ),
                           // Input row
@@ -4904,8 +4919,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                             hasBlockedParticipantInRoom
                                         ? null
                                         : (text) async {
-                                            final trimmed = text.trim();
+                                          final trimmed = text.trim();
                                             if (trimmed.isEmpty) return;
+                                          final outgoingMessage =
+                                            _buildOutgoingChatMessage(trimmed);
                                             if (slowModeSeconds > 0 &&
                                                 lastMessageTime != null) {
                                               final secs = DateTime.now()
@@ -4921,10 +4938,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                             }
                                             setState(() => isSending = true);
                                             try {
-                                              await sendMessage(trimmed);
+                                              await sendMessage(outgoingMessage);
                                               lastMessageTime = DateTime.now();
                                               cooldownMessage = '';
                                               messageController.clear();
+                                              _pendingRichColorHex = null;
                                               _showEmojiTray = false;
                                             } catch (e) {
                                               if (context.mounted) {
@@ -4963,11 +4981,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                           hasBlockedParticipantInRoom
                                       ? null
                                       : () async {
-                                          if (messageController.text
-                                              .trim()
-                                              .isEmpty) {
+                                          final trimmed = messageController.text
+                                            .trim();
+                                          if (trimmed.isEmpty) {
                                             return;
                                           }
+                                          final outgoingMessage =
+                                            _buildOutgoingChatMessage(trimmed);
                                           if (slowModeSeconds > 0 &&
                                               lastMessageTime != null) {
                                             final secs = DateTime.now()
@@ -4983,12 +5003,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                           }
                                           setState(() => isSending = true);
                                           try {
-                                            await sendMessage(
-                                              messageController.text.trim(),
-                                            );
+                                            await sendMessage(outgoingMessage);
                                             lastMessageTime = DateTime.now();
                                             cooldownMessage = '';
                                             messageController.clear();
+                                            _pendingRichColorHex = null;
                                             _showEmojiTray = false;
                                             if (!_hasTrackedFirstMessage) {
                                               _hasTrackedFirstMessage = true;

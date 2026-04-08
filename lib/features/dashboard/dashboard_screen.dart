@@ -29,10 +29,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Kick off the feed on first load
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(feedControllerProvider.notifier).loadFeed();
-    });
   }
 
   void _showNavigationError(String message) {
@@ -63,9 +59,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final postsAsync = ref.watch(postsStreamProvider);
     final roomsAsync = ref.watch(roomsStreamProvider);
-    final feedState = ref.watch(feedControllerProvider);
+    final trendingUsersAsync = ref.watch(trendingUsersStreamProvider);
     final profileState = ref.watch(profileControllerProvider);
-    final setupItems = ProfileCompletion.guidedSetupItems(profileState);
+    final setupItems = ProfileCompletion.homeNudgeItems(profileState);
     final currentUser = ref.watch(userProvider);
     final newMembersAsync = ref.watch(newMembersStreamProvider);
 
@@ -183,8 +179,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
 
               // Top Creators
-              if (feedState.trendingUsers.isNotEmpty ||
-                  feedState.isLoading) ...[
+              if (trendingUsersAsync.value?.isNotEmpty == true ||
+                  trendingUsersAsync.isLoading) ...[
                 SliverToBoxAdapter(
                   child: _SectionHeader(
                     title: 'Top Creators',
@@ -199,25 +195,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: feedState.isLoading
-                      ? const _HorizontalSkeleton(height: 88)
-                      : SizedBox(
+                  child: trendingUsersAsync.when(
+                    data: (users) => SizedBox(
                           height: 88,
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 4),
-                            itemCount: feedState.trendingUsers.length
-                                .clamp(0, 12),
+                            itemCount: users.length.clamp(0, 12),
                             separatorBuilder: (context, index) =>
                                 const SizedBox(width: 16),
                             itemBuilder: (context, i) => _CreatorChip(
-                              user: feedState.trendingUsers[i],
-                              onTap: () =>
-                                  _openProfile(feedState.trendingUsers[i].id),
+                              user: users[i],
+                              onTap: () => _openProfile(users[i].id),
                             ),
                           ),
                         ),
+                    loading: () => const _HorizontalSkeleton(height: 88),
+                    error: (_, _) => const SizedBox.shrink(),
+                  ),
                 ),
               ],
 
@@ -584,7 +580,7 @@ class _ProfileNudge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pct =
-        (ProfileCompletion.completeness(profileState) * 100).round();
+      (ProfileCompletion.homeNudgeCompleteness(profileState) * 100).round();
     final isAlmostDone = pct >= 70;
     final Color accent =
         isAlmostDone ? const Color(0xFF00E676) : NeonPulse.primary;

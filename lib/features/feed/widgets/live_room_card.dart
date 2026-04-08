@@ -117,7 +117,7 @@ class LiveRoomCard extends StatelessWidget {
 
             // Info section
             Padding(
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
+              padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -139,7 +139,7 @@ class LiveRoomCard extends StatelessWidget {
                         fontSize: 11,
                         color: NeonPulse.onSurfaceVariant,
                       ),
-                      maxLines: 2,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],

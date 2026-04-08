@@ -6,6 +6,7 @@ import '../repository/feed_repository.dart';
 import '../models/post_model.dart';
 import '../../../models/room_model.dart';
 import '../../../models/user_model.dart';
+import '../../../models/user.dart' as feed_user;
 import 'package:mixvy/models/models.dart';
 
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
@@ -75,4 +76,17 @@ final newMembersStreamProvider = StreamProvider.autoDispose<List<UserModel>>((re
             data['id'] = d.id;
             return UserModel.fromJson(data);
           }).toList());
+});
+
+/// Real-time top-10 users by coin balance — drives the "Top Creators" section.
+final trendingUsersStreamProvider =
+    StreamProvider.autoDispose<List<feed_user.User>>((ref) {
+  return FirebaseFirestore.instance
+      .collection('users')
+      .orderBy('balance', descending: true)
+      .limit(10)
+      .snapshots()
+      .map((snap) => snap.docs
+          .map((d) => feed_user.User.fromJson({'id': d.id, ...d.data()}))
+          .toList());
 });
