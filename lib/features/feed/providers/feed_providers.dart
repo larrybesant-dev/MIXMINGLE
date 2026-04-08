@@ -55,12 +55,10 @@ final onlineUsersCountProvider = StreamProvider.autoDispose<int>((ref) {
 
 /// Real-time count of currently live rooms.
 final liveRoomsCountProvider = StreamProvider.autoDispose<int>((ref) {
-  return FirebaseFirestore.instance
-      .collection('rooms')
-      .where('isLive', isEqualTo: true)
-      .limit(501)
-      .snapshots()
-      .map((snap) => snap.size);
+  return ref
+      .read(roomServiceProvider)
+      .watchLiveRooms(limit: 501)
+      .map((rooms) => rooms.length);
 });
 
 /// Stream of the 12 most recently joined users, ordered by createdAt desc.

@@ -256,7 +256,7 @@ class _UserProfilePopupSheetState
                               : profile.username,
                           user2AvatarUrl: profile.avatarUrl,
                         );
-                    if (!mounted) return;
+                    if (!context.mounted) return;
                     Navigator.of(context).pop();
                     context.go('/messages/$conversationId');
                   },

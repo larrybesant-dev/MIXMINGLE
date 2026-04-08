@@ -571,6 +571,16 @@ class _NewMemberChip extends StatelessWidget {
 // Profile nudge banner
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Maps the first incomplete nudge item to the edit-profile tab index:
+/// 0 = Basics (name / avatar), 1 = About (bio), 2 = Interests
+int _nudgeTab(List<String> items) {
+  if (items.isEmpty) return 0;
+  final first = items.first;
+  if (first == 'Write a short bio') return 1;
+  if (first == 'Add interests') return 2;
+  return 0;
+}
+
 class _ProfileNudge extends StatelessWidget {
   final List<String> setupItems;
   final dynamic profileState;
@@ -588,7 +598,10 @@ class _ProfileNudge extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GestureDetector(
-        onTap: () => context.go('/profile'),
+        onTap: () {
+          final tab = _nudgeTab(setupItems);
+          context.go('/edit-profile?tab=$tab');
+        },
         child: Container(
           width: double.infinity,
           padding:

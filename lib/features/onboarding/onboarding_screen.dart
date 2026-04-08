@@ -162,7 +162,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget build(BuildContext context) {
     // Total pages = 3 scenes + 1 interests page
     final isLastPage = _index == _pages.length;
-    final canContinue = !isLastPage || (_acceptedLegal && _selectedInterests.isNotEmpty);
+    final canContinue = !isLastPage || _acceptedLegal;
     final glowColor = _index < _pages.length
         ? _pages[_index].glowColor
         : _theme.accents[0];
@@ -290,7 +290,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   children: [
                     Checkbox(
                       value: _acceptedLegal,
-                      activeColor: _pages[_index].glowColor,
+                      activeColor: glowColor,
                       side: const BorderSide(color: Colors.white70),
                       onChanged: (value) => setState(() => _acceptedLegal = value ?? false),
                     ),

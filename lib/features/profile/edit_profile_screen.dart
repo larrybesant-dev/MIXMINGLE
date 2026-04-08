@@ -19,7 +19,8 @@ const _kInterestSuggestions = [
 ];
 
 class EditProfileScreen extends ConsumerStatefulWidget {
-  const EditProfileScreen({super.key});
+  final int initialTab;
+  const EditProfileScreen({super.key, this.initialTab = 0});
   @override
   ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
@@ -49,7 +50,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(
+        length: 3, vsync: this, initialIndex: widget.initialTab.clamp(0, 2));
     final s = ref.read(profileControllerProvider);
     _nameController.text = s.username ?? '';
     _emailController.text = s.email ?? '';

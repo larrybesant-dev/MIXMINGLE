@@ -50,7 +50,7 @@ class LiveRoomCard extends StatelessWidget {
                     room.thumbnailUrl!.isNotEmpty)
                   CachedNetworkImage(
                     imageUrl: room.thumbnailUrl!,
-                    height: 96,
+                    height: 68,
                     width: double.infinity,
                     fit: BoxFit.cover,
                     errorWidget: (context, url, error) =>
@@ -230,7 +230,7 @@ class _FallbackThumbnail extends StatelessWidget {
     final emoji = _categoryEmojis[key] ?? '📡';
 
     return Container(
-      height: 96,
+      height: 68,
       width: double.infinity,
       decoration: const BoxDecoration(
         gradient: LinearGradient(

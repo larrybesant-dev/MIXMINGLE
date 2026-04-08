@@ -9,6 +9,8 @@ final roomServiceProvider = Provider<RoomService>((ref) {
 });
 
 class RoomService {
+	static const Duration _participantFreshnessWindow = Duration(seconds: 90);
+
 	RoomService({FirebaseFirestore? firestore})
 			: _firestore = firestore ?? FirebaseFirestore.instance;
 
@@ -16,6 +18,9 @@ class RoomService {
 
 	CollectionReference<Map<String, dynamic>> get _roomsCollection =>
 			_firestore.collection('rooms');
+
+	CollectionReference<Map<String, dynamic>> _participantsCollection(String roomId) =>
+			_roomsCollection.doc(roomId).collection('participants');
 
 	String _normalizeRoomId(String roomId) {
 		final trimmedRoomId = roomId.trim();
@@ -25,17 +30,53 @@ class RoomService {
 		return trimmedRoomId;
 	}
 
+	DateTime get _freshParticipantCutoff =>
+			DateTime.now().subtract(_participantFreshnessWindow);
+
+	Future<bool> _hasFreshParticipants(String roomId) async {
+		final snapshot = await _participantsCollection(roomId)
+				.where(
+					'lastActiveAt',
+					isGreaterThanOrEqualTo: Timestamp.fromDate(_freshParticipantCutoff),
+				)
+				.limit(1)
+				.get();
+		return snapshot.docs.isNotEmpty;
+	}
+
+	Future<void> _markRoomInactive(String roomId) {
+		return _roomsCollection.doc(roomId).set({
+			'isLive': false,
+			'memberCount': 0,
+			'audienceUserIds': <String>[],
+			'stageUserIds': <String>[],
+			'updatedAt': FieldValue.serverTimestamp(),
+		}, SetOptions(merge: true));
+	}
+
+	Future<List<RoomModel>> _filterActiveLiveRooms(
+			Iterable<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
+	) async {
+		final activeRooms = <RoomModel>[];
+		for (final doc in docs) {
+			final room = RoomModel.fromJson(doc.data(), doc.id);
+			if (await _hasFreshParticipants(doc.id)) {
+				activeRooms.add(room);
+				continue;
+			}
+
+			await _markRoomInactive(doc.id);
+		}
+		return activeRooms;
+	}
+
 	Stream<List<RoomModel>> watchLiveRooms({int limit = 30}) {
 		return _roomsCollection
 				.where('isLive', isEqualTo: true)
 				.orderBy('updatedAt', descending: true)
 				.limit(limit)
 				.snapshots()
-				.map((snapshot) {
-			return snapshot.docs
-					.map((doc) => RoomModel.fromJson(doc.data(), doc.id))
-					.toList(growable: false);
-		});
+				.asyncMap((snapshot) => _filterActiveLiveRooms(snapshot.docs));
 	}
 
 	/// Rooms scheduled to start in the next 48 hours, ordered soonest first.
@@ -67,9 +108,7 @@ class RoomService {
 				.limit(limit)
 				.get();
 
-		return snapshot.docs
-				.map((doc) => RoomModel.fromJson(doc.data(), doc.id))
-				.toList(growable: false);
+		return _filterActiveLiveRooms(snapshot.docs);
 	}
 
 	Future<List<RoomModel>> getRecommendedLiveRooms({

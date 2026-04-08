@@ -1,0 +1,369 @@
+00:00 +0: loading C:/MixVy/test/app_integration_test.dart
+00:00 +0: C:/MixVy/test/app_integration_test.dart: (setUpAll)
+00:00 +0: C:/MixVy/test/app_integration_test.dart: Onboarding renders and advances pages
+00:01 +1: C:/MixVy/test/app_integration_test.dart: (tearDownAll)
+00:18 +1: C:/MixVy/test/app_router_redirect_test.dart: evaluateAppRedirect routes first-run users to onboarding
+00:18 +2: C:/MixVy/test/app_router_redirect_test.dart: evaluateAppRedirect routes logged-out users to login after onboarding
+00:18 +3: C:/MixVy/test/app_router_redirect_test.dart: evaluateAppRedirect routes logged-in users with incomplete profile to profile
+00:18 +4: C:/MixVy/test/app_router_redirect_test.dart: evaluateAppRedirect keeps logged-in user on profile when incomplete
+00:18 +5: C:/MixVy/test/app_router_redirect_test.dart: evaluateAppRedirect routes logged-in users away from login
+00:18 +6: C:/MixVy/test/app_router_redirect_test.dart: evaluateAppRedirect routes users to legal terms when current legal is not accepted
+00:18 +7: C:/MixVy/test/app_settings_controller_test.dart: AppSettingsController loads defaults when no preferences are stored
+00:18 +8: C:/MixVy/test/app_patrol_test.dart: Patrol test skipped unless RUN_INTEGRATION_TESTS=true
+00:18 +9: C:/MixVy/test/app_patrol_test.dart: Patrol test skipped unless RUN_INTEGRATION_TESTS=true
+00:18 +10: C:/MixVy/test/app_patrol_test.dart: Patrol test skipped unless RUN_INTEGRATION_TESTS=true
+00:19 +11: C:/MixVy/test/auth_controller_test.dart: (setUpAll)
+00:19 +11: C:/MixVy/test/auth_controller_test.dart: AuthController login sets user state
+00:19 +11 ~1: C:/MixVy/test/auth_controller_test.dart: AuthController logout clears user state
+00:19 +11 ~2: C:/MixVy/test/auth_controller_test.dart: AuthController signup sets user state
+00:19 +11 ~3: C:/MixVy/test/auth_controller_test.dart: (tearDownAll)
+00:23 +11 ~3: C:/MixVy/test/cash_out_service_test.dart: CashOutService requestsForCurrentUser returns empty stream when no user is signed in
+00:23 +12 ~3: C:/MixVy/test/cash_out_service_test.dart: CashOutService requestsForCurrentUser returns empty list when user has no requests
+00:23 +13 ~3: C:/MixVy/test/cash_out_service_test.dart: CashOutService requestsForCurrentUser returns only the current user's requests
+00:23 +14 ~3: C:/MixVy/test/cash_out_service_test.dart: CashOutService requestCashOut throws when user is not signed in
+00:23 +15 ~3: C:/MixVy/test/cash_out_service_test.dart: CashOutService requestCashOut throws when amount is below minimum payout threshold
+00:23 +16 ~3: C:/MixVy/test/cash_out_service_test.dart: CashOutService requestCashOut throws when requested amount exceeds available balance
+00:23 +17 ~3: C:/MixVy/test/cash_out_service_test.dart: CashOutService requestCashOut saves a pending request when conditions are met
+00:23 +18 ~3: C:/MixVy/test/cash_out_service_test.dart: CashOutService requestCashOut accounts for pending requests when checking available balance
+00:24 +19 ~3: C:/MixVy/test/discovery_feed_screen_test.dart: AdManager.shouldShowAds returns true for Free membership
+00:24 +20 ~3: C:/MixVy/test/discovery_feed_screen_test.dart: AdManager.shouldShowAds returns false for Premium membership
+00:24 +21 ~3: C:/MixVy/test/discovery_feed_screen_test.dart: AdManager.shouldShowAds returns false for Gold membership
+00:24 +22 ~3: C:/MixVy/test/discovery_feed_screen_test.dart: AdManager.shouldShowAds returns false for any non-Free value
+00:24 +23 ~3: C:/MixVy/test/discovery_feed_screen_test.dart: DiscoveryFeedContent -- promo banner shows banner when membershipLevel is Free
+00:25 +24 ~3: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö private-account toggle shows "Anyone can view" subtitle when isPrivate=false
+00:25 +25 ~3: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö private-account toggle shows "Anyone can view" subtitle when isPrivate=false
+00:25 +26 ~3: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö private-account toggle shows "Anyone can view" subtitle when isPrivate=false
+00:25 +27 ~3: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö private-account toggle shows "Anyone can view" subtitle when isPrivate=false
+00:27 +28 ~3: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö private-account toggle shows "Anyone can view" subtitle when isPrivate=false
+00:27 +29 ~3: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö private-account toggle shows "Anyone can view" subtitle when isPrivate=false
+00:27 +30 ~3: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö private-account toggle shows "Anyone can view" subtitle when isPrivate=false
+00:27 +31 ~3: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö private-account toggle shows "Anyone can view" subtitle when isPrivate=false
+00:27 +32 ~3: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö private-account toggle shows "Anyone can view" subtitle when isPrivate=false
+00:29 +33 ~3: C:/MixVy/test/friend_list_screen_test.dart: FriendListScreen renders friends and suggestions
+00:29 +33 ~4: C:/MixVy/test/friend_list_screen_test.dart: FriendListScreen renders friends and suggestions
+00:29 +33 ~5: C:/MixVy/test/friend_list_screen_test.dart: FriendListScreen renders friends and suggestions
+00:29 +34 ~5: C:/MixVy/test/friend_list_screen_test.dart: FriendListScreen renders friends and suggestions
+00:29 +35 ~5: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö private-account toggle tapping switch updates subtitle from public to private
+00:30 +36 ~5: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö avatar section shows person icon when no avatar URL is set
+00:30 +37 ~5: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö avatar section no upload spinner visible when not uploading
+00:30 +38 ~5: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö save button state Save button is enabled when not loading
+00:30 +39 ~5: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö save button state Save button is disabled when isLoading=true
+00:30 +40 ~5: C:/MixVy/test/edit_profile_screen_test.dart: EditProfileScreen ΓÇö save button state error text is displayed when state.error is set
+00:31 +41 ~5: C:/MixVy/test/login_signup_navigation_test.dart: (setUpAll)
+00:31 +41 ~5: C:/MixVy/test/login_signup_navigation_test.dart: login screen exposes signup navigation
+00:33 +42 ~5: C:/MixVy/test/messages_screen_test.dart: MessagesScreen renders Messages AppBar with Chats and Requests tabs
+00:33 +43 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen shows login prompt when user is missing
+00:33 +44 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen shows login prompt when user is missing
+00:34 +45 ~5: C:/MixVy/test/messages_screen_test.dart: MessagesScreen shows conversations when they exist
+00:34 +46 ~5: C:/MixVy/test/message_bubble_vip_test.dart: MessageBubble VIP colours level 0 renders without gold/silver/bronze tint
+00:34 +47 ~5: C:/MixVy/test/message_bubble_vip_test.dart: MessageBubble VIP colours level 0 renders without gold/silver/bronze tint
+00:34 +48 ~5: C:/MixVy/test/message_bubble_vip_test.dart: MessageBubble VIP colours level 0 renders without gold/silver/bronze tint
+00:35 +49 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen renders joined audience state
+00:35 +50 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen renders joined audience state
+00:35 +51 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen renders joined audience state
+00:35 +52 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen renders joined audience state
+00:35 +53 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen renders joined audience state
+00:35 +54 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen renders joined audience state
+[LIVE_ROOM] connect:start user=user-1 room=room-a
+[LIVE_ROOM] connect:failed
+[LIVE_ROOM] error: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+[LIVE_ROOM] prewarm:failed (non-fatal)
+[LIVE_ROOM] error: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+00:36 +55 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen opens the people roster for room members
+[LIVE_ROOM] connect:start user=user-1 room=room-a
+[LIVE_ROOM] connect:failed
+[LIVE_ROOM] error: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+[LIVE_ROOM] prewarm:failed (non-fatal)
+[LIVE_ROOM] error: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+00:36 +56 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen exposes expanded host controls
+00:37 +57 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen hides audience stage request panel for moderators
+00:37 +58 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen hides audience stage request panel for moderators
+00:37 +59 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen hides audience stage request panel for moderators
+00:37 +60 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen hides audience stage request panel for moderators
+00:37 +61 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen hides audience stage request panel for moderators
+00:37 +62 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen hides audience stage request panel for moderators
+00:37 +63 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen hides audience stage request panel for moderators
+00:37 +64 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen hides audience stage request panel for moderators
+[LIVE_ROOM] connect:start user=mod-1 room=room-a
+[LIVE_ROOM] connect:failed
+[LIVE_ROOM] error: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+[LIVE_ROOM] prewarm:failed (non-fatal)
+[LIVE_ROOM] error: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+00:38 +65 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen does not show camera/mic toggle buttons before Agora connects
+[LIVE_ROOM] connect:start user=user-1 room=room-a
+[LIVE_ROOM] connect:failed
+[LIVE_ROOM] error: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+[LIVE_ROOM] prewarm:failed (non-fatal)
+[LIVE_ROOM] error: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+00:38 +66 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen renders member-role participant without crash
+[LIVE_ROOM] connect:start user=user-1 room=room-a
+[LIVE_ROOM] connect:failed
+[LIVE_ROOM] error: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+[LIVE_ROOM] prewarm:failed (non-fatal)
+[LIVE_ROOM] error: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+00:38 +67 ~5: C:/MixVy/test/live_room_screen_test.dart: LiveRoomScreen shows broadcaster controls for owner-role participant (hostId match)
+[LIVE_ROOM] connect:start user=user-1 room=room-a
+[LIVE_ROOM] connect:failed
+[LIVE_ROOM] error: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+[LIVE_ROOM] prewarm:failed (non-fatal)
+[LIVE_ROOM] error: [core/no-app] No Firebase App '[DEFAULT]' has been created - call Firebase.initializeApp()
+00:44 +68 ~5: C:/MixVy/test/messaging_retention_test.dart: Messaging retention sendMessage writes expiresAt and updates conversation summary
+00:45 +69 ~5: C:/MixVy/test/messaging_retention_test.dart: Messaging retention Message.fromJson parses expiresAt
+00:45 +70 ~5: C:/MixVy/test/notification_provider_test.dart: Notification providers notificationsStreamProvider scopes notifications to current user
+00:45 +71 ~5: C:/MixVy/test/notifications_screen_test.dart: NotificationsScreen shows current user notifications and settings banner
+00:46 +72 ~5: C:/MixVy/test/notifications_screen_test.dart: NotificationsScreen shows current user notifications and settings banner
+00:46 +73 ~5: C:/MixVy/test/notifications_screen_test.dart: NotificationsScreen shows current user notifications and settings banner
+00:47 +74 ~5: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen renders first page content
+00:48 +75 ~5: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen advances to second page via KEEP THE VIBE
+00:48 +76 ~5: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen advances to second page via KEEP THE VIBE
+00:48 +77 ~5: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen advances to second page via KEEP THE VIBE
+00:48 +78 ~5: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen advances through all pages to final page
+00:48 +79 ~5: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen advances through all pages to final page
+00:49 +80 ~5: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen advances through all pages to final page
+00:49 +81 ~5: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen advances through all pages to final page
+00:49 +82 ~5: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen advances through all pages to final page
+00:49 +83 ~5: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen advances through all pages to final page
+00:49 +84 ~5: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen advances through all pages to final page
+00:49 +85 ~5: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen advances through all pages to final page
+ΓòÉΓòÉΓòí EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK Γò₧ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "JOIN THE PARTY": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///C:/MixVy/test/onboarding_screen_test.dart:85:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/MixVy/test/onboarding_screen_test.dart line 85
+The test description was:
+  advances through all pages to final page
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+00:49 +85 ~5 -1: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen advances through all pages to final page [E]
+  Test failed. See exception logs above.
+  The test description was: advances through all pages to final page
+  
+00:49 +85 ~5 -1: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen final page shows legal checkbox
+ΓòÉΓòÉΓòí EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK Γò₧ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TypeWidgetFinder:<Found 0 widgets with type "Checkbox": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///C:/MixVy/test/onboarding_screen_test.dart:97:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/MixVy/test/onboarding_screen_test.dart line 97
+The test description was:
+  final page shows legal checkbox
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+00:49 +85 ~5 -2: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen final page shows legal checkbox [E]
+  Test failed. See exception logs above.
+  The test description was: final page shows legal checkbox
+  
+00:49 +85 ~5 -2: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen JOIN THE PARTY is disabled until legal checkbox is ticked
+00:49 +86 ~5 -2: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen JOIN THE PARTY is disabled until legal checkbox is ticked
+ΓòÉΓòÉΓòí EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK Γò₧ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+The following StateError was thrown running a test:
+Bad state: No element
+
+When the exception was thrown, this was the stack:
+#0      Iterable.first (dart:core/iterable.dart:663:7)
+#1      _FirstFinderMixin.filter (package:flutter_test/src/finders.dart:1340:28)
+#3      Iterable.single (dart:core/iterable.dart:694:13)
+#4      WidgetController.widget (package:flutter_test/src/controller.dart:823:30)
+#5      main.<anonymous closure>.<anonymous closure>.ctaInkWell (file:///C:/MixVy/test/onboarding_screen_test.dart:113:38)
+#6      main.<anonymous closure>.<anonymous closure> (file:///C:/MixVy/test/onboarding_screen_test.dart:122:14)
+<asynchronous suspension>
+#7      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#8      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided 2 frames from dart:async-patch and package:stack_trace)
+
+The test description was:
+  JOIN THE PARTY is disabled until legal checkbox is ticked
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+00:49 +86 ~5 -3: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen JOIN THE PARTY is disabled until legal checkbox is ticked [E]
+  Test failed. See exception logs above.
+  The test description was: JOIN THE PARTY is disabled until legal checkbox is ticked
+  
+00:49 +86 ~5 -3: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen Terms link is tappable on final page
+ΓòÉΓòÉΓòí EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK Γò₧ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+The following assertion was thrown running a test:
+The finder "Found 0 widgets with text "Terms": []" (used in a call to "tap()") could not find any
+matching widgets.
+
+When the exception was thrown, this was the stack:
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2090:7)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1942:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1075:7)
+#3      main.<anonymous closure>.<anonymous closure> (file:///C:/MixVy/test/onboarding_screen_test.dart:142:20)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  Terms link is tappable on final page
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+00:50 +86 ~5 -4: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen Terms link is tappable on final page [E]
+  Test failed. See exception logs above.
+  The test description was: Terms link is tappable on final page
+  
+00:50 +86 ~5 -4: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen progress dots count matches page count
+ΓòÉΓòÉΓòí EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK Γò₧ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+The following TestFailure was thrown running a test:
+Expected: <3>
+  Actual: <4>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///C:/MixVy/test/onboarding_screen_test.dart:155:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/MixVy/test/onboarding_screen_test.dart line 155
+The test description was:
+  progress dots count matches page count
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+00:50 +86 ~5 -5: C:/MixVy/test/onboarding_screen_test.dart: OnboardingScreen progress dots count matches page count [E]
+  Test failed. See exception logs above.
+  The test description was: progress dots count matches page count
+  
+00:50 +86 ~5 -5: C:/MixVy/test/onboarding_screen_test.dart: (tearDownAll)
+00:50 +86 ~5 -5: C:/MixVy/test/profile_controller_test.dart: ProfileController fetchProfile loads the Firestore user document
+00:50 +87 ~5 -5: C:/MixVy/test/profile_controller_test.dart: ProfileController updateProfile saves against the authenticated uid
+00:50 +88 ~5 -5: C:/MixVy/test/profile_controller_test.dart: ProfileController updateProfile persists isPrivate=true to Firestore
+00:50 +89 ~5 -5: C:/MixVy/test/profile_controller_test.dart: ProfileController updateProfile persists isPrivate=false to Firestore
+00:51 +90 ~5 -5: C:/MixVy/test/room_audio_cues_test.dart: RoomAudioCues is a singleton
+00:51 +91 ~5 -5: C:/MixVy/test/room_audio_cues_test.dart: RoomAudioCues non-web no-op (test environment is non-web) playUserJoined does not throw
+00:51 +92 ~5 -5: C:/MixVy/test/room_audio_cues_test.dart: RoomAudioCues non-web no-op (test environment is non-web) playUserLeft does not throw
+00:51 +93 ~5 -5: C:/MixVy/test/room_audio_cues_test.dart: RoomAudioCues non-web no-op (test environment is non-web) playGiftReceived does not throw
+00:51 +94 ~5 -5: C:/MixVy/test/room_audio_cues_test.dart: RoomAudioCues non-web no-op (test environment is non-web) playHandRaised does not throw
+00:51 +95 ~5 -5: C:/MixVy/test/room_audio_cues_test.dart: RoomAudioCues non-web no-op (test environment is non-web) playMicApproved does not throw
+00:51 +96 ~5 -5: C:/MixVy/test/room_audio_cues_test.dart: RoomAudioCues non-web no-op (test environment is non-web) dispose does not throw
+00:51 +97 ~5 -5: C:/MixVy/test/room_audio_cues_test.dart: RoomAudioCues non-web no-op (test environment is non-web) methods are callable multiple times without error
+00:52 +98 ~5 -5: C:/MixVy/test/room_browser_search_test.dart: RoomBrowserScreen search filter logic empty query returns all rooms
+00:52 +99 ~5 -5: C:/MixVy/test/room_browser_search_test.dart: RoomBrowserScreen search filter logic whitespace-only query returns all rooms
+00:52 +100 ~5 -5: C:/MixVy/test/room_browser_search_test.dart: RoomBrowserScreen search filter logic matching by name (case-insensitive)
+00:52 +101 ~5 -5: C:/MixVy/test/room_browser_search_test.dart: RoomBrowserScreen search filter logic matching by description
+00:52 +102 ~5 -5: C:/MixVy/test/room_browser_search_test.dart: RoomBrowserScreen search filter logic no match returns empty list
+00:52 +103 ~5 -5: C:/MixVy/test/room_browser_search_test.dart: RoomBrowserScreen search filter logic partial query matches multiple rooms
+00:52 +104 ~5 -5: C:/MixVy/test/room_browser_search_test.dart: RoomBrowserScreen search filter logic null description does not cause error
+00:53 +105 ~5 -5: C:/MixVy/test/room_controller_test.dart: (setUpAll)
+00:53 +105 ~5 -5: C:/MixVy/test/room_controller_test.dart: RoomController createRoom sets state
+00:53 +105 ~6 -5: C:/MixVy/test/room_controller_test.dart: RoomController leaveRoom clears state
+00:53 +105 ~7 -5: C:/MixVy/test/room_controller_test.dart: RoomController updateRoom updates state
+00:53 +105 ~8 -5: C:/MixVy/test/room_controller_test.dart: (tearDownAll)
+00:54 +105 ~8 -5: C:/MixVy/test/room_permissions_test.dart: RoomPermissions.canUseCamera returns true for each named role
+00:54 +106 ~8 -5: C:/MixVy/test/room_permissions_test.dart: RoomPermissions.canUseCamera returns true for arbitrary non-empty role strings
+00:54 +107 ~8 -5: C:/MixVy/test/room_permissions_test.dart: RoomPermissions.canUseCamera returns false for empty string
+00:54 +108 ~8 -5: C:/MixVy/test/room_permissions_test.dart: RoomPermissions.canUseMic returns true for each named role
+00:54 +109 ~8 -5: C:/MixVy/test/room_permissions_test.dart: RoomPermissions.canUseMic returns false for empty string
+00:54 +110 ~8 -5: C:/MixVy/test/room_permissions_test.dart: RoomPermissions.canManageParticipant host can manage audience
+00:54 +111 ~8 -5: C:/MixVy/test/room_permissions_test.dart: RoomPermissions.canManageParticipant host cannot manage themselves
+00:54 +112 ~8 -5: C:/MixVy/test/room_permissions_test.dart: RoomPermissions.canManageParticipant audience cannot manage other audience members
+00:54 +113 ~8 -5: C:/MixVy/test/room_permissions_test.dart: RoomPermissions.canManageParticipant moderator cannot manage the host
+00:54 +114 ~8 -5: C:/MixVy/test/room_providers_test.dart: Room providers participantCountProvider returns number of participants
+00:55 +115 ~8 -5: C:/MixVy/test/room_providers_test.dart: Room providers currentParticipantProvider loads a participant model
+00:55 +116 ~8 -5: C:/MixVy/test/room_providers_test.dart: Room providers sendMessageProvider writes a message document
+00:55 +117 ~8 -5: C:/MixVy/test/room_providers_test.dart: Room providers sendMessageProvider rejects messages when host is blocked
+00:55 +118 ~8 -5: C:/MixVy/test/room_providers_test.dart: Room providers sendMessageProvider rejects when blocked participant is present
+00:55 +119 ~8 -5: C:/MixVy/test/room_providers_test.dart: Room providers sendMessageProvider rejects when room policy disables chat
+00:55 +120 ~8 -5: C:/MixVy/test/room_providers_test.dart: Room providers hostControlsProvider toggles room lock state
+00:55 +121 ~8 -5: C:/MixVy/test/room_providers_test.dart: Room providers hostControlsProvider toggles allowChat policy
+00:55 +122 ~8 -5: C:/MixVy/test/room_providers_test.dart: Room providers hostControlsProvider toggles allowCamRequests policy
+00:55 +123 ~8 -5: C:/MixVy/test/room_providers_test.dart: Room providers hostControlsProvider can promote and demote a participant
+00:55 +124 ~8 -5: C:/MixVy/test/room_providers_test.dart: Room providers camAccessController approves request and promotes requester
+00:55 +125 ~8 -5: C:/MixVy/test/room_providers_test.dart: isHostProvider returns true for role "host"
+00:55 +126 ~8 -5: C:/MixVy/test/room_providers_test.dart: isHostProvider returns true for legacy role "owner"
+00:55 +127 ~8 -5: C:/MixVy/test/room_providers_test.dart: isHostProvider returns false for role "cohost"
+00:55 +128 ~8 -5: C:/MixVy/test/room_providers_test.dart: isHostProvider returns false for role "audience"
+00:55 +129 ~8 -5: C:/MixVy/test/room_providers_test.dart: isHostProvider returns false for null participant
+00:55 +130 ~8 -5: C:/MixVy/test/room_providers_test.dart: isCohostProvider returns true for role "cohost"
+00:55 +131 ~8 -5: C:/MixVy/test/room_providers_test.dart: isCohostProvider returns false for role "host"
+00:55 +132 ~8 -5: C:/MixVy/test/room_providers_test.dart: isCohostProvider returns false for null participant
+00:55 +133 ~8 -5: C:/MixVy/test/room_service_test.dart: RoomService createRoom trims input and applies defaults
+00:55 +134 ~8 -5: C:/MixVy/test/room_service_test.dart: RoomService createRoom rejects empty hostId and name
+00:55 +135 ~8 -5: C:/MixVy/test/room_service_test.dart: RoomService getLiveRooms returns live rooms ordered by updatedAt desc
+00:56 +135 ~8 -6: C:/MixVy/test/room_service_test.dart: RoomService getLiveRooms returns live rooms ordered by updatedAt desc [E]
+  Expected: an object with length of <2>
+    Actual: []
+     Which: has length of <0>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\room_service_test.dart 71:7                    main.<fn>.<fn>
+  
+00:56 +135 ~8 -6: C:/MixVy/test/room_service_test.dart: RoomService getRecommendedLiveRooms boosts friend-hosted rooms
+00:56 +135 ~8 -7: C:/MixVy/test/room_service_test.dart: RoomService getRecommendedLiveRooms boosts friend-hosted rooms [E]
+  Expected: an object with length of <2>
+    Actual: []
+     Which: has length of <0>
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\room_service_test.dart 103:7                   main.<fn>.<fn>
+  
+00:56 +135 ~8 -7: C:/MixVy/test/room_service_test.dart: RoomService getRecommendedLiveRooms excludes blocked hosts
+00:56 +135 ~8 -8: C:/MixVy/test/room_service_test.dart: RoomService getRecommendedLiveRooms excludes blocked hosts [E]
+  Expected: contains 'room-b'
+    Actual: MappedListIterable<RoomModel, String>:[]
+     Which: does not contain 'room-b'
+  
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\room_service_test.dart 135:7                   main.<fn>.<fn>
+  
+00:56 +135 ~8 -8: C:/MixVy/test/room_service_test.dart: RoomService getRecommendationReason returns social and popularity labels
+00:56 +136 ~8 -8: C:/MixVy/test/room_service_test.dart: RoomService getRecommendationTier classifies rooms by social/popularity/recency
+00:56 +137 ~8 -8: C:/MixVy/test/room_service_test.dart: RoomService watchRoomById returns null stream for empty id
+00:56 +138 ~8 -8: C:/MixVy/test/room_service_test.dart: RoomService setRoomLiveStatus trims room id before update
+00:56 +139 ~8 -8: C:/MixVy/test/room_service_test.dart: RoomService deleteRoom trims room id before delete
+00:56 +140 ~8 -8: C:/MixVy/test/room_service_test.dart: RoomService getRoomById returns null for empty id
+00:56 +141 ~8 -8: C:/MixVy/test/room_slot_service_test.dart: RoomSlotService claimSlot returns a slot id and writes userId to Firestore
+00:57 +142 ~8 -8: C:/MixVy/test/room_slot_service_test.dart: RoomSlotService claimSlot returns null when all slots are occupied
+00:57 +143 ~8 -8: C:/MixVy/test/room_slot_service_test.dart: RoomSlotService claimSlot is idempotent ΓÇö re-claiming own slot returns same id
+00:57 +144 ~8 -8: C:/MixVy/test/room_slot_service_test.dart: RoomSlotService releaseSlot deletes the slot doc and sets camOn=false
+00:57 +145 ~8 -8: C:/MixVy/test/room_slot_service_test.dart: RoomSlotService releaseSlot allows another user to claim the freed slot
+00:57 +146 ~8 -8: C:/MixVy/test/room_slot_service_test.dart: RoomSlotService claimSlot rejects blank roomId or userId gracefully
+00:57 +147 ~8 -8: C:/MixVy/test/room_slot_service_test.dart: RoomSlotService releaseSlot does nothing for blank inputs without throwing
+00:57 +148 ~8 -8: C:/MixVy/test/room_slot_service_test.dart: RoomSlotService releaseSlot for a user who never held a slot sets camOn=false and does not throw
+00:57 +149 ~8 -8: C:/MixVy/test/room_slot_service_test.dart: RoomSlotService releaseSlot is idempotent when slot was already deleted externally
+00:57 +150 ~8 -8: C:/MixVy/test/room_slot_service_test.dart: RoomSlotService concurrent claims respect maxBroadcasters limit
+00:57 +151 ~8 -8: C:/MixVy/test/settings_screen_test.dart: SettingsScreen renders persisted preferences
+00:58 +152 ~8 -8: C:/MixVy/test/settings_screen_test.dart: SettingsScreen renders persisted preferences
+00:58 +153 ~8 -8: C:/MixVy/test/settings_screen_test.dart: SettingsScreen renders persisted preferences
+00:58 +154 ~8 -8: C:/MixVy/test/settings_screen_test.dart: SettingsScreen renders persisted preferences
+00:58 +155 ~8 -8: C:/MixVy/test/settings_screen_test.dart: SettingsScreen renders persisted preferences
+00:58 +156 ~8 -8: C:/MixVy/test/settings_screen_test.dart: SettingsScreen renders persisted preferences
+00:58 +157 ~8 -8: C:/MixVy/test/settings_screen_test.dart: SettingsScreen renders persisted preferences
+00:58 +158 ~8 -8: C:/MixVy/test/settings_screen_test.dart: SettingsScreen renders persisted preferences
+00:58 +159 ~8 -8: C:/MixVy/test/settings_screen_test.dart: SettingsScreen renders persisted preferences
+00:59 +160 ~8 -8: C:/MixVy/test/stripe_web_payment_widget_test.dart: StripeWebPaymentWidget renders and shows button
+01:00 +161 ~8 -8: Some tests failed.

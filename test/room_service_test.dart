@@ -53,12 +53,24 @@ void main() {
         'isLive': true,
         'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 10)),
       });
+      await firestore
+          .collection('rooms')
+          .doc('room-1')
+          .collection('participants')
+          .doc('host-1')
+          .set({'lastActiveAt': Timestamp.now()});
       await firestore.collection('rooms').doc('room-2').set({
         'name': 'Room Two',
         'hostId': 'host-2',
         'isLive': true,
         'updatedAt': Timestamp.fromDate(DateTime(2026, 1, 1, 12)),
       });
+      await firestore
+          .collection('rooms')
+          .doc('room-2')
+          .collection('participants')
+          .doc('host-2')
+          .set({'lastActiveAt': Timestamp.now()});
       await firestore.collection('rooms').doc('room-3').set({
         'name': 'Room Three',
         'hostId': 'host-3',
@@ -84,6 +96,12 @@ void main() {
         'isLocked': false,
         'updatedAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(minutes: 30))),
       });
+      await firestore
+          .collection('rooms')
+          .doc('room-friend')
+          .collection('participants')
+          .doc('friend-1')
+          .set({'lastActiveAt': Timestamp.now()});
       await firestore.collection('rooms').doc('room-busy').set({
         'name': 'Busy Room',
         'hostId': 'host-2',
@@ -94,6 +112,12 @@ void main() {
         'isLocked': false,
         'updatedAt': Timestamp.fromDate(DateTime.now().subtract(const Duration(minutes: 5))),
       });
+      await firestore
+          .collection('rooms')
+          .doc('room-busy')
+          .collection('participants')
+          .doc('host-2')
+          .set({'lastActiveAt': Timestamp.now()});
 
       final rooms = await service.getRecommendedLiveRooms(
         limit: 2,
@@ -115,6 +139,12 @@ void main() {
         'isLocked': false,
         'updatedAt': Timestamp.fromDate(DateTime.now()),
       });
+      await firestore
+          .collection('rooms')
+          .doc('room-a')
+          .collection('participants')
+          .doc('blocked-host')
+          .set({'lastActiveAt': Timestamp.now()});
       await firestore.collection('rooms').doc('room-b').set({
         'name': 'Room B',
         'hostId': 'safe-host',
@@ -125,6 +155,12 @@ void main() {
         'isLocked': false,
         'updatedAt': Timestamp.fromDate(DateTime.now()),
       });
+      await firestore
+          .collection('rooms')
+          .doc('room-b')
+          .collection('participants')
+          .doc('safe-host')
+          .set({'lastActiveAt': Timestamp.now()});
 
       final rooms = await service.getRecommendedLiveRooms(
         limit: 10,

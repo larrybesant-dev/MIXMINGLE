@@ -299,7 +299,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/edit-profile',
-            builder: (context, state) => const EditProfileScreen(),
+            builder: (context, state) {
+              final tab = int.tryParse(
+                      state.uri.queryParameters['tab'] ?? '') ??
+                  0;
+              return EditProfileScreen(initialTab: tab);
+            },
           ),
           GoRoute(
             path: '/profile/:userId',

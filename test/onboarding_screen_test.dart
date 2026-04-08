@@ -80,8 +80,12 @@ void main() {
       await tester.tap(find.text('KEEP THE VIBE'));
       await tester.pumpAndSettle();
 
-      // Final page
-      expect(find.text('Launch Your Own Party'), findsOneWidget);
+      // Page 2 → 3 (interests/final page)
+      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.pumpAndSettle();
+
+      // Final page shows interests picker and JOIN THE PARTY CTA
+      expect(find.text('What are you into?'), findsOneWidget);
       expect(find.text('JOIN THE PARTY'), findsOneWidget);
     });
 
@@ -89,6 +93,8 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
+      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('KEEP THE VIBE'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('KEEP THE VIBE'));
@@ -103,7 +109,9 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      // Navigate to final page
+      // Navigate to final page (interests page is page 3)
+      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('KEEP THE VIBE'));
       await tester.pumpAndSettle();
       await tester.tap(find.text('KEEP THE VIBE'));
@@ -138,6 +146,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('KEEP THE VIBE'));
       await tester.pumpAndSettle();
+      await tester.tap(find.text('KEEP THE VIBE'));
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text('Terms'));
       await tester.pumpAndSettle();
@@ -149,10 +159,10 @@ void main() {
       await tester.pumpWidget(_buildApp());
       await tester.pumpAndSettle();
 
-      // 3 pages → 3 dots; each dot is a small Container inside a Row.
-      // The simplest proxy: PageView has 3 children.
+      // 4 pages (3 scene pages + 1 interests page) → 4 dots.
+      // The simplest proxy: PageView has 4 children.
       final pageView = tester.widget<PageView>(find.byType(PageView).first);
-      expect(pageView.childrenDelegate.estimatedChildCount, 3);
+      expect(pageView.childrenDelegate.estimatedChildCount, 4);
     });
   });
 }
