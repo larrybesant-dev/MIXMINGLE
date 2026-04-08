@@ -9,13 +9,13 @@ import '../../features/messaging/providers/messaging_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
 import '../../widgets/friends_panel_button.dart';
 
-// ── Neon Pulse colour aliases ─────────────────────────────────────────────────
-const _npSurface     = Color(0xFF0B0E14);
-const _npPrimary     = Color(0xFFBA9EFF);
-const _npPrimaryDim  = Color(0xFF8455EF);
-const _npOnVariant   = Color(0xFFA9ABB3);
+// ── Velvet Noir colour aliases ─────────────────────────────────────────────
+const _npSurface     = Color(0xFF0D0A0C);
+const _npPrimary     = Color(0xFFD4A853);
+const _npPrimaryDim  = Color(0xFF8C6020);
+const _npOnVariant   = Color(0xFFB09080);
 const _npError       = Color(0xFFFF6E84);
-const _npGhost       = Color(0x1A73757D);
+const _npGhost       = Color(0x14D4A853);
 
 /// Persistent shell wrapping every main app screen with a frosted Neon Pulse
 /// bottom nav bar (Home / Rooms / Create / Messages / Profile).
@@ -24,17 +24,15 @@ class AppShell extends ConsumerWidget {
   const AppShell({required this.child, super.key});
 
   static int _indexForLocation(String location) {
-    if (location.startsWith('/rooms'))     return 1;
-    if (location.startsWith('/create-room')) return 2;
-    if (location.startsWith('/messages'))  return 3;
-    if (location.startsWith('/profile'))   return 4;
+    if (location.startsWith('/rooms'))    return 1;
+    if (location.startsWith('/messages')) return 2;
+    if (location.startsWith('/profile'))  return 3;
     return 0;
   }
 
   static const List<String> _roots = [
     '/',
     '/rooms',
-    '/create-room',
     '/messages',
     '/profile',
   ];
@@ -88,7 +86,7 @@ class _NeonBottomNav extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
           decoration: const BoxDecoration(
-            color: Color(0xE510131A), // surface-low at 90% opacity
+            color: Color(0xE5130C0F), // surfaceLow at 90% opacity
             borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
             border: Border(top: BorderSide(color: _npGhost)),
           ),
@@ -103,10 +101,9 @@ class _NeonBottomNav extends StatelessWidget {
                   _friendsNavItem(context),
                   _navItem(1, Icons.meeting_room_outlined,
                       Icons.meeting_room_rounded, 'Rooms'),
-                  _createButton(),
-                  _navItemBadge(3, Icons.chat_bubble_outline_rounded,
+                  _navItemBadge(2, Icons.chat_bubble_outline_rounded,
                       Icons.chat_bubble_rounded, 'Messages', unreadMsgs),
-                  _navItem(4, Icons.person_outline_rounded,
+                  _navItem(3, Icons.person_outline_rounded,
                       Icons.person_rounded, 'Profile'),
                 ],
               ),
@@ -164,7 +161,7 @@ class _NeonBottomNav extends StatelessWidget {
               decoration: isSelected
                   ? BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0x33BA9EFF), Color(0x228455EF)],
+                        colors: [Color(0x33D4A853), Color(0x228C6020)],
                       ),
                       borderRadius: BorderRadius.circular(10),
                     )
@@ -206,7 +203,7 @@ class _NeonBottomNav extends StatelessWidget {
               decoration: isSelected
                   ? BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [Color(0x33BA9EFF), Color(0x228455EF)],
+                        colors: [Color(0x33D4A853), Color(0x228C6020)],
                       ),
                       borderRadius: BorderRadius.circular(10),
                     )
@@ -259,50 +256,6 @@ class _NeonBottomNav extends StatelessWidget {
     );
   }
 
-  Widget _createButton() {
-    final isSelected = selectedIndex == 2;
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => onTap(2),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 44, height: 36,
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [_npPrimary, _npPrimaryDim],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: isSelected
-                    ? [
-                        BoxShadow(
-                          color: _npPrimaryDim.withAlpha(80),
-                          blurRadius: 12,
-                          spreadRadius: 1,
-                        ),
-                      ]
-                    : null,
-              ),
-              child: const Icon(Icons.add_rounded, color: _npSurface, size: 22),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              'Create',
-              style: GoogleFonts.inter(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: isSelected ? _npPrimary : _npOnVariant,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 // ── Persistent friends FAB ────────────────────────────────────────────────────
@@ -315,7 +268,7 @@ class _FriendsFab extends StatelessWidget {
     return FloatingActionButton.small(
       heroTag: 'shell_friends_fab',
       tooltip: 'Friends',
-      backgroundColor: const Color(0xFF1C1F2C),
+      backgroundColor: const Color(0xFF241820),
       foregroundColor: _npPrimary,
       elevation: 4,
       onPressed: () => FriendsPanelButton.openPanel(context),

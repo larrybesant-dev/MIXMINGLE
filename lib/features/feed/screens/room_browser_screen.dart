@@ -141,34 +141,137 @@ class _CategoryGrid extends StatelessWidget {
   final List<({String label, String emoji, String? value})> categories;
   final void Function(String? value) onCategorySelected;
 
+  static const Map<String?, Color> _accentColors = {
+    null:      Color(0xFFBA9EFF),
+    'music':   Color(0xFF00E3FD),
+    'talk':    Color(0xFFFFB74D),
+    'gaming':  Color(0xFF66BB6A),
+    'dance':   Color(0xFFFF6EB4),
+    'dating':  Color(0xFFFF6E84),
+    'study':   Color(0xFF64B5F6),
+    'art':     Color(0xFFFFCA28),
+  };
+
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(builder: (context, constraints) {
       final width = constraints.maxWidth;
-      final crossAxisCount = width > 900
-          ? 4
-          : width > 600
-              ? 3
-              : 2;
-      return GridView.builder(
-        padding: const EdgeInsets.all(16),
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: crossAxisCount,
-          childAspectRatio: 2.2,
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-        ),
-        itemCount: categories.length,
-        itemBuilder: (ctx, i) {
-          final cat = categories[i];
-          return _CategoryCard(
-            label: cat.label,
-            emoji: cat.emoji,
-            onTap: () => onCategorySelected(cat.value),
-          );
-        },
+      final crossAxisCount = width > 900 ? 4 : width > 600 ? 3 : 2;
+      return CustomScrollView(
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+              child: _CreateRoomBanner(),
+            ),
+          ),
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(16, 20, 16, 8),
+              child: Text(
+                'BROWSE BY CATEGORY',
+                style: TextStyle(
+                  color: Color(0xFFA9ABB3),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 1.2,
+                ),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            sliver: SliverGrid(
+              delegate: SliverChildBuilderDelegate(
+                (ctx, i) {
+                  final cat = categories[i];
+                  return _CategoryCard(
+                    label: cat.label,
+                    emoji: cat.emoji,
+                    value: cat.value,
+                    accent: _accentColors[cat.value] ?? const Color(0xFFBA9EFF),
+                    onTap: () => onCategorySelected(cat.value),
+                  );
+                },
+                childCount: categories.length,
+              ),
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: crossAxisCount,
+                childAspectRatio: 2.2,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+            ),
+          ),
+        ],
       );
     });
+  }
+}
+
+class _CreateRoomBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.go('/create-room'),
+      child: Container(
+        height: 76,
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(
+            colors: [Color(0xFF8455EF), Color(0xFFBA9EFF)],
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+          ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFBA9EFF).withValues(alpha: 0.28),
+              blurRadius: 20,
+              offset: const Offset(0, 6),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.add_rounded, color: Colors.white, size: 26),
+              ),
+              const SizedBox(width: 16),
+              const Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Create a Room',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Go live with your community',
+                      style: TextStyle(color: Color(0xCCFFFFFF), fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 24),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -176,37 +279,62 @@ class _CategoryCard extends StatelessWidget {
   const _CategoryCard({
     required this.label,
     required this.emoji,
+    required this.value,
+    required this.accent,
     required this.onTap,
   });
 
   final String label;
   final String emoji;
+  final String? value;
+  final Color accent;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
       child: Ink(
         decoration: BoxDecoration(
-          color: theme.colorScheme.primaryContainer,
+          gradient: LinearGradient(
+            colors: [
+              accent.withValues(alpha: 0.10),
+              const Color(0xFF1C2028),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: accent.withValues(alpha: 0.30), width: 1),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(emoji, style: const TextStyle(fontSize: 24)),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: theme.textTheme.titleSmall?.copyWith(
-                color: theme.colorScheme.onPrimaryContainer,
-                fontWeight: FontWeight.w700,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Center(
+                  child: Text(emoji, style: const TextStyle(fontSize: 20)),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Color(0xFFECEDF6),
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -258,7 +386,7 @@ class _RoomListView extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.meeting_room_outlined, size: 56, color: Colors.grey),
+                const Icon(Icons.meeting_room_outlined, size: 56, color: Color(0xFFA9ABB3)),
                 const SizedBox(height: 12),
                 const Text('No live rooms in this category right now.'),
                 const SizedBox(height: 16),
