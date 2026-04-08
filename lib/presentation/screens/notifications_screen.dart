@@ -241,7 +241,7 @@ class NotificationsScreen extends ConsumerWidget {
                       return ListView.separated(
                         padding: const EdgeInsets.symmetric(vertical: 8),
                         itemCount: notifications.length,
-                        separatorBuilder: (_, __) => const Divider(
+                        separatorBuilder: (_, _) => const Divider(
                           height: 1,
                           color: NeonPulse.outlineVariant,
                           indent: 72,

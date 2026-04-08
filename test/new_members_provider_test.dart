@@ -3,7 +3,6 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mixvy/features/feed/providers/feed_providers.dart';
-import 'package:mixvy/models/user_model.dart';
 
 void main() {
   group('newMembersStreamProvider', () {

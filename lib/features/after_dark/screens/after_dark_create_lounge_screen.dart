@@ -1,7 +1,10 @@
+import 'dart:developer' as developer;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../services/room_service.dart';
 import '../theme/after_dark_theme.dart';
@@ -24,8 +27,10 @@ class _AfterDarkCreateLoungeScreenState
 
   _Privacy _privacy       = _Privacy.public;
   String?  _category;
+  String?  _thumbnailUrl;
   bool     _videoEnabled  = false;
   bool     _creating      = false;
+  bool     _uploadingThumbnail = false;
 
   static const List<({String label, String emoji})> _categories = [
     (label: 'Romance',  emoji: '💋'),
@@ -45,6 +50,12 @@ class _AfterDarkCreateLoungeScreenState
 
   Future<void> _create() async {
     if (_formKey.currentState?.validate() != true) return;
+    if (_uploadingThumbnail) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please wait for the lounge logo to finish uploading.')),
+      );
+      return;
+    }
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       context.go('/login');
@@ -59,6 +70,7 @@ class _AfterDarkCreateLoungeScreenState
         category: _category?.toLowerCase(),
         isLive:   true,
         isAdult:  true,
+        thumbnailUrl: _thumbnailUrl,
       );
       if (mounted) context.go('/room/$roomId');
     } catch (e) {
@@ -70,6 +82,52 @@ class _AfterDarkCreateLoungeScreenState
       }
     } finally {
       if (mounted) setState(() => _creating = false);
+    }
+  }
+
+  Future<void> _pickAndUploadLogo() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      context.go('/login');
+      return;
+    }
+
+    final picker = ImagePicker();
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 85,
+    );
+    if (file == null) return;
+
+    setState(() => _uploadingThumbnail = true);
+    try {
+      final bytes = await file.readAsBytes();
+      final ext = file.name.split('.').last.toLowerCase();
+      final ref = FirebaseStorage.instance.ref(
+        'rooms/$uid/${DateTime.now().millisecondsSinceEpoch}_after_dark_logo.$ext',
+      );
+      final snap = await ref.putData(
+        bytes,
+        SettableMetadata(contentType: 'image/$ext'),
+      );
+      final url = await snap.ref.getDownloadURL();
+      if (!mounted) return;
+      setState(() => _thumbnailUrl = url);
+    } catch (e, st) {
+      developer.log(
+        'After Dark lounge logo upload failed',
+        name: 'AfterDarkCreateLoungeScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Logo upload failed: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _uploadingThumbnail = false);
     }
   }
 
@@ -119,6 +177,10 @@ class _AfterDarkCreateLoungeScreenState
                           _sectionLabel('Description (optional)'),
                           const SizedBox(height: 10),
                           _buildDescInput(),
+                          const SizedBox(height: 24),
+                          _sectionLabel('Lounge Logo (optional)'),
+                          const SizedBox(height: 10),
+                          _buildLogoPicker(),
                           const SizedBox(height: 24),
                           _sectionLabel('Category'),
                           const SizedBox(height: 10),
@@ -240,6 +302,89 @@ class _AfterDarkCreateLoungeScreenState
     );
   }
 
+  Widget _buildLogoPicker() {
+    return Row(
+      children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: EmberDark.surfaceHigh,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: EmberDark.outlineVariant.withValues(alpha: 0.45),
+            ),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: _uploadingThumbnail
+              ? const Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: EmberDark.primary,
+                    ),
+                  ),
+                )
+              : (_thumbnailUrl?.isNotEmpty ?? false)
+                  ? Image.network(
+                      _thumbnailUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const Icon(
+                        Icons.image_outlined,
+                        color: EmberDark.onSurfaceVariant,
+                        size: 28,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.add_photo_alternate_outlined,
+                      color: EmberDark.onSurfaceVariant,
+                      size: 28,
+                    ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Upload a group photo or logo for the lounge card.',
+                style: TextStyle(color: EmberDark.onSurface, fontSize: 13),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _uploadingThumbnail ? null : _pickAndUploadLogo,
+                    icon: const Icon(Icons.upload_rounded, size: 16),
+                    label: Text(_thumbnailUrl == null ? 'Upload Logo' : 'Change Logo'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: EmberDark.surfaceHigh,
+                      foregroundColor: EmberDark.onSurface,
+                      side: BorderSide(
+                        color: EmberDark.outlineVariant.withValues(alpha: 0.45),
+                      ),
+                    ),
+                  ),
+                  if (_thumbnailUrl != null)
+                    TextButton(
+                      onPressed: _uploadingThumbnail
+                          ? null
+                          : () => setState(() => _thumbnailUrl = null),
+                      child: const Text('Remove'),
+                    ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildCategories() {
     return Wrap(
       spacing: 10,
@@ -310,8 +455,8 @@ class _AfterDarkCreateLoungeScreenState
           };
           return RadioListTile<_Privacy>(
             value: p,
-            groupValue: _privacy,
-            onChanged: (v) => setState(() => _privacy = v!),
+            groupValue: _privacy, // ignore: deprecated_member_use
+            onChanged: (v) => setState(() => _privacy = v!), // ignore: deprecated_member_use
             title: Text(label,
                 style: const TextStyle(color: EmberDark.onSurface)),
             subtitle: Text(subtitle,
@@ -344,7 +489,7 @@ class _AfterDarkCreateLoungeScreenState
                 color: EmberDark.onSurfaceVariant, fontSize: 12)),
         secondary: const Icon(Icons.videocam_outlined,
             color: EmberDark.onSurfaceVariant),
-        activeColor: EmberDark.primary,
+        activeThumbColor: EmberDark.primary,
       ),
     );
   }

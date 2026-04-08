@@ -17,8 +17,12 @@ class MessageBubble extends StatelessWidget {
   final int senderVipLevel;
   /// Optional avatar URL for the sender's profile picture.
   final String? senderAvatarUrl;
+  /// Whether the sender currently has cam enabled in the room.
+  final bool senderCamOn;
   /// Called when the user taps the avatar or sender name. Receives the senderId.
   final void Function(String senderId)? onTapSender;
+  /// Called when the user taps the sender cam indicator.
+  final void Function(String senderId)? onTapCam;
 
   const MessageBubble({
     super.key,
@@ -27,7 +31,9 @@ class MessageBubble extends StatelessWidget {
     this.senderLabel,
     this.senderVipLevel = 0,
     this.senderAvatarUrl,
+    this.senderCamOn = false,
     this.onTapSender,
+    this.onTapCam,
   });
 
   String _formatClock(DateTime value) {
@@ -168,6 +174,25 @@ class MessageBubble extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (senderCamOn) ...[
+                      const SizedBox(width: 6),
+                      InkWell(
+                        borderRadius: BorderRadius.circular(999),
+                        onTap: onTapCam != null
+                            ? () => onTapCam!(message.senderId)
+                            : (onTapSender != null
+                                ? () => onTapSender!(message.senderId)
+                                : null),
+                        child: const Padding(
+                          padding: EdgeInsets.all(2),
+                          child: Icon(
+                            Icons.videocam,
+                            size: 14,
+                            color: Color(0xFFC45E7A),
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(width: 6),
                     Text(
                       _formatClock(message.sentAt),

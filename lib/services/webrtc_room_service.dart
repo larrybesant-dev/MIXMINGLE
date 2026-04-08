@@ -1654,15 +1654,13 @@ class _VadMonitor {
     } else if (_speaking && avg < _offThreshold) {
       // Energy dropped — but don't emit false immediately.
       // Start (or restart) a hold timer; only go silent after _offHold ms.
-      if (_offHoldTimer == null) {
-        _offHoldTimer = Timer(_offHold, () {
-          _offHoldTimer = null;
-          if (_speaking) {
-            _speaking = false;
-            _onStateChange(false);
-          }
-        });
-      }
+      _offHoldTimer ??= Timer(_offHold, () {
+        _offHoldTimer = null;
+        if (_speaking) {
+          _speaking = false;
+          _onStateChange(false);
+        }
+      });
       return; // keep _speaking = true until the hold expires
     } else {
       nowSpeaking = _speaking;

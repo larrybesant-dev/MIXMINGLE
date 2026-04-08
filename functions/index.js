@@ -3,6 +3,7 @@ const {onDocumentCreated, onDocumentWritten} = require("firebase-functions/v2/fi
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 const {onRequest: onRequestV1} = require("firebase-functions/v1/https");
 const functionsV1 = require("firebase-functions/v1");
+const logger = require("firebase-functions/logger");
 const admin = require("firebase-admin");
 const Stripe = require("stripe");
 const {RtcTokenBuilder, RtcRole} = require("agora-access-token");
@@ -28,6 +29,62 @@ function getStripe() {
 }
 
 const db = admin.firestore();
+const CHAT_RETENTION_BATCH_LIMIT = 400;
+
+function buildMessagePreview(content) {
+  const normalized = typeof content === "string" ? content.trim() : "";
+  if (!normalized) return null;
+  return normalized.length <= 140 ? normalized : `${normalized.slice(0, 137)}...`;
+}
+
+async function rebuildConversationSummary(conversationId) {
+  const conversationRef = db.collection("conversations").doc(conversationId);
+  const conversationSnap = await conversationRef.get();
+  if (!conversationSnap.exists) return;
+
+  let query = conversationRef
+    .collection("messages")
+    .orderBy("createdAt", "desc")
+    .limit(50);
+
+  let latestMessage = null;
+  let pageSnap = await query.get();
+  while (!pageSnap.empty && latestMessage == null) {
+    for (const doc of pageSnap.docs) {
+      const data = doc.data() || {};
+      if (data.isDeleted === true) continue;
+      latestMessage = {id: doc.id, data};
+      break;
+    }
+
+    if (latestMessage != null) break;
+
+    query = conversationRef
+      .collection("messages")
+      .orderBy("createdAt", "desc")
+      .startAfter(pageSnap.docs[pageSnap.docs.length - 1])
+      .limit(50);
+    pageSnap = await query.get();
+  }
+
+  if (latestMessage == null) {
+    await conversationRef.update({
+      lastMessageId: null,
+      lastMessagePreview: null,
+      lastMessageSenderId: null,
+      lastMessageAt: null,
+    });
+    return;
+  }
+
+  const data = latestMessage.data;
+  await conversationRef.update({
+    lastMessageId: latestMessage.id,
+    lastMessagePreview: buildMessagePreview(data.content),
+    lastMessageSenderId: data.senderId || null,
+    lastMessageAt: data.createdAt || null,
+  });
+}
 
 const RATE_LIMITS = {
   createPaymentIntent: {windowMs: 60 * 1000, maxRequests: 12},
@@ -1660,6 +1717,45 @@ exports.cleanupExpiredStories = onSchedule("every 24 hours", async () => {
   await batch.commit();
 
   logger.info(`cleanupExpiredStories: deleted ${expired.size} expired stories`);
+});
+
+/**
+ * cleanupExpiredMessages – scheduled retention job that hard-deletes expired
+ * conversation messages and repairs parent conversation preview metadata.
+ */
+exports.cleanupExpiredMessages = onSchedule("every 6 hours", async () => {
+  const now = admin.firestore.Timestamp.now();
+  const touchedConversationIds = new Set();
+  let deletedCount = 0;
+
+  while (true) {
+    const expired = await db
+      .collectionGroup("messages")
+      .where("expiresAt", "<=", now)
+      .limit(CHAT_RETENTION_BATCH_LIMIT)
+      .get();
+
+    if (expired.empty) break;
+
+    const batch = db.batch();
+    for (const doc of expired.docs) {
+      const conversationRef = doc.ref.parent.parent;
+      if (conversationRef) touchedConversationIds.add(conversationRef.id);
+      batch.delete(doc.ref);
+    }
+    await batch.commit();
+    deletedCount += expired.size;
+
+    if (expired.size < CHAT_RETENTION_BATCH_LIMIT) break;
+  }
+
+  for (const conversationId of touchedConversationIds) {
+    await rebuildConversationSummary(conversationId);
+  }
+
+  logger.info(
+    `cleanupExpiredMessages: deleted ${deletedCount} messages across ${touchedConversationIds.size} conversations`,
+  );
 });
 
 // ── Friend-online notification ────────────────────────────────────────────────

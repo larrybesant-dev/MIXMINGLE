@@ -349,7 +349,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
             CachedNetworkImage(
               imageUrl: _imageUrl!,
               fit: BoxFit.cover,
-              placeholder: (_, __) => const ColoredBox(
+              placeholder: (_, _) => const ColoredBox(
                 color: NeonPulse.surfaceHigh,
               ),
             )

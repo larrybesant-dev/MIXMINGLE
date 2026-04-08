@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -98,6 +100,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _index = 0;
   int _themeIndex = 1;
   bool _acceptedLegal = false;
+  final Set<String> _selectedInterests = {};
 
   final List<_OnboardingTheme> _themeOptions = const [
     _OnboardingThemes.minimalLuxe,
@@ -157,8 +160,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isLastPage = _index == _pages.length - 1;
-    final canContinue = !isLastPage || _acceptedLegal;
+    // Total pages = 3 scenes + 1 interests page
+    final isLastPage = _index == _pages.length;
+    final canContinue = !isLastPage || (_acceptedLegal && _selectedInterests.isNotEmpty);
+    final glowColor = _index < _pages.length
+        ? _pages[_index].glowColor
+        : _theme.accents[0];
 
     return Scaffold(
       backgroundColor: _theme.background[1],
@@ -168,7 +175,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           PageView(
             controller: _controller,
             onPageChanged: (i) => setState(() => _index = i),
-            children: _pages.map((scene) => _OnboardPage(scene: scene, theme: _theme)).toList(growable: false),
+            children: [
+              ..._pages.map((scene) => _OnboardPage(scene: scene, theme: _theme)),
+              _InterestsPage(
+                theme: _theme,
+                selected: _selectedInterests,
+                onToggle: (interest) => setState(() {
+                  if (_selectedInterests.contains(interest)) {
+                    _selectedInterests.remove(interest);
+                  } else {
+                    _selectedInterests.add(interest);
+                  }
+                }),
+              ),
+            ],
           ),
           Positioned(
             top: 42,
@@ -212,7 +232,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 foregroundColor: Colors.white,
                 side: BorderSide(color: Colors.white.withValues(alpha: 0.15)),
               ),
-              onPressed: _index == _pages.length - 1
+              onPressed: isLastPage
                   ? null
                   : () async {
                       final router = GoRouter.of(context);
@@ -230,7 +250,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                _pages.length,
+                _pages.length + 1,
                 (i) => AnimatedContainer(
                   duration: const Duration(milliseconds: 220),
                   margin: const EdgeInsets.symmetric(horizontal: 4),
@@ -242,7 +262,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     boxShadow: _index == i
                         ? [
                             BoxShadow(
-                              color: _pages[_index].glowColor.withValues(alpha: 0.85),
+                              color: glowColor.withValues(alpha: 0.85),
                               blurRadius: 16,
                               spreadRadius: 1,
                             ),
@@ -308,13 +328,21 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             right: 20,
             child: _NeonCtaButton(
               enabled: canContinue,
-              color: _pages[_index].glowColor,
+              color: glowColor,
               label: isLastPage ? 'JOIN THE PARTY' : 'KEEP THE VIBE',
               onPressed: () async {
                 if (isLastPage) {
                   final router = GoRouter.of(context);
                   await FirstRunService.markOnboardingSeen();
                   await ref.read(appSettingsControllerProvider.notifier).acceptCurrentLegal();
+                  // Save selected interests
+                  final uid = FirebaseAuth.instance.currentUser?.uid;
+                  if (uid != null && _selectedInterests.isNotEmpty) {
+                    await FirebaseFirestore.instance
+                        .collection('users')
+                        .doc(uid)
+                        .update({'interests': _selectedInterests.toList()});
+                  }
                   await AnalyticsService().logEvent('onboarding_complete');
                   if (!mounted) return;
                   router.go('/');
@@ -329,6 +357,129 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─── Interests Selection Page ─────────────────────────────────────────────────
+
+class _InterestsPage extends StatelessWidget {
+  const _InterestsPage({
+    required this.theme,
+    required this.selected,
+    required this.onToggle,
+  });
+
+  final _OnboardingTheme theme;
+  final Set<String> selected;
+  final void Function(String) onToggle;
+
+  static const _categories = [
+    '🎵 music', '🎮 gaming', '🗣️ deep talks', '🎤 karaoke',
+    '🍳 food & cooking', '✈️ travel', '😂 comedy', '💪 fitness',
+    '🎨 art & design', '📺 streaming', '⚽ sports', '💰 crypto',
+    '🌙 nightlife', '🤍 wellness', '🎧 afrobeats', '🕺 dancing',
+    '📷 photography', '🧠 self-growth',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = theme.accents[0];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(22, 118, 22, 200),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(100),
+                  border: Border.all(color: accent.withValues(alpha: 0.65)),
+                ),
+                child: Text(
+                  'YOUR VIBE',
+                  style: TextStyle(
+                    color: accent,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.0,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'What are you into?',
+                style: Theme.of(context).textTheme.headlineLarge?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                      height: 1.02,
+                    ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                'Pick at least one interest so we can personalise your experience.',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.76),
+                      height: 1.4,
+                    ),
+              ),
+              const SizedBox(height: 24),
+              Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: _categories.map((cat) {
+                  final isSelected = selected.contains(cat);
+                  return GestureDetector(
+                    onTap: () => onToggle(cat),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 9),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? accent.withValues(alpha: 0.28)
+                            : theme.chipSurface.withValues(alpha: 0.72),
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: isSelected
+                              ? accent.withValues(alpha: 0.85)
+                              : Colors.white.withValues(alpha: 0.15),
+                          width: isSelected ? 1.5 : 1,
+                        ),
+                      ),
+                      child: Text(
+                        cat,
+                        style: TextStyle(
+                          color: isSelected
+                              ? accent
+                              : Colors.white.withValues(alpha: 0.8),
+                          fontWeight: isSelected
+                              ? FontWeight.w700
+                              : FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  );
+                }).toList(),
+              ),
+              if (selected.isEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Select at least one to continue',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.45),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        );
+      },
     );
   }
 }

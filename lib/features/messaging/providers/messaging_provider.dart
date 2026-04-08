@@ -180,6 +180,7 @@ final messagingControllerProvider =
 });
 
 class MessagingController {
+  static const int messageRetentionDays = 90;
   final FirebaseFirestore _firestore;
 
   MessagingController({required FirebaseFirestore firestore}) : _firestore = firestore;
@@ -192,19 +193,22 @@ class MessagingController {
     required String content,
   }) async {
     final now = DateTime.now();
-    
-    // Add message to messages subcollection
-    await _firestore
+    final expiresAt = now.add(const Duration(days: messageRetentionDays));
+    final messageRef = _firestore
         .collection('conversations')
         .doc(conversationId)
         .collection('messages')
-        .add({
+        .doc();
+    
+    // Add message to messages subcollection
+    await messageRef.set({
       'conversationId': conversationId,
       'senderId': senderId,
       'senderName': senderName,
       'senderAvatarUrl': senderAvatarUrl,
       'content': content,
       'createdAt': Timestamp.fromDate(now),
+      'expiresAt': Timestamp.fromDate(expiresAt),
       'isDeleted': false,
       'readBy': [senderId],
     });
@@ -212,6 +216,7 @@ class MessagingController {
     // Update conversation with last message info
     final convRef = _firestore.collection('conversations').doc(conversationId);
     await convRef.update({
+      'lastMessageId': messageRef.id,
       'lastMessagePreview': content,
       'lastMessageSenderId': senderId,
       'lastMessageAt': Timestamp.fromDate(now),

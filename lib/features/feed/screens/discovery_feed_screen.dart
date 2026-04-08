@@ -1124,7 +1124,7 @@ class _LiveNowStrip extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             scrollDirection: Axis.horizontal,
             itemCount: rooms.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            separatorBuilder: (_, _) => const SizedBox(width: 14),
             itemBuilder: (ctx, i) => _LiveNowBubble(
               room: rooms[i],
               onTap: () => context.go('/room/${rooms[i].id}'),
@@ -1140,7 +1140,7 @@ class _LiveNowStrip extends ConsumerWidget {
 
 // ── Live Now bubble (avatar ring + name) ──────────────────────────────────────
 class _LiveNowBubble extends ConsumerWidget {
-  const _LiveNowBubble({required this.room, required this.onTap, super.key});
+  const _LiveNowBubble({required this.room, required this.onTap});
 
   final RoomModel room;
   final VoidCallback onTap;
@@ -1185,12 +1185,12 @@ class _LiveNowBubble extends ConsumerWidget {
                           ? CachedNetworkImage(
                               imageUrl: url,
                               fit: BoxFit.cover,
-                              errorWidget: (_, __, ___) =>
+                              errorWidget: (_, _, _) =>
                                   _EmojiAvatar(emoji: emoji),
                             )
                           : _EmojiAvatar(emoji: emoji),
                       loading: () => _EmojiAvatar(emoji: emoji),
-                      error: (_, __) => _EmojiAvatar(emoji: emoji),
+                      error: (_, _) => _EmojiAvatar(emoji: emoji),
                     ),
                   ),
                 ),

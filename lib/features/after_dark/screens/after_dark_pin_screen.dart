@@ -11,6 +11,7 @@ enum _PinMode { setup, unlock }
 ///  - First-time setup (/after-dark/pin-setup) — sets the PIN
 ///  - Later unlock (/after-dark/unlock) — verifies PIN
 class AfterDarkPinScreen extends ConsumerStatefulWidget {
+  // ignore: library_private_types_in_public_api
   final _PinMode mode;
   const AfterDarkPinScreen.setup({super.key}) : mode = _PinMode.setup;
   const AfterDarkPinScreen.unlock({super.key}) : mode = _PinMode.unlock;

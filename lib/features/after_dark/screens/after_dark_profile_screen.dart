@@ -238,7 +238,7 @@ class _AfterDarkProfileScreenState
                   style: const TextStyle(
                       color: EmberDark.onSurfaceVariant, fontSize: 12),
                 ),
-                activeColor: EmberDark.primary,
+                activeThumbColor: EmberDark.primary,
                 secondary: const Icon(Icons.visibility_outlined,
                     color: EmberDark.onSurfaceVariant),
               ),

@@ -68,6 +68,7 @@ class Message {
   final String? senderAvatarUrl;
   final String content;
   final DateTime createdAt;
+  final DateTime? expiresAt;
   final DateTime? editedAt;
   final bool isDeleted;
   final List<String> readBy; // UIDs of users who read this message
@@ -80,6 +81,7 @@ class Message {
     this.senderAvatarUrl,
     required this.content,
     required this.createdAt,
+    this.expiresAt,
     this.editedAt,
     this.isDeleted = false,
     this.readBy = const [],
@@ -94,6 +96,9 @@ class Message {
       senderAvatarUrl: _asNullableString(json['senderAvatarUrl']),
       content: _asString(json['content']),
       createdAt: _parseDateTime(json['createdAt']),
+        expiresAt: json['expiresAt'] == null
+          ? null
+          : _parseDateTime(json['expiresAt']),
       editedAt: json['editedAt'] == null
           ? null
           : _parseDateTime(json['editedAt']),
@@ -110,6 +115,7 @@ class Message {
       'senderAvatarUrl': senderAvatarUrl,
       'content': content,
       'createdAt': Timestamp.fromDate(createdAt),
+      'expiresAt': expiresAt != null ? Timestamp.fromDate(expiresAt!) : null,
       'editedAt': editedAt != null ? Timestamp.fromDate(editedAt!) : null,
       'isDeleted': isDeleted,
       'readBy': readBy,
@@ -117,4 +123,5 @@ class Message {
   }
 
   bool isRead(String userId) => readBy.contains(userId);
+  bool get isExpired => expiresAt != null && DateTime.now().isAfter(expiresAt!);
 }

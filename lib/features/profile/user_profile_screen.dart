@@ -6,13 +6,16 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixvy/models/moderation_model.dart';
 import 'package:mixvy/services/follow_service.dart';
+import 'package:mixvy/services/friend_service.dart';
 import 'package:mixvy/services/moderation_service.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../widgets/follow_button.dart';
 import '../../widgets/gift_picker_sheet.dart';
+import '../../features/messaging/providers/messaging_provider.dart';
 import '../../features/feed/models/post_model.dart';
 import '../../features/feed/widgets/post_card.dart';
+import '../../presentation/providers/user_provider.dart';
 import 'widgets/profile_music_player_stub.dart'
     if (dart.library.html) 'widgets/profile_music_player_web.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,6 +33,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
     with SingleTickerProviderStateMixin {
   final ModerationService _moderationService = ModerationService();
   final FollowService _followService = FollowService();
+  final FriendService _friendService = FriendService();
   late Future<Map<String, dynamic>> _profileFuture;
   late TabController _tabController;
 
@@ -117,15 +121,19 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
   Future<Map<String, dynamic>> _loadProfile() async {
     final firestore = FirebaseFirestore.instance;
     final userRef = firestore.collection('users').doc(widget.userId);
-    final privacyRef = userRef.collection('privacy').doc('settings');
     final userSnapshot = await userRef.get();
-    final privacySnapshot = await privacyRef.get();
+    final viewerId = FirebaseAuth.instance.currentUser?.uid;
+    Map<String, dynamic> privacyData = const <String, dynamic>{};
+    if (viewerId == widget.userId) {
+      final privacySnapshot =
+          await userRef.collection('privacy').doc('settings').get();
+      privacyData = privacySnapshot.data() ?? const <String, dynamic>{};
+    }
 
     var isBlocked = false;
     var isFollowing = false;
     var followerCount = 0;
     var followingCount = 0;
-    final viewerId = FirebaseAuth.instance.currentUser?.uid;
     if (viewerId != null && viewerId != widget.userId) {
       try {
         isBlocked = await _moderationService.isBlocked(widget.userId);
@@ -146,12 +154,57 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
 
     return {
       'user': userSnapshot,
-      'privacy': privacySnapshot.data() ?? const <String, dynamic>{},
+      'privacy': privacyData,
       'isBlocked': isBlocked,
       'isFollowing': isFollowing,
       'followerCount': followerCount,
       'followingCount': followingCount,
     };
+  }
+
+  Future<void> _sendFriendRequest() async {
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null || currentUser.uid == widget.userId) {
+      return;
+    }
+    try {
+      await _friendService.sendFriendRequest(currentUser.uid, widget.userId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Friend request sent.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not send friend request: $e')),
+      );
+    }
+  }
+
+  Future<void> _startConversation(String peerName, String? peerAvatarUrl) async {
+    final currentUser = ref.read(userProvider);
+    if (currentUser == null || currentUser.id == widget.userId) {
+      return;
+    }
+    try {
+      final conversationId = await ref
+          .read(messagingControllerProvider)
+          .createDirectConversation(
+            userId1: currentUser.id,
+            user1Name: currentUser.username,
+            user1AvatarUrl: currentUser.avatarUrl,
+            userId2: widget.userId,
+            user2Name: peerName,
+            user2AvatarUrl: peerAvatarUrl,
+          );
+      if (!mounted) return;
+      context.go('/messages/$conversationId');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not open conversation: $e')),
+      );
+    }
   }
 
   Future<void> _toggleFollow(bool currentlyFollowing) async {
@@ -463,6 +516,27 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                 Row(
                   children: [
                     Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _sendFriendRequest,
+                        icon: const Icon(Icons.person_add_alt_1_outlined),
+                        label: const Text('Add Friend'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: () => _startConversation(displayName, avatarUrl),
+                        icon: const Icon(Icons.message_outlined),
+                        label: const Text('Message'),
+                      ),
+                    ),
+                  ],
+                ),
+              if (!isOwnProfile) ...[
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Expanded(
                       child: FilledButton.icon(
                         onPressed: _inviteToLiveRoom,
                         icon: const Icon(Icons.mic),
@@ -478,7 +552,6 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                     ),
                   ],
                 ),
-              if (!isOwnProfile) ...[
                 const SizedBox(height: 10),
                 Consumer(
                   builder: (consumerCtx, widgetRef, _) => SizedBox(

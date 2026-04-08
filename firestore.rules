@@ -590,7 +590,8 @@ service cloud.firestore {
       allow update: if signedIn()
         && resource.data.participantIds.hasAny([request.auth.uid])
         && request.resource.data.diff(resource.data).affectedKeys()
-            .hasOnly(['lastMessage', 'lastMessageAt', 'updatedAt',
+            .hasOnly(['lastMessage', 'lastMessageId', 'lastMessagePreview',
+                      'lastMessageSenderId', 'lastMessageAt', 'updatedAt',
                       'isArchived', 'unreadCounts', 'lastReadAt',
                       'status', 'typingStatus']);
       allow delete: if false;
@@ -601,6 +602,9 @@ service cloud.firestore {
               .data.participantIds.hasAny([request.auth.uid]);
         allow create: if signedIn()
           && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.conversationId == conversationId
+          && request.resource.data.createdAt is timestamp
+          && request.resource.data.expiresAt is timestamp
           && get(/databases/$(database)/documents/conversations/$(conversationId))
               .data.participantIds.hasAny([request.auth.uid]);
         allow update, delete: if false;

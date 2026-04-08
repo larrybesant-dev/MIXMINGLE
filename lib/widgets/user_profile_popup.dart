@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import '../models/user_model.dart';
+import '../features/messaging/providers/messaging_provider.dart';
 import '../services/friend_service.dart';
 import '../services/moderation_service.dart';
 import '../presentation/providers/user_provider.dart';
@@ -239,9 +240,25 @@ class _UserProfilePopupSheetState
                 _ActionButton(
                   icon: Icons.message_outlined,
                   label: 'Send message',
-                  onTap: () {
+                  onTap: () async {
+                    final currentUser = ref.read(userProvider);
+                    final profile = _profile;
+                    if (currentUser == null || profile == null) return;
+                    final conversationId = await ref
+                        .read(messagingControllerProvider)
+                        .createDirectConversation(
+                          userId1: currentUser.id,
+                          user1Name: currentUser.username,
+                          user1AvatarUrl: currentUser.avatarUrl,
+                          userId2: widget.userId,
+                          user2Name: profile.username.isEmpty
+                              ? widget.userId
+                              : profile.username,
+                          user2AvatarUrl: profile.avatarUrl,
+                        );
+                    if (!mounted) return;
                     Navigator.of(context).pop();
-                    context.go('/messages/new?userId=${widget.userId}');
+                    context.go('/messages/$conversationId');
                   },
                 ),
               if (!_isBlocked)

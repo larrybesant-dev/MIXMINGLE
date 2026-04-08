@@ -201,13 +201,34 @@ class LiveRoomCard extends StatelessWidget {
   }
 }
 
-// Fallback thumbnail when no image is set — uses a gradient with a camera icon
+// Fallback thumbnail when no image is set — gradient with category emoji
 class _FallbackThumbnail extends StatelessWidget {
   final String? category;
   const _FallbackThumbnail({this.category});
 
+  static const _categoryEmojis = <String, String>{
+    'music': '🎵',
+    'gaming': '🎮',
+    'talk': '🗣️',
+    'events': '🎉',
+    'dating': '💕',
+    'karaoke': '🎤',
+    'comedy': '😂',
+    'news': '📰',
+    'fitness': '💪',
+    'cooking': '🍳',
+    'travel': '✈️',
+    'art': '🎨',
+    'sports': '⚽',
+    'crypto': '💰',
+    'adult': '🔞',
+  };
+
   @override
   Widget build(BuildContext context) {
+    final key = category?.toLowerCase() ?? '';
+    final emoji = _categoryEmojis[key] ?? '📡';
+
     return Container(
       height: 96,
       width: double.infinity,
@@ -218,9 +239,25 @@ class _FallbackThumbnail extends StatelessWidget {
           colors: [NeonPulse.primaryDim, NeonPulse.surfaceBright],
         ),
       ),
-      child: const Center(
-        child: Icon(Icons.videocam,
-            size: 32, color: Colors.white54),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(emoji, style: const TextStyle(fontSize: 28)),
+            if (category != null && category!.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                category!,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white70,
+                  letterSpacing: 0.3,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

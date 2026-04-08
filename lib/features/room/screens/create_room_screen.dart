@@ -1,9 +1,12 @@
 import 'dart:ui';
+import 'dart:developer' as developer;
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../services/room_service.dart';
 
 // ── colour aliases ────────────────────────────────────────────────────────────
@@ -35,7 +38,9 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
   _RoomMode _mode = _RoomMode.audio;
   _Privacy _privacy = _Privacy.public;
   String? _selectedCategory;
+  String? _thumbnailUrl;
   bool _isCreating = false;
+  bool _isUploadingThumbnail = false;
   bool _scheduleMode = false;
   DateTime? _scheduledAt;
 
@@ -52,6 +57,14 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
 
   Future<void> _startRoom() async {
     if (_formKey.currentState?.validate() != true) return;
+    if (_isUploadingThumbnail) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please wait for the room logo to finish uploading.'),
+        ),
+      );
+      return;
+    }
     if (_scheduleMode && _scheduledAt == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -71,11 +84,11 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
     try {
       final roomService = ref.read(roomServiceProvider);
       if (_scheduleMode) {
-        // Create scheduled (not live) room
         await roomService.createRoom(
           hostId: uid,
           name: _titleController.text.trim(),
           category: _selectedCategory?.toLowerCase(),
+          thumbnailUrl: _thumbnailUrl,
           isLive: false,
           scheduledAt: _scheduledAt,
         );
@@ -93,6 +106,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
           hostId: uid,
           name: _titleController.text.trim(),
           category: _selectedCategory?.toLowerCase(),
+          thumbnailUrl: _thumbnailUrl,
           isLive: true,
         );
         if (mounted) context.go('/room/$roomId');
@@ -109,6 +123,52 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
       }
     } finally {
       if (mounted) setState(() => _isCreating = false);
+    }
+  }
+
+  Future<void> _pickAndUploadRoomLogo() async {
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      if (mounted) context.go('/login');
+      return;
+    }
+
+    final picker = ImagePicker();
+    final file = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1200,
+      maxHeight: 1200,
+      imageQuality: 85,
+    );
+    if (file == null) return;
+
+    setState(() => _isUploadingThumbnail = true);
+    try {
+      final bytes = await file.readAsBytes();
+      final ext = file.name.split('.').last.toLowerCase();
+      final ref = FirebaseStorage.instance.ref(
+        'rooms/$uid/${DateTime.now().millisecondsSinceEpoch}_logo.$ext',
+      );
+      final snap = await ref.putData(
+        bytes,
+        SettableMetadata(contentType: 'image/$ext'),
+      );
+      final url = await snap.ref.getDownloadURL();
+      if (!mounted) return;
+      setState(() => _thumbnailUrl = url);
+    } catch (e, st) {
+      developer.log(
+        'Room logo upload failed',
+        name: 'CreateRoomScreen',
+        error: e,
+        stackTrace: st,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Logo upload failed: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isUploadingThumbnail = false);
     }
   }
 
@@ -141,6 +201,10 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                           _sectionLabel('Room Title'),
                           const SizedBox(height: 10),
                           _buildTitleInput(),
+                          const SizedBox(height: 28),
+                          _sectionLabel('Room Logo (optional)'),
+                          const SizedBox(height: 10),
+                          _buildLogoPicker(),
                           const SizedBox(height: 28),
                           _sectionLabel('Select Mode'),
                           const SizedBox(height: 10),
@@ -272,6 +336,82 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
         const SizedBox(width: 12),
         Expanded(child: _modeTile(_RoomMode.video, Icons.videocam_rounded, 'Video Room',
             'Camera broadcast')),
+      ],
+    );
+  }
+
+  Widget _buildLogoPicker() {
+    return Row(
+      children: [
+        Container(
+          width: 72,
+          height: 72,
+          decoration: BoxDecoration(
+            color: _surfaceLow,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: _ghost),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: _isUploadingThumbnail
+              ? const Center(
+                  child: SizedBox(
+                    width: 24,
+                    height: 24,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              : (_thumbnailUrl?.isNotEmpty ?? false)
+                  ? Image.network(
+                      _thumbnailUrl!,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => const Icon(
+                        Icons.image_outlined,
+                        color: _onVariant,
+                        size: 28,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.add_photo_alternate_outlined,
+                      color: _onVariant,
+                      size: 28,
+                    ),
+        ),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Upload a group photo or logo for this room.',
+                style: GoogleFonts.inter(fontSize: 13, color: _onSurface),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _isUploadingThumbnail ? null : _pickAndUploadRoomLogo,
+                    icon: const Icon(Icons.upload_rounded, size: 16),
+                    label: Text(_thumbnailUrl == null ? 'Upload Logo' : 'Change Logo'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: _surfaceHighest,
+                      foregroundColor: _onSurface,
+                      side: const BorderSide(color: _ghost),
+                    ),
+                  ),
+                  if (_thumbnailUrl != null) ...[
+                    const SizedBox(width: 8),
+                    TextButton(
+                      onPressed: _isUploadingThumbnail
+                          ? null
+                          : () => setState(() => _thumbnailUrl = null),
+                      child: const Text('Remove'),
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -542,7 +682,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                       primary: _primary,
                       surface: _surfaceHigh,
                     ),
-                    dialogBackgroundColor: _surfaceHigh,
+                    dialogTheme: const DialogThemeData(backgroundColor: _surfaceHigh),
                   ),
                   child: child!,
                 ),
@@ -560,7 +700,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                       primary: _primary,
                       surface: _surfaceHigh,
                     ),
-                    dialogBackgroundColor: _surfaceHigh,
+                    dialogTheme: const DialogThemeData(backgroundColor: _surfaceHigh),
                   ),
                   child: child!,
                 ),
@@ -647,39 +787,62 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
             child: Row(
               children: [
                 Container(
-                  width: 36, height: 36,
+                  width: 48,
+                  height: 48,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _primaryDim,
-                    border: Border.all(color: _secondary, width: 2),
-                    boxShadow: [
-                      BoxShadow(
-                          color: _secondary.withAlpha(80),
-                          blurRadius: 8,
-                          spreadRadius: 1),
+                    borderRadius: BorderRadius.circular(14),
+                    gradient: _thumbnailUrl == null
+                        ? const LinearGradient(
+                            colors: [_primary, _primaryDim],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: _thumbnailUrl == null ? null : _surfaceHighest,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: (_thumbnailUrl?.isNotEmpty ?? false)
+                      ? Image.network(
+                          _thumbnailUrl!,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => Icon(
+                            _mode == _RoomMode.video
+                                ? Icons.videocam_rounded
+                                : Icons.mic_rounded,
+                            color: _surface,
+                            size: 24,
+                          ),
+                        )
+                      : Icon(
+                          _mode == _RoomMode.video
+                              ? Icons.videocam_rounded
+                              : Icons.mic_rounded,
+                          color: _surface,
+                          size: 24,
+                        ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _titleController.text.isEmpty
+                            ? 'Previewing your room'
+                            : _titleController.text,
+                        style: GoogleFonts.inter(
+                            fontSize: 14, fontWeight: FontWeight.w600,
+                            color: _onSurface),
+                      ),
+                      Text(
+                        'YOUR PULSE IS READY',
+                        style: GoogleFonts.inter(
+                            fontSize: 10, fontWeight: FontWeight.w700,
+                            color: _secondary, letterSpacing: 1.0),
+                      ),
                     ],
                   ),
-                ),
-                const SizedBox(width: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      _titleController.text.isEmpty
-                          ? 'Previewing your room'
-                          : _titleController.text,
-                      style: GoogleFonts.inter(
-                          fontSize: 14, fontWeight: FontWeight.w600,
-                          color: _onSurface),
-                    ),
-                    Text(
-                      'YOUR PULSE IS READY',
-                      style: GoogleFonts.inter(
-                          fontSize: 10, fontWeight: FontWeight.w700,
-                          color: _secondary, letterSpacing: 1.0),
-                    ),
-                  ],
                 ),
               ],
             ),

@@ -37,7 +37,7 @@ class StoriesRow extends ConsumerWidget {
 
     return storiesAsync.when(
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (stories) {
         // Group stories by userId, preserving first occurrence order
         final seen = <String>{};

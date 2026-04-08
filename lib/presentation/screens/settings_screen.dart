@@ -231,7 +231,7 @@ class _AfterDarkSettingsCard extends ConsumerWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
           ),
-          error: (_, __) => const ListTile(
+          error: (_, _) => const ListTile(
             leading: Icon(Icons.local_fire_department_rounded,
                 color: Color(0xFFE0142A)),
             title: Text('MixVy After Dark'),

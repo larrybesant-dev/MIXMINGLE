@@ -251,7 +251,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
                     width: 80,
                     height: 80,
                     fit: BoxFit.cover,
-                    errorWidget: (_, __, ___) =>
+                    errorWidget: (_, _, _) =>
                         const CircleAvatar(radius: 40, child: Icon(Icons.person)),
                   ),
                 ),

@@ -256,7 +256,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
                                     width: 72,
                                     height: 72,
                                     fit: BoxFit.cover,
-                                    errorWidget: (_, __, ___) =>
+                                    errorWidget: (_, _, _) =>
                                         const Icon(Icons.person, size: 32),
                                   ),
                                 )

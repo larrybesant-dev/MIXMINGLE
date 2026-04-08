@@ -8,17 +8,23 @@ class FloatingCamWindowData {
   FloatingCamWindowData({
     required this.id,
     required this.label,
-    required this.content,
+    required this.isLocal,
+    this.remoteUid,
+    this.userId,
+    this.avatarUrl,
+    this.canViewRemote = true,
     this.offset = const Offset(100, 100),
     this.width = 280.0,
     this.height = 200.0,
-  });
+  }) : assert(isLocal || remoteUid != null);
 
   final String id;
   final String label;
-
-  /// The video widget (AgoraVideoView / WebRTC RTCVideoView).
-  final Widget content;
+  final bool isLocal;
+  final int? remoteUid;
+  final String? userId;
+  final String? avatarUrl;
+  final bool canViewRemote;
   Offset offset;
   double width;
   double height;
@@ -50,7 +56,11 @@ class FloatingCamWindowsNotifier
           FloatingCamWindowData(
             id: w.id,
             label: w.label,
-            content: w.content,
+            isLocal: w.isLocal,
+            remoteUid: w.remoteUid,
+            userId: w.userId,
+            avatarUrl: w.avatarUrl,
+            canViewRemote: w.canViewRemote,
             offset: offset,
             width: w.width,
             height: w.height,
@@ -69,10 +79,12 @@ class FloatingCamWindowLayer extends ConsumerWidget {
   const FloatingCamWindowLayer({
     super.key,
     required this.onReattach,
+    required this.contentBuilder,
   });
 
   /// Called when the user clicks "Dock" on a floating cam window.
   final void Function(String windowId) onReattach;
+  final Widget Function(FloatingCamWindowData window) contentBuilder;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -99,7 +111,7 @@ class FloatingCamWindowLayer extends ConsumerWidget {
                 bottomLeft: Radius.circular(8),
                 bottomRight: Radius.circular(8),
               ),
-              child: window.content,
+              child: contentBuilder(window),
             ),
           ),
       ],

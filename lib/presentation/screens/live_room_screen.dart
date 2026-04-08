@@ -156,6 +156,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   final Map<int, GlobalKey> _remoteViewKeys = {};
   GlobalKey _remoteViewKey(int uid) =>
       _remoteViewKeys.putIfAbsent(uid, () => GlobalKey());
+  final GlobalKey _localViewMoveKey = GlobalKey();
   final Map<String, String?> _senderAvatarUrlById = <String, String?>{};
   final Map<String, String?> _senderGenderById = <String, String?>{};
   final Set<String> _senderLookupInFlight = <String>{};
@@ -1141,8 +1142,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     // placeholder.
     if (service != null && service.canRenderLocalView && _isVideoEnabled) {
       return KeyedSubtree(
-        key: ValueKey<String>('local-view-$_localViewEpoch'),
-        child: service.getLocalView(),
+        key: _localViewMoveKey,
+        child: KeyedSubtree(
+          key: ValueKey<String>('local-view-$_localViewEpoch'),
+          child: service.getLocalView(),
+        ),
       );
     }
     return ColoredBox(
@@ -1274,6 +1278,43 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         );
       }
     }
+  }
+
+  Widget _buildFloatingCamWindowContent(FloatingCamWindowData window) {
+    if (window.isLocal) {
+      return _buildLocalCamContent(avatarUrl: window.avatarUrl);
+    }
+
+    final remoteUid = window.remoteUid;
+    if (remoteUid == null) {
+      return const ColoredBox(color: Color(0xFF241820));
+    }
+
+    final currentUserId = _joinedUserId;
+    final remoteUserId = window.userId;
+    final allowedViewers = remoteUserId == null
+        ? const <String>[]
+        : ref.watch(userCamAllowedViewersProvider(remoteUserId)).valueOrNull ??
+            const <String>[];
+    final canViewRemote = remoteUserId == null
+        ? window.canViewRemote
+        : (allowedViewers.isEmpty ||
+            (currentUserId != null && allowedViewers.contains(currentUserId)));
+
+    return KeyedSubtree(
+      key: _remoteViewKey(remoteUid),
+      child: _buildRemoteCamContent(
+        remoteUid: remoteUid,
+        canViewRemote: canViewRemote,
+        avatarUrl: window.avatarUrl,
+        onRequestAccess:
+            (!canViewRemote &&
+                    remoteUserId != null &&
+                    remoteUserId != currentUserId)
+                ? () => _sendCamViewRequest(remoteUserId)
+                : null,
+      ),
+    );
   }
 
   /// Shows an Allow/Deny dialog when another user requests to view the current
@@ -3349,6 +3390,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     final participantsAsync = ref.watch(
       participantsStreamProvider(widget.roomId),
     );
+    final participantByUserId = {
+      for (final participant
+          in participantsAsync.valueOrNull ?? const <RoomParticipantModel>[])
+        participant.userId: participant,
+    };
     final messageStreamAsync = ref.watch(messageStreamProvider(widget.roomId));
     final presenceAsync = ref.watch(roomPresenceStreamProvider(widget.roomId));
     final roomPolicyAsync = ref.watch(roomPolicyProvider(widget.roomId));
@@ -3501,12 +3547,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             double colLeft(String slot) {
               if (isMobile) {
                 // Off-screen if not the active mobile tab
-                const Map<String, int> _slotTab = {
+                const Map<String, int> slotTab = {
                   'cams': 0,
                   'chat': 1,
                   'users': 2,
                 };
-                return _slotTab[slot] == _mobileTab ? 0.0 : -screenWidth * 2;
+                return slotTab[slot] == _mobileTab ? 0.0 : -screenWidth * 2;
               }
               double l = 0;
               for (final s in _columnOrder) {
@@ -4024,9 +4070,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         label:
                                             _senderDisplayNameById[user.id] ??
                                                 'My Camera',
-                                        content: _buildLocalCamContent(
-                                          avatarUrl: _senderAvatarUrlById[user.id],
-                                        ),
+                                        isLocal: true,
+                                        avatarUrl:
+                                            _senderAvatarUrlById[user.id],
                                         offset: const Offset(40, 80),
                                         width: 320,
                                         height: 240,
@@ -4039,14 +4085,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       .add(FloatingCamWindowData(
                                         id: '${tile.uid}_remote',
                                         label: tile.label,
-                                        content: KeyedSubtree(
-                                          key: _remoteViewKey(tile.uid),
-                                          child: _buildRemoteCamContent(
-                                            remoteUid: tile.uid,
-                                            canViewRemote: tile.canView,
-                                            avatarUrl: tile.avatarUrl,
-                                          ),
-                                        ),
+                                        isLocal: false,
+                                        remoteUid: tile.uid,
+                                        userId: tile.userId,
+                                        avatarUrl: tile.avatarUrl,
+                                        canViewRemote: tile.canView,
                                         offset: Offset(
                                           40 + (tile.uid % 200).toDouble(),
                                           80 + (tile.uid % 150).toDouble(),
@@ -4711,6 +4754,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       senderVipLevel:
                                           _senderVipLevelById[msg.senderId] ??
                                           0,
+                                        senderCamOn:
+                                          participantByUserId[msg.senderId]
+                                            ?.camOn ??
+                                          false,
                                       senderAvatarUrl:
                                           _senderAvatarUrlById[msg.senderId],
                                       onTapSender: (senderId) =>
@@ -4719,6 +4766,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                             ref,
                                             userId: senderId,
                                           ),
+                                        onTapCam: msg.senderId == user.id
+                                          ? null
+                                          : (senderId) =>
+                                            _sendCamViewRequest(senderId),
                                     );
                                   },
                                 );
@@ -5198,6 +5249,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     ),
                   // Floating cam windows layer (detached tiles)
                   FloatingCamWindowLayer(
+                    contentBuilder: _buildFloatingCamWindowContent,
                     onReattach: (id) {
                       ref
                           .read(floatingCamWindowsProvider.notifier)

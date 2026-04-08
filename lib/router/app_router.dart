@@ -542,7 +542,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/after-dark/create-lounge',
-            parentNavigatorKey: rootNavigatorKey,
             builder: (context, state) =>
                 const AfterDarkCreateLoungeScreen(),
           ),

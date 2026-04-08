@@ -11,6 +11,8 @@ import '../profile/profile_completion.dart';
 import '../profile/profile_controller.dart';
 import '../../presentation/providers/user_provider.dart';
 import '../stories/widgets/stories_row.dart';
+import 'daily_checkin_card.dart';
+import 'leaderboard_strip.dart';
 import '../../models/user.dart' as feed_user;
 import '../../models/user_model.dart';
 import '../../widgets/mixvy_drawer.dart';
@@ -33,6 +35,30 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     });
   }
 
+  void _showNavigationError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
+
+  void _openRoom(String? roomId) {
+    final normalizedRoomId = roomId?.trim() ?? '';
+    if (normalizedRoomId.isEmpty) {
+      _showNavigationError('This room is unavailable right now.');
+      return;
+    }
+    context.go('/room/${Uri.encodeComponent(normalizedRoomId)}');
+  }
+
+  void _openProfile(String? userId) {
+    final normalizedUserId = userId?.trim() ?? '';
+    if (normalizedUserId.isEmpty) {
+      _showNavigationError('This profile is unavailable right now.');
+      return;
+    }
+    context.go('/profile/${Uri.encodeComponent(normalizedUserId)}');
+  }
+
   @override
   Widget build(BuildContext context) {
     final postsAsync = ref.watch(postsStreamProvider);
@@ -46,7 +72,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     return Scaffold(
       backgroundColor: NeonPulse.surface,
       drawer: const MixVyDrawer(),
-      floatingActionButton: _CreateFAB(),
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => [
           SliverAppBar(
@@ -75,6 +100,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
               const SizedBox(width: 4),
               IconButton(
+                icon: const Icon(Icons.add_circle_outline,
+                    color: NeonPulse.onSurface),
+                tooltip: 'Create',
+                onPressed: () => _showCreateMenu(context),
+              ),
+              IconButton(
                 icon: const Icon(Icons.notifications_outlined,
                     color: NeonPulse.onSurface),
                 onPressed: () => context.go('/notifications'),
@@ -93,6 +124,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               // Stories
               const SliverToBoxAdapter(child: StoriesRow()),
               const SliverToBoxAdapter(child: SizedBox(height: 4)),
+
+              // Daily check-in
+              const SliverToBoxAdapter(child: DailyCheckinCard()),
+
+              // Hall of Fame leaderboard
+              const SliverToBoxAdapter(child: LeaderboardStrip()),
 
               // Profile nudge
               if (setupItems.isNotEmpty)
@@ -135,8 +172,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 const SizedBox(width: 12),
                             itemBuilder: (context, i) => LiveRoomCard(
                               room: rooms[i],
-                              onTap: () =>
-                                  context.go('/rooms/${rooms[i].id}'),
+                              onTap: () => _openRoom(rooms[i].id),
                             ),
                           ),
                         ),
@@ -177,8 +213,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                                 const SizedBox(width: 16),
                             itemBuilder: (context, i) => _CreatorChip(
                               user: feedState.trendingUsers[i],
-                              onTap: () => context.go(
-                                  '/profile/${feedState.trendingUsers[i].id}'),
+                              onTap: () =>
+                                  _openProfile(feedState.trendingUsers[i].id),
                             ),
                           ),
                         ),
@@ -204,17 +240,16 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 4),
                             itemCount: members.length,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 const SizedBox(width: 16),
                             itemBuilder: (ctx, i) => _NewMemberChip(
                               user: members[i],
-                              onTap: () =>
-                                  ctx.go('/profile/${members[i].id}'),
+                              onTap: () => _openProfile(members[i].id),
                             ),
                           ),
                         ),
                   loading: () => const _HorizontalSkeleton(height: 88),
-                  error: (_, __) =>
+                  error: (_, _) =>
                       const _ErrorCard(message: 'Could not load new members'),
                 ),
               ),
@@ -614,77 +649,65 @@ class _ProfileNudge extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Create FAB with NeonPulse bottom sheet
+// Create menu with NeonPulse bottom sheet
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _CreateFAB extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton(
-      onPressed: () => _showCreateMenu(context),
-      backgroundColor: NeonPulse.primaryDim,
-      tooltip: 'Create',
-      child: const Icon(Icons.add, color: NeonPulse.onSurface),
-    );
-  }
-
-  void _showCreateMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: NeonPulse.surfaceContainer,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (_) => Wrap(
-        children: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 4),
-              child: Container(
-                width: 36,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: NeonPulse.outlineVariant,
-                  borderRadius: BorderRadius.circular(2),
-                ),
+void _showCreateMenu(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: NeonPulse.surfaceContainer,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (_) => Wrap(
+      children: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 4),
+            child: Container(
+              width: 36,
+              height: 4,
+              decoration: BoxDecoration(
+                color: NeonPulse.outlineVariant,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
-          ListTile(
-            leading: const Icon(Icons.article_outlined,
-                color: NeonPulse.primary),
-            title: const Text('New Post',
-                style: TextStyle(color: NeonPulse.onSurface)),
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/create-post');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.auto_stories_outlined,
-                color: NeonPulse.secondary),
-            title: const Text('New Story',
-                style: TextStyle(color: NeonPulse.onSurface)),
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/create-story');
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.meeting_room_outlined,
-                color: NeonPulse.primaryDim),
-            title: const Text('Browse Rooms',
-                style: TextStyle(color: NeonPulse.onSurface)),
-            onTap: () {
-              Navigator.pop(context);
-              context.go('/rooms');
-            },
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
+        ),
+        ListTile(
+          leading: const Icon(Icons.article_outlined,
+              color: NeonPulse.primary),
+          title: const Text('New Post',
+              style: TextStyle(color: NeonPulse.onSurface)),
+          onTap: () {
+            Navigator.pop(context);
+            context.go('/create-post');
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.auto_stories_outlined,
+              color: NeonPulse.secondary),
+          title: const Text('New Story',
+              style: TextStyle(color: NeonPulse.onSurface)),
+          onTap: () {
+            Navigator.pop(context);
+            context.go('/create-story');
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.meeting_room_outlined,
+              color: NeonPulse.primaryDim),
+          title: const Text('Browse Rooms',
+              style: TextStyle(color: NeonPulse.onSurface)),
+          onTap: () {
+            Navigator.pop(context);
+            context.go('/rooms');
+          },
+        ),
+        const SizedBox(height: 16),
+      ],
+    ),
+  );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -47,12 +47,6 @@ class AppShell extends ConsumerWidget {
       backgroundColor: _npSurface,
       drawer: const MixVyDrawer(),
       body: child,
-      // ── Persistent friends panel button (bottom-right) ────────────────────
-      // Appears on every shell screen that does not define its own FAB.
-      // Screens with their own floatingActionButton override this via the inner
-      // Scaffold, so there is no conflict.
-      floatingActionButton: const _FriendsFab(),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _NeonBottomNav(
         selectedIndex: selectedIndex,
         unreadNotifs: unreadNotifs,
@@ -121,7 +115,7 @@ class _NeonBottomNav extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
+            SizedBox(
               width: 40,
               height: 32,
               child: const Icon(
@@ -255,23 +249,4 @@ class _NeonBottomNav extends StatelessWidget {
     );
   }
 
-}
-
-// ── Persistent friends FAB ────────────────────────────────────────────────────
-
-class _FriendsFab extends StatelessWidget {
-  const _FriendsFab();
-
-  @override
-  Widget build(BuildContext context) {
-    return FloatingActionButton.small(
-      heroTag: 'shell_friends_fab',
-      tooltip: 'Friends',
-      backgroundColor: const Color(0xFF241820),
-      foregroundColor: _npPrimary,
-      elevation: 4,
-      onPressed: () => FriendsPanelButton.openPanel(context),
-      child: const Icon(Icons.people_alt_rounded, size: 20),
-    );
-  }
 }

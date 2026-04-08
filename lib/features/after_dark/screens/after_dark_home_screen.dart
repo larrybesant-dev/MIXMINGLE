@@ -222,7 +222,7 @@ class _QuickActions extends StatelessWidget {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: actions.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, _) => const SizedBox(width: 10),
         itemBuilder: (ctx, i) {
           final (icon, label, route) = actions[i];
           return GestureDetector(
