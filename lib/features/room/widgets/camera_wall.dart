@@ -180,10 +180,6 @@ class CameraWall extends ConsumerWidget {
         const double maxTileH = 280; // cap so a single cam doesn't dominate
         const double mobileH = 160;
         const npSurfaceLow   = Color(0xFF10131A);
-        const npSurfaceHigh  = Color(0xFF1C2028);
-        const npPrimary      = Color(0xFFBA9EFF);
-        const npOnVariant    = Color(0xFFA9ABB3);
-        const npGhost        = Color(0x1A73757D);
 
         return ColoredBox(
           color: npSurfaceLow,
@@ -192,68 +188,15 @@ class CameraWall extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      roomName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: const Color(0x33BA9EFF),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: npGhost),
-                      ),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
+                if (overflowTiles.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      const Spacer(),
+                      if (overflowPageCount > 1)
+                        Text(
+                          'Page ${overflowPage + 1} of $overflowPageCount',
+                          style: const TextStyle(color: Color(0xFFA9ABB3), fontSize: 12),
                         ),
-                        child: Text(
-                          'LIVE',
-                          style: TextStyle(
-                            color: npPrimary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: npSurfaceHigh,
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: npGhost),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        child: Text(
-                          '${1 + remoteTiles.length} windows',
-                          style: const TextStyle(
-                            color: npOnVariant,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    if (overflowPageCount > 1)
-                      Text(
-                        'Page ${overflowPage + 1} of $overflowPageCount',
-                        style: const TextStyle(color: Color(0xFFA9ABB3), fontSize: 12),
-                      ),
-                    if (overflowTiles.isNotEmpty) ...[
                       const SizedBox(width: 6),
                       IconButton(
                         tooltip: 'Previous cam page',
@@ -261,12 +204,8 @@ class CameraWall extends ConsumerWidget {
                         onPressed: overflowPage > 0
                             ? () {
                                 ref
-                                        .read(
-                                          cameraWallOverflowPageProvider(roomId)
-                                              .notifier,
-                                        )
-                                        .state =
-                                    overflowPage - 1;
+                                    .read(cameraWallOverflowPageProvider(roomId).notifier)
+                                    .state = overflowPage - 1;
                               }
                             : null,
                         icon: const Icon(Icons.chevron_left),
@@ -277,20 +216,16 @@ class CameraWall extends ConsumerWidget {
                         onPressed: overflowPage < overflowPageCount - 1
                             ? () {
                                 ref
-                                        .read(
-                                          cameraWallOverflowPageProvider(roomId)
-                                              .notifier,
-                                        )
-                                        .state =
-                                    overflowPage + 1;
+                                    .read(cameraWallOverflowPageProvider(roomId).notifier)
+                                    .state = overflowPage + 1;
                               }
                             : null,
                         icon: const Icon(Icons.chevron_right),
                       ),
                     ],
-                  ],
-                ),
-                const SizedBox(height: 10),
+                  ),
+                  const SizedBox(height: 6),
+                ],
                 // ── Talking Now section ──────────────────────────────────
                 if (localIsTalking || talkingRemotes.isNotEmpty) ...[
                   Row(
@@ -374,20 +309,43 @@ class CameraWall extends ConsumerWidget {
                       final tileHeight = (effectiveTileW * (3 / 4) + headerH).clamp(120.0, maxTileH);
                       final mainGridHeight = rows * (tileHeight + spacing) - spacing;
                       // For a single centered tile, wrap the grid in a centered box.
-                      Widget grid = SizedBox(
-                        height: mainGridHeight,
-                        child: GridView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: crossAxisCount,
-                            mainAxisSpacing: spacing,
-                            crossAxisSpacing: spacing,
-                            mainAxisExtent: tileHeight,
-                          ),
-                          itemCount: mainGridTiles.length,
-                          itemBuilder: (context, index) => mainGridTiles[index],
-                        ),
+                      Widget grid = Wrap(
+                        spacing: spacing,
+                        runSpacing: spacing,
+                        alignment: WrapAlignment.start,
+                        crossAxisAlignment: WrapCrossAlignment.start,
+                        children: [
+                          if (showLocalTile && !localIsTalking)
+                            _ResizableTile(
+                              key: const ValueKey('rtile_local'),
+                              defaultWidth: effectiveTileW,
+                              defaultHeight: tileHeight,
+                              child: _CameraWallTileFrame(
+                                label: localLabel,
+                                speaking: false,
+                                hasMic: localHasMic,
+                                compact: false,
+                                onDetach: onDetachLocal,
+                                child: localTile,
+                              ),
+                            ),
+                          ...quietRemotes.map((tile) => _ResizableTile(
+                            key: ValueKey('rtile_${tile.uid}'),
+                            defaultWidth: effectiveTileW,
+                            defaultHeight: tileHeight,
+                            child: _CameraWallTileFrame(
+                              label: tile.label,
+                              speaking: false,
+                              hasMic: tile.hasMic,
+                              compact: false,
+                              viewerCount: tile.viewerCount,
+                              onDetach: onDetachRemote == null
+                                  ? null
+                                  : () => onDetachRemote!(tile),
+                              child: remoteTileBuilder(tile),
+                            ),
+                          )),
+                        ],
                       );
                       if (tileCount <= 1) {
                         grid = Align(
@@ -781,3 +739,82 @@ class _SoundWaveEqState extends State<_SoundWaveEq>
   }
 }
 
+// ---------------------------------------------------------------------------
+// Resizable tile wrapper — drag the bottom-right handle to resize any cam tile.
+// State is preserved across rebuilds via the widget's stable ValueKey.
+// ---------------------------------------------------------------------------
+class _ResizableTile extends StatefulWidget {
+  const _ResizableTile({
+    super.key,
+    required this.defaultWidth,
+    required this.defaultHeight,
+    required this.child,
+  });
+
+  final double defaultWidth;
+  final double defaultHeight;
+  final Widget child;
+
+  @override
+  State<_ResizableTile> createState() => _ResizableTileState();
+}
+
+class _ResizableTileState extends State<_ResizableTile> {
+  late double _width;
+  late double _height;
+
+  @override
+  void initState() {
+    super.initState();
+    _width = widget.defaultWidth;
+    _height = widget.defaultHeight;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _width,
+      height: _height,
+      child: Stack(
+        fit: StackFit.expand,
+        clipBehavior: Clip.none,
+        children: [
+          widget.child,
+          // Drag this handle to resize the cam tile.
+          Positioned(
+            right: 0,
+            bottom: 0,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanUpdate: (details) {
+                setState(() {
+                  _width = (_width + details.delta.dx).clamp(120.0, 640.0);
+                  _height = (_height + details.delta.dy).clamp(100.0, 480.0);
+                });
+              },
+              child: MouseRegion(
+                cursor: SystemMouseCursors.resizeDownRight,
+                child: Container(
+                  width: 16,
+                  height: 16,
+                  decoration: const BoxDecoration(
+                    color: Color(0x50BA9EFF),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(4),
+                      bottomRight: Radius.circular(10),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.south_east,
+                    size: 9,
+                    color: Colors.white70,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

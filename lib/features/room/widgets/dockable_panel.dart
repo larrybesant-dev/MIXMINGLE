@@ -197,12 +197,16 @@ class FloatingDockablePanel extends StatefulWidget {
 
 class FloatingDockablePanelState extends State<FloatingDockablePanel> {
   late Offset _position;
+  late double _width;
+  late double _height;
   bool _minimized = false;
 
   @override
   void initState() {
     super.initState();
     _position = widget.initialOffset;
+    _width = widget.width;
+    _height = widget.height;
   }
 
   @override
@@ -211,12 +215,12 @@ class FloatingDockablePanelState extends State<FloatingDockablePanel> {
     const npPrimary = Color(0xFFBA9EFF);
     const headerHeight = 32.0;
 
-    final panelHeight = _minimized ? headerHeight : widget.height;
+    final panelHeight = _minimized ? headerHeight : _height;
 
     return Positioned(
       left: _position.dx,
       top: _position.dy,
-      width: widget.width,
+      width: _width,
       height: panelHeight,
       child: Material(
         color: Colors.transparent,
@@ -235,7 +239,9 @@ class FloatingDockablePanelState extends State<FloatingDockablePanel> {
               ),
             ],
           ),
-          child: Column(
+          child: Stack(
+            children: [
+              Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // ── Draggable title bar ───────────────────────────────────
@@ -312,6 +318,41 @@ class FloatingDockablePanelState extends State<FloatingDockablePanel> {
               // ── Content ───────────────────────────────────────────────
               if (!_minimized)
                 Expanded(child: widget.child),
+            ],
+          ),
+              // ── Resize handle (bottom-right corner) ─────────────────
+              if (!_minimized)
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onPanUpdate: (details) {
+                      setState(() {
+                        _width = (_width + details.delta.dx).clamp(200.0, 800.0);
+                        _height = (_height + details.delta.dy).clamp(150.0, 600.0);
+                      });
+                    },
+                    child: MouseRegion(
+                      cursor: SystemMouseCursors.resizeDownRight,
+                      child: Container(
+                        width: 16,
+                        height: 16,
+                        decoration: const BoxDecoration(
+                          color: Color(0x50BA9EFF),
+                          borderRadius: BorderRadius.only(
+                            bottomRight: Radius.circular(8),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.south_east,
+                          size: 9,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),

@@ -85,13 +85,28 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isCallReady = false;
   bool _isMicMuted = false;
   bool _isVideoEnabled = false;
-  double _rightPanelWidth = 480.0;
+  /// Order of the three desktop columns. Valid values: 'cams', 'chat', 'users'.
+  List<String> _columnOrder = const ['cams', 'chat', 'users'];
+  double _chatColW = 280.0;
+  static const double _kUsersColW = 200.0;
+
+  void _moveSlot(String slot, int dir) {
+    final list = List<String>.from(_columnOrder);
+    final i = list.indexOf(slot);
+    final j = i + dir;
+    if (j >= 0 && j < list.length) {
+      final tmp = list[i];
+      list[i] = list[j];
+      list[j] = tmp;
+      setState(() => _columnOrder = List.unmodifiable(list));
+    }
+  }
   bool _isMicActionInFlight = false;
   bool _isVideoActionInFlight = false;
-  bool _isSharingPcAudio = false;
   String? _cameraStatus;
   String _connectPhase = 'idle';
   bool _showEmojiTray = false;
+  bool _showRichToolbar = false;
   String? _callError;
   int? _currentRtcUid;
   /// Slot id in rooms/{roomId}/slots currently held by this user, if any.
@@ -126,6 +141,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   static const int _kMaxBackoffSeconds = 30;
   final Map<String, String> _senderDisplayNameById = <String, String>{};
   final Map<String, int> _senderVipLevelById = <String, int>{};
+  /// GlobalKeys for remote RTCVideoViews — lets Flutter move the platform-view
+  /// element atomically when a tile is detached/reattached (avoids black screen).
+  final Map<int, GlobalKey> _remoteViewKeys = {};
+  GlobalKey _remoteViewKey(int uid) =>
+      _remoteViewKeys.putIfAbsent(uid, () => GlobalKey());
   final Map<String, String?> _senderAvatarUrlById = <String, String?>{};
   final Map<String, String?> _senderGenderById = <String, String?>{};
   final Set<String> _senderLookupInFlight = <String>{};
@@ -697,7 +717,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       // Cast needed: onSystemAudioStopped is only on WebRtcRoomService.
       if (connectedService is WebRtcRoomService) {
         connectedService.onSystemAudioStopped = () {
-          if (mounted) setState(() => _isSharingPcAudio = false);
+          // PC audio sharing stopped
         };
       }
       setState(() {
@@ -1593,7 +1613,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     _appliedMediaRole = null;
     _isMicActionInFlight = false;
     _isVideoActionInFlight = false;
-    _isSharingPcAudio = false;
     _requestedHighQualityRemoteUids = <int>{};
     _requestedLowQualityRemoteUids = <int>{};
     if (service != null) {
@@ -3287,6 +3306,49 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             final roomName = _asString(roomData?['name'], fallback: 'Live Room');
             final roomDescription = _asString(roomData?['description']);
             final spotlightUserId = _asString(roomData?['spotlightUserId']);
+            // ── 3-column layout helpers ──────────────────────────────────
+            final screenWidth = MediaQuery.sizeOf(context).width;
+            const kUsersW = _LiveRoomScreenState._kUsersColW;
+            final camsW =
+                (screenWidth - _chatColW - kUsersW).clamp(200.0, double.infinity);
+            double colLeft(String slot) {
+              double l = 0;
+              for (final s in _columnOrder) {
+                if (s == slot) return l;
+                l += switch (s) {
+                  'cams' => camsW,
+                  'chat' => _chatColW,
+                  _ => kUsersW,
+                };
+              }
+              return 0;
+            }
+            Widget panelMoveBtn(
+              String slot,
+              int dir, {
+              required String tooltip,
+              required IconData icon,
+            }) {
+              final i = _columnOrder.indexOf(slot);
+              final canMove = i + dir >= 0 && i + dir < _columnOrder.length;
+              return Tooltip(
+                message: tooltip,
+                child: InkWell(
+                  onTap: canMove ? () => _moveSlot(slot, dir) : null,
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      icon,
+                      size: 14,
+                      color: canMove
+                          ? const Color(0xFFBA9EFF)
+                          : const Color(0xFF343640),
+                    ),
+                  ),
+                ),
+              );
+            }
             final spotlightName = spotlightUserId.isNotEmpty
                 ? (_senderDisplayNameById[spotlightUserId] ?? spotlightUserId)
                 : null;
@@ -3458,13 +3520,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
               body: Stack(
                 fit: StackFit.expand,
                 children: [
-                  // ── FULLSCREEN VIDEO BACKGROUND ──────────────────────────
-                  // Camera panel — fills the screen left of the right panel.
+                  // ── CAM COLUMN (order-aware) ──────────────────────────────
+                  // Camera panel width is whatever is left after chat + users.
                   Positioned(
-                    left: 0,
+                    left: colLeft('cams'),
                     top: 0,
                     bottom: 0,
-                    right: _rightPanelWidth,
+                    width: camsW,
                     child: _agoraService != null
                         ? Builder(
                             builder: (context) {
@@ -3496,8 +3558,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                               90))
                                     p.userId: true,
                               };
+                              final floatingIds = ref
+                                  .watch(floatingCamWindowsProvider)
+                                  .map((w) => w.id)
+                                  .toSet();
+                              final localIsFloating = floatingIds.contains('${user.id}_local');
                               final remoteTiles = _agoraService!.remoteUids
                                   .where((remoteUid) {
+                                    // Hide from grid if already popped out.
+                                    if (floatingIds.contains('${remoteUid}_remote')) return false;
                                     final remoteUserId = _userIdForRtcUid(
                                         remoteUid, participantsInRoom);
                                     if (remoteUserId == null) return true;
@@ -3549,7 +3618,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 roomName: roomName,
                                 localLabel:
                                     _senderDisplayNameById[user.id] ?? 'You',
-                                showLocalTile: _isVideoEnabled,
+                                showLocalTile: _isVideoEnabled && !localIsFloating,
                                 localHasMic: participantsInRoom.any((p) =>
                                     p.userId == user.id &&
                                     p.role == 'stage'),
@@ -3565,17 +3634,20 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 remoteTiles: remoteTiles,
                                 maxMainGridRemoteTiles: slotCount,
                                 remoteTileBuilder: (tile) =>
-                                    _buildRemoteCamContent(
-                                  remoteUid: tile.uid,
-                                  canViewRemote: tile.canView,
-                                  avatarUrl: tile.avatarUrl,
-                                  onRequestAccess:
-                                      (!tile.canView &&
-                                              tile.userId != null &&
-                                              tile.userId != _joinedUserId)
-                                          ? () => _sendCamViewRequest(
-                                              tile.userId!)
-                                          : null,
+                                    KeyedSubtree(
+                                  key: _remoteViewKey(tile.uid),
+                                  child: _buildRemoteCamContent(
+                                    remoteUid: tile.uid,
+                                    canViewRemote: tile.canView,
+                                    avatarUrl: tile.avatarUrl,
+                                    onRequestAccess:
+                                        (!tile.canView &&
+                                                tile.userId != null &&
+                                                tile.userId != _joinedUserId)
+                                            ? () => _sendCamViewRequest(
+                                                tile.userId!)
+                                            : null,
+                                  ),
                                 ),
                                 onSubscriptionPlanChanged:
                                     (highQualityUids, lowQualityUids) {
@@ -3597,8 +3669,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                           avatarUrl: _senderAvatarUrlById[user.id],
                                         ),
                                         offset: const Offset(40, 80),
-                                        width: 300,
-                                        height: 220,
+                                        width: 320,
+                                        height: 240,
                                       ));
                                 },
                                 onDetachRemote: (tile) {
@@ -3608,17 +3680,20 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       .add(FloatingCamWindowData(
                                         id: '${tile.uid}_remote',
                                         label: tile.label,
-                                        content: _buildRemoteCamContent(
-                                          remoteUid: tile.uid,
-                                          canViewRemote: tile.canView,
-                                          avatarUrl: tile.avatarUrl,
+                                        content: KeyedSubtree(
+                                          key: _remoteViewKey(tile.uid),
+                                          child: _buildRemoteCamContent(
+                                            remoteUid: tile.uid,
+                                            canViewRemote: tile.canView,
+                                            avatarUrl: tile.avatarUrl,
+                                          ),
                                         ),
                                         offset: Offset(
                                           40 + (tile.uid % 200).toDouble(),
                                           80 + (tile.uid % 150).toDouble(),
                                         ),
-                                        width: 300,
-                                        height: 220,
+                                        width: 320,
+                                        height: 240,
                                       ));
                                 },
                               );
@@ -3647,21 +3722,49 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             ),
                           ),
                   ),
-                  // ── PANEL RESIZE HANDLE ───────────────────────────────────
+                  // ── CHAT COLUMN RESIZE HANDLE ─────────────────────────────
                   Positioned(
                     top: 0,
                     bottom: 0,
-                    right: _rightPanelWidth - 2,
+                    left: colLeft('chat') - 2,
                     width: 4,
                     child: MouseRegion(
                       cursor: SystemMouseCursors.resizeColumn,
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onHorizontalDragUpdate: (d) => setState(() {
-                          _rightPanelWidth = (_rightPanelWidth - d.delta.dx)
-                              .clamp(280.0, 700.0);
+                          // Dragging toward chat grows/shrinks it depending on
+                          // which side the chat column is on relative to cams.
+                          final chatIdx = _columnOrder.indexOf('chat');
+                          final camsIdx = _columnOrder.indexOf('cams');
+                          final chatRightOfCams = chatIdx > camsIdx;
+                          _chatColW =
+                              (_chatColW + (chatRightOfCams ? -d.delta.dx : d.delta.dx))
+                                  .clamp(220.0, 480.0);
                         }),
                         child: Container(color: const Color(0x20BA9EFF)),
+                      ),
+                    ),
+                  ),
+                  // ── CAM COLUMN MOVE BUTTONS ───────────────────────────────
+                  Positioned(
+                    top: kToolbarHeight + (roomDescription.isEmpty ? 8 : 32),
+                    left: colLeft('cams') + camsW - 66,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: const Color(0x9910131A),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          panelMoveBtn('cams', -1,
+                              tooltip: 'Move Cams left',
+                              icon: Icons.chevron_left),
+                          panelMoveBtn('cams', 1,
+                              tooltip: 'Move Cams right',
+                              icon: Icons.chevron_right),
+                        ],
                       ),
                     ),
                   ),
@@ -4014,39 +4117,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     ),
                                   ),
                                 ),
-                                // ── Share PC audio button ─────────────────
-                                Tooltip(
-                                  message: _isSharingPcAudio
-                                      ? 'Stop sharing PC audio'
-                                      : 'Share PC audio (music/system sound)',
-                                  child: IconButton(
-                                    icon: Icon(
-                                      _isSharingPcAudio
-                                          ? Icons.music_note
-                                          : Icons.music_off,
-                                      color: _isSharingPcAudio
-                                          ? const Color(0xFF00E3FD)
-                                          : const Color(0xFFA9ABB3),
-                                    ),
-                                    onPressed: (!_isCallReady || _agoraService == null)
-                                        ? null
-                                        : () async {
-                                            final service = _agoraService;
-                                            if (service == null) return;
-                                            try {
-                                              await service.shareSystemAudio(!_isSharingPcAudio);
-                                              if (mounted) {
-                                                setState(() => _isSharingPcAudio = service.isSharingSystemAudio);
-                                              }
-                                              _showSnackBar(_isSharingPcAudio
-                                                  ? 'PC audio is now being shared with the room.'
-                                                  : 'PC audio sharing stopped.');
-                                            } catch (e) {
-                                              _showSnackBar(_mapMediaError(e, canBroadcast: true));
-                                            }
-                                          },
-                                  ),
-                                ),
                               ],
                             ),
                           ),
@@ -4065,12 +4135,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         ],
                       ),
                     ),
-                  // ── RIGHT: Chat + Users panels (Paltalk-style docked) ─────
+                  // ── CHAT COLUMN (order-aware) ──────────────────────────────
                   Positioned(
-                    right: 0,
+                    left: colLeft('chat'),
                     top: 0,
                     bottom: 0,
-                    width: _rightPanelWidth,
+                    width: _chatColW,
                     child: DecoratedBox(
                       decoration: const BoxDecoration(
                         color: Color(0xFF16181F),
@@ -4087,76 +4157,17 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             icon: Icons.chat_bubble_outline,
                             backgroundColor: const Color(0xFF16181F),
                             headerColor: const Color(0xFF23253A),
+                            actions: [
+                              panelMoveBtn('chat', -1,
+                                  tooltip: 'Move Chat left',
+                                  icon: Icons.chevron_left),
+                              panelMoveBtn('chat', 1,
+                                  tooltip: 'Move Chat right',
+                                  icon: Icons.chevron_right),
+                            ],
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                          // Chat header
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        'Room Chat',
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleMedium
-                                            ?.copyWith(color: Colors.white),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    presenceAsync.when(
-                                      data: (presence) {
-                                        final onlineCount = presence
-                                            .where(
-                                              (e) =>
-                                                  e.isOnline &&
-                                                  (e.lastHeartbeatAt ==
-                                                          null ||
-                                                      DateTime.now()
-                                                              .difference(
-                                                                e.lastHeartbeatAt!,
-                                                              )
-                                                              .inSeconds <
-                                                          90),
-                                            )
-                                            .length;
-                                        return Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            const Icon(Icons.circle,
-                                                color: Color(0xFF00E3FD),
-                                                size: 8),
-                                            const SizedBox(width: 3),
-                                            Text(
-                                              '$onlineCount online',
-                                              style: const TextStyle(
-                                                color: Colors.white70,
-                                                fontSize: 11,
-                                              ),
-                                            ),
-                                          ],
-                                        );
-                                      },
-                                      loading: () => const SizedBox.shrink(),
-                                      error: (_, _) => const SizedBox.shrink(),
-                                    ),
-                                  ],
-                                ),
-                                Text(
-                                  '${participantsInRoom.length} total joined',
-                                  style: const TextStyle(
-                                    color: Colors.white54,
-                                    fontSize: 11,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                           const Divider(height: 1, color: Color(0x30BA9EFF)),
                           // Gift + hand raise row for non-hosts.
                           // Resolve hostId from Firestore doc first; fall back
@@ -4435,11 +4446,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 );
                               },
                             ),
-                          // Rich text toolbar
-                          RichTextToolbar(
-                            controller: messageController,
-                            onChanged: () => setState(() {}),
-                          ),
+                          // Rich text toolbar (toggled)
+                          if (_showRichToolbar)
+                            RichTextToolbar(
+                              controller: messageController,
+                              onChanged: () => setState(() {}),
+                            ),
                           // Input row
                           Padding(
                             padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
@@ -4459,6 +4471,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                           _showEmojiTray = !_showEmojiTray,
                                     );
                                   },
+                                ),
+                                Tooltip(
+                                  message: _showRichToolbar ? 'Hide formatting' : 'Rich text formatting',
+                                  child: IconButton(
+                                    icon: Icon(
+                                      Icons.text_format,
+                                      color: _showRichToolbar
+                                          ? const Color(0xFFBA9EFF)
+                                          : const Color(0xFF5A5E6B),
+                                      size: 20,
+                                    ),
+                                    onPressed: () => setState(() => _showRichToolbar = !_showRichToolbar),
+                                  ),
                                 ),
                                 Expanded(
                                   child: TextField(
@@ -4562,17 +4587,62 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       ),
                     ),
                   ),
-                        const VerticalDivider(
-                          width: 1,
-                          thickness: 1,
-                          color: Color(0xFF2E2F3A),
-                        ),
+                      ],
+                    ),
+                    ),
+                  ),
+                  // ── USERS COLUMN (order-aware) ────────────────────────────
+                  Positioned(
+                    left: colLeft('users'),
+                    top: 0,
+                    bottom: 0,
+                    width: kUsersW,
+                    child: ColoredBox(
+                      color: const Color(0xFF161A21),
+                      child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // AppBar + ticker spacer so content starts below bar
                         SizedBox(
-                          width: 200,
-                          child: _RoomRosterSidebar(
-                            topPadding: roomDescription.isEmpty
+                            height: roomDescription.isEmpty
                                 ? kToolbarHeight
-                                : kToolbarHeight + 24,
+                                : kToolbarHeight + 24),
+                        // 32 px header row with ◄ ► move buttons
+                        Container(
+                          height: 32,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFF1C2028),
+                            border: Border(
+                              left: BorderSide(
+                                  color: Color(0xFF2E2F3A), width: 1),
+                            ),
+                          ),
+                          padding:
+                              const EdgeInsets.symmetric(horizontal: 8),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.people_outline,
+                                  size: 14, color: Color(0xFFBA9EFF)),
+                              const SizedBox(width: 6),
+                              const Expanded(
+                                child: Text('Users',
+                                    style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w700)),
+                              ),
+                              panelMoveBtn('users', -1,
+                                  tooltip: 'Move Users left',
+                                  icon: Icons.chevron_left),
+                              panelMoveBtn('users', 1,
+                                  tooltip: 'Move Users right',
+                                  icon: Icons.chevron_right),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: _RoomRosterSidebar(
+                            topPadding: 0,
                             participants: participantsInRoom,
                             displayNameById: Map.unmodifiable(
                                 _senderDisplayNameById),
@@ -4995,6 +5065,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                     gender: genderById[p.userId],
                     trailingIcon: Icons.videocam,
                     trailingColor: Colors.white38,
+                    hasRecentChat: recentChatters.contains(p.userId),
                   ),
                 ),
           const Divider(height: 1, thickness: 1, color: _kDivider),
@@ -5026,6 +5097,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                             ? Icons.star_half
                             : null,
                     trailingColor: const Color(0xFFFFD700),
+                    hasRecentChat: recentChatters.contains(p.userId),
                   ),
                 );
               },
@@ -5083,6 +5155,7 @@ class _RosterRow extends StatelessWidget {
     this.gender,
     this.trailingIcon,
     this.trailingColor = Colors.white38,
+    this.hasRecentChat = false,
   });
 
   final String displayName;
@@ -5091,6 +5164,7 @@ class _RosterRow extends StatelessWidget {
   final String? gender;
   final IconData? trailingIcon;
   final Color trailingColor;
+  final bool hasRecentChat;
 
   IconData? _genderIcon(String? g) {
     if (g == null) return null;
@@ -5136,6 +5210,26 @@ class _RosterRow extends StatelessWidget {
               '💎$vipLevel',
               style: const TextStyle(
                   fontSize: 9, color: Color(0xFF7777BB)),
+            ),
+          ],
+          if (hasRecentChat) ...[
+            const SizedBox(width: 3),
+            DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(3),
+                boxShadow: [
+                  BoxShadow(
+                    color: Color(0xFF00C853).withValues(alpha: 0.75),
+                    blurRadius: 6,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.mail,
+                size: 11,
+                color: Color(0xFF00E676),
+              ),
             ),
           ],
           if (trailingIcon != null) ...[
