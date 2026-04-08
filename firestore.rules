@@ -155,11 +155,20 @@ service cloud.firestore {
     }
 
     match /rooms/{roomId} {
-      allow read: if signedIn();
+      // Non-adult rooms: any signed-in user. Adult rooms: 18+ verified users only.
+      allow read: if signedIn()
+        && (
+          !resource.data.get('isAdult', false)
+          || adultModeEnabled(request.auth.uid)
+        );
       allow create: if signedIn()
         && (
           request.resource.data.ownerId == request.auth.uid
           || request.resource.data.hostId == request.auth.uid
+        )
+        && (
+          !request.resource.data.get('isAdult', false)
+          || adultModeEnabled(request.auth.uid)
         );
       // Host can update/delete; callee can decline an incoming direct call.
       allow update: if isRoomHost(roomId)

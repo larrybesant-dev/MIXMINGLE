@@ -44,6 +44,13 @@ import '../features/room/screens/cam_popout_screen.dart';
 import '../features/feed/screens/room_browser_screen.dart';
 import '../features/verification/screens/verification_screen.dart';
 import '../features/room/screens/create_room_screen.dart';
+import '../features/after_dark/screens/after_dark_age_gate_screen.dart';
+import '../features/after_dark/screens/after_dark_pin_screen.dart';
+import '../features/after_dark/screens/after_dark_home_screen.dart';
+import '../features/after_dark/screens/after_dark_lounges_screen.dart';
+import '../features/after_dark/screens/after_dark_profile_screen.dart';
+import '../features/after_dark/screens/after_dark_create_lounge_screen.dart';
+import '../features/after_dark/widgets/after_dark_shell.dart';
 
 import '../shared/widgets/app_shell.dart';
 import 'package:mixvy/features/auth/screens/login_screen.dart';
@@ -146,6 +153,9 @@ Future<String?> evaluateAppRedirect({
   if (isRouteError || matchedLocation == '/404') {
     return null;
   }
+
+  // Let After Dark handle its own guard (age-gate + PIN redirect).
+  if (matchedLocation.startsWith('/after-dark')) return null;
 
   // Let the splash screen drive its own navigation after the animation.
   if (matchedLocation == '/splash') return null;
@@ -485,6 +495,49 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
         ],
       ),
+
+      // ── After Dark — no-shell setup routes ────────────────────────────────
+      GoRoute(
+        path: '/after-dark/setup',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const AfterDarkAgeGateScreen(),
+      ),
+      GoRoute(
+        path: '/after-dark/pin-setup',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const AfterDarkPinScreen.setup(),
+      ),
+      GoRoute(
+        path: '/after-dark/unlock',
+        parentNavigatorKey: rootNavigatorKey,
+        builder: (context, state) => const AfterDarkPinScreen.unlock(),
+      ),
+
+      // ── After Dark — shell routes ──────────────────────────────────────────
+      ShellRoute(
+        navigatorKey: _afterDarkShellKey,
+        builder: (context, state, child) => AfterDarkShell(child: child),
+        routes: [
+          GoRoute(
+            path: '/after-dark',
+            builder: (context, state) => const AfterDarkHomeScreen(),
+          ),
+          GoRoute(
+            path: '/after-dark/lounges',
+            builder: (context, state) => const AfterDarkLoungesScreen(),
+          ),
+          GoRoute(
+            path: '/after-dark/profile',
+            builder: (context, state) => const AfterDarkProfileScreen(),
+          ),
+          GoRoute(
+            path: '/after-dark/create-lounge',
+            parentNavigatorKey: rootNavigatorKey,
+            builder: (context, state) =>
+                const AfterDarkCreateLoungeScreen(),
+          ),
+        ],
+      ),
     ],
   );
 });
@@ -494,5 +547,8 @@ final GlobalKey<NavigatorState> rootNavigatorKey =
 
 final _shellNavigatorKey =
     GlobalKey<NavigatorState>(debugLabel: 'mixvy-shell-navigator');
+
+final _afterDarkShellKey =
+    GlobalKey<NavigatorState>(debugLabel: 'mixvy-after-dark-shell-navigator');
 
 

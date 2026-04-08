@@ -12,6 +12,7 @@ import '../profile/profile_controller.dart';
 import '../../presentation/providers/user_provider.dart';
 import '../stories/widgets/stories_row.dart';
 import '../../models/user.dart' as feed_user;
+import '../../models/user_model.dart';
 import '../../widgets/mixvy_drawer.dart';
 
 
@@ -40,6 +41,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final profileState = ref.watch(profileControllerProvider);
     final setupItems = ProfileCompletion.guidedSetupItems(profileState);
     final currentUser = ref.watch(userProvider);
+    final newMembersAsync = ref.watch(newMembersStreamProvider);
 
     return Scaffold(
       backgroundColor: NeonPulse.surface,
@@ -182,6 +184,40 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                 ),
               ],
+
+              // New Members
+              SliverToBoxAdapter(
+                child: _SectionHeader(
+                  title: 'New Members',
+                  dotColor: const Color(0xFF00E676),
+                  topPadding: 24,
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: newMembersAsync.when(
+                  data: (members) => members.isEmpty
+                      ? const _EmptyPill(label: 'No new members yet')
+                      : SizedBox(
+                          height: 88,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 4),
+                            itemCount: members.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(width: 16),
+                            itemBuilder: (ctx, i) => _NewMemberChip(
+                              user: members[i],
+                              onTap: () =>
+                                  ctx.go('/profile/${members[i].id}'),
+                            ),
+                          ),
+                        ),
+                  loading: () => const _HorizontalSkeleton(height: 88),
+                  error: (_, __) =>
+                      const _ErrorCard(message: 'Could not load new members'),
+                ),
+              ),
 
               // Recent Posts header
               SliverToBoxAdapter(
@@ -403,6 +439,92 @@ class _CreatorChip extends StatelessWidget {
               style: const TextStyle(
                   fontSize: 10,
                   color: NeonPulse.onSurfaceVariant),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// New Member chip: avatar + username + "NEW" badge
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _NewMemberChip extends StatelessWidget {
+  final UserModel user;
+  final VoidCallback onTap;
+  const _NewMemberChip({required this.user, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarUrl = user.avatarUrl ?? '';
+    return GestureDetector(
+      onTap: onTap,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(2),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFF00E676).withValues(alpha: 0.25),
+                  border: Border.all(
+                      color: const Color(0xFF00E676), width: 2),
+                ),
+                child: CircleAvatar(
+                  radius: 26,
+                  backgroundColor: NeonPulse.surfaceHigh,
+                  backgroundImage: avatarUrl.isNotEmpty
+                      ? CachedNetworkImageProvider(avatarUrl)
+                      : null,
+                  child: avatarUrl.isEmpty
+                      ? Text(
+                          user.username.isNotEmpty
+                              ? user.username[0].toUpperCase()
+                              : '?',
+                          style: const TextStyle(
+                              color: Color(0xFF00E676),
+                              fontWeight: FontWeight.w800,
+                              fontSize: 18),
+                        )
+                      : null,
+                ),
+              ),
+              Positioned(
+                top: -4,
+                right: -4,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 4, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00E676),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'NEW',
+                    style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.black),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          SizedBox(
+            width: 60,
+            child: Text(
+              user.username,
+              style: const TextStyle(
+                  fontSize: 10, color: NeonPulse.onSurfaceVariant),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,

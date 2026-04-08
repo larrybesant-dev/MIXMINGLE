@@ -8,7 +8,6 @@ import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
 import '../../follow/providers/follow_provider.dart';
 import '../../../presentation/providers/friend_provider.dart';
-import '../../../services/friend_service.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});

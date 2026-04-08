@@ -8,6 +8,8 @@ import '../theme/app_theme.dart';
 import '../core/theme.dart';
 import '../shared/widgets/beta_feedback_overlay.dart';
 import '../shared/widgets/incoming_call_overlay.dart';
+import '../features/after_dark/providers/after_dark_provider.dart';
+import '../features/after_dark/theme/after_dark_theme.dart';
 
 class MixVyApp extends ConsumerWidget {
   const MixVyApp({super.key});
@@ -17,12 +19,13 @@ class MixVyApp extends ConsumerWidget {
     final router = ref.watch(routerProvider);
     final settings = ref.watch(appSettingsControllerProvider).valueOrNull ?? const AppSettings.defaults();
     final appLocale = Locale(settings.localeCode);
+    final afterDarkActive = ref.watch(afterDarkSessionProvider);
 
     return MaterialApp.router(
       title: 'MixVy',
-      theme: AppTheme.light,
-      darkTheme: midnightCreativeTheme,
-      themeMode: settings.themeMode,
+      theme: afterDarkActive ? afterDarkTheme : AppTheme.light,
+      darkTheme: afterDarkActive ? afterDarkTheme : midnightCreativeTheme,
+      themeMode: afterDarkActive ? ThemeMode.dark : settings.themeMode,
       builder: (context, child) {
         return IncomingCallOverlay(
           child: BetaFeedbackOverlay(
