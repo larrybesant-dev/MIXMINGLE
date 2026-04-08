@@ -3353,7 +3353,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 ? (_senderDisplayNameById[spotlightUserId] ?? spotlightUserId)
                 : null;
             return Scaffold(
-              extendBodyBehindAppBar: true,
+              extendBodyBehindAppBar: false,
               extendBody: true,
               backgroundColor: const Color(0xFF0B0E14),
               appBar: AppBar(
