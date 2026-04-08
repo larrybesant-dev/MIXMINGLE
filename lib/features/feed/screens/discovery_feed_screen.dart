@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:ui';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -15,6 +17,7 @@ import '../widgets/feed_loading_shimmer.dart';
 import '../../stories/widgets/stories_row.dart';
 import '../../ads/ad_manager.dart';
 import '../../../features/profile/profile_controller.dart';
+import '../../../models/room_model.dart';
 
 // ── Neon Pulse colour aliases ─────────────────────────────────────────────────
 const _npSurface        = Color(0xFF0D0A0C);
@@ -27,6 +30,17 @@ const _npError          = Color(0xFFFF6E84);
 const _npOnSurface      = Color(0xFFF2EBE0);
 const _npOnVariant      = Color(0xFFB09080);
 const _npGhost          = Color(0x1A73757D);
+
+// ── Host avatar provider ──────────────────────────────────────────────────────
+final _hostAvatarProvider =
+    FutureProvider.autoDispose.family<String?, String>((ref, hostId) async {
+  final doc = await FirebaseFirestore.instance
+      .collection('users')
+      .doc(hostId)
+      .get();
+  if (!doc.exists) return null;
+  return doc.data()?['avatarUrl'] as String?;
+});
 
 class DiscoveryFeedScreen extends ConsumerWidget {
   const DiscoveryFeedScreen({super.key});
@@ -75,6 +89,8 @@ class DiscoveryFeedScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            // Live Now strip — visible on both Discover and Following tabs
+            const SliverToBoxAdapter(child: _LiveNowStrip()),
           ],
           body: const TabBarView(
             children: [
@@ -1049,6 +1065,187 @@ class _RoomCountdownState extends State<_RoomCountdown> {
     }
     return Text(label,
         style: GoogleFonts.inter(fontSize: 12, color: _npOnVariant));
+  }
+}
+
+// ── Live Now Strip — always visible above both feed tabs ───────────────────────
+class _LiveNowStrip extends ConsumerWidget {
+  const _LiveNowStrip();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final feedState = ref.watch(feedControllerProvider);
+    final rooms = feedState.liveRooms.take(12).toList();
+    if (rooms.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          child: Row(
+            children: [
+              Container(
+                width: 7, height: 7,
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: _npError,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                'Live Now',
+                style: GoogleFonts.inter(
+                  fontSize: 13, fontWeight: FontWeight.w700,
+                  color: _npError, letterSpacing: 0.3,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: _npError.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${rooms.length}',
+                  style: GoogleFonts.inter(
+                      fontSize: 11, fontWeight: FontWeight.w600,
+                      color: _npError),
+                ),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 92,
+          child: ListView.separated(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            scrollDirection: Axis.horizontal,
+            itemCount: rooms.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 14),
+            itemBuilder: (ctx, i) => _LiveNowBubble(
+              room: rooms[i],
+              onTap: () => context.go('/room/${rooms[i].id}'),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Container(height: 1, color: _npGhost),
+      ],
+    );
+  }
+}
+
+// ── Live Now bubble (avatar ring + name) ──────────────────────────────────────
+class _LiveNowBubble extends ConsumerWidget {
+  const _LiveNowBubble({required this.room, required this.onTap, super.key});
+
+  final RoomModel room;
+  final VoidCallback onTap;
+
+  static const _categoryEmoji = {
+    'music': '🎵', 'gaming': '🎮', 'dating': '❤️', 'talk': '💬',
+    'tech': '💻',  'art': '🎨',   'dance': '💃',
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final avatarAsync = ref.watch(_hostAvatarProvider(room.hostId));
+    final emoji = _categoryEmoji[room.category?.toLowerCase()] ?? '📡';
+    final memberCount = room.memberCount > 0
+        ? room.memberCount
+        : room.stageUserIds.length + room.audienceUserIds.length;
+
+    return GestureDetector(
+      onTap: onTap,
+      child: SizedBox(
+        width: 66,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                // Gradient ring: gold → rose wine
+                Container(
+                  width: 58, height: 58,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: SweepGradient(
+                      colors: [_npError, _npPrimary, _npSecondary, _npError],
+                    ),
+                  ),
+                  padding: const EdgeInsets.all(2.5),
+                  child: ClipOval(
+                    child: avatarAsync.when(
+                      data: (url) => url != null && url.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: url,
+                              fit: BoxFit.cover,
+                              errorWidget: (_, __, ___) =>
+                                  _EmojiAvatar(emoji: emoji),
+                            )
+                          : _EmojiAvatar(emoji: emoji),
+                      loading: () => _EmojiAvatar(emoji: emoji),
+                      error: (_, __) => _EmojiAvatar(emoji: emoji),
+                    ),
+                  ),
+                ),
+                // Member count badge
+                if (memberCount > 0)
+                  Positioned(
+                    bottom: -2, right: -2,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: _npSurface,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: _npSurfaceHigh, width: 1.5),
+                      ),
+                      child: Text(
+                        memberCount >= 1000
+                            ? '${(memberCount / 1000).toStringAsFixed(1)}k'
+                            : '$memberCount',
+                        style: GoogleFonts.inter(
+                            fontSize: 9, fontWeight: FontWeight.w700,
+                            color: _npOnVariant),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Text(
+              room.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: GoogleFonts.inter(
+                  fontSize: 10, fontWeight: FontWeight.w500,
+                  color: _npOnVariant),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Emoji fallback avatar ─────────────────────────────────────────────────────
+class _EmojiAvatar extends StatelessWidget {
+  const _EmojiAvatar({required this.emoji});
+  final String emoji;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: _npSurfaceHighest,
+      alignment: Alignment.center,
+      child: Text(emoji, style: const TextStyle(fontSize: 22)),
+    );
   }
 }
 
