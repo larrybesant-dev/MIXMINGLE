@@ -36,15 +36,16 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
+        backgroundColor: const Color(0xFF1C2028),
         actions: [
-          TextButton.icon(
+          IconButton(
+            tooltip: 'Logout',
+            icon: const Icon(Icons.logout, color: Color(0xFFFF6E84)),
             onPressed: () async {
               await ref.read(authControllerProvider.notifier).logout();
               if (!context.mounted) return;
               context.go('/login');
             },
-            icon: const Icon(Icons.logout),
-            label: const Text('Logout'),
           ),
         ],
       ),

@@ -96,7 +96,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                 if (isVerified) {
                   return _StatusBanner(
                     icon: Icons.verified,
-                    color: Colors.blue,
+                    color: const Color(0xFF00E3FD),
                     title: 'You are verified!',
                     subtitle: 'Your account has the verified badge.',
                   );
@@ -262,7 +262,7 @@ class _ExistingRequestView extends StatelessWidget {
     final (icon, color, title, subtitle) = switch (status) {
       'approved' => (
           Icons.verified,
-          Colors.blue,
+          const Color(0xFF00E3FD),
           'Request approved',
           'You have been granted verified status.',
         ),
@@ -274,7 +274,7 @@ class _ExistingRequestView extends StatelessWidget {
         ),
       _ => (
           Icons.hourglass_top_outlined,
-          Colors.orange,
+          const Color(0xFFFFB74D),
           'Request pending',
           'Your request is under review. This usually takes 3–5 business days.',
         ),

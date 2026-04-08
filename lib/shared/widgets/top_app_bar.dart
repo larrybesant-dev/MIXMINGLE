@@ -31,7 +31,6 @@ class TopAppBar extends ConsumerWidget implements PreferredSizeWidget {
               : const Icon(Icons.notifications_outlined),
         ),
       ],
-      backgroundColor: Theme.of(context).appBarTheme.backgroundColor,
       elevation: 0,
     );
   }

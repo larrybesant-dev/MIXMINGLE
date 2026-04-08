@@ -123,18 +123,18 @@ class _FloatingWhisperPanelWidgetState
               },
               child: Container(
                 height: 44,
-                color: const Color(0xFF23263A),
+                color: const Color(0xFF282C36),
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Row(
                   children: [
-                    const Icon(Icons.drag_indicator, size: 18, color: Colors.white70),
+                    const Icon(Icons.drag_indicator, size: 18, color: Color(0xFFA9ABB3)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         widget.peerName,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: Color(0xFFECEDF6),
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -223,12 +223,12 @@ class _MessageList extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.error_outline, color: Colors.redAccent, size: 28),
+              const Icon(Icons.error_outline, color: Color(0xFFFF6E84), size: 28),
               const SizedBox(height: 8),
               const Text(
                 'Could not load messages.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70, fontSize: 12),
+                style: TextStyle(color: Color(0xFFA9ABB3), fontSize: 12),
               ),
               const SizedBox(height: 8),
               TextButton(
@@ -242,7 +242,7 @@ class _MessageList extends ConsumerWidget {
       data: (messages) {
         if (messages.isEmpty) {
           return const Center(
-            child: Text('No messages yet.', style: TextStyle(color: Colors.grey)),
+            child: Text('No messages yet.', style: TextStyle(color: Color(0xFFA9ABB3))),
           );
         }
         return ListView.builder(

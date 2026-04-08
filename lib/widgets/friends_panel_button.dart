@@ -262,7 +262,7 @@ class _FriendTile extends ConsumerWidget {
               height: 13,
               decoration: BoxDecoration(
                 color: isOnline
-                    ? const Color(0xFF00D4AA)
+                    ? const Color(0xFF00E3FD)
                     : cs.outlineVariant,
                 shape: BoxShape.circle,
                 border: Border.all(color: cs.surface, width: 2),
@@ -277,7 +277,7 @@ class _FriendTile extends ConsumerWidget {
           ? Text(
               inRoom != null ? '🎙 In a room' : 'Online',
               style: const TextStyle(
-                  color: Color(0xFF00D4AA), fontSize: 12),
+                  color: Color(0xFF00E3FD), fontSize: 12),
             )
           : Text(
               'Offline',

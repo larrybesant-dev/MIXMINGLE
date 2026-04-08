@@ -77,6 +77,12 @@ final ThemeData midnightCreativeTheme = ThemeData(
     surfaceTintColor: Colors.transparent,
     foregroundColor: NeonPulse.onSurface,
     centerTitle: true,
+    titleTextStyle: TextStyle(
+      color: NeonPulse.onSurface,
+      fontSize: 18,
+      fontWeight: FontWeight.w700,
+      letterSpacing: 0.2,
+    ),
   ),
   cardTheme: CardThemeData(
     elevation: 0,
