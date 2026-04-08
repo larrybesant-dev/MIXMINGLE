@@ -12,7 +12,6 @@ import '../../widgets/friends_panel_button.dart';
 // ── Velvet Noir colour aliases ─────────────────────────────────────────────
 const _npSurface     = Color(0xFF0D0A0C);
 const _npPrimary     = Color(0xFFD4A853);
-const _npPrimaryDim  = Color(0xFF8C6020);
 const _npOnVariant   = Color(0xFFB09080);
 const _npError       = Color(0xFFFF6E84);
 const _npGhost       = Color(0x14D4A853);

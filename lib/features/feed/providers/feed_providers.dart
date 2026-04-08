@@ -5,6 +5,7 @@ import 'package:mixvy/services/room_service.dart';
 import '../repository/feed_repository.dart';
 import '../models/post_model.dart';
 import '../../../models/room_model.dart';
+import '../../../models/user_model.dart';
 import 'package:mixvy/models/models.dart';
 
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
@@ -59,4 +60,18 @@ final liveRoomsCountProvider = StreamProvider.autoDispose<int>((ref) {
       .limit(501)
       .snapshots()
       .map((snap) => snap.size);
+});
+
+/// Stream of the 12 most recently joined users, ordered by createdAt desc.
+final newMembersStreamProvider = StreamProvider.autoDispose<List<UserModel>>((ref) {
+  return FirebaseFirestore.instance
+      .collection('users')
+      .orderBy('createdAt', descending: true)
+      .limit(12)
+      .snapshots()
+      .map((snap) => snap.docs.map((d) {
+            final data = d.data();
+            data['id'] = d.id;
+            return UserModel.fromJson(data);
+          }).toList());
 });
