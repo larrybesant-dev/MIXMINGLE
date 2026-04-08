@@ -58,6 +58,7 @@ import '../../services/friend_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/presence_service.dart';
 import '../../services/room_audio_cues.dart';
+import '../../shared/widgets/beta_feedback_overlay.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -3514,6 +3515,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             title: 'Report room',
                             fallbackReason: 'Live room review requested',
                           );
+                        case 'report_issue':
+                          BetaFeedbackSheet.show(context);
                       }
                     },
                     itemBuilder: (context) => const [
@@ -3549,6 +3552,15 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         child: ListTile(
                           leading: Icon(Icons.flag_outlined),
                           title: Text('Report room'),
+                          contentPadding: EdgeInsets.zero,
+                          dense: true,
+                        ),
+                      ),
+                      PopupMenuItem<String>(
+                        value: 'report_issue',
+                        child: ListTile(
+                          leading: Icon(Icons.bug_report_outlined),
+                          title: Text('Report issue'),
                           contentPadding: EdgeInsets.zero,
                           dense: true,
                         ),

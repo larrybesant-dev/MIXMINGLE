@@ -3,7 +3,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mixvy/router/app_router.dart';
 
 class BetaFeedbackOverlay extends StatelessWidget {
   const BetaFeedbackOverlay({super.key, required this.child});
@@ -11,44 +10,28 @@ class BetaFeedbackOverlay extends StatelessWidget {
   final Widget child;
 
   @override
-  Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        child,
-        Positioned(
-          right: 16,
-          bottom: 24,
-          child: FloatingActionButton.small(
-            heroTag: 'beta-feedback-fab',
-            tooltip: 'Report Issue',
-            child: const Icon(Icons.bug_report_outlined),
-            onPressed: () {
-              final navigatorContext = rootNavigatorKey.currentContext;
-              if (navigatorContext == null) return;
+  Widget build(BuildContext context) => child;
+}
 
-              showModalBottomSheet<void>(
-                context: navigatorContext,
-                useRootNavigator: true,
-                isScrollControlled: true,
-                showDragHandle: true,
-                builder: (_) => const _BetaFeedbackSheet(),
-              );
-            },
-          ),
-        ),
-      ],
+class BetaFeedbackSheet extends StatefulWidget {
+  const BetaFeedbackSheet({super.key});
+
+  /// Convenience method to open the sheet from any context.
+  static void show(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (_) => const BetaFeedbackSheet(),
     );
   }
-}
-
-class _BetaFeedbackSheet extends StatefulWidget {
-  const _BetaFeedbackSheet();
 
   @override
-  State<_BetaFeedbackSheet> createState() => _BetaFeedbackSheetState();
+  State<BetaFeedbackSheet> createState() => _BetaFeedbackSheetState();
 }
 
-class _BetaFeedbackSheetState extends State<_BetaFeedbackSheet> {
+class _BetaFeedbackSheetState extends State<BetaFeedbackSheet> {
   final TextEditingController _messageController = TextEditingController();
   String _category = 'bug';
   bool _submitting = false;

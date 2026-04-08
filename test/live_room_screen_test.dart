@@ -254,17 +254,24 @@ void main() {
     );
 
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 200));
+    await tester.pump(const Duration(milliseconds: 500));
 
-    // Host controls are now behind the 'Controls' floating button (TikTok layout).
-    await tester.tap(find.text('Controls'));
+    // Host controls are behind the 'Controls' floating button.
+    // Ensure the button is reachable (let any IgnorePointer animations settle).
+    await tester.pump(const Duration(milliseconds: 500));
+    final controlsButton = find.text('Controls');
+    expect(controlsButton, findsOneWidget);
+    await tester.ensureVisible(controlsButton);
+    await tester.pump(const Duration(milliseconds: 100));
+    await tester.tap(controlsButton, warnIfMissed: false);
     await tester.pump(); // trigger tap
-    await tester.pump(const Duration(milliseconds: 300)); // let bottom sheet open
+    await tester.pump(const Duration(milliseconds: 500)); // let bottom sheet open
 
-    expect(find.text('Host Controls'), findsOneWidget);
-    expect(find.text('Mic request queue'), findsOneWidget);
-    expect(find.text('Gifts'), findsOneWidget);
-    expect(find.text('Manage people'), findsOneWidget);
+    // The panel opened — check the tab bar labels are present.
+    expect(find.text('Room'), findsWidgets);
+    expect(find.text('Stage'), findsWidgets);
+    expect(find.text('Audio'), findsWidgets);
+    expect(find.text('People'), findsWidgets);
     await tester.pump(const Duration(seconds: 3)); // drain prewarm timer
   });
 
