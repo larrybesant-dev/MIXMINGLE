@@ -2,25 +2,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// ── Neon Pulse colour tokens ──────────────────────────────────────────────────
+// ── Velvet Noir Design Tokens — MixVy ────────────────────────────────────────
+// Deep warm-black surfaces · champagne gold · rose wine · warm cream
 class NeonPulse {
-  // Surfaces
-  static const Color surface       = Color(0xFF0B0E14);
-  static const Color surfaceLow    = Color(0xFF10131A);
-  static const Color surfaceContainer     = Color(0xFF161A21);
-  static const Color surfaceHigh   = Color(0xFF1C2028);
-  static const Color surfaceBright = Color(0xFF282C36);
-  static const Color surfaceHighest = Color(0xFF22262F);
+  // Surfaces — warm deep-black with burgundy undertones
+  static const Color surface        = Color(0xFF0D0A0C);
+  static const Color surfaceLow     = Color(0xFF130C0F);
+  static const Color surfaceContainer = Color(0xFF1B1216);
+  static const Color surfaceHigh    = Color(0xFF241820);
+  static const Color surfaceBright  = Color(0xFF302229);
+  static const Color surfaceHighest = Color(0xFF2A1C23);
 
-  // Brand
-  static const Color primary    = Color(0xFFBA9EFF); // lavender
-  static const Color primaryDim = Color(0xFF8455EF); // deep purple
-  static const Color secondary  = Color(0xFF00E3FD); // cyan
+  // Brand — champagne gold · rose wine
+  static const Color primary    = Color(0xFFD4A853); // champagne gold
+  static const Color primaryDim = Color(0xFF8C6020); // deep amber
+  static const Color secondary  = Color(0xFFC45E7A); // rose wine
 
-  // On-surface
-  static const Color onSurface        = Color(0xFFECEDF6);
-  static const Color onSurfaceVariant = Color(0xFFA9ABB3);
-  static const Color outlineVariant   = Color(0xFF45484F);
+  // On-surface — warm cream tones
+  static const Color onSurface        = Color(0xFFF2EBE0);
+  static const Color onSurfaceVariant = Color(0xFFB09080);
+  static const Color outlineVariant   = Color(0xFF5A3845);
 
   // Status
   static const Color error = Color(0xFFFF6E84); // LIVE badge / error
@@ -52,23 +53,23 @@ final ThemeData midnightCreativeTheme = ThemeData(
     surfaceContainerHighest: NeonPulse.surfaceHighest,
     outline: NeonPulse.outlineVariant,
   ),
-  textTheme: GoogleFonts.interTextTheme(
-    const TextTheme(
-      displayLarge:  TextStyle(fontWeight: FontWeight.w800, fontSize: 32, letterSpacing: -1,   color: NeonPulse.onSurface),
-      displayMedium: TextStyle(fontWeight: FontWeight.w700, fontSize: 28, letterSpacing: -0.5, color: NeonPulse.onSurface),
-      headlineLarge: TextStyle(fontWeight: FontWeight.w700, fontSize: 26, color: NeonPulse.onSurface),
-      headlineMedium: TextStyle(fontWeight: FontWeight.w700, fontSize: 22, color: NeonPulse.onSurface),
-      headlineSmall:  TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: NeonPulse.onSurface),
-      titleLarge:  TextStyle(fontWeight: FontWeight.w600, fontSize: 20, color: NeonPulse.onSurface),
-      titleMedium: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: NeonPulse.onSurface),
-      titleSmall:  TextStyle(fontWeight: FontWeight.w500, fontSize: 14, color: NeonPulse.onSurface),
-      bodyLarge:   TextStyle(fontSize: 16, color: NeonPulse.onSurface),
-      bodyMedium:  TextStyle(fontSize: 14, color: NeonPulse.onSurfaceVariant),
-      bodySmall:   TextStyle(fontSize: 12, color: NeonPulse.onSurfaceVariant),
-      labelLarge:  TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: NeonPulse.onSurface),
-      labelMedium: TextStyle(fontWeight: FontWeight.w500, fontSize: 12, color: NeonPulse.onSurface),
-      labelSmall:  TextStyle(fontWeight: FontWeight.w500, fontSize: 11, letterSpacing: 0.5, color: NeonPulse.onSurfaceVariant),
-    ),
+  textTheme: TextTheme(
+    // Display & Headline — Playfair Display (elegant serif)
+    displayLarge:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 32, letterSpacing: -0.5, color: NeonPulse.onSurface),
+    displayMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 28, letterSpacing: -0.3, color: NeonPulse.onSurface),
+    headlineLarge: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 26, color: NeonPulse.onSurface),
+    headlineMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 22, color: NeonPulse.onSurface),
+    headlineSmall:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 18, color: NeonPulse.onSurface),
+    titleLarge:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 20, color: NeonPulse.onSurface),
+    // Body & Labels — Inter (clean, readable)
+    titleMedium: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16, color: NeonPulse.onSurface),
+    titleSmall:  GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14, color: NeonPulse.onSurface),
+    bodyLarge:   GoogleFonts.inter(fontSize: 16, color: NeonPulse.onSurface),
+    bodyMedium:  GoogleFonts.inter(fontSize: 14, color: NeonPulse.onSurfaceVariant),
+    bodySmall:   GoogleFonts.inter(fontSize: 12, color: NeonPulse.onSurfaceVariant),
+    labelLarge:  GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14, color: NeonPulse.onSurface),
+    labelMedium: GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 12, color: NeonPulse.onSurface),
+    labelSmall:  GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 11, letterSpacing: 0.5, color: NeonPulse.onSurfaceVariant),
   ),
   appBarTheme: const AppBarTheme(
     backgroundColor: NeonPulse.surface,
@@ -142,7 +143,7 @@ final ThemeData midnightCreativeTheme = ThemeData(
   ),
   snackBarTheme: SnackBarThemeData(
     backgroundColor: NeonPulse.surfaceHigh,
-    contentTextStyle: GoogleFonts.inter(color: NeonPulse.onSurface, fontSize: 14),
+    contentTextStyle: GoogleFonts.inter(color: NeonPulse.onSurface, fontSize: 14, height: 1.4),
     behavior: SnackBarBehavior.floating,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
   ),

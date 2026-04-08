@@ -217,6 +217,20 @@ final searchHashtagsProvider = FutureProvider.family<List<SearchHashtag>, String
       .toList();
 });
 
+/// Returns the 50 most-recently joined users — shown on the People tab before
+/// the user has typed anything.
+final browseAllUsersProvider = FutureProvider<List<SearchUser>>((ref) async {
+  final firestore = ref.watch(firestoreProvider);
+  final snapshot = await firestore
+      .collection('users')
+      .orderBy('createdAt', descending: true)
+      .limit(50)
+      .get();
+  return snapshot.docs
+      .map((doc) => SearchUser.fromJson(doc.data(), doc.id))
+      .toList();
+});
+
 // Trending hashtags
 final trendingHashtagsProvider = FutureProvider<List<SearchHashtag>>((ref) async {
   final firestore = ref.watch(firestoreProvider);

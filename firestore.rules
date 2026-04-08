@@ -631,7 +631,9 @@ service cloud.firestore {
 
     match /verification_requests/{requestId} {
       // Users can submit and read their own verification request.
-      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      // Use requestId (doc ID == uid) instead of resource.data.userId so
+      // the rule works even when the document does not yet exist.
+      allow read: if signedIn() && requestId == request.auth.uid;
       allow create: if signedIn()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.reason is string

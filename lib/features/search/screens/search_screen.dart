@@ -7,6 +7,8 @@ import '../providers/search_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
 import '../../follow/providers/follow_provider.dart';
+import '../../../presentation/providers/friend_provider.dart';
+import '../../../services/friend_service.dart';
 
 class SearchScreen extends ConsumerStatefulWidget {
   const SearchScreen({super.key});
@@ -65,30 +67,27 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               },
             ),
           ),
-          if (_searchQuery.isEmpty)
-            Expanded(
-              child: _buildTrendingContent(),
-            )
-          else
-            Expanded(
-              child: Column(
-                children: [
-                  TabBar(
-                    tabs: const [
-                      Tab(text: 'People'),
-                      Tab(text: 'Posts'),
-                      Tab(text: 'Hashtags'),
-                    ],
-                    onTap: (index) {
-                      setState(() => _selectedTab = index);
-                    },
-                  ),
-                  Expanded(
-                    child: _buildSearchResults(),
-                  ),
-                ],
-              ),
+          Expanded(
+            child: Column(
+              children: [
+                TabBar(
+                  tabs: const [
+                    Tab(text: 'People'),
+                    Tab(text: 'Posts'),
+                    Tab(text: 'Hashtags'),
+                  ],
+                  onTap: (index) {
+                    setState(() => _selectedTab = index);
+                  },
+                ),
+                Expanded(
+                  child: _searchQuery.isEmpty && _selectedTab != 0
+                      ? _buildTrendingContent()
+                      : _buildSearchResults(),
+                ),
+              ],
             ),
+          ),
         ],
       ),
     );
@@ -136,7 +135,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   Widget _buildSearchResults() {
     if (_selectedTab == 0) {
-      final usersAsync = ref.watch(searchUsersProvider(_searchQuery));
+      final usersAsync = _searchQuery.isEmpty
+          ? ref.watch(browseAllUsersProvider)
+          : ref.watch(searchUsersProvider(_searchQuery));
       return usersAsync.when(
         data: (users) {
           if (users.isEmpty) {
@@ -167,7 +168,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   ],
                 ),
                 subtitle: Text('${user.followerCount} followers'),
-                trailing: _FollowButton(targetUserId: user.id),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _FriendRequestButton(targetUserId: user.id),
+                    _FollowButton(targetUserId: user.id),
+                  ],
+                ),
                 onTap: () => context.push('/profile/${user.id}'),
               );
             },
@@ -235,6 +242,70 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         error: (error, _) => Center(child: Text('Error: $error')),
       );
     }
+  }
+}
+
+class _FriendRequestButton extends ConsumerStatefulWidget {
+  final String targetUserId;
+  const _FriendRequestButton({required this.targetUserId});
+
+  @override
+  ConsumerState<_FriendRequestButton> createState() => _FriendRequestButtonState();
+}
+
+class _FriendRequestButtonState extends ConsumerState<_FriendRequestButton> {
+  bool _busy = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final currentUid = FirebaseAuth.instance.currentUser?.uid ?? '';
+    if (currentUid.isEmpty || currentUid == widget.targetUserId) {
+      return const SizedBox.shrink();
+    }
+
+    final friendIds = ref.watch(currentFriendIdsProvider).valueOrNull ?? const [];
+    final pendingIds = ref.watch(pendingOutgoingFriendRequestIdsProvider).valueOrNull ?? const <String>{};
+
+    if (friendIds.contains(widget.targetUserId)) {
+      return const SizedBox.shrink(); // already friends
+    }
+
+    final isPending = pendingIds.contains(widget.targetUserId);
+
+    return IconButton(
+      tooltip: isPending ? 'Friend request sent' : 'Add friend',
+      icon: Icon(
+        isPending ? Icons.schedule_rounded : Icons.person_add_alt_1_rounded,
+        size: 20,
+        color: isPending ? Colors.grey : Theme.of(context).colorScheme.primary,
+      ),
+      onPressed: isPending || _busy
+          ? null
+          : () async {
+              setState(() => _busy = true);
+              final messenger = ScaffoldMessenger.of(context);
+              try {
+                await ref.read(friendServiceProvider).sendFriendRequest(
+                      currentUid,
+                      widget.targetUserId,
+                    );
+                ref.invalidate(pendingOutgoingFriendRequestIdsProvider);
+                if (mounted) {
+                  messenger.showSnackBar(
+                    const SnackBar(content: Text('Friend request sent!')),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  messenger.showSnackBar(
+                    SnackBar(content: Text('Could not send request: $e')),
+                  );
+                }
+              } finally {
+                if (mounted) setState(() => _busy = false);
+              }
+            },
+    );
   }
 }
 

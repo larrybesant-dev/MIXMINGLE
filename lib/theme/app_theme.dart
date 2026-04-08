@@ -22,20 +22,20 @@ class AppTheme {
       surfaceContainerHighest: NeonPulse.surfaceHighest,
       outline: NeonPulse.outlineVariant,
     ),
-    textTheme: GoogleFonts.interTextTheme(
-      const TextTheme(
-        displayLarge:   TextStyle(fontWeight: FontWeight.w800, fontSize: 32, letterSpacing: -1,   color: NeonPulse.onSurface),
-        headlineLarge:  TextStyle(fontWeight: FontWeight.w700, fontSize: 26, color: NeonPulse.onSurface),
-        headlineMedium: TextStyle(fontWeight: FontWeight.w700, fontSize: 22, color: NeonPulse.onSurface),
-        headlineSmall:  TextStyle(fontWeight: FontWeight.w600, fontSize: 18, color: NeonPulse.onSurface),
-        titleLarge:  TextStyle(fontWeight: FontWeight.w600, fontSize: 20, color: NeonPulse.onSurface),
-        titleMedium: TextStyle(fontWeight: FontWeight.w600, fontSize: 16, color: NeonPulse.onSurface),
-        titleSmall:  TextStyle(fontWeight: FontWeight.w500, fontSize: 14, color: NeonPulse.onSurface),
-        bodyLarge:   TextStyle(fontSize: 16, color: NeonPulse.onSurface),
-        bodyMedium:  TextStyle(fontSize: 14, color: NeonPulse.onSurfaceVariant),
-        bodySmall:   TextStyle(fontSize: 12, color: NeonPulse.onSurfaceVariant),
-        labelLarge:  TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: NeonPulse.onSurface),
-      ),
+    textTheme: TextTheme(
+      // Display & Headline — Playfair Display (elegant serif)
+      displayLarge:   GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 32, letterSpacing: -0.5, color: NeonPulse.onSurface),
+      headlineLarge:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w700, fontSize: 26, color: NeonPulse.onSurface),
+      headlineMedium: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 22, color: NeonPulse.onSurface),
+      headlineSmall:  GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 18, color: NeonPulse.onSurface),
+      titleLarge:     GoogleFonts.playfairDisplay(fontWeight: FontWeight.w600, fontSize: 20, color: NeonPulse.onSurface),
+      // Body & Labels — Inter (clean, readable)
+      titleMedium: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16, color: NeonPulse.onSurface),
+      titleSmall:  GoogleFonts.inter(fontWeight: FontWeight.w500, fontSize: 14, color: NeonPulse.onSurface),
+      bodyLarge:   GoogleFonts.inter(fontSize: 16, color: NeonPulse.onSurface),
+      bodyMedium:  GoogleFonts.inter(fontSize: 14, color: NeonPulse.onSurfaceVariant),
+      bodySmall:   GoogleFonts.inter(fontSize: 12, color: NeonPulse.onSurfaceVariant),
+      labelLarge:  GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 14, color: NeonPulse.onSurface),
     ),
     appBarTheme: const AppBarTheme(
       backgroundColor: NeonPulse.surface,
