@@ -7,6 +7,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../presentation/providers/notification_provider.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
 import '../../widgets/mixvy_drawer.dart';
+import '../../widgets/friends_panel_button.dart';
 
 // ── Neon Pulse colour aliases ─────────────────────────────────────────────────
 const _npSurface     = Color(0xFF0B0E14);
@@ -49,6 +50,12 @@ class AppShell extends ConsumerWidget {
       backgroundColor: _npSurface,
       drawer: const MixVyDrawer(),
       body: child,
+      // ── Persistent friends panel button (bottom-right) ────────────────────
+      // Appears on every shell screen that does not define its own FAB.
+      // Screens with their own floatingActionButton override this via the inner
+      // Scaffold, so there is no conflict.
+      floatingActionButton: const _FriendsFab(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _NeonBottomNav(
         selectedIndex: selectedIndex,
         unreadNotifs: unreadNotifs,
@@ -219,7 +226,6 @@ class _NeonBottomNav extends StatelessWidget {
     );
   }
 
-  /// Centre gradient create button
   Widget _createButton() {
     final isSelected = selectedIndex == 2;
     return Expanded(
@@ -266,3 +272,21 @@ class _NeonBottomNav extends StatelessWidget {
   }
 }
 
+// ── Persistent friends FAB ────────────────────────────────────────────────────
+
+class _FriendsFab extends StatelessWidget {
+  const _FriendsFab();
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton.small(
+      heroTag: 'shell_friends_fab',
+      tooltip: 'Friends',
+      backgroundColor: const Color(0xFF1C1F2C),
+      foregroundColor: _npPrimary,
+      elevation: 4,
+      onPressed: () => FriendsPanelButton.openPanel(context),
+      child: const Icon(Icons.people_alt_rounded, size: 20),
+    );
+  }
+}

@@ -426,10 +426,20 @@ class WebRtcRoomService implements RtcRoomService {
   Future<void> mute(bool muted) async {
     final stream = _localStream;
     if (stream == null) return;
+    // Collect system-audio track IDs so they are NEVER silenced by the mic
+    // mute button. When system audio is active the answer PCs carry the
+    // system audio track; muting the mic should not affect that broadcast.
+    // This matters most when _localStream IS _systemAudioStream (i.e. sharing
+    // started with no mic active) — in that case all audio tracks in
+    // _localStream are system audio and there is nothing mic-only to mute.
+    final sysIds = <String>{
+      for (final t in (_systemAudioStream?.getAudioTracks() ?? [])) t.id,
+    };
     for (final track in stream.getAudioTracks()) {
+      if (sysIds.contains(track.id)) continue; // keep system audio live
       track.enabled = !muted;
     }
-    _log('mute=$muted');
+    _log('mute=$muted (sysAudioProtected=${sysIds.isNotEmpty})');
   }
 
   @override

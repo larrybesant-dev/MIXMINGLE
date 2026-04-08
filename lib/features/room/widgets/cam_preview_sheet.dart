@@ -1,13 +1,17 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
-/// Bottom sheet that shows a camera preview and lets the user confirm
-/// before going live. On web it relies on the WebRTC local stream already
-/// captured by [RtcRoomService]; on native it uses the Agora local preview.
+import '../../../services/device_prefs_service.dart';
+import '../../../services/web_device_enum_stub.dart'
+    if (dart.library.html) '../../../services/web_device_enum_web.dart'
+    as device_enum;
+
+/// Bottom sheet that shows a compact camera preview, lets the user pick which
+/// camera and microphone to use, and confirms before going live.
 ///
 /// The sheet is purely informational — the actual camera enable/disable is
 /// handled by the parent via [onConfirm]/[onCancel].
-class CamPreviewSheet extends StatelessWidget {
+class CamPreviewSheet extends StatefulWidget {
   const CamPreviewSheet({
     super.key,
     required this.previewWidget,
@@ -44,9 +48,64 @@ class CamPreviewSheet extends StatelessWidget {
   }
 
   @override
+  State<CamPreviewSheet> createState() => _CamPreviewSheetState();
+}
+
+class _CamPreviewSheetState extends State<CamPreviewSheet> {
+  final _prefs = DevicePrefsService();
+
+  List<device_enum.MediaDeviceInfo> _cameras = const [];
+  List<device_enum.MediaDeviceInfo> _mics = const [];
+  String? _selectedCameraId;
+  String? _selectedMicId;
+  bool _devicesLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDevices();
+  }
+
+  Future<void> _loadDevices() async {
+    try {
+      final devices = await device_enum.enumerateMediaDevices();
+      final savedCam = await _prefs.getPreferredCameraId();
+      final savedMic = await _prefs.getPreferredMicId();
+      if (!mounted) return;
+      final cameras = devices.where((d) => d.kind == 'videoinput').toList();
+      final mics = devices.where((d) => d.kind == 'audioinput').toList();
+      setState(() {
+        _cameras = cameras;
+        _mics = mics;
+        _selectedCameraId = (savedCam != null && cameras.any((c) => c.deviceId == savedCam))
+            ? savedCam
+            : (cameras.isNotEmpty ? cameras.first.deviceId : null);
+        _selectedMicId = (savedMic != null && mics.any((m) => m.deviceId == savedMic))
+            ? savedMic
+            : (mics.isNotEmpty ? mics.first.deviceId : null);
+        _devicesLoading = false;
+      });
+    } catch (_) {
+      if (mounted) setState(() => _devicesLoading = false);
+    }
+  }
+
+  Future<void> _onCameraChanged(String? id) async {
+    if (id == null) return;
+    setState(() => _selectedCameraId = id);
+    await _prefs.setPreferredCameraId(id);
+  }
+
+  Future<void> _onMicChanged(String? id) async {
+    if (id == null) return;
+    setState(() => _selectedMicId = id);
+    await _prefs.setPreferredMicId(id);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -54,7 +113,7 @@ class CamPreviewSheet extends StatelessWidget {
           Container(
             width: 40,
             height: 4,
-            margin: const EdgeInsets.only(bottom: 16),
+            margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
               color: const Color(0xFF3A3E47),
               borderRadius: BorderRadius.circular(2),
@@ -64,64 +123,96 @@ class CamPreviewSheet extends StatelessWidget {
             'Camera Preview',
             style: TextStyle(
               color: Colors.white,
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 12),
-          // Preview area
+          const SizedBox(height: 10),
+          // ── Compact preview (16:9, max 200 px tall) ─────────────────
           ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: AspectRatio(
-              aspectRatio: 4 / 3,
-              child: ColoredBox(
-                color: const Color(0xFF0B0E14),
-                child: isVideoEnabled
-                    ? previewWidget
-                    : const Center(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.videocam_off,
-                                color: Color(0xFFA9ABB3),
-                                size: 40),
-                            SizedBox(height: 8),
-                            Text(
-                              'Camera not started yet',
-                              style: TextStyle(
-                                color: Color(0xFFA9ABB3),
-                                fontSize: 13,
+            borderRadius: BorderRadius.circular(10),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 180),
+              child: AspectRatio(
+                aspectRatio: 16 / 9,
+                child: ColoredBox(
+                  color: const Color(0xFF0B0E14),
+                  child: widget.isVideoEnabled
+                      ? widget.previewWidget
+                      : const Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.videocam_off,
+                                  color: Color(0xFFA9ABB3), size: 32),
+                              SizedBox(height: 6),
+                              Text(
+                                'Camera not started yet',
+                                style: TextStyle(
+                                    color: Color(0xFFA9ABB3), fontSize: 12),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
+                ),
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          // Info text
-          Text(
-            kIsWeb
-                ? 'Your camera will be visible to others once you go live.'
-                : 'Preview your camera before broadcasting.',
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: Color(0xFFA9ABB3),
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 20),
-          // Action buttons
+          const SizedBox(height: 14),
+          // ── Device selectors ─────────────────────────────────────────
+          if (kIsWeb) ...[
+            if (_devicesLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Color(0xFFBA9EFF)),
+                    ),
+                    SizedBox(width: 8),
+                    Text('Loading devices…',
+                        style:
+                            TextStyle(color: Color(0xFFA9ABB3), fontSize: 12)),
+                  ],
+                ),
+              )
+            else if (_cameras.isNotEmpty || _mics.isNotEmpty) ...[
+              if (_cameras.isNotEmpty)
+                _DeviceRow(
+                  icon: Icons.videocam_outlined,
+                  label: 'Camera',
+                  devices: _cameras,
+                  selectedId: _selectedCameraId,
+                  onChanged: _onCameraChanged,
+                ),
+              if (_cameras.isNotEmpty && _mics.isNotEmpty)
+                const SizedBox(height: 8),
+              if (_mics.isNotEmpty)
+                _DeviceRow(
+                  icon: Icons.mic_outlined,
+                  label: 'Microphone',
+                  devices: _mics,
+                  selectedId: _selectedMicId,
+                  onChanged: _onMicChanged,
+                ),
+              const SizedBox(height: 6),
+            ],
+          ],
+          const SizedBox(height: 10),
+          // ── Action buttons ───────────────────────────────────────────
           Row(
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed: onCancel,
+                  onPressed: widget.onCancel,
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFF3A3E47)),
                     foregroundColor: const Color(0xFFA9ABB3),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 11),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -132,11 +223,11 @@ class CamPreviewSheet extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: onConfirm,
+                  onPressed: widget.onConfirm,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color(0xFFBA9EFF),
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 11),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -151,6 +242,78 @@ class CamPreviewSheet extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ── Device row: icon + label + dropdown ────────────────────────────────────
+
+class _DeviceRow extends StatelessWidget {
+  const _DeviceRow({
+    required this.icon,
+    required this.label,
+    required this.devices,
+    required this.selectedId,
+    required this.onChanged,
+  });
+
+  final IconData icon;
+  final String label;
+  final List<device_enum.MediaDeviceInfo> devices;
+  final String? selectedId;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: const Color(0xFFBA9EFF)),
+        const SizedBox(width: 6),
+        SizedBox(
+          width: 72,
+          child: Text(
+            label,
+            style: const TextStyle(
+              color: Color(0xFFA9ABB3),
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Expanded(
+          child: DropdownButtonFormField<String>(
+            initialValue: selectedId,
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: const Color(0xFF10131A),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFF3A3E47)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: const BorderSide(color: Color(0xFF3A3E47)),
+              ),
+            ),
+            dropdownColor: const Color(0xFF1C2028),
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+            items: devices
+                .map(
+                  (d) => DropdownMenuItem<String>(
+                    value: d.deviceId,
+                    child: Text(
+                      d.label.isNotEmpty ? d.label : d.deviceId,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                )
+                .toList(),
+            onChanged: onChanged,
+          ),
+        ),
+      ],
     );
   }
 }

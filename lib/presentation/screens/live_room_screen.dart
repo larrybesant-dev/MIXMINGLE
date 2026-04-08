@@ -59,6 +59,7 @@ import '../../services/notification_service.dart';
 import '../../services/presence_service.dart';
 import '../../services/room_audio_cues.dart';
 import '../../shared/widgets/beta_feedback_overlay.dart';
+import '../../widgets/friends_panel_button.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   final String roomId;
@@ -3409,6 +3410,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         child: _TickerBanner(text: roomDescription),
                       ),
                 actions: [
+                  // Home button
+                  IconButton(
+                    tooltip: 'Go to Home',
+                    icon: const Icon(Icons.home_rounded),
+                    onPressed: () async {
+                      await _disconnectCall();
+                      await _leaveRoom();
+                      if (context.mounted) context.go('/');
+                    },
+                  ),
+                  // Friends panel
+                  FriendsPanelButton(iconColor: Colors.white),
                   // Coin balance
                   walletAsync.when(
                     data: (wallet) => Padding(

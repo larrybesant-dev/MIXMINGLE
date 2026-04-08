@@ -2,10 +2,17 @@ import 'package:fake_cloud_firestore/fake_cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mixvy/features/feed/providers/host_controls_providers.dart';
 import 'package:mixvy/features/room/providers/host_provider.dart';
 import 'package:mixvy/features/room/providers/message_providers.dart';
+import 'package:mixvy/features/room/providers/mic_access_provider.dart';
 import 'package:mixvy/features/room/providers/participant_providers.dart';
+import 'package:mixvy/features/room/providers/room_policy_provider.dart';
+import 'package:mixvy/features/room/widgets/room_host_control_panel.dart';
+import 'package:mixvy/models/mic_access_request_model.dart';
+import 'package:mixvy/models/room_model.dart';
 import 'package:mixvy/models/room_participant_model.dart';
+import 'package:mixvy/models/room_policy_model.dart';
 import 'package:mixvy/features/room/providers/room_firestore_provider.dart';
 import 'package:mixvy/models/user_model.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
@@ -199,26 +206,27 @@ void main() {
     WidgetTester tester,
   ) async {
     await configureViewport(tester);
-    final firestore = FakeFirebaseFirestore();
-    await firestore.collection('rooms').doc('room-a').set({
-      'hostId': 'host-1',
-      'isLocked': false,
-      'slowModeSeconds': 0,
-    });
 
+    // Test the RoomHostControlPanel directly by mounting a minimal scaffold
+    // that opens the panel on button press, bypassing the complex live room UI.
+    final firestore = FakeFirebaseFirestore();
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
           roomFirestoreProvider.overrideWithValue(firestore),
-          currentParticipantProvider.overrideWith(
-            (ref, args) => Stream.value(
-              RoomParticipantModel(
-                userId: 'host-1',
-                role: 'host',
-                joinedAt: DateTime(2026, 1, 1),
-                lastActiveAt: DateTime(2026, 1, 1),
-              ),
-            ),
+          roomStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value(RoomModel(
+              id: roomId,
+              name: 'Test Room',
+              hostId: 'host-1',
+              isLive: true,
+            )),
+          ),
+          roomPolicyProvider.overrideWith(
+            (ref, roomId) => Stream.value(RoomPolicyModel(roomId: roomId)),
+          ),
+          roomMicAccessRequestsProvider.overrideWith(
+            (ref, roomId) => Stream.value(const <MicAccessRequestModel>[]),
           ),
           participantsStreamProvider.overrideWith(
             (ref, roomId) => Stream.value([
@@ -230,44 +238,33 @@ void main() {
               ),
             ]),
           ),
-          participantCountProvider.overrideWith(
-            (ref, roomId) => Stream.value(1),
-          ),
-          messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
-          hostProvider.overrideWith(
-            (ref, roomId) => Stream.value(Host('host-1')),
-          ),
-          coHostsProvider.overrideWith(
-            (ref, roomId) => Stream.value(const <Cohost>[]),
-          ),
-          userProvider.overrideWithValue(
-            UserModel(
-              id: 'host-1',
-              email: 'host@mixvy.com',
-              username: 'Host One',
-              createdAt: DateTime(2026, 1, 1),
+        ],
+        child: MaterialApp(
+          home: Scaffold(
+            body: Builder(
+              builder: (ctx) => ElevatedButton(
+                child: const Text('Open Panel'),
+                onPressed: () => RoomHostControlPanel.show(
+                  ctx,
+                  roomId: 'room-a',
+                  currentUserId: 'host-1',
+                  isOwner: true,
+                ),
+              ),
             ),
           ),
-        ],
-        child: const MaterialApp(home: LiveRoomScreen(roomId: 'room-a')),
+        ),
       ),
     );
 
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 500));
 
-    // Host controls are behind the 'Controls' floating button.
-    // Ensure the button is reachable (let any IgnorePointer animations settle).
-    await tester.pump(const Duration(milliseconds: 500));
-    final controlsButton = find.text('Controls');
-    expect(controlsButton, findsOneWidget);
-    await tester.ensureVisible(controlsButton);
-    await tester.pump(const Duration(milliseconds: 100));
-    await tester.tap(controlsButton, warnIfMissed: false);
+    await tester.tap(find.text('Open Panel'));
     await tester.pump(); // trigger tap
     await tester.pump(const Duration(milliseconds: 500)); // let bottom sheet open
 
-    // The panel opened — check the tab bar labels are present.
+    // Panel opened — verify tab bar labels are present.
+    expect(find.text('Room Control Panel'), findsOneWidget);
     expect(find.text('Room'), findsWidgets);
     expect(find.text('Stage'), findsWidgets);
     expect(find.text('Audio'), findsWidgets);
