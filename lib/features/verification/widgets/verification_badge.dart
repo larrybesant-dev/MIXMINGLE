@@ -21,7 +21,7 @@ class VerificationBadge extends StatelessWidget {
         child: Icon(
           Icons.verified,
           size: size,
-          color: const Color(0xFF00E3FD),
+          color: const Color(0xFFC45E7A),
         ),
       ),
     );

@@ -142,8 +142,8 @@ class _CategoryGrid extends StatelessWidget {
   final void Function(String? value) onCategorySelected;
 
   static const Map<String?, Color> _accentColors = {
-    null:      Color(0xFFBA9EFF),
-    'music':   Color(0xFF00E3FD),
+    null:      Color(0xFFD4A853),
+    'music':   Color(0xFFC45E7A),
     'talk':    Color(0xFFFFB74D),
     'gaming':  Color(0xFF66BB6A),
     'dance':   Color(0xFFFF6EB4),
@@ -171,7 +171,7 @@ class _CategoryGrid extends StatelessWidget {
               child: Text(
                 'BROWSE BY CATEGORY',
                 style: TextStyle(
-                  color: Color(0xFFA9ABB3),
+                  color: Color(0xFFB09080),
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.2,
@@ -189,7 +189,7 @@ class _CategoryGrid extends StatelessWidget {
                     label: cat.label,
                     emoji: cat.emoji,
                     value: cat.value,
-                    accent: _accentColors[cat.value] ?? const Color(0xFFBA9EFF),
+                    accent: _accentColors[cat.value] ?? const Color(0xFFD4A853),
                     onTap: () => onCategorySelected(cat.value),
                   );
                 },
@@ -218,14 +218,14 @@ class _CreateRoomBanner extends StatelessWidget {
         height: 76,
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF8455EF), Color(0xFFBA9EFF)],
+            colors: [Color(0xFF8C6020), Color(0xFFD4A853)],
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
           ),
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFBA9EFF).withValues(alpha: 0.28),
+              color: const Color(0xFFD4A853).withValues(alpha: 0.28),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
@@ -300,7 +300,7 @@ class _CategoryCard extends StatelessWidget {
           gradient: LinearGradient(
             colors: [
               accent.withValues(alpha: 0.10),
-              const Color(0xFF1C2028),
+              const Color(0xFF241820),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -328,7 +328,7 @@ class _CategoryCard extends StatelessWidget {
               Text(
                 label,
                 style: const TextStyle(
-                  color: Color(0xFFECEDF6),
+                  color: Color(0xFFF2EBE0),
                   fontWeight: FontWeight.w700,
                   fontSize: 14,
                 ),
@@ -386,7 +386,7 @@ class _RoomListView extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.meeting_room_outlined, size: 56, color: Color(0xFFA9ABB3)),
+                const Icon(Icons.meeting_room_outlined, size: 56, color: Color(0xFFB09080)),
                 const SizedBox(height: 12),
                 const Text('No live rooms in this category right now.'),
                 const SizedBox(height: 16),

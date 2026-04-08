@@ -127,14 +127,14 @@ class _FloatingWhisperPanelWidgetState
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: Row(
                   children: [
-                    const Icon(Icons.drag_indicator, size: 18, color: Color(0xFFA9ABB3)),
+                    const Icon(Icons.drag_indicator, size: 18, color: Color(0xFFB09080)),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         widget.peerName,
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFECEDF6),
+                          color: Color(0xFFF2EBE0),
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -228,12 +228,12 @@ class _MessageList extends ConsumerWidget {
               const Text(
                 'Could not load messages.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Color(0xFFA9ABB3), fontSize: 12),
+                style: TextStyle(color: Color(0xFFB09080), fontSize: 12),
               ),
               const SizedBox(height: 8),
               TextButton(
                 onPressed: () => ref.invalidate(messagesStreamProvider(conversationId)),
-                child: const Text('Retry', style: TextStyle(color: Color(0xFFBA9EFF))),
+                child: const Text('Retry', style: TextStyle(color: Color(0xFFD4A853))),
               ),
             ],
           ),
@@ -242,7 +242,7 @@ class _MessageList extends ConsumerWidget {
       data: (messages) {
         if (messages.isEmpty) {
           return const Center(
-            child: Text('No messages yet.', style: TextStyle(color: Color(0xFFA9ABB3))),
+            child: Text('No messages yet.', style: TextStyle(color: Color(0xFFB09080))),
           );
         }
         return ListView.builder(
@@ -281,7 +281,7 @@ class _FloatingMessageBubble extends StatelessWidget {
             ),
             TextSpan(
               text: message.content,
-              style: const TextStyle(fontSize: 12, color: Color(0xFFECEDF6)),
+              style: const TextStyle(fontSize: 12, color: Color(0xFFF2EBE0)),
             ),
           ],
         ),

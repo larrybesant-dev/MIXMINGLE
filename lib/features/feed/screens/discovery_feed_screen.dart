@@ -17,15 +17,15 @@ import '../../ads/ad_manager.dart';
 import '../../../features/profile/profile_controller.dart';
 
 // ── Neon Pulse colour aliases ─────────────────────────────────────────────────
-const _npSurface        = Color(0xFF0B0E14);
-const _npSurfaceHigh    = Color(0xFF1C2028);
-const _npSurfaceHighest = Color(0xFF22262F);
-const _npPrimary        = Color(0xFFBA9EFF);
-const _npPrimaryDim     = Color(0xFF8455EF);
-const _npSecondary      = Color(0xFF00E3FD);
+const _npSurface        = Color(0xFF0D0A0C);
+const _npSurfaceHigh    = Color(0xFF241820);
+const _npSurfaceHighest = Color(0xFF2A1C23);
+const _npPrimary        = Color(0xFFD4A853);
+const _npPrimaryDim     = Color(0xFF8C6020);
+const _npSecondary      = Color(0xFFC45E7A);
 const _npError          = Color(0xFFFF6E84);
-const _npOnSurface      = Color(0xFFECEDF6);
-const _npOnVariant      = Color(0xFFA9ABB3);
+const _npOnSurface      = Color(0xFFF2EBE0);
+const _npOnVariant      = Color(0xFFB09080);
 const _npGhost          = Color(0x1A73757D);
 
 class DiscoveryFeedScreen extends ConsumerWidget {
@@ -627,7 +627,7 @@ class _BentoHeroCard extends StatelessWidget {
                 gradient: LinearGradient(
                   colors: [
                     const Color(0xFF1C1240),
-                    const Color(0xFF0B0E14),
+                    const Color(0xFF0D0A0C),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -641,7 +641,7 @@ class _BentoHeroCard extends StatelessWidget {
                 height: 120,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.transparent, Color(0xCC0B0E14)],
+                    colors: [Colors.transparent, Color(0xCC0D0A0C)],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -713,7 +713,7 @@ class _BentoSmallCard extends StatelessWidget {
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [const Color(0xFF1A152E), const Color(0xFF0B0E14)],
+                  colors: [const Color(0xFF1B1216), const Color(0xFF0D0A0C)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -725,7 +725,7 @@ class _BentoSmallCard extends StatelessWidget {
                 height: 60,
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [Colors.transparent, Color(0xCC0B0E14)],
+                    colors: [Colors.transparent, Color(0xCC0D0A0C)],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),

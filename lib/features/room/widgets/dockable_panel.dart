@@ -14,8 +14,8 @@ class DockablePanel extends StatefulWidget {
     this.onDetach,
     this.onMinimizedChanged,
     this.backgroundColor = const Color(0xFF10131A),
-    this.headerColor = const Color(0xFF1C2028),
-    this.borderColor = const Color(0x30BA9EFF),
+    this.headerColor = const Color(0xFF241820),
+    this.borderColor = const Color(0x30D4A853),
   });
 
   final String title;
@@ -53,8 +53,8 @@ class _DockablePanelState extends State<DockablePanel> {
   @override
   Widget build(BuildContext context) {
     const headerHeight = 32.0;
-    const npOnVariant = Color(0xFFA9ABB3);
-    const npPrimary = Color(0xFFBA9EFF);
+    const npOnVariant = Color(0xFFB09080);
+    const npPrimary = Color(0xFFD4A853);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -135,7 +135,7 @@ class _HeaderIconButton extends StatelessWidget {
     required this.tooltip,
     required this.icon,
     required this.onTap,
-    this.color = const Color(0xFFA9ABB3),
+    this.color = const Color(0xFFB09080),
   });
 
   final String tooltip;
@@ -172,8 +172,8 @@ class FloatingDockablePanel extends StatefulWidget {
     this.height = 260.0,
     this.onClose,
     this.backgroundColor = const Color(0xFF10131A),
-    this.headerColor = const Color(0xFF1C2028),
-    this.borderColor = const Color(0x30BA9EFF),
+    this.headerColor = const Color(0xFF241820),
+    this.borderColor = const Color(0x30D4A853),
     this.actions = const [],
     this.onReattach,
   });
@@ -211,8 +211,8 @@ class FloatingDockablePanelState extends State<FloatingDockablePanel> {
 
   @override
   Widget build(BuildContext context) {
-    const npOnVariant = Color(0xFFA9ABB3);
-    const npPrimary = Color(0xFFBA9EFF);
+    const npOnVariant = Color(0xFFB09080);
+    const npPrimary = Color(0xFFD4A853);
     const headerHeight = 32.0;
 
     final panelHeight = _minimized ? headerHeight : _height;
@@ -339,7 +339,7 @@ class FloatingDockablePanelState extends State<FloatingDockablePanel> {
                         width: 16,
                         height: 16,
                         decoration: const BoxDecoration(
-                          color: Color(0x50BA9EFF),
+                          color: Color(0x50D4A853),
                           borderRadius: BorderRadius.only(
                             bottomRight: Radius.circular(8),
                           ),

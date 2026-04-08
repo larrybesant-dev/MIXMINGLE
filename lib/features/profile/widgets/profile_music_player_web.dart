@@ -211,7 +211,7 @@ class _ProfileMusicPlayerState extends State<ProfileMusicPlayer> {
                     Row(
                       children: [
                         const Icon(Icons.music_note_rounded,
-                            size: 13, color: Color(0xFFBA9EFF)),
+                            size: 13, color: Color(0xFFD4A853)),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(

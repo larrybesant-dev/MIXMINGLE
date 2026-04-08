@@ -36,7 +36,7 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Profile'),
-        backgroundColor: const Color(0xFF1C2028),
+        backgroundColor: const Color(0xFF241820),
         actions: [
           IconButton(
             tooltip: 'Logout',
@@ -1879,18 +1879,18 @@ class _ColorSwatchRow extends StatelessWidget {
   final ValueChanged<String?> onSelected;
 
   static const _swatches = <String>[
-    '#BA9EFF', // lavender
-    '#00E3FD', // cyan
-    '#5B8AF5', // blue
-    '#FF6E84', // rose
+    '#D4A853', // champagne gold
+    '#C45E7A', // rose wine
+    '#8C6020', // deep amber
+    '#FF6E84', // blush
     '#FFA040', // orange
-    '#FFD700', // gold
-    '#4CAF50', // green
-    '#FF4081', // pink
-    '#E040FB', // purple
+    '#F2EBE0', // warm cream
+    '#B09080', // warm taupe
+    '#6B3040', // burgundy
+    '#3D1A22', // deep wine
     '#FFFFFF', // white
-    '#A9ABB3', // silver
     '#FF1744', // red
+    '#4CAF50', // green
   ];
 
   @override

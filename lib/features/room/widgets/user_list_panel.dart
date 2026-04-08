@@ -46,7 +46,7 @@ class UserListPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const npSurfaceContainer = Color(0xFF161A21);
-    const npOnVariant = Color(0xFFA9ABB3);
+    const npOnVariant = Color(0xFFB09080);
 
     final onlineIds = {
       for (final p in presenceList)
@@ -163,8 +163,8 @@ class _UserListTile extends StatelessWidget {
   final bool showModMenu;
 
   void _showContextMenu(BuildContext context, Offset globalPosition) async {
-    const npSurfaceHigh = Color(0xFF1C2028);
-    const npPrimary = Color(0xFFBA9EFF);
+    const npSurfaceHigh = Color(0xFF241820);
+    const npPrimary = Color(0xFFD4A853);
 
     final selected = await showMenu<String>(
       context: context,
@@ -188,7 +188,7 @@ class _UserListTile extends StatelessWidget {
           PopupMenuItem(
             value: 'whisper',
             child: Row(children: [
-              const Icon(Icons.message_outlined, color: Color(0xFF00E3FD), size: 16),
+              const Icon(Icons.message_outlined, color: Color(0xFFC45E7A), size: 16),
               const SizedBox(width: 8),
               Text('Whisper', style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13)),
             ]),
@@ -250,10 +250,10 @@ class _UserListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const npSurfaceHigh = Color(0xFF1C2028);
-    const npOnVariant = Color(0xFFA9ABB3);
-    const npPrimary = Color(0xFFBA9EFF);
-    const npSecondary = Color(0xFF00E3FD);
+    const npSurfaceHigh = Color(0xFF241820);
+    const npOnVariant = Color(0xFFB09080);
+    const npPrimary = Color(0xFFD4A853);
+    const npSecondary = Color(0xFFC45E7A);
 
     final roleIcon = _roleIcon(participant.role);
 

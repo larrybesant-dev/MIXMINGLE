@@ -45,12 +45,12 @@ class MixVyDrawer extends ConsumerWidget {
               children: [
                 const Text(
                   'MixVy',
-                  style: TextStyle(color: Color(0xFFECEDF6), fontSize: 28, fontWeight: FontWeight.w800),
+                  style: TextStyle(color: Color(0xFFF2EBE0), fontSize: 28, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Urban live social network',
-                  style: TextStyle(color: Color(0xFFECEDF6).withValues(alpha: 0.75), fontSize: 14),
+                  'Elevated. Social. Live.',
+                  style: TextStyle(color: Color(0xFFF2EBE0).withValues(alpha: 0.75), fontSize: 14),
                 ),
               ],
             ),

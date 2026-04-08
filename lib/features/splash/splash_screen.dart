@@ -51,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0E14),
+      backgroundColor: const Color(0xFF0D0A0C),
       body: Center(
         child: AnimatedBuilder(
           animation: _controller,
@@ -72,7 +72,7 @@ class _SplashScreenState extends State<SplashScreen>
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFBA9EFF).withOpacity(0.22),
+                      color: const Color(0xFFD4A853).withOpacity(0.22),
                       blurRadius: 72,
                       spreadRadius: 24,
                     ),
@@ -88,7 +88,7 @@ class _SplashScreenState extends State<SplashScreen>
               const Text(
                 'MixVy',
                 style: TextStyle(
-                  color: Color(0xFFECEDF6),
+                  color: Color(0xFFF2EBE0),
                   fontSize: 34,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 3.0,

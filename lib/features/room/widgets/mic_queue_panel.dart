@@ -69,15 +69,15 @@ class _MicQueuePanelState extends ConsumerState<MicQueuePanel> {
     final seconds = expiresAt.difference(DateTime.now()).inSeconds;
     if (seconds <= 30) return const Color(0xFFFF6E84);
     if (seconds <= 90) return const Color(0xFFFFA040);
-    return const Color(0xFF00E3FD);
+    return const Color(0xFFC45E7A);
   }
 
   @override
   Widget build(BuildContext context) {
     const npSurfaceContainer = Color(0xFF161A21);
-    const npSurfaceHigh = Color(0xFF1C2028);
-    const npPrimary = Color(0xFFBA9EFF);
-    const npOnVariant = Color(0xFFA9ABB3);
+    const npSurfaceHigh = Color(0xFF241820);
+    const npPrimary = Color(0xFFD4A853);
+    const npOnVariant = Color(0xFFB09080);
 
     final requestsAsync = ref.watch(roomMicAccessRequestsProvider(widget.roomId));
 

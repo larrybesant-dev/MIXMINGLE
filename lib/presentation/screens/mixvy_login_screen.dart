@@ -8,13 +8,13 @@ import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 import 'package:mixvy/services/analytics_service.dart';
 
 // ── colour aliases for this screen ───────────────────────────────────────────
-const _surface        = Color(0xFF0B0E14);
-const _surfaceHighest = Color(0xFF22262F);
-const _primary        = Color(0xFFBA9EFF);
-const _primaryDim     = Color(0xFF8455EF);
-const _secondary      = Color(0xFF00E3FD);
-const _onSurface      = Color(0xFFECEDF6);
-const _onVariant      = Color(0xFFA9ABB3);
+const _surface        = Color(0xFF0D0A0C);
+const _surfaceHighest = Color(0xFF2A1C23);
+const _primary        = Color(0xFFD4A853);
+const _primaryDim     = Color(0xFF8C6020);
+const _secondary      = Color(0xFFC45E7A);
+const _onSurface      = Color(0xFFF2EBE0);
+const _onVariant      = Color(0xFFB09080);
 const _ghostBorder    = Color(0x1A73757D);
 
 class MixVyLoginScreen extends ConsumerStatefulWidget {
@@ -59,7 +59,7 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message, style: const TextStyle(color: Colors.white)),
-        backgroundColor: isError ? const Color(0xFFFF6E84) : const Color(0xFF00E3FD),
+        backgroundColor: isError ? const Color(0xFFFF6E84) : const Color(0xFFC45E7A),
       ),
     );
   }
@@ -320,7 +320,7 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
             child: _brandingCard(
               width: 220, height: 140,
               gradient: const LinearGradient(
-                colors: [Color(0xFF1C2028), Color(0xFF161A21)],
+                colors: [Color(0xFF241820), Color(0xFF161A21)],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -398,9 +398,9 @@ class _MixVyLoginScreenState extends ConsumerState<MixVyLoginScreen>
 
   Widget _avatarStack() {
     final avatarColors = [
-      const Color(0xFF8455EF),
-      const Color(0xFF00E3FD),
-      const Color(0xFFBA9EFF),
+      const Color(0xFF8C6020),
+      const Color(0xFFC45E7A),
+      const Color(0xFFD4A853),
     ];
     return SizedBox(
       width: 70,

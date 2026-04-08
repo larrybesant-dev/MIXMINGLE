@@ -1146,7 +1146,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       );
     }
     return ColoredBox(
-      color: const Color(0xFF1C2028),
+      color: const Color(0xFF241820),
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(12),
@@ -1160,14 +1160,14 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   backgroundColor: const Color(0xFF2A2D35),
                 )
               else
-                const Icon(Icons.videocam_off, size: 40, color: Color(0xFFA9ABB3)),
+                const Icon(Icons.videocam_off, size: 40, color: Color(0xFFB09080)),
               const SizedBox(height: 8),
               Text(
                 _isVideoEnabled
                     ? 'Camera feed is preparing.'
                     : 'Camera is off.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFFA9ABB3), fontSize: 13),
+                style: const TextStyle(color: Color(0xFFB09080), fontSize: 13),
               ),
             ],
           ),
@@ -1187,7 +1187,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       return service.getRemoteView(remoteUid, widget.roomId);
     }
     return ColoredBox(
-      color: const Color(0xFF1C2028),
+      color: const Color(0xFF241820),
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(8),
@@ -1201,12 +1201,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   backgroundColor: const Color(0xFF2A2D35),
                 )
               else
-                const Icon(Icons.lock_outline, size: 24, color: Color(0xFFA9ABB3)),
+                const Icon(Icons.lock_outline, size: 24, color: Color(0xFFB09080)),
               const SizedBox(height: 6),
               Text(
                 canViewRemote ? 'Loading video...' : 'Cam access locked',
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Color(0xFFA9ABB3), fontSize: 11),
+                style: const TextStyle(color: Color(0xFFB09080), fontSize: 11),
               ),
               if (onRequestAccess != null) ...[
                 const SizedBox(height: 4),
@@ -1221,7 +1221,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   child: const Text(
                     'Request Access',
                     style: TextStyle(
-                        fontSize: 10, color: Color(0xFF00E3FD)),
+                        fontSize: 10, color: Color(0xFFC45E7A)),
                   ),
                 ),
               ],
@@ -1592,7 +1592,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       title: Text(f.username),
                       subtitle: inThisRoom
                           ? const Text('In this room',
-                              style: TextStyle(color: Color(0xFF00E3FD)))
+                              style: TextStyle(color: Color(0xFFC45E7A)))
                           : inOtherRoom
                               ? const Text('In another room')
                               : const Text('Online'),
@@ -2740,7 +2740,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       context: ctx,
       builder: (dialogCtx) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1C2028),
+          backgroundColor: const Color(0xFF241820),
           title: const Text('Set Status', style: TextStyle(color: Colors.white, fontSize: 16)),
           content: TextField(
             controller: ctrl,
@@ -2753,7 +2753,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 borderSide: BorderSide(color: Color(0xFF3A3E47)),
               ),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color(0xFFBA9EFF)),
+                borderSide: BorderSide(color: Color(0xFFD4A853)),
               ),
               counterStyle: TextStyle(color: Color(0xFF5A5D65)),
             ),
@@ -2761,7 +2761,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogCtx).pop(),
-              child: const Text('Cancel', style: TextStyle(color: Color(0xFFA9ABB3))),
+              child: const Text('Cancel', style: TextStyle(color: Color(0xFFB09080))),
             ),
             TextButton(
               onPressed: () {
@@ -2772,7 +2772,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   status: ctrl.text.trim().isEmpty ? null : ctrl.text.trim(),
                 );
               },
-              child: const Text('Save', style: TextStyle(color: Color(0xFFBA9EFF))),
+              child: const Text('Save', style: TextStyle(color: Color(0xFFD4A853))),
             ),
           ],
         );
@@ -3538,7 +3538,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                       icon,
                       size: 14,
                       color: canMove
-                          ? const Color(0xFFBA9EFF)
+                          ? const Color(0xFFD4A853)
                           : const Color(0xFF343640),
                     ),
                   ),
@@ -3551,9 +3551,9 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             return Scaffold(
               extendBodyBehindAppBar: false,
               extendBody: true,
-              backgroundColor: const Color(0xFF0B0E14),
+              backgroundColor: const Color(0xFF0D0A0C),
               appBar: AppBar(
-                backgroundColor: const Color(0xB40B0E14),
+                backgroundColor: const Color(0xB40D0A0C),
                 foregroundColor: Colors.white,
                 elevation: 0,
                 title: Text(roomName),
@@ -3763,7 +3763,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               width: 16,
                               height: 16,
                               decoration: const BoxDecoration(
-                                color: Color(0xFFBA9EFF),
+                                color: Color(0xFFD4A853),
                                 shape: BoxShape.circle,
                               ),
                               child: Center(
@@ -4059,7 +4059,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             },
                           )
                         : const ColoredBox(
-                            color: Color(0xFF0B0E14),
+                            color: Color(0xFF0D0A0C),
                             child: Center(
                               child: Column(
                                 mainAxisSize: MainAxisSize.min,
@@ -4101,7 +4101,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                               (_chatColW + (chatRightOfCams ? -d.delta.dx : d.delta.dx))
                                   .clamp(220.0, 480.0);
                         }),
-                        child: Container(color: const Color(0x20BA9EFF)),
+                        child: Container(color: const Color(0x20D4A853)),
                       ),
                     ),
                   ),
@@ -4256,13 +4256,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             decoration: BoxDecoration(
                               color: const Color(0x9910131A),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: const Color(0x30BA9EFF)),
+                              border: Border.all(color: const Color(0x30D4A853)),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.circle,
-                                    color: Color(0xFF00E3FD), size: 9),
+                                    color: Color(0xFFC45E7A), size: 9),
                                 const SizedBox(width: 5),
                                 Text(
                                   '$onlineCount online',
@@ -4364,7 +4364,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           decoration: BoxDecoration(
                             color: const Color(0xB310131A),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0x30BA9EFF)),
+                            border: Border.all(color: const Color(0x30D4A853)),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -4396,7 +4396,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           color: const Color(0xCC10131A),
                           borderRadius: BorderRadius.circular(16),
                           border:
-                              Border.all(color: const Color(0x30BA9EFF)),
+                              Border.all(color: const Color(0x30D4A853)),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -4514,7 +4514,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
-                          const Divider(height: 1, color: Color(0x30BA9EFF)),
+                          const Divider(height: 1, color: Color(0x30D4A853)),
                           // Gift + hand raise row for non-hosts.
                           // Resolve hostId from Firestore doc first; fall back
                           // to the participants list so the row shows even when
@@ -4573,7 +4573,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         padding: EdgeInsets.all(6),
                                         child: Icon(
                                           Icons.emoji_emotions_outlined,
-                                          color: Color(0xFFA9ABB3),
+                                          color: Color(0xFFB09080),
                                           size: 20,
                                         ),
                                       ),
@@ -4830,7 +4830,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     icon: Icon(
                                       Icons.text_format,
                                       color: _showRichToolbar
-                                          ? const Color(0xFFBA9EFF)
+                                          ? const Color(0xFFD4A853)
                                           : const Color(0xFF5A5E6B),
                                       size: 20,
                                     ),
@@ -5008,7 +5008,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         Container(
                           height: 32,
                           decoration: const BoxDecoration(
-                            color: Color(0xFF1C2028),
+                            color: Color(0xFF241820),
                             border: Border(
                               left: BorderSide(
                                   color: Color(0xFF2E2F3A), width: 1),
@@ -5019,7 +5019,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                           child: Row(
                             children: [
                               const Icon(Icons.people_outline,
-                                  size: 14, color: Color(0xFFBA9EFF)),
+                                  size: 14, color: Color(0xFFD4A853)),
                               const SizedBox(width: 6),
                               const Expanded(
                                 child: Text('Users',
@@ -5247,7 +5247,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         );
       },
       loading: () => Scaffold(
-          backgroundColor: const Color(0xFF0B0E14),
+          backgroundColor: const Color(0xFF0D0A0C),
           body: Stack(
             children: [
               const Center(child: CircularProgressIndicator()),
@@ -5264,7 +5264,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         decoration: BoxDecoration(
                           color: const Color(0xB310131A),
                           borderRadius: BorderRadius.circular(24),
-                          border: Border.all(color: const Color(0x30BA9EFF)),
+                          border: Border.all(color: const Color(0x30D4A853)),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -5340,8 +5340,8 @@ class _MobileTabBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const primary = Color(0xFFBA9EFF);
-    const inactive = Color(0xFFA9ABB3);
+    const primary = Color(0xFFD4A853);
+    const inactive = Color(0xFFB09080);
     return Expanded(
       child: InkWell(
         onTap: onTap,
@@ -5426,7 +5426,7 @@ class _RoomRosterSidebar extends StatelessWidget {
 
   Color _nameColor(int level) {
     if (level >= 20) return const Color(0xFFFFD700);
-    if (level >= 10) return const Color(0xFF00E3FD);
+    if (level >= 10) return const Color(0xFFC45E7A);
     if (level >= 5) return const Color(0xFF4CAF50);
     return Colors.white.withValues(alpha: 0.85);
   }
@@ -5474,7 +5474,7 @@ class _RoomRosterSidebar extends StatelessWidget {
           _RosterHeader(
             label: 'Talking Now',
             icon: Icons.mic,
-            iconColor: const Color(0xFF00E3FD),
+            iconColor: const Color(0xFFC45E7A),
           ),
           if (speakingUserIds.isEmpty)
             const Padding(
@@ -5489,7 +5489,7 @@ class _RoomRosterSidebar extends StatelessWidget {
                     vipLevel: vipLevelById[uid] ?? 0,
                     nameColor: _nameColor(vipLevelById[uid] ?? 0),
                     trailingIcon: Icons.mic,
-                    trailingColor: const Color(0xFF00E3FD),
+                    trailingColor: const Color(0xFFC45E7A),
                   ),
                 ),
           const Divider(height: 1, thickness: 1, color: _kDivider),
@@ -5497,7 +5497,7 @@ class _RoomRosterSidebar extends StatelessWidget {
           _RosterHeader(
             label: 'Mic Queue  $pendingMicCount',
             icon: Icons.queue_music,
-            iconColor: const Color(0xFFBA9EFF),
+            iconColor: const Color(0xFFD4A853),
           ),
           Padding(
             padding: const EdgeInsets.fromLTRB(8, 2, 8, 6),
@@ -5558,7 +5558,7 @@ class _RoomRosterSidebar extends StatelessWidget {
           _RosterHeader(
             label: 'Chatting  ${sorted.length}',
             icon: Icons.chat_bubble_outline,
-            iconColor: const Color(0xFFA9ABB3),
+            iconColor: const Color(0xFFB09080),
           ),
           Expanded(
             child: ListView.builder(
@@ -5608,7 +5608,7 @@ class _RosterHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: const Color(0xFF1C2028),
+      color: const Color(0xFF241820),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       child: Row(
         children: [
@@ -5618,7 +5618,7 @@ class _RosterHeader extends StatelessWidget {
             child: Text(
               label,
               style: const TextStyle(
-                color: Color(0xFFA9ABB3),
+                color: Color(0xFFB09080),
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
                 letterSpacing: 0.2,
@@ -5773,7 +5773,7 @@ class _HandRaiseButton extends StatelessWidget {
       tooltip: isPending ? 'Cancel hand raise' : 'Raise hand to speak',
       icon: Icon(
         isPending ? Icons.front_hand : Icons.front_hand_outlined,
-        color: isPending ? const Color(0xFFBA9EFF) : null,
+        color: isPending ? const Color(0xFFD4A853) : null,
       ),
       onPressed: isPending ? () => onCancel() : onRaise,
     );
@@ -6247,7 +6247,7 @@ class _TickerBannerState extends State<_TickerBanner>
             child: Text(
               widget.text,
               style: const TextStyle(
-                color: Color(0xFFA9ABB3),
+                color: Color(0xFFB09080),
                 fontSize: 11,
               ),
               maxLines: 1,

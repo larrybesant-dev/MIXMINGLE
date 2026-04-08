@@ -193,8 +193,8 @@ class _RichTextToolbarState extends State<RichTextToolbar> {
 
   @override
   Widget build(BuildContext context) {
-    const npOnVariant = Color(0xFFA9ABB3);
-    const npSurfaceHigh = Color(0xFF1C2028);
+    const npOnVariant = Color(0xFFB09080);
+    const npSurfaceHigh = Color(0xFF241820);
 
     return Container(
       height: 32,
@@ -242,11 +242,11 @@ class _RichTextToolbarState extends State<RichTextToolbar> {
   }
 
   static const _presetColors = [
-    'FF6E84', // red/pink
+    'FF6E84', // blush
     'FFA040', // orange
-    'FFD700', // gold
-    '00E3FD', // cyan
-    'BA9EFF', // lavender
+    'D4A853', // champagne gold
+    'C45E7A', // rose wine
+    'F2EBE0', // warm cream
     '4CAF50', // green
   ];
 }

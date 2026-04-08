@@ -33,7 +33,7 @@ class CamPreviewSheet extends StatefulWidget {
   }) {
     return showModalBottomSheet<bool>(
       context: context,
-      backgroundColor: const Color(0xFF1C2028),
+      backgroundColor: const Color(0xFF241820),
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -136,7 +136,7 @@ class _CamPreviewSheetState extends State<CamPreviewSheet> {
               child: AspectRatio(
                 aspectRatio: 16 / 9,
                 child: ColoredBox(
-                  color: const Color(0xFF0B0E14),
+                  color: const Color(0xFF0D0A0C),
                   child: widget.isVideoEnabled
                       ? widget.previewWidget
                       : const Center(
@@ -144,12 +144,12 @@ class _CamPreviewSheetState extends State<CamPreviewSheet> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.videocam_off,
-                                  color: Color(0xFFA9ABB3), size: 32),
+                                  color: Color(0xFFB09080), size: 32),
                               SizedBox(height: 6),
                               Text(
                                 'Camera not started yet',
                                 style: TextStyle(
-                                    color: Color(0xFFA9ABB3), fontSize: 12),
+                                    color: Color(0xFFB09080), fontSize: 12),
                               ),
                             ],
                           ),
@@ -171,12 +171,12 @@ class _CamPreviewSheetState extends State<CamPreviewSheet> {
                       width: 14,
                       height: 14,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Color(0xFFBA9EFF)),
+                          strokeWidth: 2, color: Color(0xFFD4A853)),
                     ),
                     SizedBox(width: 8),
                     Text('Loading devices…',
                         style:
-                            TextStyle(color: Color(0xFFA9ABB3), fontSize: 12)),
+                            TextStyle(color: Color(0xFFB09080), fontSize: 12)),
                   ],
                 ),
               )
@@ -211,7 +211,7 @@ class _CamPreviewSheetState extends State<CamPreviewSheet> {
                   onPressed: widget.onCancel,
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: Color(0xFF3A3E47)),
-                    foregroundColor: const Color(0xFFA9ABB3),
+                    foregroundColor: const Color(0xFFB09080),
                     padding: const EdgeInsets.symmetric(vertical: 11),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -225,7 +225,7 @@ class _CamPreviewSheetState extends State<CamPreviewSheet> {
                 child: ElevatedButton(
                   onPressed: widget.onConfirm,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFBA9EFF),
+                    backgroundColor: const Color(0xFFD4A853),
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 11),
                     shape: RoundedRectangleBorder(
@@ -267,14 +267,14 @@ class _DeviceRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: const Color(0xFFBA9EFF)),
+        Icon(icon, size: 16, color: const Color(0xFFD4A853)),
         const SizedBox(width: 6),
         SizedBox(
           width: 72,
           child: Text(
             label,
             style: const TextStyle(
-              color: Color(0xFFA9ABB3),
+              color: Color(0xFFB09080),
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -297,7 +297,7 @@ class _DeviceRow extends StatelessWidget {
                 borderSide: const BorderSide(color: Color(0xFF3A3E47)),
               ),
             ),
-            dropdownColor: const Color(0xFF1C2028),
+            dropdownColor: const Color(0xFF241820),
             style: const TextStyle(color: Colors.white, fontSize: 12),
             items: devices
                 .map(

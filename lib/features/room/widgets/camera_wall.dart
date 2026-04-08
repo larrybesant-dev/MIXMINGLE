@@ -198,7 +198,7 @@ class CameraWall extends ConsumerWidget {
                       if (overflowPageCount > 1)
                         Text(
                           'Page ${overflowPage + 1} of $overflowPageCount',
-                          style: const TextStyle(color: Color(0xFFA9ABB3), fontSize: 12),
+                          style: const TextStyle(color: Color(0xFFB09080), fontSize: 12),
                         ),
                       const SizedBox(width: 6),
                       IconButton(
@@ -258,7 +258,7 @@ class CameraWall extends ConsumerWidget {
                         const Text(
                           'Talking: ',
                           style: TextStyle(
-                            color: Color(0xFF00E3FD),
+                            color: Color(0xFFC45E7A),
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                           ),
@@ -456,7 +456,7 @@ class CameraWall extends ConsumerWidget {
                       padding: EdgeInsets.symmetric(vertical: 8),
                       child: Text(
                         'Waiting for others to join video...',
-                        style: TextStyle(color: Color(0xFFA9ABB3), fontSize: 13),
+                        style: TextStyle(color: Color(0xFFB09080), fontSize: 13),
                       ),
                     ),
                 ],
@@ -503,9 +503,9 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
   @override
   Widget build(BuildContext context) {
     const npSurfaceContainer = Color(0xFF161A21);
-    const npSurfaceHigh      = Color(0xFF1C2028);
-    const npSecondary        = Color(0xFF00E3FD); // cyan speaking
-    const npOnVariant        = Color(0xFFA9ABB3);
+    const npSurfaceHigh      = Color(0xFF241820);
+    const npSecondary        = Color(0xFFC45E7A); // cyan speaking
+    const npOnVariant        = Color(0xFFB09080);
 
     final radius = widget.compact ? 8.0 : 10.0;
     final borderColor = widget.speaking ? npSecondary : const Color(0x1A73757D);
@@ -580,7 +580,7 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
                   fit: StackFit.expand,
                   children: [
                     ColoredBox(
-                      color: const Color(0xFF0B0E14),
+                      color: const Color(0xFF0D0A0C),
                       child: widget.child,
                     ),
                     // EQ sound-wave bars only on the mic holder
@@ -610,7 +610,7 @@ class _CameraWallTileFrameState extends State<_CameraWallTileFrame> {
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.visibility, color: Color(0xFF00E3FD), size: 10),
+                              const Icon(Icons.visibility, color: Color(0xFFC45E7A), size: 10),
                               const SizedBox(width: 3),
                               Text(
                                 '${widget.viewerCount}',
@@ -712,7 +712,7 @@ class _SoundWaveEqState extends State<_SoundWaveEq>
                 width: 3,
                 height: _barAnims[i].value,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF00E3FD)
+                  color: const Color(0xFFC45E7A)
                       .withAlpha(widget.active ? 220 : 80),
                   borderRadius: BorderRadius.circular(2),
                 ),
@@ -784,7 +784,7 @@ class _ResizableTileState extends State<_ResizableTile> {
                   width: 16,
                   height: 16,
                   decoration: const BoxDecoration(
-                    color: Color(0x50BA9EFF),
+                    color: Color(0x50D4A853),
                     borderRadius: BorderRadius.only(
                       topLeft: Radius.circular(4),
                       bottomRight: Radius.circular(10),

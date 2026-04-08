@@ -22,8 +22,8 @@ class OnMicPanel extends ConsumerWidget {
   final Map<String, String> displayNameById;
 
   static const _npSurfaceContainer = Color(0xFF161A21);
-  static const _npSurfaceHigh = Color(0xFF1C2028);
-  static const _npSecondary = Color(0xFF00E3FD);
+  static const _npSurfaceHigh = Color(0xFF241820);
+  static const _npSecondary = Color(0xFFC45E7A);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -107,9 +107,9 @@ class _OnMicRow extends StatelessWidget {
   final String name;
   final bool isMe;
 
-  static const _npPrimary = Color(0xFFBA9EFF);
-  static const _npSecondary = Color(0xFF00E3FD);
-  static const _npOnVariant = Color(0xFFA9ABB3);
+  static const _npPrimary = Color(0xFFD4A853);
+  static const _npSecondary = Color(0xFFC45E7A);
+  static const _npOnVariant = Color(0xFFB09080);
   static const _npStage = Color(0xFFFFA040);
 
   Color get _roleColor {
@@ -250,7 +250,7 @@ class _PulsingMicIconState extends State<_PulsingMicIcon>
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _opacity,
-      child: const Icon(Icons.mic, color: Color(0xFF00E3FD), size: 14),
+      child: const Icon(Icons.mic, color: Color(0xFFC45E7A), size: 14),
     );
   }
 }

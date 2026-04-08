@@ -7,15 +7,15 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../services/room_service.dart';
 
 // ── colour aliases ────────────────────────────────────────────────────────────
-const _surface        = Color(0xFF0B0E14);
-const _surfaceHigh    = Color(0xFF1C2028);
-const _surfaceHighest = Color(0xFF22262F);
+const _surface        = Color(0xFF0D0A0C);
+const _surfaceHigh    = Color(0xFF241820);
+const _surfaceHighest = Color(0xFF2A1C23);
 const _surfaceLow     = Color(0xFF10131A);
-const _primary        = Color(0xFFBA9EFF);
-const _primaryDim     = Color(0xFF8455EF);
-const _secondary      = Color(0xFF00E3FD);
-const _onSurface      = Color(0xFFECEDF6);
-const _onVariant      = Color(0xFFA9ABB3);
+const _primary        = Color(0xFFD4A853);
+const _primaryDim     = Color(0xFF8C6020);
+const _secondary      = Color(0xFFC45E7A);
+const _onSurface      = Color(0xFFF2EBE0);
+const _onVariant      = Color(0xFFB09080);
 const _ghost          = Color(0x1A73757D);
 
 enum _RoomMode { audio, video }
@@ -83,7 +83,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Room scheduled! It will appear in Upcoming Rooms.'),
-              backgroundColor: Color(0xFF8455EF),
+              backgroundColor: Color(0xFF8C6020),
             ),
           );
           context.pop();
@@ -617,7 +617,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
       height: 140,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF1A1240), Color(0xFF0B0E14)],
+          colors: [Color(0xFF1B1216), Color(0xFF0D0A0C)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -633,7 +633,7 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
               height: 80,
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Colors.transparent, Color(0xCC0B0E14)],
+                  colors: [Colors.transparent, Color(0xCC0D0A0C)],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                 ),

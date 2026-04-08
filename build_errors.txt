@@ -1,7 +1,19 @@
-Compiling lib\main.dart for the Web...                          
-Wasm dry run succeeded. Consider building and testing your application with the `--wasm` flag. See docs for more info: https://docs.flutter.dev/platform-integration/web/wasm
-Use --no-wasm-dry-run to disable these warnings.
-Font asset "CupertinoIcons.ttf" was tree-shaken, reducing it from 257628 to 1472 bytes (99.4% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
-Font asset "MaterialIcons-Regular.otf" was tree-shaken, reducing it from 1645184 to 35776 bytes (97.8% reduction). Tree-shaking can be disabled by providing the --no-tree-shake-icons flag when building your app.
-Compiling lib\main.dart for the Web...                             62.5s
-ΓêÜ Built build\web
+Analyzing MixVy...                                              
+
+   info - Unnecessary use of multiple underscores - lib\features\profile\edit_profile_screen.dart:259:54 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\profile\edit_profile_screen.dart:259:58 - unnecessary_underscores
+   info - 'dialogBackgroundColor' is deprecated and shouldn't be used. Use DialogThemeData.backgroundColor instead. This feature was deprecated after v3.27.0-0.1.pre - lib\features\room\screens\create_room_screen.dart:545:21 - deprecated_member_use
+   info - 'dialogBackgroundColor' is deprecated and shouldn't be used. Use DialogThemeData.backgroundColor instead. This feature was deprecated after v3.27.0-0.1.pre - lib\features\room\screens\create_room_screen.dart:563:21 - deprecated_member_use
+warning - Unused import: '../../../services/friend_service.dart' - lib\features\search\screens\search_screen.dart:11:8 - unused_import
+   info - Unnecessary use of multiple underscores - lib\features\speed_dating\screens\speed_dating_screen.dart:254:38 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\speed_dating\screens\speed_dating_screen.dart:254:42 - unnecessary_underscores
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\features\splash\splash_screen.dart:75:54 - deprecated_member_use
+   info - Unnecessary use of multiple underscores - lib\features\stories\screens\create_story_screen.dart:352:32 - unnecessary_underscores
+   info - Unnecessary use of multiple underscores - lib\features\stories\widgets\stories_row.dart:40:18 - unnecessary_underscores
+   info - The local variable '_slotTab' starts with an underscore - lib\presentation\screens\live_room_screen.dart:3504:40 - no_leading_underscores_for_local_identifiers
+   info - Unnecessary use of multiple underscores - lib\presentation\screens\notifications_screen.dart:244:47 - unnecessary_underscores
+   info - The 'if' statement could be replaced by a null-aware assignment - lib\services\webrtc_room_service.dart:1657:7 - prefer_conditional_assignment
+warning - The declaration '_npPrimaryDim' isn't referenced - lib\shared\widgets\app_shell.dart:15:7 - unused_element
+   info - Use a 'SizedBox' to add whitespace to a layout - lib\shared\widgets\app_shell.dart:125:13 - sized_box_for_whitespace
+
+15 issues found. (ran in 6.3s)

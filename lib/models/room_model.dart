@@ -23,6 +23,8 @@ class RoomModel {
   final int maxBroadcasters;
   /// When the room is scheduled to start (null = not scheduled / already live).
   final Timestamp? scheduledAt;
+  /// Whether this is an 18+ After Dark room.
+  final bool isAdult;
 
   RoomModel({
     required this.id,
@@ -44,6 +46,7 @@ class RoomModel {
     this.slowModeSeconds,
     this.maxBroadcasters = 6,
     this.scheduledAt,
+    this.isAdult = false,
   });
 
   /// Combined members list (used by UI)
@@ -124,6 +127,7 @@ class RoomModel {
       slowModeSeconds: json['slowModeSeconds'] is num ? (json['slowModeSeconds'] as num).toInt() : null,
       maxBroadcasters: json['maxBroadcasters'] is num ? (json['maxBroadcasters'] as num).toInt() : 6,
       scheduledAt: _asTimestamp(json['scheduledAt']),
+      isAdult: _asBool(json['isAdult']),
     );
   }
 
@@ -147,6 +151,7 @@ class RoomModel {
       'slowModeSeconds': slowModeSeconds,
       'maxBroadcasters': maxBroadcasters,
       'scheduledAt': scheduledAt,
+      'isAdult': isAdult,
     };
   }
 
@@ -170,6 +175,7 @@ class RoomModel {
     int? slowModeSeconds,
     int? maxBroadcasters,
     Timestamp? scheduledAt,
+    bool? isAdult,
   }) {
     return RoomModel(
       id: id ?? this.id,
@@ -191,6 +197,7 @@ class RoomModel {
       slowModeSeconds: slowModeSeconds ?? this.slowModeSeconds,
       maxBroadcasters: maxBroadcasters ?? this.maxBroadcasters,
       scheduledAt: scheduledAt ?? this.scheduledAt,
+      isAdult: isAdult ?? this.isAdult,
     );
   }
 }

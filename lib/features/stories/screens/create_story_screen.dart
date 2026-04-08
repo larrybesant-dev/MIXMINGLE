@@ -359,7 +359,7 @@ class _CreateStoryScreenState extends ConsumerState<CreateStoryScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [NeonPulse.primaryDim, Color(0xFF0B0E14)],
+                  colors: [NeonPulse.primaryDim, Color(0xFF0D0A0C)],
                 ),
               ),
             ),

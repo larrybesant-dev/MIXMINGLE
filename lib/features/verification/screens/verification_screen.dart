@@ -96,7 +96,7 @@ class _VerificationScreenState extends ConsumerState<VerificationScreen> {
                 if (isVerified) {
                   return _StatusBanner(
                     icon: Icons.verified,
-                    color: const Color(0xFF00E3FD),
+                    color: const Color(0xFFC45E7A),
                     title: 'You are verified!',
                     subtitle: 'Your account has the verified badge.',
                   );
@@ -262,7 +262,7 @@ class _ExistingRequestView extends StatelessWidget {
     final (icon, color, title, subtitle) = switch (status) {
       'approved' => (
           Icons.verified,
-          const Color(0xFF00E3FD),
+          const Color(0xFFC45E7A),
           'Request approved',
           'You have been granted verified status.',
         ),

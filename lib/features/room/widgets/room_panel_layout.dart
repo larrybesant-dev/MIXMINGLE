@@ -186,9 +186,9 @@ class _RoomPanelLayoutState extends ConsumerState<RoomPanelLayout> {
   // ── Mobile: tabbed layout ─────────────────────────────────────────────────
 
   Widget _buildMobileLayout() {
-    const npSurfaceHigh = Color(0xFF1C2028);
-    const npPrimary = Color(0xFFBA9EFF);
-    const npOnVariant = Color(0xFFA9ABB3);
+    const npSurfaceHigh = Color(0xFF241820);
+    const npPrimary = Color(0xFFD4A853);
+    const npOnVariant = Color(0xFFB09080);
 
     final tabs = [
       (icon: Icons.videocam_outlined, label: 'Cams'),
@@ -272,7 +272,7 @@ class _ResizeDivider extends StatelessWidget {
         onHorizontalDragUpdate: (details) => onDelta(details.delta.dx),
         child: Container(
           width: 4,
-          color: const Color(0x20BA9EFF),
+          color: const Color(0x20D4A853),
         ),
       ),
     );
@@ -299,11 +299,11 @@ class _MinimizedTabButton extends StatelessWidget {
         onTap: onRestore,
         child: Container(
           width: 24,
-          color: const Color(0xFF1C2028),
+          color: const Color(0xFF241820),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 16, color: const Color(0xFFBA9EFF)),
+              Icon(icon, size: 16, color: const Color(0xFFD4A853)),
               const SizedBox(height: 8),
               RotatedBox(
                 quarterTurns: 1,

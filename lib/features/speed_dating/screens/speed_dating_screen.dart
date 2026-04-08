@@ -463,7 +463,7 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [Color(0xFFFF6EB4), Color(0xFFBA9EFF)],
+                  colors: [Color(0xFFFF6EB4), Color(0xFFD4A853)],
                 ),
                 borderRadius: BorderRadius.circular(12),
               ),

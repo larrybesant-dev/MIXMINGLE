@@ -91,7 +91,7 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
   @override
   Widget build(BuildContext context) {
     const npSurfaceLow = Color(0xFF10131A);
-    const npOnVariant = Color(0xFFA9ABB3);
+    const npOnVariant = Color(0xFFB09080);
 
     if (widget.messages.length != _lastCount) {
       _lastCount = widget.messages.length;
@@ -252,20 +252,20 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
                         borderSide: const BorderSide(
-                            color: Color(0x30BA9EFF)),
+                            color: Color(0x30D4A853)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
                         borderSide: const BorderSide(
-                            color: Color(0x30BA9EFF)),
+                            color: Color(0x30D4A853)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(20),
                         borderSide: const BorderSide(
-                            color: Color(0xFFBA9EFF)),
+                            color: Color(0xFFD4A853)),
                       ),
                       filled: true,
-                      fillColor: const Color(0xFF1C2028),
+                      fillColor: const Color(0xFF241820),
                     ),
                     onSubmitted: canSend
                         ? (text) async {
@@ -282,7 +282,7 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
                   height: 36,
                   child: FilledButton(
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFFBA9EFF),
+                      backgroundColor: const Color(0xFFD4A853),
                       padding: const EdgeInsets.symmetric(horizontal: 12),
                       minimumSize: Size.zero,
                     ),

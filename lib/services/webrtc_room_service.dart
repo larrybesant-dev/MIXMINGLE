@@ -218,7 +218,7 @@ class WebRtcRoomService implements RtcRoomService {
     if (userId == null) {
       // UID not yet mapped — connection initialising.
       return const ColoredBox(
-        color: Color(0xFF1C2028),
+        color: Color(0xFF241820),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -228,13 +228,13 @@ class WebRtcRoomService implements RtcRoomService {
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFFA9ABB3),
+                  color: Color(0xFFB09080),
                 ),
               ),
               SizedBox(height: 6),
               Text(
                 'Connecting cam…',
-                style: TextStyle(color: Color(0xFFA9ABB3), fontSize: 10),
+                style: TextStyle(color: Color(0xFFB09080), fontSize: 10),
               ),
             ],
           ),
@@ -245,7 +245,7 @@ class WebRtcRoomService implements RtcRoomService {
     if (peer == null) {
       // Peer entry not yet created — connection still initialising.
       return const ColoredBox(
-        color: Color(0xFF1C2028),
+        color: Color(0xFF241820),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -255,13 +255,13 @@ class WebRtcRoomService implements RtcRoomService {
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFFA9ABB3),
+                  color: Color(0xFFB09080),
                 ),
               ),
               SizedBox(height: 6),
               Text(
                 'Connecting cam…',
-                style: TextStyle(color: Color(0xFFA9ABB3), fontSize: 10),
+                style: TextStyle(color: Color(0xFFB09080), fontSize: 10),
               ),
             ],
           ),
@@ -274,14 +274,14 @@ class WebRtcRoomService implements RtcRoomService {
       // instead of a misleading "Connecting cam…" spinner.
       if (!peer.remoteCameraActive) {
         return const ColoredBox(
-          color: Color(0xFF1C2028),
+          color: Color(0xFF241820),
           child: Center(
-            child: Icon(Icons.videocam_off, size: 28, color: Color(0xFFA9ABB3)),
+            child: Icon(Icons.videocam_off, size: 28, color: Color(0xFFB09080)),
           ),
         );
       }
       return const ColoredBox(
-        color: Color(0xFF1C2028),
+        color: Color(0xFF241820),
         child: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -291,13 +291,13 @@ class WebRtcRoomService implements RtcRoomService {
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Color(0xFFA9ABB3),
+                  color: Color(0xFFB09080),
                 ),
               ),
               SizedBox(height: 6),
               Text(
                 'Connecting cam…',
-                style: TextStyle(color: Color(0xFFA9ABB3), fontSize: 10),
+                style: TextStyle(color: Color(0xFFB09080), fontSize: 10),
               ),
             ],
           ),
@@ -311,9 +311,9 @@ class WebRtcRoomService implements RtcRoomService {
         .any((t) => t.enabled);
     if (!hasVideo) {
       return const ColoredBox(
-        color: Color(0xFF1C2028),
+        color: Color(0xFF241820),
         child: Center(
-          child: Icon(Icons.videocam_off, size: 28, color: Color(0xFFA9ABB3)),
+          child: Icon(Icons.videocam_off, size: 28, color: Color(0xFFB09080)),
         ),
       );
     }
