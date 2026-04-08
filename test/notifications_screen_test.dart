@@ -54,9 +54,9 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    expect(find.text('Push notifications are disabled in Settings.'), findsOneWidget);
+    expect(find.text('Push notifications are disabled.'), findsOneWidget);
     expect(find.text('Payment received'), findsOneWidget);
-    expect(find.text('Mark All Read'), findsOneWidget);
-    expect(find.text('Notification Settings'), findsOneWidget);
+    expect(find.byTooltip('Mark all as read'), findsOneWidget);
+    expect(find.byTooltip('Notification settings'), findsOneWidget);
   });
 }

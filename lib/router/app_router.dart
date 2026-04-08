@@ -55,7 +55,9 @@ import '../features/after_dark/widgets/after_dark_shell.dart';
 import '../shared/widgets/app_shell.dart';
 import 'package:mixvy/features/auth/screens/login_screen.dart';
 import '../features/auth/register_screen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../features/profile/profile_screen.dart';
+import '../features/profile/edit_profile_screen.dart';
 import '../features/payments/payments_screen.dart';
 import '../features/dashboard/dashboard_screen.dart';
 
@@ -289,7 +291,15 @@ final routerProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: '/profile',
-            builder: (context, state) => const ProfileScreen(),
+            builder: (context, state) {
+              final uid = FirebaseAuth.instance.currentUser?.uid;
+              if (uid == null) return const ProfileScreen();
+              return UserProfileScreen(userId: uid);
+            },
+          ),
+          GoRoute(
+            path: '/edit-profile',
+            builder: (context, state) => const EditProfileScreen(),
           ),
           GoRoute(
             path: '/profile/:userId',

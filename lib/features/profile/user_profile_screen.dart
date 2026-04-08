@@ -2,6 +2,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:mixvy/models/moderation_model.dart';
 import 'package:mixvy/services/follow_service.dart';
 import 'package:mixvy/services/moderation_service.dart';
@@ -510,6 +512,33 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen>
                         icon: const Icon(Icons.flag_outlined),
                         label: const Text('Report'),
                       ),
+                    ),
+                  ],
+                ),
+              ],
+              if (isOwnProfile) ...[  
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: () => context.push('/edit-profile'),
+                        icon: const Icon(Icons.edit_outlined),
+                        label: const Text('Edit Profile'),
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    OutlinedButton.icon(
+                      onPressed: () {
+                        Clipboard.setData(ClipboardData(
+                          text: 'https://mix-and-mingle-v2.web.app/profile/${widget.userId}',
+                        ));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Profile link copied!')),
+                        );
+                      },
+                      icon: const Icon(Icons.share_outlined),
+                      label: const Text('Share'),
                     ),
                   ],
                 ),

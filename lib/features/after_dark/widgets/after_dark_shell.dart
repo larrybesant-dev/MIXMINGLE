@@ -34,9 +34,26 @@ class AfterDarkShell extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final location     = GoRouterState.of(context).uri.toString();
+    final sessionActive = ref.watch(afterDarkSessionProvider);
+
+    // Guard: if the session was cleared (app restart, manual lock, or direct URL
+    // navigation) redirect immediately to the PIN unlock screen.
+    if (!sessionActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (context.mounted) context.go('/after-dark/unlock');
+      });
+      // Render a blank dark screen while the redirect fires.
+      return const Scaffold(
+        backgroundColor: EmberDark.surface,
+        body: Center(
+          child: CircularProgressIndicator(color: EmberDark.primary),
+        ),
+      );
+    }
+
+    final location      = GoRouterState.of(context).uri.toString();
     final selectedIndex = _indexForLocation(location);
-    final unreadMsgs   = ref.watch(unreadMessageCountProvider);
+    final unreadMsgs    = ref.watch(unreadMessageCountProvider);
 
     return Scaffold(
       backgroundColor: _edSurface,

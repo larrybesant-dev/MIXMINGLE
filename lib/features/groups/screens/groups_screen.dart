@@ -20,9 +20,22 @@ class GroupsScreen extends ConsumerWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
+        backgroundColor: NeonPulse.surface,
         appBar: AppBar(
-          title: const Text('Groups'),
+          backgroundColor: NeonPulse.surface,
+          title: const Text(
+            'Groups',
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 22,
+              color: NeonPulse.onSurface,
+            ),
+          ),
           bottom: const TabBar(
+            indicatorColor: NeonPulse.primary,
+            labelColor: NeonPulse.primary,
+            unselectedLabelColor: NeonPulse.onSurfaceVariant,
+            indicatorWeight: 2,
             tabs: [
               Tab(text: 'Discover'),
               Tab(text: 'My Groups'),
@@ -30,7 +43,9 @@ class GroupsScreen extends ConsumerWidget {
           ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.add_circle_outline),
+              icon: const Icon(Icons.add_circle_outline,
+                  color: NeonPulse.primary),
+              tooltip: 'Create group',
               onPressed: () => context.push('/create-group?userId=$userId'),
             ),
           ],
@@ -41,30 +56,40 @@ class GroupsScreen extends ConsumerWidget {
             groupsAsync.when(
               data: (groups) {
                 if (groups.isEmpty) {
-                  return const Center(child: Text('No groups yet'));
+                  return const Center(
+                    child: Text('No groups yet',
+                        style:
+                            TextStyle(color: NeonPulse.onSurfaceVariant)),
+                  );
                 }
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
                   itemCount: groups.length,
                   itemBuilder: (context, index) {
                     final group = groups[index];
                     final isMember = group.isMember(userId);
-                    return Card(
+                    return Container(
                       margin: const EdgeInsets.only(bottom: 10),
-                      color: NeonPulse.surfaceContainer,
-                      shape: RoundedRectangleBorder(
+                      decoration: BoxDecoration(
+                        color: NeonPulse.surfaceContainer,
                         borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: NeonPulse.outlineVariant
+                                .withValues(alpha: 0.5)),
                       ),
                       child: InkWell(
                         borderRadius: BorderRadius.circular(14),
                         onTap: () => context.push('/group/${group.id}'),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 16, vertical: 14),
                           child: Row(
                             children: [
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       group.name,
@@ -92,12 +117,16 @@ class GroupsScreen extends ConsumerWidget {
                                 child: ElevatedButton(
                                   onPressed: () {
                                     if (isMember) {
-                                      ref.read(groupsControllerProvider).leaveGroup(
+                                      ref
+                                          .read(groupsControllerProvider)
+                                          .leaveGroup(
                                             groupId: group.id,
                                             userId: userId,
                                           );
                                     } else {
-                                      ref.read(groupsControllerProvider).joinGroup(
+                                      ref
+                                          .read(groupsControllerProvider)
+                                          .joinGroup(
                                             groupId: group.id,
                                             userId: userId,
                                           );
@@ -108,12 +137,15 @@ class GroupsScreen extends ConsumerWidget {
                                         ? NeonPulse.surfaceBright
                                         : NeonPulse.primaryDim,
                                     foregroundColor: NeonPulse.onSurface,
-                                    padding: const EdgeInsets.symmetric(vertical: 8),
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 8),
                                     shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
+                                      borderRadius:
+                                          BorderRadius.circular(20),
                                     ),
                                     minimumSize: Size.zero,
-                                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
                                   ),
                                   child: Text(
                                     isMember ? 'Leave' : 'Join',
@@ -129,29 +161,45 @@ class GroupsScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text('Error: $error')),
+              loading: () => const Center(
+                  child: CircularProgressIndicator(
+                      color: NeonPulse.primary)),
+              error: (e, _) => const Center(
+                child: Text('Could not load groups',
+                    style:
+                        TextStyle(color: NeonPulse.onSurfaceVariant)),
+              ),
             ),
             // My Groups tab
             userGroupsAsync.when(
               data: (groups) {
                 if (groups.isEmpty) {
-                  return const Center(child: Text('You have not joined any groups'));
+                  return const Center(
+                    child: Text(
+                      'You haven\'t joined any groups yet',
+                      style:
+                          TextStyle(color: NeonPulse.onSurfaceVariant),
+                    ),
+                  );
                 }
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 12),
                   itemCount: groups.length,
                   itemBuilder: (context, index) {
                     final group = groups[index];
-                    return Card(
+                    return Container(
                       margin: const EdgeInsets.only(bottom: 10),
-                      color: NeonPulse.surfaceContainer,
-                      shape: RoundedRectangleBorder(
+                      decoration: BoxDecoration(
+                        color: NeonPulse.surfaceContainer,
                         borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                            color: NeonPulse.outlineVariant
+                                .withValues(alpha: 0.5)),
                       ),
                       child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 6),
+                            horizontal: 16, vertical: 6),
                         title: Text(
                           group.name,
                           style: const TextStyle(
@@ -161,16 +209,26 @@ class GroupsScreen extends ConsumerWidget {
                         ),
                         subtitle: Text(
                           '${group.memberCount} members',
-                          style: const TextStyle(color: NeonPulse.onSurfaceVariant),
+                          style: const TextStyle(
+                              color: NeonPulse.onSurfaceVariant),
                         ),
-                        onTap: () => context.push('/group/${group.id}'),
+                        trailing: const Icon(Icons.chevron_right,
+                            color: NeonPulse.onSurfaceVariant),
+                        onTap: () =>
+                            context.push('/group/${group.id}'),
                       ),
                     );
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, _) => Center(child: Text('Error: $error')),
+              loading: () => const Center(
+                  child: CircularProgressIndicator(
+                      color: NeonPulse.primary)),
+              error: (e, _) => const Center(
+                child: Text('Could not load your groups',
+                    style:
+                        TextStyle(color: NeonPulse.onSurfaceVariant)),
+              ),
             ),
           ],
         ),

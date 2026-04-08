@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/groups_provider.dart';
 import '../../feed/models/post_model.dart';
 import '../../feed/widgets/post_card.dart';
+import '../../../core/theme.dart';
 
 class GroupDetailsScreen extends ConsumerWidget {
   final String groupId;
@@ -20,67 +21,146 @@ class GroupDetailsScreen extends ConsumerWidget {
     final postsAsync = ref.watch(groupPostsProvider(groupId));
 
     return Scaffold(
+      backgroundColor: NeonPulse.surface,
       appBar: AppBar(
-        title: const Text('Group'),
+        backgroundColor: NeonPulse.surface,
+        title: groupAsync.whenOrNull(
+              data: (g) => g == null
+                  ? null
+                  : Text(
+                      g.name,
+                      style: const TextStyle(
+                        color: NeonPulse.onSurface,
+                        fontWeight: FontWeight.w700,
+                        fontSize: 18,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+            ) ??
+            const Text(
+              'Group',
+              style: TextStyle(
+                  color: NeonPulse.onSurface, fontWeight: FontWeight.w700),
+            ),
       ),
       body: groupAsync.when(
         data: (group) {
           if (group == null) {
-            return const Center(child: Text('Group not found'));
+            return const Center(
+              child: Text('Group not found',
+                  style: TextStyle(color: NeonPulse.onSurfaceVariant)),
+            );
           }
+
+          final isMember = group.isMember(userId);
 
           return Column(
             children: [
+              // Group header banner
               Container(
-                padding: const EdgeInsets.all(16),
+                width: double.infinity,
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+                color: NeonPulse.surfaceContainer,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       group.name,
                       style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                        color: NeonPulse.onSurface,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(group.description),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('${group.memberCount} members'),
-                        if (group.isMember(userId))
-                          ElevatedButton(
-                            onPressed: () {
-                              ref.read(groupsControllerProvider).leaveGroup(
-                                    groupId: group.id,
-                                    userId: userId,
-                                  );
-                            },
-                            child: const Text('Leave'),
-                          )
-                        else
-                          ElevatedButton(
-                            onPressed: () {
-                              ref.read(groupsControllerProvider).joinGroup(
-                                    groupId: group.id,
-                                    userId: userId,
-                                  );
-                            },
-                            child: const Text('Join'),
+                    if (group.description.isNotEmpty) ...
+                      [
+                        const SizedBox(height: 6),
+                        Text(
+                          group.description,
+                          style: const TextStyle(
+                            color: NeonPulse.onSurfaceVariant,
+                            fontSize: 14,
                           ),
+                        ),
+                      ],
+                    const SizedBox(height: 14),
+                    Row(
+                      children: [
+                        const Icon(Icons.people_outline,
+                            color: NeonPulse.onSurfaceVariant, size: 16),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${group.memberCount} members',
+                          style: const TextStyle(
+                            color: NeonPulse.onSurfaceVariant,
+                            fontSize: 13,
+                          ),
+                        ),
+                        const Spacer(),
+                        ElevatedButton(
+                          onPressed: () {
+                            if (isMember) {
+                              ref
+                                  .read(groupsControllerProvider)
+                                  .leaveGroup(
+                                    groupId: group.id,
+                                    userId: userId,
+                                  );
+                            } else {
+                              ref
+                                  .read(groupsControllerProvider)
+                                  .joinGroup(
+                                    groupId: group.id,
+                                    userId: userId,
+                                  );
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isMember
+                                ? NeonPulse.surfaceBright
+                                : NeonPulse.primaryDim,
+                            foregroundColor: NeonPulse.onSurface,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 8),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: Text(isMember ? 'Leave' : 'Join Group'),
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
-              const Divider(),
+              Divider(
+                  height: 1,
+                  color: NeonPulse.outlineVariant.withValues(alpha: 0.5)),
+              // Posts section label
+              const Padding(
+                padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Posts',
+                    style: TextStyle(
+                      color: NeonPulse.onSurface,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              // Posts list
               Expanded(
                 child: postsAsync.when(
                   data: (posts) {
                     if (posts.isEmpty) {
-                      return const Center(child: Text('No posts in this group'));
+                      return const Center(
+                        child: Text('No posts in this group yet',
+                            style: TextStyle(
+                                color: NeonPulse.onSurfaceVariant)),
+                      );
                     }
                     return ListView.builder(
                       itemCount: posts.length,
@@ -102,19 +182,27 @@ class GroupDetailsScreen extends ConsumerWidget {
                       },
                     );
                   },
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (error, _) => Center(child: Text('Error: $error')),
+                  loading: () => const Center(
+                      child: CircularProgressIndicator(
+                          color: NeonPulse.primary)),
+                  error: (e, _) => const Center(
+                    child: Text('Could not load posts',
+                        style:
+                            TextStyle(color: NeonPulse.onSurfaceVariant)),
+                  ),
                 ),
               ),
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(child: Text('Error: $error')),
+        loading: () => const Center(
+            child: CircularProgressIndicator(color: NeonPulse.primary)),
+        error: (e, _) => const Center(
+          child: Text('Could not load group',
+              style: TextStyle(color: NeonPulse.onSurfaceVariant)),
+        ),
       ),
     );
   }
-
 }
 

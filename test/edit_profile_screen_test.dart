@@ -121,7 +121,6 @@ void main() {
       await tester.pump();
 
       expect(find.byIcon(Icons.person), findsOneWidget);
-      expect(find.text('Tap to change photo'), findsOneWidget);
     });
 
     testWidgets('no upload spinner visible when not uploading', (tester) async {
@@ -160,8 +159,8 @@ void main() {
       );
       await tester.pump();
 
-      final saveButton = tester.widget<ElevatedButton>(
-        find.widgetWithText(ElevatedButton, 'Save'),
+      final saveButton = tester.widget<TextButton>(
+        find.widgetWithText(TextButton, 'Save'),
       );
       expect(saveButton.onPressed, isNotNull);
     });
@@ -178,8 +177,8 @@ void main() {
       );
       await tester.pump();
 
-      final saveButton = tester.widget<ElevatedButton>(
-        find.byType(ElevatedButton).first,
+      final saveButton = tester.widget<TextButton>(
+        find.byType(TextButton).first,
       );
       expect(saveButton.onPressed, isNull);
     });

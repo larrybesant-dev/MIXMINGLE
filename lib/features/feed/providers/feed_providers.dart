@@ -64,7 +64,8 @@ final liveRoomsCountProvider = StreamProvider.autoDispose<int>((ref) {
 
 /// Stream of the 12 most recently joined users, ordered by createdAt desc.
 final newMembersStreamProvider = StreamProvider.autoDispose<List<UserModel>>((ref) {
-  return FirebaseFirestore.instance
+  final firestore = ref.watch(firestoreProvider);
+  return firestore
       .collection('users')
       .orderBy('createdAt', descending: true)
       .limit(12)

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/groups_provider.dart';
+import '../../../core/theme.dart';
 
 class CreateGroupScreen extends ConsumerStatefulWidget {
   final String userId;
@@ -35,7 +36,7 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
   }
 
   Future<void> _createGroup() async {
-    if (_nameController.text.isEmpty) {
+    if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please enter a group name')),
       );
@@ -47,13 +48,13 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
     try {
       await ref.read(groupsControllerProvider).createGroup(
             userId: widget.userId,
-            name: _nameController.text,
-            description: _descriptionController.text,
+            name: _nameController.text.trim(),
+            description: _descriptionController.text.trim(),
           );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Group created successfully')),
+          const SnackBar(content: Text('Group created!')),
         );
         context.pop();
       }
@@ -64,52 +65,108 @@ class _CreateGroupScreenState extends ConsumerState<CreateGroupScreen> {
         );
       }
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: NeonPulse.surface,
       appBar: AppBar(
-        title: const Text('Create Group'),
+        backgroundColor: NeonPulse.surface,
+        title: const Text(
+          'Create Group',
+          style: TextStyle(
+            color: NeonPulse.onSurface,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Name field
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(
+              style: const TextStyle(color: NeonPulse.onSurface),
+              decoration: InputDecoration(
                 labelText: 'Group Name',
-                hintText: 'Enter group name',
-                border: OutlineInputBorder(),
+                labelStyle:
+                    const TextStyle(color: NeonPulse.onSurfaceVariant),
+                hintText: 'Enter a name for your group',
+                hintStyle:
+                    const TextStyle(color: NeonPulse.onSurfaceVariant),
+                filled: true,
+                fillColor: NeonPulse.surfaceContainer,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: NeonPulse.outlineVariant),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                      color: NeonPulse.primary, width: 1.5),
+                ),
               ),
             ),
             const SizedBox(height: 16),
+            // Description field
             TextField(
               controller: _descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description',
-                hintText: 'Enter group description',
-                border: OutlineInputBorder(),
-              ),
+              style: const TextStyle(color: NeonPulse.onSurface),
               minLines: 3,
               maxLines: 5,
+              decoration: InputDecoration(
+                labelText: 'Description',
+                labelStyle:
+                    const TextStyle(color: NeonPulse.onSurfaceVariant),
+                hintText: 'What is this group about?',
+                hintStyle:
+                    const TextStyle(color: NeonPulse.onSurfaceVariant),
+                filled: true,
+                fillColor: NeonPulse.surfaceContainer,
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide:
+                      const BorderSide(color: NeonPulse.outlineVariant),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                      color: NeonPulse.primary, width: 1.5),
+                ),
+              ),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
+            // Create button
             ElevatedButton(
               onPressed: _isLoading ? null : _createGroup,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: NeonPulse.primaryDim,
+                foregroundColor: NeonPulse.onSurface,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                disabledBackgroundColor:
+                    NeonPulse.surfaceBright,
+              ),
               child: _isLoading
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: NeonPulse.primary),
                     )
-                  : const Text('Create Group'),
+                  : const Text(
+                      'Create Group',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w700, fontSize: 16),
+                    ),
             ),
           ],
         ),
