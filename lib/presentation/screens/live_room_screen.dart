@@ -2717,7 +2717,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         // Migrate legacy 'owner' role to 'host' so the broadcaster
         // controls always render for the room creator.
         final correctedRole = ownerId == userId ? 'host' : (data['role'] as String? ?? 'audience');
-        await docRef.update({'lastActiveAt': now, 'role': correctedRole});
+        await docRef.update({'lastActiveAt': now, 'role': correctedRole, 'camOn': false});
         await memberDocRef.set({
           'userId': userId,
           'role': ownerId == userId ? 'owner' : 'member',
@@ -4961,10 +4961,12 @@ class _RoomRosterSidebar extends StatelessWidget {
     }
 
     // ── On-cam participants ───────────────────────────────────
+    // For the local user, trust the live _isVideoEnabled state rather than
+    // the Firestore camOn flag (which may be stale from a previous session).
     final onCamParticipants = participants
-        .where((p) =>
-            p.camOn ||
-            (p.userId == currentUserId && isLocalVideoEnabled))
+        .where((p) => p.userId == currentUserId
+            ? isLocalVideoEnabled
+            : p.camOn)
         .toList(growable: false);
 
     // ── Sort: host → cohost → mod → audience ─────────────────
