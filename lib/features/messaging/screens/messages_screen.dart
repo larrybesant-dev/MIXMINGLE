@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../models/conversation_model.dart';
 import '../providers/messaging_provider.dart';
 import '../../../core/theme.dart';
+import '../../../widgets/mixvy_drawer.dart';
 
 class MessagesScreen extends ConsumerWidget {
   final String userId;
@@ -66,6 +67,7 @@ class MessagesScreen extends ConsumerWidget {
             ],
           ),
         ),
+        drawer: const MixVyDrawer(),
         body: TabBarView(
           children: [
             _ConversationsList(

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../models/room_model.dart';
 import '../widgets/live_room_card.dart';
+import '../../../widgets/mixvy_drawer.dart';
 
 /// Live room category browser — a grid of category cards that lets users
 /// browse rooms by topic, similar to Paltalk's main lobby.
@@ -60,6 +61,7 @@ class _RoomBrowserScreenState extends ConsumerState<RoomBrowserScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: const MixVyDrawer(),
       appBar: AppBar(
         title: _showGrid
             ? Text(_categoryLabel(_selectedCategory))

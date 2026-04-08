@@ -7,6 +7,7 @@ import 'package:mixvy/features/auth/controllers/auth_controller.dart';
 import 'package:mixvy/core/services/first_run_service.dart';
 import 'package:mixvy/core/services/profile_gate_service.dart';
 import 'package:mixvy/features/onboarding/onboarding_screen.dart';
+import 'package:mixvy/features/splash/splash_screen.dart';
 import 'package:mixvy/features/feed/screens/discovery_feed_screen.dart';
 import 'package:mixvy/features/profile/user_profile_screen.dart';
 import 'package:mixvy/presentation/screens/friend_list_screen.dart';
@@ -146,6 +147,9 @@ Future<String?> evaluateAppRedirect({
     return null;
   }
 
+  // Let the splash screen drive its own navigation after the animation.
+  if (matchedLocation == '/splash') return null;
+
   final loggedIn = uid != null;
   final isLoggingIn =
       matchedLocation == '/login' || matchedLocation == '/register';
@@ -179,7 +183,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,
-    initialLocation: '/',
+    initialLocation: '/splash',
     errorBuilder: (context, state) =>
         NotFoundScreen(path: state.uri.toString()),
     redirect: (context, state) async {
@@ -204,6 +208,10 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       // ── Auth / legal / onboarding — no shell ───────────────────────────
+      GoRoute(
+        path: '/splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),

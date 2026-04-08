@@ -12,6 +12,7 @@ import '../profile/profile_controller.dart';
 import '../../presentation/providers/user_provider.dart';
 import '../stories/widgets/stories_row.dart';
 import '../../models/user.dart' as feed_user;
+import '../../widgets/mixvy_drawer.dart';
 
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -42,6 +43,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
     return Scaffold(
       backgroundColor: NeonPulse.surface,
+      drawer: const MixVyDrawer(),
       floatingActionButton: _CreateFAB(),
       body: NestedScrollView(
         headerSliverBuilder: (context, _) => [
