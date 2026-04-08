@@ -16,27 +16,37 @@ void main() {
         'uid': 'user-1',
         'email': 'user1@mixvy.dev',
         'username': 'User One',
+        'usernameLower': 'user one',
         'friends': ['user-2'],
+        'createdAt': DateTime(2026, 1, 1),
       });
       await firestore.collection('users').doc('user-2').set({
         'uid': 'user-2',
         'email': 'user2@mixvy.dev',
         'username': 'User Two',
+        'usernameLower': 'user two',
+        'createdAt': DateTime(2026, 1, 2),
       });
       await firestore.collection('users').doc('user-3').set({
         'uid': 'user-3',
         'email': 'search@mixvy.dev',
         'username': 'Searchable Person',
+        'usernameLower': 'searchable person',
+        'createdAt': DateTime(2026, 1, 3),
       });
       await firestore.collection('users').doc('user-5').set({
         'uid': 'user-5',
         'email': 'search-candidate@mixvy.dev',
         'username': 'Search Candidate',
+        'usernameLower': 'search candidate',
+        'createdAt': DateTime(2026, 1, 5),
       });
       await firestore.collection('users').doc('user-4').set({
         'uid': 'user-4',
         'email': 'pending@mixvy.dev',
         'username': 'Pending Person',
+        'usernameLower': 'pending person',
+        'createdAt': DateTime(2026, 1, 4),
       });
       await firestore.collection('friend_requests').doc('incoming-1').set({
         'fromUserId': 'user-3',

@@ -550,7 +550,24 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   void _attachServiceCallbacks(RtcRoomService service) {
     service.onRemoteUserJoined = () {
       RoomAudioCues.instance.playUserJoined();
-      if (mounted) setState(() {});
+      if (mounted) {
+        setState(() {});
+        // Immediately resolve display names for any UIDs whose userId mapping
+        // is now known but whose name hasn't been fetched yet.  This means
+        // tiles show a real name the moment they appear instead of "Guest UID"
+        // until the Firestore participants stream delivers the participant doc.
+        final newUserIds = service.remoteUids
+            .map((uid) => service.userIdForUid(uid))
+            .whereType<String>()
+            .where((id) => !_senderDisplayNameById.containsKey(id))
+            .toList(growable: false);
+        if (newUserIds.isNotEmpty) {
+          _hydrateSenderDisplayNames(
+            userIds: newUserIds,
+            currentUserId: _joinedUserId ?? '',
+          );
+        }
+      }
     };
     service.onRemoteUserLeft = () {
       RoomAudioCues.instance.playUserLeft();
@@ -836,9 +853,95 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     await _agoraService?.setSpeakerVolume(v);
   }
 
+  /// Shows a step-by-step guide telling the user how to share PC audio in
+  /// Chrome/Edge before the getDisplayMedia picker is opened.
+  /// Returns true when the user confirms they want to proceed.
+  Future<bool> _showSystemAudioGuide() async {
+    final confirmed = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.headset, size: 24, color: Color(0xFF7C5FFF)),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'Share PC audio',
+                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, size: 20),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => Navigator.of(sheetCtx).pop(false),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              const Text(
+                'Chrome will open a screen-share picker. Follow these steps so others can hear your audio:',
+                style: TextStyle(fontSize: 13, color: Colors.white70),
+              ),
+              const SizedBox(height: 14),
+              _SystemAudioStep(
+                number: '1',
+                text: 'Choose the tab or window you want to share audio from.',
+              ),
+              const SizedBox(height: 8),
+              _SystemAudioStep(
+                number: '2',
+                icon: Icons.check_box,
+                text: 'Check "Share system audio" (the checkbox near the bottom of the picker).',
+              ),
+              const SizedBox(height: 8),
+              _SystemAudioStep(
+                number: '3',
+                text: 'Click Share — your PC audio streams to the room.',
+              ),
+              const SizedBox(height: 20),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => Navigator.of(sheetCtx).pop(true),
+                  icon: const Icon(Icons.open_in_new, size: 18),
+                  label: const Text('Open Share Picker'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFF7C5FFF),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        ),
+      ),
+    );
+    return confirmed == true;
+  }
+
   Future<void> _toggleSystemAudio() async {
     final service = _agoraService;
     if (service == null || !_isCallReady || _isSystemAudioActionInFlight) return;
+
+    // When starting (not stopping), show the guide so the user knows to check
+    // "Share system audio" in Chrome's picker before clicking Share.
+    if (!_isSharingSystemAudio) {
+      final proceed = await _showSystemAudioGuide();
+      if (!proceed || !mounted) return;
+    }
+
     setState(() => _isSystemAudioActionInFlight = true);
     try {
       await service.shareSystemAudio(!_isSharingSystemAudio);
@@ -1690,12 +1793,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
           }
         }
       }
-      // When demoted back to audience: stop publishing and downgrade Agora
-      // client role so this user no longer occupies a broadcaster slot.
+      // When demoted back to audience or member: stop publishing and downgrade
+      // Agora client role so this user no longer occupies a broadcaster slot.
       // Skip if the user has an active camera slot (already broadcaster).
-      if (role == 'audience' && service.isBroadcaster && _claimedSlotId == null) {
+      if ((role == 'audience' || role == 'member') &&
+          service.isBroadcaster &&
+          _claimedSlotId == null) {
         await service.setBroadcaster(false);
         if (mounted) setState(() => _isMicMuted = true);
+        // If demoted from stage the user was displaced by someone grabbing the
+        // mic — show a brief notice so they are not confused.
+        if (mounted && _appliedMediaRole == 'stage') {
+          _showSnackBar('Your mic was taken — someone else grabbed it.');
+        }
       }
       await service.mute(_isMicMuted);
       // Do NOT call enableVideo again if the camera is already running.
@@ -2320,6 +2430,33 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   }
                 } catch (e) {
                   _showSnackBar('Could not update role: $e');
+                }
+              }),
+            ),
+          // Invite non-cohost to the mic (push-invite) or pull them off the mic.
+          if (canHostOnlyManage && target.role != 'cohost')
+            RoomActionItem(
+              label: target.role == 'stage' ? 'Pull from mic' : 'Invite to mic',
+              icon: target.role == 'stage'
+                  ? Icons.mic_off_outlined
+                  : Icons.mic_outlined,
+              onTap: () => runAction(() async {
+                try {
+                  if (target.role == 'stage') {
+                    await hostControls.forceReleaseMic(
+                      widget.roomId,
+                      target.userId,
+                    );
+                    _showSnackBar('${target.userId} removed from mic.');
+                  } else {
+                    await hostControls.inviteToMic(
+                      widget.roomId,
+                      target.userId,
+                    );
+                    _showSnackBar('${target.userId} invited to the mic!');
+                  }
+                } catch (e) {
+                  _showSnackBar('Could not update mic: $e');
                 }
               }),
             ),
@@ -3779,7 +3916,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     if (remoteUserId == null) return true;
                                     final knownOnline =
                                         presenceMap[remoteUserId];
-                                    if (knownOnline == null) return true;
+                                    if (knownOnline == null) return false;
                                     return knownOnline;
                                   })
                                   .map((remoteUid) {
@@ -3825,7 +3962,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                 roomName: roomName,
                                 localLabel:
                                     _senderDisplayNameById[user.id] ?? 'You',
-                                showLocalTile: _isVideoEnabled && !localIsFloating,
+                                showLocalTile: (_agoraService?.isLocalVideoCapturing ?? false) && !localIsFloating,
                                 localHasMic: participantsInRoom.any((p) =>
                                     p.userId == user.id &&
                                     p.role == 'stage'),
@@ -4561,6 +4698,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                           0,
                                       senderAvatarUrl:
                                           _senderAvatarUrlById[msg.senderId],
+                                      onTapSender: (senderId) =>
+                                          UserProfilePopup.show(
+                                            context,
+                                            ref,
+                                            userId: senderId,
+                                          ),
                                     );
                                   },
                                 );
@@ -4687,6 +4830,51 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                         participant?.isMuted != true &&
                                         participant?.isBanned != true &&
                                         !hasBlockedParticipantInRoom,
+                                    textInputAction: TextInputAction.send,
+                                    onSubmitted: isSending ||
+                                            participant?.isMuted == true ||
+                                            participant?.isBanned == true ||
+                                            !allowChat ||
+                                            hasBlockedParticipantInRoom
+                                        ? null
+                                        : (text) async {
+                                            final trimmed = text.trim();
+                                            if (trimmed.isEmpty) return;
+                                            if (slowModeSeconds > 0 &&
+                                                lastMessageTime != null) {
+                                              final secs = DateTime.now()
+                                                  .difference(lastMessageTime!)
+                                                  .inSeconds;
+                                              if (secs < slowModeSeconds) {
+                                                setState(() {
+                                                  cooldownMessage =
+                                                      'Slow mode on. Wait ${slowModeSeconds - secs}s.';
+                                                });
+                                                return;
+                                              }
+                                            }
+                                            setState(() => isSending = true);
+                                            try {
+                                              await sendMessage(trimmed);
+                                              lastMessageTime = DateTime.now();
+                                              cooldownMessage = '';
+                                              messageController.clear();
+                                              _showEmojiTray = false;
+                                            } catch (e) {
+                                              if (context.mounted) {
+                                                ScaffoldMessenger.of(context)
+                                                    .showSnackBar(SnackBar(
+                                                  content: Text(e.toString()),
+                                                ));
+                                              }
+                                            } finally {
+                                              if (mounted) {
+                                                setState(
+                                                  () => isSending = false,
+                                                );
+                                              }
+                                            }
+                                          },
                                     decoration: InputDecoration(
                                       hintText: participant?.isMuted == true
                                           ? 'You are muted'
@@ -4862,8 +5050,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                       ),
                                     )
                                     .role,
-                            isMicFree: !participantsInRoom
-                                    .any((p) => p.role == 'stage' && p.userId != user.id),
+                            isMicFree: true,
                             isLocalVideoEnabled: _isVideoEnabled,
                             localSpeaking:
                                 (_agoraService?.localSpeaking ?? false) ||
@@ -4896,33 +5083,22 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             },
                             onJoinQueue: allowMicRequests
                                 ? () async {
-                                    final micFree = !participantsInRoom
-                                            .any((p) => p.role == 'stage' && p.userId != user.id);
+                                    // Grab the mic directly, displacing any
+                                    // current stage user (co-hosts are
+                                    // unaffected — their role stays 'cohost').
                                     try {
-                                      if (micFree) {
-                                        await micAccessController
-                                            .grabMicDirectly(
-                                          roomId: widget.roomId,
-                                          userId: user.id,
-                                        );
-                                        if (mounted) {
-                                          _showSnackBar('You have the mic!');
-                                        }
-                                      } else {
-                                        await micAccessController
-                                            .requestAccess(
-                                          roomId: widget.roomId,
-                                          requesterId: user.id,
-                                          hostId: hostId,
-                                        );
-                                        if (mounted) {
-                                          _showSnackBar('Mic request sent!');
-                                        }
+                                      await micAccessController
+                                          .grabMicDirectly(
+                                        roomId: widget.roomId,
+                                        userId: user.id,
+                                      );
+                                      if (mounted) {
+                                        _showSnackBar('You have the mic!');
                                       }
                                     } catch (e) {
                                       if (mounted) {
                                         _showSnackBar(
-                                            'Could not join queue: $e');
+                                            'Could not grab mic: $e');
                                       }
                                     }
                                   }
@@ -5810,6 +5986,66 @@ class _HostControlsContentState extends ConsumerState<_HostControlsContent> {
 // ─────────────────────────────────────────────────────────────────────────────
 // Mic level bar — five animated bars showing live audio energy
 // ─────────────────────────────────────────────────────────────────────────────
+/// One numbered step row in the "Share PC audio" guide bottom sheet.
+class _SystemAudioStep extends StatelessWidget {
+  const _SystemAudioStep({
+    required this.number,
+    required this.text,
+    this.icon,
+  });
+
+  final String number;
+  final String text;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 24,
+          height: 24,
+          alignment: Alignment.center,
+          decoration: const BoxDecoration(
+            color: Color(0xFF7C5FFF),
+            shape: BoxShape.circle,
+          ),
+          child: Text(
+            number,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Padding(
+            padding: const EdgeInsets.only(top: 3),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 16, color: const Color(0xFF7C5FFF)),
+                  const SizedBox(width: 4),
+                ],
+                Expanded(
+                  child: Text(
+                    text,
+                    style: const TextStyle(fontSize: 13),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
 class _MicLevelBar extends StatelessWidget {
   const _MicLevelBar({required this.level});
 

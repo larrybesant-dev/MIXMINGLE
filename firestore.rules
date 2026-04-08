@@ -10,7 +10,10 @@ service cloud.firestore {
     }
 
     function isFriendLinkUpdate() {
-      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends'])
+      // Allow updating 'friends' (required) and optionally 'updatedAt'.
+      // This covers acceptFriendRequest and removeFriend which write both fields.
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['friends', 'updatedAt'])
+        && request.resource.data.diff(resource.data).affectedKeys().hasAny(['friends'])
         && (
           request.resource.data.friends.hasAny([request.auth.uid])
           || resource.data.friends.hasAny([request.auth.uid])
@@ -40,6 +43,13 @@ service cloud.firestore {
         'adultModeEnabled',
         'adultConsentAccepted',
         'isPrivate',
+        'profileAccentColor',
+        'profileBgGradientStart',
+        'profileBgGradientEnd',
+        'profileMusicUrl',
+        'profileMusicTitle',
+        'favoriteFriendIds',
+        'usernameLower',
         'updatedAt'
       ]);
     }
@@ -184,17 +194,9 @@ service cloud.firestore {
             && request.resource.data.diff(resource.data).affectedKeys()
                 .hasOnly(['lastActiveAt', 'camOn', 'micOn'])
           )
-          // Allow a participant to grab the mic directly (self-promote to
-          // stage) when the host has not restricted it.  Only the fields
-          // 'userId', 'role', and 'lastActiveAt' may change, and the new
-          // role must be exactly 'stage'.
-          || (
-            participantId == request.auth.uid
-            && request.resource.data.diff(resource.data).affectedKeys()
-                .hasOnly(['userId', 'role', 'lastActiveAt'])
-            && request.resource.data.role == 'stage'
-          )
           // Allow a participant to release the mic (self-demote back to member).
+          // Grabbing / inviting to stage must go through the grabMic /
+          // inviteToMic Cloud Functions, which enforce displacement + micLimit.
           || (
             participantId == request.auth.uid
             && request.resource.data.diff(resource.data).affectedKeys()

@@ -17,6 +17,8 @@ class MessageBubble extends StatelessWidget {
   final int senderVipLevel;
   /// Optional avatar URL for the sender's profile picture.
   final String? senderAvatarUrl;
+  /// Called when the user taps the avatar or sender name. Receives the senderId.
+  final void Function(String senderId)? onTapSender;
 
   const MessageBubble({
     super.key,
@@ -25,6 +27,7 @@ class MessageBubble extends StatelessWidget {
     this.senderLabel,
     this.senderVipLevel = 0,
     this.senderAvatarUrl,
+    this.onTapSender,
   });
 
   String _formatClock(DateTime value) {
@@ -116,26 +119,29 @@ class MessageBubble extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Avatar
-          CircleAvatar(
-            radius: 16,
-            backgroundColor: Colors.grey.shade800,
-            backgroundImage: (senderAvatarUrl != null &&
-                    senderAvatarUrl!.isNotEmpty)
-                ? NetworkImage(senderAvatarUrl!)
-                : null,
-            child: (senderAvatarUrl == null || senderAvatarUrl!.isEmpty)
-                ? Text(
-                    resolvedSenderLabel.isNotEmpty
-                        ? resolvedSenderLabel[0].toUpperCase()
-                        : '?',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : null,
+          // Avatar — tappable to view profile
+          GestureDetector(
+            onTap: onTapSender != null ? () => onTapSender!(message.senderId) : null,
+            child: CircleAvatar(
+              radius: 16,
+              backgroundColor: Colors.grey.shade800,
+              backgroundImage: (senderAvatarUrl != null &&
+                      senderAvatarUrl!.isNotEmpty)
+                  ? NetworkImage(senderAvatarUrl!)
+                  : null,
+              child: (senderAvatarUrl == null || senderAvatarUrl!.isEmpty)
+                  ? Text(
+                      resolvedSenderLabel.isNotEmpty
+                          ? resolvedSenderLabel[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    )
+                  : null,
+            ),
           ),
           const SizedBox(width: 8),
           // Content column
@@ -148,14 +154,17 @@ class MessageBubble extends StatelessWidget {
                 Row(
                   children: [
                     Flexible(
-                      child: Text(
-                        resolvedSenderLabel,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: nameColor,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 12,
-                          height: 1.4,
+                      child: GestureDetector(
+                        onTap: onTapSender != null ? () => onTapSender!(message.senderId) : null,
+                        child: Text(
+                          resolvedSenderLabel,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: nameColor,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 12,
+                            height: 1.4,
+                          ),
                         ),
                       ),
                     ),

@@ -29,6 +29,7 @@ class ChatPanel extends ConsumerStatefulWidget {
     required this.senderLabelResolver,
     required this.senderVipLevelResolver,
     required this.senderAvatarResolver,
+    this.onTapSender,
     this.typingNames = const [],
     this.extraHeader,
   });
@@ -52,6 +53,9 @@ class ChatPanel extends ConsumerStatefulWidget {
   final String Function(String senderId) senderLabelResolver;
   final int Function(String senderId) senderVipLevelResolver;
   final String? Function(String senderId) senderAvatarResolver;
+
+  /// Called when the user taps the avatar or name of a message sender.
+  final void Function(String senderId)? onTapSender;
 
   /// Names of users currently typing.
   final List<String> typingNames;
@@ -143,6 +147,7 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
                                 widget.senderVipLevelResolver(msg.senderId),
                             senderAvatarUrl:
                                 widget.senderAvatarResolver(msg.senderId),
+                            onTapSender: widget.onTapSender,
                           );
                         },
                       ),
@@ -235,6 +240,7 @@ class _ChatPanelState extends ConsumerState<ChatPanel> {
                     controller: widget.messageController,
                     onChanged: (_) => widget.onTyping(),
                     enabled: canSend,
+                    textInputAction: TextInputAction.send,
                     style: const TextStyle(color: Colors.white, fontSize: 13),
                     decoration: InputDecoration(
                       hintText: hintText,

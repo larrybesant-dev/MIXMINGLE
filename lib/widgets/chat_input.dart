@@ -11,6 +11,8 @@ class ChatInput extends StatelessWidget {
         Expanded(
           child: TextField(
             controller: controller,
+            textInputAction: TextInputAction.send,
+            onSubmitted: (_) => onSend(),
             decoration: const InputDecoration(hintText: 'Type a message...'),
           ),
         ),

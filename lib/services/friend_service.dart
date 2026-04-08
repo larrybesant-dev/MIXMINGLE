@@ -316,22 +316,40 @@ class FriendService {
     List<String> excludeUserIds = const [],
   }) async {
     final normalizedQuery = query.trim().toLowerCase();
-    final snapshot = await _firestore.collection('users').limit(30).get();
     final blockedIds = currentUserId == null
         ? const <String>{}
         : await _moderationService.getExcludedUserIds(currentUserId);
 
+    QuerySnapshot snapshot;
+    if (normalizedQuery.isEmpty) {
+      // No search term — return the 50 most recently-joined users so the
+      // "People you may know" section isn't limited to the first 30 doc-IDs.
+      snapshot = await _firestore
+          .collection('users')
+          .orderBy('createdAt', descending: true)
+          .limit(50)
+          .get();
+    } else {
+      // Prefix search on the lowercase username index field so any user can
+      // be found regardless of how many total users exist.
+      snapshot = await _firestore
+          .collection('users')
+          .where('usernameLower', isGreaterThanOrEqualTo: normalizedQuery)
+          .where('usernameLower', isLessThan: '$normalizedQuery\uf8ff')
+          .limit(20)
+          .get();
+    }
+
     return snapshot.docs
-        .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data()}))
+        .map((doc) => UserModel.fromJson({'id': doc.id, ...doc.data() as Map<String, dynamic>}))
         .where((user) => user.id.isNotEmpty)
         .where((user) => user.id != currentUserId)
         .where((user) => !excludeUserIds.contains(user.id))
         .where((user) => !blockedIds.contains(user.id))
         .where((user) {
-          if (normalizedQuery.isEmpty) {
-            return true;
-          }
-
+          if (normalizedQuery.isEmpty) return true;
+          // Additional client-side contains check catches partial matches
+          // that start before the prefix (e.g. typing mid-username).
           return user.username.toLowerCase().contains(normalizedQuery);
         })
         .toList(growable: false);

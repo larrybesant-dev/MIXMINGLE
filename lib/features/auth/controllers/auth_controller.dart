@@ -284,6 +284,7 @@ class AuthController extends Notifier<AuthState> {
       await firestore.collection('users').doc(user.uid).set({
         'id': user.uid,
         'username': user.displayName ?? '',
+        'usernameLower': (user.displayName ?? '').toLowerCase(),
         'email': user.email ?? '',
         'avatarUrl': user.photoURL,
         'updatedAt': FieldValue.serverTimestamp(),

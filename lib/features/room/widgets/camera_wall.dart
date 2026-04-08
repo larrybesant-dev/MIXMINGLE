@@ -133,29 +133,32 @@ class CameraWall extends ConsumerWidget {
           onSubscriptionPlanChanged(highQualityUids, lowQualityUids);
         });
 
-        // --- Talking Now: separate the active speaker from the grid ---
-        final talkingRemotes = mainGridRemoteTiles
-            .where((t) => t.isSpeaking)
-            .toList(growable: false);
-        final quietRemotes = mainGridRemoteTiles
-            .where((t) => !t.isSpeaking)
-            .toList(growable: false);
-        final localIsTalking = localSpeaking;
+        // Collect speaking names for the compact names strip.
+        // Tiles stay in the main grid — the cyan glow border on each tile already
+        // provides per-tile speaking feedback.  Physically lifting tiles into a
+        // separate section changes tileCount/crossAxisCount on every VAD event,
+        // causing the entire grid to reflow and tiles to jump positions.
+        final speakingNames = <String>[
+          if (localSpeaking && showLocalTile) localLabel,
+          ...mainGridRemoteTiles
+              .where((t) => t.isSpeaking)
+              .map((t) => t.label),
+        ];
 
         final mainGridTiles = <Widget>[
-          if (showLocalTile && !localIsTalking)
+          if (showLocalTile)
             _CameraWallTileFrame(
               label: localLabel,
-              speaking: false,
+              speaking: localSpeaking,
               hasMic: localHasMic,
               compact: false,
               onDetach: onDetachLocal,
               child: localTile,
             ),
-          ...quietRemotes.map(
+          ...mainGridRemoteTiles.map(
             (tile) => _CameraWallTileFrame(
               label: tile.label,
-              speaking: false,
+              speaking: tile.isSpeaking,
               hasMic: tile.hasMic,
               compact: false,
               viewerCount: tile.viewerCount,
@@ -226,71 +229,54 @@ class CameraWall extends ConsumerWidget {
                   ),
                   const SizedBox(height: 6),
                 ],
-                // ── Talking Now section ──────────────────────────────────
-                if (localIsTalking || talkingRemotes.isNotEmpty) ...[
-                  Row(
-                    children: [
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFFF4444),
-                          shape: BoxShape.circle,
-                        ),
+                // ── Compact "Talking Now" names strip ───────────────────
+                // Shows who is speaking without moving any tiles.  Tiles stay
+                // in their stable grid positions; the cyan border/glow on each
+                // tile already provides visual speaking feedback in-place.
+                if (speakingNames.isNotEmpty) ...[
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF161A21),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Color.fromARGB(60, 0, 227, 253), // cyan @ 24%
                       ),
-                      const SizedBox(width: 6),
-                      const Text(
-                        'Talking Now',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    height: isDesktop ? 180 : 150,
+                    ),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        if (showLocalTile && localIsTalking)
-                          Flexible(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: _CameraWallTileFrame(
-                                label: localLabel,
-                                speaking: true,
-                                hasMic: localHasMic,
-                                compact: false,
-                                onDetach: onDetachLocal,
-                                child: localTile,
-                              ),
-                            ),
+                        Container(
+                          width: 7,
+                          height: 7,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFF4444),
+                            shape: BoxShape.circle,
                           ),
-                        ...talkingRemotes.map(
-                          (tile) => Flexible(
-                            child: Padding(
-                              padding: const EdgeInsets.only(right: 8),
-                              child: _CameraWallTileFrame(
-                                label: tile.label,
-                                speaking: true,
-                                hasMic: tile.hasMic,
-                                compact: false,
-                                viewerCount: tile.viewerCount,
-                                onDetach: onDetachRemote == null
-                                    ? null
-                                    : () => onDetachRemote!(tile),
-                                child: remoteTileBuilder(tile),
-                              ),
+                        ),
+                        const SizedBox(width: 6),
+                        const Text(
+                          'Talking: ',
+                          style: TextStyle(
+                            color: Color(0xFF00E3FD),
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            speakingNames.join(' · '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
                             ),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 10),
                 ],
                 if (isDesktop)
                   LayoutBuilder(
@@ -315,27 +301,27 @@ class CameraWall extends ConsumerWidget {
                         alignment: WrapAlignment.start,
                         crossAxisAlignment: WrapCrossAlignment.start,
                         children: [
-                          if (showLocalTile && !localIsTalking)
+                          if (showLocalTile)
                             _ResizableTile(
                               key: const ValueKey('rtile_local'),
                               defaultWidth: effectiveTileW,
                               defaultHeight: tileHeight,
                               child: _CameraWallTileFrame(
                                 label: localLabel,
-                                speaking: false,
+                                speaking: localSpeaking,
                                 hasMic: localHasMic,
                                 compact: false,
                                 onDetach: onDetachLocal,
                                 child: localTile,
                               ),
                             ),
-                          ...quietRemotes.map((tile) => _ResizableTile(
+                          ...mainGridRemoteTiles.map((tile) => _ResizableTile(
                             key: ValueKey('rtile_${tile.uid}'),
                             defaultWidth: effectiveTileW,
                             defaultHeight: tileHeight,
                             child: _CameraWallTileFrame(
                               label: tile.label,
-                              speaking: false,
+                              speaking: tile.isSpeaking,
                               hasMic: tile.hasMic,
                               compact: false,
                               viewerCount: tile.viewerCount,

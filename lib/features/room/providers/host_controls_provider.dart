@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../services/notification_service.dart';
@@ -121,6 +122,22 @@ class HostControls {
 
   Future<void> demoteToAudience(String roomId, String userId) {
     return _participantRef(roomId, userId).update({'role': 'audience'});
+  }
+
+  /// Pushes [userId] onto the stage mic via the `inviteToMic` Cloud Function.
+  /// Displaces any current stage holder if `micLimit` is already reached.
+  Future<void> inviteToMic(String roomId, String userId) async {
+    await FirebaseFunctions.instance
+        .httpsCallable('inviteToMic')
+        .call<Map<String, dynamic>>({'roomId': roomId, 'targetId': userId});
+  }
+
+  /// Force-releases [userId] from the stage mic (demotes to member).
+  Future<void> forceReleaseMic(String roomId, String userId) {
+    return _participantRef(roomId, userId).update({
+      'role': 'member',
+      'lastActiveAt': FieldValue.serverTimestamp(),
+    });
   }
 
   Future<void> removeUser(String roomId, String userId) {

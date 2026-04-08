@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../models/mic_access_request_model.dart';
@@ -168,25 +169,17 @@ class MicAccessController {
     }
   }
 
-  /// Immediately grants mic access to [userId] without a host-approval step.
-  /// Used when the mic is free (no active stage speaker, no pending requests).
+  /// Grabs the mic via the `grabMic` Cloud Function, which atomically
+  /// displaces any current stage holder and promotes [userId] to stage.
+  /// Co-host / host roles are never displaced.
+  /// The Cloud Function also enforces `micLimit` and cleans up stale docs.
   Future<void> grabMicDirectly({
     required String roomId,
     required String userId,
   }) async {
-    await _db
-        .collection('rooms')
-        .doc(roomId)
-        .collection('participants')
-        .doc(userId)
-        .set(
-      {
-        'userId': userId,
-        'role': 'stage',
-        'lastActiveAt': FieldValue.serverTimestamp(),
-      },
-      SetOptions(merge: true),
-    );
+    await FirebaseFunctions.instance
+        .httpsCallable('grabMic')
+        .call<Map<String, dynamic>>({'roomId': roomId});
   }
 
   /// Releases the mic: demotes [userId] from stage back to member.
@@ -210,13 +203,38 @@ class MicAccessController {
   }
 
   Future<void> approveRequest(String roomId, MicAccessRequestModel request) async {
+    final participantsCol = _db
+        .collection('rooms')
+        .doc(roomId)
+        .collection('participants');
+
+    // Demote any current stage holder before granting the approved user the mic.
+    final stageSnapshot = await participantsCol
+        .where('role', isEqualTo: 'stage')
+        .get();
+
     final batch = _db.batch();
+
     batch.update(_requestCollection(roomId).doc(request.id), {
       'status': 'approved',
       'updatedAt': FieldValue.serverTimestamp(),
     });
+
+    for (final doc in stageSnapshot.docs) {
+      if (doc.id != request.requesterId) {
+        batch.set(
+          doc.reference,
+          {
+            'role': 'member',
+            'lastActiveAt': FieldValue.serverTimestamp(),
+          },
+          SetOptions(merge: true),
+        );
+      }
+    }
+
     batch.set(
-      _db.collection('rooms').doc(roomId).collection('participants').doc(request.requesterId),
+      participantsCol.doc(request.requesterId),
       {
         'userId': request.requesterId,
         'role': 'stage',
@@ -224,6 +242,7 @@ class MicAccessController {
       },
       SetOptions(merge: true),
     );
+
     await batch.commit();
     await NotificationService(firestore: _db).inAppNotification(
       request.requesterId,

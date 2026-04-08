@@ -242,8 +242,44 @@ class WebRtcRoomService implements RtcRoomService {
       );
     }
     final peer = _peers[userId];
-    if (peer == null || peer.remoteStream == null) {
-      // Peer entry exists (or UID is known) but the P2P stream hasn't arrived yet.
+    if (peer == null) {
+      // Peer entry not yet created — connection still initialising.
+      return const ColoredBox(
+        color: Color(0xFF1C2028),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFFA9ABB3),
+                ),
+              ),
+              SizedBox(height: 6),
+              Text(
+                'Connecting cam…',
+                style: TextStyle(color: Color(0xFFA9ABB3), fontSize: 10),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+    if (peer.remoteStream == null) {
+      // P2P stream not yet arrived. If Firestore already confirmed the
+      // broadcaster's camera is off, show the mic-only icon immediately
+      // instead of a misleading "Connecting cam…" spinner.
+      if (!peer.remoteCameraActive) {
+        return const ColoredBox(
+          color: Color(0xFF1C2028),
+          child: Center(
+            child: Icon(Icons.videocam_off, size: 28, color: Color(0xFFA9ABB3)),
+          ),
+        );
+      }
       return const ColoredBox(
         color: Color(0xFF1C2028),
         child: Center(
@@ -324,6 +360,7 @@ class WebRtcRoomService implements RtcRoomService {
     await _peersCol.doc(_localUserId).set({
       'uid': uid,
       'isBroadcasting': false,
+      'cameraActive': false,
       'joinedAt': FieldValue.serverTimestamp(),
       'lastHeartbeatAt': FieldValue.serverTimestamp(),
     });
@@ -405,12 +442,12 @@ class WebRtcRoomService implements RtcRoomService {
           // track. Close them and signal viewers to reconnect immediately via
           // a Firestore streamRefreshAt timestamp (avoids 10-30 s ICE timeout).
           _closeAllAnswerPcs();
-          await _updatePresence(isBroadcasting: true, streamRefresh: true);
+          await _updatePresence(isBroadcasting: true, streamRefresh: true, cameraActive: true);
           // Also process any offers already waiting in Firestore.
           await _processExistingIncomingCalls();
         } else {
           // First time becoming a broadcaster — announce and answer offers.
-          await _updatePresence(isBroadcasting: true);
+          await _updatePresence(isBroadcasting: true, cameraActive: true);
           await _processExistingIncomingCalls();
         }
 
@@ -436,7 +473,10 @@ class WebRtcRoomService implements RtcRoomService {
         // No audio publishing — fully clean up and mark offline.
         await _stopLocalStream();
         _broadcasterMode = false;
-        await _updatePresence(isBroadcasting: false);
+        await _updatePresence(isBroadcasting: false, cameraActive: false);
+      } else {
+        // Mic-only: still broadcasting but camera is off.
+        await _updatePresence(isBroadcasting: true, cameraActive: false);
       }
       // If activeAudio: _broadcasterMode stays true, isBroadcasting stays
       // true, and Harley's existing connection continues to receive audio.
@@ -489,14 +529,18 @@ class WebRtcRoomService implements RtcRoomService {
         // Force a streamRefresh when a new stream was acquired so that any
         // viewer with a stale connection (e.g. from a previous cam session)
         // reconnects and hears the new audio track.
-        await _updatePresence(isBroadcasting: true, streamRefresh: hadNoStream);
+        // cameraActive stays false: this is mic-only mode.
+        await _updatePresence(
+            isBroadcasting: true,
+            streamRefresh: hadNoStream,
+            cameraActive: _localVideoCapturing);
         // Answer any pending viewer offers now that we have a stream.
         await _processExistingIncomingCalls();
       }
     } else if (!enabled) {
       _broadcasterMode = false;
       _stopLocalVad();
-      await _updatePresence(isBroadcasting: false);
+      await _updatePresence(isBroadcasting: false, cameraActive: false);
     }
   }
 
@@ -890,10 +934,14 @@ class WebRtcRoomService implements RtcRoomService {
   Future<void> _updatePresence({
     required bool isBroadcasting,
     bool streamRefresh = false,
+    bool? cameraActive,
   }) async {
     if (_roomId == null) return;
     try {
       final data = <String, dynamic>{'isBroadcasting': isBroadcasting};
+      if (cameraActive != null) {
+        data['cameraActive'] = cameraActive;
+      }
       if (streamRefresh) {
         data['streamRefreshAt'] = FieldValue.serverTimestamp();
       }
@@ -950,6 +998,8 @@ class WebRtcRoomService implements RtcRoomService {
           _lastStreamRefreshAt[remoteBroadcasterId] = streamRefreshAt;
         }
 
+        final remoteCameraActive = data?['cameraActive'] as bool? ?? true;
+
         if (!_peers.containsKey(remoteBroadcasterId)) {
           if (_peers.length >= _maxMeshPeers) {
             _log(
@@ -961,6 +1011,7 @@ class WebRtcRoomService implements RtcRoomService {
           _uidToUserId[remoteUid] = remoteBroadcasterId;
           _userIdToUid[remoteBroadcasterId] = remoteUid;
           _createViewerConnection(remoteBroadcasterId, remoteUid);
+          _peers[remoteBroadcasterId]?.remoteCameraActive = remoteCameraActive;
           // Notify the screen immediately so the tile appears (as a placeholder)
           // before the WebRTC stream arrives.
           onRemoteUserJoined?.call();
@@ -971,7 +1022,12 @@ class WebRtcRoomService implements RtcRoomService {
           _uidToUserId[remoteUid] = remoteBroadcasterId;
           _userIdToUid[remoteBroadcasterId] = remoteUid;
           _createViewerConnection(remoteBroadcasterId, remoteUid);
+          _peers[remoteBroadcasterId]?.remoteCameraActive = remoteCameraActive;
           onRemoteUserJoined?.call();
+        } else {
+          // Peer already connected — update camera-active flag so the tile
+          // reflects mic-only vs camera-on without waiting for stream tracks.
+          _peers[remoteBroadcasterId]?.remoteCameraActive = remoteCameraActive;
         }
       } else {
         _closePeer(remoteBroadcasterId);
@@ -998,6 +1054,18 @@ class WebRtcRoomService implements RtcRoomService {
       renderer: renderer,
     );
     _peers[broadcasterId] = peer;
+
+    // Safety net: if the P2P stream doesn't arrive within 15 s (ICE hung or
+    // offer/answer stalled), drop the zombie connection so the screen tile
+    // disappears rather than showing "Connecting cam…" indefinitely.
+    Timer(const Duration(seconds: 15), () {
+      if (!identical(_peers[broadcasterId], peer)) return; // stale — new PC present
+      if (peer.remoteStream == null && _isJoined && _roomId != null) {
+        _log('P2P stream timeout (15 s) for broadcaster=$broadcasterId — dropping zombie');
+        _closePeer(broadcasterId);
+        onRemoteUserLeft?.call();
+      }
+    });
 
     pc.onTrack = (RTCTrackEvent event) {
       MediaStream? stream;
@@ -1482,6 +1550,9 @@ class _PeerEntry {
   RTCPeerConnectionState connectionState =
       RTCPeerConnectionState.RTCPeerConnectionStateNew;
   bool get rendererReady => true; // renderer.initialize() is called in create
+  /// Whether the broadcaster's camera is active per their Firestore peer doc.
+  /// Set to true by default (optimistic); updated when _onPresenceChanged fires.
+  bool remoteCameraActive = true;
 
   StreamSubscription? answerSub;
   StreamSubscription? iceSub;
@@ -1515,6 +1586,10 @@ class _VadMonitor {
   web.AudioContext? _ctx;
   web.AnalyserNode? _analyser;
   Timer? _timer;
+  /// Delays the speaking→not-speaking transition so brief pauses in speech
+  /// (swallowing, breath, mid-sentence pause) don't flicker the "Talking Now"
+  /// strip.  Only relevant when transitioning OFF; transitions ON are instant.
+  Timer? _offHoldTimer;
   bool _speaking = false;
   double _currentLevel = 0.0;
 
@@ -1524,6 +1599,10 @@ class _VadMonitor {
   // Byte-energy thresholds (0–255).  Tuned for typical speech vs. silence.
   static const int _onThreshold = 25;
   static const int _offThreshold = 10;
+
+  /// How long energy must stay below [_offThreshold] before we emit speaking=false.
+  /// 2.5 s matches typical broadcast VAD hold time and prevents flicker.
+  static const Duration _offHold = Duration(milliseconds: 2500);
 
   void _init(web.MediaStream jsStream) {
     try {
@@ -1573,9 +1652,26 @@ class _VadMonitor {
     if (!_speaking && avg >= _onThreshold) {
       nowSpeaking = true;
     } else if (_speaking && avg < _offThreshold) {
-      nowSpeaking = false;
+      // Energy dropped — but don't emit false immediately.
+      // Start (or restart) a hold timer; only go silent after _offHold ms.
+      if (_offHoldTimer == null) {
+        _offHoldTimer = Timer(_offHold, () {
+          _offHoldTimer = null;
+          if (_speaking) {
+            _speaking = false;
+            _onStateChange(false);
+          }
+        });
+      }
+      return; // keep _speaking = true until the hold expires
     } else {
       nowSpeaking = _speaking;
+    }
+
+    // Energy rose above _onThreshold — cancel any pending off-hold timer.
+    if (nowSpeaking && _offHoldTimer != null) {
+      _offHoldTimer!.cancel();
+      _offHoldTimer = null;
     }
 
     if (nowSpeaking != _speaking) {
@@ -1587,6 +1683,8 @@ class _VadMonitor {
   void dispose() {
     _timer?.cancel();
     _timer = null;
+    _offHoldTimer?.cancel();
+    _offHoldTimer = null;
     _currentLevel = 0.0;
     try { _ctx?.close(); } catch (_) {}
     _ctx = null;

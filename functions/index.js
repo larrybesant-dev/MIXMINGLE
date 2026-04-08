@@ -41,6 +41,8 @@ const RATE_LIMITS = {
   generateAgoraToken: {windowMs: 60 * 1000, maxRequests: 30},
   generateTurnCredentials: {windowMs: 60 * 1000, maxRequests: 30},
   requestRefund: {windowMs: 60 * 1000, maxRequests: 12},
+  grabMic: {windowMs: 60 * 1000, maxRequests: 20},
+  inviteToMic: {windowMs: 60 * 1000, maxRequests: 30},
 };
 
 const rateLimitState = new Map();
@@ -1724,6 +1726,197 @@ exports.notifyFriendsUserOnline = onDocumentWritten(
   },
 );
 
+// ── grabMic ────────────────────────────────────────────────────────────────
+// Atomically displaces any current stage user and promotes the caller.
+// Co-hosts and hosts keep their mic regardless.
+// Respects the room's micLimit policy (1 = exclusive, n = panel mode).
+// Stale stage docs (lastActiveAt > 90 s) are cleaned up on every grab.
+async function grabMicHandler(request, deps = {}) {
+  const userId = requireAuth(request);
+  enforceRateLimit("grabMic", userId);
+
+  const roomId = parseIdField(request.data && request.data.roomId, "roomId");
+
+  const firestore = deps.firestore || db;
+  const participantsCol = firestore
+    .collection("rooms")
+    .doc(roomId)
+    .collection("participants");
+  const policyRef = firestore
+    .collection("rooms")
+    .doc(roomId)
+    .collection("policies")
+    .doc("settings");
+
+  await firestore.runTransaction(async (tx) => {
+    // ── Verify caller is a live, non-banned participant ──────────────────
+    const callerSnap = await tx.get(participantsCol.doc(userId));
+    if (!callerSnap.exists) {
+      throw new HttpsError("permission-denied", "You are not in this room.");
+    }
+    const callerData = callerSnap.data();
+    if (callerData.isBanned === true) {
+      throw new HttpsError("permission-denied", "You are banned from this room.");
+    }
+    // Hosts and co-hosts already have a permanent mic — nothing to do.
+    const callerRole = callerData.role || "";
+    if (["host", "owner", "cohost"].includes(callerRole)) {
+      return;
+    }
+
+    // ── Fetch policy (micLimit) ──────────────────────────────────────────
+    const policySnap = await tx.get(policyRef);
+    const micLimit = (policySnap.exists && typeof policySnap.data().micLimit === "number")
+      ? Math.max(1, policySnap.data().micLimit)
+      : 1;                           // default: one exclusive stage speaker
+
+    // ── Fetch current stage holders ──────────────────────────────────────
+    const stageQuery = participantsCol.where("role", "==", "stage");
+    const stageSnap = await tx.get(stageQuery);
+
+    // Count non-stale stage holders (excluding caller if already on stage).
+    const STALE_MS = 90 * 1000;
+    const now = Date.now();
+    const activeStageDocs = stageSnap.docs.filter((d) => {
+      if (d.id === userId) return false;
+      const lat = d.data().lastActiveAt;
+      if (!lat) return false;       // no timestamp → treat as stale
+      const ms = lat.toMillis ? lat.toMillis() : Number(lat);
+      return (now - ms) < STALE_MS;
+    });
+
+    // ── Demote if we are at or above micLimit ────────────────────────────
+    // Always demote stale docs. Demote active ones when at capacity.
+    const toLimitDemoteCount = Math.max(0, activeStageDocs.length - (micLimit - 1));
+    let demoted = 0;
+    for (const doc of stageSnap.docs) {
+      if (doc.id === userId) continue;
+      const lat = doc.data().lastActiveAt;
+      const ms = lat ? (lat.toMillis ? lat.toMillis() : Number(lat)) : 0;
+      const isStale = (now - ms) >= STALE_MS;
+      if (isStale || demoted < toLimitDemoteCount) {
+        tx.set(
+          doc.ref,
+          {role: "member", lastActiveAt: admin.firestore.FieldValue.serverTimestamp()},
+          {merge: true},
+        );
+        if (!isStale) demoted++;
+      }
+    }
+
+    // ── Promote caller to stage ──────────────────────────────────────────
+    tx.set(
+      participantsCol.doc(userId),
+      {
+        userId,
+        role: "stage",
+        lastActiveAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      {merge: true},
+    );
+  });
+
+  return {success: true};
+}
+
+exports.grabMic = onCall(async (request) => grabMicHandler(request));
+
+// ── inviteToMic ────────────────────────────────────────────────────────────
+// Host/co-host only: promotes a target participant to stage (displacing the
+// current stage holder if at micLimit capacity, same logic as grabMic).
+async function inviteToMicHandler(request, deps = {}) {
+  const callerId = requireAuth(request);
+  enforceRateLimit("inviteToMic", callerId);
+
+  const roomId = parseIdField(request.data && request.data.roomId, "roomId");
+  const targetId = parseIdField(request.data && request.data.targetId, "targetId");
+
+  if (callerId === targetId) {
+    throw new HttpsError("invalid-argument", "Use grabMic to promote yourself.");
+  }
+
+  const firestore = deps.firestore || db;
+  const participantsCol = firestore
+    .collection("rooms")
+    .doc(roomId)
+    .collection("participants");
+  const policyRef = firestore
+    .collection("rooms")
+    .doc(roomId)
+    .collection("policies")
+    .doc("settings");
+
+  await firestore.runTransaction(async (tx) => {
+    // ── Verify caller is host/co-host ────────────────────────────────────
+    const callerSnap = await tx.get(participantsCol.doc(callerId));
+    if (!callerSnap.exists) {
+      throw new HttpsError("permission-denied", "You are not in this room.");
+    }
+    const callerRole = callerSnap.data().role || "";
+    if (!["host", "owner", "cohost"].includes(callerRole)) {
+      throw new HttpsError("permission-denied", "Only the host or co-host can invite to mic.");
+    }
+
+    // ── Verify target is a live, non-banned participant ──────────────────
+    const targetSnap = await tx.get(participantsCol.doc(targetId));
+    if (!targetSnap.exists) {
+      throw new HttpsError("not-found", "Target participant is not in this room.");
+    }
+    if (targetSnap.data().isBanned === true) {
+      throw new HttpsError("permission-denied", "Cannot invite a banned participant.");
+    }
+
+    // ── Fetch policy + current stage holders (same as grabMic) ──────────
+    const policySnap = await tx.get(policyRef);
+    const micLimit = (policySnap.exists && typeof policySnap.data().micLimit === "number")
+      ? Math.max(1, policySnap.data().micLimit)
+      : 1;
+
+    const stageSnap = await tx.get(participantsCol.where("role", "==", "stage"));
+    const STALE_MS = 90 * 1000;
+    const now = Date.now();
+    const activeStageDocs = stageSnap.docs.filter((d) => {
+      if (d.id === targetId) return false;
+      const lat = d.data().lastActiveAt;
+      if (!lat) return false;
+      const ms = lat.toMillis ? lat.toMillis() : Number(lat);
+      return (now - ms) < STALE_MS;
+    });
+
+    const toLimitDemoteCount = Math.max(0, activeStageDocs.length - (micLimit - 1));
+    let demoted = 0;
+    for (const doc of stageSnap.docs) {
+      if (doc.id === targetId) continue;
+      const lat = doc.data().lastActiveAt;
+      const ms = lat ? (lat.toMillis ? lat.toMillis() : Number(lat)) : 0;
+      const isStale = (now - ms) >= STALE_MS;
+      if (isStale || demoted < toLimitDemoteCount) {
+        tx.set(
+          doc.ref,
+          {role: "member", lastActiveAt: admin.firestore.FieldValue.serverTimestamp()},
+          {merge: true},
+        );
+        if (!isStale) demoted++;
+      }
+    }
+
+    // ── Promote target ───────────────────────────────────────────────────
+    tx.set(
+      participantsCol.doc(targetId),
+      {
+        userId: targetId,
+        role: "stage",
+        lastActiveAt: admin.firestore.FieldValue.serverTimestamp(),
+      },
+      {merge: true},
+    );
+  });
+
+  return {success: true};
+}
+
+exports.inviteToMic = onCall(async (request) => inviteToMicHandler(request));
+
 exports.__testing = {
   createPaymentIntentHandler,
   recordStripePaymentSuccessHandler,
@@ -1755,4 +1948,6 @@ exports.__testing = {
   unregisterFcmTokenHandler,
   sendPushForNotification,
   sendIncomingCallPushHandler,
+  grabMicHandler,
+  inviteToMicHandler,
 };

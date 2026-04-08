@@ -298,6 +298,7 @@ class ProfileController extends Notifier<ProfileState> {
         userId: userId,
         userData: {
           'username': normalizedUsername,
+          'usernameLower': normalizedUsername.toLowerCase(),
           'email': normalizedEmail,
           'avatarUrl': normalizedAvatar.isEmpty ? null : normalizedAvatar,
           'coverPhotoUrl': normalizedCover.isEmpty ? null : normalizedCover,
