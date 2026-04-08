@@ -15,6 +15,7 @@ import 'package:mixvy/models/room_participant_model.dart';
 import 'package:mixvy/models/room_policy_model.dart';
 import 'package:mixvy/features/room/providers/room_firestore_provider.dart';
 import 'package:mixvy/models/user_model.dart';
+import 'package:mixvy/features/room/providers/presence_provider.dart';
 import 'package:mixvy/presentation/providers/user_provider.dart';
 import 'package:mixvy/presentation/screens/live_room_screen.dart';
 
@@ -90,15 +91,22 @@ void main() {
               ),
             ]),
           ),
-          participantCountProvider.overrideWith(
-            (ref, roomId) => Stream.value(1),
-          ),
           messageStreamProvider.overrideWith((ref, roomId) => Stream.value([])),
           hostProvider.overrideWith(
             (ref, roomId) => Stream.value(Host('host-1')),
           ),
           coHostsProvider.overrideWith(
             (ref, roomId) => Stream.value(const <Cohost>[]),
+          ),
+          roomPresenceStreamProvider.overrideWith(
+            (ref, roomId) => Stream.value([
+              RoomPresenceModel(
+                userId: 'user-1',
+                isOnline: true,
+                lastHeartbeatAt: null,
+                lastSeenAt: null,
+              ),
+            ]),
           ),
           userProvider.overrideWithValue(
             UserModel(
@@ -117,7 +125,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     expect(find.text('No messages yet.'), findsOneWidget);
-    expect(find.textContaining('1 total joined'), findsOneWidget);
+    expect(find.textContaining('1 online'), findsOneWidget);
     expect(find.text('Send'), findsOneWidget);
     expect(find.byTooltip('Leave Room'), findsOneWidget);
     // Drain the _preWarmAgora Future.delayed(2s) timer so the test ends cleanly.
@@ -194,7 +202,8 @@ void main() {
     await tester.pump(const Duration(milliseconds: 200));
 
     await tester.tap(find.byTooltip('People in room').first);
-    await tester.pumpAndSettle();
+    await tester.pump(); // trigger tap
+    await tester.pump(const Duration(milliseconds: 500)); // let bottom sheet open
 
     expect(find.text('People in room'), findsOneWidget);
     expect(find.text('host-1'), findsWidgets);

@@ -97,7 +97,11 @@ service cloud.firestore {
           || !resource.data.get('isPrivate', false)
           || request.auth.uid in resource.data.get('followers', [])
         );
-      allow create: if isSelf(userId);
+      // On create, membership level must be the default 'basic' (or absent).
+      // Upgrades must go through Cloud Functions / admin writes.
+      allow create: if isSelf(userId)
+        && (!('membershipLevel' in request.resource.data)
+          || request.resource.data.membershipLevel == 'basic');
       allow update: if (isSelf(userId) && isAllowedUserProfileUpdate())
         || (signedIn() && isFriendLinkUpdate());
       allow delete: if isSelf(userId);
@@ -621,6 +625,19 @@ service cloud.firestore {
     match /hashtags/{hashtag} {
       allow read: if signedIn();
       allow create, update, delete: if false;
+    }
+
+    match /verification_requests/{requestId} {
+      // Users can submit and read their own verification request.
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+      allow create: if signedIn()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.reason is string
+        && request.resource.data.reason.size() > 0
+        && request.resource.data.reason.size() <= 2000
+        && request.resource.data.status == 'pending';
+      // Only Cloud Functions / admin can update status.
+      allow update, delete: if false;
     }
 
     match /{document=**} {
