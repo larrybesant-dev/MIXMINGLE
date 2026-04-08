@@ -34,6 +34,7 @@ import '../../features/room/providers/buzz_provider.dart';
 import '../../features/room/widgets/cam_preview_sheet.dart';
 import '../../features/room/widgets/rich_text_toolbar.dart';
 import '../../features/room/widgets/floating_cam_window.dart';
+import '../../features/room/widgets/room_host_control_panel.dart';
 import '../../services/web_popout_service.dart';
 import '../../services/desktop_window_service.dart';
 import '../../features/messaging/providers/messaging_provider.dart';
@@ -85,6 +86,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   bool _isCallReady = false;
   bool _isMicMuted = false;
   bool _isVideoEnabled = false;
+  bool _isSharingSystemAudio = false;
+  bool _isSystemAudioActionInFlight = false;
   /// Order of the three desktop columns. Valid values: 'cams', 'chat', 'users'.
   List<String> _columnOrder = const ['cams', 'chat', 'users'];
   double _chatColW = 280.0;
@@ -103,6 +106,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   }
   bool _isMicActionInFlight = false;
   bool _isVideoActionInFlight = false;
+  // Volume controls — persisted only for the lifetime of the room session.
+  double _micVolume = 1.0;
+  double _speakerVolume = 1.0;
+  bool _showVolumeControls = false;
   String? _cameraStatus;
   String _connectPhase = 'idle';
   bool _showEmojiTray = false;
@@ -717,7 +724,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       // Cast needed: onSystemAudioStopped is only on WebRtcRoomService.
       if (connectedService is WebRtcRoomService) {
         connectedService.onSystemAudioStopped = () {
-          // PC audio sharing stopped
+          if (mounted) setState(() => _isSharingSystemAudio = false);
         };
       }
       setState(() {
@@ -811,6 +818,34 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   void _stopMicLevelPolling() {
     _micLevelTimer?.cancel();
     _micLevelTimer = null;
+  }
+
+  // ── Volume helpers ─────────────────────────────────────────────────────────
+
+  Future<void> _setMicVolume(double v) async {
+    setState(() => _micVolume = v);
+    await _agoraService?.setMicVolume(v);
+  }
+
+  Future<void> _setSpeakerVolume(double v) async {
+    setState(() => _speakerVolume = v);
+    await _agoraService?.setSpeakerVolume(v);
+  }
+
+  Future<void> _toggleSystemAudio() async {
+    final service = _agoraService;
+    if (service == null || !_isCallReady || _isSystemAudioActionInFlight) return;
+    setState(() => _isSystemAudioActionInFlight = true);
+    try {
+      await service.shareSystemAudio(!_isSharingSystemAudio);
+      if (mounted) {
+        setState(() => _isSharingSystemAudio = !_isSharingSystemAudio);
+      }
+    } catch (e) {
+      _showSnackBar(_mapMediaError(e, canBroadcast: true));
+    } finally {
+      if (mounted) setState(() => _isSystemAudioActionInFlight = false);
+    }
   }
 
   Future<void> _toggleVideo() async {
@@ -1610,6 +1645,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     _isCallReady = false;
     _isVideoEnabled = false;
     _isMicMuted = false;
+    _isSharingSystemAudio = false;
+    _isSystemAudioActionInFlight = false;
     _appliedMediaRole = null;
     _isMicActionInFlight = false;
     _isVideoActionInFlight = false;
@@ -3210,7 +3247,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         // enableVideo() a second time and disrupt the live camera track.
         // Deduplicate: only queue one postFrameCallback at a time to prevent
         // multiple concurrent _applyRoleMediaState calls from rapid rebuilds.
-        if (_isCallReady && _appliedMediaRole != role && _claimedSlotId == null &&
+        // NOTE: _claimedSlotId guard was removed — _applyRoleMediaState itself
+        // guards enableVideo internally, so running it while camera is on is
+        // safe and necessary (e.g. user grabs mic while camera is active).
+        if (_isCallReady && _appliedMediaRole != role &&
             !_roleMediaStatePending) {
           _roleMediaStatePending = true;
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -3983,19 +4023,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         ),
                       ),
                     ),
-                  // ── HOST CONTROLS BUTTON (hosts only) ────────────────────
-                  if (isHost || isRoomHostByDoc)
+                  // ── HOST CONTROLS BUTTON (hosts, cohosts, moderators) ────
+                  if (isHost || isRoomHostByDoc || isCohost || isModerator)
                     Positioned(
                       bottom: 92,
                       left: 12,
                       child: GestureDetector(
-                        onTap: () => showModalBottomSheet<void>(
-                          context: context,
-                          isScrollControlled: true,
-                          backgroundColor: Colors.transparent,
-                          builder: (_) => _HostControlsContent(
-                            roomId: widget.roomId,
-                          ),
+                        onTap: () => RoomHostControlPanel.show(
+                          context,
+                          roomId: widget.roomId,
+                          currentUserId: user.id,
+                          isOwner: isHost || isRoomHostByDoc,
+                          micVolume: _micVolume,
+                          speakerVolume: _speakerVolume,
+                          onMicVolumeChanged: _setMicVolume,
+                          onSpeakerVolumeChanged: _setSpeakerVolume,
                         ),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -4005,15 +4047,19 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                             borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: const Color(0x30BA9EFF)),
                           ),
-                          child: const Row(
+                          child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Icon(Icons.settings_rounded,
+                              const Icon(Icons.settings_rounded,
                                   color: Colors.white, size: 16),
-                              SizedBox(width: 4),
-                              Text('Controls',
-                                  style: TextStyle(
-                                      color: Colors.white, fontSize: 12)),
+                              const SizedBox(width: 4),
+                              Text(
+                                isHost || isRoomHostByDoc
+                                    ? 'Controls'
+                                    : (isCohost ? 'Co-host' : 'Mod Tools'),
+                                style: const TextStyle(
+                                    color: Colors.white, fontSize: 12),
+                              ),
                             ],
                           ),
                         ),
@@ -4117,9 +4163,143 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                     ),
                                   ),
                                 ),
+                                // ── Share system audio (web only) ──────────
+                                if (kIsWeb)
+                                  IconButton(
+                                    tooltip: _isSharingSystemAudio
+                                        ? 'Stop sharing computer audio'
+                                        : 'Share computer audio (what\'s playing through speakers)',
+                                    icon: Icon(
+                                      _isSharingSystemAudio
+                                          ? Icons.headset
+                                          : Icons.headset_off,
+                                      color: _isSharingSystemAudio
+                                          ? const Color(0xFF7C5FFF)
+                                          : Colors.white70,
+                                    ),
+                                    onPressed: (!_isCallReady || _agoraService == null || _isSystemAudioActionInFlight)
+                                        ? null
+                                        : _toggleSystemAudio,
+                                  ),
+                                // ── Volume controls toggle ──────────────────
+                                IconButton(
+                                  tooltip: 'Volume controls',
+                                  icon: Icon(
+                                    _showVolumeControls
+                                        ? Icons.volume_up
+                                        : Icons.volume_up_outlined,
+                                    color: _showVolumeControls
+                                        ? const Color(0xFF00D4AA)
+                                        : Colors.white70,
+                                  ),
+                                  onPressed: () => setState(
+                                      () => _showVolumeControls =
+                                          !_showVolumeControls),
+                                ),
                               ],
                             ),
                           ),
+                          // ── Inline volume sliders ─────────────────────────
+                          if (_showVolumeControls)
+                            Container(
+                              margin: const EdgeInsets.only(top: 6),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: const Color(0xCC10131A),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                    color: const Color(0x30BA9EFF)),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.mic,
+                                          size: 16, color: Colors.white70),
+                                      const SizedBox(width: 6),
+                                      const Text('Mic',
+                                          style: TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 11)),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${(_micVolume * 100).round()}%',
+                                        style: const TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 10),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    width: 200,
+                                    child: SliderTheme(
+                                      data: SliderThemeData(
+                                        activeTrackColor:
+                                            const Color(0xFF7C5FFF),
+                                        trackHeight: 2.5,
+                                        thumbShape:
+                                            const RoundSliderThumbShape(
+                                                enabledThumbRadius: 7),
+                                      ),
+                                      child: Slider.adaptive(
+                                        value: _micVolume,
+                                        min: 0.0,
+                                        max: 2.0,
+                                        divisions: 40,
+                                        label:
+                                            '${(_micVolume * 100).round()}%',
+                                        onChanged:
+                                            _isCallReady ? _setMicVolume : null,
+                                      ),
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.volume_up,
+                                          size: 16, color: Colors.white70),
+                                      const SizedBox(width: 6),
+                                      const Text('Speaker',
+                                          style: TextStyle(
+                                              color: Colors.white70,
+                                              fontSize: 11)),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        '${(_speakerVolume * 100).round()}%',
+                                        style: const TextStyle(
+                                            color: Colors.white54,
+                                            fontSize: 10),
+                                      ),
+                                    ],
+                                  ),
+                                  SizedBox(
+                                    width: 200,
+                                    child: SliderTheme(
+                                      data: SliderThemeData(
+                                        activeTrackColor:
+                                            const Color(0xFF00D4AA),
+                                        trackHeight: 2.5,
+                                        thumbShape:
+                                            const RoundSliderThumbShape(
+                                                enabledThumbRadius: 7),
+                                      ),
+                                      child: Slider.adaptive(
+                                        value: _speakerVolume,
+                                        min: 0.0,
+                                        max: 1.0,
+                                        divisions: 20,
+                                        label:
+                                            '${(_speakerVolume * 100).round()}%',
+                                        onChanged: _isCallReady
+                                            ? _setSpeakerVolume
+                                            : null,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           if (_cameraStatus != null)
                             Padding(
                               padding:
@@ -4876,6 +5056,23 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                                   ? null
                                   : _toggleVideo,
                             ),
+                            if (kIsWeb)
+                              IconButton(
+                                tooltip: _isSharingSystemAudio
+                                    ? 'Stop sharing computer audio'
+                                    : 'Share computer audio',
+                                icon: Icon(
+                                  _isSharingSystemAudio
+                                      ? Icons.headset
+                                      : Icons.headset_off,
+                                  color: _isSharingSystemAudio
+                                      ? const Color(0xFF7C5FFF)
+                                      : Colors.white70,
+                                ),
+                                onPressed: (!_isCallReady || _agoraService == null || _isSystemAudioActionInFlight)
+                                    ? null
+                                    : _toggleSystemAudio,
+                              ),
                           ],
                         ),
                       ),

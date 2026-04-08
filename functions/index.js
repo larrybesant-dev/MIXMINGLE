@@ -538,14 +538,17 @@ async function sendCoinTransferHandler(request, deps = {}) {
       txn.get(receiverRef),
     ]);
 
+    const isAdminSender = senderSnap.data()?.admin === true;
     const senderBalance = Number((senderSnap.data() && senderSnap.data().balance) || 0);
     const receiverBalance = Number((receiverSnap.data() && receiverSnap.data().balance) || 0);
 
-    if (senderBalance < amount) {
+    if (!isAdminSender && senderBalance < amount) {
       throw new HttpsError("failed-precondition", "Insufficient balance.");
     }
 
-    txn.update(senderRef, {balance: senderBalance - amount});
+    if (!isAdminSender) {
+      txn.update(senderRef, {balance: senderBalance - amount});
+    }
     txn.update(receiverRef, {balance: receiverBalance + amount});
     txn.set(transactionRef, {
       id: transactionRef.id,
@@ -908,7 +911,8 @@ async function sendRoomGiftHandler(request, deps = {}) {
     const senderBalance = Number(
       (senderSnap.data() && senderSnap.data().balance) || 0,
     );
-    if (senderBalance < coinCost) {
+    const isAdminSender = senderSnap.data()?.admin === true;
+    if (!isAdminSender && senderBalance < coinCost) {
       throw new HttpsError(
         "failed-precondition",
         "Insufficient coin balance.",
@@ -919,7 +923,9 @@ async function sendRoomGiftHandler(request, deps = {}) {
       (receiverSnap.data() && receiverSnap.data().balance) || 0,
     );
 
-    txn.update(senderRef, {balance: senderBalance - coinCost});
+    if (!isAdminSender) {
+      txn.update(senderRef, {balance: senderBalance - coinCost});
+    }
     txn.update(receiverRef, {balance: receiverBalance + receiverAmount});
     txn.set(giftEventRef, {
       id: giftEventRef.id,
@@ -985,7 +991,8 @@ async function sendDirectGiftHandler(request, deps = {}) {
     const senderBalance = Number(
       (senderSnap.data() && senderSnap.data().balance) || 0,
     );
-    if (senderBalance < coinCost) {
+    const isAdminSender = senderSnap.data()?.admin === true;
+    if (!isAdminSender && senderBalance < coinCost) {
       throw new HttpsError("failed-precondition", "Insufficient coin balance.");
     }
 
@@ -993,7 +1000,9 @@ async function sendDirectGiftHandler(request, deps = {}) {
       (receiverSnap.data() && receiverSnap.data().balance) || 0,
     );
 
-    txn.update(senderRef, {balance: senderBalance - coinCost});
+    if (!isAdminSender) {
+      txn.update(senderRef, {balance: senderBalance - coinCost});
+    }
     txn.update(receiverRef, {balance: receiverBalance + receiverAmount});
     txn.set(giftEventRef, {
       id: giftEventRef.id,

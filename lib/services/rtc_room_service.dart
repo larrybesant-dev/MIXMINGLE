@@ -87,6 +87,19 @@ abstract class RtcRoomService {
   /// Default no-op for Agora; only implemented on web via [WebRtcRoomService].
   Future<void> shareSystemAudio(bool enabled) async {}
 
+  /// Set local microphone input gain.
+  ///
+  /// [volume] is in the range [0.0, 2.0] where 1.0 is the default (100%).
+  /// Values above 1.0 amplify the signal; 0.0 is silent.
+  /// Default no-op — implementations that support it override this.
+  Future<void> setMicVolume(double volume) async {}
+
+  /// Set local speaker / playback output volume.
+  ///
+  /// [volume] is in the range [0.0, 1.0] where 1.0 is the default (100%).
+  /// Default no-op — implementations that support it override this.
+  Future<void> setSpeakerVolume(double volume) async {}
+
   Future<void> dispose();
 
   Future<void> ensureDeviceAccess({

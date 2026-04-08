@@ -200,6 +200,50 @@ class HostControls {
   ) {
     return _roomRef(roomId).collection('participants').doc(userId);
   }
+
+  // ── Stage / mic-seat controls ──────────────────────────────────────────────
+
+  /// Sets how many broadcasters (mic seats) can be on stage simultaneously.
+  ///
+  /// Updates both the room doc (`maxBroadcasters`) and the policy doc
+  /// (`micLimit`) so the slot service and mic-queue logic stay in sync.
+  Future<void> setMaxBroadcasters(String roomId, int max) async {
+    if (max < 1 || max > 20) {
+      throw ArgumentError('maxBroadcasters must be between 1 and 20.');
+    }
+    final batch = _db.batch();
+    batch.update(_roomRef(roomId), {'maxBroadcasters': max});
+    batch.set(
+      _policyRef(roomId),
+      {'micLimit': max, 'updatedAt': FieldValue.serverTimestamp()},
+      SetOptions(merge: true),
+    );
+    await batch.commit();
+  }
+
+  /// Force-clears a specific broadcaster slot by removing the participant's
+  /// active broadcaster slot document so the seat becomes available immediately.
+  Future<void> clearBroadcasterSlot(String roomId, String userId) async {
+    await _roomRef(roomId).collection('slots').doc(userId).delete();
+  }
+
+  /// Fetch current participants ordered by lastActiveAt descending.
+  Future<List<Map<String, dynamic>>> getParticipants(String roomId) async {
+    final snap = await _roomRef(roomId)
+        .collection('participants')
+        .orderBy('lastActiveAt', descending: true)
+        .get();
+    return snap.docs.map((d) => {'id': d.id, ...d.data()}).toList();
+  }
+
+  /// Returns a stream of participant docs for the given room.
+  Stream<List<Map<String, dynamic>>> watchParticipants(String roomId) {
+    return _roomRef(roomId)
+        .collection('participants')
+        .orderBy('lastActiveAt', descending: true)
+        .snapshots()
+        .map((s) => s.docs.map((d) => {'id': d.id, ...d.data()}).toList());
+  }
 }
 
 final hostControlsProvider = Provider<HostControls>(

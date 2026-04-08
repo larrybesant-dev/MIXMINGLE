@@ -1036,6 +1036,30 @@ class AgoraService implements RtcRoomService {
     }
   }
 
+  /// Set local microphone input gain.
+  ///
+  /// [volume] range [0.0, 2.0]; 1.0 = default (maps to Agora value 100).
+  @override
+  Future<void> setMicVolume(double volume) async {
+    if (!_initialized) return;
+    final agoraVol = (volume.clamp(0.0, 2.0) * 100).round();
+    try {
+      await _engine.adjustRecordingSignalVolume(agoraVol);
+    } catch (_) {}
+  }
+
+  /// Set local speaker / playback output volume.
+  ///
+  /// [volume] range [0.0, 1.0]; 1.0 = default (maps to Agora value 100).
+  @override
+  Future<void> setSpeakerVolume(double volume) async {
+    if (!_initialized) return;
+    final agoraVol = (volume.clamp(0.0, 1.0) * 100).round();
+    try {
+      await _engine.adjustPlaybackSignalVolume(agoraVol);
+    } catch (_) {}
+  }
+
   /// Enable/disable video.
   ///
   /// [publishMicrophoneTrack] controls whether the microphone track is

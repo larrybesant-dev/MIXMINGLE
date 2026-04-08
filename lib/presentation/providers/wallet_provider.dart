@@ -2,7 +2,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../../features/auth/providers/admin_provider.dart';
 import '../../models/wallet_model.dart';
+
+/// Coin balance returned to admin accounts — effectively unlimited.
+const _kAdminCoinBalance = 999999999;
 
 final walletAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
@@ -20,6 +24,14 @@ final walletDetailsProvider = StreamProvider<WalletModel>((ref) {
   final userId = ref.watch(walletUserIdProvider);
   if (userId == null || userId.isEmpty) {
     return Stream<WalletModel>.value(const WalletModel(userId: '', coinBalance: 0));
+  }
+
+  // Admin accounts are treated as having unlimited balance.
+  final isAdmin = ref.watch(isAdminProvider).valueOrNull ?? false;
+  if (isAdmin) {
+    return Stream<WalletModel>.value(
+      WalletModel(userId: userId, coinBalance: _kAdminCoinBalance),
+    );
   }
 
   final firestore = ref.watch(walletFirestoreProvider);

@@ -79,6 +79,9 @@ class WebRtcRoomService implements RtcRoomService {
 
   @override Future<void> renewToken(String newToken) => _unsupported();
 
+  @override Future<void> setMicVolume(double volume) async {}
+  @override Future<void> setSpeakerVolume(double volume) async {}
+
   @override Future<void> dispose() => _unsupported();
 
   @override
