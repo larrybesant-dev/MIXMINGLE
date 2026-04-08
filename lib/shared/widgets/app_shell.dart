@@ -100,6 +100,7 @@ class _NeonBottomNav extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _navItem(0, Icons.home_outlined, Icons.home_rounded, 'Home'),
+                  _friendsNavItem(context),
                   _navItem(1, Icons.meeting_room_outlined,
                       Icons.meeting_room_rounded, 'Rooms'),
                   _createButton(),
@@ -111,6 +112,38 @@ class _NeonBottomNav extends StatelessWidget {
               ),
             ),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _friendsNavItem(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => FriendsPanelButton.openPanel(context),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 40,
+              height: 32,
+              child: const Icon(
+                Icons.people_alt_outlined,
+                color: _npOnVariant,
+                size: 22,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Friends',
+              style: GoogleFonts.inter(
+                fontSize: 10,
+                fontWeight: FontWeight.w400,
+                color: _npOnVariant,
+              ),
+            ),
+          ],
         ),
       ),
     );

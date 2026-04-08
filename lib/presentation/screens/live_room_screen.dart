@@ -3,7 +3,6 @@ import 'dart:developer' as developer;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
@@ -340,11 +339,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     return userId.hashCode.abs() % 2147483647;
   }
 
-  /// Builds the ICE server list for WebRTC.
-  /// Falls back to Google STUN only; uses TURN servers when TURN_URL is set
-  /// in the app env file so that P2P works across symmetric NAT.
-  static List<Map<String, dynamic>> _buildIceServers() {
-    final servers = <Map<String, dynamic>>[
+  /// Fetches ICE servers from the `generateTurnCredentials` Cloud Function.
+  /// The function calls Metered server-side so the API key is never exposed
+  /// in the client bundle. Falls back to Google STUN on any error.
+  static Future<List<Map<String, dynamic>>> _fetchIceServers() async {
+    const fallback = [
       {
         'urls': [
           'stun:stun.l.google.com:19302',
@@ -353,19 +352,21 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
       },
     ];
     try {
-      final turnUrl = dotenv.env['TURN_URL'] ?? '';
-      final turnUser = dotenv.env['TURN_USERNAME'] ?? '';
-      final turnCred = dotenv.env['TURN_CREDENTIAL'] ?? '';
-      if (turnUrl.isNotEmpty) {
-        final entry = <String, dynamic>{'urls': [turnUrl]};
-        if (turnUser.isNotEmpty) entry['username'] = turnUser;
-        if (turnCred.isNotEmpty) entry['credential'] = turnCred;
-        servers.add(entry);
+      final callable = FirebaseFunctions.instance
+          .httpsCallable('generateTurnCredentials');
+      final result = await callable.call<Map<String, dynamic>>({});
+      final raw = result.data['iceServers'];
+      if (raw is List && raw.isNotEmpty) {
+        return raw
+            .whereType<Map<dynamic, dynamic>>()
+            .map((e) => e.map((k, v) => MapEntry(k.toString(), v)))
+            .toList();
       }
+      return fallback;
     } catch (_) {
-      // dotenv not loaded (e.g. in tests) — STUN only is fine.
+      // Cloud Function unavailable (offline / test env) — STUN only.
+      return fallback;
     }
-    return servers;
   }
 
   String? _userIdForRtcUid(int rtcUid, List<RoomParticipantModel> members) {
@@ -596,10 +597,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
         if (mounted) {
           setState(() => _cameraStatus = 'Connecting to live room…');
         }
+        final iceServers = await _fetchIceServers();
         final service = WebRtcRoomService(
           firestore: _firestore!,
           localUserId: userId,
-          iceServers: _buildIceServers(),
+          iceServers: iceServers,
         );
         _attachServiceCallbacks(service);
         await _runWithWatchdog<void>(
@@ -3403,13 +3405,153 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                 foregroundColor: Colors.white,
                 elevation: 0,
                 title: Text(roomName),
-                bottom: roomDescription.isEmpty
+                bottom: (roomDescription.isEmpty && _cameraStatus == null)
                     ? null
                     : PreferredSize(
-                        preferredSize: const Size.fromHeight(24),
-                        child: _TickerBanner(text: roomDescription),
+                        preferredSize: Size.fromHeight(
+                          (roomDescription.isEmpty ? 0.0 : 24.0) +
+                              (_cameraStatus != null ? 20.0 : 0.0),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (roomDescription.isNotEmpty)
+                              _TickerBanner(text: roomDescription),
+                            if (_cameraStatus != null)
+                              Container(
+                                width: double.infinity,
+                                color: const Color(0x9910131A),
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 16, vertical: 2),
+                                child: Text(
+                                  _cameraStatus!,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontSize: 11,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                 actions: [
+                  // ── Media controls ─────────────────────────────────────
+                  // Mic toggle
+                  IconButton(
+                    tooltip: _isMicMuted
+                        ? 'Unmute microphone'
+                        : 'Mute microphone',
+                    icon: Icon(
+                      _isMicMuted ? Icons.mic_off : Icons.mic,
+                      color: _isMicMuted
+                          ? const Color(0xFFFF6E84)
+                          : Colors.white,
+                    ),
+                    onPressed:
+                        (!_isCallReady || _agoraService == null || _isMicActionInFlight)
+                            ? null
+                            : _toggleMic,
+                  ),
+                  // Live mic level bar — visible when unmuted
+                  if (!_isMicMuted && _agoraService != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Center(
+                        child: _MicLevelBar(
+                            level: _agoraService!.localAudioLevel),
+                      ),
+                    ),
+                  // Camera toggle
+                  Tooltip(
+                    message: _isVideoEnabled
+                        ? 'Turn camera off (long-press to manage viewers)'
+                        : 'Turn camera on (long-press to manage viewers)',
+                    child: GestureDetector(
+                      onLongPress: () {
+                        final camController = ref.read(
+                          userCamPermissionsControllerProvider,
+                        );
+                        final allowedViewers = ref
+                                .read(userCamAllowedViewersProvider(user.id))
+                                .valueOrNull ??
+                            const <String>[];
+                        _openManageCamViewersSheet(
+                          members: participantsInRoom,
+                          currentUserId: user.id,
+                          currentAllowedViewers: allowedViewers,
+                          controller: camController,
+                        );
+                      },
+                      child: IconButton(
+                        tooltip: _isVideoEnabled
+                            ? 'Turn camera off'
+                            : 'Turn camera on',
+                        icon: Icon(
+                          _isVideoEnabled
+                              ? Icons.videocam
+                              : Icons.videocam_off,
+                          color: _isVideoEnabled
+                              ? Colors.white
+                              : const Color(0xFFFF6E84),
+                        ),
+                        onPressed: (!_isCallReady ||
+                                _agoraService == null ||
+                                _isVideoActionInFlight)
+                            ? null
+                            : () async {
+                                if (!_isVideoEnabled) {
+                                  final localPreview = _buildLocalCamContent(
+                                    avatarUrl: _senderAvatarUrlById[
+                                        _joinedUserId ?? ''],
+                                  );
+                                  if (!context.mounted) return;
+                                  final confirmed = await CamPreviewSheet.show(
+                                    context,
+                                    previewWidget: localPreview,
+                                    isVideoEnabled: _isVideoEnabled,
+                                  );
+                                  if (confirmed != true) return;
+                                }
+                                await _toggleVideo();
+                              },
+                      ),
+                    ),
+                  ),
+                  // Share system audio (web only)
+                  if (kIsWeb)
+                    IconButton(
+                      tooltip: _isSharingSystemAudio
+                          ? 'Stop sharing computer audio'
+                          : 'Share computer audio',
+                      icon: Icon(
+                        _isSharingSystemAudio
+                            ? Icons.headset
+                            : Icons.headset_off,
+                        color: _isSharingSystemAudio
+                            ? const Color(0xFF7C5FFF)
+                            : Colors.white70,
+                      ),
+                      onPressed: (!_isCallReady ||
+                              _agoraService == null ||
+                              _isSystemAudioActionInFlight)
+                          ? null
+                          : _toggleSystemAudio,
+                    ),
+                  // Volume controls toggle
+                  IconButton(
+                    tooltip: 'Volume controls',
+                    icon: Icon(
+                      _showVolumeControls
+                          ? Icons.volume_up
+                          : Icons.volume_up_outlined,
+                      color: _showVolumeControls
+                          ? const Color(0xFF00D4AA)
+                          : Colors.white70,
+                    ),
+                    onPressed: () => setState(
+                        () => _showVolumeControls = !_showVolumeControls),
+                  ),
                   // Home button
                   IconButton(
                     tooltip: 'Go to Home',
@@ -4090,254 +4232,101 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                         ),
                       ),
                     ),
-                  // ── BROADCASTER MIC / CAMERA CONTROLS ────────────────────
-                  // Room policy allows all participants to go live freely
-                  // (no host approval required). Show mic/cam for every joined
-                  // participant. The onPressed callbacks stay null until the
-                  // RTC service is connected (_isCallReady), so buttons show
-                  // immediately but are disabled until the call is ready.
-                  Positioned(
-                      bottom: 40,
-                      left: 12,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xB310131A),
-                              borderRadius: BorderRadius.circular(24),
-                              border: Border.all(color: const Color(0x30BA9EFF)),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                  // ── VOLUME SLIDERS PANEL — anchored top-right below AppBar ───
+                  if (_showVolumeControls)
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xCC10131A),
+                          borderRadius: BorderRadius.circular(16),
+                          border:
+                              Border.all(color: const Color(0x30BA9EFF)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
                               children: [
-                                IconButton(
-                                  tooltip: _isMicMuted
-                                      ? 'Unmute microphone'
-                                      : 'Mute microphone',
-                                  icon: Icon(
-                                    _isMicMuted ? Icons.mic_off : Icons.mic,
-                                    color:
-                                        _isMicMuted ? const Color(0xFFFF6E84) : Colors.white,
-                                  ),
-                                  onPressed: (!_isCallReady || _agoraService == null || _isMicActionInFlight)
-                                      ? null
-                                      : _toggleMic,
-                                ),
-                                // Live mic level bar — visible when unmuted
-                                if (!_isMicMuted && _agoraService != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 4),
-                                    child: _MicLevelBar(
-                                      level: _agoraService!.localAudioLevel,
-                                    ),
-                                  ),
-                                Tooltip(
-                                  message: _isVideoEnabled
-                                      ? 'Turn camera off (long-press to manage viewers)'
-                                      : 'Turn camera on (long-press to manage viewers)',
-                                  child: GestureDetector(
-                                    onLongPress: () {
-                                      final camController = ref.read(
-                                        userCamPermissionsControllerProvider,
-                                      );
-                                      final allowedViewers = ref
-                                          .read(userCamAllowedViewersProvider(
-                                            user.id,
-                                          ))
-                                          .valueOrNull ??
-                                          const <String>[];
-                                      _openManageCamViewersSheet(
-                                        members: participantsInRoom,
-                                        currentUserId: user.id,
-                                        currentAllowedViewers: allowedViewers,
-                                        controller: camController,
-                                      );
-                                    },
-                                    child: IconButton(
-                                      tooltip: _isVideoEnabled
-                                          ? 'Turn camera off'
-                                          : 'Turn camera on',
-                                      icon: Icon(
-                                        _isVideoEnabled
-                                            ? Icons.videocam
-                                            : Icons.videocam_off,
-                                        color: _isVideoEnabled
-                                            ? Colors.white
-                                            : const Color(0xFFFF6E84),
-                                      ),
-                                      onPressed: (!_isCallReady || _agoraService == null || _isVideoActionInFlight)
-                                          ? null
-                                          : () async {
-                                              // When turning ON, show preview first.
-                                              if (!_isVideoEnabled) {
-                                                final localPreview = _buildLocalCamContent(
-                                                avatarUrl: _senderAvatarUrlById[_joinedUserId ?? ''],
-                                              );
-                                                if (!context.mounted) return;
-                                                final confirmed = await CamPreviewSheet.show(
-                                                  context,
-                                                  previewWidget: localPreview,
-                                                  isVideoEnabled: _isVideoEnabled,
-                                                );
-                                                if (confirmed != true) return;
-                                              }
-                                              await _toggleVideo();
-                                            },
-                                    ),
-                                  ),
-                                ),
-                                // ── Share system audio (web only) ──────────
-                                if (kIsWeb)
-                                  IconButton(
-                                    tooltip: _isSharingSystemAudio
-                                        ? 'Stop sharing computer audio'
-                                        : 'Share computer audio (what\'s playing through speakers)',
-                                    icon: Icon(
-                                      _isSharingSystemAudio
-                                          ? Icons.headset
-                                          : Icons.headset_off,
-                                      color: _isSharingSystemAudio
-                                          ? const Color(0xFF7C5FFF)
-                                          : Colors.white70,
-                                    ),
-                                    onPressed: (!_isCallReady || _agoraService == null || _isSystemAudioActionInFlight)
-                                        ? null
-                                        : _toggleSystemAudio,
-                                  ),
-                                // ── Volume controls toggle ──────────────────
-                                IconButton(
-                                  tooltip: 'Volume controls',
-                                  icon: Icon(
-                                    _showVolumeControls
-                                        ? Icons.volume_up
-                                        : Icons.volume_up_outlined,
-                                    color: _showVolumeControls
-                                        ? const Color(0xFF00D4AA)
-                                        : Colors.white70,
-                                  ),
-                                  onPressed: () => setState(
-                                      () => _showVolumeControls =
-                                          !_showVolumeControls),
+                                const Icon(Icons.mic,
+                                    size: 16, color: Colors.white70),
+                                const SizedBox(width: 6),
+                                const Text('Mic',
+                                    style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 11)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${(_micVolume * 100).round()}%',
+                                  style: const TextStyle(
+                                      color: Colors.white54, fontSize: 10),
                                 ),
                               ],
                             ),
-                          ),
-                          // ── Inline volume sliders ─────────────────────────
-                          if (_showVolumeControls)
-                            Container(
-                              margin: const EdgeInsets.only(top: 6),
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 8),
-                              decoration: BoxDecoration(
-                                color: const Color(0xCC10131A),
-                                borderRadius: BorderRadius.circular(16),
-                                border: Border.all(
-                                    color: const Color(0x30BA9EFF)),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.mic,
-                                          size: 16, color: Colors.white70),
-                                      const SizedBox(width: 6),
-                                      const Text('Mic',
-                                          style: TextStyle(
-                                              color: Colors.white70,
-                                              fontSize: 11)),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${(_micVolume * 100).round()}%',
-                                        style: const TextStyle(
-                                            color: Colors.white54,
-                                            fontSize: 10),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(
-                                    width: 200,
-                                    child: SliderTheme(
-                                      data: SliderThemeData(
-                                        activeTrackColor:
-                                            const Color(0xFF7C5FFF),
-                                        trackHeight: 2.5,
-                                        thumbShape:
-                                            const RoundSliderThumbShape(
-                                                enabledThumbRadius: 7),
-                                      ),
-                                      child: Slider.adaptive(
-                                        value: _micVolume,
-                                        min: 0.0,
-                                        max: 2.0,
-                                        divisions: 40,
-                                        label:
-                                            '${(_micVolume * 100).round()}%',
-                                        onChanged:
-                                            _isCallReady ? _setMicVolume : null,
-                                      ),
-                                    ),
-                                  ),
-                                  Row(
-                                    children: [
-                                      const Icon(Icons.volume_up,
-                                          size: 16, color: Colors.white70),
-                                      const SizedBox(width: 6),
-                                      const Text('Speaker',
-                                          style: TextStyle(
-                                              color: Colors.white70,
-                                              fontSize: 11)),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        '${(_speakerVolume * 100).round()}%',
-                                        style: const TextStyle(
-                                            color: Colors.white54,
-                                            fontSize: 10),
-                                      ),
-                                    ],
-                                  ),
-                                  SizedBox(
-                                    width: 200,
-                                    child: SliderTheme(
-                                      data: SliderThemeData(
-                                        activeTrackColor:
-                                            const Color(0xFF00D4AA),
-                                        trackHeight: 2.5,
-                                        thumbShape:
-                                            const RoundSliderThumbShape(
-                                                enabledThumbRadius: 7),
-                                      ),
-                                      child: Slider.adaptive(
-                                        value: _speakerVolume,
-                                        min: 0.0,
-                                        max: 1.0,
-                                        divisions: 20,
-                                        label:
-                                            '${(_speakerVolume * 100).round()}%',
-                                        onChanged: _isCallReady
-                                            ? _setSpeakerVolume
-                                            : null,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          if (_cameraStatus != null)
-                            Padding(
-                              padding:
-                                  const EdgeInsets.only(left: 8, top: 4),
-                              child: Text(
-                                _cameraStatus!,
-                                style: const TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 10,
+                            SizedBox(
+                              width: 200,
+                              child: SliderTheme(
+                                data: SliderThemeData(
+                                  activeTrackColor: const Color(0xFF7C5FFF),
+                                  trackHeight: 2.5,
+                                  thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: 7),
+                                ),
+                                child: Slider.adaptive(
+                                  value: _micVolume,
+                                  min: 0.0,
+                                  max: 2.0,
+                                  divisions: 40,
+                                  label: '${(_micVolume * 100).round()}%',
+                                  onChanged:
+                                      _isCallReady ? _setMicVolume : null,
                                 ),
                               ),
                             ),
-                        ],
+                            Row(
+                              children: [
+                                const Icon(Icons.volume_up,
+                                    size: 16, color: Colors.white70),
+                                const SizedBox(width: 6),
+                                const Text('Speaker',
+                                    style: TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 11)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${(_speakerVolume * 100).round()}%',
+                                  style: const TextStyle(
+                                      color: Colors.white54, fontSize: 10),
+                                ),
+                              ],
+                            ),
+                            SizedBox(
+                              width: 200,
+                              child: SliderTheme(
+                                data: SliderThemeData(
+                                  activeTrackColor: const Color(0xFF00D4AA),
+                                  trackHeight: 2.5,
+                                  thumbShape: const RoundSliderThumbShape(
+                                      enabledThumbRadius: 7),
+                                ),
+                                child: Slider.adaptive(
+                                  value: _speakerVolume,
+                                  min: 0.0,
+                                  max: 1.0,
+                                  divisions: 20,
+                                  label:
+                                      '${(_speakerVolume * 100).round()}%',
+                                  onChanged:
+                                      _isCallReady ? _setSpeakerVolume : null,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   // ── CHAT COLUMN (order-aware) ──────────────────────────────

@@ -36,8 +36,8 @@ class StoriesRow extends ConsumerWidget {
     final storiesAsync = ref.watch(followingStoriesProvider(params));
 
     return storiesAsync.when(
-      loading: () => _buildShimmer(context),
-      error: (_, _) => const SizedBox.shrink(),
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
       data: (stories) {
         // Group stories by userId, preserving first occurrence order
         final seen = <String>{};
