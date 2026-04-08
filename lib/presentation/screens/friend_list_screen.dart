@@ -63,7 +63,19 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Friends')),
+      backgroundColor: NeonPulse.surface,
+      appBar: AppBar(
+        backgroundColor: NeonPulse.surfaceHigh,
+        elevation: 0,
+        title: const Text(
+          'Friends',
+          style: TextStyle(
+            color: NeonPulse.onSurface,
+            fontWeight: FontWeight.w700,
+            fontSize: 17,
+          ),
+        ),
+      ),
       drawer: const MixVyDrawer(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
@@ -86,7 +98,11 @@ class _FriendListScreenState extends ConsumerState<FriendListScreen> {
           const SizedBox(height: 24),
 
           // ── Incoming requests ──────────────────────────────────────────
-          _SectionHeader(label: 'Requests', icon: Icons.mail_outline_rounded),
+          _SectionHeader(
+            label: 'Requests',
+            icon: Icons.mail_outline_rounded,
+            badge: incomingRequestsAsync.valueOrNull?.length,
+          ),
           const SizedBox(height: 8),
           incomingRequestsAsync.when(
             data: (requests) {

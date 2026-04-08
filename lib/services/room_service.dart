@@ -213,6 +213,7 @@ class RoomService {
 		String? thumbnailUrl,
 		String? category,
 		List<String> tags = const <String>[],
+		DateTime? scheduledAt,
 	}) async {
 		final trimmedHostId = hostId.trim();
 		final trimmedName = name.trim();
@@ -243,6 +244,7 @@ class RoomService {
 			'coHosts': <String>[],
 			'isLocked': false,
 			'slowModeSeconds': 0,
+			if (scheduledAt != null) 'scheduledAt': Timestamp.fromDate(scheduledAt),
 		});
 
 		return docRef.id;

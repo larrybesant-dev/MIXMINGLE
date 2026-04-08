@@ -5,6 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/theme.dart';
 import '../models/speed_dating_models.dart';
 import '../services/speed_dating_service.dart';
 
@@ -192,42 +193,115 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
     required String matchId,
   }) async {
     final pageContext = context;
-    await showDialog<void>(
+    await showModalBottomSheet<void>(
       context: pageContext,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: const Text('🎉 It\'s a Match!'),
-          content: Column(
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: NeonPulse.surfaceHigh,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          ),
+          padding: const EdgeInsets.fromLTRB(24, 20, 24, 40),
+          child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('🔥', style: TextStyle(fontSize: 48)),
+              // Drag handle
+              Container(
+                width: 36,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: NeonPulse.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // Emoji burst
+              const Text('💘', style: TextStyle(fontSize: 64)),
               const SizedBox(height: 12),
+              ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [Color(0xFFFF6EB4), NeonPulse.primary],
+                ).createShader(bounds),
+                child: const Text(
+                  "It's a Match!",
+                  style: TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
               Text(
                 'You and ${candidate.username} liked each other.',
                 textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: NeonPulse.onSurfaceVariant,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 28),
+              // Avatar pair
+              if (candidate.avatarUrl != null)
+                ClipOval(
+                  child: CachedNetworkImage(
+                    imageUrl: candidate.avatarUrl!,
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover,
+                    errorWidget: (_, __, ___) =>
+                        const CircleAvatar(radius: 40, child: Icon(Icons.person)),
+                  ),
+                ),
+              const SizedBox(height: 28),
+              // CTA buttons
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF6EB4),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onPressed: () async {
+                    Navigator.of(sheetCtx).pop();
+                    final roomId = await _service.startLiveDateRoom(
+                      hostUserId: currentUserId,
+                      targetUserId: candidate.id,
+                      matchId: matchId,
+                    );
+                    if (!mounted || !pageContext.mounted) return;
+                    pageContext.go('/room/$roomId');
+                  },
+                  icon: const Icon(Icons.videocam_rounded, size: 20),
+                  label: const Text('Start Live Date',
+                      style: TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 16)),
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: NeonPulse.onSurfaceVariant,
+                    side: const BorderSide(color: NeonPulse.outlineVariant),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(sheetCtx).pop(),
+                  child: const Text('Keep Browsing'),
+                ),
               ),
             ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Keep Browsing'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                Navigator.of(dialogContext).pop();
-                final roomId = await _service.startLiveDateRoom(
-                  hostUserId: currentUserId,
-                  targetUserId: candidate.id,
-                  matchId: matchId,
-                );
-                if (!mounted) return;
-                if (!pageContext.mounted) return;
-                pageContext.go('/room/$roomId');
-              },
-              child: const Text('Start Live Date 🚀'),
-            ),
-          ],
         );
       },
     );
@@ -378,21 +452,78 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
     }
 
     return Scaffold(
+      backgroundColor: NeonPulse.surface,
       appBar: AppBar(
-        title: const Text('Live Speed Dating'),
+        backgroundColor: NeonPulse.surfaceHigh,
+        elevation: 0,
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFFF6EB4), Color(0xFFBA9EFF)],
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Text(
+                'LIVE',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 11,
+                  letterSpacing: 1,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'Speed Dating',
+              style: TextStyle(
+                color: NeonPulse.onSurface,
+                fontWeight: FontWeight.w700,
+                fontSize: 17,
+              ),
+            ),
+          ],
+        ),
         actions: [
           if (!_queueMode)
-            TextButton.icon(
-              onPressed: () => _enterQueueMode(user.uid),
-              icon: const Icon(Icons.queue, size: 18),
-              label: const Text('Find Match'),
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: TextButton.icon(
+                style: TextButton.styleFrom(
+                  backgroundColor: NeonPulse.primary,
+                  foregroundColor: NeonPulse.surface,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                onPressed: () => _enterQueueMode(user.uid),
+                icon: const Icon(Icons.search, size: 16),
+                label: const Text('Find Match',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              ),
             ),
           if (_queueMode)
-            TextButton.icon(
-              onPressed: _leaveQueueMode,
-              icon: const Icon(Icons.cancel_outlined, size: 18),
-              label: const Text('Leave Queue'),
-              style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: TextButton.icon(
+                style: TextButton.styleFrom(
+                  backgroundColor: NeonPulse.surfaceBright,
+                  foregroundColor: NeonPulse.error,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                onPressed: _leaveQueueMode,
+                icon: const Icon(Icons.cancel_outlined, size: 16),
+                label: const Text('Leave Queue',
+                    style: TextStyle(fontWeight: FontWeight.w700, fontSize: 13)),
+              ),
             ),
         ],
       ),
@@ -657,41 +788,55 @@ class _SpeedDatingScreenState extends State<SpeedDatingScreen>
           mainAxisSize: MainAxisSize.min,
           children: [
             if (_queueJoining) ...[
-              const CircularProgressIndicator(),
+              const CircularProgressIndicator(
+                color: NeonPulse.primary),
               const SizedBox(height: 20),
-              Text('Joining match queue…', style: theme.textTheme.titleMedium),
+              Text('Joining match queue…',
+                  style: theme.textTheme.titleMedium?.copyWith(
+                      color: NeonPulse.onSurface)),
             ] else if (_queueSessionId != null) ...[
               const Text('💘', style: TextStyle(fontSize: 64)),
               const SizedBox(height: 16),
               Text(
                 'Match found!',
-                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800, color: NeonPulse.onSurface),
               ),
               const SizedBox(height: 8),
-              const Text('Connecting you to a live date room…'),
+              const Text('Connecting you to a live date room…',
+                  style: TextStyle(color: NeonPulse.onSurfaceVariant)),
               const SizedBox(height: 20),
-              const CircularProgressIndicator(),
+              const CircularProgressIndicator(color: NeonPulse.primary),
             ] else ...[
               const Text('🔍', style: TextStyle(fontSize: 64)),
               const SizedBox(height: 16),
               Text(
                 'Searching for a match…',
-                style: theme.textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
+                style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w800, color: NeonPulse.onSurface),
               ),
               const SizedBox(height: 12),
-              Text(
-                'You\'re in the queue. We\'ll notify you when someone matches with you.',
+              const Text(
+                "You're in the queue. We'll connect you when someone matches with you.",
                 textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium,
+                style: TextStyle(color: NeonPulse.onSurfaceVariant),
               ),
-              const SizedBox(height: 8),
-              const LinearProgressIndicator(),
-              const SizedBox(height: 24),
+              const SizedBox(height: 20),
+              const LinearProgressIndicator(
+                color: NeonPulse.primary,
+                backgroundColor: NeonPulse.surfaceHigh,
+              ),
+              const SizedBox(height: 28),
               OutlinedButton.icon(
                 onPressed: _leaveQueueMode,
-                icon: const Icon(Icons.cancel_outlined),
+                icon: const Icon(Icons.cancel_outlined, size: 16),
                 label: const Text('Leave Queue'),
-                style: OutlinedButton.styleFrom(foregroundColor: Colors.redAccent),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: NeonPulse.error,
+                  side: BorderSide(color: NeonPulse.error.withValues(alpha: 0.5)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20)),
+                ),
               ),
             ],
           ],

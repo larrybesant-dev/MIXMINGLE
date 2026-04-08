@@ -36,6 +36,8 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
   _Privacy _privacy = _Privacy.public;
   String? _selectedCategory;
   bool _isCreating = false;
+  bool _scheduleMode = false;
+  DateTime? _scheduledAt;
 
   static const List<String> _categories = [
     'Music', 'Gaming', 'Dating', 'Tech Talk',
@@ -50,6 +52,15 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
 
   Future<void> _startRoom() async {
     if (_formKey.currentState?.validate() != true) return;
+    if (_scheduleMode && _scheduledAt == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please choose a date & time to schedule the room.'),
+          backgroundColor: Color(0xFFFF6E84),
+        ),
+      );
+      return;
+    }
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
       if (mounted) context.go('/login');
@@ -59,13 +70,33 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
     setState(() => _isCreating = true);
     try {
       final roomService = ref.read(roomServiceProvider);
-      final roomId = await roomService.createRoom(
-        hostId: uid,
-        name: _titleController.text.trim(),
-        category: _selectedCategory?.toLowerCase(),
-        isLive: true,
-      );
-      if (mounted) context.go('/room/$roomId');
+      if (_scheduleMode) {
+        // Create scheduled (not live) room
+        await roomService.createRoom(
+          hostId: uid,
+          name: _titleController.text.trim(),
+          category: _selectedCategory?.toLowerCase(),
+          isLive: false,
+          scheduledAt: _scheduledAt,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Room scheduled! It will appear in Upcoming Rooms.'),
+              backgroundColor: Color(0xFF8455EF),
+            ),
+          );
+          context.pop();
+        }
+      } else {
+        final roomId = await roomService.createRoom(
+          hostId: uid,
+          name: _titleController.text.trim(),
+          category: _selectedCategory?.toLowerCase(),
+          isLive: true,
+        );
+        if (mounted) context.go('/room/$roomId');
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -122,6 +153,10 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                           _sectionLabel('Category'),
                           const SizedBox(height: 10),
                           _buildCategoryChips(),
+                          const SizedBox(height: 28),
+                          _sectionLabel('When to Start'),
+                          const SizedBox(height: 10),
+                          _buildScheduleToggle(),
                           const SizedBox(height: 28),
                           _buildPreviewCard(),
                           const SizedBox(height: 28),
@@ -388,6 +423,195 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
     );
   }
 
+  Widget _buildScheduleToggle() {
+    // Format the chosen date nicely
+    String scheduledLabel = 'Choose date & time';
+    if (_scheduledAt != null) {
+      final dt = _scheduledAt!;
+      final monthNames = ['Jan','Feb','Mar','Apr','May','Jun',
+                          'Jul','Aug','Sep','Oct','Nov','Dec'];
+      final hour = dt.hour % 12 == 0 ? 12 : dt.hour % 12;
+      final min = dt.minute.toString().padLeft(2, '0');
+      final ampm = dt.hour < 12 ? 'AM' : 'PM';
+      scheduledLabel = '${monthNames[dt.month - 1]} ${dt.day}, $hour:$min $ampm';
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Now / Schedule toggle
+        Row(
+          children: [
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() {
+                  _scheduleMode = false;
+                  _scheduledAt = null;
+                }),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: !_scheduleMode
+                        ? const LinearGradient(
+                            colors: [_primary, _primaryDim],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: !_scheduleMode ? null : _surfaceHigh,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: !_scheduleMode ? Colors.transparent : _ghost,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.bolt_rounded,
+                          size: 18,
+                          color: !_scheduleMode ? _surface : _onVariant),
+                      const SizedBox(width: 6),
+                      Text('Start Now',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: !_scheduleMode ? _surface : _onVariant,
+                          )),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _scheduleMode = true),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  decoration: BoxDecoration(
+                    gradient: _scheduleMode
+                        ? const LinearGradient(
+                            colors: [_primary, _primaryDim],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
+                    color: _scheduleMode ? null : _surfaceHigh,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: _scheduleMode ? Colors.transparent : _ghost,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.calendar_today_rounded,
+                          size: 18,
+                          color: _scheduleMode ? _surface : _onVariant),
+                      const SizedBox(width: 6),
+                      Text('Schedule',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                            color: _scheduleMode ? _surface : _onVariant,
+                          )),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+
+        // DateTime picker (shown only in schedule mode)
+        if (_scheduleMode) ...[
+          const SizedBox(height: 12),
+          GestureDetector(
+            onTap: () async {
+              final now = DateTime.now();
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: _scheduledAt ?? now.add(const Duration(hours: 1)),
+                firstDate: now,
+                lastDate: now.add(const Duration(days: 30)),
+                builder: (ctx, child) => Theme(
+                  data: ThemeData.dark().copyWith(
+                    colorScheme: const ColorScheme.dark(
+                      primary: _primary,
+                      surface: _surfaceHigh,
+                    ),
+                    dialogBackgroundColor: _surfaceHigh,
+                  ),
+                  child: child!,
+                ),
+              );
+              if (picked == null || !mounted) return;
+
+              final time = await showTimePicker(
+                context: context,
+                initialTime: TimeOfDay.fromDateTime(
+                  _scheduledAt ?? now.add(const Duration(hours: 1)),
+                ),
+                builder: (ctx, child) => Theme(
+                  data: ThemeData.dark().copyWith(
+                    colorScheme: const ColorScheme.dark(
+                      primary: _primary,
+                      surface: _surfaceHigh,
+                    ),
+                    dialogBackgroundColor: _surfaceHigh,
+                  ),
+                  child: child!,
+                ),
+              );
+              if (time == null || !mounted) return;
+
+              setState(() {
+                _scheduledAt = DateTime(
+                  picked.year, picked.month, picked.day,
+                  time.hour, time.minute,
+                );
+              });
+            },
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: _surfaceHighest,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: _scheduledAt != null ? _primary : _ghost,
+                ),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.event_rounded,
+                    size: 20,
+                    color: _scheduledAt != null ? _primary : _onVariant,
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      scheduledLabel,
+                      style: TextStyle(
+                        color: _scheduledAt != null ? _onSurface : _onVariant,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: _onVariant, size: 18),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
   Widget _buildPreviewCard() {
     return Container(
       height: 140,
@@ -512,14 +736,20 @@ class _CreateRoomScreenState extends ConsumerState<CreateRoomScreen> {
                           : Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Text('START ROOM NOW',
+                                Text(
+                                    _scheduleMode
+                                        ? 'SCHEDULE ROOM'
+                                        : 'START ROOM NOW',
                                     style: GoogleFonts.inter(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w800,
                                         color: _surface,
                                         letterSpacing: 0.5)),
                                 const SizedBox(width: 8),
-                                const Icon(Icons.play_arrow_rounded,
+                                Icon(
+                                    _scheduleMode
+                                        ? Icons.calendar_today_rounded
+                                        : Icons.play_arrow_rounded,
                                     color: _surface, size: 20),
                               ],
                             ),

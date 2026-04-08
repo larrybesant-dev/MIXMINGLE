@@ -80,41 +80,6 @@ class StoriesRow extends ConsumerWidget {
       },
     );
   }
-
-  Widget _buildShimmer(BuildContext context) {
-    return SizedBox(
-      height: 90,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemCount: 5,
-        itemBuilder: (_, _) => Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: Column(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Container(
-                width: 44,
-                height: 10,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _StoryBubble extends StatelessWidget {

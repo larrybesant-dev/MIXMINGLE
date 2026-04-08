@@ -93,6 +93,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
   List<String> _columnOrder = const ['cams', 'chat', 'users'];
   double _chatColW = 280.0;
   static const double _kUsersColW = 200.0;
+  /// Mobile tab: 0=Camera, 1=Chat, 2=People  (only used when width < 640)
+  int _mobileTab = 0;
 
   void _moveSlot(String slot, int dir) {
     final list = List<String>.from(_columnOrder);
@@ -3489,17 +3491,30 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
             final spotlightUserId = _asString(roomData?['spotlightUserId']);
             // ── 3-column layout helpers ──────────────────────────────────
             final screenWidth = MediaQuery.sizeOf(context).width;
+            final isMobile = screenWidth < 640;
             const kUsersW = _LiveRoomScreenState._kUsersColW;
-            final camsW =
-                (screenWidth - _chatColW - kUsersW).clamp(200.0, double.infinity);
+            final effectiveChatW = isMobile ? 0.0 : _chatColW;
+            final effectiveUsersW = isMobile ? 0.0 : kUsersW;
+            final camsW = isMobile
+                ? screenWidth
+                : (screenWidth - _chatColW - kUsersW).clamp(200.0, double.infinity);
             double colLeft(String slot) {
+              if (isMobile) {
+                // Off-screen if not the active mobile tab
+                const Map<String, int> _slotTab = {
+                  'cams': 0,
+                  'chat': 1,
+                  'users': 2,
+                };
+                return _slotTab[slot] == _mobileTab ? 0.0 : -screenWidth * 2;
+              }
               double l = 0;
               for (final s in _columnOrder) {
                 if (s == slot) return l;
                 l += switch (s) {
                   'cams' => camsW,
-                  'chat' => _chatColW,
-                  _ => kUsersW,
+                  'chat' => effectiveChatW,
+                  _ => effectiveUsersW,
                 };
               }
               return 0;
@@ -4471,7 +4486,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     left: colLeft('chat'),
                     top: 0,
                     bottom: 0,
-                    width: _chatColW,
+                    width: isMobile ? screenWidth : _chatColW,
                     child: DecoratedBox(
                       decoration: const BoxDecoration(
                         color: Color(0xFF16181F),
@@ -4978,7 +4993,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                     left: colLeft('users'),
                     top: 0,
                     bottom: 0,
-                    width: kUsersW,
+                    width: isMobile ? screenWidth : kUsersW,
                     child: ColoredBox(
                       color: const Color(0xFF161A21),
                       child: Column(
@@ -5199,6 +5214,34 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
                   ),
                 ],
               ),
+              bottomNavigationBar: !isMobile ? null : Container(
+                color: const Color(0xFF161A21),
+                child: Row(
+                  children: [
+                    _MobileTabBtn(
+                      icon: Icons.videocam_outlined,
+                      activeIcon: Icons.videocam_rounded,
+                      label: 'Camera',
+                      active: _mobileTab == 0,
+                      onTap: () => setState(() => _mobileTab = 0),
+                    ),
+                    _MobileTabBtn(
+                      icon: Icons.chat_bubble_outline_rounded,
+                      activeIcon: Icons.chat_bubble_rounded,
+                      label: 'Chat',
+                      active: _mobileTab == 1,
+                      onTap: () => setState(() => _mobileTab = 1),
+                    ),
+                    _MobileTabBtn(
+                      icon: Icons.people_outline_rounded,
+                      activeIcon: Icons.people_rounded,
+                      label: 'People',
+                      active: _mobileTab == 2,
+                      onTap: () => setState(() => _mobileTab = 2),
+                    ),
+                  ],
+                ),
+              ),
             );
           },
         );
@@ -5276,6 +5319,59 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen>
     );
   }
 }
+// ---------------------------------------------------------------------------
+// Mobile tab bar button
+// ---------------------------------------------------------------------------
+
+class _MobileTabBtn extends StatelessWidget {
+  const _MobileTabBtn({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final IconData activeIcon;
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    const primary = Color(0xFFBA9EFF);
+    const inactive = Color(0xFFA9ABB3);
+    return Expanded(
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                active ? activeIcon : icon,
+                color: active ? primary : inactive,
+                size: 22,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                  color: active ? primary : inactive,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Paltalk-style Roster Sidebar
 // Shows: Talking Now / Mic Queue / On Cam / Chatting sections

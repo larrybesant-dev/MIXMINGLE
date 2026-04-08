@@ -7,7 +7,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../core/theme.dart';
+import 'profile_completion.dart';
 import 'profile_controller.dart';
+
+// Common interest tags users can tap to add
+const _kInterestSuggestions = [
+  'Music', 'Gaming', 'Travel', 'Fitness', 'Food', 'Art', 'Movies',
+  'Sports', 'Tech', 'Cooking', 'Reading', 'Dancing', 'Fashion',
+  'Photography', 'Nature', 'Anime', 'Comedy', 'Podcasts',
+];
 
 class EditProfileScreen extends ConsumerStatefulWidget {
   const EditProfileScreen({super.key});
@@ -15,209 +24,457 @@ class EditProfileScreen extends ConsumerStatefulWidget {
   ConsumerState<EditProfileScreen> createState() => _EditProfileScreenState();
 }
 
-class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
+class _EditProfileScreenState extends ConsumerState<EditProfileScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
+  // Tab 0 – Basics
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _showPassword = false;
-  bool _isUploadingPhoto = false;
+  bool _isUploadingAvatar = false;
+  bool _isUploadingCover = false;
   String? _avatarUrl;
+  String? _coverPhotoUrl;
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    super.dispose();
-  }
+  // Tab 1 – About
+  final _bioController = TextEditingController();
+  final _aboutMeController = TextEditingController();
+
+  // Tab 2 – Interests
+  final _interestInputController = TextEditingController();
+  List<String> _interests = [];
 
   @override
   void initState() {
     super.initState();
-    final state = ref.read(profileControllerProvider);
-    _nameController.text = state.username ?? '';
-    _emailController.text = state.email ?? '';
-    _avatarUrl = state.avatarUrl;
+    _tabController = TabController(length: 3, vsync: this);
+    final s = ref.read(profileControllerProvider);
+    _nameController.text = s.username ?? '';
+    _emailController.text = s.email ?? '';
+    _avatarUrl = s.avatarUrl;
+    _coverPhotoUrl = s.coverPhotoUrl;
+    _bioController.text = s.bio ?? '';
+    _aboutMeController.text = s.aboutMe ?? '';
+    _interests = List<String>.from(s.interests);
   }
 
-  Future<void> _pickAndUploadPhoto() async {
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _bioController.dispose();
+    _aboutMeController.dispose();
+    _interestInputController.dispose();
+    super.dispose();
+  }
+
+  // ── Photo uploaders ────────────────────────────────────────────────────────
+
+  Future<void> _pickAndUpload({
+    required String storagePath,
+    required void Function(String url) onSuccess,
+    required void Function(bool loading) setLoading,
+  }) async {
     final picker = ImagePicker();
     final file = await picker.pickImage(
       source: ImageSource.gallery,
-      maxWidth: 800,
-      maxHeight: 800,
+      maxWidth: 1200,
+      maxHeight: 1200,
       imageQuality: 85,
     );
     if (file == null) return;
-
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) return;
-
-    setState(() => _isUploadingPhoto = true);
+    setLoading(true);
     try {
       final bytes = await file.readAsBytes();
       final ext = file.name.split('.').last.toLowerCase();
-      final ref = FirebaseStorage.instance.ref('users/$uid/avatar.$ext');
-      final uploadTask = ref.putData(
-        bytes,
-        SettableMetadata(contentType: 'image/$ext'),
-      );
-      final snapshot = await uploadTask;
-      final url = await snapshot.ref.getDownloadURL();
-      if (mounted) setState(() => _avatarUrl = url);
+      final ref = FirebaseStorage.instance.ref('$storagePath.$ext');
+      final snap = await ref.putData(bytes, SettableMetadata(contentType: 'image/$ext'));
+      final url = await snap.ref.getDownloadURL();
+      if (mounted) onSuccess(url);
     } catch (e, st) {
-      developer.log('Avatar upload failed', name: 'EditProfile', error: e, stackTrace: st);
+      developer.log('Upload failed', name: 'EditProfile', error: e, stackTrace: st);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Photo upload failed: $e')),
+          SnackBar(content: Text('Upload failed: $e')),
         );
       }
     } finally {
-      if (mounted) setState(() => _isUploadingPhoto = false);
+      setLoading(false);
     }
   }
 
+  // ── Save ──────────────────────────────────────────────────────────────────
+
   Future<void> _saveProfile() async {
-    final controller = ref.read(profileControllerProvider.notifier);
-    await controller.updateProfile(
-      ref.read(profileControllerProvider).copyWith(
+    final current = ref.read(profileControllerProvider);
+    await ref.read(profileControllerProvider.notifier).updateProfile(
+      current.copyWith(
         username: _nameController.text.trim(),
         email: _emailController.text.trim(),
         avatarUrl: _avatarUrl ?? '',
+        coverPhotoUrl: _coverPhotoUrl ?? '',
+        bio: _bioController.text.trim(),
+        aboutMe: _aboutMeController.text.trim(),
+        interests: List<String>.from(_interests),
       ),
     );
     if (!mounted) return;
-    final state = ref.read(profileControllerProvider);
-    if (state.error == null) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Profile updated')));
+    if (ref.read(profileControllerProvider).error == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Profile saved!')),
+      );
       context.pop();
     }
   }
 
-  void _cancel() {
-    context.pop();
+  // ── Completion banner ─────────────────────────────────────────────────────
+
+  Widget _completionBanner(ProfileState s) {
+    final pct = ProfileCompletion.completeness(s.copyWith(
+      username: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : s.username,
+      bio: _bioController.text.trim().isNotEmpty ? _bioController.text.trim() : s.bio,
+      aboutMe: _aboutMeController.text.trim().isNotEmpty ? _aboutMeController.text.trim() : s.aboutMe,
+      avatarUrl: _avatarUrl ?? s.avatarUrl,
+      coverPhotoUrl: _coverPhotoUrl ?? s.coverPhotoUrl,
+      interests: _interests.isNotEmpty ? _interests : s.interests,
+    ));
+    final pctInt = (pct * 100).round();
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1C1F2C),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: NeonPulse.primary.withAlpha(60)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Profile completion', style: TextStyle(color: NeonPulse.primary, fontWeight: FontWeight.w600)),
+              Text('$pctInt%', style: TextStyle(color: NeonPulse.primary, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: pct,
+              backgroundColor: const Color(0xFF2E2F3A),
+              valueColor: AlwaysStoppedAnimation<Color>(NeonPulse.primary),
+              minHeight: 6,
+            ),
+          ),
+        ],
+      ),
+    );
   }
+
+  // ── Tab 0: Basics ─────────────────────────────────────────────────────────
+
+  Widget _buildBasicsTab(ProfileState s) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Avatar + Cover row
+        Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Cover photo
+            GestureDetector(
+              onTap: _isUploadingCover
+                  ? null
+                  : () => _pickAndUpload(
+                        storagePath: 'users/${FirebaseAuth.instance.currentUser?.uid}/cover',
+                        onSuccess: (url) => setState(() => _coverPhotoUrl = url),
+                        setLoading: (v) => setState(() => _isUploadingCover = v),
+                      ),
+              child: Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1C1F2C),
+                  borderRadius: BorderRadius.circular(12),
+                  image: (_coverPhotoUrl != null && _coverPhotoUrl!.isNotEmpty)
+                      ? DecorationImage(
+                          image: NetworkImage(_coverPhotoUrl!),
+                          fit: BoxFit.cover,
+                        )
+                      : null,
+                ),
+                child: Center(
+                  child: _isUploadingCover
+                      ? const CircularProgressIndicator()
+                      : (_coverPhotoUrl == null || _coverPhotoUrl!.isEmpty)
+                          ? Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.add_photo_alternate_outlined,
+                                    color: Colors.white38, size: 32),
+                                const SizedBox(height: 4),
+                                const Text('Add cover photo',
+                                    style: TextStyle(color: Colors.white38, fontSize: 12)),
+                              ],
+                            )
+                          : const SizedBox.shrink(),
+                ),
+              ),
+            ),
+            // Avatar overlapping cover
+            Positioned(
+              bottom: -28,
+              left: 16,
+              child: GestureDetector(
+                onTap: _isUploadingAvatar
+                    ? null
+                    : () => _pickAndUpload(
+                          storagePath: 'users/${FirebaseAuth.instance.currentUser?.uid}/avatar',
+                          onSuccess: (url) => setState(() => _avatarUrl = url),
+                          setLoading: (v) => setState(() => _isUploadingAvatar = v),
+                        ),
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    CircleAvatar(
+                      radius: 36,
+                      backgroundColor: const Color(0xFF23253A),
+                      child: _isUploadingAvatar
+                          ? const SizedBox(
+                              width: 24, height: 24,
+                              child: CircularProgressIndicator(strokeWidth: 2))
+                          : (_avatarUrl != null && _avatarUrl!.isNotEmpty)
+                              ? ClipOval(
+                                  child: CachedNetworkImage(
+                                    imageUrl: _avatarUrl!,
+                                    width: 72,
+                                    height: 72,
+                                    fit: BoxFit.cover,
+                                    errorWidget: (_, __, ___) =>
+                                        const Icon(Icons.person, size: 32),
+                                  ),
+                                )
+                              : const Icon(Icons.person, size: 32, color: Colors.white54),
+                    ),
+                    CircleAvatar(
+                      radius: 12,
+                      backgroundColor: NeonPulse.primary,
+                      child: const Icon(Icons.camera_alt, size: 12, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 40),
+        _field(_nameController, 'Display name', Icons.person_outline, next: true),
+        const SizedBox(height: 14),
+        _field(_emailController, 'Email', Icons.email_outlined, next: true),
+        const SizedBox(height: 14),
+        TextFormField(
+          controller: _passwordController,
+          obscureText: !_showPassword,
+          decoration: InputDecoration(
+            labelText: 'New password (leave blank to keep)',
+            prefixIcon: const Icon(Icons.lock_outline),
+            suffixIcon: IconButton(
+              icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
+              onPressed: () => setState(() => _showPassword = !_showPassword),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        SwitchListTile.adaptive(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Private account'),
+          subtitle: Text(s.privacy.isPrivate
+              ? 'Only followers can view your profile'
+              : 'Anyone can view your profile'),
+          value: s.privacy.isPrivate,
+          onChanged: (val) => ref.read(profileControllerProvider.notifier)
+              .updateDraft(s.copyWith(privacy: s.privacy.copyWith(isPrivate: val))),
+        ),
+      ],
+    );
+  }
+
+  // ── Tab 1: About ──────────────────────────────────────────────────────────
+
+  Widget _buildAboutTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        const Text('Short bio', style: TextStyle(color: Colors.white70, fontSize: 13)),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: _bioController,
+          maxLines: 3,
+          maxLength: 160,
+          decoration: const InputDecoration(
+            hintText: 'One sentence that describes you…',
+            prefixIcon: Icon(Icons.short_text),
+          ),
+        ),
+        const SizedBox(height: 14),
+        const Text('About me', style: TextStyle(color: Colors.white70, fontSize: 13)),
+        const SizedBox(height: 6),
+        TextFormField(
+          controller: _aboutMeController,
+          maxLines: 6,
+          maxLength: 500,
+          decoration: const InputDecoration(
+            hintText: 'Tell people more about yourself…',
+            prefixIcon: Icon(Icons.article_outlined),
+            alignLabelWithHint: true,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Tab 2: Interests ──────────────────────────────────────────────────────
+
+  Widget _buildInterestsTab() {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _interestInputController,
+                decoration: const InputDecoration(
+                  hintText: 'Type an interest…',
+                  prefixIcon: Icon(Icons.tag),
+                ),
+                onFieldSubmitted: _addInterest,
+              ),
+            ),
+            const SizedBox(width: 8),
+            FilledButton(
+              onPressed: () => _addInterest(_interestInputController.text),
+              child: const Text('Add'),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (_interests.isNotEmpty) ...[
+          const Text('Your interests', style: TextStyle(color: Colors.white70, fontSize: 13)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _interests
+                .map((i) => Chip(
+                      label: Text(i),
+                      onDeleted: () => setState(() => _interests.remove(i)),
+                      deleteIconColor: NeonPulse.primary,
+                      backgroundColor: const Color(0xFF1C1F2C),
+                      side: BorderSide(color: NeonPulse.primary.withAlpha(80)),
+                      labelStyle: const TextStyle(color: Colors.white),
+                    ))
+                .toList(),
+          ),
+          const SizedBox(height: 20),
+        ],
+        const Text('Suggestions', style: TextStyle(color: Colors.white70, fontSize: 13)),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: _kInterestSuggestions
+              .where((s) => !_interests.contains(s))
+              .map((s) => ActionChip(
+                    label: Text(s),
+                    onPressed: () => _addInterest(s),
+                    backgroundColor: const Color(0xFF16181F),
+                    side: const BorderSide(color: Color(0xFF2E2F3A)),
+                    labelStyle: const TextStyle(color: Colors.white70),
+                  ))
+              .toList(),
+        ),
+      ],
+    );
+  }
+
+  void _addInterest(String value) {
+    final trimmed = value.trim();
+    if (trimmed.isEmpty || _interests.contains(trimmed)) return;
+    setState(() => _interests.add(trimmed));
+    _interestInputController.clear();
+  }
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+
+  Widget _field(TextEditingController c, String label, IconData icon,
+      {bool next = false}) {
+    return TextFormField(
+      controller: c,
+      decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+      textInputAction: next ? TextInputAction.next : TextInputAction.done,
+    );
+  }
+
+  // ── Build ─────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(profileControllerProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Edit Profile')),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              // Profile Picture — tap to upload
-              GestureDetector(
-                onTap: _isUploadingPhoto ? null : _pickAndUploadPhoto,
-                child: Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      child: _isUploadingPhoto
-                          ? const SizedBox(
-                              width: 28,
-                              height: 28,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : (_avatarUrl != null && _avatarUrl!.isNotEmpty)
-                              ? ClipOval(
-                                  child: CachedNetworkImage(
-                                    imageUrl: _avatarUrl!,
-                                    width: 80,
-                                    height: 80,
-                                    fit: BoxFit.cover,
-                                    errorWidget: (_, url, error) => Icon(
-                                      Icons.person,
-                                      size: 40,
-                                      color: Theme.of(context).colorScheme.primary,
-                                    ),
-                                  ),
-                                )
-                              : Icon(Icons.person, size: 40, color: Theme.of(context).colorScheme.primary),
-                    ),
-                    CircleAvatar(
-                      radius: 14,
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      child: const Icon(Icons.camera_alt, size: 14, color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'Tap to change photo',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _nameController,
-                decoration: const InputDecoration(labelText: 'Name'),
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _emailController,
-                decoration: const InputDecoration(labelText: 'Email'),
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: _passwordController,
-                obscureText: !_showPassword,
-                decoration: InputDecoration(
-                  labelText: 'New Password',
-                  suffixIcon: IconButton(
-                    icon: Icon(_showPassword ? Icons.visibility : Icons.visibility_off),
-                    onPressed: () => setState(() => _showPassword = !_showPassword),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Private account'),
-                subtitle: Text(
-                  state.privacy.isPrivate
-                      ? 'Only followers can view your profile'
-                      : 'Anyone can view your profile',
-                ),
-                value: state.privacy.isPrivate,
-                onChanged: (val) {
-                  ref.read(profileControllerProvider.notifier).updateDraft(
-                    state.copyWith(
-                      privacy: state.privacy.copyWith(isPrivate: val),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 24),
-              if (state.error != null)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: Text(state.error!, style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
-                ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  ElevatedButton(
-                    onPressed: state.isLoading ? null : _saveProfile,
-                    child: state.isLoading ? const CircularProgressIndicator() : const Text('Save'),
-                  ),
-                  OutlinedButton(
-                    onPressed: state.isLoading ? null : _cancel,
-                    child: const Text('Cancel'),
-                  ),
-                ],
-              ),
-            ],
+      backgroundColor: NeonPulse.surface,
+      appBar: AppBar(
+        backgroundColor: NeonPulse.surface,
+        title: const Text('Edit Profile'),
+        actions: [
+          TextButton(
+            onPressed: state.isLoading ? null : _saveProfile,
+            child: state.isLoading
+                ? const SizedBox(
+                    width: 18, height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2))
+                : Text('Save', style: TextStyle(color: NeonPulse.primary, fontWeight: FontWeight.bold)),
           ),
+        ],
+        bottom: TabBar(
+          controller: _tabController,
+          indicatorColor: NeonPulse.primary,
+          labelColor: NeonPulse.primary,
+          unselectedLabelColor: Colors.white54,
+          tabs: const [
+            Tab(text: 'Basics'),
+            Tab(text: 'About'),
+            Tab(text: 'Interests'),
+          ],
         ),
+      ),
+      body: Column(
+        children: [
+          _completionBanner(state),
+          if (state.error != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+              child: Text(state.error!,
+                  style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
+            ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _buildBasicsTab(state),
+                _buildAboutTab(),
+                _buildInterestsTab(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
