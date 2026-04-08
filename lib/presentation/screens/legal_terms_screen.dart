@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mixvy/features/auth/controllers/auth_controller.dart';
+import '../../widgets/friends_panel_button.dart';
 
 import '../providers/app_settings_provider.dart';
 
@@ -41,7 +42,17 @@ class _LegalTermsScreenState extends ConsumerState<LegalTermsScreen> {
     final accepted = settings?.hasAcceptedCurrentLegal ?? false;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Terms of Service')),
+      appBar: AppBar(
+        title: const Text('Terms of Service'),
+        actions: [
+          IconButton(
+            tooltip: 'Go to Home',
+            icon: const Icon(Icons.home_rounded),
+            onPressed: () => context.go('/'),
+          ),
+          const FriendsPanelButton(),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [

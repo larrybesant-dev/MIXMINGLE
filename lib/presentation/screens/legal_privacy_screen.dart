@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../widgets/friends_panel_button.dart';
 
 class LegalPrivacyScreen extends StatelessWidget {
   const LegalPrivacyScreen({super.key});
@@ -7,7 +8,17 @@ class LegalPrivacyScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Privacy Policy')),
+      appBar: AppBar(
+        title: const Text('Privacy Policy'),
+        actions: [
+          IconButton(
+            tooltip: 'Go to Home',
+            icon: const Icon(Icons.home_rounded),
+            onPressed: () => context.go('/'),
+          ),
+          const FriendsPanelButton(),
+        ],
+      ),
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.all(16),
